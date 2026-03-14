@@ -1,0 +1,97 @@
+# ================================
+# Prettier Ignore Configuration
+# ================================
+# Files and directories that should not be formatted by Prettier
+# Last Updated: 2025-12-13
+# ================================
+
+# Dependencies
+node_modules/
+bower_components/
+vendor/
+.pnp/
+.pnp.js
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+*.min.js
+*.min.css
+bundle.js
+bundle.*.js
+
+# Coverage
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.uat
+.env.dev
+
+# Package manager
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Static/Public assets
+public/
+static/
+assets/
+
+# Generated files
+*.generated.*
+generated/
+
+# Documentation
+CHANGELOG.md
+LICENSE
+README.md
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab/
+.circleci/
+
+# Testing
+__snapshots__/
+*.snap
+
+# Misc
+*.md
+.DS_Store
+Thumbs.db
+
+
+
+
