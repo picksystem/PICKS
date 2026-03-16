@@ -1,3 +1,0 @@
-[2026-03-08 02:14:33] ERROR: Core switch SW-HQ-B3-01 - link failure on port 0/1
-[2026-03-08 02:14:34] CRITICAL: Spanning tree topology change detected
-[2026-03-08 02:14:35] ERROR: Failover to backup switch failed - no redundant path
