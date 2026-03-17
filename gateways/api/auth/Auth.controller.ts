@@ -574,7 +574,11 @@ export class AuthController {
         sanitizedUpdate.name = `${fn} ${ln}`;
       }
 
-      const updated = await db.user.update({ where: { id: userId }, data: sanitizedUpdate });
+      const updated = await db.user.update({
+        where: { id: userId },
+        data: sanitizedUpdate,
+      });
+
       res.json({
         message: 'Profile updated successfully',
         data: sanitizeUser(updated as unknown as Record<string, unknown>),
@@ -604,7 +608,9 @@ export class AuthController {
     const db = prisma as PrismaClient;
 
     // Track last activity (fire-and-forget — does not block the response)
-    db.user.update({ where: { id: decoded.id }, data: { lastActivityAt: new Date() } }).catch(() => {});
+    db.user
+      .update({ where: { id: decoded.id }, data: { lastActivityAt: new Date() } })
+      .catch(() => {});
 
     switch (action) {
       // ── List users ──────────────────────────────────────────────────────────
@@ -612,7 +618,9 @@ export class AuthController {
         const users = await db.user.findMany({ orderBy: { createdAt: 'desc' } });
         res.json({
           message: 'Users retrieved successfully',
-          data: users.map((u) => sanitizeUser(u as unknown as Record<string, unknown>)),
+          data: users.map((u: Record<string, unknown>) =>
+            sanitizeUser(u as unknown as Record<string, unknown>),
+          ),
         });
         break;
       }
@@ -643,7 +651,9 @@ export class AuthController {
         });
         res.json({
           message: 'Role requests retrieved',
-          data: users.map((u) => sanitizeUser(u as unknown as Record<string, unknown>)),
+          data: users.map((u: Record<string, unknown>) =>
+            sanitizeUser(u as unknown as Record<string, unknown>),
+          ),
         });
         break;
       }
@@ -655,7 +665,9 @@ export class AuthController {
         });
         res.json({
           message: 'Pending requests retrieved',
-          data: users.map((u) => sanitizeUser(u as unknown as Record<string, unknown>)),
+          data: users.map((u: Record<string, unknown>) =>
+            sanitizeUser(u as unknown as Record<string, unknown>),
+          ),
         });
         break;
       }

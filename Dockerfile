@@ -18,4 +18,5 @@ RUN npx prisma generate
 EXPOSE 3001
 
 # Start backend using ts-node with path alias support
-CMD ["npx", "ts-node", "-r", "tsconfig-paths/register", "--project=tsconfig.app.json", "gateways/src/index.ts"]
+ENV NODE_OPTIONS="--max-old-space-size=400"
+CMD ["npx", "ts-node", "--transpile-only", "-r", "tsconfig-paths/register", "--project=tsconfig.app.json", "gateways/src/index.ts"]
