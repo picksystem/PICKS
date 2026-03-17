@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "ignoreDeprecations": "5.0",
+    "noEmit": true,
+    "types": ["node", "jest"]
+  },
+  "include": ["libs/**/*", "gateways/**/*", "web/**/*", "tools/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/dist",
+    "**/dist/**",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/webpack.config.js",
+    "**/jest.config.js",
+    "**/jest.config.ts",
+    "**/*.stories.ts",
+    "**/*.stories.tsx"
+  ]
+}

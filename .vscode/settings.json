@@ -1,0 +1,95 @@
+{
+  // === AUTO-SAVE SETTINGS ===
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+
+  // === FORMAT ON SAVE (triggers on auto-save too) ===
+  "editor.formatOnSave": true,
+  "editor.formatOnType": false,
+  "editor.formatOnPaste": true,
+
+  // === DEFAULT FORMATTER - Use Prettier for all files ===
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  // === CODE ACTIONS ON SAVE (ESLint fixes) ===
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always",
+    "source.organizeImports": "never"
+  },
+
+  // === FILE-SPECIFIC FORMATTERS ===
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.formatOnSave": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // === ESLINT SETTINGS ===
+  "eslint.enable": true,
+  "eslint.format.enable": true,
+  "eslint.run": "onSave",
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "eslint.experimental.useFlatConfig": true,
+  "eslint.lintTask.enable": true,
+
+  // === PRETTIER SETTINGS ===
+  "prettier.requireConfig": false,
+  "prettier.useEditorConfig": false,
+
+  // === EDITOR SETTINGS ===
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+
+  // === TYPESCRIPT SETTINGS ===
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+
+  // === FILES TO EXCLUDE ===
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.nx": true
+  },
+
+  // === TRAILING WHITESPACE ===
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  // === SEARCH EXCLUDE ===
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.nx": true,
+    "**/coverage": true
+  }
+}
+
+
+
+
