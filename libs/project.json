@@ -1,0 +1,31 @@
+{
+  "name": "shared",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "root": "libs",
+  "sourceRoot": "libs",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["coverage/libs"],
+      "options": {
+        "jestConfig": "libs/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "outputPath": "dist/libs",
+        "tsConfig": "libs/tsconfig.lib.json",
+        "main": "libs/index.ts",
+        "buildLibsFromSource": true
+      }
+    }
+  },
+  "tags": ["shared"]
+}
