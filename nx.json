@@ -1,7 +1,6 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "defaultBase": "master",
-  "cacheDirectory": "C:/temp/nx-cache",
   "projects": {
     "administration": "web/apps/administration",
     "generale-partner": "web/tenants/generale-partner",
