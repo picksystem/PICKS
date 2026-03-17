@@ -16,6 +16,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { useStyles } from './styles';
 import useCreateIncident, { CreateIncidentProps } from './hooks/useCreateIncident';
+export type { CreateIncidentProps };
 import TicketInfoSection from './components/TicketInfoSection';
 import CategorizationSection from './components/CategorizationSection';
 import DescriptionSection from './components/DescriptionSection';
