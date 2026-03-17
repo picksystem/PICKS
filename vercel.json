@@ -1,9 +1,0 @@
-{
-  "buildCommand": "cross-env NODE_ENV=production NODE_OPTIONS=--no-warnings NX_CACHE_DIRECTORY=/tmp/nx-cache NX_WORKSPACE_DATA_DIRECTORY=/tmp/nx-data npx nx build administration",
-  "outputDirectory": "dist/web/apps/administration",
-  "installCommand": "npm install",
-  "framework": null,
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}
