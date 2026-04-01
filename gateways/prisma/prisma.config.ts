@@ -10,5 +10,7 @@ export default defineConfig({
   },
   datasource: {
     url: process.env.DATABASE_URL,
+    // directUrl is used by migrations to bypass the pooler (required for Prisma Migrate)
+    directUrl: process.env.DIRECT_URL || process.env.DATABASE_URL,
   },
 } as any);
