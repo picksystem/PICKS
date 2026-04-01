@@ -18,5 +18,5 @@ RUN npx prisma generate --config=gateways/prisma/prisma.config.ts
 EXPOSE 3001
 
 # Start backend using ts-node with path alias support
-ENV NODE_OPTIONS="--max-old-space-size=400"
+ENV NODE_OPTIONS="--max-old-space-size=400 --dns-result-order=ipv4first"
 CMD ["npx", "ts-node", "--transpile-only", "-r", "tsconfig-paths/register", "--project=tsconfig.app.json", "gateways/src/index.ts"]
