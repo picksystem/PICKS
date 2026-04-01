@@ -1,3 +1,8 @@
+// Force IPv4 DNS resolution — must be set before any network connections
+// Render free tier does not support outbound IPv6; Node 18+ defaults to IPv6-first
+import dns from 'dns';
+dns.setDefaultResultOrder('ipv4first');
+
 // Load environment variables from .env file
 import dotenv from 'dotenv';
 dotenv.config();
