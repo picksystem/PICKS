@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { UnauthorizedException } from './error-handler.middleware';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'picks-jwt-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'serivceops-jwt-secret-key';
 
 export interface AuthRequest extends Request {
   user?: {

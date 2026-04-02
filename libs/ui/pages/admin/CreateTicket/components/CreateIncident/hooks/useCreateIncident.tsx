@@ -5,7 +5,7 @@ import {
   useUploadAttachmentsMutation,
   useGetAllUsersMutation,
   useUpdateUserMutation,
-} from '@picks/services';
+} from '@serviceops/services';
 import {
   IncidentImpact,
   IncidentUrgency,
@@ -15,9 +15,9 @@ import {
   CreateIncidentSchema,
   DraftIncidentSchema,
   calculatePriority,
-} from '@picks/interfaces';
-import { useAuth, useFormWithSessionStorage, useNotification, useTicketConfig } from '@picks/hooks';
-import { constants } from '@picks/utils';
+} from '@serviceops/interfaces';
+import { useAuth, useFormWithSessionStorage, useNotification, useTicketConfig } from '@serviceops/hooks';
+import { constants } from '@serviceops/utils';
 import {
   channelOptions,
   generateTicketNumber,

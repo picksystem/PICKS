@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { prisma } from '@picks/database';
+import { prisma } from '@serviceops/database';
 import { AdminControlsController } from './AdminControls.controller';
 
 const controller = new AdminControlsController(prisma);

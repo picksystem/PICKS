@@ -1,6 +1,6 @@
 // userApi.ts
 
-import { IAuthUser } from '@picks/interfaces';
+import { IAuthUser } from '@serviceops/interfaces';
 import { baseApi } from './baseServices';
 
 export const userApi = baseApi.injectEndpoints({

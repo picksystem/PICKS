@@ -1,6 +1,6 @@
 import { Box, Typography, FormControlLabel, Checkbox, Tooltip, Link } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { useDevice } from '@picks/hooks';
+import { useDevice } from '@serviceops/hooks';
 
 interface TicketTypeToolbarProps {
   advancedSequences: boolean;

@@ -551,7 +551,7 @@ model AdminControls {
   updatedAt               DateTime @updatedAt
 }
 
-/// Singleton row that stores the full PICKS configuration document as JSON.
+/// Singleton row that stores the full SerivceOps configuration document as JSON.
 /// Downstream sections (priorities, statuses, SLAs, …) reference ticket type
 /// keys from AdminTicketType so they stay in sync automatically.
 model AdminConfiguration {

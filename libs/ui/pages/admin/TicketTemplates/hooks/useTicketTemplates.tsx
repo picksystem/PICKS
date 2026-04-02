@@ -5,8 +5,8 @@ import {
   useUpdateTicketTypeMutation,
   useDeleteTicketTypeMutation,
 } from '../../../../../services';
-import { ITicketType } from '@picks/interfaces';
-import { useNotification } from '@picks/hooks';
+import { ITicketType } from '@serviceops/interfaces';
+import { useNotification } from '@serviceops/hooks';
 import { loadIconMap, saveIconMap, loadTagMap, saveTagMap } from '../utils/ticketTypeIcons';
 
 export interface TicketTypeFormValues {

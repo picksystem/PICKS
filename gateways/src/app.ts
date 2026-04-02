@@ -3,11 +3,12 @@ import 'express-async-errors';
 
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import path from 'path';
 import fs from 'fs';
 
 // Centralized error handling middleware
-import { errorHandler, notFoundHandler } from '@picks/middleware';
+import { errorHandler, notFoundHandler } from '@serviceops/middleware';
 
 // Import route modules
 import authRoutes from '../api/auth/Auth.routes';
@@ -16,7 +17,7 @@ import userRoutes from '../api/user/routes';
 import consultantRoutes from '../api/consultant/routes';
 
 // Constants for route paths
-import { ADMIN_PATHS, USER_PATHS, CONSULTANT_PATHS } from '@picks/constants';
+import { ADMIN_PATHS, USER_PATHS, CONSULTANT_PATHS } from '@serviceops/constants';
 
 const app = express();
 
@@ -25,6 +26,9 @@ const app = express();
  * Global Middleware
  * -------------------------
  */
+
+// Gzip compress all responses — reduces payload size by 60-80%
+app.use(compression());
 
 // Enable CORS
 app.use(cors());

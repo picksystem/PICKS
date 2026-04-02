@@ -13,7 +13,7 @@ module.exports = {
     extensions: ['.ts', '.tsx', '.js'],
 
     alias: {
-      '@picks/component': path.resolve(__dirname, '../../libs/shared/src/index.ts'),
+      '@serviceops/component': path.resolve(__dirname, '../../libs/shared/src/index.ts'),
     },
   },
 

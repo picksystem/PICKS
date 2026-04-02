@@ -26,7 +26,7 @@ const LeftPanel = ({ stepIndex, classes, onNavigateSignIn }: LeftPanelProps) => 
         <AssignmentIndIcon className={classes.brandIcon28} />
       </Box>
       <Typography variant='h4' fontWeight={800} className={classes.brandTitle}>
-        PICKS
+        ServiceOps
       </Typography>
     </Box>
 
@@ -36,7 +36,7 @@ const LeftPanel = ({ stepIndex, classes, onNavigateSignIn }: LeftPanelProps) => 
       Recovery
     </Typography>
     <Typography className={classes.heroSubtitle}>
-      Regain secure access to your PICKS account in just a few steps.
+      Regain secure access to your ServiceOps account in just a few steps.
     </Typography>
 
     {LEFT_STEPS.map((s, i) => (

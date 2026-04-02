@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Column } from '@picks/component';
+import { Column } from '@serviceops/component';
 import { Chip, Typography, Button, Stack, Tab, Link } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
@@ -7,9 +7,9 @@ import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import GroupIcon from '@mui/icons-material/Group';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import { useAuthActionMutation } from '@picks/services';
-import { useNotification } from '@picks/hooks';
-import { IAuthUser } from '@picks/interfaces';
+import { useAuthActionMutation } from '@serviceops/services';
+import { useNotification } from '@serviceops/hooks';
+import { IAuthUser } from '@serviceops/interfaces';
 import { RoleRequestRow, ActionType } from '../types/roleRequests.types';
 import { getFilteredData, getTabLists } from '../utils/roleRequests.utils';
 

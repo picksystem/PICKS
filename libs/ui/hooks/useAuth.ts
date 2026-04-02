@@ -1,8 +1,8 @@
 import { useAppDispatch } from './useAppDispatch';
 import { useAppSelector } from './useAppSelector';
 import { setCredentials, logout as logoutAction } from '../store/authStore';
-import { useAuthActionMutation } from '@picks/services';
-import { UserRole, ISignInResponse } from '@picks/interfaces';
+import { useAuthActionMutation } from '@serviceops/services';
+import { UserRole, ISignInResponse } from '@serviceops/interfaces';
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();

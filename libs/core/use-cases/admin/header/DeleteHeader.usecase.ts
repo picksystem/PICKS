@@ -1,4 +1,4 @@
-import { IHeaderGateway, IHeader, IDeleteHeaderUseCase } from '@picks/interfaces';
+import { IHeaderGateway, IHeader, IDeleteHeaderUseCase } from '@serviceops/interfaces';
 import { NotFoundException } from '../../../middleware';
 
 /**

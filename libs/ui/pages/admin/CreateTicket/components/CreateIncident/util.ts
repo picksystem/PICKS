@@ -5,7 +5,7 @@ import {
   IncidentUrgency,
   IncidentPriority,
   calculatePriority,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 // Dropdown options
 export const impactOptions = [

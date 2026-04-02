@@ -3,7 +3,7 @@ import {
   IConfigurationData,
   IConfigurationGateway,
   DEFAULT_CONFIGURATION_DATA,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 /**
  * Manages the singleton AdminConfiguration row.

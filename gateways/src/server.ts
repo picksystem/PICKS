@@ -28,13 +28,13 @@ try {
 import app from './app';
 
 // Custom Winston logger
-import { logger } from '@picks/config';
+import { logger } from '@serviceops/config';
 
 // Prisma client for database access
-import { prisma } from '@picks/database';
+import { prisma } from '@serviceops/database';
 
 // Draft cleanup
-import { CleanupExpiredDraftsUseCase } from '@picks/core/use-cases';
+import { CleanupExpiredDraftsUseCase } from '@serviceops/core/use-cases';
 import { incidentGateway } from '../api/admin/Incident/Incident.routes';
 
 // Server configuration
@@ -71,7 +71,7 @@ async function startServer() {
     // Start HTTP server
     const server = app.listen(PORT, HOST, () => {
       logger.info('='.repeat(60));
-      logger.info(`🚀 Unified Picks Backend API Server Started`);
+      logger.info(`🚀 Unified SerivceOps Backend API Server Started`);
       logger.info('='.repeat(60));
       logger.info(`📍 Server running on: http://${HOST}:${PORT}`);
       logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -91,7 +91,7 @@ async function startServer() {
           logger.error('Failed to cleanup expired drafts:', error);
         }
       };
-      runCleanup();
+      setTimeout(runCleanup, 10_000); // delay initial run until pool is warmed up
       setInterval(runCleanup, 24 * 60 * 60 * 1000);
     });
 

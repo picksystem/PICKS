@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { ValidationError } from 'yup';
 import { NotFoundService } from './NotFound.service';
 import { CreateNotFoundSchema, UpdateNotFoundSchema } from './NotFound.dto';
-import { BadRequestException } from '@picks/middleware';
+import { BadRequestException } from '@serviceops/middleware';
 
 /**
  * Controller for ConsultantNotFound endpoints

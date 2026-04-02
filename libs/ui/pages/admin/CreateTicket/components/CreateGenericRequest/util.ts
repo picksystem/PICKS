@@ -3,7 +3,7 @@ import {
   IncidentUrgency,
   IncidentPriority,
   calculatePriority,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 export const impactOptions = [
   { value: IncidentImpact.HIGH, label: '1 - High' },

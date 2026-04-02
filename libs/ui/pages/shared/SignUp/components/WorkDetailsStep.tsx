@@ -10,7 +10,7 @@ import {
   SelectChangeEvent,
 } from '@mui/material';
 import WorkIcon from '@mui/icons-material/Work';
-import { useFieldError } from '@picks/hooks';
+import { useFieldError } from '@serviceops/hooks';
 import TextField from '../../../../components/TextField/TextField';
 
 interface WorkDetailsStepProps {
@@ -138,7 +138,7 @@ const WorkDetailsStep = ({
               name='reasonForAccess'
               label='Reason for Access'
               type='text'
-              placeholder='Briefly describe why you need access to PICKS...'
+              placeholder='Briefly describe why you need access to ServiceOps...'
               value={values.reasonForAccess}
               onChange={onChange}
               onBlur={onBlur}

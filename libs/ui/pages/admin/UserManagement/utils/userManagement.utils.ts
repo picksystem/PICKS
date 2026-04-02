@@ -1,5 +1,5 @@
 import * as yup from 'yup';
-import { IAuthUser } from '@picks/interfaces';
+import { IAuthUser } from '@serviceops/interfaces';
 import {
   EditFormShape,
   InitialCreateValues,

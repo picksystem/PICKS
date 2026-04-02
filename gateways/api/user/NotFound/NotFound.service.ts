@@ -1,4 +1,4 @@
-import { BaseService } from '@picks/core/service';
+import { BaseService } from '@serviceops/core/service';
 import { NotFoundRepository } from './NotFound.repository';
 import { CreateNotFoundDto, UpdateNotFoundDto } from './NotFound.dto';
 import { UserNotFound } from '@prisma/client';

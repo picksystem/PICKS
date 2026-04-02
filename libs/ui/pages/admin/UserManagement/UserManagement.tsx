@@ -1,4 +1,4 @@
-import { Box, Loader, DataTable } from '@picks/component';
+import { Box, Loader, DataTable } from '@serviceops/component';
 import {
   Typography,
   Button,

@@ -4,7 +4,7 @@ import {
   IConfigurationGateway,
   IUpdateConfigurationSectionInput,
   IUpdateConfigurationSectionUseCase,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 export class UpdateConfigurationSectionUseCase implements IUpdateConfigurationSectionUseCase {
   constructor(private readonly configurationGateway: IConfigurationGateway) {}

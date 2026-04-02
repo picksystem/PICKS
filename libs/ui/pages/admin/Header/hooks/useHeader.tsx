@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { constants } from '@picks/utils';
-import { useAuth, useDebounce } from '@picks/hooks';
-import { useAuthActionMutation, useGetIncidentsQuery } from '@picks/services';
-import { IAuthUser, IIncident } from '@picks/interfaces';
+import { constants } from '@serviceops/utils';
+import { useAuth, useDebounce } from '@serviceops/hooks';
+import { useAuthActionMutation, useGetIncidentsQuery } from '@serviceops/services';
+import { IAuthUser, IIncident } from '@serviceops/interfaces';
 
 export const useHeader = () => {
   const navigate = useNavigate();

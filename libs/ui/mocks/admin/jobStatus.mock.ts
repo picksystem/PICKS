@@ -4,13 +4,13 @@ import {
   JobStatus,
   JOB_STATUS_CONFIG,
   JOB_PRIORITY_COLORS,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 /**
  * Job Status Mock Data
  * Demonstrates different UI variations for job status states
  *
- * Uses shared interfaces from @picks/interfaces
+ * Uses shared interfaces from @serviceops/interfaces
  * Same types used by Frontend and Backend
  */
 

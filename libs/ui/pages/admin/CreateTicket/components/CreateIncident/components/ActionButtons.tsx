@@ -3,7 +3,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import SaveIcon from '@mui/icons-material/Save';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import SearchIcon from '@mui/icons-material/Search';
-import { Box, Button } from '@picks/component';
+import { Box, Button } from '@serviceops/component';
 import { useStyles } from '../styles';
 
 interface ActionButtonsProps {

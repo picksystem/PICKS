@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { prisma } from '@picks/database';
+import { prisma } from '@serviceops/database';
 import { PrismaConfigurationGateway } from '../../../../libs/core/infrastructure/admin/PrismaConfigurationGateway';
 import { GetConfigurationUseCase } from '../../../../libs/core/use-cases/admin/configuration/GetConfiguration.usecase';
 import { UpdateConfigurationUseCase } from '../../../../libs/core/use-cases/admin/configuration/UpdateConfiguration.usecase';

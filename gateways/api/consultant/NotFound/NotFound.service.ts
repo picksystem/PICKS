@@ -1,6 +1,6 @@
 import { NotFoundRepository } from './NotFound.repository';
 import { CreateNotFoundDto, UpdateNotFoundDto } from './NotFound.dto';
-import { NotFoundException } from '@picks/middleware';
+import { NotFoundException } from '@serviceops/middleware';
 
 /**
  * Service for ConsultantNotFound business logic

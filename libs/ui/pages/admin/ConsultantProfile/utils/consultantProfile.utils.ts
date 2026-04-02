@@ -1,4 +1,4 @@
-import { IAuthUser, IConsultantProfile } from '@picks/interfaces';
+import { IAuthUser, IConsultantProfile } from '@serviceops/interfaces';
 import { ProfileForm, RoleForm } from '../types/consultantProfile.types';
 
 export const emptyProfileForm: ProfileForm = {

@@ -1,4 +1,4 @@
-import { Box, Typography } from '@picks/component';
+import { Box, Typography } from '@serviceops/component';
 import { useStyles } from './styles';
 
 const RecentItems = () => {

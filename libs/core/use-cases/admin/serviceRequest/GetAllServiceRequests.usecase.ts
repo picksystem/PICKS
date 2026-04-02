@@ -2,7 +2,7 @@ import {
   IServiceRequestGateway,
   IServiceRequest,
   IGetAllServiceRequestsUseCase,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 /**
  * Get All Service Requests Use Case

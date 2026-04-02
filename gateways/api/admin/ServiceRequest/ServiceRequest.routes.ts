@@ -3,8 +3,8 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { ServiceRequestController } from './ServiceRequest.controller';
-import { prisma } from '@picks/database';
-import { PrismaServiceRequestGateway } from '@picks/core/infrastructure';
+import { prisma, pool } from '@serviceops/database';
+import { PrismaServiceRequestGateway } from '@serviceops/core/infrastructure';
 import {
   CreateServiceRequestUseCase,
   GetServiceRequestUseCase,
@@ -12,15 +12,17 @@ import {
   GetAllServiceRequestsUseCase,
   UpdateServiceRequestUseCase,
   DeleteServiceRequestUseCase,
-} from '@picks/core/use-cases';
+} from '@serviceops/core/use-cases';
 
 // Dependency injection - Gateway Pattern
-const serviceRequestGateway = new PrismaServiceRequestGateway(prisma);
+const serviceRequestGateway = new PrismaServiceRequestGateway(prisma, pool);
 
 // Use Cases with injected gateway
 const createServiceRequestUseCase = new CreateServiceRequestUseCase(serviceRequestGateway);
 const getServiceRequestUseCase = new GetServiceRequestUseCase(serviceRequestGateway);
-const getServiceRequestByNumberUseCase = new GetServiceRequestByNumberUseCase(serviceRequestGateway);
+const getServiceRequestByNumberUseCase = new GetServiceRequestByNumberUseCase(
+  serviceRequestGateway,
+);
 const getAllServiceRequestsUseCase = new GetAllServiceRequestsUseCase(serviceRequestGateway);
 const updateServiceRequestUseCase = new UpdateServiceRequestUseCase(serviceRequestGateway);
 const deleteServiceRequestUseCase = new DeleteServiceRequestUseCase(serviceRequestGateway);
@@ -61,15 +63,11 @@ const upload = multer({
 const router = Router();
 
 // File upload
-router.post(
-  '/attachments/upload',
-  upload.array('files', 10),
-  (req: Request, res: Response) => {
-    const files = req.files as Express.Multer.File[];
-    const filenames = files.map((f) => f.filename);
-    res.json({ data: filenames });
-  },
-);
+router.post('/attachments/upload', upload.array('files', 10), (req: Request, res: Response) => {
+  const files = req.files as Express.Multer.File[];
+  const filenames = files.map((f) => f.filename);
+  res.json({ data: filenames });
+});
 
 // Service Request CRUD
 router.get('/', controller.getAll);

@@ -3,9 +3,13 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { PrismaClient } from '@prisma/client';
-import { prisma } from '@picks/database';
+import { prisma, pool } from '@serviceops/database';
 import { TicketController } from './Ticket.controller';
-import { PrismaIncidentGateway, PrismaServiceRequestGateway, PrismaAdvisoryRequestGateway } from '@picks/core/infrastructure';
+import {
+  PrismaIncidentGateway,
+  PrismaServiceRequestGateway,
+  PrismaAdvisoryRequestGateway,
+} from '@serviceops/core/infrastructure';
 import {
   CreateIncidentUseCase,
   CreateServiceRequestUseCase,
@@ -13,20 +17,24 @@ import {
   GetIncidentByNumberUseCase,
   GetServiceRequestByNumberUseCase,
   GetAdvisoryRequestByNumberUseCase,
-} from '@picks/core/use-cases';
+} from '@serviceops/core/use-cases';
 
 // ── Gateways ─────────────────────────────────────────────────────────────────
-const incidentGateway = new PrismaIncidentGateway(prisma as PrismaClient);
-const serviceRequestGateway = new PrismaServiceRequestGateway(prisma as PrismaClient);
-const advisoryRequestGateway = new PrismaAdvisoryRequestGateway(prisma as PrismaClient);
+const incidentGateway = new PrismaIncidentGateway(prisma as PrismaClient, pool);
+const serviceRequestGateway = new PrismaServiceRequestGateway(prisma as PrismaClient, pool);
+const advisoryRequestGateway = new PrismaAdvisoryRequestGateway(prisma as PrismaClient, pool);
 
 // ── Use Cases ─────────────────────────────────────────────────────────────────
 const createIncidentUseCase = new CreateIncidentUseCase(incidentGateway);
 const createServiceRequestUseCase = new CreateServiceRequestUseCase(serviceRequestGateway);
 const createAdvisoryRequestUseCase = new CreateAdvisoryRequestUseCase(advisoryRequestGateway);
 const getIncidentByNumberUseCase = new GetIncidentByNumberUseCase(incidentGateway);
-const getServiceRequestByNumberUseCase = new GetServiceRequestByNumberUseCase(serviceRequestGateway);
-const getAdvisoryRequestByNumberUseCase = new GetAdvisoryRequestByNumberUseCase(advisoryRequestGateway);
+const getServiceRequestByNumberUseCase = new GetServiceRequestByNumberUseCase(
+  serviceRequestGateway,
+);
+const getAdvisoryRequestByNumberUseCase = new GetAdvisoryRequestByNumberUseCase(
+  advisoryRequestGateway,
+);
 
 // ── Controller ────────────────────────────────────────────────────────────────
 const controller = new TicketController(

@@ -2,7 +2,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import { constants } from '@picks/utils';
+import { constants } from '@serviceops/utils';
 
 export const useMenuItems = () => {
   const { ConsultantPath } = constants;

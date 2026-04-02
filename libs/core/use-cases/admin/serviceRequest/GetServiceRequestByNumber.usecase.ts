@@ -1,4 +1,4 @@
-import { IServiceRequestGateway, IServiceRequest } from '@picks/interfaces';
+import { IServiceRequestGateway, IServiceRequest } from '@serviceops/interfaces';
 import { NotFoundException } from '../../../middleware';
 
 /**

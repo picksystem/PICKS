@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import CloseIcon from '@mui/icons-material/Close';
-import { IAuthUser, IConsultantRole } from '@picks/interfaces';
+import { IAuthUser, IConsultantRole } from '@serviceops/interfaces';
 import { ProfileForm } from '../../types/consultantProfile.types';
 import SectionLabel from '../../components/SectionLabel';
 import { useStyles } from './styles';

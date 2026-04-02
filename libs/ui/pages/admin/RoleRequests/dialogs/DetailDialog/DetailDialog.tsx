@@ -15,7 +15,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import CloseIcon from '@mui/icons-material/Close';
-import { IAuthUser } from '@picks/interfaces';
+import { IAuthUser } from '@serviceops/interfaces';
 import { RoleRequestRow, ActionType } from '../../types/roleRequests.types';
 import DetailField from '../../components/DetailField';
 import { useStyles } from './styles';

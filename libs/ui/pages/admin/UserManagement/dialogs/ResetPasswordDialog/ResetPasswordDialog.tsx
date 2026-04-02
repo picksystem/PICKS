@@ -1,4 +1,4 @@
-import { UserAvatar } from '@picks/component';
+import { UserAvatar } from '@serviceops/component';
 import {
   Box,
   Typography,
@@ -30,7 +30,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import EmailIcon from '@mui/icons-material/Email';
 import { useStyles } from './styles';
-import { useNotification, useFieldError } from '@picks/hooks';
+import { useNotification, useFieldError } from '@serviceops/hooks';
 import { UserRow, ResetPwErrors } from '../../types/userManagement.types';
 import { getPasswordStrength, generateTempPassword } from '../../utils/userManagement.utils';
 

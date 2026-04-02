@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Box, Modal, Button } from '../../../../components';
 import { TextField } from '@mui/material';
-import { IIncident, IncidentStatus } from '@picks/interfaces';
+import { IIncident, IncidentStatus } from '@serviceops/interfaces';
 import { useUpdateIncidentMutation } from '../../../../../services';
-import { useNotification } from '@picks/hooks';
+import { useNotification } from '@serviceops/hooks';
 
 interface AssignModalProps {
   open: boolean;

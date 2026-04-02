@@ -166,7 +166,7 @@ export interface IUpdateConfigurationSectionUseCase {
 
 export const DEFAULT_CONFIGURATION_DATA: IConfigurationData = {
   general: {
-    systemName: 'PICKS',
+    systemName: 'serivceops',
     systemDescription: 'IT Service Management Platform',
     timezone: 'UTC',
     dateFormat: 'MM/DD/YYYY',

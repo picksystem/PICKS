@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Chip, Tooltip, alpha, Switch } from '@mui/material';
-import { ITicketType } from '@picks/interfaces';
-import { DataTable, Column } from '@picks/component';
+import { ITicketType } from '@serviceops/interfaces';
+import { DataTable, Column } from '@serviceops/component';
 import { loadTagMap, getTagOption } from '../utils/ticketTypeIcons';
 
 const FALLBACK_COLOR = '#64748b';

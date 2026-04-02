@@ -3,7 +3,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { getThemeOverride, mergeWithBase } from './themePalettes';
 import './theme.types';
 
-const STORAGE_KEY = 'picks_selected_theme';
+const STORAGE_KEY = 'serivceops_selected_theme';
 
 interface ThemeContextValue {
   themeName: string;

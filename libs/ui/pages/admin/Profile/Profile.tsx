@@ -18,8 +18,8 @@ import {
   Stack,
 } from '@mui/material';
 import { useStyles } from './styles';
-import { useAuth, useNotification } from '@picks/hooks';
-import { useAuthActionMutation } from '@picks/services';
+import { useAuth, useNotification } from '@serviceops/hooks';
+import { useAuthActionMutation } from '@serviceops/services';
 import { useAppDispatch } from '../../../hooks/useAppDispatch';
 import { updateUser } from '../../../store/authStore';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';

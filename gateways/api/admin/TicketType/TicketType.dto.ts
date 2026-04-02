@@ -1,6 +1,6 @@
 /**
  * TicketType DTO - Re-exports shared validation schemas
- * Validation logic is centralized in @picks/interfaces (using Yup)
+ * Validation logic is centralized in @serviceops/interfaces (using Yup)
  */
 export {
   CreateTicketTypeSchema,
@@ -9,4 +9,4 @@ export {
   type CreateTicketTypeDto,
   type UpdateTicketTypeDto,
   type TicketTypeResponseDto,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';

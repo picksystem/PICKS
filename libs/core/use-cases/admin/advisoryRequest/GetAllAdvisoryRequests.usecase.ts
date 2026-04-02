@@ -2,7 +2,7 @@ import {
   IAdvisoryRequestGateway,
   IAdvisoryRequest,
   IGetAllAdvisoryRequestsUseCase,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 /**
  * Get All Advisory Requests Use Case

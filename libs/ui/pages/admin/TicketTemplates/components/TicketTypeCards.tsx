@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { ITicketType } from '@picks/interfaces';
+import { ITicketType } from '@serviceops/interfaces';
 import { getIconComponent, getTypeColor, getTypeGradient } from '../utils/ticketTypeIcons';
 
 function buildPreview(prefix: string, length: number): string {

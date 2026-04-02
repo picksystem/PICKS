@@ -1,8 +1,8 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IIncident } from '@picks/interfaces';
-import { constants } from '@picks/utils';
-import { useDebounce } from '@picks/hooks';
+import { IIncident } from '@serviceops/interfaces';
+import { constants } from '@serviceops/utils';
+import { useDebounce } from '@serviceops/hooks';
 
 export const useIncidentNavigation = (
   number: string | undefined,

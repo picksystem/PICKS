@@ -480,7 +480,7 @@ export function getTagOption(value: string): TicketTagOption | undefined {
   return TICKET_TAG_OPTIONS.find((t) => t.value === value);
 }
 
-const TAG_STORAGE_KEY = 'picks_ticket_type_tags';
+const TAG_STORAGE_KEY = 'serivceops_ticket_type_tags';
 
 export function loadTagMap(): Record<string, string> {
   try {
@@ -546,7 +546,7 @@ export function getTypeGradient(type: string): string {
   return TYPE_GRADIENTS[type] || 'linear-gradient(135deg, #475569 0%, #64748b 100%)';
 }
 
-const STORAGE_KEY = 'picks_ticket_type_icons';
+const STORAGE_KEY = 'serivceops_ticket_type_icons';
 
 export function loadIconMap(): Record<string, string> {
   try {

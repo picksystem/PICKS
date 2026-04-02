@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { IConfigurationData } from '@picks/interfaces';
+import { IConfigurationData } from '@serviceops/interfaces';
 import { GetConfigurationUseCase } from '../../../../libs/core/use-cases/admin/configuration/GetConfiguration.usecase';
 import { UpdateConfigurationUseCase } from '../../../../libs/core/use-cases/admin/configuration/UpdateConfiguration.usecase';
 import { UpdateConfigurationSectionUseCase } from '../../../../libs/core/use-cases/admin/configuration/UpdateConfigurationSection.usecase';
@@ -35,7 +35,12 @@ export class ConfigurationController {
       value: IConfigurationData[typeof section];
       updatedBy?: number;
     };
-    const validSections: (keyof IConfigurationData)[] = ['general', 'priorities', 'statuses', 'slas'];
+    const validSections: (keyof IConfigurationData)[] = [
+      'general',
+      'priorities',
+      'statuses',
+      'slas',
+    ];
     if (!validSections.includes(section)) {
       res.status(400).json({ message: `Unknown section: ${section}` });
       return;

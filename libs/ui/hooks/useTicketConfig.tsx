@@ -1,5 +1,5 @@
-import { useGetConfigurationQuery } from '@picks/services';
-import { IConfigStatusLevel } from '@picks/interfaces';
+import { useGetConfigurationQuery } from '@serviceops/services';
+import { IConfigStatusLevel } from '@serviceops/interfaces';
 
 // ── Option shape used by every Select dropdown in the app ─────────────────────
 
@@ -7,40 +7,40 @@ export interface ITicketConfigOption {
   value: string;
   label: string;
   bgColor?: string; // badge/dot colour for display
-  color?: string;   // foreground text colour
+  color?: string; // foreground text colour
 }
 
 // ── Static fallbacks (used while the API loads or if config is empty) ─────────
 
 const FALLBACK_IMPACT_OPTIONS: ITicketConfigOption[] = [
-  { value: 'high',   label: '1 - High',   bgColor: '#b91c1c' },
+  { value: 'high', label: '1 - High', bgColor: '#b91c1c' },
   { value: 'medium', label: '2 - Medium', bgColor: '#ca8a04' },
-  { value: 'low',    label: '3 - Low',    bgColor: '#15803d' },
+  { value: 'low', label: '3 - Low', bgColor: '#15803d' },
 ];
 
 const FALLBACK_URGENCY_OPTIONS: ITicketConfigOption[] = [
-  { value: 'high',   label: '1 - High',   bgColor: '#b91c1c' },
+  { value: 'high', label: '1 - High', bgColor: '#b91c1c' },
   { value: 'medium', label: '2 - Medium', bgColor: '#ca8a04' },
-  { value: 'low',    label: '3 - Low',    bgColor: '#15803d' },
+  { value: 'low', label: '3 - Low', bgColor: '#15803d' },
 ];
 
 const FALLBACK_PRIORITY_OPTIONS: ITicketConfigOption[] = [
   { value: 'critical', label: '1 - Critical', bgColor: '#b91c1c', color: '#fff' },
-  { value: 'high',     label: '2 - High',     bgColor: '#ea580c', color: '#fff' },
-  { value: 'medium',   label: '3 - Medium',   bgColor: '#ca8a04', color: '#fff' },
-  { value: 'low',      label: '4 - Low',      bgColor: '#2563eb', color: '#fff' },
+  { value: 'high', label: '2 - High', bgColor: '#ea580c', color: '#fff' },
+  { value: 'medium', label: '3 - Medium', bgColor: '#ca8a04', color: '#fff' },
+  { value: 'low', label: '4 - Low', bgColor: '#2563eb', color: '#fff' },
   { value: 'planning', label: '5 - Planning', bgColor: '#0f766e', color: '#fff' },
 ];
 
 /** Fallback statuses shared by all ticket types until config statuses are set. */
 const FALLBACK_STATUS_OPTIONS: ITicketConfigOption[] = [
-  { value: 'new',         label: 'New' },
+  { value: 'new', label: 'New' },
   { value: 'in_progress', label: 'In Progress' },
-  { value: 'on_hold',     label: 'On Hold' },
-  { value: 'assigned',    label: 'Assigned' },
-  { value: 'resolved',    label: 'Resolved' },
-  { value: 'closed',      label: 'Closed' },
-  { value: 'cancelled',   label: 'Cancelled' },
+  { value: 'on_hold', label: 'On Hold' },
+  { value: 'assigned', label: 'Assigned' },
+  { value: 'resolved', label: 'Resolved' },
+  { value: 'closed', label: 'Closed' },
+  { value: 'cancelled', label: 'Cancelled' },
 ];
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
@@ -64,59 +64,49 @@ export const useTicketConfig = (ticketType?: string) => {
   const p = config?.data?.priorities;
 
   // ── Impact options ──────────────────────────────────────────────────────────
-  const impactOptions: ITicketConfigOption[] =
-    p?.impactLevels?.length
-      ? p.impactLevels
-          .filter(
-            (l) =>
-              l.isActive &&
-              (!ticketType || l.enabledFor[ticketType] !== false),
-          )
-          .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map((l) => ({ value: l.name, label: l.displayName, bgColor: l.bgColor }))
-      : FALLBACK_IMPACT_OPTIONS;
+  const impactOptions: ITicketConfigOption[] = p?.impactLevels?.length
+    ? p.impactLevels
+        .filter((l) => l.isActive && (!ticketType || l.enabledFor[ticketType] !== false))
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((l) => ({ value: l.name, label: l.displayName, bgColor: l.bgColor }))
+    : FALLBACK_IMPACT_OPTIONS;
 
   // ── Urgency options ─────────────────────────────────────────────────────────
-  const urgencyOptions: ITicketConfigOption[] =
-    p?.urgencyLevels?.length
-      ? p.urgencyLevels
-          .filter(
-            (l) =>
-              l.isActive &&
-              (!ticketType || l.enabledFor[ticketType] !== false),
-          )
-          .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map((l) => ({ value: l.name, label: l.displayName, bgColor: l.bgColor }))
-      : FALLBACK_URGENCY_OPTIONS;
+  const urgencyOptions: ITicketConfigOption[] = p?.urgencyLevels?.length
+    ? p.urgencyLevels
+        .filter((l) => l.isActive && (!ticketType || l.enabledFor[ticketType] !== false))
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((l) => ({ value: l.name, label: l.displayName, bgColor: l.bgColor }))
+    : FALLBACK_URGENCY_OPTIONS;
 
   // ── Priority options ────────────────────────────────────────────────────────
-  const priorityOptions: ITicketConfigOption[] =
-    p?.levels?.length
-      ? p.levels
-          .filter(
-            (l) =>
-              !ticketType || l.enabledFor[ticketType] !== false,
-          )
-          .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map((l) => ({ value: l.id, label: l.name, bgColor: l.bgColor, color: l.color }))
-      : FALLBACK_PRIORITY_OPTIONS;
+  const priorityOptions: ITicketConfigOption[] = p?.levels?.length
+    ? p.levels
+        .filter((l) => !ticketType || l.enabledFor[ticketType] !== false)
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((l) => ({ value: l.id, label: l.name, bgColor: l.bgColor, color: l.color }))
+    : FALLBACK_PRIORITY_OPTIONS;
 
   // ── Status options ──────────────────────────────────────────────────────────
   // Falls back to shared defaults until statuses are configured in the admin UI.
-  const configStatuses: IConfigStatusLevel[] | undefined =
-    ticketType ? config?.data?.statuses?.byTicketType?.[ticketType] : undefined;
+  const configStatuses: IConfigStatusLevel[] | undefined = ticketType
+    ? config?.data?.statuses?.byTicketType?.[ticketType]
+    : undefined;
   const statusOptions: ITicketConfigOption[] =
     Array.isArray(configStatuses) && configStatuses.length
       ? configStatuses
           .filter((s: IConfigStatusLevel) => s.isActive)
           .sort((a: IConfigStatusLevel, b: IConfigStatusLevel) => a.sortOrder - b.sortOrder)
-          .map((s: IConfigStatusLevel) => ({ value: s.id, label: s.displayName, bgColor: s.bgColor }))
+          .map((s: IConfigStatusLevel) => ({
+            value: s.id,
+            label: s.displayName,
+            bgColor: s.bgColor,
+          }))
       : FALLBACK_STATUS_OPTIONS;
 
   // ── Lookup helpers (used in detail screens to resolve display labels/colours) ─
 
-  const findPriority = (value: string) =>
-    p?.levels?.find((l) => l.id === value) ?? null;
+  const findPriority = (value: string) => p?.levels?.find((l) => l.id === value) ?? null;
 
   const findImpact = (value: string) =>
     p?.impactLevels?.find((l) => l.name === value || l.id === value) ?? null;

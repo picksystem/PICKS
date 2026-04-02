@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 import notFoundRoutes from './NotFound/NotFound.routes';
-import { CONSULTANT_PATHS } from '@picks/constants';
+import { CONSULTANT_PATHS } from '@serviceops/constants';
 
 const router = Router();
 

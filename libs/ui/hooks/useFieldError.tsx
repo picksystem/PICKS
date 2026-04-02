@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
-import { createStyles } from '@picks/theme';
+import { createStyles } from '@serviceops/theme';
 
 const useStyles = createStyles((theme) => ({
   requiredErrorWrapper: {
@@ -18,7 +18,8 @@ export const useFieldError = () => {
 
   const reqError = (touched: unknown, error: string | undefined) => {
     if (!touched || !error) return undefined;
-    const label = error === 'required' || error.toLowerCase().includes('required') ? 'Required' : error;
+    const label =
+      error === 'required' || error.toLowerCase().includes('required') ? 'Required' : error;
     return (
       <Box component='span' className={classes.requiredErrorWrapper}>
         <ArrowCircleRightIcon className={classes.requiredErrorIcon} />

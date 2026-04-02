@@ -1,8 +1,4 @@
-import {
-  ITicketTypeGateway,
-  ITicketType,
-  IGetAllTicketTypesUseCase,
-} from '@picks/interfaces';
+import { ITicketTypeGateway, ITicketType, IGetAllTicketTypesUseCase } from '@serviceops/interfaces';
 
 /**
  * Get All TicketTypes Use Case

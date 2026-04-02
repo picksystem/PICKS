@@ -13,7 +13,7 @@ import {
   Divider,
 } from '@mui/material';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
-import { constants } from '@picks/utils';
+import { constants } from '@serviceops/utils';
 import { useStyles } from './styles';
 import useSignUp, { STEPS } from './hooks/useSignUp';
 import StepProgress from './components/StepProgress';
@@ -24,11 +24,11 @@ import LeftPanel from './components/LeftPanel';
 
 import TextField from '../../../components/TextField/TextField';
 import Button from '../../../components/Button/Button';
-import { useFieldError } from '@picks/hooks';
+import { useFieldError } from '@serviceops/hooks';
 
 function getSignUpStyle(): 'old' | 'new' {
   try {
-    const saved = localStorage.getItem('picks_page_styles');
+    const saved = localStorage.getItem('serivceops_page_styles');
     if (saved) return (JSON.parse(saved)?.signUp as 'old' | 'new') || 'new';
   } catch {
     /* ignore */
@@ -245,7 +245,7 @@ const SignUp = () => {
               name='reasonForAccess'
               label='Reason for Access'
               type='text'
-              placeholder='Describe why you need access to PICKS'
+              placeholder='Describe why you need access to ServiceOps'
               fullWidth
               required
               multiline

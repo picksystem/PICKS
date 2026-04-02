@@ -3,37 +3,37 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: picks-postgres
+    container_name: SerivceOps-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: picks_db
+      POSTGRES_DB: SerivceOps_db
     ports:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - picks-network
+      - SerivceOps-network
 
   redis:
     image: redis:7-alpine
-    container_name: picks-redis
+    container_name: SerivceOps-redis
     ports:
       - '6379:6379'
     volumes:
       - redis_data:/data
     networks:
-      - picks-network
+      - SerivceOps-network
 
   # Uncomment to run the admin in Docker
   # admin:
   #   build:
   #     context: .
   #     dockerfile: Dockerfile
-  #   container_name: picks-admin
+  #   container_name: SerivceOps-admin
   #   environment:
   #     - APP=admin
-  #     - DATABASE_URL=postgresql://postgres:password@postgres:5432/picks_db?schema=public
+  #     - DATABASE_URL=postgresql://postgres:password@postgres:5432/SerivceOps_db?schema=public
   #     - REDIS_HOST=redis
   #     - REDIS_PORT=6379
   #   ports:
@@ -42,17 +42,17 @@ services:
   #     - postgres
   #     - redis
   #   networks:
-  #     - picks-network
+  #     - SerivceOps-network
 
   # Uncomment to run the user in Docker
   # user:
   #   build:
   #     context: .
   #     dockerfile: Dockerfile
-  #   container_name: picks-user
+  #   container_name: SerivceOps-user
   #   environment:
   #     - APP=user
-  #     - DATABASE_URL=postgresql://postgres:password@postgres:5432/picks_db?schema=public
+  #     - DATABASE_URL=postgresql://postgres:password@postgres:5432/SerivceOps_db?schema=public
   #     - REDIS_HOST=redis
   #     - REDIS_PORT=6379
   #   ports:
@@ -61,12 +61,12 @@ services:
   #     - postgres
   #     - redis
   #   networks:
-  #     - picks-network
+  #     - SerivceOps-network
 
 volumes:
   postgres_data:
   redis_data:
 
 networks:
-  picks-network:
+  serivceops-network:
     driver: bridge

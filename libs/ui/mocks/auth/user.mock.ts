@@ -1,10 +1,10 @@
-import { IAuthUser, UserRole, RoleRequestStatus } from '@picks/interfaces';
+import { IAuthUser, UserRole, RoleRequestStatus } from '@serviceops/interfaces';
 
 /**
  * Auth & User Mock Data
  * Covers all roles, account states, and edge cases
  *
- * Uses shared interfaces from @picks/interfaces
+ * Uses shared interfaces from @serviceops/interfaces
  * Same types used by Frontend and Backend
  */
 
@@ -108,7 +108,7 @@ export const mockConsultantUser: IAuthUser = {
   managerName: 'Project Lead',
   dateOfBirth: null,
   profilePicture: null,
-  reasonForAccess: 'Assigned to PICKS implementation project for Q1 2026',
+  reasonForAccess: 'Assigned to ServiceOps implementation project for Q1 2026',
   role: UserRole.CONSULTANT,
   requestedRole: null,
   status: RoleRequestStatus.APPROVED,
@@ -126,7 +126,7 @@ export const mockConsultantUser: IAuthUser = {
   language: 'en',
   slaWorkingCalendar: null,
   slaExceptionGroup: null,
-  application: 'PICKS',
+  application: 'ServiceOps',
   applicationLead: null,
   consultantProfileUpdated: false,
   mustResetPassword: false,
@@ -312,7 +312,7 @@ export const mockPendingSignupUser: IAuthUser = {
   managerName: 'Engineering Lead',
   dateOfBirth: '1998-12-01',
   profilePicture: null,
-  reasonForAccess: 'New hire needing access to PICKS platform',
+  reasonForAccess: 'New hire needing access to ServiceOps platform',
   role: UserRole.USER,
   requestedRole: UserRole.USER,
   status: RoleRequestStatus.PENDING,

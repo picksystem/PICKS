@@ -4,7 +4,7 @@ import {
   ICreateAdvisoryRequestInput,
   ICreateAdvisoryRequestUseCase,
   AdvisoryRequestStatus,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 /**
  * Create Advisory Request Use Case

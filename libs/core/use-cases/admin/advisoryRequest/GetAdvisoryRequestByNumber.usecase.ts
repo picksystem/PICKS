@@ -1,4 +1,4 @@
-import { IAdvisoryRequestGateway, IAdvisoryRequest } from '@picks/interfaces';
+import { IAdvisoryRequestGateway, IAdvisoryRequest } from '@serviceops/interfaces';
 import { NotFoundException } from '../../../middleware';
 
 /**

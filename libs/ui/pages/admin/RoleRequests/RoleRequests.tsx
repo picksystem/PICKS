@@ -1,8 +1,8 @@
-import { Box, Loader, DataTable } from '@picks/component';
+import { Box, Loader, DataTable } from '@serviceops/component';
 import { Typography, Tabs, TextField, InputAdornment } from '@mui/material';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import SearchIcon from '@mui/icons-material/Search';
-import { IAuthUser } from '@picks/interfaces';
+import { IAuthUser } from '@serviceops/interfaces';
 import { useStyles } from './styles';
 import { useRoleRequests } from './hooks/useRoleRequests';
 import TabPanel from './components/TabPanel';

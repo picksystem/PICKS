@@ -3,10 +3,10 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
 import { LazyMenuItems } from './routes';
-import { constants } from '@picks/utils';
-import { ErrorBoundary, MainContent } from '@picks/component';
-import { useAuth } from '@picks/hooks';
-import { AppRoleContext } from '@picks/theme';
+import { constants } from '@serviceops/utils';
+import { ErrorBoundary, MainContent } from '@serviceops/component';
+import { useAuth } from '@serviceops/hooks';
+import { AppRoleContext } from '@serviceops/theme';
 
 const {
   // Admin pages

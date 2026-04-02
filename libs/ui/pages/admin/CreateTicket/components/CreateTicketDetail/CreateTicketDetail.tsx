@@ -30,8 +30,8 @@ import HistoryIcon from '@mui/icons-material/History';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import BuildIcon from '@mui/icons-material/Build';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import { Box, TextField, Select, Checkbox, Button, UploadFile } from '@picks/component';
-import { useFieldError } from '@picks/hooks';
+import { Box, TextField, Select, Checkbox, Button, UploadFile } from '@serviceops/component';
+import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from './styles';
 import useCreateTicketDetail, { CreateTicketDetailProps } from './hooks/useCreateTicketDetail';
 

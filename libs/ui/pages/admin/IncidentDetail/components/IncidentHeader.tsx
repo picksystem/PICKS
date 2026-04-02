@@ -9,7 +9,7 @@ import {
   Chip,
 } from '../../../../components';
 import { Typography } from '@mui/material';
-import { IIncident } from '@picks/interfaces';
+import { IIncident } from '@serviceops/interfaces';
 import { copyToClipboard, formatStatus, getStatusColor } from '../utils/incidentDetail.utils';
 
 interface IncidentHeaderProps {

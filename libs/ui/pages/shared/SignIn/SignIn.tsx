@@ -1,6 +1,6 @@
 import { Box, Typography, Divider, Paper } from '@mui/material';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
-import { constants } from '@picks/utils';
+import { constants } from '@serviceops/utils';
 import { useStyles } from './styles';
 import useSignIn from './hooks/useSignIn';
 import SignInForm from './components/SignInForm';
@@ -8,7 +8,7 @@ import LeftPanel from './components/LeftPanel';
 
 function getSignInStyle(): 'old' | 'new' {
   try {
-    const saved = localStorage.getItem('picks_page_styles');
+    const saved = localStorage.getItem('serivceops_page_styles');
     if (saved) return (JSON.parse(saved)?.signIn as 'old' | 'new') || 'new';
   } catch {
     /* ignore */
@@ -18,7 +18,15 @@ function getSignInStyle(): 'old' | 'new' {
 
 const SignIn = () => {
   const { classes } = useStyles();
-  const { formik, isLoading, showPassword, setShowPassword, navigate, loginError, clearLoginError } = useSignIn();
+  const {
+    formik,
+    isLoading,
+    showPassword,
+    setShowPassword,
+    navigate,
+    loginError,
+    clearLoginError,
+  } = useSignIn();
   const pageStyle = getSignInStyle();
 
   const sharedFormProps = {
@@ -41,7 +49,7 @@ const SignIn = () => {
               Sign In
             </Typography>
             <Typography variant='body2' color='text.secondary'>
-              Welcome back to PICKS
+              Welcome back to ServiceOps
             </Typography>
           </Box>
 
@@ -93,7 +101,7 @@ const SignIn = () => {
               Welcome back
             </Typography>
             <Typography variant='body2' color='text.secondary' className={classes.formSubtitle}>
-              Sign in to your PICKS account
+              Sign in to your ServiceOps account
             </Typography>
 
             <form onSubmit={formik.handleSubmit} noValidate>

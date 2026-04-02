@@ -28,7 +28,7 @@ const LeftPanel = ({ classes, onNavigateSignIn }: LeftPanelProps) => (
         <AssignmentIndIcon className={classes.brandIcon28} />
       </Box>
       <Typography variant='h4' fontWeight={800} className={classes.brandTitle}>
-        PICKS
+        ServiceOps
       </Typography>
     </Box>
 

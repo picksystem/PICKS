@@ -16,8 +16,8 @@ import FlagIcon from '@mui/icons-material/Flag';
 import HistoryIcon from '@mui/icons-material/History';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import SearchIcon from '@mui/icons-material/Search';
-import { Box, TextField, Select, Checkbox, Button, UploadFile } from '@picks/component';
-import { useFieldError } from '@picks/hooks';
+import { Box, TextField, Select, Checkbox, Button, UploadFile } from '@serviceops/component';
+import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from './styles/CreateGenericRequest.styles';
 import useCreateGenericRequest, {
   CreateGenericRequestProps,

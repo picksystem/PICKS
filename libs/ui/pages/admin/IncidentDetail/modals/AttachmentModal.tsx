@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Box, Modal, Button, UploadFile } from '../../../../components';
 import { Typography } from '@mui/material';
-import { IIncident } from '@picks/interfaces';
+import { IIncident } from '@serviceops/interfaces';
 import { useUpdateIncidentMutation } from '../../../../../services';
-import { useNotification } from '@picks/hooks';
+import { useNotification } from '@serviceops/hooks';
 
 interface AttachmentModalProps {
   open: boolean;

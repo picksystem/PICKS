@@ -9,7 +9,7 @@ import {
   TrendingUpIcon,
   CancelIcon,
 } from '../../../../components';
-import { IIncident } from '@picks/interfaces';
+import { IIncident } from '@serviceops/interfaces';
 
 interface MoreToolsMenuProps {
   anchorEl: null | HTMLElement;

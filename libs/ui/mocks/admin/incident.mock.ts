@@ -7,13 +7,13 @@ import {
   IncidentChannel,
   IncidentStatus,
   calculatePriority,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 /**
  * Incident Mock Data
  * Covers all statuses, priorities, impact/urgency combos, channels
  *
- * Uses shared interfaces from @picks/interfaces
+ * Uses shared interfaces from @serviceops/interfaces
  * Same types used by Frontend and Backend
  */
 

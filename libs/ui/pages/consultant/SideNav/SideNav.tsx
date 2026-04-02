@@ -5,7 +5,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useStyles } from './styles';
 import { useMenuItems } from './MenuItems';
 import { Tooltip } from '../../../components';
-import { useCollapse } from '@picks/hooks';
+import { useCollapse } from '@serviceops/hooks';
 
 const SideNav = () => {
   const { cx, classes } = useStyles();

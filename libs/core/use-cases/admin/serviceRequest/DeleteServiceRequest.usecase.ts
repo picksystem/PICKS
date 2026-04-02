@@ -2,7 +2,7 @@ import {
   IServiceRequestGateway,
   IServiceRequest,
   IDeleteServiceRequestUseCase,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 import { NotFoundException } from '../../../middleware';
 
 /**

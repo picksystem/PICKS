@@ -111,14 +111,18 @@ const AdminControlsDialog = ({
           {isSaving ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <CircularProgress size={13} thickness={5} sx={{ color: 'rgba(255,255,255,0.7)' }} />
-              <Typography sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>
+              <Typography
+                sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}
+              >
                 Saving…
               </Typography>
             </Box>
           ) : (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, opacity: 0.55 }}>
               <CloudDoneIcon sx={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.8)' }} />
-              <Typography sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>
+              <Typography
+                sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}
+              >
                 Auto-saved
               </Typography>
             </Box>
@@ -358,10 +362,16 @@ const AdminControlsDialog = ({
           {isSaving ? (
             <>
               <CircularProgress size={14} thickness={5} color='primary' />
-              <Typography variant='caption' color='text.secondary'>Saving changes…</Typography>
+              <Typography variant='caption' color='text.secondary'>
+                Saving changes…
+              </Typography>
             </>
           ) : (
-            <Typography variant='caption' color='text.secondary' sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Typography
+              variant='caption'
+              color='text.secondary'
+              sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+            >
               <CloudDoneIcon sx={{ fontSize: '0.85rem', color: 'success.main' }} />
               All changes auto-saved
             </Typography>

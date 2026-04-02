@@ -3,7 +3,7 @@ import {
   IAdvisoryRequest,
   IUpdateAdvisoryRequestInput,
   IUpdateAdvisoryRequestUseCase,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 import { NotFoundException } from '../../../middleware';
 
 /**

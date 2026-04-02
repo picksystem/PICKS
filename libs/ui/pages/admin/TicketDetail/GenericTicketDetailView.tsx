@@ -8,9 +8,9 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import { Loader } from '../../../components';
-import { useGetTicketByNumberQuery } from '@picks/services';
-import { constants } from '@picks/utils';
-import { IServiceRequest, IAdvisoryRequest } from '@picks/interfaces';
+import { useGetTicketByNumberQuery } from '@serviceops/services';
+import { constants } from '@serviceops/utils';
+import { IServiceRequest, IAdvisoryRequest } from '@serviceops/interfaces';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 

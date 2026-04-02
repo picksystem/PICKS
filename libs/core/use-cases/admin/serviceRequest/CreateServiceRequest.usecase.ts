@@ -4,7 +4,7 @@ import {
   ICreateServiceRequestInput,
   ICreateServiceRequestUseCase,
   ServiceRequestStatus,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 /**
  * Create Service Request Use Case

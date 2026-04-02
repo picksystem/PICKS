@@ -21,7 +21,7 @@ import {
   Select,
   MenuItem,
 } from '@mui/material';
-import { IIncident, IUpdateIncidentInput } from '@picks/interfaces';
+import { IIncident, IUpdateIncidentInput } from '@serviceops/interfaces';
 import { TimeSummaryData } from '../types/incidentDetail.types';
 
 interface SidebarProps {

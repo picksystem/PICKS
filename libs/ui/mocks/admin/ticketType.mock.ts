@@ -1,8 +1,8 @@
-import { ITicketType, TicketTypeEnum } from '@picks/interfaces';
+import { ITicketType, TicketTypeEnum } from '@serviceops/interfaces';
 
 /**
  * Ticket Type Mock Data
- * Uses shared interfaces from @picks/interfaces
+ * Uses shared interfaces from @serviceops/interfaces
  * Same types used by Frontend and Backend
  */
 

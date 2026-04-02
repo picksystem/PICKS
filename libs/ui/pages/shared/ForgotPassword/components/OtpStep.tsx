@@ -1,6 +1,6 @@
 import { Box, Typography, Chip } from '@mui/material';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
-import { useFieldError } from '@picks/hooks';
+import { useFieldError } from '@serviceops/hooks';
 import TextField from '../../../../components/TextField/TextField';
 import Button from '../../../../components/Button/Button';
 

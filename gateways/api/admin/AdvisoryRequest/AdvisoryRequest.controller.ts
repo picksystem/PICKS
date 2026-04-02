@@ -1,14 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import { ValidationError } from 'yup';
-import { CreateAdvisoryRequestSchema, DraftAdvisoryRequestSchema, UpdateAdvisoryRequestSchema } from './AdvisoryRequest.dto';
-import { BadRequestException } from '@picks/middleware';
+import {
+  CreateAdvisoryRequestSchema,
+  DraftAdvisoryRequestSchema,
+  UpdateAdvisoryRequestSchema,
+} from './AdvisoryRequest.dto';
+import { BadRequestException } from '@serviceops/middleware';
 import {
   AdvisoryRequestStatus,
   IUpdateAdvisoryRequestInput,
   CommentSchema,
   TimeEntrySchema,
   ResolutionSchema,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 import {
   CreateAdvisoryRequestUseCase,
   GetAdvisoryRequestUseCase,
@@ -16,7 +20,7 @@ import {
   GetAllAdvisoryRequestsUseCase,
   UpdateAdvisoryRequestUseCase,
   DeleteAdvisoryRequestUseCase,
-} from '@picks/core/use-cases';
+} from '@serviceops/core/use-cases';
 
 /**
  * Controller for AdminAdvisoryRequest endpoints

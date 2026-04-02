@@ -4,10 +4,7 @@ import * as yup from 'yup';
  * Schema for creating a new UserNotFound entry
  */
 export const CreateNotFoundSchema = yup.object({
-  name: yup
-    .string()
-    .required('Name is required')
-    .max(100, 'Name must be 100 characters or less'),
+  name: yup.string().required('Name is required').max(100, 'Name must be 100 characters or less'),
   age: yup
     .number()
     .integer('Age must be an integer')

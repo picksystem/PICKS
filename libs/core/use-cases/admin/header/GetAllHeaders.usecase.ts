@@ -1,4 +1,4 @@
-import { IHeaderGateway, IHeader, IGetAllHeadersUseCase } from '@picks/interfaces';
+import { IHeaderGateway, IHeader, IGetAllHeadersUseCase } from '@serviceops/interfaces';
 
 /**
  * Get All Headers Use Case

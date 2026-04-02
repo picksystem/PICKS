@@ -36,7 +36,7 @@ export interface AppMetadataConfig<T = Record<string, unknown>> {
  *   }
  * );
  */
-export const createAppMetadata = <T extends Record<string, unknown>>(
+export const useAppMetadata = <T extends Record<string, unknown>>(
   baseMetadata: T,
   appConfig?: AppMetadataConfig<Partial<T>>,
 ): T => {

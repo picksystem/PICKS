@@ -1,5 +1,5 @@
 import React from 'react';
-import { IAuthUser } from '@picks/interfaces';
+import { IAuthUser } from '@serviceops/interfaces';
 
 export type UserRow = IAuthUser & { sno: number };
 

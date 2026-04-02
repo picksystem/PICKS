@@ -3,7 +3,7 @@ import {
   ITicketType,
   IUpdateTicketTypeInput,
   IUpdateTicketTypeUseCase,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 import { NotFoundException, ConflictException } from '../../../middleware';
 
 /**

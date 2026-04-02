@@ -1,5 +1,5 @@
-import { Box, Typography, Select } from '@picks/component';
-import { IncidentStatus } from '@picks/interfaces';
+import { Box, Typography, Select } from '@serviceops/component';
+import { IncidentStatus } from '@serviceops/interfaces';
 import { useStyles } from '../styles';
 
 const statusOptions = [

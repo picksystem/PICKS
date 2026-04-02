@@ -1,4 +1,4 @@
-import { IAuthUser } from '@picks/interfaces';
+import { IAuthUser } from '@serviceops/interfaces';
 import { RoleRequestRow } from '../types/roleRequests.types';
 
 export const getTableData = (list: IAuthUser[]): RoleRequestRow[] =>

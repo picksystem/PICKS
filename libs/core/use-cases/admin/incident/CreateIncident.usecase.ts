@@ -4,7 +4,7 @@ import {
   ICreateIncidentInput,
   ICreateIncidentUseCase,
   IncidentStatus,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 /**
  * Create Incident Use Case

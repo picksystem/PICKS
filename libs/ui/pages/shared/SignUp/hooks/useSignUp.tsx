@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useFormWithSessionStorage, useNotification } from '@picks/hooks';
-import { SignUpSchema } from '@picks/interfaces';
-import { constants } from '@picks/utils';
-import { useAuthActionMutation } from '@picks/services';
+import { useFormWithSessionStorage, useNotification } from '@serviceops/hooks';
+import { SignUpSchema } from '@serviceops/interfaces';
+import { constants } from '@serviceops/utils';
+import { useAuthActionMutation } from '@serviceops/services';
 
 function detectLocaleSettings() {
   try {

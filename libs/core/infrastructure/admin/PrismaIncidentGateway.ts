@@ -1,18 +1,22 @@
 import { PrismaClient } from '@prisma/client';
+import { Pool } from 'pg';
 import {
   IIncidentGateway,
   IIncident,
   ICreateIncidentInput,
   IUpdateIncidentInput,
   IncidentStatus,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 /**
  * Prisma implementation of Incident Gateway
  * Used for real database operations in production
  */
 export class PrismaIncidentGateway implements IIncidentGateway {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(
+    private readonly prisma: PrismaClient,
+    private readonly pool: Pool,
+  ) {}
 
   async create(data: ICreateIncidentInput & { number: string }): Promise<IIncident> {
     const result = await this.prisma.adminIncident.create({ data });
@@ -55,10 +59,13 @@ export class PrismaIncidentGateway implements IIncidentGateway {
   }
 
   async deleteExpiredDrafts(): Promise<number> {
-    const result = await this.prisma.adminIncident.deleteMany({
-      where: { status: 'draft', draftExpiresAt: { lt: new Date() } },
-    });
-    return result.count;
+    const result = await this.pool.query(
+      `DELETE FROM "AdminIncident"
+       WHERE status = 'draft'
+         AND "draftExpiresAt" IS NOT NULL
+         AND "draftExpiresAt" < NOW()`,
+    );
+    return result.rowCount ?? 0;
   }
 
   async getNextNumber(): Promise<string> {

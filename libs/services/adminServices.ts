@@ -39,7 +39,7 @@ import {
   IAdvisoryRequestResponse,
   ICreateAdvisoryRequestInput,
   IUpdateAdvisoryRequestInput,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 import { baseApi } from './baseServices';
 
 /** Unified create-ticket input — ticketType discriminates which entity is created */
@@ -326,12 +326,19 @@ export const adminApi = baseApi.injectEndpoints({
     }),
 
     // Unified Ticket endpoints (single API for all ticket types)
-    getTicketByNumber: builder.query<(IIncident | IServiceRequest | IAdvisoryRequest) & { ticketType: string }, string>({
+    getTicketByNumber: builder.query<
+      (IIncident | IServiceRequest | IAdvisoryRequest) & { ticketType: string },
+      string
+    >({
       query: (number) => `/api/admin/tickets/${number}`,
-      transformResponse: (response: { data: (IIncident | IServiceRequest | IAdvisoryRequest) & { ticketType: string } }) =>
-        response.data,
+      transformResponse: (response: {
+        data: (IIncident | IServiceRequest | IAdvisoryRequest) & { ticketType: string };
+      }) => response.data,
     }),
-    createTicket: builder.mutation<IIncident | IServiceRequest | IAdvisoryRequest, ICreateTicketInput>({
+    createTicket: builder.mutation<
+      IIncident | IServiceRequest | IAdvisoryRequest,
+      ICreateTicketInput
+    >({
       query: (body) => ({
         url: '/api/admin/tickets',
         method: 'POST',

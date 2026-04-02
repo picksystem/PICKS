@@ -2,11 +2,11 @@ import { useState, useMemo, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, Button } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { Box } from '@picks/component';
+import { Box } from '@serviceops/component';
 import { useGetIncidentsQuery, useCreateIncidentMutation } from '../../../../services';
 import { IncidentStatus, ICreateIncidentInput } from '../../../../entities/interfaces';
-import { constants } from '@picks/utils';
-import { useNotification, useDebounce } from '@picks/hooks';
+import { constants } from '@serviceops/utils';
+import { useNotification, useDebounce } from '@serviceops/hooks';
 import { useStyles } from './styles';
 import { HeroBanner, InputColumn, SolutionViewer, ActionButtons } from './components';
 

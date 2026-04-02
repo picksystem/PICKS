@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Column } from '@picks/component';
+import { Column } from '@serviceops/component';
 import { Chip, Typography, Stack, IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useAuthActionMutation } from '@picks/services';
-import { useNotification } from '@picks/hooks';
-import { IAuthUser, IConsultantProfile, IConsultantRole } from '@picks/interfaces';
+import { useAuthActionMutation } from '@serviceops/services';
+import { useNotification } from '@serviceops/hooks';
+import { IAuthUser, IConsultantProfile, IConsultantRole } from '@serviceops/interfaces';
 import { ProfileForm, ProfileRow, RoleForm, RoleRow } from '../types/consultantProfile.types';
 import {
   emptyProfileForm,

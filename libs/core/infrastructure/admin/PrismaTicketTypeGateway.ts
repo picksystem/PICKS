@@ -4,7 +4,7 @@ import {
   ITicketType,
   ICreateTicketTypeInput,
   IUpdateTicketTypeInput,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 /**
  * Prisma implementation of TicketType Gateway

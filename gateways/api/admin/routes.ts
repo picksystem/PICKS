@@ -7,7 +7,7 @@ import serviceRequestRoutes from './ServiceRequest/ServiceRequest.routes';
 import advisoryRequestRoutes from './AdvisoryRequest/AdvisoryRequest.routes';
 import ticketRoutes from './Ticket/Ticket.routes';
 import configurationRoutes from './Configuration/Configuration.routes';
-import { ADMIN_PATHS } from '@picks/constants';
+import { ADMIN_PATHS } from '@serviceops/constants';
 
 const router = Router();
 

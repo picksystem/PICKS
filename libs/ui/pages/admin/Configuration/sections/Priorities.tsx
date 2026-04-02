@@ -39,10 +39,10 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import TuneIcon from '@mui/icons-material/Tune';
-import { DataTable, Column, Loader } from '@picks/component';
+import { DataTable, Column, Loader } from '@serviceops/component';
 import { useStyles } from '../styles';
 import { useConfiguration } from '../hooks/useConfiguration';
-import { useGetTicketTypeQuery } from '@picks/services';
+import { useGetTicketTypeQuery } from '@serviceops/services';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

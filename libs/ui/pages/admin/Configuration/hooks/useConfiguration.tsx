@@ -3,7 +3,7 @@ import {
   useGetConfigurationQuery,
   useUpdateConfigurationSectionMutation,
   useUpdateConfigurationMutation,
-} from '@picks/services';
+} from '@serviceops/services';
 import {
   IConfigurationData,
   IConfigPriorities,
@@ -11,7 +11,7 @@ import {
   IConfigStatuses,
   IConfigSLAs,
   DEFAULT_CONFIGURATION_DATA,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 /**
  * Central hook consumed by every Configuration section.

@@ -5,4 +5,4 @@ export {
   AdvisoryRequestIdSchema,
   type CreateAdvisoryRequestDto,
   type UpdateAdvisoryRequestDto,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';

@@ -3,9 +3,9 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { IncidentController } from './Incident.controller';
-import { prisma } from '@picks/database';
+import { prisma, pool } from '@serviceops/database';
 import { PrismaClient } from '@prisma/client';
-import { PrismaIncidentGateway } from '@picks/core/infrastructure';
+import { PrismaIncidentGateway } from '@serviceops/core/infrastructure';
 import {
   CreateIncidentUseCase,
   GetIncidentUseCase,
@@ -14,10 +14,10 @@ import {
   UpdateIncidentUseCase,
   DeleteIncidentUseCase,
   CleanupExpiredDraftsUseCase,
-} from '@picks/core/use-cases';
+} from '@serviceops/core/use-cases';
 
 // Dependency injection - Gateway Pattern
-const incidentGateway = new PrismaIncidentGateway(prisma as PrismaClient);
+const incidentGateway = new PrismaIncidentGateway(prisma as PrismaClient, pool);
 
 // Use Cases with injected gateway
 const createIncidentUseCase = new CreateIncidentUseCase(incidentGateway);
@@ -67,15 +67,11 @@ const upload = multer({
 const router = Router();
 
 // File upload
-router.post(
-  '/attachments/upload',
-  upload.array('files', 10),
-  (req: Request, res: Response) => {
-    const files = req.files as Express.Multer.File[];
-    const filenames = files.map((f) => f.filename);
-    res.json({ data: filenames });
-  },
-);
+router.post('/attachments/upload', upload.array('files', 10), (req: Request, res: Response) => {
+  const files = req.files as Express.Multer.File[];
+  const filenames = files.map((f) => f.filename);
+  res.json({ data: filenames });
+});
 
 // Incident CRUD
 router.get('/', controller.getAll);

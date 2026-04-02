@@ -1,8 +1,4 @@
-import {
-  IIncidentGateway,
-  IIncident,
-  IDeleteIncidentUseCase,
-} from '@picks/interfaces';
+import { IIncidentGateway, IIncident, IDeleteIncidentUseCase } from '@serviceops/interfaces';
 import { NotFoundException } from '../../../middleware';
 
 /**

@@ -1,18 +1,23 @@
 import { Typography } from '@mui/material';
-import { Box } from '@picks/component';
+import { Box } from '@serviceops/component';
 
 interface LogoMarkProps {
   compact?: boolean;
 }
 
-// Colorful PICKS wordmark: each letter has its own vibrant color
-const LETTER_COLORS: Record<string, string> = {
-  P: '#fbbf24', // amber
-  I: '#fb7185', // rose
-  C: '#34d399', // emerald
-  K: '#60a5fa', // sky blue
-  S: '#c084fc', // violet
-};
+// Colorful ServiceOps wordmark: each letter has its own vibrant color
+const LETTERS = [
+  { char: 'S', color: '#fb7185' }, // rose
+  { char: 'e', color: '#fbbf24' }, // amber
+  { char: 'r', color: '#34d399' }, // emerald
+  { char: 'v', color: '#60a5fa' }, // sky blue
+  { char: 'i', color: '#c084fc' }, // violet
+  { char: 'c', color: '#f472b6' }, // pink
+  { char: 'e', color: '#38bdf8' }, // light blue
+  { char: 'O', color: '#fb923c' }, // orange
+  { char: 'p', color: '#a3e635' }, // lime
+  { char: 's', color: '#e879f9' }, // fuchsia
+];
 
 const LogoMark = ({ compact = false }: LogoMarkProps) => (
   <Box sx={{ display: 'flex', alignItems: 'center', gap: compact ? 0.875 : 1.25, flexShrink: 0 }}>
@@ -78,21 +83,21 @@ const LogoMark = ({ compact = false }: LogoMarkProps) => (
     {/* Wordmark — each letter its own color */}
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0 }}>
-        {['P', 'I', 'C', 'K', 'S'].map((letter) => (
+        {LETTERS.map(({ char, color }, idx) => (
           <Typography
-            key={letter}
+            key={idx}
             component='span'
             sx={{
-              color: LETTER_COLORS[letter],
+              color,
               fontWeight: 900,
-              fontSize: compact ? '1.1rem' : '1.4rem',
+              fontSize: compact ? '0.85rem' : '1.1rem',
               lineHeight: 1,
-              letterSpacing: '0.04em',
-              textShadow: `0 0 10px ${LETTER_COLORS[letter]}66, 0 1px 3px rgba(0,0,0,0.2)`,
+              letterSpacing: '0.02em',
+              textShadow: `0 0 10px ${color}66, 0 1px 3px rgba(0,0,0,0.2)`,
               fontFamily: '"Segoe UI Black","Segoe UI","Helvetica Neue",Arial,sans-serif',
             }}
           >
-            {letter}
+            {char}
           </Typography>
         ))}
       </Box>

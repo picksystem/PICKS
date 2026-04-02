@@ -23,13 +23,22 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     [theme.breakpoints.down('sm')]: {
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'flex-start',
+      justifyContent: 'space-between',
       height: '48px',
       borderBottom: '1px solid rgba(255,255,255,0.15)',
       paddingLeft: theme.spacing(2),
       paddingRight: theme.spacing(2),
       background: 'rgba(0,0,0,0.08)',
     },
+  },
+
+  mobileAvatar: {
+    width: '34px',
+    height: '34px',
+    fontSize: '0.78rem',
+    fontWeight: 700,
+    border: '2px solid rgba(255,255,255,0.5)',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
   },
 
   // ── Desktop logo area (inside toolbar, hidden on mobile) ────────
@@ -155,6 +164,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
       paddingRight: theme.spacing(1),
       minHeight: '56px',
       height: '56px',
+      gap: theme.spacing(0.5),
     },
   },
 
@@ -163,19 +173,22 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     display: 'flex',
     alignItems: 'center',
     gap: theme.spacing(1.5),
+    flexShrink: 0,
 
     [theme.breakpoints.down('lg')]: {
       gap: theme.spacing(1),
     },
 
     [theme.breakpoints.down('sm')]: {
-      gap: theme.spacing(0.75),
+      gap: theme.spacing(0.5),
     },
   },
 
+  // Uniform 32×32 touch target for all icon buttons on mobile
   avatar: {
     width: theme.spacing(4),
     height: theme.spacing(4),
+    fontSize: '0.85rem',
 
     [theme.breakpoints.down('md')]: {
       width: theme.spacing(3.5),
@@ -183,8 +196,9 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     },
 
     [theme.breakpoints.down('sm')]: {
-      width: theme.spacing(3),
-      height: theme.spacing(3),
+      width: '32px',
+      height: '32px',
+      fontSize: '0.75rem',
     },
   },
 
@@ -241,13 +255,14 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     alignItems: 'center',
     justifyContent: 'flex-end',
     gap: theme.spacing(1.5),
+    flexShrink: 0,
 
     [theme.breakpoints.down('lg')]: {
       gap: theme.spacing(1),
     },
 
     [theme.breakpoints.down('sm')]: {
-      gap: theme.spacing(0.75),
+      gap: theme.spacing(0.5),
     },
   },
 
@@ -270,6 +285,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
       display: 'flex',
       alignItems: 'center',
       flex: 1,
+      minWidth: 0,
       maxWidth: '220px',
       marginLeft: theme.spacing(1),
       marginRight: theme.spacing(1),
@@ -280,7 +296,8 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     },
 
     [theme.breakpoints.down('sm')]: {
-      maxWidth: '140px',
+      maxWidth: 'none',
+      flex: 1,
       marginLeft: theme.spacing(0.5),
       marginRight: theme.spacing(0.5),
     },
@@ -311,25 +328,26 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
       color: theme.palette.text.secondary,
     },
 
+    // Match the same 32px height on mobile as all other controls
     [theme.breakpoints.down('sm')]: {
       '& .MuiOutlinedInput-root': {
-        height: '28px',
-        fontSize: '0.75rem',
+        height: '32px',
+        fontSize: '0.78rem',
       },
       '& .MuiInputBase-input': {
-        padding: `${theme.spacing(0.25)} ${theme.spacing(0.5)}`,
-        fontSize: '0.75rem',
+        padding: `${theme.spacing(0.5)} ${theme.spacing(0.5)}`,
+        fontSize: '0.78rem',
       },
       '& .MuiInputBase-input::placeholder': {
-        fontSize: '0.7rem',
+        fontSize: '0.72rem',
       },
       '& .MuiInputAdornment-root .MuiSvgIcon-root': {
-        fontSize: '0.9rem',
+        fontSize: '1rem',
       },
     },
   },
 
-  // Admin chip
+  // Admin chip — 32px height on mobile to match all icon buttons
   adminChip: {
     backgroundColor: '#ff6b35 !important',
     color: '#ffffff !important',
@@ -341,14 +359,18 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     },
 
     [theme.breakpoints.down('sm')]: {
+      height: '32px',
+      width: '32px',
+      borderRadius: '8px !important',
+      paddingLeft: '0 !important',
+      paddingRight: '0 !important',
       '& .MuiChip-label': {
         display: 'none',
       },
       '& .MuiChip-icon': {
-        margin: 0,
+        margin: '0 auto',
+        fontSize: '20px !important',
       },
-      paddingLeft: theme.spacing(0.5),
-      paddingRight: theme.spacing(0.5),
     },
   },
 
@@ -444,6 +466,22 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     '&:hover': {
       color: 'rgba(255,255,255,0.85)',
       transform: 'scale(1.12)',
+    },
+
+    // Uniform 20px icon size on mobile for all toolbar icons
+    [theme.breakpoints.down('sm')]: {
+      width: '20px',
+      height: '20px',
+      fontSize: '20px',
+    },
+  },
+
+  // Applied to every IconButton on mobile for uniform 32×32 touch target
+  mobileIconBtn: {
+    [theme.breakpoints.down('sm')]: {
+      width: '32px',
+      height: '32px',
+      padding: '6px',
     },
   },
 

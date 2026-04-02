@@ -15,7 +15,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import SpeedIcon from '@mui/icons-material/Speed';
 import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
-import { Box } from '@picks/component';
+import { Box } from '@serviceops/component';
 import { IncidentStatus, IIncident } from '../../../../../entities/interfaces';
 import { useStyles } from '../styles';
 

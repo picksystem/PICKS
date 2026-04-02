@@ -6,7 +6,7 @@ import {
   IncidentChannel,
   ServiceRequestStatus,
   calculatePriority,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 // ── Ticket-type config ────────────────────────────────────────────────────────
 

@@ -1,6 +1,6 @@
 import { Box, Typography, Grid, Alert } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
-import { useFieldError } from '@picks/hooks';
+import { useFieldError } from '@serviceops/hooks';
 import TextField from '../../../../components/TextField/TextField';
 
 function getStrength(pw: string) {

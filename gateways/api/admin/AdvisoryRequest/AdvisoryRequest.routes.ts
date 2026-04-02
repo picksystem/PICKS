@@ -3,8 +3,8 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { AdvisoryRequestController } from './AdvisoryRequest.controller';
-import { prisma } from '@picks/database';
-import { PrismaAdvisoryRequestGateway } from '@picks/core/infrastructure';
+import { prisma, pool } from '@serviceops/database';
+import { PrismaAdvisoryRequestGateway } from '@serviceops/core/infrastructure';
 import {
   CreateAdvisoryRequestUseCase,
   GetAdvisoryRequestUseCase,
@@ -12,15 +12,17 @@ import {
   GetAllAdvisoryRequestsUseCase,
   UpdateAdvisoryRequestUseCase,
   DeleteAdvisoryRequestUseCase,
-} from '@picks/core/use-cases';
+} from '@serviceops/core/use-cases';
 
 // Dependency injection - Gateway Pattern
-const advisoryRequestGateway = new PrismaAdvisoryRequestGateway(prisma);
+const advisoryRequestGateway = new PrismaAdvisoryRequestGateway(prisma, pool);
 
 // Use Cases with injected gateway
 const createAdvisoryRequestUseCase = new CreateAdvisoryRequestUseCase(advisoryRequestGateway);
 const getAdvisoryRequestUseCase = new GetAdvisoryRequestUseCase(advisoryRequestGateway);
-const getAdvisoryRequestByNumberUseCase = new GetAdvisoryRequestByNumberUseCase(advisoryRequestGateway);
+const getAdvisoryRequestByNumberUseCase = new GetAdvisoryRequestByNumberUseCase(
+  advisoryRequestGateway,
+);
 const getAllAdvisoryRequestsUseCase = new GetAllAdvisoryRequestsUseCase(advisoryRequestGateway);
 const updateAdvisoryRequestUseCase = new UpdateAdvisoryRequestUseCase(advisoryRequestGateway);
 const deleteAdvisoryRequestUseCase = new DeleteAdvisoryRequestUseCase(advisoryRequestGateway);
@@ -61,15 +63,11 @@ const upload = multer({
 const router = Router();
 
 // File upload
-router.post(
-  '/attachments/upload',
-  upload.array('files', 10),
-  (req: Request, res: Response) => {
-    const files = req.files as Express.Multer.File[];
-    const filenames = files.map((f) => f.filename);
-    res.json({ data: filenames });
-  },
-);
+router.post('/attachments/upload', upload.array('files', 10), (req: Request, res: Response) => {
+  const files = req.files as Express.Multer.File[];
+  const filenames = files.map((f) => f.filename);
+  res.json({ data: filenames });
+});
 
 // Advisory Request CRUD
 router.get('/', controller.getAll);

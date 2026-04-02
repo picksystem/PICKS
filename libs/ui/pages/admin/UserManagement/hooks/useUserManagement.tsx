@@ -1,19 +1,19 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { Chip, Switch } from '@mui/material';
-import { useThemeContext } from '@picks/theme';
+import { useThemeContext } from '@serviceops/theme';
 import {
   useAuthActionMutation,
   useGetAdminControlsQuery,
   useUpdateAdminControlsMutation,
-} from '@picks/services';
+} from '@serviceops/services';
 import {
   useAuth,
   useNotification,
   useFieldError,
   useFormWithSessionStorage,
   useMediaQuery,
-} from '@picks/hooks';
-import { IAuthUser, UserRole } from '@picks/interfaces';
+} from '@serviceops/hooks';
+import { IAuthUser, UserRole } from '@serviceops/interfaces';
 import {
   UserRow,
   EditFormShape,
@@ -42,7 +42,7 @@ import {
   DRAFT_DAYS,
   UM_SESSION_KEY,
 } from '../utils/userManagement.utils';
-import { Column } from '@picks/component';
+import { Column } from '@serviceops/component';
 
 const useUserManagement = () => {
   const [authAction] = useAuthActionMutation();
@@ -169,7 +169,7 @@ const useUserManagement = () => {
         forgotPassword: (adminControlsData.forgotPasswordStyle as 'old' | 'new') || 'new',
       });
       // Apply theme from DB if not already set in localStorage
-      const storedTheme = localStorage.getItem('picks_selected_theme');
+      const storedTheme = localStorage.getItem('serivceops_selected_theme');
       if (!storedTheme || storedTheme === 'System') {
         setThemeName(adminControlsData.theme);
       }

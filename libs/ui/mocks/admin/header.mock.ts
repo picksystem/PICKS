@@ -1,4 +1,4 @@
-import { IHeader } from '@picks/interfaces';
+import { IHeader } from '@serviceops/interfaces';
 
 /**
  * Mock data for Header component

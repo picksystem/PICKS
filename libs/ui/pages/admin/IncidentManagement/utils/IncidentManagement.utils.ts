@@ -1,7 +1,7 @@
 import { IIncident, IncidentStatus } from '../../../../../entities/interfaces';
 import { IncidentRow } from '../types/IncidentManagement.types';
 
-export const FAVORITES_KEY = 'picks_favorite_incidents';
+export const FAVORITES_KEY = 'serivceops_favorite_incidents';
 
 export const buildTabLists = (allIncidents: IIncident[]): IIncident[][] => [
   allIncidents,

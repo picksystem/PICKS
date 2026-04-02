@@ -15,9 +15,9 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useStyles } from './styles';
-import { Box, Typography, Tooltip } from '@picks/component';
-import { constants } from '@picks/utils';
-import { useAuth } from '@picks/hooks';
+import { Box, Typography, Tooltip } from '@serviceops/component';
+import { constants } from '@serviceops/utils';
+import { useAuth } from '@serviceops/hooks';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import LogoutIcon from '@mui/icons-material/Logout';

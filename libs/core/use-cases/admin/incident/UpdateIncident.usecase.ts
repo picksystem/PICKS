@@ -3,7 +3,7 @@ import {
   IIncident,
   IUpdateIncidentInput,
   IUpdateIncidentUseCase,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 import { NotFoundException } from '../../../middleware';
 
 /**

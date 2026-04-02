@@ -44,7 +44,7 @@ export function useEnv(): EnvConfig {
       refreshTokenKey: process.env.REACT_APP_REFRESH_TOKEN_KEY || 'refresh_token',
 
       // Application Settings
-      appName: process.env.REACT_APP_NAME || 'PICKS Application',
+      appName: process.env.REACT_APP_NAME || 'ServiceOps',
       appVersion: process.env.REACT_APP_VERSION || '1.0.0',
       environment: (process.env.REACT_APP_ENVIRONMENT as EnvConfig['environment']) || 'development',
 
@@ -78,7 +78,7 @@ export function useEnv(): EnvConfig {
  * Useful for non-component contexts (utilities, services, etc.)
  *
  * @example
- * import { getEnvConfig } from '@picks/hooks';
+ * import { getEnvConfig } from '@serviceops/hooks';
  * const env = getEnvConfig();
  * console.log(env.apiUrl);
  */
@@ -93,7 +93,7 @@ export function getEnvConfig(): EnvConfig {
     refreshTokenKey: process.env.REACT_APP_REFRESH_TOKEN_KEY || 'refresh_token',
 
     // Application Settings
-    appName: process.env.REACT_APP_NAME || 'PICKS Application',
+    appName: process.env.REACT_APP_NAME || 'ServiceOps',
     appVersion: process.env.REACT_APP_VERSION || '1.0.0',
     environment: (process.env.REACT_APP_ENVIRONMENT as EnvConfig['environment']) || 'development',
 

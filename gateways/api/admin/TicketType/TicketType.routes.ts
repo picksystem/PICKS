@@ -1,15 +1,15 @@
 import { Router } from 'express';
 import { TicketTypeController } from './TicketType.controller';
-import { prisma } from '@picks/database';
+import { prisma } from '@serviceops/database';
 import { PrismaClient } from '@prisma/client';
-import { PrismaTicketTypeGateway } from '@picks/core/infrastructure';
+import { PrismaTicketTypeGateway } from '@serviceops/core/infrastructure';
 import {
   CreateTicketTypeUseCase,
   GetTicketTypeUseCase,
   GetAllTicketTypesUseCase,
   UpdateTicketTypeUseCase,
   DeleteTicketTypeUseCase,
-} from '@picks/core/use-cases';
+} from '@serviceops/core/use-cases';
 
 // Dependency injection - Gateway Pattern
 const ticketTypeGateway = new PrismaTicketTypeGateway(prisma as PrismaClient);

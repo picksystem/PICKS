@@ -10,7 +10,7 @@ import {
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: process.env.API_URL || 'http://localhost:3001',
   prepareHeaders: (headers) => {
-    const token = localStorage.getItem('picks_token');
+    const token = localStorage.getItem('serviceops_token');
     if (token) {
       headers.set('authorization', `Bearer ${token}`);
     }
@@ -29,8 +29,8 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
   const isAuthEndpoint = requestUrl?.includes('/api/auth');
 
   if (result.error?.status === 401 && !isAuthEndpoint) {
-    localStorage.removeItem('picks_token');
-    localStorage.removeItem('picks_user');
+    localStorage.removeItem('serviceops_token');
+    localStorage.removeItem('serviceops_user');
     window.location.href = '/signin';
   }
 

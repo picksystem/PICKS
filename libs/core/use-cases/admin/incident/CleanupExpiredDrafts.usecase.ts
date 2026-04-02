@@ -1,7 +1,4 @@
-import {
-  IIncidentGateway,
-  ICleanupExpiredDraftsUseCase,
-} from '@picks/interfaces';
+import { IIncidentGateway, ICleanupExpiredDraftsUseCase } from '@serviceops/interfaces';
 
 /**
  * Cleanup Expired Drafts Use Case

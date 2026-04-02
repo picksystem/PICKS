@@ -8,7 +8,7 @@ import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import { IIncident } from '../../../../../entities/interfaces';
 import { IncidentRow } from '../types/Favourites.types';
 
-export const FAVORITES_KEY = 'picks_favorite_incidents';
+export const FAVORITES_KEY = 'serivceops_favorite_incidents';
 
 export const TICKET_TABS = [
   { label: 'All', icon: <BookmarksIcon /> },

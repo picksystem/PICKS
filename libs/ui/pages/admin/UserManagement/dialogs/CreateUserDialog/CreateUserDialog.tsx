@@ -30,7 +30,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import { FormikProps } from 'formik';
 import { useStyles } from './styles';
-import { useNotification } from '@picks/hooks';
+import { useNotification } from '@serviceops/hooks';
 import {
   TIMEZONES,
   DATE_FORMATS,
@@ -579,7 +579,9 @@ const CreateUserDialog = ({
             error={createFormik.touched.role && Boolean(createFormik.errors.role)}
             sx={{ mb: 1.5 }}
           >
-            <InputLabel id='create-role-label' required>Role</InputLabel>
+            <InputLabel id='create-role-label' required>
+              Role
+            </InputLabel>
             <Select
               labelId='create-role-label'
               id='role'

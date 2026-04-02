@@ -1,5 +1,5 @@
 import { Typography } from '@mui/material';
-import { Box } from '@picks/component';
+import { Box } from '@serviceops/component';
 import { useStyles } from '../styles';
 
 interface DetailRowProps {

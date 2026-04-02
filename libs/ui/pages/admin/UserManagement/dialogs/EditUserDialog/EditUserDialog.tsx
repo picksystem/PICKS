@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { UserAvatar } from '@picks/component';
+import { UserAvatar } from '@serviceops/component';
 import {
   Box,
   Typography,
@@ -23,7 +23,7 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
-import { useFieldError } from '@picks/hooks';
+import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from './styles';
 import { UserRow, EditFormShape } from '../../types/userManagement.types';
 import {

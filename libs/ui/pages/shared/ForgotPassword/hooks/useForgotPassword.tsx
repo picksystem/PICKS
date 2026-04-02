@@ -1,9 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm, useFormWithSessionStorage, useNotification, useFieldError } from '@picks/hooks';
-import { ForgotPasswordSchema, VerifyOtpSchema, ResetPasswordSchema } from '@picks/interfaces';
-import { constants } from '@picks/utils';
-import { useAuthActionMutation } from '@picks/services';
+import {
+  useForm,
+  useFormWithSessionStorage,
+  useNotification,
+  useFieldError,
+} from '@serviceops/hooks';
+import { ForgotPasswordSchema, VerifyOtpSchema, ResetPasswordSchema } from '@serviceops/interfaces';
+import { constants } from '@serviceops/utils';
+import { useAuthActionMutation } from '@serviceops/services';
 
 export type Step = 'email' | 'otp' | 'reset';
 

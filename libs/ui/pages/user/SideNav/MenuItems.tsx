@@ -2,7 +2,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import ArticleIcon from '@mui/icons-material/Article';
-import { constants } from '@picks/utils';
+import { constants } from '@serviceops/utils';
 
 export const useMenuItems = () => {
   const { UserPath } = constants;

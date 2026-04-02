@@ -62,7 +62,10 @@ const Modal: React.FC<DSModalProps> = ({
       <Fade in={open}>
         <Box
           className={classes.paper}
-          sx={{ width: { xs: '100%', sm: `${widthMap[maxWidth]}px` }, maxWidth: { xs: '100%', sm: '90%' } }}
+          sx={{
+            width: { xs: '100%', sm: `${widthMap[maxWidth]}px` },
+            maxWidth: { xs: '100%', sm: '90%' },
+          }}
         >
           {title && (
             <Box className={classes.header}>

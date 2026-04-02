@@ -9,13 +9,13 @@ import {
   ForgotPasswordSchema,
   VerifyOtpSchema,
   ResetPasswordSchema,
-} from '@picks/interfaces';
-import { BadRequestException, HttpException, UnauthorizedException } from '@picks/middleware';
-import { prisma } from '@picks/database';
+} from '@serviceops/interfaces';
+import { BadRequestException, HttpException, UnauthorizedException } from '@serviceops/middleware';
+import { prisma } from '@serviceops/database';
 import { PrismaClient } from '@prisma/client';
-import { sendEmail, generateOtp } from '@picks/config';
+import { sendEmail, generateOtp } from '@serviceops/config';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'picks-jwt-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'serivceops-jwt-secret-key';
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '24h') as jwt.SignOptions['expiresIn'];
 const APP_URL = process.env.APP_URL || 'http://localhost:4200';
 
@@ -340,7 +340,7 @@ export class AuthController {
     // Notify admin (fire and forget)
     sendEmail(
       process.env.ADMIN_EMAIL || 'admin@serviceops.tech',
-      'PICKS — New Access Request',
+      'serivceops — New Access Request',
       `<h2>New Access Request</h2>
        <p><strong>${fullName}</strong> (${validatedData.email}) has signed up and is requesting <strong>${validatedData.role}</strong> access.</p>
        <p>Please review in the Access Requests section.</p>`,
@@ -389,7 +389,7 @@ export class AuthController {
 
     sendEmail(
       validatedData.email,
-      'PICKS — Password Reset OTP',
+      'SerivceOps — Password Reset OTP',
       `<h2>Password Reset</h2><p>Your OTP:</p><h1 style="color:#1976d2;letter-spacing:4px">${otp}</h1><p>Valid for 10 minutes.</p>`,
     ).catch(console.error);
 
@@ -727,8 +727,8 @@ export class AuthController {
         const invLink = `${APP_URL}/set-password?token=${invToken}&email=${encodeURIComponent(user.email)}`;
         sendEmail(
           user.email,
-          'PICKS — Your Access Has Been Approved',
-          `<h2>Welcome to PICKS!</h2>
+          'SerivceOps — Your Access Has Been Approved',
+          `<h2>Welcome to SerivceOps!</h2>
            <p>Your access request has been approved with the role: <strong>${approvedRole}</strong>.</p>
            <p>Please click the link below to set your password and activate your account:</p>
            <p><a href="${invLink}" style="background:#1976d2;color:#fff;padding:10px 20px;text-decoration:none;border-radius:4px">Set Password & Activate Account</a></p>
@@ -739,7 +739,7 @@ export class AuthController {
         if (approvedRole === 'consultant') {
           sendEmail(
             user.email,
-            'PICKS — Please Update Your Consultant Profile',
+            'SerivceOps — Please Update Your Consultant Profile',
             `<h2>Action Required: Consultant Profile</h2>
              <p>After activating your account, please update your consultant profile in the system.</p>`,
           ).catch(console.error);
@@ -784,7 +784,7 @@ export class AuthController {
 
         sendEmail(
           user.email,
-          'PICKS — Access Request Update',
+          'SerivceOps — Access Request Update',
           `<h2>Access Request Update</h2><p>We regret to inform you that your access request has been rejected.</p>${adminNotes ? `<p>Reason: ${adminNotes}</p>` : ''}`,
         ).catch(console.error);
 
@@ -882,8 +882,8 @@ export class AuthController {
         // Send welcome email with temp password
         sendEmail(
           email,
-          'PICKS — Your Account Has Been Created',
-          `<h2>Welcome to PICKS!</h2>
+          'SerivceOps — Your Account Has Been Created',
+          `<h2>Welcome to SerivceOps!</h2>
            <p>Your account has been created by an administrator.</p>
            <p><strong>Email:</strong> ${email}</p>
            <p><strong>Temporary Password:</strong> <code style="font-size:1.2em">${tempPw}</code></p>
@@ -1157,7 +1157,7 @@ export class AuthController {
 
           sendEmail(
             user.email,
-            'PICKS — Your Temporary Password',
+            'SerivceOps — Your Temporary Password',
             `<h2>Temporary Password</h2>
              <p>An administrator has generated a temporary password for your account.</p>
              <p><strong>Temporary Password:</strong> <code style="font-size:1.2em">${tempPw}</code></p>
@@ -1207,7 +1207,7 @@ export class AuthController {
 
         sendEmail(
           user.email,
-          'PICKS — Password Reset',
+          'SerivceOps — Password Reset',
           `<h2>Password Reset</h2><p>Your password has been reset by an administrator. Please sign in with your new credentials and change your password immediately.</p>`,
         ).catch(console.error);
 

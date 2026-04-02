@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { constants } from '@picks/utils';
+import { constants } from '@serviceops/utils';
 
 /**
  * Custom hook for type-safe navigation using app routes

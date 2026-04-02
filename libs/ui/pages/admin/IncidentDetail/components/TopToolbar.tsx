@@ -23,7 +23,7 @@ import {
   HelpOutlineIcon,
   LogoutIcon,
 } from '../../../../components';
-import { IIncident } from '@picks/interfaces';
+import { IIncident } from '@serviceops/interfaces';
 
 const buttonSx = {
   color: 'text.primary',

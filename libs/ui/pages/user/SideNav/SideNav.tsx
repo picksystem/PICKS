@@ -4,8 +4,8 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { Link, useLocation } from 'react-router-dom';
 import { useStyles } from './styles';
 import { useMenuItems } from './MenuItems';
-import { Tooltip } from '@picks/component';
-import { useCollapse } from '@picks/hooks';
+import { Tooltip } from '@serviceops/component';
+import { useCollapse } from '@serviceops/hooks';
 
 const SideNav = () => {
   const { cx, classes } = useStyles();

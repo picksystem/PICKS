@@ -8,11 +8,11 @@ import {
   useGetTimeEntriesQuery,
   useCreateTimeEntryMutation,
 } from '../../../../../services';
-import { useGetAllUsersMutation } from '@picks/services';
-import { useAuth } from '@picks/hooks';
+import { useGetAllUsersMutation } from '@serviceops/services';
+import { useAuth } from '@serviceops/hooks';
 import { useAppDispatch } from '../../../../hooks/useAppDispatch';
 import { showNotification } from '../../../../slices';
-import { IncidentStatus, IUpdateIncidentInput } from '@picks/interfaces';
+import { IncidentStatus, IUpdateIncidentInput } from '@serviceops/interfaces';
 import { ModalType, TimeSummaryData } from '../types/incidentDetail.types';
 import { useIncidentTimer } from './useIncidentTimer';
 import { useIncidentNavigation } from './useIncidentNavigation';

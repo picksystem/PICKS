@@ -1,14 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import { ValidationError } from 'yup';
-import { CreateServiceRequestSchema, DraftServiceRequestSchema, UpdateServiceRequestSchema } from './ServiceRequest.dto';
-import { BadRequestException } from '@picks/middleware';
+import {
+  CreateServiceRequestSchema,
+  DraftServiceRequestSchema,
+  UpdateServiceRequestSchema,
+} from './ServiceRequest.dto';
+import { BadRequestException } from '@serviceops/middleware';
 import {
   ServiceRequestStatus,
   IUpdateServiceRequestInput,
   CommentSchema,
   TimeEntrySchema,
   ResolutionSchema,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 import {
   CreateServiceRequestUseCase,
   GetServiceRequestUseCase,
@@ -16,7 +20,7 @@ import {
   GetAllServiceRequestsUseCase,
   UpdateServiceRequestUseCase,
   DeleteServiceRequestUseCase,
-} from '@picks/core/use-cases';
+} from '@serviceops/core/use-cases';
 
 /**
  * Controller for AdminServiceRequest endpoints

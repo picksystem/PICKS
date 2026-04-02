@@ -1,4 +1,4 @@
-import { UserAvatar } from '@picks/component';
+import { UserAvatar } from '@serviceops/component';
 import {
   Box,
   Typography,
@@ -28,7 +28,7 @@ import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
-import { useFieldError } from '@picks/hooks';
+import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from './styles';
 import { UserRow, ChangeProfileErrors } from '../../types/userManagement.types';
 import { ROLE_CHANGE_REASON_CODES } from '../../utils/userManagement.utils';
@@ -158,7 +158,9 @@ const ChangeProfileDialog = ({
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
               <FormControl fullWidth size='small' error={!!changeProfileErrors.role}>
-                <InputLabel shrink required>Change role to</InputLabel>
+                <InputLabel shrink required>
+                  Change role to
+                </InputLabel>
                 <Select
                   value={changeProfileRole}
                   label='Change role to'
@@ -198,7 +200,9 @@ const ChangeProfileDialog = ({
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
               <FormControl fullWidth size='small' error={!!changeProfileErrors.reasonCode}>
-                <InputLabel shrink required>Reason code</InputLabel>
+                <InputLabel shrink required>
+                  Reason code
+                </InputLabel>
                 <Select
                   value={changeProfileReasonCode}
                   label='Reason code'
@@ -240,7 +244,10 @@ const ChangeProfileDialog = ({
           {/* Rich-text note */}
           <Box sx={{ mt: 2.5 }}>
             <Typography variant='body2' fontWeight={600} color='text.primary' sx={{ mb: 0.75 }}>
-              Role change note <Box component='span' sx={{ color: 'error.main' }}>*</Box>
+              Role change note{' '}
+              <Box component='span' sx={{ color: 'error.main' }}>
+                *
+              </Box>
             </Typography>
 
             {/* Formatting toolbar */}

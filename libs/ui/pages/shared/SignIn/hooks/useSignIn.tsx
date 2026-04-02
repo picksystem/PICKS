@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, useFormWithSessionStorage, useNotification, useFieldError } from '@picks/hooks';
-import { SignInSchema, UserRole } from '@picks/interfaces';
-import { constants } from '@picks/utils';
+import { useAuth, useFormWithSessionStorage, useNotification, useFieldError } from '@serviceops/hooks';
+import { SignInSchema, UserRole } from '@serviceops/interfaces';
+import { constants } from '@serviceops/utils';
 
 const useSignIn = () => {
   const reqError = useFieldError();

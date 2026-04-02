@@ -1,6 +1,6 @@
 import SearchIcon from '@mui/icons-material/Search';
-import { Box, Typography, TextField, Select } from '@picks/component';
-import { useFieldError } from '@picks/hooks';
+import { Box, Typography, TextField, Select } from '@serviceops/component';
+import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from '../styles';
 
 interface PrioritySectionProps {

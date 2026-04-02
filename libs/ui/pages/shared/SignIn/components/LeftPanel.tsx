@@ -28,7 +28,7 @@ const LeftPanel = ({ classes, onNavigateSignUp }: LeftPanelProps) => (
         <AssignmentIndIcon className={classes.brandIcon28} />
       </Box>
       <Typography variant='h4' fontWeight={800} className={classes.brandTitle}>
-        PICKS
+        ServiceOps
       </Typography>
     </Box>
 
@@ -51,7 +51,7 @@ const LeftPanel = ({ classes, onNavigateSignUp }: LeftPanelProps) => (
     ))}
 
     <Box className={classes.signupLink} onClick={onNavigateSignUp}>
-      New to PICKS? <strong>Create an account</strong>
+      New to ServiceOps? <strong>Create an account</strong>
     </Box>
   </Box>
 );

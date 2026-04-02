@@ -10,7 +10,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { Box } from '@picks/component';
+import { Box } from '@serviceops/component';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import TimerIcon from '@mui/icons-material/Timer';
@@ -23,10 +23,14 @@ import SearchBar from './components/SearchBar';
 import NotificationsMenu from './components/NotificationsMenu';
 import UserMenu from './components/UserMenu';
 
+// Shared sx for every icon button — uniform 32×32 touch target on mobile
 const iconBtnSx = {
   color: 'white',
   '&:hover': { background: 'rgba(255,255,255,0.15)', transform: 'scale(1.08)' },
   transition: 'background 0.15s, transform 0.15s',
+  width: { xs: '32px', sm: '32px', md: 'auto' },
+  height: { xs: '32px', sm: '32px', md: 'auto' },
+  padding: { xs: '6px', sm: '6px', md: '8px' },
 };
 
 const Header = () => {
@@ -64,6 +68,20 @@ const Header = () => {
       {/* Mobile logo bar — visible only on xs/sm */}
       <Box className={classes.mobileLogoBar}>
         <LogoMark compact />
+        <Avatar
+          className={classes.mobileAvatar}
+          src={user?.profilePicture || undefined}
+          onClick={handleSettingsOpen}
+          sx={{ cursor: 'pointer' }}
+        >
+          {!user?.profilePicture &&
+            userName
+              .split(' ')
+              .map((n) => n[0])
+              .join('')
+              .toUpperCase()
+              .slice(0, 2)}
+        </Avatar>
       </Box>
 
       {/* Main toolbar */}
@@ -77,7 +95,11 @@ const Header = () => {
 
         {/* Left: Avatar + Welcome + ADMIN chip + Notifications bell */}
         <Box className={classes.headerLeft}>
-          <Avatar className={classes.avatar} src={user?.profilePicture || undefined}>
+          <Avatar
+            className={classes.avatar}
+            src={user?.profilePicture || undefined}
+            sx={{ display: { xs: 'none', sm: 'none', md: 'flex' } }}
+          >
             {!user?.profilePicture &&
               userName
                 .split(' ')
@@ -95,7 +117,7 @@ const Header = () => {
 
           <Chip
             className={classes.adminChip}
-            icon={<AdminPanelSettingsIcon sx={{ fontSize: 15 }} />}
+            icon={<AdminPanelSettingsIcon sx={{ fontSize: { xs: 20, md: 15 } }} />}
             label='ADMIN'
             size='small'
           />
@@ -103,7 +125,7 @@ const Header = () => {
           <Tooltip title='Notifications' placement='bottom'>
             <IconButton onClick={handleNotifOpen} size='small' sx={iconBtnSx}>
               <Badge badgeContent={notifications.length} color='error'>
-                <NotificationsIcon sx={{ fontSize: '1.25rem' }} />
+                <NotificationsIcon sx={{ fontSize: { xs: '20px', md: '1.25rem' } }} />
               </Badge>
             </IconButton>
           </Tooltip>
@@ -158,10 +180,7 @@ const Header = () => {
           </Tooltip>
 
           <Tooltip title='Timer' placement='bottom'>
-            <IconButton
-              size='small'
-              sx={{ ...iconBtnSx, display: { xs: 'none', sm: 'inline-flex' } }}
-            >
+            <IconButton size='small' sx={iconBtnSx}>
               <TimerIcon className={classes.icon} />
             </IconButton>
           </Tooltip>

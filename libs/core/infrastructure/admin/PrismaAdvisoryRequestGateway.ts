@@ -1,17 +1,21 @@
+import { Pool } from 'pg';
 import {
   IAdvisoryRequestGateway,
   IAdvisoryRequest,
   ICreateAdvisoryRequestInput,
   IUpdateAdvisoryRequestInput,
   AdvisoryRequestStatus,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 /**
  * Prisma implementation of Advisory Request Gateway
  * Used for real database operations in production
  */
 export class PrismaAdvisoryRequestGateway implements IAdvisoryRequestGateway {
-  constructor(private readonly prisma: any) {}
+  constructor(
+    private readonly prisma: any,
+    private readonly pool: Pool,
+  ) {}
 
   async create(data: ICreateAdvisoryRequestInput & { number: string }): Promise<IAdvisoryRequest> {
     const result = await this.prisma.adminAdvisoryRequest.create({ data });
@@ -54,10 +58,13 @@ export class PrismaAdvisoryRequestGateway implements IAdvisoryRequestGateway {
   }
 
   async deleteExpiredDrafts(): Promise<number> {
-    const result = await this.prisma.adminAdvisoryRequest.deleteMany({
-      where: { status: 'draft', draftExpiresAt: { lt: new Date() } },
-    });
-    return result.count;
+    const result = await this.pool.query(
+      `DELETE FROM "AdminAdvisoryRequest"
+       WHERE status = 'draft'
+         AND "draftExpiresAt" IS NOT NULL
+         AND "draftExpiresAt" < NOW()`,
+    );
+    return result.rowCount ?? 0;
   }
 
   async getNextNumber(): Promise<string> {

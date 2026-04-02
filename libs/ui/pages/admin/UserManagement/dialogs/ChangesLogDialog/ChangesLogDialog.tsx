@@ -22,7 +22,7 @@ import {
   Tooltip,
   Grid,
 } from '@mui/material';
-import { Loader, UserAvatar } from '@picks/component';
+import { Loader, UserAvatar } from '@serviceops/component';
 import HistoryIcon from '@mui/icons-material/History';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
@@ -414,7 +414,11 @@ const ChangesLogDialog = ({
             </TableHead>
             <TableBody>
               {paginatedLog.map((log, idx) => (
-                <TableRow key={(log.id as string | number | null | undefined) ?? idx} hover className={classes.tableRow}>
+                <TableRow
+                  key={(log.id as string | number | null | undefined) ?? idx}
+                  hover
+                  className={classes.tableRow}
+                >
                   <TableCell className={classes.cellDate}>{fmtDateTime(log.createdAt)}</TableCell>
                   <TableCell>
                     {log.changeType ? (

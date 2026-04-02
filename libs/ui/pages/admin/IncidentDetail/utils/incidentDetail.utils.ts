@@ -1,4 +1,4 @@
-import { IncidentImpact, IncidentUrgency, calculatePriority, ITimeEntry } from '@picks/interfaces';
+import { IncidentImpact, IncidentUrgency, calculatePriority, ITimeEntry } from '@serviceops/interfaces';
 import { TimeSummaryData } from '../types/incidentDetail.types';
 
 export const getPriorityColor = (priority: string) => {

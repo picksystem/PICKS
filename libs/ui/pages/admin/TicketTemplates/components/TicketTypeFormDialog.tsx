@@ -21,8 +21,8 @@ import {
   Divider,
 } from '@mui/material';
 import { useFormik } from 'formik';
-import { CreateTicketTypeSchema, ITicketType } from '@picks/interfaces';
-import { useFieldError } from '@picks/hooks';
+import { CreateTicketTypeSchema, ITicketType } from '@serviceops/interfaces';
+import { useFieldError } from '@serviceops/hooks';
 import {
   TICKET_ICON_OPTIONS,
   TICKET_TAG_OPTIONS,

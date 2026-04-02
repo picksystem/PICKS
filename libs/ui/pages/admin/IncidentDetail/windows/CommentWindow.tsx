@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Box, Modal, Select, Checkbox, Button, UploadFile } from '../../../../components';
 import { TextField } from '@mui/material';
-import { IIncident, IncidentStatus } from '@picks/interfaces';
+import { IIncident, IncidentStatus } from '@serviceops/interfaces';
 import { useCreateCommentMutation } from '../../../../../services';
-import { useAuth, useNotification } from '@picks/hooks';
+import { useAuth, useNotification } from '@serviceops/hooks';
 
 interface CommentWindowProps {
   open: boolean;

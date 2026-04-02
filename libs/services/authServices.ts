@@ -1,4 +1,4 @@
-import { IAuthActionRequest } from '@picks/interfaces';
+import { IAuthActionRequest } from '@serviceops/interfaces';
 import { baseApi } from './baseServices';
 
 export const authApi = baseApi.injectEndpoints({

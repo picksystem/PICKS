@@ -4,7 +4,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import SaveIcon from '@mui/icons-material/Save';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
-import { Box } from '@picks/component';
+import { Box } from '@serviceops/component';
 import { useStyles } from '../styles';
 
 interface ActionButtonsProps {

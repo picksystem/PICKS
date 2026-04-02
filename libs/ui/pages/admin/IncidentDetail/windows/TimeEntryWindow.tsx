@@ -5,9 +5,9 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
-import { IIncident, IncidentStatus } from '@picks/interfaces';
+import { IIncident, IncidentStatus } from '@serviceops/interfaces';
 import { useCreateTimeEntryMutation } from '../../../../../services';
-import { useAuth, useNotification } from '@picks/hooks';
+import { useAuth, useNotification } from '@serviceops/hooks';
 
 interface TimeEntryWindowProps {
   open: boolean;

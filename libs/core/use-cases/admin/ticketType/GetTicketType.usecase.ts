@@ -1,8 +1,4 @@
-import {
-  ITicketTypeGateway,
-  ITicketType,
-  IGetTicketTypeUseCase,
-} from '@picks/interfaces';
+import { ITicketTypeGateway, ITicketType, IGetTicketTypeUseCase } from '@serviceops/interfaces';
 import { NotFoundException } from '../../../middleware';
 
 /**

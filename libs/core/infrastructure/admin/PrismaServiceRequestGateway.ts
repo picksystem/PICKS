@@ -1,17 +1,21 @@
+import { Pool } from 'pg';
 import {
   IServiceRequestGateway,
   IServiceRequest,
   ICreateServiceRequestInput,
   IUpdateServiceRequestInput,
   ServiceRequestStatus,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 /**
  * Prisma implementation of Service Request Gateway
  * Used for real database operations in production
  */
 export class PrismaServiceRequestGateway implements IServiceRequestGateway {
-  constructor(private readonly prisma: any) {}
+  constructor(
+    private readonly prisma: any,
+    private readonly pool: Pool,
+  ) {}
 
   async create(data: ICreateServiceRequestInput & { number: string }): Promise<IServiceRequest> {
     const result = await this.prisma.adminServiceRequest.create({ data });
@@ -54,10 +58,13 @@ export class PrismaServiceRequestGateway implements IServiceRequestGateway {
   }
 
   async deleteExpiredDrafts(): Promise<number> {
-    const result = await this.prisma.adminServiceRequest.deleteMany({
-      where: { status: 'draft', draftExpiresAt: { lt: new Date() } },
-    });
-    return result.count;
+    const result = await this.pool.query(
+      `DELETE FROM "AdminServiceRequest"
+       WHERE status = 'draft'
+         AND "draftExpiresAt" IS NOT NULL
+         AND "draftExpiresAt" < NOW()`,
+    );
+    return result.rowCount ?? 0;
   }
 
   async getNextNumber(): Promise<string> {

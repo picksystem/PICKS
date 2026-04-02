@@ -14,7 +14,7 @@ import LocalActivityIcon from '@mui/icons-material/LocalActivity';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PeopleIcon from '@mui/icons-material/People';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
-import { constants } from '@picks/utils';
+import { constants } from '@serviceops/utils';
 
 export const useMenuItems = () => {
   const { AdminPath } = constants;

@@ -3,7 +3,7 @@ import {
   IConfigurationGateway,
   IUpdateConfigurationInput,
   IUpdateConfigurationUseCase,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 export class UpdateConfigurationUseCase implements IUpdateConfigurationUseCase {
   constructor(private readonly configurationGateway: IConfigurationGateway) {}

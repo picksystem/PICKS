@@ -1,9 +1,9 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Button, Alert } from '@picks/component';
+import { Box, Button, Alert } from '@serviceops/component';
 import { CreateTicketDetail } from './components';
 import { ROUTE_SLUG_MAP } from './utils/CreateTicket.utils';
 import { TICKET_CONFIG } from './components/CreateTicketDetail/util';
-import { constants } from '@picks/utils';
+import { constants } from '@serviceops/utils';
 import { useStyles } from './styles';
 
 const CreateTicketForm = () => {

@@ -3,10 +3,10 @@ import * as ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import CssBaseline from '@mui/material/CssBaseline';
-import { CollapseProvider } from '@picks/hooks';
-import { store } from 'libs/ui/state';
-import { Loader, NotificationModal } from '@picks/component';
-import { DynamicThemeProvider } from '@picks/theme';
+import { CollapseProvider } from '@serviceops/hooks';
+import { Loader, NotificationModal } from '@serviceops/component';
+import { DynamicThemeProvider } from '@serviceops/theme';
+import { store } from '@serviceops/state';
 import App from './app';
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);

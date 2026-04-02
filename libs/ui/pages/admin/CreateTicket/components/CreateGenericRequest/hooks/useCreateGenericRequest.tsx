@@ -18,9 +18,9 @@ import {
   CreateAdvisoryRequestSchema,
   DraftAdvisoryRequestSchema,
   calculatePriority,
-} from '@picks/interfaces';
-import { useAuth, useFormWithSessionStorage, useNotification, useTicketConfig } from '@picks/hooks';
-import { constants } from '@picks/utils';
+} from '@serviceops/interfaces';
+import { useAuth, useFormWithSessionStorage, useNotification, useTicketConfig } from '@serviceops/hooks';
+import { constants } from '@serviceops/utils';
 import {
   generateTicketNumber,
   srInitialValues,

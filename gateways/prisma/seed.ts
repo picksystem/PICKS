@@ -456,7 +456,7 @@ async function clearAndSeed() {
       businessUnit: 'Professional Services',
       employeeId: 'CON001',
       managerName: 'Project Lead',
-      reasonForAccess: 'Assigned to PICKS implementation project',
+      reasonForAccess: 'Assigned to SerivceOps implementation project',
       name: 'Consultant User',
       role: 'consultant',
       status: 'active',

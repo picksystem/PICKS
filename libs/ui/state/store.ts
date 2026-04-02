@@ -3,7 +3,7 @@ import { setupListeners } from '@reduxjs/toolkit/query/react';
 
 import { counterReducer, userReducer, notificationReducer } from '../slices';
 import authReducer from '../store/authStore';
-import { baseApi } from '@picks/services';
+import { baseApi } from '@serviceops/services';
 
 // Configure the store with all reducers and RTK Query middleware
 export const store = configureStore({

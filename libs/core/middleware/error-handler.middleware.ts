@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { logger } from '@picks/config';
+import { logger } from '@serviceops/config';
 
 export interface ApiError extends Error {
   statusCode?: number;

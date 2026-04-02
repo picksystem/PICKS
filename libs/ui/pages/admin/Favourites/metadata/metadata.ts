@@ -1,7 +1,7 @@
-import { createAppMetadata } from '../../../../../theme';
+import { useAppMetadata } from '../../../../../theme';
 
 export const useMetadata = () =>
-  createAppMetadata(
+  useAppMetadata(
     {
       title: 'Welcome to Favourites Page',
       description: 'This is the Favourites Page. You can manage your account here.',

@@ -2,7 +2,7 @@ import { Typography, Chip, alpha, darken } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { useStyles } from './styles';
-import { Box, Button, Loader } from '@picks/component';
+import { Box, Button, Loader } from '@serviceops/component';
 import useCreateTicket from './hooks/useCreateTicket';
 import { useGetTicketTypeQuery } from '../../../../services';
 import {

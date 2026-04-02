@@ -15,9 +15,9 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useStyles } from './styles';
-import { Box, TextField, Typography, Tooltip } from '@picks/component';
-import { constants } from '@picks/utils';
-import { useAuth } from '@picks/hooks';
+import { Box, TextField, Typography, Tooltip } from '@serviceops/component';
+import { constants } from '@serviceops/utils';
+import { useAuth } from '@serviceops/hooks';
 import SearchIcon from '@mui/icons-material/Search';
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import GradeIcon from '@mui/icons-material/Grade';

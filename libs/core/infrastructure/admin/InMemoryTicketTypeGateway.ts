@@ -3,7 +3,7 @@ import {
   ITicketType,
   ICreateTicketTypeInput,
   IUpdateTicketTypeInput,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 
 /**
  * In-Memory implementation of TicketType Gateway

@@ -3,7 +3,7 @@ import {
   ITicketType,
   ICreateTicketTypeInput,
   ICreateTicketTypeUseCase,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 import { ConflictException } from '../../../middleware';
 
 /**

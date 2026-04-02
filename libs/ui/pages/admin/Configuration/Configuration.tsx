@@ -13,7 +13,7 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import CommentIcon from '@mui/icons-material/Comment';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import { useCollapse, useDevice } from '@picks/hooks';
+import { useCollapse, useDevice } from '@serviceops/hooks';
 
 import General from './sections/General';
 import TicketTypes from './sections/TicketTypes';

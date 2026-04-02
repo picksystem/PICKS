@@ -1,4 +1,4 @@
-# PICKS - Full-Stack Monorepo
+# SerivceOps - Full-Stack Monorepo
 
 A modern, scalable ITIL Service Management Platform (ITSM) built as a full-stack monorepo with React frontend, Express backend, shared interfaces, and multi-tenant support.
 
@@ -49,7 +49,7 @@ A modern, scalable ITIL Service Management Platform (ITSM) built as a full-stack
 
 ## Overview
 
-PICKS is an ITIL Service Management Platform built with clean architecture principles:
+SerivceOps is an ITIL Service Management Platform built with clean architecture principles:
 
 - **ITSM Features** — Incident management, change management, problem management, dashboards, CAB requests, knowledge base, reports, time management
 - **Shared Interfaces** — Same TypeScript types used by both Frontend and Backend
@@ -86,7 +86,7 @@ PICKS is an ITIL Service Management Platform built with clean architecture princ
 │         │                                                        │
 │         ▼                                                        │
 │  ┌─────────────────────────────────────────────────────────────┐│
-│  │              @picks/interfaces (Shared Types)                ││
+│  │              @serviceops/interfaces (Shared Types)                ││
 │  │   IHeader, IJob, ICreateHeaderInput, IHeaderResponse, etc.  ││
 │  └─────────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────────┘
@@ -114,7 +114,7 @@ PICKS is an ITIL Service Management Platform built with clean architecture princ
 ## Project Structure
 
 ```
-picks/
+SerivceOps/
 ├── gateways/                          # BACKEND (Express API)
 │   ├── api/
 │   │   ├── admin/                     # Admin API routes
@@ -310,7 +310,7 @@ picks/
 ```bash
 # Clone repository
 git clone <repository-url>
-cd picks
+cd SerivceOps
 
 # Install dependencies
 npm install
@@ -369,8 +369,8 @@ docker-compose logs -f
 
 | Service | Container | Port | Description |
 |---------|-----------|------|-------------|
-| PostgreSQL | picks-postgres | 5432 | Primary database |
-| Redis | picks-redis | 6379 | Caching layer |
+| PostgreSQL | serivceops-postgres | 5432 | Primary database |
+| Redis | serivceops-redis | 6379 | Caching layer |
 
 ### Environment Variables
 
@@ -383,7 +383,7 @@ PORT=3001
 HOST=localhost
 
 # Database
-DATABASE_URL=postgresql://postgres:password@localhost:5432/picks_db?schema=public
+DATABASE_URL=postgresql://postgres:password@localhost:5432/serivceops_db?schema=public
 
 # JWT Authentication
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production-min-32-chars
@@ -410,7 +410,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password-here
-SMTP_FROM=PICKS App <noreply@serviceops.tech>
+SMTP_FROM=serivceops App <noreply@serviceops.tech>
 ```
 
 #### Gmail SMTP Setup
@@ -428,7 +428,7 @@ For Gmail, use an **App Password** (not your regular account password):
 
 ## Role-Based Access Control
 
-PICKS implements a comprehensive role-based access control system with three primary roles.
+serivceops implements a comprehensive role-based access control system with three primary roles.
 
 ### User Roles
 
@@ -584,10 +584,10 @@ export interface IJob {
 
 ```typescript
 // Backend
-import { IJob, JobStatus } from '@picks/interfaces';
+import { IJob, JobStatus } from '@serviceops/interfaces';
 
 // Frontend
-import { IJob, JOB_STATUS_CONFIG, JOB_PRIORITY_COLORS } from '@picks/interfaces';
+import { IJob, JOB_STATUS_CONFIG, JOB_PRIORITY_COLORS } from '@serviceops/interfaces';
 ```
 
 ---
@@ -801,7 +801,7 @@ npm run prisma:deploy
 
 ```typescript
 import { CreateHeaderUseCase } from '../CreateHeader.usecase';
-import { InMemoryHeaderGateway } from '@picks/core/infrastructure';
+import { InMemoryHeaderGateway } from '@serviceops/core/infrastructure';
 
 describe('CreateHeaderUseCase', () => {
   let useCase: CreateHeaderUseCase;
@@ -1256,33 +1256,33 @@ Priority is auto-calculated from **Impact × Urgency**:
 
 ```typescript
 // Shared interfaces (FE + BE)
-import { IHeader, IJob } from '@picks/interfaces';
+import { IHeader, IJob } from '@serviceops/interfaces';
 
 // Backend core
-import { CreateHeaderUseCase } from '@picks/core/use-cases';
-import { PrismaHeaderGateway } from '@picks/core/infrastructure';
+import { CreateHeaderUseCase } from '@serviceops/core/use-cases';
+import { PrismaHeaderGateway } from '@serviceops/core/infrastructure';
 
 // Frontend components
-import { JobStatusCard, DataTable, Button } from '@picks/component';
+import { JobStatusCard, DataTable, Button } from '@serviceops/component';
 
 // Mock data
-import { mockJobInProgress } from '@picks/mocks';
+import { mockJobInProgress } from '@serviceops/mocks';
 
 // Theme & Styles
-import { createAppStyles } from '@picks/theme';
+import { createAppStyles } from '@serviceops/theme';
 
 // Hooks
-import { useDebounce } from '@picks/hooks';
+import { useDebounce } from '@serviceops/hooks';
 
 // Services
-import { adminService } from '@picks/services';
+import { adminService } from '@serviceops/services';
 
 // Constants
-import { API_ROUTES } from '@picks/constants';
+import { API_ROUTES } from '@serviceops/constants';
 
 // Store & State
-import { store } from '@picks/store';
-import { useAppSelector } from '@picks/state';
+import { store } from '@serviceops/store';
+import { useAppSelector } from '@serviceops/state';
 ```
 
 ---
@@ -1347,7 +1347,7 @@ import { useAppSelector } from '@picks/state';
 
 2. **Verify `DATABASE_URL`** format in `.env`:
    ```env
-   DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/picks_db?schema=public
+   DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/serivceops_db?schema=public
    # Special characters in password must be URL-encoded (& → %26)
    ```
 

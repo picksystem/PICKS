@@ -1,11 +1,11 @@
 /**
  * theme barrel export
- * Import using: import { theme, createAppStyles, createAppMetadata, ... } from '@picks/theme'
+ * Import using: import { theme, createAppStyles, createAppMetadata, ... } from '@serviceops/theme'
  *
  * Includes:
  * - Theme configuration (theme, palette)
  * - Styling utilities (createAppStyles, useAppStyles)
- * - Metadata utilities (createAppMetadata)
+ * - Metadata utilities (useAppMetadata)
  * - Theme types
  */
 

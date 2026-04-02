@@ -7,9 +7,9 @@ import {
   IncidentUrgency,
   PriorityChangeReasonCode,
   calculatePriority,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 import { useUpdateIncidentMutation, useUploadAttachmentsMutation } from '../../../../../services';
-import { useNotification } from '@picks/hooks';
+import { useNotification } from '@serviceops/hooks';
 
 interface PriorityChangeModalProps {
   open: boolean;

@@ -1,4 +1,4 @@
-import { UserAvatar } from '@picks/component';
+import { UserAvatar } from '@serviceops/component';
 import {
   Box,
   Typography,

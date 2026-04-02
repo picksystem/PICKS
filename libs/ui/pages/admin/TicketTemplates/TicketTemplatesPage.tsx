@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { constants } from '@picks/utils';
+import { constants } from '@serviceops/utils';
 
 /** TicketTemplates has moved into Configuration → Ticket Types. */
 const TicketTemplatesPage = () => {

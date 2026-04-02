@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { ITicketType } from '@picks/interfaces';
+import { ITicketType } from '@serviceops/interfaces';
 import { getIconComponent, loadTagMap, getTagOption } from '../utils/ticketTypeIcons';
 import { useStyles } from '../styles';
 

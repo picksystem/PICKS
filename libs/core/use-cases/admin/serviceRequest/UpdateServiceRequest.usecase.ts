@@ -3,7 +3,7 @@ import {
   IServiceRequest,
   IUpdateServiceRequestInput,
   IUpdateServiceRequestUseCase,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 import { NotFoundException } from '../../../middleware';
 
 /**

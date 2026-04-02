@@ -1,5 +1,5 @@
 import { Menu, MenuItem, Divider, Avatar, ListItemIcon, ListItemText } from '@mui/material';
-import { IAuthUser } from '@picks/interfaces';
+import { IAuthUser } from '@serviceops/interfaces';
 
 interface NotificationsMenuProps {
   anchorEl: HTMLElement | null;

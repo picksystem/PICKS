@@ -6,8 +6,8 @@ import TableChartIcon from '@mui/icons-material/TableChart';
 import ImageIcon from '@mui/icons-material/Image';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import DownloadIcon from '@mui/icons-material/Download';
-import { IIncident, IIncidentComment, IResolution, IActivityLog } from '@picks/interfaces';
-import { useNotification } from '@picks/hooks';
+import { IIncident, IIncidentComment, IResolution, IActivityLog } from '@serviceops/interfaces';
+import { useNotification } from '@serviceops/hooks';
 import { useStyles } from '../styles';
 
 interface TabPanelProps {

@@ -39,8 +39,10 @@ const Button: React.FC<DSButtonProps> = ({
 }) => {
   const { cx, classes } = useStyles();
 
-  const resolvedStartIcon = startIconProp || (!loading && iconPosition === 'start' && icon ? icon : undefined);
-  const resolvedEndIcon = endIconProp || (!loading && iconPosition === 'end' && icon ? icon : undefined);
+  const resolvedStartIcon =
+    startIconProp || (!loading && iconPosition === 'start' && icon ? icon : undefined);
+  const resolvedEndIcon =
+    endIconProp || (!loading && iconPosition === 'end' && icon ? icon : undefined);
 
   return (
     <MUIButton

@@ -2,7 +2,7 @@ import { Box, Typography, Paper } from '@mui/material';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import LockResetIcon from '@mui/icons-material/LockReset';
-import { constants } from '@picks/utils';
+import { constants } from '@serviceops/utils';
 import { useStyles } from './styles';
 import useForgotPassword from './hooks/useForgotPassword';
 import StepProgress from './components/StepProgress';
@@ -13,7 +13,7 @@ import LeftPanel from './components/LeftPanel';
 
 function getForgotPasswordStyle(): 'old' | 'new' {
   try {
-    const saved = localStorage.getItem('picks_page_styles');
+    const saved = localStorage.getItem('serivceops_page_styles');
     if (saved) return (JSON.parse(saved)?.forgotPassword as 'old' | 'new') || 'new';
   } catch {
     /* ignore */

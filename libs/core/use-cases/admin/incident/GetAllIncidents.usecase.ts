@@ -1,8 +1,4 @@
-import {
-  IIncidentGateway,
-  IIncident,
-  IGetAllIncidentsUseCase,
-} from '@picks/interfaces';
+import { IIncidentGateway, IIncident, IGetAllIncidentsUseCase } from '@serviceops/interfaces';
 
 /**
  * Get All Incidents Use Case

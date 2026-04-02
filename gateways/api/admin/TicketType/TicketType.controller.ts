@@ -1,14 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import { ValidationError } from 'yup';
 import { CreateTicketTypeSchema, UpdateTicketTypeSchema } from './TicketType.dto';
-import { BadRequestException } from '@picks/middleware';
+import { BadRequestException } from '@serviceops/middleware';
 import {
   CreateTicketTypeUseCase,
   GetTicketTypeUseCase,
   GetAllTicketTypesUseCase,
   UpdateTicketTypeUseCase,
   DeleteTicketTypeUseCase,
-} from '@picks/core/use-cases';
+} from '@serviceops/core/use-cases';
 
 /**
  * Controller for AdminTicketType endpoints

@@ -6,7 +6,7 @@ import {
   GetIncidentByNumberUseCase,
   GetServiceRequestByNumberUseCase,
   GetAdvisoryRequestByNumberUseCase,
-} from '@picks/core/use-cases';
+} from '@serviceops/core/use-cases';
 
 /** Detect ticket type from number prefix (e.g. INC0001234 → incident) */
 const PREFIX_TYPE_MAP: Record<string, string> = {

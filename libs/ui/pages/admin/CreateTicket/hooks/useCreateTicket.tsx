@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useNotification } from '@picks/hooks';
-import { constants } from '@picks/utils';
+import { useNotification } from '@serviceops/hooks';
+import { constants } from '@serviceops/utils';
 import { getRouteSlug } from '../utils/CreateTicket.utils';
 
 const useCreateTicket = () => {

@@ -6,7 +6,7 @@ import {
   AccordionDetails as MuiAccordionDetails,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Box, TextField, Select, UploadFile } from '@picks/component';
+import { Box, TextField, Select, UploadFile } from '@serviceops/component';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import CategoryIcon from '@mui/icons-material/Category';

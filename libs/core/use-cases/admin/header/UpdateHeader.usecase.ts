@@ -3,7 +3,7 @@ import {
   IHeader,
   IUpdateHeaderInput,
   IUpdateHeaderUseCase,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 import { NotFoundException } from '../../../middleware';
 
 /**

@@ -1,6 +1,6 @@
 import SearchIcon from '@mui/icons-material/Search';
-import { Box, Typography, TextField, Select, Checkbox, Button } from '@picks/component';
-import { useFieldError } from '@picks/hooks';
+import { Box, Typography, TextField, Select, Checkbox, Button } from '@serviceops/component';
+import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from '../styles';
 
 interface TicketInfoSectionProps {

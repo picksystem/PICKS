@@ -7,8 +7,8 @@ import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
-import { Box, Typography, TextField, Checkbox } from '@picks/component';
-import { useFieldError } from '@picks/hooks';
+import { Box, Typography, TextField, Checkbox } from '@serviceops/component';
+import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from '../styles';
 
 interface DescriptionSectionProps {

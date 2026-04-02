@@ -1,4 +1,4 @@
-import { IHeaderGateway, IHeader } from '@picks/interfaces';
+import { IHeaderGateway, IHeader } from '@serviceops/interfaces';
 
 /**
  * Get Active Headers By App Use Case

@@ -2,7 +2,7 @@ import {
   IAdvisoryRequestGateway,
   IAdvisoryRequest,
   IGetAdvisoryRequestUseCase,
-} from '@picks/interfaces';
+} from '@serviceops/interfaces';
 import { NotFoundException } from '../../../middleware';
 
 /**

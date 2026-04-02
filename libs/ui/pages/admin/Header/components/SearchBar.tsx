@@ -1,6 +1,6 @@
 import { Typography, ClickAwayListener, Chip } from '@mui/material';
-import { Box, TextField } from '@picks/component';
-import { IIncident } from '@picks/interfaces';
+import { Box, TextField } from '@serviceops/component';
+import { IIncident } from '@serviceops/interfaces';
 import SearchIcon from '@mui/icons-material/Search';
 
 interface SearchBarProps {

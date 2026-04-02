@@ -14,7 +14,7 @@ import {
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
-import { IAuthUser, IConsultantProfile } from '@picks/interfaces';
+import { IAuthUser, IConsultantProfile } from '@serviceops/interfaces';
 import ReadField from '../../components/ReadField';
 import SectionLabel from '../../components/SectionLabel';
 import {

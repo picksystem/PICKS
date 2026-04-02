@@ -1,4 +1,4 @@
-import { IConsultantProfile, IConsultantRole } from '@picks/interfaces';
+import { IConsultantProfile, IConsultantRole } from '@serviceops/interfaces';
 
 export type ProfileRow = IConsultantProfile & { sno: number };
 export type RoleRow = IConsultantRole & { sno: number };
