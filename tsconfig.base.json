@@ -3,6 +3,7 @@
   "compilerOptions": {
     "ignoreDeprecations": "5.0",
     "rootDir": ".",
+    "baseUrl": ".",
     "sourceMap": true,
     "moduleResolution": "bundler",
     "allowJs": true,
