@@ -1,7 +1,11 @@
 import * as yup from 'yup';
 
 export const SignInSchema = yup.object({
-  email: yup.string().email('Invalid email').required('required'),
+  email: yup
+    .string()
+    .email('Invalid email')
+    .required('required')
+    .matches(/@serviceops\.tech$/i, 'Email must be a @serviceops.tech address'),
   password: yup.string().required('required').min(6, 'Min 6 characters'),
 });
 

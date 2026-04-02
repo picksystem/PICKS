@@ -339,7 +339,7 @@ export class AuthController {
 
     // Notify admin (fire and forget)
     sendEmail(
-      process.env.ADMIN_EMAIL || 'admin@picks.com',
+      process.env.ADMIN_EMAIL || 'admin@serviceops.tech',
       'PICKS — New Access Request',
       `<h2>New Access Request</h2>
        <p><strong>${fullName}</strong> (${validatedData.email}) has signed up and is requesting <strong>${validatedData.role}</strong> access.</p>
@@ -826,6 +826,11 @@ export class AuthController {
           return;
         }
 
+        if (!/@serviceops\.com$/i.test(email)) {
+          res.status(400).json({ message: 'Email must be a @serviceops.tech address' });
+          return;
+        }
+
         const existing = await db.user.findUnique({ where: { email } });
         if (existing) {
           res.status(409).json({ message: 'Email already registered' });
@@ -899,6 +904,11 @@ export class AuthController {
         const { firstName, lastName, email, phone, department, workLocation } = body;
         if (!firstName || !lastName || !email) {
           res.status(400).json({ message: 'firstName, lastName, and email are required' });
+          return;
+        }
+
+        if (!/@serviceops\.com$/i.test(email)) {
+          res.status(400).json({ message: 'Email must be a @serviceops.tech address' });
           return;
         }
 

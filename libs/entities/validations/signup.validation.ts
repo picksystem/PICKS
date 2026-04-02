@@ -1,15 +1,13 @@
 import * as yup from 'yup';
 
 export const SignUpSchema = yup.object({
-  firstName: yup
+  firstName: yup.string().required('required').min(2, 'First name must be at least 2 characters'),
+  lastName: yup.string().required('required').min(2, 'Last name must be at least 2 characters'),
+  email: yup
     .string()
+    .email('Invalid email')
     .required('required')
-    .min(2, 'First name must be at least 2 characters'),
-  lastName: yup
-    .string()
-    .required('required')
-    .min(2, 'Last name must be at least 2 characters'),
-  email: yup.string().email('Invalid email').required('required'),
+    .matches(/@serviceops\.tech$/i, 'Email must be a @serviceops.tech address'),
   phone: yup
     .string()
     .matches(/^[\d\s+\-()]*$/, 'Phone number must contain only numbers')
@@ -18,16 +16,10 @@ export const SignUpSchema = yup.object({
   workLocation: yup.string().required('required'),
   department: yup.string().optional().nullable(),
   reasonForAccess: yup.string().required('required'),
-  employeeId: yup
-    .string()
-    .matches(/^\d*$/, 'Employee ID must be numeric')
-    .optional(),
+  employeeId: yup.string().matches(/^\d*$/, 'Employee ID must be numeric').optional(),
   businessUnit: yup.string().optional(),
   managerName: yup.string().required('required'),
-  password: yup
-    .string()
-    .required('required')
-    .min(6, 'Password must be at least 6 characters'),
+  password: yup.string().required('required').min(6, 'Password must be at least 6 characters'),
   confirmPassword: yup
     .string()
     .required('required')

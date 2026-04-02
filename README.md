@@ -30,6 +30,17 @@ A modern, scalable ITIL Service Management Platform (ITSM) built as a full-stack
 - [Testing](#testing)
 - [Development Commands](#development-commands)
 - [API Endpoints](#api-endpoints)
+  - [Base URL & Auth Header](#base-url--auth-header)
+  - [Auth API](#auth-api)
+  - [Incident API](#incident-api)
+  - [Comment API](#comment-api)
+  - [Time Entry API](#time-entry-api)
+  - [Resolution API](#resolution-api)
+  - [Activity API](#activity-api)
+  - [Ticket Type API](#ticket-type-api)
+  - [Enum Reference](#enum-reference)
+  - [Error Responses](#error-responses)
+  - [API Testing (Postman)](#api-testing-postman)
 - [Path Aliases](#path-aliases)
 - [Technology Stack](#technology-stack)
 - [Troubleshooting](#troubleshooting)
@@ -399,7 +410,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password-here
-SMTP_FROM=PICKS App <noreply@picks.com>
+SMTP_FROM=PICKS App <noreply@serviceops.tech>
 ```
 
 #### Gmail SMTP Setup
@@ -496,9 +507,9 @@ PICKS implements a comprehensive role-based access control system with three pri
 ### Default Test Credentials (after seeding)
 
 ```
-admin@picks.com       / admin123
-user@picks.com        / user123
-consultant@picks.com  / consultant123
+admin@serviceops.tech       / admin123
+user@serviceops.tech        / user123
+consultant@serviceops.tech  / consultant123
 ```
 
 ---
@@ -889,40 +900,276 @@ docker-compose logs -f           # View logs
 
 ## API Endpoints
 
-### Authentication API
+### Base URL & Auth Header
+
+```
+http://localhost:3001
+```
+
+All protected endpoints require a JWT bearer token:
+
+```
+Authorization: Bearer <token>
+```
+
+### Health Check
+
+**GET** `/health` — No auth required.
+
+```json
+{ "status": "OK", "timestamp": "2025-02-12T10:00:00.000Z" }
+```
+
+---
+
+### Auth API
+
+All auth actions use a single **POST** `/api/auth` with an `action` field.
+
+#### Sign In
+
+```json
+{ "action": "signin", "email": "admin@serviceops.tech", "password": "admin123" }
+```
+
+**Response (201):**
+
+```json
+{
+  "message": "Sign in successful",
+  "data": {
+    "user": { "userId": 1, "userName": "Admin User", "userEmail": "admin@serviceops.tech", "role": "admin", "isActive": true },
+    "token": "eyJhbGciOiJIUzI1NiIs..."
+  }
+}
+```
+
+#### Seeded Test Users
+
+| Email | Password | Role |
+|-------|----------|------|
+| `admin@serviceops.tech` | `admin123` | admin |
+| `user@serviceops.tech` | `user123` | user |
+| `consultant@serviceops.tech` | `consultant123` | consultant |
+
+#### Sign Up
+
+```json
+{
+  "action": "signup",
+  "firstName": "John", "lastName": "Doe",
+  "email": "john@serviceops.tech",
+  "password": "password123", "confirmPassword": "password123",
+  "phone": "+1-555-0000",
+  "workLocation": "NYC", "department": "IT",
+  "reasonForAccess": "Support ticket handling",
+  "employeeId": "EMP123", "businessUnit": "Operations",
+  "managerName": "Jane Smith", "role": "user"
+}
+```
+
+**Response (201):** `{ "message": "Account created successfully. Your account is pending admin approval.", "data": { "roleRequestPending": true } }`
+
+#### Forgot Password
+
+```json
+{ "action": "forgot-password", "email": "user@serviceops.tech" }
+```
+
+**Response (200):** `{ "message": "If the email exists, an OTP has been sent." }`
+
+#### Verify OTP
+
+```json
+{ "action": "verify-otp", "email": "user@serviceops.tech", "otp": "123456" }
+```
+
+**Response (200):** `{ "message": "OTP verified successfully", "data": { "verified": true, "resetToken": "jwt-reset-token" } }`
+
+#### Reset Password
+
+```json
+{
+  "action": "reset-password",
+  "email": "user@serviceops.tech",
+  "resetToken": "jwt-reset-token",
+  "newPassword": "newpassword123", "confirmPassword": "newpassword123"
+}
+```
+
+**Response (200):** `{ "message": "Password reset successfully. You can now sign in with your new password." }`
+
+#### Change Password _(requires auth)_
+
+```json
+{ "action": "change-password", "currentPassword": "old123", "newPassword": "new123" }
+```
+
+#### Admin User Actions _(admin only)_
+
+| Action | Description |
+|--------|-------------|
+| `get-all-users` | List all users |
+| `get-user` + `userId` | Get single user |
+| `update-user` + `userId` + `data` | Update user fields |
+| `delete-user` + `userId` | Delete user |
+| `unlock-user` + `userId` | Unlock locked account |
+| `create-user` | Create active user immediately |
+| `create-pending-user` | Create user pending approval |
+| `activate-user` + `userId` | Manually activate user |
+| `deactivate-user` + `userId` | Deactivate user |
+| `get-role-requests` | Get all role requests |
+| `get-pending-role-requests` | Get pending role requests |
+| `approve-role-request` + `userId` + `adminNotes` | Approve role request |
+| `reject-role-request` + `userId` + `adminNotes` | Reject role request |
+| `get-change-log` | Get user audit log |
+
+---
+
+### Incident API
+
+Base path: `/api/admin/incidents` — all endpoints require auth.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/auth` | Sign in / Sign up (action-based) |
-| POST | `/api/auth/signup` | Register new user |
-| POST | `/api/auth/signin` | Sign in |
-| POST | `/api/auth/forgot-password` | Request password reset OTP |
-| POST | `/api/auth/verify-otp` | Verify OTP |
-| POST | `/api/auth/reset-password` | Reset password |
+| GET | `/api/admin/incidents` | Get all incidents |
+| GET | `/api/admin/incidents/drafts` | Get draft incidents |
+| GET | `/api/admin/incidents/:id` | Get incident by ID |
+| GET | `/api/admin/incidents/number/:number` | Get by number (e.g. `INC0000001`) |
+| POST | `/api/admin/incidents` | Create incident |
+| PUT | `/api/admin/incidents/:id` | Update incident |
+| DELETE | `/api/admin/incidents/:id` | Delete incident |
 
-### Admin API (`/api/admin/`)
+**Create Incident** — required fields: `caller`, `businessCategory`, `serviceLine`, `application`, `shortDescription`, `description`, `impact`, `urgency`, `channel`, `assignmentGroup`, `createdBy`
+
+```json
+{
+  "caller": "John Doe", "businessCategory": "IT Support", "serviceLine": "Hardware",
+  "application": "Windows", "shortDescription": "Printer not working",
+  "description": "Network printer on floor 3 not responding",
+  "impact": "medium", "urgency": "medium", "channel": "portal",
+  "assignmentGroup": "IT Support Team", "createdBy": "admin@serviceops.tech",
+  "status": "new", "client": "Acme Corp", "isRecurring": false, "isMajor": false
+}
+```
+
+> For **drafts**, only `caller` and `createdBy` are required. Set `"status": "draft"`.
+
+**Update Incident** — all fields optional:
+
+```json
+{ "status": "in_progress", "priority": "2-High", "assignmentGroup": "Escalation Team" }
+```
+
+---
+
+### Comment API
+
+Base path: `/api/admin/incidents/:id/comments`
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| **Incidents** | | |
-| GET | `/incident` | Get all incidents |
-| GET | `/incident/:number` | Get incident by number |
-| POST | `/incident` | Create incident |
-| PUT | `/incident/:id` | Update incident |
-| DELETE | `/incident/:id` | Delete incident |
-| GET | `/incident/:id/comments` | Get comments for incident |
-| POST | `/incident/:id/comments` | Add comment |
-| GET | `/incident/:id/time-entries` | Get time entries |
-| POST | `/incident/:id/time-entries` | Add time entry |
-| GET | `/incident/:id/resolutions` | Get resolutions |
-| POST | `/incident/:id/resolutions` | Add resolution |
-| GET | `/incident/:id/activities` | Get activity log |
-| **Ticket Types** | | |
-| GET | `/ticket-type` | Get all ticket types |
-| GET | `/ticket-type/:id` | Get ticket type by ID |
-| POST | `/ticket-type` | Create ticket type |
-| PUT | `/ticket-type/:id` | Update ticket type |
-| DELETE | `/ticket-type/:id` | Delete ticket type |
+| GET | `/api/admin/incidents/:id/comments` | Get comments |
+| POST | `/api/admin/incidents/:id/comments` | Add comment |
+
+**Create Comment** — required: `subject`, `message`
+
+```json
+{
+  "subject": "Follow-up needed",
+  "message": "User confirmed the issue persists",
+  "isInternal": false, "isSelfNote": false, "notifyAssigneesOnly": false,
+  "status": "in_progress", "createdBy": "admin@serviceops.tech"
+}
+```
+
+---
+
+### Time Entry API
+
+Base path: `/api/admin/incidents/:id/time-entries`
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/admin/incidents/:id/time-entries` | Get time entries |
+| POST | `/api/admin/incidents/:id/time-entries` | Add time entry |
+
+**Create Time Entry** — required: `date`, `hours`, `minutes`
+
+```json
+{
+  "date": "2025-02-12", "hours": 2, "minutes": 30,
+  "billingCode": "PROJECT-001", "activityTask": "Troubleshooting printer drivers",
+  "externalComment": "Investigated driver compatibility",
+  "internalComment": "Need to escalate to vendor",
+  "isNonBillable": false, "createdBy": "admin@serviceops.tech"
+}
+```
+
+---
+
+### Resolution API
+
+Base path: `/api/admin/incidents/:id/resolutions`
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/admin/incidents/:id/resolutions` | Get resolutions |
+| POST | `/api/admin/incidents/:id/resolutions` | Add resolution |
+
+**Create Resolution** — required: `resolutionCode`, `resolution`
+
+```json
+{
+  "resolutionCode": "permanent_fix",
+  "resolution": "Updated printer drivers to latest version",
+  "application": "Windows", "category": "Hardware Issue", "subCategory": "Printer",
+  "customerConfirmation": true, "isRecurring": false,
+  "rootCauseIdentified": true, "rootCause": "Outdated drivers caused compatibility issue",
+  "internalNote": "Recommend updating all printers on floor 3",
+  "createdBy": "admin@serviceops.tech"
+}
+```
+
+**Resolution Code values:** `permanent_fix`, `workaround`, `known_error`, `duplicate`, `not_reproducible`, `user_error`, `configuration_change`, `software_update`, `hardware_replacement`, `third_party_fix`, `other`
+
+---
+
+### Activity API
+
+**GET** `/api/admin/incidents/:id/activities` — read-only audit log for an incident.
+
+```json
+{
+  "data": [{
+    "id": 1, "incidentId": 1, "activityType": "status_change",
+    "description": "Status changed from new to in_progress",
+    "previousValue": "new", "newValue": "in_progress",
+    "performedBy": "admin@serviceops.tech", "createdAt": "2025-02-12T10:00:00Z"
+  }]
+}
+```
+
+---
+
+### Ticket Type API
+
+Base path: `/api/admin/ticket-type`
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/admin/ticket-type` | Get all ticket types |
+| GET | `/api/admin/ticket-type/:id` | Get by ID |
+| POST | `/api/admin/ticket-type` | Create ticket type |
+| PUT | `/api/admin/ticket-type/:id` | Update ticket type |
+| DELETE | `/api/admin/ticket-type/:id` | Delete ticket type |
+
+---
+
+### Admin API Summary (`/api/admin/`)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
 | **Service Requests** | | |
 | GET | `/service-request` | Get all service requests |
 | GET | `/service-request/:number` | Get by number |
@@ -954,7 +1201,54 @@ docker-compose logs -f           # View logs
 |--------|----------|-------------|
 | GET | `/dashboard` | Get user dashboard data |
 
-> **API Testing:** See `docs/POSTMAN_API.md` for full Postman collection guide and example request/response payloads.
+---
+
+### Enum Reference
+
+| Field | Values |
+|-------|--------|
+| **Impact / Urgency** | `high`, `medium`, `low` |
+| **Priority** | `1-Critical`, `2-High`, `3-Medium`, `4-Low`, `5-Planning` |
+| **Channel** | `email`, `phone`, `portal`, `chat`, `walk_in` |
+| **Status** | `draft`, `new`, `in_progress`, `on_hold`, `assigned`, `resolved`, `closed`, `cancelled` |
+| **Activity Types** | `status_change`, `priority_change`, `assignment_change`, `comment_added`, `time_entry_added`, `resolution_added`, `attachment_added`, `field_update`, `follow_added`, `escalation` |
+
+Priority is auto-calculated from **Impact × Urgency**:
+
+| | High Urgency | Medium Urgency | Low Urgency |
+|---|---|---|---|
+| **High Impact** | 1-Critical | 2-High | 3-Medium |
+| **Medium Impact** | 2-High | 3-Medium | 4-Low |
+| **Low Impact** | 3-Medium | 4-Low | 5-Planning |
+
+---
+
+### Error Responses
+
+| Status | Description | Example |
+|--------|-------------|---------|
+| 400 | Validation error | `{ "message": "Validation failed", "errors": [...] }` |
+| 401 | Unauthorized | `{ "message": "Access token is required" }` |
+| 403 | Forbidden | `{ "message": "Admin access required" }` |
+| 404 | Not found | `{ "message": "Incident not found" }` |
+| 409 | Conflict | `{ "message": "Email already registered" }` |
+| 423 | Locked | `{ "message": "Account is locked. Try again after X minutes." }` |
+| 429 | Rate limited | `{ "message": "OTP already sent. Wait X minutes." }` |
+
+---
+
+### API Testing (Postman)
+
+1. **Create an environment** with variable `baseUrl` = `http://localhost:3001`
+2. **Add a pre-request script** to the Sign In request to auto-save the token:
+   ```javascript
+   if (pm.response.code === 201) {
+     const data = pm.response.json();
+     pm.environment.set("token", data.data.token);
+   }
+   ```
+3. **Set the Authorization header** on your collection to `Bearer {{token}}`
+4. Use `{{baseUrl}}` in all request URLs
 
 ---
 
