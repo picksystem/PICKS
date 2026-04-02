@@ -10,11 +10,13 @@ const useSignIn = () => {
   const { login, isLoading } = useAuth();
   const notify = useNotification();
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const formik = useFormWithSessionStorage('signIn', {
     initialValues: { email: '', password: '' },
     validationSchema: SignInSchema,
     onSubmit: async (values) => {
+      setLoginError(null);
       try {
         const result = await login(values.email, values.password);
         if (result.data.adminRequestPending) {
@@ -29,18 +31,37 @@ const useSignIn = () => {
         }
         navigate(destination, { replace: true });
       } catch (err: unknown) {
-        const error = err as { data?: { message?: string }; message?: string };
-        const message = error?.data?.message || error?.message || 'Invalid email or password';
+        const error = err as {
+          status?: string | number;
+          data?: { message?: string };
+          message?: string;
+          error?: string;
+        };
+        let message: string;
+        if (error?.status === 'FETCH_ERROR' || error?.status === 'PARSING_ERROR') {
+          message = 'Unable to reach the server. Please check that the backend is running.';
+        } else {
+          message = error?.data?.message || error?.message || error?.error || 'Invalid email or password';
+        }
         if (message.toLowerCase().includes('pending admin approval')) {
           notify.warning(message);
         } else {
-          notify.error(message);
+          setLoginError(message);
         }
       }
     },
   });
 
-  return { formik, isLoading, showPassword, setShowPassword, reqError, navigate };
+  return {
+    formik,
+    isLoading,
+    showPassword,
+    setShowPassword,
+    reqError,
+    navigate,
+    loginError,
+    clearLoginError: () => setLoginError(null),
+  };
 };
 
 export default useSignIn;

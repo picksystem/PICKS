@@ -18,7 +18,7 @@ function getSignInStyle(): 'old' | 'new' {
 
 const SignIn = () => {
   const { classes } = useStyles();
-  const { formik, isLoading, showPassword, setShowPassword, navigate } = useSignIn();
+  const { formik, isLoading, showPassword, setShowPassword, navigate, loginError, clearLoginError } = useSignIn();
   const pageStyle = getSignInStyle();
 
   const sharedFormProps = {
@@ -27,6 +27,8 @@ const SignIn = () => {
     showPassword,
     onTogglePassword: () => setShowPassword((v) => !v),
     onNavigate: navigate,
+    loginError,
+    onClearError: clearLoginError,
   };
 
   if (pageStyle === 'old') {

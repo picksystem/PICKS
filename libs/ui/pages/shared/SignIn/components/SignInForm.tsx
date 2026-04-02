@@ -1,4 +1,4 @@
-import { InputAdornment, IconButton } from '@mui/material';
+import { InputAdornment, IconButton, Alert } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { constants } from '@picks/utils';
@@ -18,6 +18,8 @@ interface SignInFormProps {
   showPassword: boolean;
   onTogglePassword: () => void;
   onNavigate: (path: string) => void;
+  loginError?: string | null;
+  onClearError?: () => void;
 }
 
 const SignInForm = ({
@@ -26,25 +28,34 @@ const SignInForm = ({
   showPassword,
   onTogglePassword,
   onNavigate,
+  loginError,
+  onClearError,
 }: SignInFormProps) => {
   const reqError = useFieldError();
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-      <TextField
-        id='email'
-        name='email'
-        label='Work Email'
-        type='email'
-        placeholder='you@company.com'
-        value={formik.values.email}
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        error={formik.touched.email && Boolean(formik.errors.email)}
-        errorText={reqError(formik.touched.email, formik.errors.email as string)}
-        fullWidth
-        required
-      />
+      {loginError && (
+        <Alert severity='error' onClose={onClearError} sx={{ borderRadius: 1.5 }}>
+          {loginError}
+        </Alert>
+      )}
+      <Box>
+        <TextField
+          id='email'
+          name='email'
+          label='Work Email'
+          type='email'
+          placeholder='you@company.com'
+          value={formik.values.email}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          error={formik.touched.email && Boolean(formik.errors.email)}
+          errorText={reqError(formik.touched.email, formik.errors.email as string)}
+          fullWidth
+          required
+        />
+      </Box>
 
       <Box>
         <TextField

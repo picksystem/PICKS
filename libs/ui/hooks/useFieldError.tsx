@@ -18,14 +18,13 @@ export const useFieldError = () => {
 
   const reqError = (touched: unknown, error: string | undefined) => {
     if (!touched || !error) return undefined;
-    if (error === 'required' || error.toLowerCase().includes('required'))
-      return (
-        <Box component='span' className={classes.requiredErrorWrapper}>
-          <ArrowCircleRightIcon className={classes.requiredErrorIcon} />
-          Required
-        </Box>
-      );
-    return error;
+    const label = error === 'required' || error.toLowerCase().includes('required') ? 'Required' : error;
+    return (
+      <Box component='span' className={classes.requiredErrorWrapper}>
+        <ArrowCircleRightIcon className={classes.requiredErrorIcon} />
+        {label}
+      </Box>
+    );
   };
 
   return reqError;

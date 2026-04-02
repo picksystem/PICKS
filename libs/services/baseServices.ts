@@ -25,7 +25,10 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 ) => {
   const result = await rawBaseQuery(args, api, extraOptions);
 
-  if (result.error?.status === 401) {
+  const requestUrl = typeof args === 'string' ? args : (args as FetchArgs).url;
+  const isAuthEndpoint = requestUrl?.includes('/api/auth');
+
+  if (result.error?.status === 401 && !isAuthEndpoint) {
     localStorage.removeItem('picks_token');
     localStorage.removeItem('picks_user');
     window.location.href = '/signin';

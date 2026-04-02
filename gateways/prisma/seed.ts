@@ -373,18 +373,109 @@ async function clearAndSeed() {
   `);
 
   // Seed default users (admin, user, consultant)
+  // Using Prisma create (parameterized) to avoid bcrypt hash interpolation issues in raw SQL
   const adminPassword = await bcrypt.hash('admin123', 10);
   const userPassword = await bcrypt.hash('user123', 10);
   const consultantPassword = await bcrypt.hash('consultant123', 10);
 
-  await pool.query(`
-    INSERT INTO "User" ("firstName", "lastName", "email", "password", "phone", "workLocation", "department", "businessUnit", "employeeId", "managerName", "name", "role", "status", "source", "timezone", "dateFormat", "timeFormat", "language", "slaWorkingCalendar", "slaExceptionGroup", "lastActivityAt", "failedLoginAttempts", "isActive", "mustResetPassword", "firstActivationDate", "createdAt", "updatedAt")
-      VALUES ('Admin', 'User', 'admin@serviceops.tech', '${adminPassword}', '+1-555-0001', 'New York - HQ', 'IT Administration', 'Technology', 'EMP001', 'CTO Office', 'Admin User', 'admin', 'active', 'admin', 'America/New_York', 'MM/DD/YYYY', '12h', 'en', 'Standard 8x5', 'US Federal Holidays', NOW() - INTERVAL '15 minutes', 0, true, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-    INSERT INTO "User" ("firstName", "lastName", "email", "password", "phone", "workLocation", "department", "businessUnit", "employeeId", "managerName", "name", "role", "status", "source", "timezone", "dateFormat", "timeFormat", "language", "slaWorkingCalendar", "slaExceptionGroup", "lastActivityAt", "failedLoginAttempts", "isActive", "mustResetPassword", "firstActivationDate", "createdAt", "updatedAt")
-      VALUES ('Regular', 'User', 'user@serviceops.tech', '${userPassword}', '+1-555-0002', 'Chicago - Branch', 'Finance', 'Corporate Services', 'EMP002', 'Jane Manager', 'Regular User', 'user', 'active', 'admin', 'America/Chicago', 'MM/DD/YYYY', '12h', 'en', 'Standard 8x5', 'US Federal Holidays', NOW() - INTERVAL '3 hours', 0, true, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-    INSERT INTO "User" ("firstName", "lastName", "email", "password", "phone", "workLocation", "department", "businessUnit", "employeeId", "managerName", "reasonForAccess", "name", "role", "status", "source", "timezone", "dateFormat", "timeFormat", "language", "slaWorkingCalendar", "slaExceptionGroup", "lastActivityAt", "failedLoginAttempts", "isActive", "mustResetPassword", "firstActivationDate", "createdAt", "updatedAt")
-      VALUES ('Consultant', 'User', 'consultant@serviceops.tech', '${consultantPassword}', '+1-555-0003', 'Remote', 'External Consulting', 'Professional Services', 'CON001', 'Project Lead', 'Assigned to PICKS implementation project', 'Consultant User', 'consultant', 'active', 'admin', 'America/Los_Angeles', 'MM/DD/YYYY', '24h', 'en', 'Extended 10x5', 'US Federal Holidays', NOW() - INTERVAL '1 day', 0, true, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-  `);
+  const now = new Date();
+
+  await (prisma as any).user.create({
+    data: {
+      firstName: 'Admin',
+      lastName: 'User',
+      email: 'admin@serviceops.tech',
+      password: adminPassword,
+      phone: '+1-555-0001',
+      workLocation: 'New York - HQ',
+      department: 'IT Administration',
+      businessUnit: 'Technology',
+      employeeId: 'EMP001',
+      managerName: 'CTO Office',
+      name: 'Admin User',
+      role: 'admin',
+      status: 'active',
+      source: 'admin',
+      timezone: 'America/New_York',
+      dateFormat: 'MM/DD/YYYY',
+      timeFormat: '12h',
+      language: 'en',
+      slaWorkingCalendar: 'Standard 8x5',
+      slaExceptionGroup: 'US Federal Holidays',
+      lastActivityAt: new Date(now.getTime() - 15 * 60 * 1000),
+      failedLoginAttempts: 0,
+      isActive: true,
+      mustResetPassword: false,
+      firstActivationDate: now,
+      createdAt: now,
+      updatedAt: now,
+    },
+  });
+
+  await (prisma as any).user.create({
+    data: {
+      firstName: 'Regular',
+      lastName: 'User',
+      email: 'user@serviceops.tech',
+      password: userPassword,
+      phone: '+1-555-0002',
+      workLocation: 'Chicago - Branch',
+      department: 'Finance',
+      businessUnit: 'Corporate Services',
+      employeeId: 'EMP002',
+      managerName: 'Jane Manager',
+      name: 'Regular User',
+      role: 'user',
+      status: 'active',
+      source: 'admin',
+      timezone: 'America/Chicago',
+      dateFormat: 'MM/DD/YYYY',
+      timeFormat: '12h',
+      language: 'en',
+      slaWorkingCalendar: 'Standard 8x5',
+      slaExceptionGroup: 'US Federal Holidays',
+      lastActivityAt: new Date(now.getTime() - 3 * 60 * 60 * 1000),
+      failedLoginAttempts: 0,
+      isActive: true,
+      mustResetPassword: false,
+      firstActivationDate: now,
+      createdAt: now,
+      updatedAt: now,
+    },
+  });
+
+  await (prisma as any).user.create({
+    data: {
+      firstName: 'Consultant',
+      lastName: 'User',
+      email: 'consultant@serviceops.tech',
+      password: consultantPassword,
+      phone: '+1-555-0003',
+      workLocation: 'Remote',
+      department: 'External Consulting',
+      businessUnit: 'Professional Services',
+      employeeId: 'CON001',
+      managerName: 'Project Lead',
+      reasonForAccess: 'Assigned to PICKS implementation project',
+      name: 'Consultant User',
+      role: 'consultant',
+      status: 'active',
+      source: 'admin',
+      timezone: 'America/Los_Angeles',
+      dateFormat: 'MM/DD/YYYY',
+      timeFormat: '24h',
+      language: 'en',
+      slaWorkingCalendar: 'Extended 10x5',
+      slaExceptionGroup: 'US Federal Holidays',
+      lastActivityAt: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+      failedLoginAttempts: 0,
+      isActive: true,
+      mustResetPassword: false,
+      firstActivationDate: now,
+      createdAt: now,
+      updatedAt: now,
+    },
+  });
 
   // Seed sample incidents across all statuses and priorities
   await pool.query(`
