@@ -1,12 +1,15 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { Box, Typography, Paper, Chip, Divider, IconButton, Tooltip } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import SearchIcon from '@mui/icons-material/Search';
 import BuildIcon from '@mui/icons-material/Build';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import { TextField } from '@serviceops/component';
 import { Loader } from '../../../components';
 import { useGetTicketByNumberQuery } from '@serviceops/services';
 import { constants } from '@serviceops/utils';
@@ -88,6 +91,9 @@ const GenericTicketDetailView = ({ ticketType }: GenericTicketDetailViewProps) =
   const { number } = useParams<{ number: string }>();
   const navigate = useNavigate();
   const { AdminPath } = constants;
+
+  const [_clientSearchOpen, setClientSearchOpen] = useState(false);
+  const [clientSearch, setClientSearch] = useState('');
 
   const {
     data: ticket,
@@ -291,7 +297,7 @@ const GenericTicketDetailView = ({ ticketType }: GenericTicketDetailViewProps) =
               Ticket Details
             </Typography>
 
-            <InfoRow label='Caller' value={t.caller} />
+            <InfoRow label='Affected user' value={t.caller} />
             <InfoRow label='Caller Email' value={t.callerEmail} />
             <InfoRow label='Caller Phone' value={t.callerPhone} />
             <InfoRow label='Caller Location' value={t.callerLocation} />
@@ -312,7 +318,28 @@ const GenericTicketDetailView = ({ ticketType }: GenericTicketDetailViewProps) =
 
             <Divider sx={{ my: 1.5 }} />
 
-            <InfoRow label='Client' value={t.client} />
+            <Box sx={{ mb: 1.5 }}>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                fontWeight={600}
+                display='block'
+                mb={0.5}
+              >
+                Client
+              </Typography>
+              <TextField
+                name='client'
+                value={clientSearch || t.client || ''}
+                onChange={(e) => setClientSearch(e.target.value)}
+                onFocus={() => setClientSearchOpen(true)}
+                onBlur={() => setClientSearchOpen(false)}
+                placeholder='Search client'
+                icon={<SearchIcon sx={{ fontSize: 18 }} />}
+                iconAlignment='right'
+                fullWidth
+              />
+            </Box>
             <InfoRow label='Created By' value={t.createdBy} />
             <InfoRow label='Created At' value={formatDate(t.createdAt)} />
           </Paper>

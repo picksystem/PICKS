@@ -1,5 +1,7 @@
-import { Box, Typography, Grid, Alert } from '@mui/material';
+import { Box, Typography, Grid, Alert, InputAdornment, IconButton } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useFieldError } from '@serviceops/hooks';
 import TextField from '../../../../components/TextField/TextField';
 
@@ -24,6 +26,10 @@ interface SecurityStepProps {
   onPasswordBlur: (e: React.FocusEvent) => void;
   onConfirmChange: React.ChangeEventHandler;
   onConfirmBlur: (e: React.FocusEvent) => void;
+  showPassword: boolean;
+  onTogglePassword: () => void;
+  showConfirmPassword: boolean;
+  onToggleConfirmPassword: () => void;
   classes: Record<string, string>;
 }
 
@@ -36,6 +42,10 @@ const SecurityStep = ({
   onPasswordBlur,
   onConfirmChange,
   onConfirmBlur,
+  showPassword,
+  onTogglePassword,
+  showConfirmPassword,
+  onToggleConfirmPassword,
   classes,
 }: SecurityStepProps) => {
   const reqError = useFieldError();
@@ -58,7 +68,7 @@ const SecurityStep = ({
               id='password'
               name='password'
               label='Password'
-              type='password'
+              type={showPassword ? 'text' : 'password'}
               placeholder='Create a strong password'
               value={values.password}
               onChange={onPasswordChange}
@@ -66,7 +76,19 @@ const SecurityStep = ({
               error={(step2Touched.password || step2Submitted) && Boolean(errors.password)}
               errorText={reqError(step2Touched.password || step2Submitted, errors.password)}
               fullWidth
-              required
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position='end'>
+                    <IconButton onClick={onTogglePassword} edge='end' size='small' tabIndex={-1}>
+                      {showPassword ? (
+                        <VisibilityOffIcon fontSize='small' />
+                      ) : (
+                        <VisibilityIcon fontSize='small' />
+                      )}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
             {values.password && (
               <Box sx={{ mt: 1 }}>
@@ -95,7 +117,7 @@ const SecurityStep = ({
               id='confirmPassword'
               name='confirmPassword'
               label='Confirm Password'
-              type='password'
+              type={showConfirmPassword ? 'text' : 'password'}
               placeholder='Re-enter your password'
               value={values.confirmPassword}
               onChange={onConfirmChange}
@@ -108,7 +130,24 @@ const SecurityStep = ({
                 errors.confirmPassword,
               )}
               fullWidth
-              required
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position='end'>
+                    <IconButton
+                      onClick={onToggleConfirmPassword}
+                      edge='end'
+                      size='small'
+                      tabIndex={-1}
+                    >
+                      {showConfirmPassword ? (
+                        <VisibilityOffIcon fontSize='small' />
+                      ) : (
+                        <VisibilityIcon fontSize='small' />
+                      )}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
           </Grid>
         </Grid>

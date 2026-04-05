@@ -2,6 +2,290 @@ import SearchIcon from '@mui/icons-material/Search';
 import { Box, Typography, TextField, Select, Checkbox, Button } from '@serviceops/component';
 import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from '../styles';
+import { useState, useRef } from 'react';
+import { Paper, Popper, MenuItem, MenuList } from '@mui/material';
+
+// ── Searchable Client Field Component ────────────────────────────
+interface ClientFieldProps {
+  value: string;
+  callerOptions: { value: string; label: string }[];
+  onChange: (value: string) => void;
+  classes: any;
+}
+
+const ClientSearchField = ({ value, callerOptions, onChange, classes }: ClientFieldProps) => {
+  const [searchText, setSearchText] = useState(value);
+  const [isOpen, setIsOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+
+  const filteredOptions = callerOptions.filter((option) =>
+    option.label.toLowerCase().includes(searchText.toLowerCase()),
+  );
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setSearchText(newValue);
+    onChange(newValue);
+    setIsOpen(newValue.length > 0);
+  };
+
+  const handleSelectOption = (option: { value: string; label: string }) => {
+    setSearchText(option.label);
+    onChange(option.label);
+    setIsOpen(false);
+  };
+
+  const handleFocus = () => {
+    if (callerOptions.length > 0) {
+      setIsOpen(true);
+    }
+  };
+
+  const handleBlur = () => {
+    setTimeout(() => setIsOpen(false), 200);
+  };
+
+  return (
+    <Box ref={anchorRef} position='relative'>
+      <TextField
+        name='client'
+        label='Client'
+        value={searchText}
+        onChange={handleInputChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        placeholder='Search or select client'
+        icon={<SearchIcon />}
+        iconAlignment='right'
+        inputProps={{ maxLength: 50 }}
+        required
+      />
+      <Popper
+        open={isOpen && filteredOptions.length > 0}
+        anchorEl={anchorRef.current}
+        placement='bottom-start'
+        style={{ width: anchorRef.current?.offsetWidth, zIndex: 1000 }}
+      >
+        <Paper elevation={3}>
+          <MenuList>
+            {filteredOptions.map((option) => (
+              <MenuItem
+                key={option.value}
+                onClick={() => handleSelectOption(option)}
+                selected={searchText === option.label}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
+          </MenuList>
+        </Paper>
+      </Popper>
+    </Box>
+  );
+};
+
+// ── Searchable User Field Component ──────────────────────────
+interface UserFieldProps {
+  value: string;
+  callerOptions: { value: string; label: string }[];
+  onChange: (value: string) => void;
+  onBlur: React.FocusEventHandler;
+  error: boolean;
+  errorText?: string | React.ReactNode;
+  label: string;
+}
+
+const UserSearchField = ({
+  value,
+  callerOptions,
+  onChange,
+  onBlur,
+  error,
+  errorText,
+  label,
+}: UserFieldProps) => {
+  const [searchText, setSearchText] = useState(value);
+  const [isOpen, setIsOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+
+  const filteredOptions = callerOptions.filter((option) =>
+    option.label.toLowerCase().includes(searchText.toLowerCase()),
+  );
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setSearchText(newValue);
+    onChange(newValue);
+    setIsOpen(newValue.length > 0);
+  };
+
+  const handleSelectOption = (option: { value: string; label: string }) => {
+    setSearchText(option.label);
+    onChange(option.label);
+    setIsOpen(false);
+  };
+
+  const handleFocus = () => {
+    if (callerOptions.length > 0) {
+      setIsOpen(true);
+    }
+  };
+
+  const handleBlur = () => {
+    setTimeout(() => setIsOpen(false), 200);
+  };
+
+  return (
+    <Box ref={anchorRef} position='relative'>
+      <TextField
+        name='user'
+        label={label}
+        value={searchText}
+        onChange={handleInputChange}
+        onFocus={handleFocus}
+        onBlur={onBlur}
+        placeholder={`Search or select ${label.toLowerCase()}`}
+        icon={<SearchIcon />}
+        iconAlignment='right'
+        inputProps={{ maxLength: 50 }}
+        error={error}
+        errorText={errorText}
+        required
+      />
+      <Popper
+        open={isOpen && filteredOptions.length > 0}
+        anchorEl={anchorRef.current}
+        placement='bottom-start'
+        style={{ width: anchorRef.current?.offsetWidth, zIndex: 1000 }}
+      >
+        <Paper elevation={3}>
+          <MenuList>
+            {filteredOptions.map((option) => (
+              <MenuItem
+                key={option.value}
+                onClick={() => handleSelectOption(option)}
+                selected={searchText === option.label}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
+          </MenuList>
+        </Paper>
+      </Popper>
+    </Box>
+  );
+};
+
+// ── Searchable Contact Field Component ──────────────────────────
+interface ContactFieldProps {
+  value: string;
+  callerOptions: { value: string; label: string }[];
+  onChange: (value: string) => void;
+}
+
+const ContactSearchField = ({ value, callerOptions, onChange }: ContactFieldProps) => {
+  const [searchText, setSearchText] = useState(value);
+  const [isOpen, setIsOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+
+  const filteredOptions = callerOptions.filter((option) =>
+    option.label.toLowerCase().includes(searchText.toLowerCase()),
+  );
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setSearchText(newValue);
+    onChange(newValue);
+    setIsOpen(newValue.length > 0);
+  };
+
+  const handleSelectOption = (option: { value: string; label: string }) => {
+    setSearchText(option.label);
+    onChange(option.label);
+    setIsOpen(false);
+  };
+
+  const handleFocus = () => {
+    if (callerOptions.length > 0) {
+      setIsOpen(true);
+    }
+  };
+
+  const handleBlur = () => {
+    setTimeout(() => setIsOpen(false), 200);
+  };
+
+  return (
+    <Box ref={anchorRef} position='relative'>
+      <TextField
+        name='contact'
+        label='Additional Contact(s)'
+        value={searchText}
+        onChange={handleInputChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        placeholder='Search or select contact'
+        icon={<SearchIcon />}
+        iconAlignment='right'
+        inputProps={{ maxLength: 50 }}
+      />
+      <Popper
+        open={isOpen && filteredOptions.length > 0}
+        anchorEl={anchorRef.current}
+        placement='bottom-start'
+        style={{ width: anchorRef.current?.offsetWidth, zIndex: 1000 }}
+      >
+        <Paper elevation={3}>
+          <MenuList>
+            {filteredOptions.map((option) => (
+              <MenuItem
+                key={option.value}
+                onClick={() => handleSelectOption(option)}
+                selected={searchText === option.label}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
+          </MenuList>
+        </Paper>
+      </Popper>
+    </Box>
+  );
+};
+
+// ── Ticket Info Content Component ────────────────────────────
+interface TicketInfoContentProps {
+  ticketNumber: string;
+  client: string;
+  onClientChange: (value: string) => void;
+  callerOptions: { value: string; label: string }[];
+  classes: any;
+}
+
+const TicketInfoContent = ({
+  ticketNumber,
+  client,
+  onClientChange,
+  callerOptions,
+  classes,
+}: TicketInfoContentProps) => {
+  return (
+    <Box className={classes.formGrid}>
+      <TextField
+        label='Ticket Number'
+        value={ticketNumber}
+        disabled
+        className={classes.ticketNumber}
+      />
+      <ClientSearchField
+        value={client}
+        callerOptions={callerOptions}
+        onChange={onClientChange}
+        classes={classes}
+      />
+    </Box>
+  );
+};
 
 interface TicketInfoSectionProps {
   ticketNumber: string;
@@ -66,54 +350,29 @@ const TicketInfoSection = ({
   return (
     <>
       <Typography className={classes.sectionTitle}>Ticket Information</Typography>
+      <TicketInfoContent
+        ticketNumber={ticketNumber}
+        client={client}
+        onClientChange={onClientChange}
+        callerOptions={callerOptions}
+        classes={classes}
+      />
       <Box className={classes.formGrid}>
-        <TextField
-          label='Ticket Number'
-          value={ticketNumber}
-          disabled
-          className={classes.ticketNumber}
+        <UserSearchField
+          value={caller}
+          callerOptions={callerOptions}
+          onChange={onCallerChange}
+          onBlur={onCallerBlur}
+          error={!!(callerTouched && callerError)}
+          errorText={reqError(callerTouched, callerError)}
+          label='Affected user'
         />
-        <Select
-          label='Client'
-          options={callerOptions}
-          value={client}
-          onChange={(e) => onClientChange(e.target.value as string)}
-          required
-        />
-        {callerOptions.length > 0 ? (
-          <Select
-            label='Caller'
-            options={callerOptions}
-            value={caller}
-            onChange={(e) => onCallerChange(e.target.value as string)}
-            onBlur={onCallerBlur}
-            error={!!(callerTouched && callerError)}
-            errorText={reqError(callerTouched, callerError)}
-            required
-          />
-        ) : (
-          <TextField
-            name='caller'
-            label='Caller'
-            value={caller}
-            onChange={onFieldChange}
-            onBlur={onFieldBlur}
-            icon={<SearchIcon />}
-            iconAlignment='right'
-            inputProps={{ maxLength: 50 }}
-            error={!!(callerTouched && callerError)}
-            errorText={reqError(callerTouched, callerError)}
-            required
-          />
-        )}
-        <Select
-          label='Additional Contact(s)'
-          options={callerOptions}
+        <ContactSearchField
           value={additionalContacts}
-          onChange={(e) => onAdditionalContactsChange(e.target.value as string)}
+          callerOptions={callerOptions}
+          onChange={onAdditionalContactsChange}
         />
       </Box>
-
       {/* ── Can't find in the list? Update manually ────────────────────── */}
       <Box className={classes.manualCallerSection}>
         <Checkbox

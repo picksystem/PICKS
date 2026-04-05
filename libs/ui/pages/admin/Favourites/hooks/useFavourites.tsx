@@ -114,7 +114,7 @@ const useFavourites = () => {
         </Typography>
       ),
     },
-    { id: 'caller', label: 'Caller', minWidth: 140, format: (v) => String(v || '-') },
+    { id: 'caller', label: 'Affected user', minWidth: 140, format: (v) => String(v || '-') },
     {
       id: 'priority',
       label: 'Priority',

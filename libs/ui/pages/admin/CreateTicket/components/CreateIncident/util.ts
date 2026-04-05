@@ -77,7 +77,7 @@ export const initialValues = {
   impact: IncidentImpact.MEDIUM,
   urgency: IncidentUrgency.LOW,
   priority: IncidentPriority.LOW,
-  channel: IncidentChannel.PHONE,
+  channel: IncidentChannel.PORTAL,
   status: IncidentStatus.NEW,
   assignmentGroup: '',
   primaryResource: '',

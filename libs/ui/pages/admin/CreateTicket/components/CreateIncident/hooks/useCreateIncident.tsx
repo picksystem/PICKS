@@ -16,13 +16,14 @@ import {
   DraftIncidentSchema,
   calculatePriority,
 } from '@serviceops/interfaces';
-import { useAuth, useFormWithSessionStorage, useNotification, useTicketConfig } from '@serviceops/hooks';
-import { constants } from '@serviceops/utils';
 import {
-  channelOptions,
-  generateTicketNumber,
-  initialValues,
-} from '../util';
+  useAuth,
+  useFormWithSessionStorage,
+  useNotification,
+  useTicketConfig,
+} from '@serviceops/hooks';
+import { constants } from '@serviceops/utils';
+import { channelOptions, generateTicketNumber, initialValues } from '../util';
 
 export interface CreateIncidentProps {
   onCancel?: () => void;
@@ -34,7 +35,8 @@ const useCreateIncident = ({ onCancel, onSuccess }: CreateIncidentProps) => {
   const navigate = useNavigate();
   const { AdminPath } = constants;
   const notify = useNotification();
-  const { impactOptions, urgencyOptions, priorityOptions, statusOptions } = useTicketConfig('incident');
+  const { impactOptions, urgencyOptions, priorityOptions, statusOptions } =
+    useTicketConfig('incident');
 
   const [createIncident, { isLoading }] = useCreateIncidentMutation();
   const [uploadAttachments] = useUploadAttachmentsMutation();
@@ -108,15 +110,22 @@ const useCreateIncident = ({ onCancel, onSuccess }: CreateIncidentProps) => {
     },
   });
 
+  // Auto-calculate priority on form mount and when impact/urgency change
   useEffect(() => {
     const newPriority = calculatePriority(
       formik.values.impact as IncidentImpact,
       formik.values.urgency as IncidentUrgency,
     );
+    console.log('Priority calculation:', {
+      impact: formik.values.impact,
+      urgency: formik.values.urgency,
+      newPriority,
+      currentPriority: formik.values.priority,
+    });
     if (newPriority !== formik.values.priority) {
       formik.setFieldValue('priority', newPriority);
     }
-  }, [formik, formik.values.impact, formik.values.urgency]);
+  }, [formik.values.impact, formik.values.urgency]);
 
   const handleCallerChange = (callerName: string) => {
     formik.setFieldValue('caller', callerName);
@@ -146,7 +155,9 @@ const useCreateIncident = ({ onCancel, onSuccess }: CreateIncidentProps) => {
       return;
     }
     const matchedUser = users.find(
-      (u) => (u.name || `${u.firstName} ${u.lastName}`) === callerName || u.email === formik.values.callerEmail,
+      (u) =>
+        (u.name || `${u.firstName} ${u.lastName}`) === callerName ||
+        u.email === formik.values.callerEmail,
     );
     if (matchedUser && matchedUser.id) {
       try {
@@ -215,9 +226,10 @@ const useCreateIncident = ({ onCancel, onSuccess }: CreateIncidentProps) => {
     isMajor: formik.values.isMajor,
     notes: formik.values.notes || undefined,
     relatedRecords: formik.values.relatedRecords || undefined,
-    attachments: uploadedFilenames && uploadedFilenames.length > 0
-      ? JSON.stringify(uploadedFilenames)
-      : undefined,
+    attachments:
+      uploadedFilenames && uploadedFilenames.length > 0
+        ? JSON.stringify(uploadedFilenames)
+        : undefined,
   });
 
   const handleBack = () => {

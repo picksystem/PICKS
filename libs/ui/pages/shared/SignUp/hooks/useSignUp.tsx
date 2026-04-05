@@ -13,7 +13,11 @@ function detectLocaleSettings() {
 
     // Language
     const langMap: Record<string, string> = {
-      en: 'en', es: 'es', fr: 'fr', de: 'de', ja: 'ja',
+      en: 'en',
+      es: 'es',
+      fr: 'fr',
+      de: 'de',
+      ja: 'ja',
     };
     const language = langMap[langCode] ?? 'en';
 
@@ -47,11 +51,22 @@ function detectLocaleSettings() {
       slaExceptionGroup = city === 'Kolkata' ? 'India Public Holidays' : 'APAC Holidays';
     }
 
-    return { timezone: tz, language, dateFormat, timeFormat, slaWorkingCalendar, slaExceptionGroup };
+    return {
+      timezone: tz,
+      language,
+      dateFormat,
+      timeFormat,
+      slaWorkingCalendar,
+      slaExceptionGroup,
+    };
   } catch {
     return {
-      timezone: '', language: 'en', dateFormat: 'MM/DD/YYYY',
-      timeFormat: '12h', slaWorkingCalendar: 'Standard 8x5', slaExceptionGroup: 'No Holiday Calendar',
+      timezone: '',
+      language: 'en',
+      dateFormat: 'MM/DD/YYYY',
+      timeFormat: '12h',
+      slaWorkingCalendar: 'Standard 8x5',
+      slaExceptionGroup: 'No Holiday Calendar',
     };
   }
 }
@@ -80,6 +95,8 @@ const useSignUp = () => {
   const [submitted, setSubmitted] = useState(false);
   const [step2Touched, setStep2Touched] = useState({ password: false, confirmPassword: false });
   const [step2Submitted, setStep2Submitted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [step, setStep] = useState(() => {
     try {
       const saved = sessionStorage.getItem('signUpStep');
@@ -147,6 +164,11 @@ const useSignUp = () => {
     if (!hasError) {
       setStep2Touched({ password: false, confirmPassword: false });
       setStep2Submitted(false);
+      // Clear password field errors when moving to security step
+      const newErrors = { ...formik.errors };
+      delete newErrors.password;
+      delete newErrors.confirmPassword;
+      formik.setErrors(newErrors);
       setStep(() => nextStep);
     }
   };
@@ -167,6 +189,10 @@ const useSignUp = () => {
     setStep2Touched,
     step2Submitted,
     setStep2Submitted,
+    showPassword,
+    setShowPassword,
+    showConfirmPassword,
+    setShowConfirmPassword,
     handleNext,
     initials,
     navigate,

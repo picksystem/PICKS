@@ -15,7 +15,12 @@ import {
   CreateIncidentSchema,
   DraftIncidentSchema,
 } from '@serviceops/interfaces';
-import { useAuth, useFormWithSessionStorage, useNotification, useTicketConfig } from '@serviceops/hooks';
+import {
+  useAuth,
+  useFormWithSessionStorage,
+  useNotification,
+  useTicketConfig,
+} from '@serviceops/hooks';
 import { constants } from '@serviceops/utils';
 import {
   getTicketConfig,
@@ -37,7 +42,8 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   const { AdminPath } = constants;
   const notify = useNotification();
   const config = getTicketConfig(ticketType);
-  const { impactOptions, urgencyOptions, priorityOptions, statusOptions } = useTicketConfig(ticketType);
+  const { impactOptions, urgencyOptions, priorityOptions, statusOptions } =
+    useTicketConfig(ticketType);
 
   const [createTicket, { isLoading }] = useCreateTicketMutation();
   const [uploadAttachments] = useUploadTicketAttachmentsMutation();
@@ -99,7 +105,9 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
       const ticketData = buildTicketData(IncidentStatus.NEW, uploadedFilenames);
       try {
         await createTicket(ticketData).unwrap();
-        notify.success(`${config.title.replace('Create ', '')} ${ticketNumber} created successfully!`);
+        notify.success(
+          `${config.title.replace('Create ', '')} ${ticketNumber} created successfully!`,
+        );
         formik.resetForm();
         setAttachedFiles([]);
         onSuccess?.(ticketNumber);
@@ -109,16 +117,22 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     },
   });
 
-  // Auto-calculate priority on impact/urgency change
+  // Auto-calculate priority on form mount and when impact/urgency change
   useEffect(() => {
     const newPriority = calculatePriority(
       formik.values.impact as IncidentImpact,
       formik.values.urgency as IncidentUrgency,
     );
+    console.log('Priority calculation:', {
+      impact: formik.values.impact,
+      urgency: formik.values.urgency,
+      newPriority,
+      currentPriority: formik.values.priority,
+    });
     if (newPriority !== formik.values.priority) {
       formik.setFieldValue('priority', newPriority);
     }
-  }, [formik, formik.values.impact, formik.values.urgency]);
+  }, [formik.values.impact, formik.values.urgency]);
 
   const handleCallerChange = (callerName: string) => {
     formik.setFieldValue('caller', callerName);

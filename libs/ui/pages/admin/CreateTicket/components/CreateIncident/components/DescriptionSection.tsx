@@ -77,27 +77,37 @@ const DescriptionSection = ({
     }
   }, [onDescriptionChange]);
 
-  const applyFormat = useCallback((command: string, value?: string) => {
-    editorRef.current?.focus();
-    document.execCommand(command, false, value);
-    if (editorRef.current) {
-      onDescriptionChange(editorRef.current.innerHTML);
-    }
-  }, [onDescriptionChange]);
-
-  const handleImageInsert = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const src = evt.target?.result as string;
+  const applyFormat = useCallback(
+    (command: string, value?: string) => {
       editorRef.current?.focus();
-      document.execCommand('insertHTML', false, `<img src="${src}" style="max-width:100%;height:auto;border-radius:4px;margin:4px 0;" alt="image"/>`);
-      if (editorRef.current) onDescriptionChange(editorRef.current.innerHTML);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  }, [onDescriptionChange]);
+      document.execCommand(command, false, value);
+      if (editorRef.current) {
+        onDescriptionChange(editorRef.current.innerHTML);
+      }
+    },
+    [onDescriptionChange],
+  );
+
+  const handleImageInsert = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const src = evt.target?.result as string;
+        editorRef.current?.focus();
+        document.execCommand(
+          'insertHTML',
+          false,
+          `<img src="${src}" style="max-width:100%;height:auto;border-radius:4px;margin:4px 0;" alt="image"/>`,
+        );
+        if (editorRef.current) onDescriptionChange(editorRef.current.innerHTML);
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    },
+    [onDescriptionChange],
+  );
 
   const hasError = !!(touched.description && errors.description);
 
@@ -122,6 +132,19 @@ const DescriptionSection = ({
 
         {/* Rich Text Description */}
         <Box className={classes.fullWidth}>
+          <Typography
+            sx={{
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              mb: 0.5,
+              color: 'text.primary',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.25,
+            }}
+          >
+            Description <span style={{ color: '#d32f2f' }}>*</span>
+          </Typography>
           <Box
             sx={{
               border: hasError ? '1px solid #d32f2f' : '1px solid rgba(0,0,0,0.23)',
@@ -148,34 +171,73 @@ const DescriptionSection = ({
               }}
             >
               <Tooltip title='Bold'>
-                <IconButton size='small' sx={toolbarBtnSx} onMouseDown={(e) => { e.preventDefault(); applyFormat('bold'); }}>
+                <IconButton
+                  size='small'
+                  sx={toolbarBtnSx}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    applyFormat('bold');
+                  }}
+                >
                   <FormatBoldIcon />
                 </IconButton>
               </Tooltip>
               <Tooltip title='Italic'>
-                <IconButton size='small' sx={toolbarBtnSx} onMouseDown={(e) => { e.preventDefault(); applyFormat('italic'); }}>
+                <IconButton
+                  size='small'
+                  sx={toolbarBtnSx}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    applyFormat('italic');
+                  }}
+                >
                   <FormatItalicIcon />
                 </IconButton>
               </Tooltip>
               <Tooltip title='Underline'>
-                <IconButton size='small' sx={toolbarBtnSx} onMouseDown={(e) => { e.preventDefault(); applyFormat('underline'); }}>
+                <IconButton
+                  size='small'
+                  sx={toolbarBtnSx}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    applyFormat('underline');
+                  }}
+                >
                   <FormatUnderlinedIcon />
                 </IconButton>
               </Tooltip>
               <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />
               <Tooltip title='Bullet List'>
-                <IconButton size='small' sx={toolbarBtnSx} onMouseDown={(e) => { e.preventDefault(); applyFormat('insertUnorderedList'); }}>
+                <IconButton
+                  size='small'
+                  sx={toolbarBtnSx}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    applyFormat('insertUnorderedList');
+                  }}
+                >
                   <FormatListBulletedIcon />
                 </IconButton>
               </Tooltip>
               <Tooltip title='Numbered List'>
-                <IconButton size='small' sx={toolbarBtnSx} onMouseDown={(e) => { e.preventDefault(); applyFormat('insertOrderedList'); }}>
+                <IconButton
+                  size='small'
+                  sx={toolbarBtnSx}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    applyFormat('insertOrderedList');
+                  }}
+                >
                   <FormatListNumberedIcon />
                 </IconButton>
               </Tooltip>
               <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />
               <Tooltip title='Insert Image'>
-                <IconButton size='small' sx={toolbarBtnSx} onClick={() => imageInputRef.current?.click()}>
+                <IconButton
+                  size='small'
+                  sx={toolbarBtnSx}
+                  onClick={() => imageInputRef.current?.click()}
+                >
                   <ImageOutlinedIcon />
                 </IconButton>
               </Tooltip>
@@ -194,8 +256,12 @@ const DescriptionSection = ({
               contentEditable
               suppressContentEditableWarning
               onInput={handleEditorInput}
-              onFocus={() => { isFocused.current = true; }}
-              onBlur={() => { isFocused.current = false; }}
+              onFocus={() => {
+                isFocused.current = true;
+              }}
+              onBlur={() => {
+                isFocused.current = false;
+              }}
               sx={{
                 minHeight: 140,
                 padding: '10px 14px',
@@ -223,7 +289,16 @@ const DescriptionSection = ({
         </Box>
 
         {/* Checkboxes + Add Attachment */}
-        <Box className={classes.fullWidth} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
+        <Box
+          className={classes.fullWidth}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 1,
+          }}
+        >
           <Box className={classes.checkboxRow}>
             <Checkbox
               label='Major Ticket'
@@ -249,7 +324,11 @@ const DescriptionSection = ({
                 gap: 0.5,
                 fontSize: '0.8rem',
                 color: 'text.secondary',
-                '&:hover': { borderColor: 'primary.main', color: 'primary.main', backgroundColor: 'primary.50' },
+                '&:hover': {
+                  borderColor: 'primary.main',
+                  color: 'primary.main',
+                  backgroundColor: 'primary.50',
+                },
               }}
             >
               <AttachFileIcon sx={{ fontSize: '1rem' }} />

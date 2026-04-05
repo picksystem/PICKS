@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import {
   Typography,
   Chip,
@@ -8,6 +8,12 @@ import {
   Tooltip,
   IconButton,
   Divider,
+  Paper,
+  Popper,
+  MenuItem,
+  MenuList,
+  Alert,
+  AlertTitle,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
@@ -15,6 +21,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CancelIcon from '@mui/icons-material/Cancel';
 import SaveIcon from '@mui/icons-material/Save';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
+import ErrorIcon from '@mui/icons-material/Error';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
@@ -86,6 +93,426 @@ const HERO_ICONS: Record<string, React.ElementType> = {
   incident: ReportProblemIcon,
   service_request: BuildIcon,
   advisory_request: LightbulbIcon,
+};
+
+// ── Searchable Client Field Component ────────────────────────────
+interface ClientFieldProps {
+  value: string;
+  callerOptions: { value: string; label: string }[];
+  onChange: (value: string) => void;
+}
+
+const ClientSearchField = ({ value, callerOptions, onChange }: ClientFieldProps) => {
+  const [searchText, setSearchText] = useState(value);
+  const [isOpen, setIsOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+
+  const filteredOptions = callerOptions.filter((option) =>
+    option.label.toLowerCase().includes(searchText.toLowerCase()),
+  );
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setSearchText(newValue);
+    onChange(newValue);
+    setIsOpen(newValue.length > 0);
+  };
+
+  const handleSelectOption = (option: { value: string; label: string }) => {
+    setSearchText(option.label);
+    onChange(option.label);
+    setIsOpen(false);
+  };
+
+  const handleFocus = () => {
+    if (callerOptions.length > 0) {
+      setIsOpen(true);
+    }
+  };
+
+  const handleBlur = () => {
+    setTimeout(() => setIsOpen(false), 200);
+  };
+
+  return (
+    <Box ref={anchorRef} position='relative'>
+      <TextField
+        name='client'
+        label='Client'
+        value={searchText}
+        onChange={handleInputChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        placeholder='Search or select client'
+        icon={<SearchIcon />}
+        iconAlignment='right'
+        inputProps={{ maxLength: 50 }}
+        required
+      />
+      <Popper
+        open={isOpen && filteredOptions.length > 0}
+        anchorEl={anchorRef.current}
+        placement='bottom-start'
+        style={{ width: anchorRef.current?.offsetWidth, zIndex: 1000 }}
+      >
+        <Paper elevation={3}>
+          <MenuList>
+            {filteredOptions.map((option) => (
+              <MenuItem
+                key={option.value}
+                onClick={() => handleSelectOption(option)}
+                selected={searchText === option.label}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
+          </MenuList>
+        </Paper>
+      </Popper>
+    </Box>
+  );
+};
+
+// ── Searchable User Field Component ──────────────────────────
+interface UserFieldProps {
+  value: string;
+  callerOptions: { value: string; label: string }[];
+  onChange: (value: string) => void;
+  onBlur: React.FocusEventHandler;
+  error: boolean;
+  errorText?: string | React.ReactNode;
+  label: string;
+}
+
+const UserSearchField = ({
+  value,
+  callerOptions,
+  onChange,
+  onBlur,
+  error,
+  errorText,
+  label,
+}: UserFieldProps) => {
+  const [searchText, setSearchText] = useState(value);
+  const [isOpen, setIsOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+
+  const filteredOptions = callerOptions.filter((option) =>
+    option.label.toLowerCase().includes(searchText.toLowerCase()),
+  );
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setSearchText(newValue);
+    onChange(newValue);
+    setIsOpen(newValue.length > 0);
+  };
+
+  const handleSelectOption = (option: { value: string; label: string }) => {
+    setSearchText(option.label);
+    onChange(option.label);
+    setIsOpen(false);
+  };
+
+  const handleFocus = () => {
+    if (callerOptions.length > 0) {
+      setIsOpen(true);
+    }
+  };
+
+  const handleBlur = () => {
+    setTimeout(() => setIsOpen(false), 200);
+  };
+
+  return (
+    <Box ref={anchorRef} position='relative'>
+      <TextField
+        name='user'
+        label={label}
+        value={searchText}
+        onChange={handleInputChange}
+        onFocus={handleFocus}
+        onBlur={onBlur}
+        placeholder={`Search or select ${label.toLowerCase()}`}
+        icon={<SearchIcon />}
+        iconAlignment='right'
+        inputProps={{ maxLength: 50 }}
+        error={error}
+        errorText={errorText}
+        required
+      />
+      <Popper
+        open={isOpen && filteredOptions.length > 0}
+        anchorEl={anchorRef.current}
+        placement='bottom-start'
+        style={{ width: anchorRef.current?.offsetWidth, zIndex: 1000 }}
+      >
+        <Paper elevation={3}>
+          <MenuList>
+            {filteredOptions.map((option) => (
+              <MenuItem
+                key={option.value}
+                onClick={() => handleSelectOption(option)}
+                selected={searchText === option.label}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
+          </MenuList>
+        </Paper>
+      </Popper>
+    </Box>
+  );
+};
+
+// ── Searchable Contact Field Component ──────────────────────────
+interface ContactFieldProps {
+  value: string;
+  callerOptions: { value: string; label: string }[];
+  onChange: (value: string) => void;
+}
+
+const ContactSearchField = ({ value, callerOptions, onChange }: ContactFieldProps) => {
+  const [searchText, setSearchText] = useState(value);
+  const [isOpen, setIsOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+
+  const filteredOptions = callerOptions.filter((option) =>
+    option.label.toLowerCase().includes(searchText.toLowerCase()),
+  );
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setSearchText(newValue);
+    onChange(newValue);
+    setIsOpen(newValue.length > 0);
+  };
+
+  const handleSelectOption = (option: { value: string; label: string }) => {
+    setSearchText(option.label);
+    onChange(option.label);
+    setIsOpen(false);
+  };
+
+  const handleFocus = () => {
+    if (callerOptions.length > 0) {
+      setIsOpen(true);
+    }
+  };
+
+  const handleBlur = () => {
+    setTimeout(() => setIsOpen(false), 200);
+  };
+
+  return (
+    <Box ref={anchorRef} position='relative'>
+      <TextField
+        name='contact'
+        label='Additional Contact(s)'
+        value={searchText}
+        onChange={handleInputChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        placeholder='Search or select contact'
+        icon={<SearchIcon />}
+        iconAlignment='right'
+        inputProps={{ maxLength: 50 }}
+      />
+      <Popper
+        open={isOpen && filteredOptions.length > 0}
+        anchorEl={anchorRef.current}
+        placement='bottom-start'
+        style={{ width: anchorRef.current?.offsetWidth, zIndex: 1000 }}
+      >
+        <Paper elevation={3}>
+          <MenuList>
+            {filteredOptions.map((option) => (
+              <MenuItem
+                key={option.value}
+                onClick={() => handleSelectOption(option)}
+                selected={searchText === option.label}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
+          </MenuList>
+        </Paper>
+      </Popper>
+    </Box>
+  );
+};
+
+// ── Searchable Category Field Component ─────────────────────────
+interface CategoryFieldProps {
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+  label: string;
+  required?: boolean;
+}
+
+const CategorySearchField = ({ value, options, onChange, label, required }: CategoryFieldProps) => {
+  const [searchText, setSearchText] = useState(value);
+  const [isOpen, setIsOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+
+  const filteredOptions = options.filter((option) =>
+    option.label.toLowerCase().includes(searchText.toLowerCase()),
+  );
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setSearchText(newValue);
+    onChange(newValue);
+    setIsOpen(newValue.length > 0);
+  };
+
+  const handleSelectOption = (option: { value: string; label: string }) => {
+    setSearchText(option.label);
+    onChange(option.label);
+    setIsOpen(false);
+  };
+
+  const handleFocus = () => {
+    if (options.length > 0) {
+      setIsOpen(true);
+    }
+  };
+
+  const handleBlur = () => {
+    setTimeout(() => setIsOpen(false), 200);
+  };
+
+  return (
+    <Box ref={anchorRef} position='relative'>
+      <TextField
+        name={label.toLowerCase().replace(/\s+/g, '')}
+        label={required ? `${label} *` : label}
+        value={searchText}
+        onChange={handleInputChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        placeholder={`Search or select ${label.toLowerCase()}`}
+        icon={<SearchIcon />}
+        iconAlignment='right'
+        inputProps={{ maxLength: 80 }}
+      />
+      <Popper
+        open={isOpen && filteredOptions.length > 0}
+        anchorEl={anchorRef.current}
+        placement='bottom-start'
+        style={{ width: anchorRef.current?.offsetWidth, zIndex: 1000 }}
+      >
+        <Paper elevation={3}>
+          <MenuList>
+            {filteredOptions.map((option) => (
+              <MenuItem
+                key={option.value}
+                onClick={() => handleSelectOption(option)}
+                selected={searchText === option.label}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
+          </MenuList>
+        </Paper>
+      </Popper>
+    </Box>
+  );
+};
+
+// ── Searchable Resource Field Component ─────────────────────────
+interface ResourceFieldProps {
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+  onBlur?: React.FocusEventHandler;
+  error?: boolean;
+  errorText?: string | React.ReactNode;
+  label: string;
+  required?: boolean;
+}
+
+const ResourceSearchField = ({
+  value,
+  options,
+  onChange,
+  onBlur,
+  error,
+  errorText,
+  label,
+  required,
+}: ResourceFieldProps) => {
+  const [searchText, setSearchText] = useState(value);
+  const [isOpen, setIsOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+
+  const filteredOptions = options.filter((option) =>
+    option.label.toLowerCase().includes(searchText.toLowerCase()),
+  );
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setSearchText(newValue);
+    onChange(newValue);
+    setIsOpen(newValue.length > 0);
+  };
+
+  const handleSelectOption = (option: { value: string; label: string }) => {
+    setSearchText(option.label);
+    onChange(option.label);
+    setIsOpen(false);
+  };
+
+  const handleFocus = () => {
+    if (options.length > 0) {
+      setIsOpen(true);
+    }
+  };
+
+  const handleBlur = () => {
+    setTimeout(() => setIsOpen(false), 200);
+  };
+
+  return (
+    <Box ref={anchorRef} position='relative'>
+      <TextField
+        name={label.toLowerCase().replace(/\s+/g, '')}
+        label={label}
+        value={searchText}
+        onChange={handleInputChange}
+        onFocus={handleFocus}
+        onBlur={onBlur}
+        placeholder={`Search or enter ${label.toLowerCase()}`}
+        icon={<SearchIcon />}
+        iconAlignment='right'
+        inputProps={{ maxLength: 80 }}
+        error={error}
+        errorText={errorText}
+        required={required}
+      />
+      <Popper
+        open={isOpen && filteredOptions.length > 0}
+        anchorEl={anchorRef.current}
+        placement='bottom-start'
+        style={{ width: anchorRef.current?.offsetWidth, zIndex: 1000 }}
+      >
+        <Paper elevation={3}>
+          <MenuList>
+            {filteredOptions.map((option) => (
+              <MenuItem
+                key={option.value}
+                onClick={() => handleSelectOption(option)}
+                selected={searchText === option.label}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
+          </MenuList>
+        </Paper>
+      </Popper>
+    </Box>
+  );
 };
 
 const toolbarBtnSx = {
@@ -300,47 +727,25 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                 disabled
                 sx={{ '& .MuiInputBase-root': { backgroundColor: 'grey.100' } }}
               />
-              <Select
-                label='Client'
-                options={callerOptions}
+              <ClientSearchField
                 value={formik.values.client}
-                onChange={(e) => formik.setFieldValue('client', e.target.value as string)}
-                required
+                callerOptions={callerOptions}
+                onChange={(value) => formik.setFieldValue('client', value)}
               />
-              {callerOptions.length > 0 ? (
-                <Select
-                  label='Caller'
-                  options={callerOptions}
-                  value={formik.values.caller}
-                  onChange={(e) => handleCallerChange(e.target.value as string)}
-                  onBlur={formik.handleBlur}
-                  error={!!(formik.touched.caller && formik.errors.caller)}
-                  errorText={reqError(formik.touched.caller, formik.errors.caller as string)}
-                  required
-                />
-              ) : (
-                <TextField
-                  name='caller'
-                  label='Caller'
-                  value={formik.values.caller}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  icon={<SearchIcon />}
-                  iconAlignment='right'
-                  inputProps={{ maxLength: 50 }}
-                  error={!!(formik.touched.caller && formik.errors.caller)}
-                  errorText={reqError(formik.touched.caller, formik.errors.caller as string)}
-                  required
-                />
-              )}
+              <UserSearchField
+                value={formik.values.caller}
+                callerOptions={callerOptions}
+                onChange={(value) => handleCallerChange(value)}
+                onBlur={formik.handleBlur}
+                error={!!(formik.touched.caller && formik.errors.caller)}
+                errorText={reqError(formik.touched.caller, formik.errors.caller as string)}
+                label='Affected User'
+              />
               {config.showAdditionalContacts && (
-                <Select
-                  label='Additional Contact(s)'
-                  options={callerOptions}
+                <ContactSearchField
                   value={formik.values.additionalContacts}
-                  onChange={(e) =>
-                    formik.setFieldValue('additionalContacts', e.target.value as string)
-                  }
+                  callerOptions={callerOptions}
+                  onChange={(value) => formik.setFieldValue('additionalContacts', value)}
                 />
               )}
             </Box>
@@ -470,45 +875,38 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
         {wrap(
           1,
           <Box className={classes.formGrid}>
-            <TextField
-              name='businessCategory'
-              label='Business Category'
+            <CategorySearchField
               value={formik.values.businessCategory}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              inputProps={{ maxLength: 80 }}
+              options={[]}
+              onChange={(value) => formik.setFieldValue('businessCategory', value)}
+              label='Business Category'
+              required
             />
-            <TextField
-              name='serviceLine'
-              label='Service Line'
+            <CategorySearchField
               value={formik.values.serviceLine}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              inputProps={{ maxLength: 80 }}
+              options={[]}
+              onChange={(value) => formik.setFieldValue('serviceLine', value)}
+              label='Service Line'
+              required
             />
-            <TextField
-              name='application'
-              label='Application'
+            <CategorySearchField
               value={formik.values.application}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              inputProps={{ maxLength: 80 }}
+              options={[]}
+              onChange={(value) => formik.setFieldValue('application', value)}
+              label='Application'
+              required
             />
-            <TextField
-              name='applicationCategory'
-              label='Application Category'
+            <CategorySearchField
               value={formik.values.applicationCategory}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              inputProps={{ maxLength: 80 }}
+              options={[]}
+              onChange={(value) => formik.setFieldValue('applicationCategory', value)}
+              label='Application Category'
             />
-            <TextField
-              name='applicationSubCategory'
-              label='Application Sub-Category'
+            <CategorySearchField
               value={formik.values.applicationSubCategory}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              inputProps={{ maxLength: 80 }}
+              options={[]}
+              onChange={(value) => formik.setFieldValue('applicationSubCategory', value)}
+              label='Application Sub-Category'
             />
           </Box>,
         )}
@@ -536,6 +934,19 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
 
             {/* Rich text editor */}
             <Box className={classes.fullWidth}>
+              <Typography
+                sx={{
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  mb: 0.5,
+                  color: 'text.primary',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.25,
+                }}
+              >
+                Description <span style={{ color: '#d32f2f' }}>*</span>
+              </Typography>
               <Box
                 sx={{
                   border: descHasError ? '1px solid #d32f2f' : '1px solid rgba(0,0,0,0.23)',
@@ -745,26 +1156,20 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
           3,
           <Box className={classes.formGrid}>
             <Select
-              label='Impact'
+              label='Impact *'
               options={impactOptions}
               value={formik.values.impact}
               onChange={(e) => formik.setFieldValue('impact', e.target.value as string)}
               onBlur={formik.handleBlur}
             />
             <Select
-              label='Urgency'
+              label='Urgency *'
               options={urgencyOptions}
               value={formik.values.urgency}
               onChange={(e) => formik.setFieldValue('urgency', e.target.value as string)}
               onBlur={formik.handleBlur}
             />
-            <Select
-              label='Priority'
-              options={priorityOptions}
-              value={formik.values.priority}
-              onChange={(e) => formik.setFieldValue('priority', e.target.value as string)}
-              onBlur={formik.handleBlur}
-            />
+            <TextField label='Calculated Priority' value={formik.values.priority} disabled />
             <Select
               label='Status'
               options={statusOptions}
@@ -772,29 +1177,42 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
               onChange={(e) => formik.setFieldValue('status', e.target.value as string)}
               onBlur={formik.handleBlur}
             />
-            <TextField
-              name='assignmentGroup'
-              label='Assignment Group'
+            <ResourceSearchField
               value={formik.values.assignmentGroup}
-              onChange={formik.handleChange}
+              options={[]}
+              onChange={(value) => formik.setFieldValue('assignmentGroup', value)}
               onBlur={formik.handleBlur}
-              inputProps={{ maxLength: 80 }}
+              error={!!(formik.touched.assignmentGroup && formik.errors.assignmentGroup)}
+              errorText={reqError(
+                formik.touched.assignmentGroup,
+                formik.errors.assignmentGroup as string,
+              )}
+              label='Assignment Group'
+              required
             />
-            <TextField
-              name='primaryResource'
-              label='Primary Resource'
+            <ResourceSearchField
               value={formik.values.primaryResource}
-              onChange={formik.handleChange}
+              options={[]}
+              onChange={(value) => formik.setFieldValue('primaryResource', value)}
               onBlur={formik.handleBlur}
-              inputProps={{ maxLength: 80 }}
+              error={!!(formik.touched.primaryResource && formik.errors.primaryResource)}
+              errorText={reqError(
+                formik.touched.primaryResource,
+                formik.errors.primaryResource as string,
+              )}
+              label='Primary Resource'
             />
-            <TextField
-              name='secondaryResources'
-              label='Secondary Resource(s)'
+            <ResourceSearchField
               value={formik.values.secondaryResources}
-              onChange={formik.handleChange}
+              options={[]}
+              onChange={(value) => formik.setFieldValue('secondaryResources', value)}
               onBlur={formik.handleBlur}
-              inputProps={{ maxLength: 200 }}
+              error={!!(formik.touched.secondaryResources && formik.errors.secondaryResources)}
+              errorText={reqError(
+                formik.touched.secondaryResources,
+                formik.errors.secondaryResources as string,
+              )}
+              label='Secondary Resource(s)'
             />
           </Box>,
         )}
@@ -844,6 +1262,42 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
             )}
           </>,
           true,
+        )}
+
+        {/* Error Summary Section */}
+        {Object.keys(formik.errors).length > 0 && (
+          <Alert
+            severity='error'
+            icon={<ErrorIcon />}
+            sx={{
+              mb: 2,
+              backgroundColor: 'error.light',
+              color: 'error.dark',
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'error.main',
+            }}
+          >
+            <AlertTitle sx={{ fontWeight: 600, mb: 1 }}>
+              Please fill in the following required fields:
+            </AlertTitle>
+            <ul style={{ margin: 0, paddingLeft: '1rem' }}>
+              {Object.entries(formik.errors).map(([fieldName, error]) => (
+                <li
+                  key={fieldName}
+                  style={{
+                    marginBottom: '4px',
+                    textTransform: 'capitalize',
+                    fontWeight: 500,
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  {fieldName.replace(/([A-Z])/g, ' $1').trim()}{' '}
+                  {typeof error === 'string' ? `- ${error}` : ''}
+                </li>
+              ))}
+            </ul>
+          </Alert>
         )}
 
         {/* ── Action buttons ────────────────────────────────────────────── */}

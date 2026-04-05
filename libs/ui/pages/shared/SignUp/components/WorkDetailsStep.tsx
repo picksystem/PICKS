@@ -10,6 +10,7 @@ import {
   SelectChangeEvent,
 } from '@mui/material';
 import WorkIcon from '@mui/icons-material/Work';
+import SearchIcon from '@mui/icons-material/Search';
 import { useFieldError } from '@serviceops/hooks';
 import TextField from '../../../../components/TextField/TextField';
 
@@ -68,6 +69,8 @@ const WorkDetailsStep = ({
               errorText={reqError(touched.workLocation, errors.workLocation)}
               fullWidth
               required
+              icon={<SearchIcon sx={{ fontSize: 22 }} />}
+              iconAlignment='right'
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -83,6 +86,8 @@ const WorkDetailsStep = ({
               error={touched.department && Boolean(errors.department)}
               errorText={touched.department ? errors.department : undefined}
               fullWidth
+              icon={<SearchIcon sx={{ fontSize: 22 }} />}
+              iconAlignment='right'
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -130,6 +135,8 @@ const WorkDetailsStep = ({
               errorText={reqError(touched.managerName, errors.managerName)}
               fullWidth
               required
+              icon={<SearchIcon sx={{ fontSize: 22 }} />}
+              iconAlignment='right'
             />
           </Grid>
           <Grid size={{ xs: 12 }}>

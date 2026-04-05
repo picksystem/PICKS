@@ -49,6 +49,10 @@ const SignUp = () => {
     setStep2Touched,
     step2Submitted,
     setStep2Submitted,
+    showPassword,
+    setShowPassword,
+    showConfirmPassword,
+    setShowConfirmPassword,
     handleNext,
     initials,
     navigate,
@@ -468,6 +472,10 @@ const SignUp = () => {
                   setStep2Touched((p) => ({ ...p, confirmPassword: true }));
                   formik.handleBlur(e);
                 }}
+                showPassword={showPassword}
+                onTogglePassword={() => setShowPassword(!showPassword)}
+                showConfirmPassword={showConfirmPassword}
+                onToggleConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
                 classes={classes}
               />
             )}

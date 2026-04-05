@@ -239,7 +239,7 @@ const CreateGenericRequest = ({
               />
               {callerOptions.length > 0 ? (
                 <Select
-                  label='Caller'
+                  label='Affected user'
                   options={callerOptions}
                   value={formik.values.caller}
                   onChange={(e) => handleCallerChange(e.target.value as string)}
@@ -251,7 +251,7 @@ const CreateGenericRequest = ({
               ) : (
                 <TextField
                   name='caller'
-                  label='Caller'
+                  label='Affected user'
                   value={formik.values.caller}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}

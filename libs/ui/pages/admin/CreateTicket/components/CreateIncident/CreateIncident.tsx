@@ -4,8 +4,11 @@ import {
   Accordion as MuiAccordion,
   AccordionSummary as MuiAccordionSummary,
   AccordionDetails as MuiAccordionDetails,
+  Alert,
+  AlertTitle,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ErrorIcon from '@mui/icons-material/Error';
 import { Box, TextField, Select, UploadFile } from '@serviceops/component';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
@@ -335,6 +338,42 @@ const CreateIncident = ({ onCancel, onSuccess }: CreateIncidentProps) => {
             )}
           </>,
           true,
+        )}
+
+        {/* Error Summary Section */}
+        {Object.keys(formik.errors).length > 0 && (
+          <Alert
+            severity='error'
+            icon={<ErrorIcon />}
+            sx={{
+              mb: 2,
+              backgroundColor: 'error.light',
+              color: 'error.dark',
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'error.main',
+            }}
+          >
+            <AlertTitle sx={{ fontWeight: 600, mb: 1 }}>
+              Please fill in the following required fields:
+            </AlertTitle>
+            <ul style={{ margin: 0, paddingLeft: '1rem' }}>
+              {Object.entries(formik.errors).map(([fieldName, error]) => (
+                <li
+                  key={fieldName}
+                  style={{
+                    marginBottom: '4px',
+                    textTransform: 'capitalize',
+                    fontWeight: 500,
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  {fieldName.replace(/([A-Z])/g, ' $1').trim()}{' '}
+                  {typeof error === 'string' ? `- ${error}` : ''}
+                </li>
+              ))}
+            </ul>
+          </Alert>
         )}
 
         <ActionButtons
