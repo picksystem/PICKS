@@ -76,18 +76,10 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
       if (!typeKeys.includes(key)) delete enrichedPriorities.matrices[key];
     }
 
-    // Sync byTicketType statuses
+    // Pass statuses through unchanged (flat items list, no enrichment needed)
     const enrichedStatuses: IConfigurationData['statuses'] = {
-      byTicketType: { ...data.statuses.byTicketType },
+      items: data.statuses?.items ?? [],
     };
-    for (const key of typeKeys) {
-      if (!enrichedStatuses.byTicketType[key]) {
-        enrichedStatuses.byTicketType[key] = [];
-      }
-    }
-    for (const key of Object.keys(enrichedStatuses.byTicketType)) {
-      if (!typeKeys.includes(key)) delete enrichedStatuses.byTicketType[key];
-    }
 
     return { ...data, priorities: enrichedPriorities, statuses: enrichedStatuses };
   }

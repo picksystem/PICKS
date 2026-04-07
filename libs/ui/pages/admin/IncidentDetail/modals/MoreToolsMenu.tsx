@@ -72,10 +72,10 @@ const MoreToolsMenu = ({
     </MenuItem>
     <Divider />
     <MenuItem onClick={onClose}>
-      <ListItemText>Merge</ListItemText>
+      <ListItemText>Merge to Another Ticket</ListItemText>
     </MenuItem>
     <MenuItem onClick={onClose}>
-      <ListItemText>Absorb</ListItemText>
+      <ListItemText>Absorb Other Tickets</ListItemText>
     </MenuItem>
     <MenuItem onClick={onClose}>
       <ListItemText>Reopen</ListItemText>
@@ -85,7 +85,7 @@ const MoreToolsMenu = ({
       <ListItemText>Link to Other Ticket</ListItemText>
     </MenuItem>
     <MenuItem onClick={onClose}>
-      <ListItemText>Add to Problem</ListItemText>
+      <ListItemText>Add to a Problem Ticket</ListItemText>
     </MenuItem>
     <MenuItem onClick={onClose}>
       <ListItemText>Create Change Request</ListItemText>

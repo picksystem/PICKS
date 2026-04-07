@@ -31,9 +31,8 @@ const CreateTicket = () => {
   const iconMap = loadIconMap();
   const tagMap = loadTagMap();
 
-  const activeTypes = (ticketTypes ?? [])
-    .filter((t) => t.isActive)
-    .sort((a, b) => (a.displayName || a.name).localeCompare(b.displayName || b.name));
+  // API returns records already ordered by displayOrder from DB
+  const activeTypes = (ticketTypes ?? []).filter((t) => t.isActive);
   const selected = activeTypes.find((t) => t.type === selectedType);
 
   const getVisuals = (type: string) => {

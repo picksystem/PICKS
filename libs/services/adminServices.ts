@@ -120,6 +120,14 @@ export const adminApi = baseApi.injectEndpoints({
       transformResponse: (response: ITicketTypeResponse) => response.data,
       invalidatesTags: ['TicketType', 'Configuration'],
     }),
+    reorderTicketTypes: builder.mutation<void, { id: number; displayOrder: number }[]>({
+      query: (orders) => ({
+        url: '/api/admin/ticket-type/reorder',
+        method: 'PATCH',
+        body: { orders },
+      }),
+      invalidatesTags: ['TicketType'],
+    }),
 
     // Incident endpoints
     getIncidents: builder.query<IIncident[], void>({
@@ -410,6 +418,7 @@ export const {
   useGetTicketTypeByIdQuery,
   useCreateTicketTypeMutation,
   useUpdateTicketTypeMutation,
+  useReorderTicketTypesMutation,
   useDeleteTicketTypeMutation,
   // Incident hooks
   useUploadAttachmentsMutation,

@@ -19,9 +19,11 @@ const SideNav = () => {
       className={cx(classes.drawer, collapsed ? classes.drawerCollapsed : '')}
     >
       <Box className={collapsed ? classes.toggleButtonCenter : classes.toggleButtonRight}>
-        <IconButton onClick={toggleCollapse}>
-          {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-        </IconButton>
+        <Tooltip title={collapsed ? 'Open sidebar' : 'Close sidebar'} placement='right' arrow>
+          <IconButton onClick={toggleCollapse}>
+            {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+          </IconButton>
+        </Tooltip>
       </Box>
 
       <Box

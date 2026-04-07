@@ -614,7 +614,6 @@ const Sidebar = ({
   applicationCategoryOptions = [],
   applicationSubCategoryOptions = [],
   ticketSourceOptions = [],
-  businessCategoryOptions = [],
   timeSummary,
 }: SidebarProps) => {
   const createdByMatchesUser =
@@ -676,7 +675,7 @@ const Sidebar = ({
               <Box sx={creatorInitialsSx}>{getNameInitials(incident.createdBy || '?')}</Box>
             )}
             <Box sx={creatorContentSx}>
-              <Typography sx={creatorLabelSx}>Created by</Typography>
+              <Typography sx={creatorLabelSx}>Created</Typography>
               <Typography sx={creatorNameSx}>{incident.createdBy || '—'}</Typography>
               <Typography sx={creatorDateSx}>
                 {new Date(incident.createdAt).toLocaleDateString(undefined, {

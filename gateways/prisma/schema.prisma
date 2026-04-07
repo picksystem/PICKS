@@ -150,6 +150,7 @@ model AdminTicketType {
   prefix       String  @default("")
   isActive     Boolean @default(true)
   numberLength Int     @default(7)
+  displayOrder Int     @default(0)
 }
 
 model AdminIncident {
@@ -157,10 +158,11 @@ model AdminIncident {
   number             String   @unique
   client             String?
   caller             String
-  callerPhone        String?
-  callerEmail        String?
-  callerLocation     String?
-  callerDepartment   String?
+  callerPhone              String?
+  callerEmail              String?
+  callerLocation           String?
+  callerDepartment         String?
+  callerReportingManager   String?
   additionalContacts String?
   businessCategory   String?
   serviceLine        String?
@@ -285,10 +287,11 @@ model AdminServiceRequest {
   number             String   @unique
   client             String?
   caller             String
-  callerPhone        String?
-  callerEmail        String?
-  callerLocation     String?
-  callerDepartment   String?
+  callerPhone              String?
+  callerEmail              String?
+  callerLocation           String?
+  callerDepartment         String?
+  callerReportingManager   String?
   businessCategory   String?
   serviceLine        String?
   application        String?
@@ -407,10 +410,11 @@ model AdminAdvisoryRequest {
   number             String   @unique
   client             String?
   caller             String
-  callerPhone        String?
-  callerEmail        String?
-  callerLocation     String?
-  callerDepartment   String?
+  callerPhone              String?
+  callerEmail              String?
+  callerLocation           String?
+  callerDepartment         String?
+  callerReportingManager   String?
   businessCategory   String?
   serviceLine        String?
   application        String?

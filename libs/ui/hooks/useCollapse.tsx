@@ -12,16 +12,25 @@ export function CollapseProvider({ children }: { children: ReactNode }) {
   const { isXS, isSM } = useDevice();
   const isMobileDevice = isXS || isSM;
 
-  // Initialize collapsed based on current device
-  const [collapsed, setCollapsed] = useState(isMobileDevice);
+  // Read persisted state; default to collapsed (true) on first visit
+  const [collapsed, setCollapsed] = useState(() => {
+    if (isMobileDevice) return true;
+    const stored = localStorage.getItem('sideNavCollapsed');
+    return stored === null ? true : stored === 'true';
+  });
 
-  // Update collapsed automatically if device changes
+  // If device becomes mobile, force collapse
   useEffect(() => {
-    setCollapsed(!!isMobileDevice);
+    if (isMobileDevice) setCollapsed(true);
   }, [isMobileDevice]);
 
-  // Toggle function for user-controlled collapse/expand
-  const toggleCollapse = () => setCollapsed((prev) => !prev);
+  // Toggle and persist the new state
+  const toggleCollapse = () =>
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('sideNavCollapsed', String(next));
+      return next;
+    });
 
   return (
     <CollapseContext.Provider value={{ collapsed, toggleCollapse }}>

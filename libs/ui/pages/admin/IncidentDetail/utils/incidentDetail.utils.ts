@@ -1,4 +1,9 @@
-import { IncidentImpact, IncidentUrgency, calculatePriority, ITimeEntry } from '@serviceops/interfaces';
+import {
+  IncidentImpact,
+  IncidentUrgency,
+  calculatePriority,
+  ITimeEntry,
+} from '@serviceops/interfaces';
 import { TimeSummaryData } from '../types/incidentDetail.types';
 
 export const getPriorityColor = (priority: string) => {
@@ -66,6 +71,24 @@ export const formatTimer = (totalSeconds: number) => {
 
 export const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text);
+};
+
+/**
+ * Copies a rich hyperlink to the clipboard.
+ * In Teams (and other apps that read HTML), pastes as a clickable link
+ * showing `label` as the display text. Falls back to plain text if unavailable.
+ */
+export const copyRichLink = (url: string, label: string) => {
+  const html = `<a href="${url}">${label}</a>`;
+  try {
+    const htmlBlob = new Blob([html], { type: 'text/html' });
+    const textBlob = new Blob([label], { type: 'text/plain' });
+    navigator.clipboard.write([
+      new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob }),
+    ]);
+  } catch {
+    navigator.clipboard.writeText(`${label} ${url}`);
+  }
 };
 
 export const computePriority = (impact: IncidentImpact, urgency: IncidentUrgency) => {

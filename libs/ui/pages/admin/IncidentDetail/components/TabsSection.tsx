@@ -34,10 +34,14 @@ interface TabsSectionProps {
 
 const getFileIcon = (filename: string) => {
   const ext = filename.split('.').pop()?.toLowerCase() ?? '';
-  if (ext === 'pdf') return { icon: <PictureAsPdfIcon sx={{ fontSize: 22 }} />, color: '#dc2626', bg: '#fef2f2' };
-  if (['doc', 'docx'].includes(ext)) return { icon: <DescriptionIcon sx={{ fontSize: 22 }} />, color: '#1d4ed8', bg: '#eff6ff' };
-  if (['xls', 'xlsx'].includes(ext)) return { icon: <TableChartIcon sx={{ fontSize: 22 }} />, color: '#15803d', bg: '#f0fdf4' };
-  if (['png', 'jpg', 'jpeg', 'gif'].includes(ext)) return { icon: <ImageIcon sx={{ fontSize: 22 }} />, color: '#7c3aed', bg: '#f5f3ff' };
+  if (ext === 'pdf')
+    return { icon: <PictureAsPdfIcon sx={{ fontSize: 22 }} />, color: '#dc2626', bg: '#fef2f2' };
+  if (['doc', 'docx'].includes(ext))
+    return { icon: <DescriptionIcon sx={{ fontSize: 22 }} />, color: '#1d4ed8', bg: '#eff6ff' };
+  if (['xls', 'xlsx'].includes(ext))
+    return { icon: <TableChartIcon sx={{ fontSize: 22 }} />, color: '#15803d', bg: '#f0fdf4' };
+  if (['png', 'jpg', 'jpeg', 'gif'].includes(ext))
+    return { icon: <ImageIcon sx={{ fontSize: 22 }} />, color: '#7c3aed', bg: '#f5f3ff' };
   return { icon: <InsertDriveFileIcon sx={{ fontSize: 22 }} />, color: '#64748b', bg: '#f8faff' };
 };
 
@@ -182,11 +186,23 @@ const TabsSection = ({
                           <Box sx={{ minWidth: 0 }}>
                             <Typography
                               className={classes.tabsAttachmentText}
-                              sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                              sx={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
                             >
                               {displayName}
                             </Typography>
-                            <Typography sx={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            <Typography
+                              sx={{
+                                fontSize: '0.7rem',
+                                color: '#94a3b8',
+                                fontWeight: 600,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px',
+                              }}
+                            >
                               {ext}
                             </Typography>
                           </Box>

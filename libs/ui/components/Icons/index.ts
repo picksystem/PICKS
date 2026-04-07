@@ -84,4 +84,5 @@ export {
   ViewModule as ViewModuleIcon,
   Visibility as ViewIcon,
   Warning as WarningIcon,
+  Timeline as TimelineIcon,
 } from '@mui/icons-material';

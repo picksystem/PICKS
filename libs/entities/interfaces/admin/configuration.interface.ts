@@ -47,7 +47,10 @@ export interface IConfigStatusLevel {
   bgColor: string;
   sortOrder: number;
   isActive: boolean;
+  slaActive: boolean;
   isFinal: boolean; // resolved/closed/cancelled
+  /** ticketType key → enabled flag */
+  enabledFor: Record<string, boolean>;
 }
 
 export interface IConfigSLA {
@@ -80,8 +83,8 @@ export interface IConfigPriorities {
 }
 
 export interface IConfigStatuses {
-  /** ticketType key → status list */
-  byTicketType: Record<string, IConfigStatusLevel[]>;
+  /** Flat list of all statuses; enabledFor controls per-ticket-type visibility */
+  items: IConfigStatusLevel[];
 }
 
 export interface IConfigSLAs {
@@ -288,7 +291,99 @@ export const DEFAULT_CONFIGURATION_DATA: IConfigurationData = {
     matrices: {},
   },
   statuses: {
-    byTicketType: {},
+    items: [
+      {
+        id: 'new',
+        name: 'new',
+        displayName: 'New',
+        description: 'Ticket has been created and is awaiting assignment',
+        color: '#fff',
+        bgColor: '#6366f1',
+        sortOrder: 1,
+        isActive: true,
+        slaActive: true,
+        isFinal: false,
+        enabledFor: {},
+      },
+      {
+        id: 'assigned',
+        name: 'assigned',
+        displayName: 'Assigned',
+        description: 'Ticket has been assigned to an agent or team',
+        color: '#fff',
+        bgColor: '#2563eb',
+        sortOrder: 2,
+        isActive: true,
+        slaActive: true,
+        isFinal: false,
+        enabledFor: {},
+      },
+      {
+        id: 'in_progress',
+        name: 'in_progress',
+        displayName: 'In Progress',
+        description: 'An agent is actively working on the ticket',
+        color: '#fff',
+        bgColor: '#0284c7',
+        sortOrder: 3,
+        isActive: true,
+        slaActive: true,
+        isFinal: false,
+        enabledFor: {},
+      },
+      {
+        id: 'on_hold',
+        name: 'on_hold',
+        displayName: 'On Hold',
+        description: 'Work is paused, waiting for customer response or third-party action',
+        color: '#fff',
+        bgColor: '#ca8a04',
+        sortOrder: 4,
+        isActive: true,
+        slaActive: false,
+        isFinal: false,
+        enabledFor: {},
+      },
+      {
+        id: 'resolved',
+        name: 'resolved',
+        displayName: 'Resolved',
+        description: 'Issue has been resolved and awaiting confirmation from the requester',
+        color: '#fff',
+        bgColor: '#15803d',
+        sortOrder: 5,
+        isActive: true,
+        slaActive: false,
+        isFinal: true,
+        enabledFor: {},
+      },
+      {
+        id: 'closed',
+        name: 'closed',
+        displayName: 'Closed',
+        description: 'Ticket has been confirmed as resolved and is now closed',
+        color: '#fff',
+        bgColor: '#374151',
+        sortOrder: 6,
+        isActive: true,
+        slaActive: false,
+        isFinal: true,
+        enabledFor: {},
+      },
+      {
+        id: 'cancelled',
+        name: 'cancelled',
+        displayName: 'Cancelled',
+        description: 'Ticket was cancelled and will not be worked on',
+        color: '#fff',
+        bgColor: '#b91c1c',
+        sortOrder: 7,
+        isActive: true,
+        slaActive: false,
+        isFinal: true,
+        enabledFor: {},
+      },
+    ],
   },
   slas: {
     items: [],

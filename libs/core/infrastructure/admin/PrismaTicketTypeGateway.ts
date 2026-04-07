@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client';
 import {
   ITicketTypeGateway,
   ITicketType,
   ICreateTicketTypeInput,
   IUpdateTicketTypeInput,
+  IReorderTicketTypeInput,
 } from '@serviceops/interfaces';
 
 /**
@@ -18,7 +18,9 @@ export class PrismaTicketTypeGateway implements ITicketTypeGateway {
   }
 
   async findAll(): Promise<ITicketType[]> {
-    return this.prisma.adminTicketType.findMany() as unknown as ITicketType[];
+    return this.prisma.adminTicketType.findMany({
+      orderBy: { displayOrder: 'asc' },
+    }) as unknown as ITicketType[];
   }
 
   async findById(id: number): Promise<ITicketType | null> {
@@ -39,5 +41,13 @@ export class PrismaTicketTypeGateway implements ITicketTypeGateway {
 
   async delete(id: number): Promise<ITicketType> {
     return this.prisma.adminTicketType.delete({ where: { id } }) as unknown as ITicketType;
+  }
+
+  async reorder(orders: IReorderTicketTypeInput[]): Promise<void> {
+    await this.prisma.$transaction(
+      orders.map(({ id, displayOrder }) =>
+        this.prisma.adminTicketType.update({ where: { id }, data: { displayOrder } }),
+      ),
+    );
   }
 }

@@ -25,6 +25,7 @@ export class InMemoryIncidentGateway implements IIncidentGateway {
       callerEmail: data.callerEmail || null,
       callerLocation: data.callerLocation || null,
       callerDepartment: data.callerDepartment || null,
+      callerReportingManager: data.callerReportingManager || null,
       additionalContacts: data.additionalContacts || null,
       businessCategory: data.businessCategory || null,
       serviceLine: data.serviceLine || null,
@@ -79,7 +80,7 @@ export class InMemoryIncidentGateway implements IIncidentGateway {
 
   async findAll(): Promise<IIncident[]> {
     return [...this.incidents].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
   }
 
@@ -127,10 +128,16 @@ export class InMemoryIncidentGateway implements IIncidentGateway {
   async deleteExpiredDrafts(): Promise<number> {
     const now = new Date();
     const expiredDrafts = this.incidents.filter(
-      (i) => i.status === IncidentStatus.DRAFT && i.draftExpiresAt && new Date(i.draftExpiresAt) < now,
+      (i) =>
+        i.status === IncidentStatus.DRAFT && i.draftExpiresAt && new Date(i.draftExpiresAt) < now,
     );
     this.incidents = this.incidents.filter(
-      (i) => !(i.status === IncidentStatus.DRAFT && i.draftExpiresAt && new Date(i.draftExpiresAt) < now),
+      (i) =>
+        !(
+          i.status === IncidentStatus.DRAFT &&
+          i.draftExpiresAt &&
+          new Date(i.draftExpiresAt) < now
+        ),
     );
     return expiredDrafts.length;
   }

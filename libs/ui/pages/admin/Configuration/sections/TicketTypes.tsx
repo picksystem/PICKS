@@ -28,17 +28,20 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
+import SortIcon from '@mui/icons-material/Sort';
 import { Loader } from '../../../../components';
 import { useStyles } from '../styles';
 import { useTicketTypes } from '../hooks/useTicketTypes';
 import TicketTypeTable from '../components/TicketTypeTable';
 import TicketTypeFormDialog from '../dialogs/TicketTypeFormDialog/TicketTypeFormDialog';
+import SequenceDialog from '../dialogs/SequenceDialog/SequenceDialog';
 
 const TicketTypes = () => {
   const { classes } = useStyles();
   const [tableSearch, setTableSearch] = useState('');
   const [accordionOpen, setAccordionOpen] = useState(true);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [sequenceOpen, setSequenceOpen] = useState(false);
 
   const {
     ticketTypes,
@@ -151,6 +154,19 @@ const TicketTypes = () => {
                   Delete
                 </Button>
               )}
+
+              <Tooltip title='Set the display order of ticket types on the Create Ticket page'>
+                <Button
+                  size='small'
+                  variant='outlined'
+                  color='primary'
+                  startIcon={<SortIcon />}
+                  onClick={() => setSequenceOpen(true)}
+                  sx={{ width: { xs: '100%', sm: 'auto' } }}
+                >
+                  Sequence
+                </Button>
+              </Tooltip>
 
               <Divider
                 orientation='vertical'
@@ -303,6 +319,14 @@ const TicketTypes = () => {
           </Box>
         </AccordionDetails>
       </Accordion>
+
+      {/* Sequence Dialog */}
+      <SequenceDialog
+        open={sequenceOpen}
+        ticketTypes={ticketTypes || []}
+        onClose={() => setSequenceOpen(false)}
+        onSave={() => setSequenceOpen(false)}
+      />
 
       {/* Form Dialog */}
       <TicketTypeFormDialog

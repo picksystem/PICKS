@@ -3,6 +3,7 @@ import {
   ITicketType,
   ICreateTicketTypeInput,
   IUpdateTicketTypeInput,
+  IReorderTicketTypeInput,
 } from '@serviceops/interfaces';
 
 /**
@@ -23,13 +24,21 @@ export class InMemoryTicketTypeGateway implements ITicketTypeGateway {
       prefix: data.prefix ?? '',
       isActive: data.isActive ?? true,
       numberLength: data.numberLength ?? 7,
+      displayOrder: data.displayOrder ?? 0,
     };
     this.ticketTypes.push(ticketType);
     return ticketType;
   }
 
   async findAll(): Promise<ITicketType[]> {
-    return [...this.ticketTypes];
+    return [...this.ticketTypes].sort((a, b) => a.displayOrder - b.displayOrder);
+  }
+
+  async reorder(orders: IReorderTicketTypeInput[]): Promise<void> {
+    orders.forEach(({ id, displayOrder }) => {
+      const t = this.ticketTypes.find((x) => x.id === id);
+      if (t) t.displayOrder = displayOrder;
+    });
   }
 
   async findById(id: number): Promise<ITicketType | null> {

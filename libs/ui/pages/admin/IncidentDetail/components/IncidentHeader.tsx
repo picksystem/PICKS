@@ -6,11 +6,10 @@ import {
   LinkIcon,
   NavigateBeforeIcon,
   NavigateNextIcon,
-  Chip,
 } from '../../../../components';
 import { Typography } from '@mui/material';
 import { IIncident } from '@serviceops/interfaces';
-import { copyToClipboard, formatStatus, getStatusColor } from '../utils/incidentDetail.utils';
+import { copyRichLink, copyToClipboard } from '../utils/incidentDetail.utils';
 
 interface IncidentHeaderProps {
   classes: Record<string, string>;
@@ -21,22 +20,6 @@ interface IncidentHeaderProps {
 }
 
 const navIconSize = '1.4rem';
-
-const mobileStatusChipSx = {
-  height: 20,
-  fontSize: '0.65rem',
-  fontWeight: 700,
-  '& .MuiChip-label': { px: 0.75 },
-};
-
-const desktopStatusChipSx = {
-  height: 22,
-  fontSize: '0.72rem',
-  fontWeight: 700,
-  letterSpacing: '0.4px',
-  border: '1px solid rgba(255,255,255,0.3)',
-  '& .MuiChip-label': { px: 1 },
-};
 
 const navIconSx = { fontSize: navIconSize };
 const navIconInheritSx = { fontSize: navIconSize, color: 'inherit' };
@@ -100,17 +83,16 @@ const IncidentHeader = ({
       />
       <Box className={classes.mobileHeaderCenter}>
         <Typography className={classes.mobileIncidentNumber}>{incident.number}</Typography>
-        <Chip
-          label={formatStatus(incident.status)}
-          color={getStatusColor(incident.status)}
-          size='small'
-          sx={mobileStatusChipSx}
-        />
         <Tooltip title='Copy incident number'>
           <IconButton
             size='small'
             className={classes.headerSmallIconButton}
-            onClick={() => copyToClipboard(incident.number)}
+            onClick={() =>
+              copyRichLink(
+                window.location.href,
+                `${incident.number}: ${incident.shortDescription || '-'}`,
+              )
+            }
           >
             <ContentCopyIcon sx={copyIconWhiteSx} />
           </IconButton>
@@ -171,12 +153,6 @@ const IncidentHeader = ({
             <ContentCopyIcon sx={copyIconSx} />
           </IconButton>
         </Tooltip>
-        <Chip
-          label={formatStatus(incident.status)}
-          color={getStatusColor(incident.status)}
-          size='small'
-          sx={desktopStatusChipSx}
-        />
         <Typography className={classes.headerPipeSeparator}>|</Typography>
         <Typography className={classes.headerTitle}>{incident.shortDescription || '-'}</Typography>
         <Tooltip title='Copy Incident Number & Title'>
@@ -184,8 +160,9 @@ const IncidentHeader = ({
             size='small'
             className={classes.headerIcon}
             onClick={() =>
-              copyToClipboard(
-                `Incident Number: ${incident.number}, Incident Title: ${incident.shortDescription || '-'}`,
+              copyRichLink(
+                window.location.href,
+                `${incident.number}: ${incident.shortDescription || '-'}`,
               )
             }
           >

@@ -565,3 +565,34 @@ export function saveIconMap(map: Record<string, string>): void {
     // ignore
   }
 }
+
+/** Default display order — matches the required sequence */
+export const DEFAULT_TYPE_ORDER: Record<string, number> = {
+  incident: 1,
+  service_request: 2,
+  advisory_request: 3,
+  task: 4,
+  change_request: 5,
+  problem_request: 6,
+  ticket_template: 7,
+};
+
+const ORDER_STORAGE_KEY = 'serviceops_ticket_type_order';
+
+export function loadOrderMap(): Record<string, number> {
+  try {
+    const stored = localStorage.getItem(ORDER_STORAGE_KEY);
+    const saved: Record<string, number> = stored ? JSON.parse(stored) : {};
+    return { ...DEFAULT_TYPE_ORDER, ...saved };
+  } catch {
+    return { ...DEFAULT_TYPE_ORDER };
+  }
+}
+
+export function saveOrderMap(map: Record<string, number>): void {
+  try {
+    localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(map));
+  } catch {
+    // ignore
+  }
+}

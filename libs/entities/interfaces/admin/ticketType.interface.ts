@@ -35,6 +35,7 @@ export interface ITicketType {
   prefix: string;
   isActive: boolean;
   numberLength: number;
+  displayOrder: number;
 }
 
 // ============================================
@@ -48,6 +49,7 @@ export interface ICreateTicketTypeInput {
   prefix?: string;
   isActive?: boolean;
   numberLength?: number;
+  displayOrder?: number;
 }
 
 export interface IUpdateTicketTypeInput {
@@ -58,6 +60,7 @@ export interface IUpdateTicketTypeInput {
   prefix?: string;
   isActive?: boolean;
   numberLength?: number;
+  displayOrder?: number;
 }
 
 // ============================================
@@ -77,6 +80,11 @@ export interface ITicketTypeListResponse {
 // Gateway Interface - Data access contract
 // Used by backend for Prisma/InMemory implementations
 // ============================================
+export interface IReorderTicketTypeInput {
+  id: number;
+  displayOrder: number;
+}
+
 export interface ITicketTypeGateway {
   create(data: ICreateTicketTypeInput): Promise<ITicketType>;
   findAll(): Promise<ITicketType[]>;
@@ -84,6 +92,7 @@ export interface ITicketTypeGateway {
   findByType(type: string): Promise<ITicketType | null>;
   update(id: number, data: IUpdateTicketTypeInput): Promise<ITicketType>;
   delete(id: number): Promise<ITicketType>;
+  reorder(orders: IReorderTicketTypeInput[]): Promise<void>;
 }
 
 // ============================================

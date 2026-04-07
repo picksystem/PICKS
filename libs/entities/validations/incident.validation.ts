@@ -15,11 +15,16 @@ export const CreateIncidentSchema = yup.object({
     .string()
     .matches(/^INC\d{7}$/, 'Invalid ticket number format')
     .max(16),
-  client: yup.string().max(50, 'Client must be 50 characters or less'),
+  client: yup
+    .string()
+    .required('Client is required')
+    .max(50, 'Client must be 50 characters or less'),
   caller: yup
     .string()
     .required('Caller is required')
     .max(25, 'Caller must be 25 characters or less'),
+  callerFirstName: yup.string().max(30, 'First name must be 30 characters or less'),
+  callerLastName: yup.string().max(30, 'Last name must be 30 characters or less'),
   callerPhone: yup.string().max(25, 'Phone must be 25 characters or less'),
   callerEmail: yup
     .string()
@@ -27,6 +32,7 @@ export const CreateIncidentSchema = yup.object({
     .email('Invalid email format'),
   callerLocation: yup.string().max(25, 'Location must be 25 characters or less'),
   callerDepartment: yup.string().max(25, 'Department must be 25 characters or less'),
+  callerReportingManager: yup.string().max(50, 'Reporting manager must be 50 characters or less'),
   additionalContacts: yup.string().max(255, 'Additional contacts must be 255 characters or less'),
   businessCategory: yup
     .string()
@@ -101,10 +107,13 @@ export const DraftIncidentSchema = yup.object({
     .string()
     .required('Caller is required')
     .max(25, 'Caller must be 25 characters or less'),
+  callerFirstName: yup.string().max(30),
+  callerLastName: yup.string().max(30),
   callerPhone: yup.string().max(25),
   callerEmail: yup.string().max(25).email('Invalid email format'),
   callerLocation: yup.string().max(25),
   callerDepartment: yup.string().max(25),
+  callerReportingManager: yup.string().max(50),
   additionalContacts: yup.string().max(255),
   businessCategory: yup.string().max(25),
   serviceLine: yup.string().max(25),

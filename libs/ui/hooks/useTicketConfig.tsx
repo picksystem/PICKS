@@ -89,20 +89,20 @@ export const useTicketConfig = (ticketType?: string) => {
 
   // ── Status options ──────────────────────────────────────────────────────────
   // Falls back to shared defaults until statuses are configured in the admin UI.
-  const configStatuses: IConfigStatusLevel[] | undefined = ticketType
-    ? config?.data?.statuses?.byTicketType?.[ticketType]
-    : undefined;
-  const statusOptions: ITicketConfigOption[] =
-    Array.isArray(configStatuses) && configStatuses.length
-      ? configStatuses
-          .filter((s: IConfigStatusLevel) => s.isActive)
-          .sort((a: IConfigStatusLevel, b: IConfigStatusLevel) => a.sortOrder - b.sortOrder)
-          .map((s: IConfigStatusLevel) => ({
-            value: s.id,
-            label: s.displayName,
-            bgColor: s.bgColor,
-          }))
-      : FALLBACK_STATUS_OPTIONS;
+  const allStatuses: IConfigStatusLevel[] = config?.data?.statuses?.items ?? [];
+  const configStatuses: IConfigStatusLevel[] = ticketType
+    ? allStatuses.filter((s) => s.enabledFor[ticketType] !== false)
+    : allStatuses;
+  const statusOptions: ITicketConfigOption[] = configStatuses.length
+    ? configStatuses
+        .filter((s: IConfigStatusLevel) => s.isActive)
+        .sort((a: IConfigStatusLevel, b: IConfigStatusLevel) => a.sortOrder - b.sortOrder)
+        .map((s: IConfigStatusLevel) => ({
+          value: s.id,
+          label: s.displayName,
+          bgColor: s.bgColor,
+        }))
+    : FALLBACK_STATUS_OPTIONS;
 
   // ── Lookup helpers (used in detail screens to resolve display labels/colours) ─
 

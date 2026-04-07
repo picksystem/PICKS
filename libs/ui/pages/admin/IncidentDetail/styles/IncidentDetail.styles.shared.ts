@@ -288,7 +288,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'flex-start',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     gap: theme.spacing(0.5),
     flex: 1,
     padding: '12px 16px',

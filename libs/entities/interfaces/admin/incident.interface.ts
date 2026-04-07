@@ -122,6 +122,7 @@ export interface IIncident {
   callerEmail: string | null;
   callerLocation: string | null;
   callerDepartment: string | null;
+  callerReportingManager: string | null;
   additionalContacts: string | null;
   businessCategory: string | null;
   serviceLine: string | null;

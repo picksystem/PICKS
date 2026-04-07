@@ -13,7 +13,6 @@ import {
   IncidentStatus,
   ServiceRequestStatus,
   CreateIncidentSchema,
-  DraftIncidentSchema,
 } from '@serviceops/interfaces';
 import {
   useAuth,
@@ -51,6 +50,7 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   const [updateUser, { isLoading: isUpdatingCaller }] = useUpdateUserMutation();
 
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [validationFailed, setValidationFailed] = useState(false);
   const [users, setUsers] = useState<
     {
       id?: number;
@@ -123,12 +123,6 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
       formik.values.impact as IncidentImpact,
       formik.values.urgency as IncidentUrgency,
     );
-    console.log('Priority calculation:', {
-      impact: formik.values.impact,
-      urgency: formik.values.urgency,
-      newPriority,
-      currentPriority: formik.values.priority,
-    });
     if (newPriority !== formik.values.priority) {
       formik.setFieldValue('priority', newPriority);
     }
@@ -152,6 +146,35 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   const handleManualCallerUpdate = async () => {
     const firstName = formik.values.callerFirstName?.trim();
     const lastName = formik.values.callerLastName?.trim();
+    const location = formik.values.callerLocation?.trim();
+    const reportingManager = formik.values.callerReportingManager?.trim();
+
+    // Validate required manual fields inline (same pattern as triggerValidation)
+    const manualErrors: Record<string, string> = {};
+    const manualTouched: Record<string, boolean> = {};
+    if (!firstName) {
+      manualErrors.callerFirstName = 'First name is required';
+      manualTouched.callerFirstName = true;
+    }
+    if (!lastName) {
+      manualErrors.callerLastName = 'Last name is required';
+      manualTouched.callerLastName = true;
+    }
+    if (!location) {
+      manualErrors.callerLocation = 'Work location is required';
+      manualTouched.callerLocation = true;
+    }
+    if (!reportingManager) {
+      manualErrors.callerReportingManager = 'Reporting manager is required';
+      manualTouched.callerReportingManager = true;
+    }
+    if (Object.keys(manualErrors).length > 0) {
+      // Pass `false` to prevent re-validation overwriting our errors
+      formik.setTouched({ ...formik.touched, ...manualTouched }, false);
+      formik.setErrors({ ...formik.errors, ...manualErrors });
+      return;
+    }
+
     if (firstName || lastName) {
       formik.setFieldValue('caller', `${firstName} ${lastName}`.trim());
     }
@@ -249,13 +272,50 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     navigate(AdminPath.DASHBOARD);
   };
 
-  const handleSaveAsDraft = async () => {
-    try {
-      await DraftIncidentSchema.validate(formik.values, { abortEarly: false });
-    } catch {
-      formik.setTouched({ caller: true, createdBy: true });
-      return;
+  const triggerValidation = async () => {
+    const schemaErrors = await formik.validateForm();
+    const allErrors: Record<string, string> = { ...(schemaErrors as Record<string, string>) };
+
+    // When the manual caller section is open, validate its required fields too
+    if (manualCallerOpen) {
+      if (!formik.values.callerFirstName?.trim()) {
+        allErrors.callerFirstName = 'First name is required';
+      }
+      if (!formik.values.callerLastName?.trim()) {
+        allErrors.callerLastName = 'Last name is required';
+      }
+      if (!formik.values.callerLocation?.trim()) {
+        allErrors.callerLocation = 'Work location is required';
+      }
+      if (!formik.values.callerReportingManager?.trim()) {
+        allErrors.callerReportingManager = 'Reporting manager is required';
+      }
     }
+
+    if (Object.keys(allErrors).length > 0) {
+      // Pass `false` as second arg so setTouched does NOT re-run Yup validation,
+      // which would overwrite allErrors (including our custom manual-section errors) back to schema-only.
+      formik.setTouched(
+        Object.keys(allErrors).reduce((acc, key) => ({ ...acc, [key]: true }), {}),
+        false,
+      );
+      formik.setErrors(allErrors);
+      setValidationFailed(true);
+      return allErrors;
+    }
+    setValidationFailed(false);
+    return allErrors;
+  };
+
+  const handleCreateTicket = async () => {
+    const errors = await triggerValidation();
+    if (Object.keys(errors).length > 0) return;
+    await formik.submitForm();
+  };
+
+  const handleSaveAsDraft = async () => {
+    const errors = await triggerValidation();
+    if (Object.keys(errors).length > 0) return;
     const draftExpiresAt = new Date();
     draftExpiresAt.setDate(draftExpiresAt.getDate() + 30);
     const uploadedFilenames = await uploadAndGetFilenames();
@@ -278,11 +338,8 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   };
 
   const handleSearchForSolution = async () => {
-    const errors = await formik.validateForm();
-    if (Object.keys(errors).length > 0) {
-      formik.setTouched(Object.keys(errors).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
-      return;
-    }
+    const errors = await triggerValidation();
+    if (Object.keys(errors).length > 0) return;
     const uploadedFilenames = await uploadAndGetFilenames();
     const ticketData = buildTicketData(undefined, uploadedFilenames);
     navigate(AdminPath.SUGGESTED_SOLUTION, { state: { incidentData: ticketData } });
@@ -305,10 +362,12 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     priorityOptions,
     statusOptions,
     channelOptions,
+    validationFailed,
     handleCallerChange,
     handleManualCallerUpdate,
     handleBack,
     handleCancel,
+    handleCreateTicket,
     handleSaveAsDraft,
     handleSearchForSolution,
   };

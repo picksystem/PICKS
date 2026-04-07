@@ -100,9 +100,19 @@ interface ClientFieldProps {
   value: string;
   callerOptions: { value: string; label: string }[];
   onChange: (value: string) => void;
+  onBlur?: React.FocusEventHandler;
+  error?: boolean;
+  errorText?: string | React.ReactNode;
 }
 
-const ClientSearchField = ({ value, callerOptions, onChange }: ClientFieldProps) => {
+const ClientSearchField = ({
+  value,
+  callerOptions,
+  onChange,
+  onBlur,
+  error,
+  errorText,
+}: ClientFieldProps) => {
   const [searchText, setSearchText] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
@@ -142,11 +152,13 @@ const ClientSearchField = ({ value, callerOptions, onChange }: ClientFieldProps)
         value={searchText}
         onChange={handleInputChange}
         onFocus={handleFocus}
-        onBlur={handleBlur}
+        onBlur={onBlur || handleBlur}
         placeholder='Search or select client'
         icon={<SearchIcon />}
         iconAlignment='right'
         inputProps={{ maxLength: 50 }}
+        error={error}
+        errorText={errorText}
         required
       />
       <Popper
@@ -218,10 +230,6 @@ const UserSearchField = ({
     if (callerOptions.length > 0) {
       setIsOpen(true);
     }
-  };
-
-  const handleBlur = () => {
-    setTimeout(() => setIsOpen(false), 200);
   };
 
   return (
@@ -347,11 +355,23 @@ interface CategoryFieldProps {
   value: string;
   options: { value: string; label: string }[];
   onChange: (value: string) => void;
+  onBlur?: React.FocusEventHandler;
+  error?: boolean;
+  errorText?: string | React.ReactNode;
   label: string;
   required?: boolean;
 }
 
-const CategorySearchField = ({ value, options, onChange, label, required }: CategoryFieldProps) => {
+const CategorySearchField = ({
+  value,
+  options,
+  onChange,
+  onBlur,
+  error,
+  errorText,
+  label,
+  required,
+}: CategoryFieldProps) => {
   const [searchText, setSearchText] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
@@ -387,15 +407,18 @@ const CategorySearchField = ({ value, options, onChange, label, required }: Cate
     <Box ref={anchorRef} position='relative'>
       <TextField
         name={label.toLowerCase().replace(/\s+/g, '')}
-        label={required ? `${label} *` : label}
+        label={label}
         value={searchText}
         onChange={handleInputChange}
         onFocus={handleFocus}
-        onBlur={handleBlur}
+        onBlur={onBlur || handleBlur}
         placeholder={`Search or select ${label.toLowerCase()}`}
         icon={<SearchIcon />}
         iconAlignment='right'
         inputProps={{ maxLength: 80 }}
+        required={required}
+        error={error}
+        errorText={errorText}
       />
       <Popper
         open={isOpen && filteredOptions.length > 0}
@@ -530,6 +553,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
   const editorRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const attachInputRef = useRef<HTMLInputElement>(null);
+  const errorAlertRef = useRef<HTMLDivElement>(null);
   const isFocused = useRef(false);
 
   const {
@@ -549,10 +573,12 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     priorityOptions,
     statusOptions,
     channelOptions,
+    validationFailed,
     handleCallerChange,
     handleManualCallerUpdate,
     handleBack,
     handleCancel,
+    handleCreateTicket,
     handleSaveAsDraft,
     handleSearchForSolution,
   } = useCreateTicketDetail({ ticketType, onCancel, onSuccess });
@@ -573,6 +599,14 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
       }
     }
   }, [formik.values.description]);
+
+  const showValidationErrors = validationFailed && Object.keys(formik.errors).length > 0;
+
+  useEffect(() => {
+    if (showValidationErrors) {
+      errorAlertRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [showValidationErrors]);
 
   const handleEditorInput = useCallback(() => {
     if (editorRef.current) formik.setFieldValue('description', editorRef.current.innerHTML);
@@ -715,7 +749,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
         </Box>
       </Box>
 
-      <form onSubmit={formik.handleSubmit}>
+      <form onSubmit={formik.handleSubmit} noValidate>
         {/* ── 1. Ticket Information ────────────────────────────────────── */}
         {wrap(
           0,
@@ -731,6 +765,9 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                 value={formik.values.client}
                 callerOptions={callerOptions}
                 onChange={(value) => formik.setFieldValue('client', value)}
+                onBlur={formik.handleBlur}
+                error={!!(formik.touched.client && formik.errors.client)}
+                errorText={reqError(formik.touched.client, formik.errors.client as string)}
               />
               <UserSearchField
                 value={formik.values.caller}
@@ -767,6 +804,11 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       inputProps={{ maxLength: 30 }}
+                      error={!!(formik.touched.callerFirstName && formik.errors.callerFirstName)}
+                      errorText={reqError(
+                        formik.touched.callerFirstName,
+                        formik.errors.callerFirstName as string,
+                      )}
                       required
                     />
                     <TextField
@@ -776,6 +818,11 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       inputProps={{ maxLength: 30 }}
+                      error={!!(formik.touched.callerLastName && formik.errors.callerLastName)}
+                      errorText={reqError(
+                        formik.touched.callerLastName,
+                        formik.errors.callerLastName as string,
+                      )}
                       required
                     />
                     <TextField
@@ -811,6 +858,11 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                       icon={<SearchIcon />}
                       iconAlignment='right'
                       inputProps={{ maxLength: 50 }}
+                      error={!!(formik.touched.callerLocation && formik.errors.callerLocation)}
+                      errorText={reqError(
+                        formik.touched.callerLocation,
+                        formik.errors.callerLocation as string,
+                      )}
                       required
                     />
                     <TextField
@@ -832,6 +884,16 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                       icon={<SearchIcon />}
                       iconAlignment='right'
                       inputProps={{ maxLength: 50 }}
+                      error={
+                        !!(
+                          formik.touched.callerReportingManager &&
+                          formik.errors.callerReportingManager
+                        )
+                      }
+                      errorText={reqError(
+                        formik.touched.callerReportingManager,
+                        formik.errors.callerReportingManager as string,
+                      )}
                       required
                     />
                     <Box
@@ -879,6 +941,12 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
               value={formik.values.businessCategory}
               options={[]}
               onChange={(value) => formik.setFieldValue('businessCategory', value)}
+              onBlur={formik.handleBlur}
+              error={!!(formik.touched.businessCategory && formik.errors.businessCategory)}
+              errorText={reqError(
+                formik.touched.businessCategory,
+                formik.errors.businessCategory as string,
+              )}
               label='Business Category'
               required
             />
@@ -886,6 +954,9 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
               value={formik.values.serviceLine}
               options={[]}
               onChange={(value) => formik.setFieldValue('serviceLine', value)}
+              onBlur={formik.handleBlur}
+              error={!!(formik.touched.serviceLine && formik.errors.serviceLine)}
+              errorText={reqError(formik.touched.serviceLine, formik.errors.serviceLine as string)}
               label='Service Line'
               required
             />
@@ -893,6 +964,9 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
               value={formik.values.application}
               options={[]}
               onChange={(value) => formik.setFieldValue('application', value)}
+              onBlur={formik.handleBlur}
+              error={!!(formik.touched.application && formik.errors.application)}
+              errorText={reqError(formik.touched.application, formik.errors.application as string)}
               label='Application'
               required
             />
@@ -934,19 +1008,6 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
 
             {/* Rich text editor */}
             <Box className={classes.fullWidth}>
-              <Typography
-                sx={{
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  mb: 0.5,
-                  color: 'text.primary',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.25,
-                }}
-              >
-                Description <span style={{ color: '#d32f2f' }}>*</span>
-              </Typography>
               <Box
                 sx={{
                   border: descHasError ? '1px solid #d32f2f' : '1px solid rgba(0,0,0,0.23)',
@@ -1156,18 +1217,24 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
           3,
           <Box className={classes.formGrid}>
             <Select
-              label='Impact *'
+              label='Impact'
               options={impactOptions}
               value={formik.values.impact}
               onChange={(e) => formik.setFieldValue('impact', e.target.value as string)}
               onBlur={formik.handleBlur}
+              required
+              error={!!(formik.touched.impact && formik.errors.impact)}
+              errorText={reqError(formik.touched.impact, formik.errors.impact as string)}
             />
             <Select
-              label='Urgency *'
+              label='Urgency'
               options={urgencyOptions}
               value={formik.values.urgency}
               onChange={(e) => formik.setFieldValue('urgency', e.target.value as string)}
               onBlur={formik.handleBlur}
+              required
+              error={!!(formik.touched.urgency && formik.errors.urgency)}
+              errorText={reqError(formik.touched.urgency, formik.errors.urgency as string)}
             />
             <TextField label='Calculated Priority' value={formik.values.priority} disabled />
             <Select
@@ -1222,13 +1289,16 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
           4,
           <Box className={classes.formGrid}>
             <TextField label='Created Date and Time' value={createdDateTime} disabled />
-            <TextField label='Created By' value={formik.values.createdBy} disabled />
+            <TextField label='Created' value={formik.values.createdBy} disabled />
             {config.showChannel && (
               <Select
                 label='Channel'
                 options={channelOptions}
                 value={formik.values.channel}
                 onChange={(e) => formik.setFieldValue('channel', e.target.value as string)}
+                onBlur={formik.handleBlur}
+                error={!!(formik.touched.channel && formik.errors.channel)}
+                errorText={reqError(formik.touched.channel, formik.errors.channel as string)}
               />
             )}
           </Box>,
@@ -1265,39 +1335,59 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
         )}
 
         {/* Error Summary Section */}
-        {Object.keys(formik.errors).length > 0 && (
-          <Alert
-            severity='error'
-            icon={<ErrorIcon />}
-            sx={{
-              mb: 2,
-              backgroundColor: 'error.light',
-              color: 'error.dark',
-              borderRadius: 1,
-              border: '1px solid',
-              borderColor: 'error.main',
-            }}
-          >
-            <AlertTitle sx={{ fontWeight: 600, mb: 1 }}>
-              Please fill in the following required fields:
-            </AlertTitle>
-            <ul style={{ margin: 0, paddingLeft: '1rem' }}>
-              {Object.entries(formik.errors).map(([fieldName, error]) => (
-                <li
-                  key={fieldName}
-                  style={{
-                    marginBottom: '4px',
-                    textTransform: 'capitalize',
-                    fontWeight: 500,
-                    fontSize: '0.875rem',
-                  }}
-                >
-                  {fieldName.replace(/([A-Z])/g, ' $1').trim()}{' '}
-                  {typeof error === 'string' ? `- ${error}` : ''}
-                </li>
-              ))}
-            </ul>
-          </Alert>
+        {showValidationErrors && (
+          <div ref={errorAlertRef}>
+            <Alert
+              severity='error'
+              icon={<ErrorIcon />}
+              sx={{
+                mb: 2,
+                backgroundColor: 'error.light',
+                color: 'error.dark',
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: 'error.main',
+              }}
+            >
+              <AlertTitle sx={{ fontWeight: 600, mb: 1 }}>
+                Please fill in the following required fields:
+              </AlertTitle>
+              <ul style={{ margin: 0, paddingLeft: '1rem' }}>
+                {Object.entries(formik.errors).map(([fieldName, error]) => {
+                  const FIELD_LABELS: Record<string, string> = {
+                    caller: 'Affected User',
+                    client: 'Client',
+                    callerFirstName: 'First Name (Manual Section)',
+                    callerLastName: 'Last Name (Manual Section)',
+                    callerEmail: 'Work Email (Manual Section)',
+                    callerLocation: 'Work Location (Manual Section)',
+                    callerReportingManager: 'Reporting Manager (Manual Section)',
+                    businessCategory: 'Business Category',
+                    serviceLine: 'Service Line',
+                    application: 'Application',
+                    shortDescription: 'Short Description / Title',
+                    description: 'Description',
+                    impact: 'Impact',
+                    urgency: 'Urgency',
+                    channel: 'Channel',
+                    assignmentGroup: 'Assignment Group',
+                    createdBy: 'Created',
+                  };
+                  const label =
+                    FIELD_LABELS[fieldName] ?? fieldName.replace(/([A-Z])/g, ' $1').trim();
+                  return (
+                    <li
+                      key={fieldName}
+                      style={{ marginBottom: '4px', fontWeight: 500, fontSize: '0.875rem' }}
+                    >
+                      {label}
+                      {typeof error === 'string' ? ` - ${error}` : ''}
+                    </li>
+                  );
+                })}
+              </ul>
+            </Alert>
+          </div>
         )}
 
         {/* ── Action buttons ────────────────────────────────────────────── */}
@@ -1338,9 +1428,9 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
             Search for Solution
           </Button>
           <Button
-            type='submit'
             variant='contained'
             color='success'
+            onClick={handleCreateTicket}
             disabled={isLoading}
             loading={isLoading}
             icon={<SkipNextIcon />}

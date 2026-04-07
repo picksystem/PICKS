@@ -1,12 +1,22 @@
 import { useState } from 'react';
 import { Box, Chip, EditIcon, LinearProgress, Tooltip, UserAvatar } from '../../../../components';
-import { Typography } from '@mui/material';
+import { Typography, Popover } from '@mui/material';
+import EmailIcon from '@mui/icons-material/Email';
+import PhoneIcon from '@mui/icons-material/Phone';
+import BusinessIcon from '@mui/icons-material/Business';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import { IIncident } from '@serviceops/interfaces';
-import { calculateSLA, getPriorityColor } from '../utils/incidentDetail.utils';
+import {
+  calculateSLA,
+  getPriorityColor,
+  getStatusColor,
+  formatStatus,
+} from '../utils/incidentDetail.utils';
 
 interface InfoRowProps {
   classes: Record<string, string>;
@@ -38,6 +48,7 @@ const callerAsUser = (caller: string) => {
 const InfoRow = ({ classes, incident, eta, onEtaChange, onPriorityClick }: InfoRowProps) => {
   const { dueDate, slaPercent } = calculateSLA(incident.createdAt);
   const [editingEta, setEditingEta] = useState(false);
+  const [callerAnchor, setCallerAnchor] = useState<HTMLElement | null>(null);
 
   const handleEtaChange = (value: Dayjs | null) => {
     if (value?.isValid()) {
@@ -55,15 +66,102 @@ const InfoRow = ({ classes, incident, eta, onEtaChange, onPriorityClick }: InfoR
 
   return (
     <Box className={classes.infoRow}>
-      {/* Caller */}
+      {/* Affected User */}
       <Box className={classes.infoItem}>
-        <Typography className={classes.infoLabel}>Caller</Typography>
-        <Tooltip title={incident.caller || 'Unknown'}>
-          <Box className={classes.infoCallerBox}>
-            <UserAvatar user={callerAsUser(incident.caller || '?')} size={30} sx={callerAvatarSx} />
-            <Typography className={classes.infoCallerText}>{incident.caller || '—'}</Typography>
-          </Box>
-        </Tooltip>
+        <Typography className={classes.infoLabel}>Affected User</Typography>
+        <Box
+          className={classes.infoCallerBox}
+          onMouseEnter={(e) => setCallerAnchor(e.currentTarget)}
+          onMouseLeave={() => setCallerAnchor(null)}
+          sx={{ cursor: 'default' }}
+        >
+          <UserAvatar user={callerAsUser(incident.caller || '?')} size={30} sx={callerAvatarSx} />
+          <Typography className={classes.infoCallerText}>{incident.caller || '—'}</Typography>
+        </Box>
+
+        {/* Caller details popover */}
+        <Popover
+          open={Boolean(callerAnchor)}
+          anchorEl={callerAnchor}
+          onClose={() => setCallerAnchor(null)}
+          anchorOrigin={{ vertical: 'center', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'center', horizontal: 'left' }}
+          disableRestoreFocus
+          sx={{ pointerEvents: 'none' }}
+          slotProps={{
+            paper: {
+              sx: {
+                pointerEvents: 'none',
+                p: 1.5,
+                borderRadius: 2,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+                border: '1px solid rgba(226,232,255,0.8)',
+                minWidth: 220,
+              },
+            },
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              color: '#6366f1',
+              textTransform: 'uppercase',
+              letterSpacing: '0.6px',
+              mb: 1,
+            }}
+          >
+            {incident.caller || '—'}
+          </Typography>
+          {[
+            {
+              icon: <EmailIcon sx={{ fontSize: '0.9rem', color: '#6366f1' }} />,
+              label: 'Email',
+              value: incident.callerEmail,
+            },
+            {
+              icon: <PhoneIcon sx={{ fontSize: '0.9rem', color: '#10b981' }} />,
+              label: 'Phone',
+              value: incident.callerPhone,
+            },
+            {
+              icon: <BusinessIcon sx={{ fontSize: '0.9rem', color: '#f59e0b' }} />,
+              label: 'Department',
+              value: incident.callerDepartment,
+            },
+            {
+              icon: <LocationOnIcon sx={{ fontSize: '0.9rem', color: '#ef4444' }} />,
+              label: 'Work Location',
+              value: incident.callerLocation,
+            },
+            {
+              icon: <SupervisorAccountIcon sx={{ fontSize: '0.9rem', color: '#8b5cf6' }} />,
+              label: 'Reporting Manager',
+              value: incident.callerReportingManager,
+            },
+          ].map(({ icon, label, value }) => (
+            <Box key={label} sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5 }}>
+              {icon}
+              <Typography sx={{ fontSize: '0.72rem', color: '#64748b', minWidth: 110 }}>
+                {label}:
+              </Typography>
+              <Typography sx={{ fontSize: '0.72rem', fontWeight: 600, color: '#1e293b' }}>
+                {value || '—'}
+              </Typography>
+            </Box>
+          ))}
+        </Popover>
+      </Box>
+
+      {/* Status */}
+      <Box className={classes.infoItem}>
+        <Typography className={classes.infoLabel}>Status</Typography>
+        <Chip
+          label={formatStatus(incident.status)}
+          color={getStatusColor(incident.status)}
+          size='small'
+          sx={{ height: 24, fontSize: '0.875rem' }}
+        />
       </Box>
 
       {/* Priority (clickable chip) */}
@@ -84,9 +182,9 @@ const InfoRow = ({ classes, incident, eta, onEtaChange, onPriorityClick }: InfoR
         <Typography className={classes.infoValue}>{incident.assignmentGroup || '-'}</Typography>
       </Box>
 
-      {/* Primary Resource */}
+      {/* Assigned to */}
       <Box className={classes.infoItem}>
-        <Typography className={classes.infoLabel}>Primary Resource</Typography>
+        <Typography className={classes.infoLabel}>Assigned to</Typography>
         <Typography className={classes.infoValue}>{incident.primaryResource || '-'}</Typography>
       </Box>
 

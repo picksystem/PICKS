@@ -7,7 +7,7 @@ import {
   AccessTimeIcon,
   BookmarkIcon,
   AttachFileIcon,
-  LaunchIcon,
+  TimelineIcon,
   MoreHorizIcon,
   SaveIcon,
   CloseIcon,
@@ -149,7 +149,7 @@ const ActionBar = ({
     {
       icon: (
         <IconPill color='#0891b2' classes={classes}>
-          <LaunchIcon sx={{ ...iconSx, color: '#0891b2' }} />
+          <TimelineIcon sx={{ ...iconSx, color: '#0891b2' }} />
         </IconPill>
       ),
       label: 'Activity',
@@ -254,7 +254,7 @@ const ActionBar = ({
     {
       icon: (
         <IconPill color='#0891b2' classes={classes}>
-          <LaunchIcon sx={{ ...iconSx, color: '#0891b2' }} />
+          <TimelineIcon sx={{ ...iconSx, color: '#0891b2' }} />
         </IconPill>
       ),
       label: 'Activity',

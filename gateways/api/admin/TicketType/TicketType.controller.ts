@@ -8,6 +8,7 @@ import {
   GetAllTicketTypesUseCase,
   UpdateTicketTypeUseCase,
   DeleteTicketTypeUseCase,
+  ReorderTicketTypesUseCase,
 } from '@serviceops/core/use-cases';
 
 /**
@@ -21,6 +22,7 @@ export class TicketTypeController {
     private readonly getAllTicketTypesUseCase: GetAllTicketTypesUseCase,
     private readonly updateTicketTypeUseCase: UpdateTicketTypeUseCase,
     private readonly deleteTicketTypeUseCase: DeleteTicketTypeUseCase,
+    private readonly reorderTicketTypesUseCase: ReorderTicketTypesUseCase,
   ) {}
 
   /**
@@ -116,6 +118,24 @@ export class TicketTypeController {
       } else {
         next(error);
       }
+    }
+  };
+
+  /**
+   * Reorder ticket types
+   * PATCH /reorder
+   * Body: { orders: { id: number; displayOrder: number }[] }
+   */
+  reorder = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { orders } = req.body as { orders: { id: number; displayOrder: number }[] };
+      if (!Array.isArray(orders)) {
+        throw new BadRequestException('orders must be an array');
+      }
+      await this.reorderTicketTypesUseCase.execute(orders);
+      res.json({ message: 'Ticket type order updated successfully' });
+    } catch (error) {
+      next(error);
     }
   };
 

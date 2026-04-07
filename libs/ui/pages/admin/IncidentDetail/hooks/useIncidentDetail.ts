@@ -76,16 +76,12 @@ export const useIncidentDetail = () => {
   // Derive unique dropdown options — merge users list with existing incident values
   const userNames = useMemo<string[]>(
     () =>
-      users
-        .map((u) => u.name || `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim())
-        .filter(Boolean),
+      users.map((u) => u.name || `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim()).filter(Boolean),
     [users],
   );
 
   const clientOptions = useMemo<string[]>(() => {
-    const fromIncidents = (allIncidents ?? [])
-      .map((i) => i.client)
-      .filter(Boolean) as string[];
+    const fromIncidents = (allIncidents ?? []).map((i) => i.client).filter(Boolean) as string[];
     return [...new Set([...userNames, ...fromIncidents])].sort();
   }, [userNames, allIncidents]);
 
