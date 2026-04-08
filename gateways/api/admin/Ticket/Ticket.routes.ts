@@ -3,7 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { PrismaClient } from '@prisma/client';
-import { prisma, pool } from '@serviceops/database';
+import { prisma } from '@serviceops/database';
 import { TicketController } from './Ticket.controller';
 import {
   PrismaIncidentGateway,
@@ -20,9 +20,9 @@ import {
 } from '@serviceops/core/use-cases';
 
 // ── Gateways ─────────────────────────────────────────────────────────────────
-const incidentGateway = new PrismaIncidentGateway(prisma as PrismaClient, pool);
-const serviceRequestGateway = new PrismaServiceRequestGateway(prisma as PrismaClient, pool);
-const advisoryRequestGateway = new PrismaAdvisoryRequestGateway(prisma as PrismaClient, pool);
+const incidentGateway = new PrismaIncidentGateway(prisma as PrismaClient);
+const serviceRequestGateway = new PrismaServiceRequestGateway(prisma as PrismaClient);
+const advisoryRequestGateway = new PrismaAdvisoryRequestGateway(prisma as PrismaClient);
 
 // ── Use Cases ─────────────────────────────────────────────────────────────────
 const createIncidentUseCase = new CreateIncidentUseCase(incidentGateway);

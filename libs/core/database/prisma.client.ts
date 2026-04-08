@@ -20,6 +20,7 @@ function getPool(): Pool {
       min: 2,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000,
+      ssl: { rejectUnauthorized: false },
     });
   }
   return g._pool;

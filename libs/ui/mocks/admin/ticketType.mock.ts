@@ -21,6 +21,7 @@ export const mockIncident: ITicketType = {
   prefix: 'INC',
   isActive: true,
   numberLength: 7,
+  displayOrder: 1,
 };
 
 export const mockServiceRequest: ITicketType = {
@@ -32,6 +33,7 @@ export const mockServiceRequest: ITicketType = {
   prefix: 'SR',
   isActive: true,
   numberLength: 7,
+  displayOrder: 2,
 };
 
 export const mockChangeRequest: ITicketType = {
@@ -43,6 +45,7 @@ export const mockChangeRequest: ITicketType = {
   prefix: 'CR',
   isActive: true,
   numberLength: 7,
+  displayOrder: 3,
 };
 
 export const mockProblemRequest: ITicketType = {
@@ -54,6 +57,7 @@ export const mockProblemRequest: ITicketType = {
   prefix: 'PR',
   isActive: true,
   numberLength: 7,
+  displayOrder: 4,
 };
 
 export const mockTask: ITicketType = {
@@ -65,6 +69,7 @@ export const mockTask: ITicketType = {
   prefix: 'TASK',
   isActive: true,
   numberLength: 7,
+  displayOrder: 5,
 };
 
 export const mockTicketTemplate: ITicketType = {
@@ -76,6 +81,7 @@ export const mockTicketTemplate: ITicketType = {
   prefix: 'TT',
   isActive: true,
   numberLength: 7,
+  displayOrder: 6,
 };
 
 // ============================================
