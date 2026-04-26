@@ -27,8 +27,11 @@ function getPool(): Pool {
   if (!g._pool) {
     const dbUrl = process.env.DATABASE_URL;
     if (!dbUrl) throw new Error('DATABASE_URL is not set');
+    const parsed = parseDbUrl(dbUrl);
+    // DB_PASSWORD overrides the password from DATABASE_URL — avoids all URL encoding issues
+    if (process.env.DB_PASSWORD) parsed.password = process.env.DB_PASSWORD;
     g._pool = new Pool({
-      ...parseDbUrl(dbUrl),
+      ...parsed,
       max: 10,
       min: 2,
       idleTimeoutMillis: 30000,
