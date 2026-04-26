@@ -1,5 +1,10 @@
 import { PrismaClient } from '@prisma/client';
-import { IHeaderGateway, IHeader, ICreateHeaderInput, IUpdateHeaderInput } from '@serviceops/interfaces';
+import {
+  IHeaderGateway,
+  IHeader,
+  ICreateHeaderInput,
+  IUpdateHeaderInput,
+} from '@serviceops/interfaces';
 
 /**
  * Prisma implementation of Header Gateway

@@ -12,15 +12,30 @@ import { Pool } from 'pg';
 // guarantees the env vars are already loaded.
 const g = global as unknown as { _pool?: Pool; _prisma?: PrismaClient };
 
+function parseDbUrl(raw: string) {
+  const u = new URL(raw);
+  return {
+    user: decodeURIComponent(u.username),
+    password: decodeURIComponent(u.password),
+    host: u.hostname,
+    port: parseInt(u.port, 10) || 5432,
+    database: u.pathname.replace(/^\//, ''),
+  };
+}
+
 function getPool(): Pool {
   if (!g._pool) {
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl) throw new Error('DATABASE_URL is not set');
     g._pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      ...parseDbUrl(dbUrl),
       max: 10,
       min: 2,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000,
       ssl: { rejectUnauthorized: false },
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000,
     });
   }
   return g._pool;

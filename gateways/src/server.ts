@@ -50,7 +50,7 @@ const HOST = process.env.HOST || '0.0.0.0';
  */
 async function checkDatabaseConnection() {
   try {
-    await prisma.$connect();
+    await prisma.$queryRaw`SELECT 1`;
     logger.info('✅ Database connection established');
   } catch (error) {
     logger.error('❌ Failed to connect to database:', error);

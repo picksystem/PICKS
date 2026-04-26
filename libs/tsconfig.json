@@ -13,8 +13,7 @@
   "exclude": [
     "node_modules",
     "dist",
-    "**/webpack.config.js",
-    "**/*.spec.ts",
+"**/*.spec.ts",
     "**/*.test.ts",
     "**/*.stories.ts",
     "**/*.stories.tsx"

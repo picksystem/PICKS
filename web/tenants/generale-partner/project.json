@@ -6,22 +6,16 @@
   "tags": ["app", "partner:generale-partner"],
   "targets": {
     "build": {
-      "executor": "@nx/webpack:webpack",
+      "executor": "@nx/vite:build",
       "options": {
         "outputPath": "dist/web/tenants/generale-partner",
-        "index": "web/tenants/generale-partner/src/index.html",
-        "main": "web/tenants/generale-partner/src/main.tsx",
-        "tsConfig": "web/tenants/generale-partner/tsconfig.app.json",
-        "webpackConfig": "web/tenants/generale-partner/webpack.config.js"
+        "configFile": "web/tenants/generale-partner/vite.config.ts"
       }
     },
     "serve": {
-      "executor": "@nx/webpack:dev-server",
+      "executor": "@nx/vite:dev-server",
       "options": {
-        "buildTarget": "generale-partner:build",
-        "hmr": true,
-        "port": 4600,
-        "historyApiFallback": true
+        "buildTarget": "generale-partner:build"
       }
     }
   }

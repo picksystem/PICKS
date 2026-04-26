@@ -19,8 +19,8 @@
     "build:shared": "cross-env NODE_OPTIONS=--no-warnings NX_CACHE_DIRECTORY=C:/temp/nx-cache NX_WORKSPACE_DATA_DIRECTORY=C:/temp/nx-data nx build shared",
     "build:backend": "tsc --project tsconfig.backend.json",
     "build:backend:clean": "rimraf dist && npm run build:backend",
-    "serve:administration": "webpack serve --config web/apps/administration/webpack.config.js",
-    "serve:generale-partner": "webpack serve --config web/tenants/generale-partner/webpack.config.js",
+    "serve:administration": "vite --config web/apps/administration/vite.config.ts",
+    "serve:generale-partner": "vite --config web/tenants/generale-partner/vite.config.ts",
     "start:backend": "tsx --tsconfig tsconfig.app.json gateways/src/index.ts",
     "dev:backend": "nodemon --config nodemon.json",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
@@ -28,8 +28,6 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "fix:all": "npm run lint:fix && npm run format",
-    "storybook": "cross-env NODE_OPTIONS=--no-warnings storybook dev -p 6006",
-    "build-storybook": "cross-env NODE_OPTIONS=--no-warnings storybook build",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -59,7 +57,7 @@
     "@mui/material": "^7.3.5",
     "@mui/x-date-pickers": "^8.27.0",
     "@prisma/adapter-pg": "^7.4.2",
-    "@prisma/client": "^7.4.2",
+    "@prisma/client": "^7.8.0",
     "@reduxjs/toolkit": "^2.10.1",
     "@types/compression": "^1.8.1",
     "@types/multer": "^2.1.0",
@@ -97,11 +95,7 @@
     "@nx/jest": "22.1.1",
     "@nx/js": "^22.1.1",
     "@nx/react": "22.1.1",
-    "@nx/web": "22.1.1",
-    "@nx/webpack": "^22.1.2",
-    "@nx/workspace": "22.1.1",
-    "@storybook/react": "^10.1.9",
-    "@storybook/react-webpack5": "^10.1.9",
+    "@nx/vite": "^22.1.1",
     "@testing-library/dom": "10.4.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "16.3.0",
@@ -117,17 +111,14 @@
     "@types/react-dom": "^19.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
+    "@vitejs/plugin-react": "^4.7.0",
     "babel-jest": "^30.0.2",
     "cross-env": "^10.1.0",
-    "dotenv-webpack": "^8.1.1",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",
-    "eslint-plugin-import": "2.31.0",
-    "eslint-plugin-jsx-a11y": "6.10.1",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-react": "7.35.0",
     "eslint-plugin-react-hooks": "5.0.0",
-    "html-webpack-plugin": "^5.6.5",
     "husky": "^9.0.11",
     "jest": "^30.0.2",
     "jest-environment-jsdom": "^30.0.2",
@@ -136,32 +127,18 @@
     "prettier": "^3.7.4",
     "prisma": "^7.4.2",
     "rimraf": "^5.0.5",
-    "storybook": "^10.1.9",
     "ts-jest": "^29.4.6",
     "ts-node": "10.9.1",
-    "tsconfig-paths": "^4.2.0",
     "tsx": "^4.21.0",
     "typescript": "~5.9.2",
-    "typescript-eslint": "^8.40.0",
-    "webpack": "^5.103.0",
-    "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.2"
+    "vite": "^6.4.2",
+    "vite-tsconfig-paths": "^5.1.4"
   },
   "workspaces": [
     "apps/*",
     "libs/*"
   ],
   "nx": {
-    "includedScripts": [],
-    "targets": {
-      "local-registry": {
-        "executor": "@nx/webpack:webpack",
-        "options": {
-          "port": 4873,
-          "webpackConfig": "web/apps/administration/webpack.config.js",
-          "storage": "tmp/local-registry/storage"
-        }
-      }
-    }
+    "includedScripts": []
   }
 }
