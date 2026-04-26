@@ -17,7 +17,7 @@ const directUrl = buildUrl(process.env.DIRECT_URL) ?? dbUrl;
 export default defineConfig({
   schema: path.join(__dirname, 'schema.prisma'),
   migrate: {
-    seed: 'npx ts-node gateways/prisma/seed.ts',
+    seed: 'npx tsx gateways/prisma/seed.ts',
   },
   datasource: {
     url: dbUrl,

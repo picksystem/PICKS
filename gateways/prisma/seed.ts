@@ -10,7 +10,16 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const dbUrl = new URL(process.env.DATABASE_URL!);
+if (process.env.DB_PASSWORD) dbUrl.password = encodeURIComponent(process.env.DB_PASSWORD);
+const pool = new Pool({
+  user: decodeURIComponent(dbUrl.username),
+  password: process.env.DB_PASSWORD ?? decodeURIComponent(dbUrl.password),
+  host: dbUrl.hostname,
+  port: parseInt(dbUrl.port) || 5432,
+  database: dbUrl.pathname.replace(/^\//, ''),
+  ssl: { rejectUnauthorized: false },
+});
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({
   adapter,

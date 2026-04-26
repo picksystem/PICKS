@@ -37,10 +37,10 @@
     "validate": "npm run format:check && npm run lint && npm run type-check",
     "prisma:generate": "prisma generate --config=gateways/prisma/prisma.config.ts",
     "prisma:migrate": "prisma db push --config=gateways/prisma/prisma.config.ts",
-    "prisma:sync": "ts-node gateways/prisma/scripts/sync-schema.ts",
-    "prisma:regenerate": "ts-node gateways/prisma/scripts/regenerate-migration.ts",
+    "prisma:sync": "tsx gateways/prisma/scripts/sync-schema.ts",
+    "prisma:regenerate": "tsx gateways/prisma/scripts/regenerate-migration.ts",
     "prisma:deploy": "prisma migrate deploy --config=gateways/prisma/prisma.config.ts",
-    "prisma:seed": "ts-node gateways/prisma/seed.ts",
+    "prisma:seed": "tsx gateways/prisma/seed.ts",
     "prisma:studio": "prisma studio --config=gateways/prisma/prisma.config.ts",
     "prisma:reset": "prisma migrate reset --force --config=gateways/prisma/prisma.config.ts",
     "prepare": "husky install || true"
