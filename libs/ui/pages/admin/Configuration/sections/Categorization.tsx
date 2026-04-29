@@ -2525,7 +2525,7 @@ const ApplicationCategories = () => {
 
   const saveRows = (next: IConfigApplicationCategory[]) => {
     setRows(next);
-    saveSection('categorization', { businessCategories: apiCat?.businessCategories ?? [], serviceLines: apiCat?.serviceLines ?? [], applications: apiCat?.applications ?? [], queues: apiCat?.queues ?? [], applicationCategories: next, applicationSubCategories: apiCat?.applicationSubCategories ?? [] });
+    saveSection('categorization', { businessCategories: apiCat?.businessCategories ?? [], serviceLines: apiCat?.serviceLines ?? [], applications: apiCat?.applications ?? [], queues: apiCat?.queues ?? [], applicationCategories: next, applicationSubCategories: apiCat?.applicationSubCategories ?? [], applicationNumberSequences: apiCat?.applicationNumberSequences ?? [] });
   };
 
   const handleApplicationChange = (id: string) => {

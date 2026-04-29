@@ -168,6 +168,7 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
         }),
         applicationCategories: data.categorization?.applicationCategories ?? [],
         applicationSubCategories: data.categorization?.applicationSubCategories ?? [],
+        applicationNumberSequences: data.categorization?.applicationNumberSequences ?? [],
       },
     };
   }

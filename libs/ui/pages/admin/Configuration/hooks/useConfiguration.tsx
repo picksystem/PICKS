@@ -11,6 +11,7 @@ import {
   IConfigStatuses,
   IConfigSLAs,
   IConfigCategorization,
+  IConfigConsultantProfiles,
   DEFAULT_CONFIGURATION_DATA,
 } from '@serviceops/interfaces';
 
@@ -55,6 +56,7 @@ export const useConfiguration = () => {
     releaseStatuses: data.releaseStatuses as IConfigStatuses,
     slas: data.slas as IConfigSLAs,
     categorization: data.categorization as IConfigCategorization,
+    consultantProfiles: data.consultantProfiles as IConfigConsultantProfiles,
     ticketTypeKeys,
     saveSection,
     saveAll,

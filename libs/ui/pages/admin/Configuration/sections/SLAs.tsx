@@ -731,16 +731,51 @@ const SLAs = () => {
 
   // ── DataTable column definitions ──────────────────────────────────────────
   const chipCell = (row: IConfigResponseAckSLARow | IConfigActivationRow) => {
-    const color = CHIP_COLORS[activeTicketTypes.findIndex((t) => t.id === row.ticketTypeId) % CHIP_COLORS.length];
-    return <Chip label={row.ticketTypeName} size='small' sx={{ bgcolor: color, color: '#fff', fontWeight: 700, fontSize: '0.72rem', height: 22, borderRadius: 1.5 }} />;
+    const color =
+      CHIP_COLORS[
+        activeTicketTypes.findIndex((t) => t.id === row.ticketTypeId) % CHIP_COLORS.length
+      ];
+    return (
+      <Chip
+        label={row.ticketTypeName}
+        size='small'
+        sx={{
+          bgcolor: color,
+          color: '#fff',
+          fontWeight: 700,
+          fontSize: '0.72rem',
+          height: 22,
+          borderRadius: 1.5,
+        }}
+      />
+    );
   };
   const pCell = (v: unknown) => (
-    <Typography sx={{ fontSize: '0.82rem', fontFamily: 'monospace', fontWeight: 700 }}>{String(v)}</Typography>
+    <Typography sx={{ fontSize: '0.82rem', fontFamily: 'monospace', fontWeight: 700 }}>
+      {String(v)}
+    </Typography>
   );
 
   const ackColumns: Column<IConfigResponseAckSLARow>[] = [
     { id: 'ticketTypeName', label: 'SLAs', minWidth: 140, format: (_v, row) => chipCell(row) },
-    { id: 'activation', label: 'Activation', minWidth: 90, align: 'center', format: (_v, row) => <Switch size='small' checked={row.activation} color='success' onChange={(e) => { e.stopPropagation(); toggleRowActivation(row.ticketTypeId, e.target.checked); }} onClick={(e) => e.stopPropagation()} /> },
+    {
+      id: 'activation',
+      label: 'Activation',
+      minWidth: 90,
+      align: 'center',
+      format: (_v, row) => (
+        <Switch
+          size='small'
+          checked={row.activation}
+          color='success'
+          onChange={(e) => {
+            e.stopPropagation();
+            toggleRowActivation(row.ticketTypeId, e.target.checked);
+          }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+    },
     { id: 'p1', label: 'P1', minWidth: 55, format: pCell },
     { id: 'p2', label: 'P2', minWidth: 55, format: pCell },
     { id: 'p3', label: 'P3', minWidth: 55, format: pCell },
@@ -750,7 +785,24 @@ const SLAs = () => {
 
   const resColumns: Column<IConfigResponseAckSLARow>[] = [
     { id: 'ticketTypeName', label: 'SLAs', minWidth: 140, format: (_v, row) => chipCell(row) },
-    { id: 'activation', label: 'Activation', minWidth: 90, align: 'center', format: (_v, row) => <Switch size='small' checked={row.activation} color='success' onChange={(e) => { e.stopPropagation(); toggleResRowActivation(row.ticketTypeId, e.target.checked); }} onClick={(e) => e.stopPropagation()} /> },
+    {
+      id: 'activation',
+      label: 'Activation',
+      minWidth: 90,
+      align: 'center',
+      format: (_v, row) => (
+        <Switch
+          size='small'
+          checked={row.activation}
+          color='success'
+          onChange={(e) => {
+            e.stopPropagation();
+            toggleResRowActivation(row.ticketTypeId, e.target.checked);
+          }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+    },
     { id: 'p1', label: 'P1', minWidth: 55, format: pCell },
     { id: 'p2', label: 'P2', minWidth: 55, format: pCell },
     { id: 'p3', label: 'P3', minWidth: 55, format: pCell },
@@ -760,7 +812,24 @@ const SLAs = () => {
 
   const dueDateColumns: Column<IConfigResponseAckSLARow>[] = [
     { id: 'ticketTypeName', label: 'SLAs', minWidth: 140, format: (_v, row) => chipCell(row) },
-    { id: 'activation', label: 'Activation', minWidth: 90, align: 'center', format: (_v, row) => <Switch size='small' checked={row.activation} color='success' onChange={(e) => { e.stopPropagation(); toggleDueDateRowActivation(row.ticketTypeId, e.target.checked); }} onClick={(e) => e.stopPropagation()} /> },
+    {
+      id: 'activation',
+      label: 'Activation',
+      minWidth: 90,
+      align: 'center',
+      format: (_v, row) => (
+        <Switch
+          size='small'
+          checked={row.activation}
+          color='success'
+          onChange={(e) => {
+            e.stopPropagation();
+            toggleDueDateRowActivation(row.ticketTypeId, e.target.checked);
+          }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+    },
     { id: 'p1', label: 'P1', minWidth: 55, format: pCell },
     { id: 'p2', label: 'P2', minWidth: 55, format: pCell },
     { id: 'p3', label: 'P3', minWidth: 55, format: pCell },
@@ -769,13 +838,57 @@ const SLAs = () => {
   ];
 
   const etaActColumns: Column<IConfigActivationRow>[] = [
-    { id: 'ticketTypeName', label: 'Ticket Type', minWidth: 140, format: (_v, row) => chipCell(row) },
-    { id: 'activation', label: 'Activation', minWidth: 90, align: 'center', format: (_v, row) => <Switch size='small' checked={row.activation} color='success' onChange={(e) => { e.stopPropagation(); toggleEtaActRowActivation(row.ticketTypeId, e.target.checked); }} onClick={(e) => e.stopPropagation()} /> },
+    {
+      id: 'ticketTypeName',
+      label: 'Ticket Type',
+      minWidth: 140,
+      format: (_v, row) => chipCell(row),
+    },
+    {
+      id: 'activation',
+      label: 'Activation',
+      minWidth: 90,
+      align: 'center',
+      format: (_v, row) => (
+        <Switch
+          size='small'
+          checked={row.activation}
+          color='success'
+          onChange={(e) => {
+            e.stopPropagation();
+            toggleEtaActRowActivation(row.ticketTypeId, e.target.checked);
+          }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+    },
   ];
 
   const timeLogActColumns: Column<IConfigActivationRow>[] = [
-    { id: 'ticketTypeName', label: 'Ticket Type', minWidth: 140, format: (_v, row) => chipCell(row) },
-    { id: 'activation', label: 'Activation', minWidth: 90, align: 'center', format: (_v, row) => <Switch size='small' checked={row.activation} color='success' onChange={(e) => { e.stopPropagation(); toggleTimeLogActRowActivation(row.ticketTypeId, e.target.checked); }} onClick={(e) => e.stopPropagation()} /> },
+    {
+      id: 'ticketTypeName',
+      label: 'Ticket Type',
+      minWidth: 140,
+      format: (_v, row) => chipCell(row),
+    },
+    {
+      id: 'activation',
+      label: 'Activation',
+      minWidth: 90,
+      align: 'center',
+      format: (_v, row) => (
+        <Switch
+          size='small'
+          checked={row.activation}
+          color='success'
+          onChange={(e) => {
+            e.stopPropagation();
+            toggleTimeLogActRowActivation(row.ticketTypeId, e.target.checked);
+          }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+    },
   ];
 
   return (
@@ -1292,7 +1405,9 @@ const SLAs = () => {
             rowKey='id'
             searchable={false}
             initialRowsPerPage={10}
-            onRowClick={(row) => setSelectedDueDateRowId((prev) => (prev === row.id ? null : row.id))}
+            onRowClick={(row) =>
+              setSelectedDueDateRowId((prev) => (prev === row.id ? null : row.id))
+            }
             activeRowKey={selectedDueDateRowId ?? undefined}
           />
         </Paper>
@@ -1428,7 +1543,9 @@ const SLAs = () => {
             rowKey='id'
             searchable={false}
             initialRowsPerPage={10}
-            onRowClick={(row) => setSelectedEtaActRowId((prev) => (prev === row.id ? null : row.id))}
+            onRowClick={(row) =>
+              setSelectedEtaActRowId((prev) => (prev === row.id ? null : row.id))
+            }
             activeRowKey={selectedEtaActRowId ?? undefined}
           />
         </Paper>
@@ -1547,7 +1664,9 @@ const SLAs = () => {
             rowKey='id'
             searchable={false}
             initialRowsPerPage={10}
-            onRowClick={(row) => setSelectedTimeLogActRowId((prev) => (prev === row.id ? null : row.id))}
+            onRowClick={(row) =>
+              setSelectedTimeLogActRowId((prev) => (prev === row.id ? null : row.id))
+            }
             activeRowKey={selectedTimeLogActRowId ?? undefined}
           />
         </Paper>

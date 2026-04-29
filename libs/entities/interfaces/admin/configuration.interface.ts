@@ -298,6 +298,76 @@ export interface IConfigApplicationNumberSequence {
   numberSequenceFormat: string;
 }
 
+export interface IConfigConsultantProfile {
+  id: string;
+  consultantName: string;
+  applicationId: string;
+  applicationName: string;
+  consultantRole: string;
+  workingCalendar: string;
+  holidayCalendar: string;
+  leadConsultant: string;
+  manager: string;
+}
+
+export interface IConfigAssociatedUserProfile {
+  id: string;
+  consultantProfileId: string;
+  consultantName: string;
+  userId: string;
+  userName: string;
+  email: string;
+  role: string;
+}
+
+export interface IConfigConsultantWorkingTime {
+  id: string;
+  consultantProfileId: string;
+  consultantName: string;
+  startTime: string;
+  endTime: string;
+  timezone: string;
+}
+
+export interface IConfigConsultantWorkingShift {
+  id: string;
+  consultantProfileId: string;
+  consultantName: string;
+  shiftName: string;
+  description: string;
+}
+
+export interface IConfigConsultantTimesheetProject {
+  id: string;
+  consultantProfileId: string;
+  consultantName: string;
+  project: string;
+  application: string;
+  fromDate: string;
+  toDate: string;
+  maxHoursPerDayPerResource: number;
+}
+
+export interface IConfigConsultantExpenseProject {
+  id: string;
+  consultantProfileId: string;
+  consultantName: string;
+  project: string;
+  application: string;
+  fromDate: string;
+  toDate: string;
+  maxAmountPerDay: number;
+}
+
+export interface IConfigConsultantProfiles {
+  profiles: IConfigConsultantProfile[];
+  associatedUserProfiles: IConfigAssociatedUserProfile[];
+  workingTimes: IConfigConsultantWorkingTime[];
+  workingShifts: IConfigConsultantWorkingShift[];
+  timesheetProjects: IConfigConsultantTimesheetProject[];
+  expenseProjects: IConfigConsultantExpenseProject[];
+}
+
 export interface IConfigCategorization {
   businessCategories: IConfigBusinessCategory[];
   serviceLines: IConfigServiceLine[];
@@ -328,6 +398,7 @@ export interface IConfigurationData {
   releaseStatuses: IConfigStatuses;
   slas: IConfigSLAs;
   categorization: IConfigCategorization;
+  consultantProfiles: IConfigConsultantProfiles;
 }
 
 export interface IConfiguration {
@@ -851,4 +922,12 @@ export const DEFAULT_CONFIGURATION_DATA: IConfigurationData = {
     applicationSubCategories: [],
     applicationNumberSequences: [],
   } as IConfigCategorization,
+  consultantProfiles: {
+    profiles: [],
+    associatedUserProfiles: [],
+    workingTimes: [],
+    workingShifts: [],
+    timesheetProjects: [],
+    expenseProjects: [],
+  },
 };
