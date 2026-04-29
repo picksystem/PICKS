@@ -3,6 +3,13 @@ import {
   IConfigurationData,
   IConfigurationGateway,
   DEFAULT_CONFIGURATION_DATA,
+  IConfigApproval,
+  IConfigServiceLineTicketType,
+  IConfigTimesheetProject,
+  IConfigExpenseProject,
+  IConfigSupportLine,
+  IConfigBillingCode,
+  IConfigApplicationQueue,
 } from '@serviceops/interfaces';
 
 /**
@@ -76,12 +83,93 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
       if (!typeKeys.includes(key)) delete enrichedPriorities.matrices[key];
     }
 
-    // Pass statuses through unchanged (flat items list, no enrichment needed)
     const enrichedStatuses: IConfigurationData['statuses'] = {
       items: data.statuses?.items ?? [],
     };
 
-    return { ...data, priorities: enrichedPriorities, statuses: enrichedStatuses };
+    const enrichedReleaseStatuses: IConfigurationData['releaseStatuses'] = {
+      items: data.releaseStatuses?.items ?? [],
+    };
+
+    // Normalize adminControls — merge defaults first so new fields (e.g.
+    // activateOnTicketTypes) are always present even when the DB row was
+    // written by an older version of the app that had different field names.
+    const rawControls = data.slas?.adminControls as unknown as Record<string, unknown> | undefined;
+    const adminControls = rawControls
+      ? {
+          ...DEFAULT_CONFIGURATION_DATA.slas.adminControls,
+          ...rawControls,
+          activateOnTicketTypes:
+            (rawControls['activateOnTicketTypes'] as Record<string, boolean> | undefined) ?? {},
+        }
+      : DEFAULT_CONFIGURATION_DATA.slas.adminControls;
+
+    const enrichedSlas: IConfigurationData['slas'] = {
+      adminControls,
+      items: data.slas?.items ?? [],
+      responseAckRows: data.slas?.responseAckRows ?? [],
+      resolutionRows: data.slas?.resolutionRows ?? [],
+      dueDateRows: data.slas?.dueDateRows ?? [],
+      etaActivationRows: data.slas?.etaActivationRows ?? [],
+      timeLogActivationRows: data.slas?.timeLogActivationRows ?? [],
+    };
+
+    return {
+      ...data,
+      priorities: enrichedPriorities,
+      statuses: enrichedStatuses,
+      releaseStatuses: enrichedReleaseStatuses,
+      slas: enrichedSlas,
+      categorization: {
+        businessCategories: data.categorization?.businessCategories ?? [],
+        serviceLines: (data.categorization?.serviceLines ?? []).map((sl) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const s = sl as any;
+          return {
+            ...sl,
+            timesheetProjects: (s.timesheetProjects ?? []) as IConfigTimesheetProject[],
+            expenseProjects: (s.expenseProjects ?? []) as IConfigExpenseProject[],
+            approvals: (s.approvals ?? []) as IConfigApproval[],
+            ticketTypeActivations: (s.ticketTypeActivations ??
+              []) as IConfigServiceLineTicketType[],
+          };
+        }),
+        applications: (data.categorization?.applications ?? []).map((app) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const a = app as any;
+          return {
+            ...app,
+            approvals: (a.approvals ?? []) as IConfigApproval[],
+            ticketTypeActivations: (a.ticketTypeActivations ??
+              []) as IConfigServiceLineTicketType[],
+            supportLines: (a.supportLines ?? []) as IConfigSupportLine[],
+            billingCodes: (a.billingCodes ?? []) as IConfigBillingCode[],
+            timesheetProjects: (a.timesheetProjects ?? []) as IConfigTimesheetProject[],
+            expenseProjects: (a.expenseProjects ?? []) as IConfigExpenseProject[],
+            stickyNote: (a.stickyNote as string | undefined) ?? '',
+          };
+        }),
+        queues: (data.categorization?.queues ?? []).map((q) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const r = q as any;
+          return {
+            ...q,
+            predecessor: (r.predecessor as string | undefined) ?? '',
+            successor: (r.successor as string | undefined) ?? '',
+            queueSpecificLead: (r.queueSpecificLead as string | undefined) ?? '',
+            managerLevel1: (r.managerLevel1 as string | undefined) ?? '',
+            managerLevel2: (r.managerLevel2 as string | undefined) ?? '',
+            approvals: (r.approvals ?? []) as IConfigApproval[],
+            ticketTypeActivations: (r.ticketTypeActivations ??
+              []) as IConfigServiceLineTicketType[],
+            timesheetProjects: (r.timesheetProjects ?? []) as IConfigTimesheetProject[],
+            expenseProjects: (r.expenseProjects ?? []) as IConfigExpenseProject[],
+          } as IConfigApplicationQueue;
+        }),
+        applicationCategories: data.categorization?.applicationCategories ?? [],
+        applicationSubCategories: data.categorization?.applicationSubCategories ?? [],
+      },
+    };
   }
 
   // ── IConfigurationGateway ──────────────────────────────────────────────────

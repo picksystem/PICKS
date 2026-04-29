@@ -64,6 +64,55 @@ export interface IConfigSLA {
   isActive: boolean;
 }
 
+export interface IConfigSLAAdminControls {
+  // master switch
+  enabled: boolean;
+  // ticket-type activation (dynamic — keyed by ticket type `type` string)
+  activateOnTicketTypes: Record<string, boolean>;
+  // calendar rules
+  basedOnCallerCalendar: boolean;
+  basedOnConsultantCalendar: boolean;
+  excludeCallerBankHolidays: boolean;
+  excludeCallerLeaves: boolean;
+  excludeConsultantBankHolidays: boolean;
+  excludeConsultantLeaves: boolean;
+  excludeSaturdaysAndSundays: boolean;
+  excludeFridaysAndSaturdays: boolean;
+  excludeFridaysOnly: boolean;
+  excludeSaturdaysOnly: boolean;
+  excludeSundaysOnly: boolean;
+  // response SLA
+  responseAckSLAEnabled: boolean;
+  responseAlertOnBreach: boolean;
+  // resolution SLA
+  resolutionSLAEnabled: boolean;
+  // due date admin
+  dueDateAdminEnabled: boolean;
+  dueDateOverrideByAgents: boolean;
+  dueDateEnableDates: boolean;
+  dueDateEditableByConsultants: boolean;
+  dueDateEqualToSLADates: boolean;
+  dueDateExtendDueDates: boolean;
+  // due dates
+  dueDatesEnabled: boolean;
+  dueDateVisibleToCallers: boolean;
+  alertBeforeDueDate: boolean;
+  // ETA admin
+  etaEnabled: boolean;
+  etaEditableByConsultants: boolean;
+  etaEqualToDueDates: boolean;
+  // ETA activation
+  etaActivationEnabled: boolean;
+  etaVisibleToCallers: boolean;
+  etaEmailNotifications: boolean;
+  // time log admin
+  timeLogAdminEnabled: boolean;
+  requireTimeLogsForResolution: boolean;
+  // time logs activation
+  timeLogsActivationEnabled: boolean;
+  showTimeLogsToCallers: boolean;
+}
+
 // ── Section shapes ─────────────────────────────────────────────────────────────
 
 export interface IConfigGeneral {
@@ -72,6 +121,9 @@ export interface IConfigGeneral {
   timezone: string;
   dateFormat: string;
   language: string;
+  timeEntriesEnabled: boolean;
+  timeEntriesDisplayName: 'approved_estimates' | 'estimated_hours';
+  approvedEstimateRows: IConfigApprovedEstimateRow[];
 }
 
 export interface IConfigPriorities {
@@ -87,8 +139,183 @@ export interface IConfigStatuses {
   items: IConfigStatusLevel[];
 }
 
+export interface IConfigResponseAckSLARow {
+  id: string;
+  ticketTypeId: number;
+  ticketTypeName: string;
+  activation: boolean;
+  p1: number;
+  p2: number;
+  p3: number;
+  p4: number;
+  p5: number;
+}
+
+export interface IConfigApprovedEstimateRow {
+  id: string;
+  ticketTypeId: number;
+  ticketTypeName: string;
+  hours: number;
+}
+
+export interface IConfigActivationRow {
+  id: string;
+  ticketTypeId: number;
+  ticketTypeName: string;
+  activation: boolean;
+}
+
+export interface IConfigBusinessCategory {
+  id: string;
+  name: string;
+  description: string;
+  head: string;
+}
+
+export interface IConfigTimesheetProject {
+  id: string;
+  project: string;
+  application: string;
+  fromDate: string;
+  toDate: string;
+  activate: boolean;
+  maxHoursPerDayPerResource: number;
+}
+
+export interface IConfigExpenseProject {
+  id: string;
+  project: string;
+  application: string;
+  fromDate: string;
+  toDate: string;
+  activate: boolean;
+  maxAmountPerDay: number;
+}
+
+export interface IConfigApproval {
+  id: string;
+  approverName: string;
+  approverRole: string;
+  approvalOrder: number;
+  isRequired: boolean;
+}
+
+export interface IConfigServiceLineTicketType {
+  ticketTypeId: number;
+  ticketTypeName: string;
+  enabled: boolean;
+}
+
+export interface IConfigServiceLine {
+  id: string;
+  businessCategoryId: string;
+  businessCategoryName: string;
+  name: string;
+  description: string;
+  manager: string;
+  timesheetProjects: IConfigTimesheetProject[];
+  expenseProjects: IConfigExpenseProject[];
+  approvals: IConfigApproval[];
+  ticketTypeActivations: IConfigServiceLineTicketType[];
+}
+
+export interface IConfigSupportLine {
+  id: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+}
+
+export interface IConfigBillingCode {
+  id: string;
+  code: string;
+  description: string;
+  isActive: boolean;
+}
+
+export interface IConfigApplication {
+  id: string;
+  serviceLineId: string;
+  serviceLineName: string;
+  name: string;
+  description: string;
+  enableSupportLevels: boolean;
+  applicationLead: string;
+  managerLevel1: string;
+  managerLevel2: string;
+  approvals: IConfigApproval[];
+  ticketTypeActivations: IConfigServiceLineTicketType[];
+  supportLines: IConfigSupportLine[];
+  billingCodes: IConfigBillingCode[];
+  timesheetProjects: IConfigTimesheetProject[];
+  expenseProjects: IConfigExpenseProject[];
+  stickyNote: string;
+}
+
+export interface IConfigApplicationQueue {
+  id: string;
+  applicationId: string;
+  applicationName: string;
+  name: string;
+  description: string;
+  predecessor: string;
+  successor: string;
+  queueSpecificLead: string;
+  managerLevel1: string;
+  managerLevel2: string;
+  approvals: IConfigApproval[];
+  ticketTypeActivations: IConfigServiceLineTicketType[];
+  timesheetProjects: IConfigTimesheetProject[];
+  expenseProjects: IConfigExpenseProject[];
+}
+
+export interface IConfigApplicationCategory {
+  id: string;
+  applicationId: string;
+  applicationName: string;
+  categoryName: string;
+  description: string;
+}
+
+export interface IConfigApplicationSubCategory {
+  id: string;
+  applicationId: string;
+  applicationName: string;
+  applicationCategoryId: string;
+  applicationCategoryName: string;
+  subCategoryName: string;
+  description: string;
+}
+
+export interface IConfigApplicationNumberSequence {
+  id: string;
+  applicationId: string;
+  applicationName: string;
+  ticketTypeId: number;
+  ticketTypeName: string;
+  numberSequenceCode: string;
+  numericCharLength: number;
+  numberSequenceFormat: string;
+}
+
+export interface IConfigCategorization {
+  businessCategories: IConfigBusinessCategory[];
+  serviceLines: IConfigServiceLine[];
+  applications: IConfigApplication[];
+  queues: IConfigApplicationQueue[];
+  applicationCategories: IConfigApplicationCategory[];
+  applicationSubCategories: IConfigApplicationSubCategory[];
+  applicationNumberSequences: IConfigApplicationNumberSequence[];
+}
+
 export interface IConfigSLAs {
+  adminControls: IConfigSLAAdminControls;
   items: IConfigSLA[];
+  responseAckRows: IConfigResponseAckSLARow[];
+  resolutionRows: IConfigResponseAckSLARow[];
+  dueDateRows: IConfigResponseAckSLARow[];
+  etaActivationRows: IConfigActivationRow[];
+  timeLogActivationRows: IConfigActivationRow[];
 }
 
 // ── Root configuration document ───────────────────────────────────────────────
@@ -98,8 +325,9 @@ export interface IConfigurationData {
   general: IConfigGeneral;
   priorities: IConfigPriorities;
   statuses: IConfigStatuses;
+  releaseStatuses: IConfigStatuses;
   slas: IConfigSLAs;
-  // Future sections (categorization, approvals, calendars, …) extend here
+  categorization: IConfigCategorization;
 }
 
 export interface IConfiguration {
@@ -174,6 +402,9 @@ export const DEFAULT_CONFIGURATION_DATA: IConfigurationData = {
     timezone: 'UTC',
     dateFormat: 'MM/DD/YYYY',
     language: 'en',
+    timeEntriesEnabled: false,
+    timeEntriesDisplayName: 'estimated_hours',
+    approvedEstimateRows: [],
   },
   priorities: {
     levels: [
@@ -385,7 +616,239 @@ export const DEFAULT_CONFIGURATION_DATA: IConfigurationData = {
       },
     ],
   },
-  slas: {
-    items: [],
+  releaseStatuses: {
+    items: [
+      {
+        id: 'awaiting_design_approval',
+        name: 'awaiting_design_approval',
+        displayName: 'Awaiting Design Approval',
+        description: 'Release is pending design team sign-off',
+        color: '#fff',
+        bgColor: '#7c3aed',
+        sortOrder: 1,
+        isActive: true,
+        slaActive: true,
+        isFinal: false,
+        enabledFor: {},
+      },
+      {
+        id: 'awaiting_estimates_approval',
+        name: 'awaiting_estimates_approval',
+        displayName: 'Awaiting Estimates Approval',
+        description: 'Release effort estimates are pending approval',
+        color: '#fff',
+        bgColor: '#6366f1',
+        sortOrder: 2,
+        isActive: true,
+        slaActive: true,
+        isFinal: false,
+        enabledFor: {},
+      },
+      {
+        id: 'awaiting_internal_approval',
+        name: 'awaiting_internal_approval',
+        displayName: 'Awaiting Internal Approval',
+        description: 'Release is pending internal stakeholder approval',
+        color: '#fff',
+        bgColor: '#0284c7',
+        sortOrder: 3,
+        isActive: true,
+        slaActive: true,
+        isFinal: false,
+        enabledFor: {},
+      },
+      {
+        id: 'under_deployment',
+        name: 'under_deployment',
+        displayName: 'Under Deployment',
+        description: 'Release is actively being deployed to the target environment',
+        color: '#fff',
+        bgColor: '#0891b2',
+        sortOrder: 4,
+        isActive: true,
+        slaActive: true,
+        isFinal: false,
+        enabledFor: {},
+      },
+      {
+        id: 'pending_deployment',
+        name: 'pending_deployment',
+        displayName: 'Pending Deployment',
+        description: 'Release is approved and queued for deployment',
+        color: '#fff',
+        bgColor: '#0f766e',
+        sortOrder: 5,
+        isActive: true,
+        slaActive: true,
+        isFinal: false,
+        enabledFor: {},
+      },
+      {
+        id: 'awaiting_uat',
+        name: 'awaiting_uat',
+        displayName: 'Awaiting UAT',
+        description: 'Release is deployed and waiting for user acceptance testing',
+        color: '#fff',
+        bgColor: '#ca8a04',
+        sortOrder: 6,
+        isActive: true,
+        slaActive: true,
+        isFinal: false,
+        enabledFor: {},
+      },
+      {
+        id: 'uat_approved',
+        name: 'uat_approved',
+        displayName: 'UAT Approved',
+        description: 'User acceptance testing has been completed and approved',
+        color: '#fff',
+        bgColor: '#15803d',
+        sortOrder: 7,
+        isActive: true,
+        slaActive: false,
+        isFinal: false,
+        enabledFor: {},
+      },
+      {
+        id: 'awaiting_cab_approval',
+        name: 'awaiting_cab_approval',
+        displayName: 'Awaiting CAB Approval',
+        description: 'Release is pending Change Advisory Board approval',
+        color: '#fff',
+        bgColor: '#ea580c',
+        sortOrder: 8,
+        isActive: true,
+        slaActive: true,
+        isFinal: false,
+        enabledFor: {},
+      },
+      {
+        id: 'cab_approved',
+        name: 'cab_approved',
+        displayName: 'CAB Approved',
+        description: 'Change Advisory Board has approved the release for production',
+        color: '#fff',
+        bgColor: '#16a34a',
+        sortOrder: 9,
+        isActive: true,
+        slaActive: false,
+        isFinal: false,
+        enabledFor: {},
+      },
+      {
+        id: 'prod_release_scheduled',
+        name: 'prod_release_scheduled',
+        displayName: 'PROD Release Scheduled',
+        description: 'Release has been scheduled for production deployment',
+        color: '#fff',
+        bgColor: '#2563eb',
+        sortOrder: 10,
+        isActive: true,
+        slaActive: false,
+        isFinal: false,
+        enabledFor: {},
+      },
+      {
+        id: 'release_closed',
+        name: 'release_closed',
+        displayName: 'Closed',
+        description: 'Release cycle has been completed and closed',
+        color: '#fff',
+        bgColor: '#374151',
+        sortOrder: 11,
+        isActive: true,
+        slaActive: false,
+        isFinal: true,
+        enabledFor: {},
+      },
+    ],
   },
+  slas: {
+    adminControls: {
+      enabled: false,
+      activateOnTicketTypes: {},
+      basedOnCallerCalendar: false,
+      basedOnConsultantCalendar: true,
+      excludeCallerBankHolidays: false,
+      excludeCallerLeaves: false,
+      excludeConsultantBankHolidays: true,
+      excludeConsultantLeaves: false,
+      excludeSaturdaysAndSundays: true,
+      excludeFridaysAndSaturdays: false,
+      excludeFridaysOnly: false,
+      excludeSaturdaysOnly: false,
+      excludeSundaysOnly: false,
+      responseAckSLAEnabled: true,
+      responseAlertOnBreach: true,
+      resolutionSLAEnabled: true,
+      dueDateAdminEnabled: true,
+      dueDateOverrideByAgents: false,
+      dueDateEnableDates: true,
+      dueDateEditableByConsultants: false,
+      dueDateEqualToSLADates: false,
+      dueDateExtendDueDates: false,
+      dueDatesEnabled: true,
+      dueDateVisibleToCallers: true,
+      alertBeforeDueDate: true,
+      etaEnabled: false,
+      etaEditableByConsultants: false,
+      etaEqualToDueDates: false,
+      etaActivationEnabled: false,
+      etaVisibleToCallers: false,
+      etaEmailNotifications: false,
+      timeLogAdminEnabled: true,
+      requireTimeLogsForResolution: false,
+      timeLogsActivationEnabled: true,
+      showTimeLogsToCallers: false,
+    },
+    items: [],
+    responseAckRows: [],
+    resolutionRows: [
+      {
+        id: 'incident',
+        ticketTypeId: 1,
+        ticketTypeName: 'Incident',
+        activation: true,
+        p1: 4,
+        p2: 8,
+        p3: 16,
+        p4: 24,
+        p5: 48,
+      },
+      {
+        id: 'service_request',
+        ticketTypeId: 2,
+        ticketTypeName: 'Service Request',
+        activation: true,
+        p1: 8,
+        p2: 16,
+        p3: 24,
+        p4: 48,
+        p5: 96,
+      },
+      {
+        id: 'advisory_request',
+        ticketTypeId: 3,
+        ticketTypeName: 'Advisory Request',
+        activation: false,
+        p1: 16,
+        p2: 24,
+        p3: 48,
+        p4: 96,
+        p5: 168,
+      },
+    ],
+    dueDateRows: [],
+    etaActivationRows: [],
+    timeLogActivationRows: [],
+  },
+  categorization: {
+    businessCategories: [],
+    serviceLines: [],
+    applications: [],
+    queues: [],
+    applicationCategories: [],
+    applicationSubCategories: [],
+    applicationNumberSequences: [],
+  } as IConfigCategorization,
 };

@@ -39,6 +39,7 @@ export class ConfigurationController {
       'general',
       'priorities',
       'statuses',
+      'releaseStatuses',
       'slas',
     ];
     if (!validSections.includes(section)) {

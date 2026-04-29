@@ -10,6 +10,7 @@ import {
   IConfigGeneral,
   IConfigStatuses,
   IConfigSLAs,
+  IConfigCategorization,
   DEFAULT_CONFIGURATION_DATA,
 } from '@serviceops/interfaces';
 
@@ -43,10 +44,7 @@ export const useConfiguration = () => {
     [patchSection],
   );
 
-  const saveAll = useCallback(
-    (fullData: IConfigurationData) => putAll(fullData),
-    [putAll],
-  );
+  const saveAll = useCallback((fullData: IConfigurationData) => putAll(fullData), [putAll]);
 
   return {
     config,
@@ -54,7 +52,9 @@ export const useConfiguration = () => {
     general: data.general as IConfigGeneral,
     priorities: data.priorities as IConfigPriorities,
     statuses: data.statuses as IConfigStatuses,
+    releaseStatuses: data.releaseStatuses as IConfigStatuses,
     slas: data.slas as IConfigSLAs,
+    categorization: data.categorization as IConfigCategorization,
     ticketTypeKeys,
     saveSection,
     saveAll,

@@ -24,6 +24,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
+import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -48,7 +49,7 @@ const PRESET_COLORS = [
   '#374151',
 ];
 
-// ── Default statuses ──────────────────────────────────────────────────────────
+// ── Default ticket statuses ───────────────────────────────────────────────────
 
 const DEFAULT_STATUSES: IConfigStatusLevel[] = [
   {
@@ -144,6 +145,154 @@ const DEFAULT_STATUSES: IConfigStatusLevel[] = [
   },
 ];
 
+// ── Default release cycle statuses ────────────────────────────────────────────
+
+const DEFAULT_RELEASE_STATUSES: IConfigStatusLevel[] = [
+  {
+    id: 'awaiting_design_approval',
+    name: 'awaiting_design_approval',
+    displayName: 'Awaiting Design Approval',
+    description: 'Release is pending design team sign-off',
+    color: '#fff',
+    bgColor: '#7c3aed',
+    sortOrder: 1,
+    isActive: true,
+    slaActive: true,
+    isFinal: false,
+    enabledFor: {},
+  },
+  {
+    id: 'awaiting_estimates_approval',
+    name: 'awaiting_estimates_approval',
+    displayName: 'Awaiting Estimates Approval',
+    description: 'Release effort estimates are pending approval',
+    color: '#fff',
+    bgColor: '#6366f1',
+    sortOrder: 2,
+    isActive: true,
+    slaActive: true,
+    isFinal: false,
+    enabledFor: {},
+  },
+  {
+    id: 'awaiting_internal_approval',
+    name: 'awaiting_internal_approval',
+    displayName: 'Awaiting Internal Approval',
+    description: 'Release is pending internal stakeholder approval',
+    color: '#fff',
+    bgColor: '#0284c7',
+    sortOrder: 3,
+    isActive: true,
+    slaActive: true,
+    isFinal: false,
+    enabledFor: {},
+  },
+  {
+    id: 'under_deployment',
+    name: 'under_deployment',
+    displayName: 'Under Deployment',
+    description: 'Release is actively being deployed to the target environment',
+    color: '#fff',
+    bgColor: '#0891b2',
+    sortOrder: 4,
+    isActive: true,
+    slaActive: true,
+    isFinal: false,
+    enabledFor: {},
+  },
+  {
+    id: 'pending_deployment',
+    name: 'pending_deployment',
+    displayName: 'Pending Deployment',
+    description: 'Release is approved and queued for deployment',
+    color: '#fff',
+    bgColor: '#0f766e',
+    sortOrder: 5,
+    isActive: true,
+    slaActive: true,
+    isFinal: false,
+    enabledFor: {},
+  },
+  {
+    id: 'awaiting_uat',
+    name: 'awaiting_uat',
+    displayName: 'Awaiting UAT',
+    description: 'Release is deployed and waiting for user acceptance testing',
+    color: '#fff',
+    bgColor: '#ca8a04',
+    sortOrder: 6,
+    isActive: true,
+    slaActive: true,
+    isFinal: false,
+    enabledFor: {},
+  },
+  {
+    id: 'uat_approved',
+    name: 'uat_approved',
+    displayName: 'UAT Approved',
+    description: 'User acceptance testing has been completed and approved',
+    color: '#fff',
+    bgColor: '#15803d',
+    sortOrder: 7,
+    isActive: true,
+    slaActive: false,
+    isFinal: false,
+    enabledFor: {},
+  },
+  {
+    id: 'awaiting_cab_approval',
+    name: 'awaiting_cab_approval',
+    displayName: 'Awaiting CAB Approval',
+    description: 'Release is pending Change Advisory Board approval',
+    color: '#fff',
+    bgColor: '#ea580c',
+    sortOrder: 8,
+    isActive: true,
+    slaActive: true,
+    isFinal: false,
+    enabledFor: {},
+  },
+  {
+    id: 'cab_approved',
+    name: 'cab_approved',
+    displayName: 'CAB Approved',
+    description: 'Change Advisory Board has approved the release for production',
+    color: '#fff',
+    bgColor: '#16a34a',
+    sortOrder: 9,
+    isActive: true,
+    slaActive: false,
+    isFinal: false,
+    enabledFor: {},
+  },
+  {
+    id: 'prod_release_scheduled',
+    name: 'prod_release_scheduled',
+    displayName: 'PROD Release Scheduled',
+    description: 'Release has been scheduled for production deployment',
+    color: '#fff',
+    bgColor: '#2563eb',
+    sortOrder: 10,
+    isActive: true,
+    slaActive: false,
+    isFinal: false,
+    enabledFor: {},
+  },
+  {
+    id: 'release_closed',
+    name: 'release_closed',
+    displayName: 'Closed',
+    description: 'Release cycle has been completed and closed',
+    color: '#fff',
+    bgColor: '#374151',
+    sortOrder: 11,
+    isActive: true,
+    slaActive: false,
+    isFinal: true,
+    enabledFor: {},
+  },
+];
+
 // ── Section wrapper ───────────────────────────────────────────────────────────
 
 interface SectionProps {
@@ -199,6 +348,7 @@ interface StatusFormDialogProps {
   open: boolean;
   editing: IConfigStatusLevel | null;
   ticketTypeColumns: { key: string; label: string }[];
+  showTicketTypes?: boolean;
   onClose: () => void;
   onSave: (data: Partial<IConfigStatusLevel>) => void;
 }
@@ -207,6 +357,7 @@ const StatusFormDialog = ({
   open,
   editing,
   ticketTypeColumns,
+  showTicketTypes = true,
   onClose,
   onSave,
 }: StatusFormDialogProps) => {
@@ -231,7 +382,9 @@ const StatusFormDialog = ({
             isActive: true,
             slaActive: true,
             isFinal: false,
-            enabledFor: Object.fromEntries(ticketTypeColumns.map((t) => [t.key, true])),
+            enabledFor: showTicketTypes
+              ? Object.fromEntries(ticketTypeColumns.map((t) => [t.key, true]))
+              : {},
           },
     );
   };
@@ -349,40 +502,42 @@ const StatusFormDialog = ({
           />
         </Box>
 
-        {/* Ticket type toggles */}
-        <Box>
-          <Typography
-            variant='caption'
-            fontWeight={700}
-            color='text.secondary'
-            sx={{ mb: 1, display: 'block' }}
-          >
-            Enable for Ticket Types
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {ticketTypeColumns.map((t) => (
-              <FormControlLabel
-                key={t.key}
-                labelPlacement='end'
-                control={
-                  <Switch
-                    size='small'
-                    checked={form.enabledFor?.[t.key] ?? true}
-                    onChange={(e) =>
-                      setForm((f) => ({
-                        ...f,
-                        enabledFor: { ...(f.enabledFor ?? {}), [t.key]: e.target.checked },
-                      }))
-                    }
-                    color='success'
-                  />
-                }
-                label={<Typography sx={{ fontSize: '0.8rem' }}>{t.label}</Typography>}
-                sx={{ mr: 2 }}
-              />
-            ))}
+        {/* Ticket type toggles — only shown for ticket statuses */}
+        {showTicketTypes && (
+          <Box>
+            <Typography
+              variant='caption'
+              fontWeight={700}
+              color='text.secondary'
+              sx={{ mb: 1, display: 'block' }}
+            >
+              Enable for Ticket Types
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {ticketTypeColumns.map((t) => (
+                <FormControlLabel
+                  key={t.key}
+                  labelPlacement='end'
+                  control={
+                    <Switch
+                      size='small'
+                      checked={form.enabledFor?.[t.key] ?? true}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          enabledFor: { ...(f.enabledFor ?? {}), [t.key]: e.target.checked },
+                        }))
+                      }
+                      color='success'
+                    />
+                  }
+                  label={<Typography sx={{ fontSize: '0.8rem' }}>{t.label}</Typography>}
+                  sx={{ mr: 2 }}
+                />
+              ))}
+            </Box>
           </Box>
-        </Box>
+        )}
       </DialogContent>
       <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
         <Button onClick={onClose} sx={{ textTransform: 'none' }}>
@@ -401,11 +556,53 @@ const StatusFormDialog = ({
   );
 };
 
+// ── Reusable status badge column cell ─────────────────────────────────────────
+
+const StatusBadgeCell = ({ row }: { row: IConfigStatusLevel }) => (
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+    <Box
+      sx={{
+        width: 10,
+        height: 10,
+        borderRadius: '50%',
+        bgcolor: row.bgColor,
+        flexShrink: 0,
+        border: '1px solid rgba(0,0,0,0.12)',
+      }}
+    />
+    <Chip
+      label={row.displayName}
+      size='small'
+      sx={{
+        bgcolor: row.bgColor,
+        color: '#fff',
+        fontWeight: 700,
+        fontSize: '0.72rem',
+        height: 22,
+        borderRadius: 1.5,
+      }}
+    />
+    {row.isFinal && (
+      <Chip
+        label='Final'
+        size='small'
+        variant='outlined'
+        sx={{ fontSize: '0.65rem', height: 18, borderRadius: 1 }}
+      />
+    )}
+  </Box>
+);
+
 // ── Main Statuses section ─────────────────────────────────────────────────────
 
 const Statuses = () => {
   const { classes } = useStyles();
-  const { statuses: apiStatuses, saveSection, isLoading } = useConfiguration();
+  const {
+    statuses: apiStatuses,
+    releaseStatuses: apiReleaseStatuses,
+    saveSection,
+    isLoading,
+  } = useConfiguration();
   const { data: ticketTypes = [] } = useGetTicketTypeQuery();
 
   const activeTicketTypeColumns =
@@ -422,7 +619,8 @@ const Statuses = () => {
           { key: 'task', label: 'Task' },
         ];
 
-  // Local editable state — initialised from API, saved back on every change
+  // ── Ticket Statuses state ────────────────────────────────────────────────
+
   const [statuses, setStatuses] = useState<IConfigStatusLevel[]>(DEFAULT_STATUSES);
 
   useEffect(() => {
@@ -432,11 +630,8 @@ const Statuses = () => {
     }
   }, [apiStatuses]);
 
-  const persist = (items: IConfigStatusLevel[]) => {
-    saveSection('statuses', { items });
-  };
+  const persistStatuses = (items: IConfigStatusLevel[]) => saveSection('statuses', { items });
 
-  // ── Toolbar state ────────────────────────────────────────────────────────
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [loadDefaults, setLoadDefaults] = useState(false);
@@ -482,7 +677,7 @@ const Statuses = () => {
       next = [...statuses, newItem];
     }
     setStatuses(next);
-    persist(next);
+    persistStatuses(next);
     setDialogOpen(false);
   };
 
@@ -490,7 +685,7 @@ const Statuses = () => {
     if (selectedId) {
       const next = statuses.filter((s) => s.id !== selectedId);
       setStatuses(next);
-      persist(next);
+      persistStatuses(next);
       setSelectedId(null);
     }
     setConfirmDeleteOpen(false);
@@ -501,20 +696,20 @@ const Statuses = () => {
     if (checked) {
       setStatuses(DEFAULT_STATUSES);
       setSelectedId(null);
-      persist(DEFAULT_STATUSES);
+      persistStatuses(DEFAULT_STATUSES);
     }
   };
 
   const handleToggleActive = (id: string) => {
     const next = statuses.map((s) => (s.id === id ? { ...s, isActive: !s.isActive } : s));
     setStatuses(next);
-    persist(next);
+    persistStatuses(next);
   };
 
   const handleToggleSlaActive = (id: string) => {
     const next = statuses.map((s) => (s.id === id ? { ...s, slaActive: !s.slaActive } : s));
     setStatuses(next);
-    persist(next);
+    persistStatuses(next);
   };
 
   const handleToggleEnabledFor = (id: string, ticketType: string) => {
@@ -524,7 +719,7 @@ const Statuses = () => {
         : s,
     );
     setStatuses(next);
-    persist(next);
+    persistStatuses(next);
   };
 
   const filteredStatuses = search
@@ -533,46 +728,12 @@ const Statuses = () => {
       )
     : statuses;
 
-  // ── DataTable columns ────────────────────────────────────────────────────
-  const columns: Column<IConfigStatusLevel>[] = [
+  const ticketColumns: Column<IConfigStatusLevel>[] = [
     {
       id: 'displayName',
       label: 'Ticket Statuses',
       minWidth: 140,
-      format: (_v, row): React.ReactNode => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box
-            sx={{
-              width: 10,
-              height: 10,
-              borderRadius: '50%',
-              bgcolor: row.bgColor,
-              flexShrink: 0,
-              border: '1px solid rgba(0,0,0,0.12)',
-            }}
-          />
-          <Chip
-            label={row.displayName}
-            size='small'
-            sx={{
-              bgcolor: row.bgColor,
-              color: '#fff',
-              fontWeight: 700,
-              fontSize: '0.72rem',
-              height: 22,
-              borderRadius: 1.5,
-            }}
-          />
-          {row.isFinal && (
-            <Chip
-              label='Final'
-              size='small'
-              variant='outlined'
-              sx={{ fontSize: '0.65rem', height: 18, borderRadius: 1 }}
-            />
-          )}
-        </Box>
-      ),
+      format: (_v, row): React.ReactNode => <StatusBadgeCell row={row} />,
     },
     {
       id: 'description',
@@ -620,7 +781,6 @@ const Statuses = () => {
         />
       ),
     },
-    // Dynamic per-ticket-type columns
     ...activeTicketTypeColumns.map(
       (t): Column<IConfigStatusLevel> => ({
         id: 'enabledFor' as keyof IConfigStatusLevel,
@@ -643,6 +803,197 @@ const Statuses = () => {
     ),
   ];
 
+  // ── Release Cycle Statuses state ─────────────────────────────────────────
+
+  const [releaseStatuses, setReleaseStatuses] =
+    useState<IConfigStatusLevel[]>(DEFAULT_RELEASE_STATUSES);
+
+  useEffect(() => {
+    if (!apiReleaseStatuses) return;
+    if (apiReleaseStatuses.items && apiReleaseStatuses.items.length > 0) {
+      setReleaseStatuses(apiReleaseStatuses.items as IConfigStatusLevel[]);
+    }
+  }, [apiReleaseStatuses]);
+
+  const persistReleaseStatuses = (items: IConfigStatusLevel[]) =>
+    saveSection('releaseStatuses', { items });
+
+  const [relSelectedId, setRelSelectedId] = useState<string | null>(null);
+  const [relSearch, setRelSearch] = useState('');
+  const [relLoadDefaults, setRelLoadDefaults] = useState(false);
+  const [relDialogOpen, setRelDialogOpen] = useState(false);
+  const [relEditingStatus, setRelEditingStatus] = useState<IConfigStatusLevel | null>(null);
+  const [relConfirmDeleteOpen, setRelConfirmDeleteOpen] = useState(false);
+
+  const relSelectedStatus = releaseStatuses.find((s) => s.id === relSelectedId) ?? null;
+
+  const handleRelOpenAdd = () => {
+    setRelEditingStatus(null);
+    setRelDialogOpen(true);
+  };
+
+  const handleRelOpenEdit = () => {
+    if (relSelectedStatus) {
+      setRelEditingStatus(relSelectedStatus);
+      setRelDialogOpen(true);
+    }
+  };
+
+  const handleRelSave = (data: Partial<IConfigStatusLevel>) => {
+    let next: IConfigStatusLevel[];
+    if (relEditingStatus) {
+      next = releaseStatuses.map((s) => (s.id === relEditingStatus.id ? { ...s, ...data } : s));
+    } else {
+      const id =
+        (data.displayName ?? '').toLowerCase().replace(/[^a-z0-9]/g, '_') ||
+        `release_status_${Date.now()}`;
+      const allEnabled = Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true]));
+      const newItem: IConfigStatusLevel = {
+        id,
+        name: id,
+        displayName: data.displayName ?? id,
+        description: data.description ?? '',
+        color: '#fff',
+        bgColor: data.bgColor ?? '#0891b2',
+        sortOrder: releaseStatuses.length + 1,
+        isActive: data.isActive ?? true,
+        slaActive: data.slaActive ?? true,
+        isFinal: data.isFinal ?? false,
+        enabledFor: data.enabledFor ?? allEnabled,
+      };
+      next = [...releaseStatuses, newItem];
+    }
+    setReleaseStatuses(next);
+    persistReleaseStatuses(next);
+    setRelDialogOpen(false);
+  };
+
+  const handleRelDelete = () => {
+    if (relSelectedId) {
+      const next = releaseStatuses.filter((s) => s.id !== relSelectedId);
+      setReleaseStatuses(next);
+      persistReleaseStatuses(next);
+      setRelSelectedId(null);
+    }
+    setRelConfirmDeleteOpen(false);
+  };
+
+  const handleRelLoadDefaults = (checked: boolean) => {
+    setRelLoadDefaults(checked);
+    if (checked) {
+      setReleaseStatuses(DEFAULT_RELEASE_STATUSES);
+      setRelSelectedId(null);
+      persistReleaseStatuses(DEFAULT_RELEASE_STATUSES);
+    }
+  };
+
+  const handleRelToggleActive = (id: string) => {
+    const next = releaseStatuses.map((s) => (s.id === id ? { ...s, isActive: !s.isActive } : s));
+    setReleaseStatuses(next);
+    persistReleaseStatuses(next);
+  };
+
+  const handleRelToggleSlaActive = (id: string) => {
+    const next = releaseStatuses.map((s) => (s.id === id ? { ...s, slaActive: !s.slaActive } : s));
+    setReleaseStatuses(next);
+    persistReleaseStatuses(next);
+  };
+
+  const handleRelToggleEnabledFor = (id: string, ticketType: string) => {
+    const next = releaseStatuses.map((s) =>
+      s.id === id
+        ? { ...s, enabledFor: { ...s.enabledFor, [ticketType]: !s.enabledFor[ticketType] } }
+        : s,
+    );
+    setReleaseStatuses(next);
+    persistReleaseStatuses(next);
+  };
+
+  const filteredReleaseStatuses = relSearch
+    ? releaseStatuses.filter((s) =>
+        [s.displayName, s.description].some((v) =>
+          v?.toLowerCase().includes(relSearch.toLowerCase()),
+        ),
+      )
+    : releaseStatuses;
+
+  const releaseColumns: Column<IConfigStatusLevel>[] = [
+    {
+      id: 'displayName',
+      label: 'Release Cycle Statuses',
+      minWidth: 180,
+      format: (_v, row): React.ReactNode => <StatusBadgeCell row={row} />,
+    },
+    {
+      id: 'description',
+      label: 'Description',
+      minWidth: 260,
+      format: (v): React.ReactNode => (
+        <Typography variant='body2' color='text.secondary' fontSize='0.78rem'>
+          {String(v || '—')}
+        </Typography>
+      ),
+    },
+    {
+      id: 'isActive',
+      label: 'Status Activation',
+      minWidth: 110,
+      align: 'center',
+      format: (_v, row): React.ReactNode => (
+        <Switch
+          size='small'
+          checked={row.isActive}
+          onChange={(e) => {
+            e.stopPropagation();
+            handleRelToggleActive(row.id);
+          }}
+          onClick={(e) => e.stopPropagation()}
+          color='success'
+        />
+      ),
+    },
+    {
+      id: 'slaActive',
+      label: 'SLA Activation',
+      minWidth: 110,
+      align: 'center',
+      format: (_v, row): React.ReactNode => (
+        <Switch
+          size='small'
+          checked={row.slaActive}
+          onChange={(e) => {
+            e.stopPropagation();
+            handleRelToggleSlaActive(row.id);
+          }}
+          onClick={(e) => e.stopPropagation()}
+          color='primary'
+        />
+      ),
+    },
+    ...activeTicketTypeColumns.map(
+      (t): Column<IConfigStatusLevel> => ({
+        id: 'enabledFor' as keyof IConfigStatusLevel,
+        label: t.label,
+        minWidth: 90,
+        align: 'center',
+        format: (_v, row): React.ReactNode => (
+          <Switch
+            size='small'
+            checked={row.enabledFor[t.key] ?? true}
+            onChange={(e) => {
+              e.stopPropagation();
+              handleRelToggleEnabledFor(row.id, t.key);
+            }}
+            onClick={(e) => e.stopPropagation()}
+            color='success'
+          />
+        ),
+      }),
+    ),
+  ];
+
+  // ── Render ───────────────────────────────────────────────────────────────
+
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
@@ -653,6 +1004,7 @@ const Statuses = () => {
 
   return (
     <Box className={classes.container}>
+      {/* ── Ticket Statuses ── */}
       <Section
         icon={<RadioButtonCheckedIcon sx={{ color: '#fff', fontSize: '1rem' }} />}
         title='Ticket Statuses'
@@ -660,10 +1012,8 @@ const Statuses = () => {
         accentColor='#7c3aed'
         defaultExpanded
       >
-        {/* Toolbar */}
         <Paper variant='outlined' className={classes.actionToolbar}>
           <Box className={classes.toolbarButtons}>
-            {/* New — always visible when nothing selected */}
             {!selectedId && (
               <Tooltip title='Add a new ticket status'>
                 <Button
@@ -678,7 +1028,6 @@ const Statuses = () => {
               </Tooltip>
             )}
 
-            {/* Edit / Delete — visible when a row is selected */}
             {selectedId && (
               <>
                 <Button
@@ -705,7 +1054,6 @@ const Statuses = () => {
 
             <Divider orientation='vertical' flexItem className={classes.toolbarDivider} />
 
-            {/* Load system default values */}
             <FormControlLabel
               labelPlacement='start'
               control={
@@ -724,7 +1072,6 @@ const Statuses = () => {
               sx={{ mr: 0, ml: 0, gap: 0.75, width: { xs: '100%', sm: 'auto' } }}
             />
 
-            {/* Search */}
             <TextField
               size='small'
               placeholder='Search...'
@@ -754,10 +1101,9 @@ const Statuses = () => {
           )}
         </Paper>
 
-        {/* DataTable */}
         <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
           <DataTable
-            columns={columns}
+            columns={ticketColumns}
             data={filteredStatuses}
             rowKey='id'
             searchable={false}
@@ -768,16 +1114,125 @@ const Statuses = () => {
         </Paper>
       </Section>
 
-      {/* Add / Edit dialog */}
+      {/* ── Release Cycle Statuses ── */}
+      <Section
+        icon={<ChangeCircleIcon sx={{ color: '#fff', fontSize: '1rem' }} />}
+        title='Release Cycle Statuses'
+        subtitle='Configure statuses for the release lifecycle from design approval through production'
+        accentColor='#0891b2'
+      >
+        <Paper variant='outlined' className={classes.actionToolbar}>
+          <Box className={classes.toolbarButtons}>
+            {!relSelectedId && (
+              <Tooltip title='Add a new release cycle status'>
+                <Button
+                  size='small'
+                  variant='contained'
+                  startIcon={<AddIcon />}
+                  onClick={handleRelOpenAdd}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  New
+                </Button>
+              </Tooltip>
+            )}
+
+            {relSelectedId && (
+              <>
+                <Button
+                  size='small'
+                  variant='contained'
+                  startIcon={<EditIcon />}
+                  onClick={handleRelOpenEdit}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  Edit
+                </Button>
+                <Button
+                  size='small'
+                  variant='outlined'
+                  color='error'
+                  startIcon={<DeleteIcon />}
+                  onClick={() => setRelConfirmDeleteOpen(true)}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  Delete
+                </Button>
+              </>
+            )}
+
+            <Divider orientation='vertical' flexItem className={classes.toolbarDivider} />
+
+            <FormControlLabel
+              labelPlacement='start'
+              control={
+                <Switch
+                  size='small'
+                  checked={relLoadDefaults}
+                  onChange={(e) => handleRelLoadDefaults(e.target.checked)}
+                  color='warning'
+                />
+              }
+              label={
+                <Typography variant='body2' fontWeight={500} fontSize='0.8rem'>
+                  Load system default values
+                </Typography>
+              }
+              sx={{ mr: 0, ml: 0, gap: 0.75, width: { xs: '100%', sm: 'auto' } }}
+            />
+
+            <TextField
+              size='small'
+              placeholder='Search...'
+              value={relSearch}
+              onChange={(e) => setRelSearch(e.target.value)}
+              className={classes.tableSearchField}
+              sx={{ ml: { xs: 0, sm: 'auto' } }}
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position='end'>
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+            />
+          </Box>
+
+          {relSelectedId && (
+            <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
+              Selected: <strong>{relSelectedStatus?.displayName}</strong>&nbsp;·&nbsp;
+              <Link component='button' variant='caption' onClick={() => setRelSelectedId(null)}>
+                Clear
+              </Link>
+            </Typography>
+          )}
+        </Paper>
+
+        <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+          <DataTable
+            columns={releaseColumns}
+            data={filteredReleaseStatuses}
+            rowKey='id'
+            searchable={false}
+            initialRowsPerPage={11}
+            onRowClick={(row) => setRelSelectedId((prev) => (prev === row.id ? null : row.id))}
+            activeRowKey={relSelectedId ?? undefined}
+          />
+        </Paper>
+      </Section>
+
+      {/* ── Ticket status dialogs ── */}
       <StatusFormDialog
         open={dialogOpen}
         editing={editingStatus}
         ticketTypeColumns={activeTicketTypeColumns}
+        showTicketTypes
         onClose={() => setDialogOpen(false)}
         onSave={handleSave}
       />
 
-      {/* Delete confirm dialog */}
       <Dialog
         open={confirmDeleteOpen}
         onClose={() => setConfirmDeleteOpen(false)}
@@ -800,6 +1255,44 @@ const Statuses = () => {
             color='error'
             sx={{ textTransform: 'none', borderRadius: 2 }}
             onClick={handleDelete}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ── Release cycle status dialogs ── */}
+      <StatusFormDialog
+        open={relDialogOpen}
+        editing={relEditingStatus}
+        ticketTypeColumns={activeTicketTypeColumns}
+        showTicketTypes
+        onClose={() => setRelDialogOpen(false)}
+        onSave={handleRelSave}
+      />
+
+      <Dialog
+        open={relConfirmDeleteOpen}
+        onClose={() => setRelConfirmDeleteOpen(false)}
+        maxWidth='xs'
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Delete Release Status</DialogTitle>
+        <DialogContent>
+          <Typography variant='body2'>
+            Are you sure you want to delete <strong>{relSelectedStatus?.displayName}</strong>? This
+            action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
+          <Button onClick={() => setRelConfirmDeleteOpen(false)} sx={{ textTransform: 'none' }}>
+            Cancel
+          </Button>
+          <Button
+            variant='contained'
+            color='error'
+            sx={{ textTransform: 'none', borderRadius: 2 }}
+            onClick={handleRelDelete}
           >
             Delete
           </Button>

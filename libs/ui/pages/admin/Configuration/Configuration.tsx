@@ -32,7 +32,7 @@ const BASE = '/app/admin/configuration';
 const INNER_NAV_WIDTH = 220;
 
 const NAV_ITEMS = [
-  { label: 'General', path: `${BASE}/general`, Icon: SettingsIcon, accent: '#2563eb' },
+  { label: 'Admin Controls', path: `${BASE}/general`, Icon: SettingsIcon, accent: '#2563eb' },
   {
     label: 'Ticket Types',
     path: `${BASE}/ticket-types`,
