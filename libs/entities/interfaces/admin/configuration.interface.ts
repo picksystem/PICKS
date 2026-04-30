@@ -341,6 +341,7 @@ export interface IConfigConsultantTimesheetProject {
   id: string;
   consultantProfileId: string;
   consultantName: string;
+  activate: boolean;
   project: string;
   application: string;
   fromDate: string;
@@ -352,11 +353,25 @@ export interface IConfigConsultantExpenseProject {
   id: string;
   consultantProfileId: string;
   consultantName: string;
+  activate: boolean;
   project: string;
   application: string;
   fromDate: string;
   toDate: string;
   maxAmountPerDay: number;
+}
+
+export interface IConfigConsultantRole {
+  id: string;
+  roleName: string;
+  description: string;
+}
+
+export interface IConfigAssociatedConsultantProfile {
+  id: string;
+  application: string;
+  roleName: string;
+  description: string;
 }
 
 export interface IConfigConsultantProfiles {
@@ -366,6 +381,8 @@ export interface IConfigConsultantProfiles {
   workingShifts: IConfigConsultantWorkingShift[];
   timesheetProjects: IConfigConsultantTimesheetProject[];
   expenseProjects: IConfigConsultantExpenseProject[];
+  consultantRoles: IConfigConsultantRole[];
+  associatedConsultantProfiles: IConfigAssociatedConsultantProfile[];
 }
 
 export interface IConfigCategorization {
@@ -929,5 +946,7 @@ export const DEFAULT_CONFIGURATION_DATA: IConfigurationData = {
     workingShifts: [],
     timesheetProjects: [],
     expenseProjects: [],
+    consultantRoles: [],
+    associatedConsultantProfiles: [],
   },
 };
