@@ -405,6 +405,124 @@ export interface IConfigSLAs {
   timeLogActivationRows: IConfigActivationRow[];
 }
 
+// ── User Config section ───────────────────────────────────────────────────────
+
+export interface IConfigWorkLocation {
+  id: string;
+  name: string;
+  description: string;
+  country: string;
+  state: string;
+  dateFormat: string;
+  timeFormat: string;
+  language: string;
+  timezone: string;
+  workCalendar: string;
+}
+
+export interface IConfigWorkLocationWorkingTime {
+  id: string;
+  workLocationId: string;
+  workLocationName: string;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface IConfigWorkLocationShift {
+  id: string;
+  workLocationId: string;
+  workLocationName: string;
+  shiftName: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface IConfigWorkLocationAssociatedProfile {
+  id: string;
+  workLocationId: string;
+  workLocationName: string;
+  consultantProfileId: string;
+  consultantName: string;
+}
+
+export interface IConfigUserConfig {
+  workLocations: IConfigWorkLocation[];
+  workingTimes: IConfigWorkLocationWorkingTime[];
+  shifts: IConfigWorkLocationShift[];
+  associatedProfiles: IConfigWorkLocationAssociatedProfile[];
+}
+
+// ── Templates section ─────────────────────────────────────────────────────────
+
+export interface IConfigTicketUpdateTemplate {
+  id: string;
+  name: string;
+  description: string;
+  active: boolean;
+  ticketStatus: string;
+  subjectLine: string;
+  commentDescription: string;
+  internalNote: boolean;
+  notifyAssigneesOnly: boolean;
+  selfNote: boolean;
+  appendToResolution: boolean;
+}
+
+export type IConfigCommentTemplate = IConfigTicketUpdateTemplate;
+
+export interface IConfigTicketUpdateTemplates {
+  items: IConfigTicketUpdateTemplate[];
+}
+
+export interface IConfigCommentTemplates {
+  items: IConfigCommentTemplate[];
+}
+
+// ── Approvals section ─────────────────────────────────────────────────────────
+
+export interface IConfigApprovalRecord {
+  id: string;
+  consultant: string;
+  application: string;
+  consultantRole: string;
+  slaWorkingTimeCalendar: string;
+  slaExceptionGroup: string;
+  leadConsultant: string;
+  manager: string;
+}
+
+export interface IConfigApprovalAssocUserProfile {
+  id: string;
+  approvalRecordId: string;
+  userId: string;
+  userName: string;
+  email: string;
+  role: string;
+}
+
+export interface IConfigApprovalConsultantRole {
+  id: string;
+  roleName: string;
+  description: string;
+}
+
+export interface IConfigApprovalWorkingTime {
+  id: string;
+  approvalRecordId: string;
+  startTime: string;
+  endTime: string;
+  timezone: string;
+}
+
+export interface IConfigApprovals {
+  records: IConfigApprovalRecord[];
+  assocUserProfiles: IConfigApprovalAssocUserProfile[];
+  consultantRoles: IConfigApprovalConsultantRole[];
+  workingTimes: IConfigApprovalWorkingTime[];
+}
+
 // ── Root configuration document ───────────────────────────────────────────────
 
 /** Full configuration stored as a single JSON document in AdminConfiguration. */
@@ -416,6 +534,10 @@ export interface IConfigurationData {
   slas: IConfigSLAs;
   categorization: IConfigCategorization;
   consultantProfiles: IConfigConsultantProfiles;
+  approvals: IConfigApprovals;
+  ticketUpdateTemplates: IConfigTicketUpdateTemplates;
+  commentTemplates: IConfigCommentTemplates;
+  userConfig: IConfigUserConfig;
 }
 
 export interface IConfiguration {
@@ -948,5 +1070,19 @@ export const DEFAULT_CONFIGURATION_DATA: IConfigurationData = {
     expenseProjects: [],
     consultantRoles: [],
     associatedConsultantProfiles: [],
+  },
+  approvals: {
+    records: [],
+    assocUserProfiles: [],
+    consultantRoles: [],
+    workingTimes: [],
+  },
+  ticketUpdateTemplates: { items: [] },
+  commentTemplates: { items: [] },
+  userConfig: {
+    workLocations: [],
+    workingTimes: [],
+    shifts: [],
+    associatedProfiles: [],
   },
 };

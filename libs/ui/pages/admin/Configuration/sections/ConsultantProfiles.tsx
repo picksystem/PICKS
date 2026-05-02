@@ -11,10 +11,6 @@ import {
   Link,
   TextField,
   InputAdornment,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Select,
   MenuItem,
   FormControl,
@@ -52,6 +48,7 @@ import {
 import { DataTable, Column } from '@serviceops/component';
 import { useStyles } from '../styles';
 import { useConfiguration } from '../hooks/useConfiguration';
+import { ConfigFormDialog, ConfigDeleteDialog } from '../dialogs/ConfigDialogs';
 
 // ── Panel shared components ───────────────────────────────────────────────────
 
@@ -472,95 +469,57 @@ const AssocUserProfilePanel = ({
           </PanelTable>
         </>
       )}
-      <Dialog
+      <ConfigFormDialog
         open={dialogOpen}
         onClose={() => {
           setDialogOpen(false);
           setEditingRow(null);
         }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<PersonIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_AUP}
+        title='Associated User Profile'
+        submitDisabled={!form.userName.trim()}
         maxWidth='sm'
-        fullWidth
       >
-        <DialogTitle sx={{ fontWeight: 700 }}>
-          {editingRow ? 'Edit Associated User Profile' : 'New Associated User Profile'}
-        </DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            <TextField
-              label='User ID'
-              size='small'
-              fullWidth
-              value={form.userId}
-              onChange={(e) => setForm((f) => ({ ...f, userId: e.target.value }))}
-            />
-            <TextField
-              label='User Name'
-              size='small'
-              fullWidth
-              required
-              value={form.userName}
-              onChange={(e) => setForm((f) => ({ ...f, userName: e.target.value }))}
-            />
-            <TextField
-              label='Email'
-              size='small'
-              fullWidth
-              value={form.email}
-              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-            />
-            <TextField
-              label='Role'
-              size='small'
-              fullWidth
-              value={form.role}
-              onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => {
-              setDialogOpen(false);
-              setEditingRow(null);
-            }}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            onClick={handleSubmit}
-            disabled={!form.userName.trim()}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            {editingRow ? 'Save Changes' : 'Add'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Associated User Profile</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Delete <strong>{selectedRow?.userName}</strong>? This cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => setDeleteOpen(false)}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            onClick={handleDelete}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <TextField
+          label='User ID'
+          size='small'
+          fullWidth
+          value={form.userId}
+          onChange={(e) => setForm((f) => ({ ...f, userId: e.target.value }))}
+        />
+        <TextField
+          label='User Name'
+          size='small'
+          fullWidth
+          required
+          value={form.userName}
+          onChange={(e) => setForm((f) => ({ ...f, userName: e.target.value }))}
+        />
+        <TextField
+          label='Email'
+          size='small'
+          fullWidth
+          value={form.email}
+          onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+        />
+        <TextField
+          label='Role'
+          size='small'
+          fullWidth
+          value={form.role}
+          onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
+        />
+      </ConfigFormDialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Associated User Profile'
+        itemName={selectedRow?.userName}
+      />
     </Box>
   );
 };
@@ -697,90 +656,52 @@ const WorkingTimesPanel = ({
           </PanelTable>
         </>
       )}
-      <Dialog
+      <ConfigFormDialog
         open={dialogOpen}
         onClose={() => {
           setDialogOpen(false);
           setEditingRow(null);
         }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<AccessTimeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_WT}
+        title='Working Time'
+        submitDisabled={!form.startTime}
         maxWidth='xs'
-        fullWidth
       >
-        <DialogTitle sx={{ fontWeight: 700 }}>
-          {editingRow ? 'Edit Working Time' : 'New Working Time'}
-        </DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            <TextField
-              label='Start Time'
-              type='time'
-              size='small'
-              fullWidth
-              value={form.startTime}
-              onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
-              slotProps={{ inputLabel: { shrink: true } }}
-            />
-            <TextField
-              label='End Time'
-              type='time'
-              size='small'
-              fullWidth
-              value={form.endTime}
-              onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
-              slotProps={{ inputLabel: { shrink: true } }}
-            />
-            <TextField
-              label='Timezone'
-              size='small'
-              fullWidth
-              value={form.timezone}
-              onChange={(e) => setForm((f) => ({ ...f, timezone: e.target.value }))}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => {
-              setDialogOpen(false);
-              setEditingRow(null);
-            }}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            onClick={handleSubmit}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            {editingRow ? 'Save Changes' : 'Add'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Working Time</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Delete this working time entry? This cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => setDeleteOpen(false)}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            onClick={handleDelete}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <TextField
+          label='Start Time'
+          type='time'
+          size='small'
+          fullWidth
+          value={form.startTime}
+          onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
+          slotProps={{ inputLabel: { shrink: true } }}
+        />
+        <TextField
+          label='End Time'
+          type='time'
+          size='small'
+          fullWidth
+          value={form.endTime}
+          onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
+          slotProps={{ inputLabel: { shrink: true } }}
+        />
+        <TextField
+          label='Timezone'
+          size='small'
+          fullWidth
+          value={form.timezone}
+          onChange={(e) => setForm((f) => ({ ...f, timezone: e.target.value }))}
+        />
+      </ConfigFormDialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Working Time'
+      />
     </Box>
   );
 };
@@ -925,83 +846,45 @@ const WorkingShiftPanel = ({
           </PanelTable>
         </>
       )}
-      <Dialog
+      <ConfigFormDialog
         open={dialogOpen}
         onClose={() => {
           setDialogOpen(false);
           setEditingRow(null);
         }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<UpdateIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_WS}
+        title='Working Shift'
+        submitDisabled={!form.shiftName.trim()}
         maxWidth='sm'
-        fullWidth
       >
-        <DialogTitle sx={{ fontWeight: 700 }}>
-          {editingRow ? 'Edit Working Shift' : 'New Working Shift'}
-        </DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            <TextField
-              label='Shift Name'
-              size='small'
-              fullWidth
-              required
-              value={form.shiftName}
-              onChange={(e) => setForm((f) => ({ ...f, shiftName: e.target.value }))}
-            />
-            <TextField
-              label='Description'
-              size='small'
-              fullWidth
-              multiline
-              minRows={2}
-              value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => {
-              setDialogOpen(false);
-              setEditingRow(null);
-            }}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            onClick={handleSubmit}
-            disabled={!form.shiftName.trim()}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            {editingRow ? 'Save Changes' : 'Add'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Working Shift</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Delete <strong>{selectedRow?.shiftName}</strong>? This cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => setDeleteOpen(false)}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            onClick={handleDelete}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <TextField
+          label='Shift Name'
+          size='small'
+          fullWidth
+          required
+          value={form.shiftName}
+          onChange={(e) => setForm((f) => ({ ...f, shiftName: e.target.value }))}
+        />
+        <TextField
+          label='Description'
+          size='small'
+          fullWidth
+          multiline
+          minRows={2}
+          value={form.description}
+          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+        />
+      </ConfigFormDialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Working Shift'
+        itemName={selectedRow?.shiftName}
+      />
     </Box>
   );
 };
@@ -1365,174 +1248,130 @@ const TimesheetProjectsPanel = ({
       </Paper>
 
       {/* New / Edit dialog */}
-      <Dialog
+      <ConfigFormDialog
         open={dialogOpen}
         onClose={() => {
           setDialogOpen(false);
           setEditingRow(null);
         }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<ReceiptLongIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_TP}
+        title='Timesheet Project'
+        submitDisabled={!form.project.trim() || (!editingRow && !form.consultantProfileId)}
+        submitLabel={editingRow ? 'Save Changes' : 'Add Project'}
         maxWidth='sm'
-        fullWidth
       >
-        <DialogTitle
-          sx={{ fontWeight: 700, borderBottom: '1px solid', borderColor: 'divider', pb: 1.5 }}
-        >
-          {editingRow ? 'Edit Timesheet Project' : 'New Timesheet Project'}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 2 }}>
-            {editingRow ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant='caption' color='text.secondary' fontWeight={600}>
-                  Consultant:
-                </Typography>
-                <Chip
-                  label={editingRow.consultantName}
-                  size='small'
-                  sx={{
-                    bgcolor: alpha(ACCENT_TP, 0.1),
-                    color: ACCENT_TP,
-                    fontWeight: 600,
-                    fontSize: '0.78rem',
-                  }}
-                />
-              </Box>
-            ) : (
-              <FormControl size='small' fullWidth required>
-                <InputLabel>Consultant</InputLabel>
-                <Select
-                  label='Consultant'
-                  value={form.consultantProfileId}
-                  onChange={(e) => setForm((f) => ({ ...f, consultantProfileId: e.target.value }))}
-                >
-                  {profiles.length === 0 ? (
-                    <MenuItem disabled value=''>
-                      <em>No consultants — add one first</em>
-                    </MenuItem>
-                  ) : (
-                    profiles.map((p) => (
-                      <MenuItem key={p.id} value={p.id}>
-                        {p.consultantName}
-                      </MenuItem>
-                    ))
-                  )}
-                </Select>
-              </FormControl>
-            )}
-            <TextField
-              label='Project'
+        {editingRow ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant='caption' color='text.secondary' fontWeight={600}>
+              Consultant:
+            </Typography>
+            <Chip
+              label={editingRow.consultantName}
               size='small'
-              fullWidth
-              required
-              value={form.project}
-              onChange={(e) => setForm((f) => ({ ...f, project: e.target.value }))}
-            />
-            <TextField
-              label='Application'
-              size='small'
-              fullWidth
-              value={form.application}
-              onChange={(e) => setForm((f) => ({ ...f, application: e.target.value }))}
-            />
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
-                label='From Date'
-                type='date'
-                size='small'
-                fullWidth
-                value={form.fromDate}
-                onChange={(e) => setForm((f) => ({ ...f, fromDate: e.target.value }))}
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
-              <TextField
-                label='To Date'
-                type='date'
-                size='small'
-                fullWidth
-                value={form.toDate}
-                onChange={(e) => setForm((f) => ({ ...f, toDate: e.target.value }))}
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
-            </Box>
-            <TextField
-              label='Max Hours Allowed Per Day Per Resource'
-              type='number'
-              size='small'
-              fullWidth
-              value={form.maxHoursPerDayPerResource}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  maxHoursPerDayPerResource: Math.max(0, Number(e.target.value)),
-                }))
-              }
-              slotProps={{ htmlInput: { min: 0, max: 24, step: 0.5 } }}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={form.activate}
-                  color='success'
-                  onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))}
-                />
-              }
-              label={
-                <Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>
-              }
+              sx={{
+                bgcolor: alpha(ACCENT_TP, 0.1),
+                color: ACCENT_TP,
+                fontWeight: 600,
+                fontSize: '0.78rem',
+              }}
             />
           </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => {
-              setDialogOpen(false);
-              setEditingRow(null);
-            }}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            onClick={handleSubmit}
-            disabled={!form.project.trim() || (!editingRow && !form.consultantProfileId)}
-            sx={{
-              textTransform: 'none',
-              borderRadius: 2,
-              bgcolor: ACCENT_TP,
-              '&:hover': { bgcolor: alpha(ACCENT_TP, 0.85) },
-            }}
-          >
-            {editingRow ? 'Save Changes' : 'Add Project'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        ) : (
+          <FormControl size='small' fullWidth required>
+            <InputLabel>Consultant</InputLabel>
+            <Select
+              label='Consultant'
+              value={form.consultantProfileId}
+              onChange={(e) => setForm((f) => ({ ...f, consultantProfileId: e.target.value }))}
+            >
+              {profiles.length === 0 ? (
+                <MenuItem disabled value=''>
+                  <em>No consultants — add one first</em>
+                </MenuItem>
+              ) : (
+                profiles.map((p) => (
+                  <MenuItem key={p.id} value={p.id}>
+                    {p.consultantName}
+                  </MenuItem>
+                ))
+              )}
+            </Select>
+          </FormControl>
+        )}
+        <TextField
+          label='Project'
+          size='small'
+          fullWidth
+          required
+          value={form.project}
+          onChange={(e) => setForm((f) => ({ ...f, project: e.target.value }))}
+        />
+        <TextField
+          label='Application'
+          size='small'
+          fullWidth
+          value={form.application}
+          onChange={(e) => setForm((f) => ({ ...f, application: e.target.value }))}
+        />
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TextField
+            label='From Date'
+            type='date'
+            size='small'
+            fullWidth
+            value={form.fromDate}
+            onChange={(e) => setForm((f) => ({ ...f, fromDate: e.target.value }))}
+            slotProps={{ inputLabel: { shrink: true } }}
+          />
+          <TextField
+            label='To Date'
+            type='date'
+            size='small'
+            fullWidth
+            value={form.toDate}
+            onChange={(e) => setForm((f) => ({ ...f, toDate: e.target.value }))}
+            slotProps={{ inputLabel: { shrink: true } }}
+          />
+        </Box>
+        <TextField
+          label='Max Hours Allowed Per Day Per Resource'
+          type='number'
+          size='small'
+          fullWidth
+          value={form.maxHoursPerDayPerResource}
+          onChange={(e) =>
+            setForm((f) => ({
+              ...f,
+              maxHoursPerDayPerResource: Math.max(0, Number(e.target.value)),
+            }))
+          }
+          slotProps={{ htmlInput: { min: 0, max: 24, step: 0.5 } }}
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={form.activate}
+              color='success'
+              onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))}
+            />
+          }
+          label={
+            <Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>
+          }
+        />
+      </ConfigFormDialog>
 
       {/* Delete dialog */}
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Timesheet Project</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Delete <strong>{selectedRow?.project}</strong>? This cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => setDeleteOpen(false)}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            onClick={handleDelete}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Timesheet Project'
+        itemName={selectedRow?.project}
+      />
     </Box>
   );
 };
@@ -1896,463 +1735,150 @@ const ExpenseProjectsPanel = ({
       </Paper>
 
       {/* New / Edit dialog */}
-      <Dialog
+      <ConfigFormDialog
         open={dialogOpen}
         onClose={() => {
           setDialogOpen(false);
           setEditingRow(null);
         }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<AttachMoneyIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_EP}
+        title='Expense Project'
+        submitDisabled={!form.project.trim() || (!editingRow && !form.consultantProfileId)}
+        submitLabel={editingRow ? 'Save Changes' : 'Add Project'}
         maxWidth='sm'
-        fullWidth
       >
-        <DialogTitle
-          sx={{ fontWeight: 700, borderBottom: '1px solid', borderColor: 'divider', pb: 1.5 }}
-        >
-          {editingRow ? 'Edit Expense Project' : 'New Expense Project'}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 2 }}>
-            {editingRow ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant='caption' color='text.secondary' fontWeight={600}>
-                  Consultant:
-                </Typography>
-                <Chip
-                  label={editingRow.consultantName}
-                  size='small'
-                  sx={{
-                    bgcolor: alpha(ACCENT_EP, 0.1),
-                    color: ACCENT_EP,
-                    fontWeight: 600,
-                    fontSize: '0.78rem',
-                  }}
-                />
-              </Box>
-            ) : (
-              <FormControl size='small' fullWidth required>
-                <InputLabel>Consultant</InputLabel>
-                <Select
-                  label='Consultant'
-                  value={form.consultantProfileId}
-                  onChange={(e) => setForm((f) => ({ ...f, consultantProfileId: e.target.value }))}
-                >
-                  {profiles.length === 0 ? (
-                    <MenuItem disabled value=''>
-                      <em>No consultants — add one first</em>
-                    </MenuItem>
-                  ) : (
-                    profiles.map((p) => (
-                      <MenuItem key={p.id} value={p.id}>
-                        {p.consultantName}
-                      </MenuItem>
-                    ))
-                  )}
-                </Select>
-              </FormControl>
-            )}
-            <TextField
-              label='Expenses Project'
+        {editingRow ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant='caption' color='text.secondary' fontWeight={600}>
+              Consultant:
+            </Typography>
+            <Chip
+              label={editingRow.consultantName}
               size='small'
-              fullWidth
-              required
-              value={form.project}
-              onChange={(e) => setForm((f) => ({ ...f, project: e.target.value }))}
-            />
-            <TextField
-              label='Application'
-              size='small'
-              fullWidth
-              value={form.application}
-              onChange={(e) => setForm((f) => ({ ...f, application: e.target.value }))}
-            />
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
-                label='From Date'
-                type='date'
-                size='small'
-                fullWidth
-                value={form.fromDate}
-                onChange={(e) => setForm((f) => ({ ...f, fromDate: e.target.value }))}
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
-              <TextField
-                label='To Date'
-                type='date'
-                size='small'
-                fullWidth
-                value={form.toDate}
-                onChange={(e) => setForm((f) => ({ ...f, toDate: e.target.value }))}
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
-            </Box>
-            <TextField
-              label='Max Amount Allowed Per Day Per Resource ($)'
-              type='number'
-              size='small'
-              fullWidth
-              value={form.maxAmountPerDay}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, maxAmountPerDay: Math.max(0, Number(e.target.value)) }))
-              }
-              slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={form.activate}
-                  color='success'
-                  onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))}
-                />
-              }
-              label={
-                <Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>
-              }
+              sx={{
+                bgcolor: alpha(ACCENT_EP, 0.1),
+                color: ACCENT_EP,
+                fontWeight: 600,
+                fontSize: '0.78rem',
+              }}
             />
           </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => {
-              setDialogOpen(false);
-              setEditingRow(null);
-            }}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            onClick={handleSubmit}
-            disabled={!form.project.trim() || (!editingRow && !form.consultantProfileId)}
-            sx={{
-              textTransform: 'none',
-              borderRadius: 2,
-              bgcolor: ACCENT_EP,
-              '&:hover': { bgcolor: alpha(ACCENT_EP, 0.85) },
-            }}
-          >
-            {editingRow ? 'Save Changes' : 'Add Project'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        ) : (
+          <FormControl size='small' fullWidth required>
+            <InputLabel>Consultant</InputLabel>
+            <Select
+              label='Consultant'
+              value={form.consultantProfileId}
+              onChange={(e) => setForm((f) => ({ ...f, consultantProfileId: e.target.value }))}
+            >
+              {profiles.length === 0 ? (
+                <MenuItem disabled value=''>
+                  <em>No consultants — add one first</em>
+                </MenuItem>
+              ) : (
+                profiles.map((p) => (
+                  <MenuItem key={p.id} value={p.id}>
+                    {p.consultantName}
+                  </MenuItem>
+                ))
+              )}
+            </Select>
+          </FormControl>
+        )}
+        <TextField
+          label='Expenses Project'
+          size='small'
+          fullWidth
+          required
+          value={form.project}
+          onChange={(e) => setForm((f) => ({ ...f, project: e.target.value }))}
+        />
+        <TextField
+          label='Application'
+          size='small'
+          fullWidth
+          value={form.application}
+          onChange={(e) => setForm((f) => ({ ...f, application: e.target.value }))}
+        />
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TextField
+            label='From Date'
+            type='date'
+            size='small'
+            fullWidth
+            value={form.fromDate}
+            onChange={(e) => setForm((f) => ({ ...f, fromDate: e.target.value }))}
+            slotProps={{ inputLabel: { shrink: true } }}
+          />
+          <TextField
+            label='To Date'
+            type='date'
+            size='small'
+            fullWidth
+            value={form.toDate}
+            onChange={(e) => setForm((f) => ({ ...f, toDate: e.target.value }))}
+            slotProps={{ inputLabel: { shrink: true } }}
+          />
+        </Box>
+        <TextField
+          label='Max Amount Allowed Per Day Per Resource ($)'
+          type='number'
+          size='small'
+          fullWidth
+          value={form.maxAmountPerDay}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, maxAmountPerDay: Math.max(0, Number(e.target.value)) }))
+          }
+          slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={form.activate}
+              color='success'
+              onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))}
+            />
+          }
+          label={
+            <Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>
+          }
+        />
+      </ConfigFormDialog>
 
       {/* Delete dialog */}
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Expense Project</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Delete <strong>{selectedRow?.project}</strong>? This cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => setDeleteOpen(false)}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            onClick={handleDelete}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Expense Project'
+        itemName={selectedRow?.project}
+      />
     </Box>
   );
 };
 
-// ── Define Consultant Roles section ──────────────────────────────────────────
+// ── Associated Consultant Profiles panel (inside Define Consultant Roles) ─────
 
-const ACCENT_CR = '#7c3aed';
+const ACCENT_ACP = '#2563eb';
 
-interface CRSectionProps {
-  roles: IConfigConsultantRole[];
-  onSave: (next: IConfigConsultantRole[]) => void;
-}
-
-const DefineConsultantRolesSection = ({ roles, onSave }: CRSectionProps) => {
-  const { classes } = useStyles();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingRow, setEditingRow] = useState<IConfigConsultantRole | null>(null);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const [form, setForm] = useState({ roleName: '', description: '' });
-
-  const selectedRow = roles.find((r) => r.id === selectedId) ?? null;
-  const filtered = search
-    ? roles.filter(
-        (r) =>
-          r.roleName.toLowerCase().includes(search.toLowerCase()) ||
-          r.description.toLowerCase().includes(search.toLowerCase()),
-      )
-    : roles;
-
-  useEffect(() => {
-    if (dialogOpen)
-      setForm(
-        editingRow
-          ? { roleName: editingRow.roleName, description: editingRow.description }
-          : { roleName: '', description: '' },
-      );
-  }, [dialogOpen, editingRow]);
-
-  const handleSubmit = () => {
-    if (!form.roleName.trim()) return;
-    let next: IConfigConsultantRole[];
-    if (editingRow) {
-      next = roles.map((r) => (r.id === editingRow.id ? { ...editingRow, ...form } : r));
-      setSelectedId(editingRow.id);
-    } else {
-      const n: IConfigConsultantRole = { id: `cr_${Date.now()}`, ...form };
-      next = [...roles, n];
-      setSelectedId(n.id);
-    }
-    onSave(next);
-    setDialogOpen(false);
-    setEditingRow(null);
-  };
-
-  const handleDelete = () => {
-    if (!selectedRow) return;
-    onSave(roles.filter((r) => r.id !== selectedRow.id));
-    setSelectedId(null);
-    setDeleteOpen(false);
-  };
-
-  const columns: Column<IConfigConsultantRole>[] = [
-    { id: 'roleName', label: 'Role Name', minWidth: 200, format: mkCell(true) },
-    {
-      id: 'description',
-      label: 'Description',
-      minWidth: 320,
-      format: (v): React.ReactNode => (
-        <Typography variant='body2' color='text.secondary' fontSize='0.8rem' noWrap>
-          {String(v || '—')}
-        </Typography>
-      ),
-    },
-  ];
-
-  return (
-    <>
-      <Accordion className={classes.sectionAccordion} elevation={0}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: 1.5,
-                bgcolor: ACCENT_CR,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <ManageAccountsIcon sx={{ color: '#fff', fontSize: '1rem' }} />
-            </Box>
-            <Box>
-              <Typography className={classes.sectionTitle}>Define Consultant Roles</Typography>
-              <Typography className={classes.sectionSubtitle}>
-                Define roles available for consultant assignments
-              </Typography>
-            </Box>
-          </Box>
-        </AccordionSummary>
-        <AccordionDetails sx={{ p: 2 }}>
-          <Paper variant='outlined' className={classes.actionToolbar}>
-            <Box className={classes.toolbarButtons}>
-              {!selectedRow ? (
-                <Tooltip title='Add a new consultant role'>
-                  <Button
-                    size='small'
-                    variant='contained'
-                    startIcon={<AddIcon />}
-                    onClick={() => {
-                      setEditingRow(null);
-                      setDialogOpen(true);
-                    }}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    New
-                  </Button>
-                </Tooltip>
-              ) : (
-                <Button
-                  size='small'
-                  variant='contained'
-                  startIcon={<EditIcon />}
-                  onClick={() => {
-                    setEditingRow(selectedRow);
-                    setDialogOpen(true);
-                  }}
-                  sx={{ textTransform: 'none' }}
-                >
-                  Edit
-                </Button>
-              )}
-              {selectedRow && (
-                <Button
-                  size='small'
-                  variant='outlined'
-                  color='error'
-                  startIcon={<DeleteIcon />}
-                  onClick={() => setDeleteOpen(true)}
-                  sx={{ textTransform: 'none' }}
-                >
-                  Delete
-                </Button>
-              )}
-              <TextField
-                size='small'
-                placeholder='Search…'
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className={classes.tableSearchField}
-                sx={{ ml: { xs: 0, sm: 'auto' } }}
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position='end'>
-                        <SearchIcon fontSize='small' />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-            </Box>
-            {selectedRow && (
-              <Typography
-                variant='caption'
-                color='text.secondary'
-                className={classes.selectionInfo}
-              >
-                Selected: <strong>{selectedRow.roleName}</strong>&nbsp;·&nbsp;
-                <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-                  Clear
-                </Link>
-              </Typography>
-            )}
-          </Paper>
-          <Paper elevation={1} className={classes.tablePaper}>
-            <DataTable
-              columns={columns}
-              data={filtered}
-              rowKey='id'
-              searchable={false}
-              initialRowsPerPage={10}
-              onRowClick={(row) => setSelectedId((p) => (p === row.id ? null : row.id))}
-              activeRowKey={selectedId ?? undefined}
-            />
-          </Paper>
-        </AccordionDetails>
-      </Accordion>
-
-      <Dialog
-        open={dialogOpen}
-        onClose={() => {
-          setDialogOpen(false);
-          setEditingRow(null);
-        }}
-        maxWidth='sm'
-        fullWidth
-      >
-        <DialogTitle sx={{ fontWeight: 700 }}>
-          {editingRow ? 'Edit Consultant Role' : 'New Consultant Role'}
-        </DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            <TextField
-              label='Role Name'
-              size='small'
-              fullWidth
-              required
-              value={form.roleName}
-              onChange={(e) => setForm((f) => ({ ...f, roleName: e.target.value }))}
-            />
-            <TextField
-              label='Description'
-              size='small'
-              fullWidth
-              multiline
-              minRows={2}
-              value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => {
-              setDialogOpen(false);
-              setEditingRow(null);
-            }}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            onClick={handleSubmit}
-            disabled={!form.roleName.trim()}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            {editingRow ? 'Save Changes' : 'Add Role'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Consultant Role</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Delete role <strong>{selectedRow?.roleName}</strong>? This cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => setDeleteOpen(false)}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            onClick={handleDelete}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </>
-  );
-};
-
-// ── Associated Consultant Profiles section ────────────────────────────────────
-
-const ACCENT_ACP = '#059669';
-
-interface ACPSectionProps {
+interface ACPPanelProps {
   assocConsProfiles: IConfigAssociatedConsultantProfile[];
   applications: { id: string; name: string }[];
   consultantRoles: IConfigConsultantRole[];
+  onBack: () => void;
   onSave: (next: IConfigAssociatedConsultantProfile[]) => void;
 }
 
-const AssocConsultantProfilesSection = ({
+const AssocConsProfilesPanel = ({
   assocConsProfiles,
   applications,
   consultantRoles,
+  onBack,
   onSave,
-}: ACPSectionProps) => {
+}: ACPPanelProps) => {
   const { classes } = useStyles();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -2425,6 +1951,308 @@ const AssocConsultantProfilesSection = ({
   ];
 
   return (
+    <Box sx={{ mt: 2 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          px: 2,
+          py: 1.25,
+          bgcolor: alpha(ACCENT_ACP, 0.08),
+          border: '1px solid',
+          borderColor: alpha(ACCENT_ACP, 0.25),
+          borderRadius: '10px 10px 0 0',
+          borderBottom: 'none',
+        }}
+      >
+        <Button
+          size='small'
+          variant='text'
+          startIcon={<ArrowBackIcon />}
+          onClick={onBack}
+          sx={{
+            textTransform: 'none',
+            color: ACCENT_ACP,
+            fontWeight: 600,
+            minWidth: 0,
+            px: 1,
+            py: 0.25,
+            '&:hover': { bgcolor: alpha(ACCENT_ACP, 0.1) },
+          }}
+        >
+          Back
+        </Button>
+        <Divider orientation='vertical' flexItem sx={{ borderColor: alpha(ACCENT_ACP, 0.3) }} />
+        <GroupIcon sx={{ color: ACCENT_ACP, fontSize: '1.1rem' }} />
+        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_ACP }}>
+          Associated Consultant Profiles
+        </Typography>
+        <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
+          {assocConsProfiles.length} profile{assocConsProfiles.length !== 1 ? 's' : ''}
+        </Typography>
+      </Box>
+      <Paper
+        variant='outlined'
+        sx={{
+          borderRadius: 0,
+          borderTop: 'none',
+          borderBottom: 'none',
+          px: 1.5,
+          py: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 0.5,
+        }}
+      >
+        <Box className={classes.toolbarButtons}>
+          {!selectedRow ? (
+            <Tooltip title='Add a new associated consultant profile'>
+              <Button
+                size='small'
+                variant='contained'
+                startIcon={<AddIcon />}
+                sx={{ bgcolor: ACCENT_ACP, '&:hover': { bgcolor: alpha(ACCENT_ACP, 0.85) } }}
+                onClick={() => {
+                  setEditingRow(null);
+                  setDialogOpen(true);
+                }}
+              >
+                New
+              </Button>
+            </Tooltip>
+          ) : (
+            <Button
+              size='small'
+              variant='contained'
+              startIcon={<EditIcon />}
+              sx={{ bgcolor: ACCENT_ACP, '&:hover': { bgcolor: alpha(ACCENT_ACP, 0.85) } }}
+              onClick={() => {
+                setEditingRow(selectedRow);
+                setDialogOpen(true);
+              }}
+            >
+              Edit
+            </Button>
+          )}
+          {selectedRow && (
+            <Button
+              size='small'
+              variant='outlined'
+              color='error'
+              startIcon={<DeleteIcon />}
+              onClick={() => setDeleteOpen(true)}
+            >
+              Delete
+            </Button>
+          )}
+          <TextField
+            size='small'
+            placeholder='Search…'
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ ml: { xs: 0, sm: 'auto' }, width: 210 }}
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position='end'>
+                    <SearchIcon sx={{ fontSize: '1rem' }} />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+        </Box>
+        {selectedRow && (
+          <Typography variant='caption' color='text.secondary'>
+            Selected: <strong>{selectedRow.roleName}</strong>&nbsp;·&nbsp;
+            <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
+              Clear
+            </Link>
+          </Typography>
+        )}
+      </Paper>
+      <Paper
+        elevation={1}
+        sx={{
+          borderRadius: '0 0 10px 10px',
+          overflow: 'hidden',
+          border: '1px solid',
+          borderColor: alpha(ACCENT_ACP, 0.25),
+          borderTop: 'none',
+        }}
+      >
+        <DataTable
+          columns={columns}
+          data={filtered}
+          rowKey='id'
+          searchable={false}
+          initialRowsPerPage={10}
+          onRowClick={(row) => setSelectedId(selectedId === row.id ? null : row.id)}
+          activeRowKey={selectedId ?? undefined}
+        />
+      </Paper>
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => {
+          setDialogOpen(false);
+          setEditingRow(null);
+        }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<GroupIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_ACP}
+        title='Associated Consultant Profile'
+        submitDisabled={!form.application.trim() || !form.roleName.trim()}
+        maxWidth='sm'
+      >
+        <FormControl size='small' fullWidth required>
+          <InputLabel>Application</InputLabel>
+          <Select
+            label='Application'
+            value={form.application}
+            onChange={(e) => setForm((f) => ({ ...f, application: e.target.value }))}
+          >
+            {applications.length === 0 ? (
+              <MenuItem disabled value=''>
+                <em>No applications available</em>
+              </MenuItem>
+            ) : (
+              applications.map((a) => (
+                <MenuItem key={a.id} value={a.name}>
+                  {a.name}
+                </MenuItem>
+              ))
+            )}
+          </Select>
+        </FormControl>
+        <FormControl size='small' fullWidth required>
+          <InputLabel>Role Name</InputLabel>
+          <Select
+            label='Role Name'
+            value={form.roleName}
+            onChange={(e) => setForm((f) => ({ ...f, roleName: e.target.value }))}
+          >
+            {consultantRoles.length === 0 ? (
+              <MenuItem disabled value=''>
+                <em>No roles defined — add roles first</em>
+              </MenuItem>
+            ) : (
+              consultantRoles.map((r) => (
+                <MenuItem key={r.id} value={r.roleName}>
+                  {r.roleName}
+                </MenuItem>
+              ))
+            )}
+          </Select>
+        </FormControl>
+        <TextField
+          label='Description'
+          size='small'
+          fullWidth
+          multiline
+          minRows={2}
+          value={form.description}
+          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+        />
+      </ConfigFormDialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Associated Consultant Profile'
+        itemName={selectedRow?.roleName}
+      />
+    </Box>
+  );
+};
+
+// ── Define Consultant Roles section ──────────────────────────────────────────
+
+const ACCENT_CR = '#7c3aed';
+
+interface CRSectionProps {
+  roles: IConfigConsultantRole[];
+  assocConsProfiles: IConfigAssociatedConsultantProfile[];
+  applications: { id: string; name: string }[];
+  onSaveRoles: (next: IConfigConsultantRole[]) => void;
+  onSaveAssocConsProfiles: (next: IConfigAssociatedConsultantProfile[]) => void;
+}
+
+const DefineConsultantRolesSection = ({
+  roles,
+  assocConsProfiles,
+  applications,
+  onSaveRoles,
+  onSaveAssocConsProfiles,
+}: CRSectionProps) => {
+  const { classes } = useStyles();
+  const [crPanel, setCrPanel] = useState<'none' | 'assocProfiles'>('none');
+  const panelActive = crPanel !== 'none';
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingRow, setEditingRow] = useState<IConfigConsultantRole | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [form, setForm] = useState({ roleName: '', description: '' });
+
+  const selectedRow = roles.find((r) => r.id === selectedId) ?? null;
+  const filtered = search
+    ? roles.filter(
+        (r) =>
+          r.roleName.toLowerCase().includes(search.toLowerCase()) ||
+          r.description.toLowerCase().includes(search.toLowerCase()),
+      )
+    : roles;
+
+  useEffect(() => {
+    if (dialogOpen)
+      setForm(
+        editingRow
+          ? { roleName: editingRow.roleName, description: editingRow.description }
+          : { roleName: '', description: '' },
+      );
+  }, [dialogOpen, editingRow]);
+
+  const handleSubmit = () => {
+    if (!form.roleName.trim()) return;
+    let next: IConfigConsultantRole[];
+    if (editingRow) {
+      next = roles.map((r) => (r.id === editingRow.id ? { ...editingRow, ...form } : r));
+      setSelectedId(editingRow.id);
+    } else {
+      const n: IConfigConsultantRole = { id: `cr_${Date.now()}`, ...form };
+      next = [...roles, n];
+      setSelectedId(n.id);
+    }
+    onSaveRoles(next);
+    setDialogOpen(false);
+    setEditingRow(null);
+  };
+
+  const handleDelete = () => {
+    if (!selectedRow) return;
+    onSaveRoles(roles.filter((r) => r.id !== selectedRow.id));
+    setSelectedId(null);
+    setDeleteOpen(false);
+  };
+
+  const columns: Column<IConfigConsultantRole>[] = [
+    { id: 'roleName', label: 'Role Name', minWidth: 200, format: mkCell(true) },
+    {
+      id: 'description',
+      label: 'Description',
+      minWidth: 320,
+      format: (v): React.ReactNode => (
+        <Typography variant='body2' color='text.secondary' fontSize='0.8rem' noWrap>
+          {String(v || '—')}
+        </Typography>
+      ),
+    },
+  ];
+
+  return (
     <>
       <Accordion className={classes.sectionAccordion} elevation={0}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
@@ -2434,226 +2262,190 @@ const AssocConsultantProfilesSection = ({
                 width: 32,
                 height: 32,
                 borderRadius: 1.5,
-                bgcolor: ACCENT_ACP,
+                bgcolor: ACCENT_CR,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
               }}
             >
-              <GroupIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+              <ManageAccountsIcon sx={{ color: '#fff', fontSize: '1rem' }} />
             </Box>
             <Box>
-              <Typography className={classes.sectionTitle}>
-                Associated Consultant Profiles
-              </Typography>
+              <Typography className={classes.sectionTitle}>Define Consultant Roles</Typography>
               <Typography className={classes.sectionSubtitle}>
-                Link applications and roles to consultant profiles
+                Define roles available for consultant assignments
               </Typography>
             </Box>
           </Box>
         </AccordionSummary>
         <AccordionDetails sx={{ p: 2 }}>
+          {/* Toolbar */}
           <Paper variant='outlined' className={classes.actionToolbar}>
             <Box className={classes.toolbarButtons}>
-              {!selectedRow ? (
-                <Tooltip title='Add a new associated consultant profile'>
-                  <Button
-                    size='small'
-                    variant='contained'
-                    startIcon={<AddIcon />}
-                    onClick={() => {
-                      setEditingRow(null);
-                      setDialogOpen(true);
-                    }}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    New
-                  </Button>
-                </Tooltip>
-              ) : (
-                <Button
-                  size='small'
-                  variant='contained'
-                  startIcon={<EditIcon />}
-                  onClick={() => {
-                    setEditingRow(selectedRow);
-                    setDialogOpen(true);
-                  }}
-                  sx={{ textTransform: 'none' }}
-                >
-                  Edit
-                </Button>
-              )}
-              {selectedRow && (
-                <Button
-                  size='small'
-                  variant='outlined'
-                  color='error'
-                  startIcon={<DeleteIcon />}
-                  onClick={() => setDeleteOpen(true)}
-                  sx={{ textTransform: 'none' }}
-                >
-                  Delete
-                </Button>
-              )}
-              <TextField
+              {!panelActive &&
+                (!selectedRow ? (
+                  <Tooltip title='Add a new consultant role'>
+                    <Button
+                      size='small'
+                      variant='contained'
+                      startIcon={<AddIcon />}
+                      onClick={() => {
+                        setEditingRow(null);
+                        setDialogOpen(true);
+                      }}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      New
+                    </Button>
+                  </Tooltip>
+                ) : (
+                  <>
+                    <Button
+                      size='small'
+                      variant='contained'
+                      startIcon={<EditIcon />}
+                      onClick={() => {
+                        setEditingRow(selectedRow);
+                        setDialogOpen(true);
+                      }}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size='small'
+                      variant='outlined'
+                      color='error'
+                      startIcon={<DeleteIcon />}
+                      onClick={() => setDeleteOpen(true)}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Delete
+                    </Button>
+                    <Divider
+                      orientation='vertical'
+                      flexItem
+                      className={classes.toolbarDivider}
+                      sx={{ mx: 0.5 }}
+                    />
+                  </>
+                ))}
+              <Button
                 size='small'
-                placeholder='Search…'
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className={classes.tableSearchField}
-                sx={{ ml: { xs: 0, sm: 'auto' } }}
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position='end'>
-                        <SearchIcon fontSize='small' />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
+                startIcon={<GroupIcon />}
+                variant={crPanel === 'assocProfiles' ? 'contained' : 'outlined'}
+                color='primary'
+                onClick={() =>
+                  setCrPanel((p) => (p === 'assocProfiles' ? 'none' : 'assocProfiles'))
+                }
+                sx={{ textTransform: 'none' }}
+              >
+                Associated Consultant Profiles
+              </Button>
+              {!panelActive && (
+                <TextField
+                  size='small'
+                  placeholder='Search…'
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className={classes.tableSearchField}
+                  sx={{ ml: { xs: 0, sm: 'auto' } }}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <SearchIcon fontSize='small' />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              )}
             </Box>
-            {selectedRow && (
+            {!panelActive && selectedRow && (
               <Typography
                 variant='caption'
                 color='text.secondary'
                 className={classes.selectionInfo}
               >
-                Selected: <strong>{selectedRow.roleName}</strong> ({selectedRow.application}
-                )&nbsp;·&nbsp;
+                Selected: <strong>{selectedRow.roleName}</strong>&nbsp;·&nbsp;
                 <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
                   Clear
                 </Link>
               </Typography>
             )}
           </Paper>
-          <Paper elevation={1} className={classes.tablePaper}>
-            <DataTable
-              columns={columns}
-              data={filtered}
-              rowKey='id'
-              searchable={false}
-              initialRowsPerPage={10}
-              onRowClick={(row) => setSelectedId((p) => (p === row.id ? null : row.id))}
-              activeRowKey={selectedId ?? undefined}
+
+          {/* Main table */}
+          {!panelActive && (
+            <Paper elevation={1} className={classes.tablePaper}>
+              <DataTable
+                columns={columns}
+                data={filtered}
+                rowKey='id'
+                searchable={false}
+                initialRowsPerPage={10}
+                onRowClick={(row) => setSelectedId((p) => (p === row.id ? null : row.id))}
+                activeRowKey={selectedId ?? undefined}
+              />
+            </Paper>
+          )}
+
+          {/* Panel */}
+          {crPanel === 'assocProfiles' && (
+            <AssocConsProfilesPanel
+              assocConsProfiles={assocConsProfiles}
+              applications={applications}
+              consultantRoles={roles}
+              onBack={() => setCrPanel('none')}
+              onSave={onSaveAssocConsProfiles}
             />
-          </Paper>
+          )}
         </AccordionDetails>
       </Accordion>
 
-      <Dialog
+      <ConfigFormDialog
         open={dialogOpen}
         onClose={() => {
           setDialogOpen(false);
           setEditingRow(null);
         }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<ManageAccountsIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_CR}
+        title='Consultant Role'
+        submitDisabled={!form.roleName.trim()}
+        submitLabel={editingRow ? 'Save Changes' : 'Add Role'}
         maxWidth='sm'
-        fullWidth
       >
-        <DialogTitle sx={{ fontWeight: 700 }}>
-          {editingRow ? 'Edit Associated Consultant Profile' : 'New Associated Consultant Profile'}
-        </DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            <FormControl size='small' fullWidth required>
-              <InputLabel>Application</InputLabel>
-              <Select
-                label='Application'
-                value={form.application}
-                onChange={(e) => setForm((f) => ({ ...f, application: e.target.value }))}
-              >
-                {applications.length === 0 ? (
-                  <MenuItem disabled value=''>
-                    <em>No applications available</em>
-                  </MenuItem>
-                ) : (
-                  applications.map((a) => (
-                    <MenuItem key={a.id} value={a.name}>
-                      {a.name}
-                    </MenuItem>
-                  ))
-                )}
-              </Select>
-            </FormControl>
-            <FormControl size='small' fullWidth required>
-              <InputLabel>Role Name</InputLabel>
-              <Select
-                label='Role Name'
-                value={form.roleName}
-                onChange={(e) => setForm((f) => ({ ...f, roleName: e.target.value }))}
-              >
-                {consultantRoles.length === 0 ? (
-                  <MenuItem disabled value=''>
-                    <em>No roles defined — add roles first</em>
-                  </MenuItem>
-                ) : (
-                  consultantRoles.map((r) => (
-                    <MenuItem key={r.id} value={r.roleName}>
-                      {r.roleName}
-                    </MenuItem>
-                  ))
-                )}
-              </Select>
-            </FormControl>
-            <TextField
-              label='Description'
-              size='small'
-              fullWidth
-              multiline
-              minRows={2}
-              value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => {
-              setDialogOpen(false);
-              setEditingRow(null);
-            }}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            onClick={handleSubmit}
-            disabled={!form.application.trim() || !form.roleName.trim()}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            {editingRow ? 'Save Changes' : 'Add'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <TextField
+          label='Role Name'
+          size='small'
+          fullWidth
+          required
+          value={form.roleName}
+          onChange={(e) => setForm((f) => ({ ...f, roleName: e.target.value }))}
+        />
+        <TextField
+          label='Description'
+          size='small'
+          fullWidth
+          multiline
+          minRows={2}
+          value={form.description}
+          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+        />
+      </ConfigFormDialog>
 
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Associated Consultant Profile</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Delete <strong>{selectedRow?.roleName}</strong> ({selectedRow?.application})? This
-            cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => setDeleteOpen(false)}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            onClick={handleDelete}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Consultant Role'
+        itemName={selectedRow?.roleName}
+      />
     </>
   );
 };
@@ -3055,157 +2847,113 @@ const ConsultantProfiles = () => {
         </AccordionDetails>
       </Accordion>
 
-      {/* ── Define Consultant Roles ── */}
+      {/* ── Define Consultant Roles (+ Associated Consultant Profiles panel) ── */}
       <DefineConsultantRolesSection
         roles={consultantRoles}
-        onSave={(next) => {
+        assocConsProfiles={assocConsProfiles}
+        applications={applications}
+        onSaveRoles={(next) => {
           setConsultantRoles(next);
           saveAll({ consultantRoles: next });
         }}
-      />
-
-      {/* ── Associated Consultant Profiles ── */}
-      <AssocConsultantProfilesSection
-        assocConsProfiles={assocConsProfiles}
-        applications={applications}
-        consultantRoles={consultantRoles}
-        onSave={(next) => {
+        onSaveAssocConsProfiles={(next) => {
           setAssocConsProfiles(next);
           saveAll({ associatedConsultantProfiles: next });
         }}
       />
 
       {/* ── New / Edit Profile Dialog ── */}
-      <Dialog
+      <ConfigFormDialog
         open={editOpen}
         onClose={() => {
           setEditOpen(false);
           setEditingProfile(null);
         }}
+        onSubmit={handleProfileSubmit}
+        isEdit={!!editingProfile}
+        icon={<BusinessCenterIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent='#d97706'
+        title='Consultant Profile'
+        submitDisabled={!cpForm.consultantName.trim()}
         maxWidth='sm'
-        fullWidth
       >
-        <DialogTitle sx={{ fontWeight: 700 }}>
-          {editingProfile ? 'Edit Consultant Profile' : 'New Consultant Profile'}
-        </DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            <TextField
-              label='Consultant Name'
-              size='small'
-              fullWidth
-              required
-              value={cpForm.consultantName}
-              onChange={(e) => setCpForm((f) => ({ ...f, consultantName: e.target.value }))}
-            />
-            {editingProfile ? (
-              <TextField
-                label='Application'
-                size='small'
-                fullWidth
-                value={cpForm.applicationName}
-                disabled
-              />
-            ) : (
-              <FormControl size='small' fullWidth>
-                <InputLabel>Application</InputLabel>
-                <Select
-                  label='Application'
-                  value={cpForm.applicationId}
-                  onChange={(e) => handleAppChange(e.target.value)}
-                >
-                  {applications.map((a) => (
-                    <MenuItem key={a.id} value={a.id}>
-                      {a.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
-            <TextField
-              label='Consultant Role'
-              size='small'
-              fullWidth
-              value={cpForm.consultantRole}
-              onChange={(e) => setCpForm((f) => ({ ...f, consultantRole: e.target.value }))}
-            />
-            <TextField
-              label='Working Calendar'
-              size='small'
-              fullWidth
-              value={cpForm.workingCalendar}
-              onChange={(e) => setCpForm((f) => ({ ...f, workingCalendar: e.target.value }))}
-            />
-            <TextField
-              label='Holiday Calendar'
-              size='small'
-              fullWidth
-              value={cpForm.holidayCalendar}
-              onChange={(e) => setCpForm((f) => ({ ...f, holidayCalendar: e.target.value }))}
-            />
-            <TextField
-              label='Lead Consultant'
-              size='small'
-              fullWidth
-              value={cpForm.leadConsultant}
-              onChange={(e) => setCpForm((f) => ({ ...f, leadConsultant: e.target.value }))}
-            />
-            <TextField
-              label='Manager'
-              size='small'
-              fullWidth
-              value={cpForm.manager}
-              onChange={(e) => setCpForm((f) => ({ ...f, manager: e.target.value }))}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => {
-              setEditOpen(false);
-              setEditingProfile(null);
-            }}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            onClick={handleProfileSubmit}
-            disabled={!cpForm.consultantName.trim()}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            {editingProfile ? 'Save Changes' : 'Add'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <TextField
+          label='Consultant Name'
+          size='small'
+          fullWidth
+          required
+          value={cpForm.consultantName}
+          onChange={(e) => setCpForm((f) => ({ ...f, consultantName: e.target.value }))}
+        />
+        {editingProfile ? (
+          <TextField
+            label='Application'
+            size='small'
+            fullWidth
+            value={cpForm.applicationName}
+            disabled
+          />
+        ) : (
+          <FormControl size='small' fullWidth>
+            <InputLabel>Application</InputLabel>
+            <Select
+              label='Application'
+              value={cpForm.applicationId}
+              onChange={(e) => handleAppChange(e.target.value)}
+            >
+              {applications.map((a) => (
+                <MenuItem key={a.id} value={a.id}>
+                  {a.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+        <TextField
+          label='Consultant Role'
+          size='small'
+          fullWidth
+          value={cpForm.consultantRole}
+          onChange={(e) => setCpForm((f) => ({ ...f, consultantRole: e.target.value }))}
+        />
+        <TextField
+          label='Working Calendar'
+          size='small'
+          fullWidth
+          value={cpForm.workingCalendar}
+          onChange={(e) => setCpForm((f) => ({ ...f, workingCalendar: e.target.value }))}
+        />
+        <TextField
+          label='Holiday Calendar'
+          size='small'
+          fullWidth
+          value={cpForm.holidayCalendar}
+          onChange={(e) => setCpForm((f) => ({ ...f, holidayCalendar: e.target.value }))}
+        />
+        <TextField
+          label='Lead Consultant'
+          size='small'
+          fullWidth
+          value={cpForm.leadConsultant}
+          onChange={(e) => setCpForm((f) => ({ ...f, leadConsultant: e.target.value }))}
+        />
+        <TextField
+          label='Manager'
+          size='small'
+          fullWidth
+          value={cpForm.manager}
+          onChange={(e) => setCpForm((f) => ({ ...f, manager: e.target.value }))}
+        />
+      </ConfigFormDialog>
 
       {/* ── Delete Confirmation ── */}
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Consultant Profile</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Are you sure you want to delete <strong>{selectedProfile?.consultantName}</strong>? This
-            action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => setDeleteOpen(false)}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            onClick={handleProfileDelete}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleProfileDelete}
+        entityName='Consultant Profile'
+        itemName={selectedProfile?.consultantName}
+      />
     </Box>
   );
 };

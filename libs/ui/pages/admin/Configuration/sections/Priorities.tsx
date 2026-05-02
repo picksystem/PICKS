@@ -8,10 +8,6 @@ import {
   Paper,
   Button,
   Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
   InputAdornment,
   Select,
@@ -45,6 +41,7 @@ import { DataTable, Column, Loader } from '@serviceops/component';
 import { useStyles } from '../styles';
 import { useConfiguration } from '../hooks/useConfiguration';
 import { useGetTicketTypeQuery } from '@serviceops/services';
+import { ConfigFormDialog, ConfigDeleteDialog } from '../dialogs/ConfigDialogs';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -332,7 +329,8 @@ const PriorityFormDialog = ({
 }: PriorityFormDialogProps) => {
   const [form, setForm] = useState<Partial<PriorityLevel>>({});
 
-  const handleEnter = () => {
+  useEffect(() => {
+    if (!open) return;
     setForm(
       editing
         ? {
@@ -348,134 +346,119 @@ const PriorityFormDialog = ({
             enabledFor: Object.fromEntries(ticketTypeColumns.map((t) => [t.key, true])),
           },
     );
-  };
+  }, [open, editing]);
 
   return (
-    <Dialog
+    <ConfigFormDialog
       open={open}
       onClose={onClose}
+      onSubmit={() => onSave(form)}
+      isEdit={!!editing}
+      icon={<PriorityHighIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+      accent='#b91c1c'
+      title='Priority'
+      submitDisabled={!form.name}
+      submitLabel={editing ? 'Save Changes' : 'Add Priority'}
       maxWidth='sm'
-      fullWidth
-      TransitionProps={{ onEnter: handleEnter }}
     >
-      <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
-        {editing ? 'Edit Priority' : 'Add New Priority'}
-      </DialogTitle>
-      <DialogContent
-        sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '16px !important' }}
-      >
-        <TextField
-          label='Priority Name'
-          size='small'
-          value={form.name ?? ''}
-          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-          helperText='e.g. 1-Critical, 2-High, 3-Medium'
-          inputProps={{ style: { fontFamily: 'monospace', fontWeight: 700 } }}
-          required
-        />
-        <TextField
-          label='Description'
-          size='small'
-          value={form.description ?? ''}
-          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-          multiline
-          rows={2}
-        />
+      <TextField
+        label='Priority Name'
+        size='small'
+        value={form.name ?? ''}
+        onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+        helperText='e.g. 1-Critical, 2-High, 3-Medium'
+        inputProps={{ style: { fontFamily: 'monospace', fontWeight: 700 } }}
+        required
+      />
+      <TextField
+        label='Description'
+        size='small'
+        value={form.description ?? ''}
+        onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+        multiline
+        rows={2}
+      />
 
-        {/* Color picker */}
-        <Box>
-          <Typography
-            variant='caption'
-            fontWeight={700}
-            color='text.secondary'
-            sx={{ mb: 0.75, display: 'block' }}
-          >
-            Badge Color
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
-            {PRESET_COLORS.map((c) => (
-              <Box
-                key={c}
-                onClick={() => setForm((f) => ({ ...f, bgColor: c }))}
-                sx={{
-                  width: 22,
-                  height: 22,
-                  borderRadius: '50%',
-                  bgcolor: c,
-                  cursor: 'pointer',
-                  border: form.bgColor === c ? '2.5px solid #1976d2' : '2px solid transparent',
-                  boxShadow: form.bgColor === c ? `0 0 0 2px ${alpha('#1976d2', 0.3)}` : 'none',
-                  transition: 'all 0.15s',
-                  '&:hover': { transform: 'scale(1.18)' },
-                }}
-              />
-            ))}
-            <TextField
-              size='small'
-              value={form.bgColor ?? ''}
-              onChange={(e) => setForm((f) => ({ ...f, bgColor: e.target.value }))}
-              inputProps={{ style: { fontFamily: 'monospace', fontSize: '0.75rem', width: 72 } }}
-              sx={{ ml: 0.5 }}
-            />
-            {form.bgColor && (
-              <Chip
-                label={form.name || 'Preview'}
-                size='small'
-                sx={{ bgcolor: form.bgColor, color: '#fff', fontWeight: 700, fontSize: '0.72rem' }}
-              />
-            )}
-          </Box>
-        </Box>
-
-        {/* Ticket type toggles */}
-        <Box>
-          <Typography
-            variant='caption'
-            fontWeight={700}
-            color='text.secondary'
-            sx={{ mb: 1, display: 'block' }}
-          >
-            Enable for Ticket Types
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {ticketTypeColumns.map((t) => (
-              <FormControlLabel
-                key={t.key}
-                labelPlacement='end'
-                control={
-                  <Switch
-                    size='small'
-                    checked={form.enabledFor?.[t.key] ?? true}
-                    onChange={(e) =>
-                      setForm((f) => ({
-                        ...f,
-                        enabledFor: { ...(f.enabledFor ?? {}), [t.key]: e.target.checked },
-                      }))
-                    }
-                    color='success'
-                  />
-                }
-                label={<Typography sx={{ fontSize: '0.8rem' }}>{t.label}</Typography>}
-                sx={{ mr: 2 }}
-              />
-            ))}
-          </Box>
-        </Box>
-      </DialogContent>
-      <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-        <Button onClick={onClose} sx={{ textTransform: 'none' }}>
-          Cancel
-        </Button>
-        <Button
-          variant='contained'
-          onClick={() => onSave(form)}
-          disabled={!form.name}
-          sx={{ textTransform: 'none', borderRadius: 2 }}
+      {/* Color picker */}
+      <Box>
+        <Typography
+          variant='caption'
+          fontWeight={700}
+          color='text.secondary'
+          sx={{ mb: 0.75, display: 'block' }}
         >
-          {editing ? 'Save Changes' : 'Add Priority'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+          Badge Color
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
+          {PRESET_COLORS.map((c) => (
+            <Box
+              key={c}
+              onClick={() => setForm((f) => ({ ...f, bgColor: c }))}
+              sx={{
+                width: 22,
+                height: 22,
+                borderRadius: '50%',
+                bgcolor: c,
+                cursor: 'pointer',
+                border: form.bgColor === c ? '2.5px solid #1976d2' : '2px solid transparent',
+                boxShadow: form.bgColor === c ? `0 0 0 2px ${alpha('#1976d2', 0.3)}` : 'none',
+                transition: 'all 0.15s',
+                '&:hover': { transform: 'scale(1.18)' },
+              }}
+            />
+          ))}
+          <TextField
+            size='small'
+            value={form.bgColor ?? ''}
+            onChange={(e) => setForm((f) => ({ ...f, bgColor: e.target.value }))}
+            inputProps={{ style: { fontFamily: 'monospace', fontSize: '0.75rem', width: 72 } }}
+            sx={{ ml: 0.5 }}
+          />
+          {form.bgColor && (
+            <Chip
+              label={form.name || 'Preview'}
+              size='small'
+              sx={{ bgcolor: form.bgColor, color: '#fff', fontWeight: 700, fontSize: '0.72rem' }}
+            />
+          )}
+        </Box>
+      </Box>
+
+      {/* Ticket type toggles */}
+      <Box>
+        <Typography
+          variant='caption'
+          fontWeight={700}
+          color='text.secondary'
+          sx={{ mb: 1, display: 'block' }}
+        >
+          Enable for Ticket Types
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+          {ticketTypeColumns.map((t) => (
+            <FormControlLabel
+              key={t.key}
+              labelPlacement='end'
+              control={
+                <Switch
+                  size='small'
+                  checked={form.enabledFor?.[t.key] ?? true}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      enabledFor: { ...(f.enabledFor ?? {}), [t.key]: e.target.checked },
+                    }))
+                  }
+                  color='success'
+                />
+              }
+              label={<Typography sx={{ fontSize: '0.8rem' }}>{t.label}</Typography>}
+              sx={{ mr: 2 }}
+            />
+          ))}
+        </Box>
+      </Box>
+    </ConfigFormDialog>
   );
 };
 
@@ -699,6 +682,8 @@ interface SimpleLevel {
 interface SimpleLevelFormDialogProps {
   open: boolean;
   noun: string;
+  accent: string;
+  icon: React.ReactNode;
   editing: SimpleLevel | null;
   onClose: () => void;
   onSave: (data: Partial<SimpleLevel>) => void;
@@ -708,6 +693,8 @@ interface SimpleLevelFormDialogProps {
 const SimpleLevelFormDialog = ({
   open,
   noun,
+  accent,
+  icon,
   editing,
   onClose,
   onSave,
@@ -715,7 +702,8 @@ const SimpleLevelFormDialog = ({
 }: SimpleLevelFormDialogProps) => {
   const [form, setForm] = useState<Partial<SimpleLevel>>({});
 
-  const handleEnter = () => {
+  useEffect(() => {
+    if (!open) return;
     setForm(
       editing
         ? {
@@ -731,133 +719,118 @@ const SimpleLevelFormDialog = ({
             enabledFor: Object.fromEntries(ticketTypeColumns.map((t) => [t.key, true])),
           },
     );
-  };
+  }, [open, editing]);
 
   return (
-    <Dialog
+    <ConfigFormDialog
       open={open}
       onClose={onClose}
+      onSubmit={() => onSave(form)}
+      isEdit={!!editing}
+      icon={icon}
+      accent={accent}
+      title={noun}
+      submitDisabled={!form.displayName}
+      submitLabel={editing ? 'Save Changes' : `Add ${noun}`}
       maxWidth='sm'
-      fullWidth
-      TransitionProps={{ onEnter: handleEnter }}
     >
-      <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
-        {editing ? `Edit ${noun}` : `Add New ${noun}`}
-      </DialogTitle>
-      <DialogContent
-        sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '16px !important' }}
-      >
-        <TextField
-          label={`${noun} Display Name`}
-          size='small'
-          value={form.displayName ?? ''}
-          onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
-          helperText='e.g. 1 - High, 2 - Medium, 3 - Low'
-          required
-        />
-        <TextField
-          label='Description'
-          size='small'
-          value={form.description ?? ''}
-          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-          multiline
-          rows={2}
-        />
+      <TextField
+        label={`${noun} Display Name`}
+        size='small'
+        value={form.displayName ?? ''}
+        onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
+        helperText='e.g. 1 - High, 2 - Medium, 3 - Low'
+        required
+      />
+      <TextField
+        label='Description'
+        size='small'
+        value={form.description ?? ''}
+        onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+        multiline
+        rows={2}
+      />
 
-        {/* Color picker */}
-        <Box>
-          <Typography
-            variant='caption'
-            fontWeight={700}
-            color='text.secondary'
-            sx={{ mb: 0.75, display: 'block' }}
-          >
-            Badge Color
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
-            {PRESET_COLORS.map((c) => (
-              <Box
-                key={c}
-                onClick={() => setForm((f) => ({ ...f, bgColor: c }))}
-                sx={{
-                  width: 22,
-                  height: 22,
-                  borderRadius: '50%',
-                  bgcolor: c,
-                  cursor: 'pointer',
-                  border: form.bgColor === c ? '2.5px solid #1976d2' : '2px solid transparent',
-                  boxShadow: form.bgColor === c ? `0 0 0 2px ${alpha('#1976d2', 0.3)}` : 'none',
-                  transition: 'all 0.15s',
-                  '&:hover': { transform: 'scale(1.18)' },
-                }}
-              />
-            ))}
-            <TextField
-              size='small'
-              value={form.bgColor ?? ''}
-              onChange={(e) => setForm((f) => ({ ...f, bgColor: e.target.value }))}
-              inputProps={{ style: { fontFamily: 'monospace', fontSize: '0.75rem', width: 72 } }}
-              sx={{ ml: 0.5 }}
-            />
-            {form.bgColor && (
-              <Chip
-                label={form.displayName || 'Preview'}
-                size='small'
-                sx={{ bgcolor: form.bgColor, color: '#fff', fontWeight: 700, fontSize: '0.72rem' }}
-              />
-            )}
-          </Box>
-        </Box>
-
-        {/* Ticket type toggles */}
-        <Box>
-          <Typography
-            variant='caption'
-            fontWeight={700}
-            color='text.secondary'
-            sx={{ mb: 1, display: 'block' }}
-          >
-            Enable for Ticket Types
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {ticketTypeColumns.map((t) => (
-              <FormControlLabel
-                key={t.key}
-                labelPlacement='end'
-                control={
-                  <Switch
-                    size='small'
-                    checked={form.enabledFor?.[t.key] ?? true}
-                    onChange={(e) =>
-                      setForm((f) => ({
-                        ...f,
-                        enabledFor: { ...(f.enabledFor ?? {}), [t.key]: e.target.checked },
-                      }))
-                    }
-                    color='success'
-                  />
-                }
-                label={<Typography sx={{ fontSize: '0.8rem' }}>{t.label}</Typography>}
-                sx={{ mr: 2 }}
-              />
-            ))}
-          </Box>
-        </Box>
-      </DialogContent>
-      <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-        <Button onClick={onClose} sx={{ textTransform: 'none' }}>
-          Cancel
-        </Button>
-        <Button
-          variant='contained'
-          onClick={() => onSave(form)}
-          disabled={!form.displayName}
-          sx={{ textTransform: 'none', borderRadius: 2 }}
+      {/* Color picker */}
+      <Box>
+        <Typography
+          variant='caption'
+          fontWeight={700}
+          color='text.secondary'
+          sx={{ mb: 0.75, display: 'block' }}
         >
-          {editing ? 'Save Changes' : `Add ${noun}`}
-        </Button>
-      </DialogActions>
-    </Dialog>
+          Badge Color
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
+          {PRESET_COLORS.map((c) => (
+            <Box
+              key={c}
+              onClick={() => setForm((f) => ({ ...f, bgColor: c }))}
+              sx={{
+                width: 22,
+                height: 22,
+                borderRadius: '50%',
+                bgcolor: c,
+                cursor: 'pointer',
+                border: form.bgColor === c ? '2.5px solid #1976d2' : '2px solid transparent',
+                boxShadow: form.bgColor === c ? `0 0 0 2px ${alpha('#1976d2', 0.3)}` : 'none',
+                transition: 'all 0.15s',
+                '&:hover': { transform: 'scale(1.18)' },
+              }}
+            />
+          ))}
+          <TextField
+            size='small'
+            value={form.bgColor ?? ''}
+            onChange={(e) => setForm((f) => ({ ...f, bgColor: e.target.value }))}
+            inputProps={{ style: { fontFamily: 'monospace', fontSize: '0.75rem', width: 72 } }}
+            sx={{ ml: 0.5 }}
+          />
+          {form.bgColor && (
+            <Chip
+              label={form.displayName || 'Preview'}
+              size='small'
+              sx={{ bgcolor: form.bgColor, color: '#fff', fontWeight: 700, fontSize: '0.72rem' }}
+            />
+          )}
+        </Box>
+      </Box>
+
+      {/* Ticket type toggles */}
+      <Box>
+        <Typography
+          variant='caption'
+          fontWeight={700}
+          color='text.secondary'
+          sx={{ mb: 1, display: 'block' }}
+        >
+          Enable for Ticket Types
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+          {ticketTypeColumns.map((t) => (
+            <FormControlLabel
+              key={t.key}
+              labelPlacement='end'
+              control={
+                <Switch
+                  size='small'
+                  checked={form.enabledFor?.[t.key] ?? true}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      enabledFor: { ...(f.enabledFor ?? {}), [t.key]: e.target.checked },
+                    }))
+                  }
+                  color='success'
+                />
+              }
+              label={<Typography sx={{ fontSize: '0.8rem' }}>{t.label}</Typography>}
+              sx={{ mr: 2 }}
+            />
+          ))}
+        </Box>
+      </Box>
+    </ConfigFormDialog>
   );
 };
 
@@ -866,6 +839,8 @@ const SimpleLevelFormDialog = ({
 interface SimpleLevelSectionProps {
   items: SimpleLevel[];
   noun: string;
+  accent: string;
+  icon: React.ReactNode;
   valueLabel: string;
   defaultItems: SimpleLevel[];
   ticketTypeColumns: { key: string; label: string }[];
@@ -880,6 +855,8 @@ interface SimpleLevelSectionProps {
 const SimpleLevelSection = ({
   items,
   noun,
+  accent,
+  icon,
   valueLabel,
   defaultItems,
   ticketTypeColumns,
@@ -1109,6 +1086,8 @@ const SimpleLevelSection = ({
       <SimpleLevelFormDialog
         open={dialogOpen}
         noun={noun}
+        accent={accent}
+        icon={icon}
         editing={editingItem}
         onClose={() => setDialogOpen(false)}
         onSave={handleSave}
@@ -1116,34 +1095,13 @@ const SimpleLevelSection = ({
       />
 
       {/* Delete confirm dialog */}
-      <Dialog
+      <ConfigDeleteDialog
         open={confirmDeleteOpen}
         onClose={() => setConfirmDeleteOpen(false)}
-        maxWidth='xs'
-        fullWidth
-      >
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete {noun}</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Are you sure you want to delete{' '}
-            <strong>{items.find((i) => i.id === selectedId)?.displayName}</strong>? This action
-            cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setConfirmDeleteOpen(false)} sx={{ textTransform: 'none' }}>
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-            onClick={handleDelete}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleDelete}
+        entityName={noun}
+        itemName={items.find((i) => i.id === selectedId)?.displayName}
+      />
     </>
   );
 };
@@ -1161,6 +1119,8 @@ interface MatrixRow {
 
 interface TicketMatrixSectionProps {
   label: string;
+  accentColor: string;
+  MatrixIcon: React.ElementType;
   priorities: PriorityLevel[];
   impacts: ImpactLevel[];
   urgencies: UrgencyLevel[];
@@ -1171,6 +1131,8 @@ interface TicketMatrixSectionProps {
 
 const TicketMatrixSection = ({
   label,
+  accentColor,
+  MatrixIcon,
   priorities,
   impacts,
   urgencies,
@@ -1518,189 +1480,168 @@ const TicketMatrixSection = ({
       )}
 
       {/* Add combination dialog */}
-      <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Add Combination</DialogTitle>
-        <DialogContent
-          sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '16px !important' }}
-        >
-          <FormControl size='small' fullWidth>
-            <InputLabel>Impact</InputLabel>
-            <Select
-              value={addForm.impactId}
-              label='Impact'
-              onChange={(e) => setAddForm((f) => ({ ...f, impactId: e.target.value }))}
-            >
-              {activeImpacts.map((i) => (
-                <MenuItem key={i.id} value={i.id}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <ColorDot color={i.bgColor} />
-                    {i.displayName}
-                  </Box>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl size='small' fullWidth>
-            <InputLabel>Urgency</InputLabel>
-            <Select
-              value={addForm.urgencyId}
-              label='Urgency'
-              onChange={(e) => setAddForm((f) => ({ ...f, urgencyId: e.target.value }))}
-            >
-              {activeUrgencies.map((u) => (
-                <MenuItem key={u.id} value={u.id}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <ColorDot color={u.bgColor} />
-                    {u.displayName}
-                  </Box>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl size='small' fullWidth>
-            <InputLabel>Priority</InputLabel>
-            <Select
-              value={addForm.priorityId}
-              label='Priority'
-              onChange={(e) => setAddForm((f) => ({ ...f, priorityId: e.target.value }))}
-            >
-              {priorities.map((p) => (
-                <MenuItem key={p.id} value={p.id}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <ColorDot color={p.bgColor} />
-                    {p.name}
-                  </Box>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setAddDialogOpen(false)} sx={{ textTransform: 'none' }}>
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            onClick={handleAddRow}
-            disabled={!addForm.impactId || !addForm.urgencyId || !addForm.priorityId}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
+      <ConfigFormDialog
+        open={addDialogOpen}
+        onClose={() => setAddDialogOpen(false)}
+        onSubmit={handleAddRow}
+        isEdit={false}
+        icon={<MatrixIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={accentColor}
+        title='Combination'
+        submitDisabled={!addForm.impactId || !addForm.urgencyId || !addForm.priorityId}
+        submitLabel='Add'
+        maxWidth='xs'
+      >
+        <FormControl size='small' fullWidth>
+          <InputLabel>Impact</InputLabel>
+          <Select
+            value={addForm.impactId}
+            label='Impact'
+            onChange={(e) => setAddForm((f) => ({ ...f, impactId: e.target.value }))}
           >
-            Add
-          </Button>
-        </DialogActions>
-      </Dialog>
+            {activeImpacts.map((i) => (
+              <MenuItem key={i.id} value={i.id}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <ColorDot color={i.bgColor} />
+                  {i.displayName}
+                </Box>
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <FormControl size='small' fullWidth>
+          <InputLabel>Urgency</InputLabel>
+          <Select
+            value={addForm.urgencyId}
+            label='Urgency'
+            onChange={(e) => setAddForm((f) => ({ ...f, urgencyId: e.target.value }))}
+          >
+            {activeUrgencies.map((u) => (
+              <MenuItem key={u.id} value={u.id}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <ColorDot color={u.bgColor} />
+                  {u.displayName}
+                </Box>
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <FormControl size='small' fullWidth>
+          <InputLabel>Priority</InputLabel>
+          <Select
+            value={addForm.priorityId}
+            label='Priority'
+            onChange={(e) => setAddForm((f) => ({ ...f, priorityId: e.target.value }))}
+          >
+            {priorities.map((p) => (
+              <MenuItem key={p.id} value={p.id}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <ColorDot color={p.bgColor} />
+                  {p.name}
+                </Box>
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </ConfigFormDialog>
 
       {/* Edit combination dialog */}
-      <Dialog
+      <ConfigFormDialog
         open={editDialogOpen}
         onClose={() => setEditDialogOpen(false)}
+        onSubmit={handleEditRow}
+        isEdit
+        icon={<MatrixIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={accentColor}
+        title='Combination'
+        submitDisabled={false}
+        submitLabel='Save Changes'
         maxWidth='xs'
-        fullWidth
       >
-        <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Edit Combination</DialogTitle>
-        <DialogContent
-          sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '16px !important' }}
-        >
-          {/* Impact — read-only, shows which row is being edited */}
-          <Box>
-            <Typography
-              variant='caption'
-              fontWeight={700}
-              color='text.secondary'
-              display='block'
-              mb={0.5}
-            >
-              Impact
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <ColorDot
-                color={impacts.find((i) => i.id === editForm.impactId)?.bgColor ?? '#999'}
-              />
-              <Typography variant='body2' fontWeight={600}>
-                {impacts.find((i) => i.id === editForm.impactId)?.displayName ?? editForm.impactId}
-              </Typography>
-            </Box>
-          </Box>
-          {/* Urgency — read-only */}
-          <Box>
-            <Typography
-              variant='caption'
-              fontWeight={700}
-              color='text.secondary'
-              display='block'
-              mb={0.5}
-            >
-              Urgency
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <ColorDot
-                color={urgencies.find((u) => u.id === editForm.urgencyId)?.bgColor ?? '#999'}
-              />
-              <Typography variant='body2' fontWeight={600}>
-                {urgencies.find((u) => u.id === editForm.urgencyId)?.displayName ??
-                  editForm.urgencyId}
-              </Typography>
-            </Box>
-          </Box>
-          {/* Priority — editable */}
-          <FormControl size='small' fullWidth>
-            <InputLabel>Priority</InputLabel>
-            <Select
-              value={editForm.priorityId}
-              label='Priority'
-              onChange={(e) => setEditForm((f) => ({ ...f, priorityId: e.target.value }))}
-            >
-              <MenuItem value=''>
-                <Typography color='text.secondary' fontSize='0.78rem'>
-                  Not set
-                </Typography>
-              </MenuItem>
-              {priorities.map((p) => (
-                <MenuItem key={p.id} value={p.id}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <ColorDot color={p.bgColor} />
-                    {p.name}
-                  </Box>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setEditDialogOpen(false)} sx={{ textTransform: 'none' }}>
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            onClick={handleEditRow}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
+        {/* Impact — read-only, shows which row is being edited */}
+        <Box>
+          <Typography
+            variant='caption'
+            fontWeight={700}
+            color='text.secondary'
+            display='block'
+            mb={0.5}
           >
-            Save Changes
-          </Button>
-        </DialogActions>
-      </Dialog>
+            Impact
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <ColorDot color={impacts.find((i) => i.id === editForm.impactId)?.bgColor ?? '#999'} />
+            <Typography variant='body2' fontWeight={600}>
+              {impacts.find((i) => i.id === editForm.impactId)?.displayName ?? editForm.impactId}
+            </Typography>
+          </Box>
+        </Box>
+        {/* Urgency — read-only */}
+        <Box>
+          <Typography
+            variant='caption'
+            fontWeight={700}
+            color='text.secondary'
+            display='block'
+            mb={0.5}
+          >
+            Urgency
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <ColorDot
+              color={urgencies.find((u) => u.id === editForm.urgencyId)?.bgColor ?? '#999'}
+            />
+            <Typography variant='body2' fontWeight={600}>
+              {urgencies.find((u) => u.id === editForm.urgencyId)?.displayName ??
+                editForm.urgencyId}
+            </Typography>
+          </Box>
+        </Box>
+        {/* Priority — editable */}
+        <FormControl size='small' fullWidth>
+          <InputLabel>Priority</InputLabel>
+          <Select
+            value={editForm.priorityId}
+            label='Priority'
+            onChange={(e) => setEditForm((f) => ({ ...f, priorityId: e.target.value }))}
+          >
+            <MenuItem value=''>
+              <Typography color='text.secondary' fontSize='0.78rem'>
+                Not set
+              </Typography>
+            </MenuItem>
+            {priorities.map((p) => (
+              <MenuItem key={p.id} value={p.id}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <ColorDot color={p.bgColor} />
+                  {p.name}
+                </Box>
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </ConfigFormDialog>
 
       {/* Define info dialog */}
-      <Dialog
+      <ConfigFormDialog
         open={defineInfoOpen}
         onClose={() => setDefineInfoOpen(false)}
+        onSubmit={() => setDefineInfoOpen(false)}
+        isEdit={false}
+        icon={<TuneIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent='#6366f1'
+        title='Impact and Urgency values'
+        newTitle='Impact and Urgency values'
+        submitLabel='Close'
+        submitDisabled={false}
         maxWidth='xs'
-        fullWidth
       >
-        <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Impact and Urgency values</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2' color='text.secondary'>
-            Impact and Urgency levels are defined globally in the <strong>Impact</strong> and{' '}
-            <strong>Urgency</strong> sections above. Any changes there will automatically reflect in
-            this combination matrix.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDefineInfoOpen(false)} sx={{ textTransform: 'none' }}>
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <Typography variant='body2' color='text.secondary'>
+          Impact and Urgency levels are defined globally in the <strong>Impact</strong> and{' '}
+          <strong>Urgency</strong> sections above. Any changes there will automatically reflect in
+          this combination matrix.
+        </Typography>
+      </ConfigFormDialog>
     </>
   );
 };
@@ -2188,6 +2129,8 @@ const Priorities = () => {
         <SimpleLevelSection
           items={impacts}
           noun='Impact'
+          accent='#ea580c'
+          icon={<FlashOnIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
           valueLabel='Impact Values'
           defaultItems={DEFAULT_IMPACTS}
           ticketTypeColumns={activeTicketTypeColumns}
@@ -2210,6 +2153,8 @@ const Priorities = () => {
         <SimpleLevelSection
           items={urgencies}
           noun='Urgency'
+          accent='#ca8a04'
+          icon={<SpeedIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
           valueLabel='Urgency Values'
           defaultItems={DEFAULT_URGENCIES}
           ticketTypeColumns={activeTicketTypeColumns}
@@ -2243,6 +2188,8 @@ const Priorities = () => {
           >
             <TicketMatrixSection
               label={cfg.pluralLabel}
+              accentColor={cfg.accentColor}
+              MatrixIcon={Icon}
               priorities={priorities}
               impacts={impacts}
               urgencies={urgencies}
@@ -2264,33 +2211,13 @@ const Priorities = () => {
       />
 
       {/* ── Delete confirm dialog ───────────────────────────────────────────── */}
-      <Dialog
+      <ConfigDeleteDialog
         open={confirmDeleteOpen}
         onClose={() => setConfirmDeleteOpen(false)}
-        maxWidth='xs'
-        fullWidth
-      >
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Priority</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Are you sure you want to delete <strong>{selectedPriority?.name}</strong>? This action
-            cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setConfirmDeleteOpen(false)} sx={{ textTransform: 'none' }}>
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-            onClick={handleDeletePriority}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleDeletePriority}
+        entityName='Priority'
+        itemName={selectedPriority?.name}
+      />
     </Box>
   );
 };

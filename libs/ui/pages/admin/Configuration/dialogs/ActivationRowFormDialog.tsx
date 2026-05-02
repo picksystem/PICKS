@@ -1,21 +1,17 @@
 import { useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
   TextField,
   Switch,
   FormControlLabel,
-  Box,
   Typography,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
 } from '@mui/material';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { IConfigActivationRow, ITicketType } from '@serviceops/interfaces';
+import { ConfigFormDialog } from './ConfigDialogs';
 
 interface Props {
   open: boolean;
@@ -77,61 +73,49 @@ const ActivationRowFormDialog = ({
   const isEditing = editingRow !== null;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth='xs' fullWidth>
-      <DialogTitle sx={{ fontWeight: 700 }}>
-        {isEditing ? `Edit ${title}` : `New ${title}`}
-      </DialogTitle>
+    <ConfigFormDialog
+      open={open}
+      onClose={onClose}
+      onSubmit={handleSubmit}
+      isEdit={isEditing}
+      icon={<AccessTimeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+      accent='#b45309'
+      title={title}
+      subtitle='Configure ticket type activation for this feature'
+      submitDisabled={!ticketTypeId}
+      submitLabel={isEditing ? 'Save Changes' : 'Add Row'}
+      maxWidth='xs'
+    >
+      {isEditing ? (
+        <TextField label='Ticket Type' value={ticketTypeName} disabled size='small' fullWidth />
+      ) : (
+        <FormControl size='small' fullWidth required>
+          <InputLabel>Ticket Type</InputLabel>
+          <Select
+            label='Ticket Type'
+            value={ticketTypeId || ''}
+            onChange={(e) => handleTicketTypeChange(Number(e.target.value))}
+          >
+            {availableTicketTypes.map((tt) => (
+              <MenuItem key={tt.id} value={tt.id}>
+                {tt.displayName || tt.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      )}
 
-      <DialogContent dividers>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-          {isEditing ? (
-            <TextField label='Ticket Type' value={ticketTypeName} disabled size='small' fullWidth />
-          ) : (
-            <FormControl size='small' fullWidth required>
-              <InputLabel>Ticket Type</InputLabel>
-              <Select
-                label='Ticket Type'
-                value={ticketTypeId || ''}
-                onChange={(e) => handleTicketTypeChange(Number(e.target.value))}
-              >
-                {availableTicketTypes.map((tt) => (
-                  <MenuItem key={tt.id} value={tt.id}>
-                    {tt.displayName || tt.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          )}
-
-          <FormControlLabel
-            control={
-              <Switch
-                checked={activation}
-                onChange={(e) => setActivation(e.target.checked)}
-                color='primary'
-              />
-            }
-            label={
-              <Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activation</Typography>
-            }
+      <FormControlLabel
+        control={
+          <Switch
+            checked={activation}
+            onChange={(e) => setActivation(e.target.checked)}
+            color='primary'
           />
-        </Box>
-      </DialogContent>
-
-      <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-        <Button onClick={onClose} sx={{ textTransform: 'none', borderRadius: 2 }}>
-          Cancel
-        </Button>
-        <Button
-          variant='contained'
-          onClick={handleSubmit}
-          disabled={!ticketTypeId}
-          sx={{ textTransform: 'none', borderRadius: 2 }}
-        >
-          {isEditing ? 'Save Changes' : 'Add Row'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        }
+        label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activation</Typography>}
+      />
+    </ConfigFormDialog>
   );
 };
 

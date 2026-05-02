@@ -17,15 +17,12 @@ import {
   Chip,
   TextField,
   InputAdornment,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
 } from '@mui/material';
+import { ConfigFormDialog, ConfigDeleteDialog } from '../dialogs/ConfigDialogs';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -423,106 +420,69 @@ const General = () => {
       </Accordion>
 
       {/* ── New / Edit dialog ── */}
-      <Dialog
+      <ConfigFormDialog
         open={dialogOpen}
         onClose={() => {
           setDialogOpen(false);
           setEditingRow(null);
         }}
+        onSubmit={handleDlgSubmit}
+        isEdit={isEditing}
+        icon={<AccessTimeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent='#0891b2'
+        title='Approved Estimate'
+        subtitle='Set default approved estimate hours per ticket type'
+        submitDisabled={!dlgTicketTypeId}
+        submitLabel={isEditing ? 'Save Changes' : 'Add Row'}
         maxWidth='xs'
-        fullWidth
       >
-        <DialogTitle sx={{ fontWeight: 700 }}>
-          {isEditing ? 'Edit Approved Estimate' : 'New Approved Estimate'}
-        </DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            {isEditing ? (
-              <TextField
-                label='Ticket Type'
-                value={dlgTicketTypeName}
-                disabled
-                size='small'
-                fullWidth
-              />
-            ) : (
-              <FormControl size='small' fullWidth required>
-                <InputLabel>Ticket Type</InputLabel>
-                <Select
-                  label='Ticket Type'
-                  value={dlgTicketTypeId || ''}
-                  onChange={(e) => handleDlgTicketTypeChange(Number(e.target.value))}
-                >
-                  {availableTicketTypes.map((tt) => (
-                    <MenuItem key={tt.id} value={tt.id}>
-                      {tt.displayName || tt.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
+        {isEditing ? (
+          <TextField
+            label='Ticket Type'
+            value={dlgTicketTypeName}
+            disabled
+            size='small'
+            fullWidth
+          />
+        ) : (
+          <FormControl size='small' fullWidth required>
+            <InputLabel>Ticket Type</InputLabel>
+            <Select
+              label='Ticket Type'
+              value={dlgTicketTypeId || ''}
+              onChange={(e) => handleDlgTicketTypeChange(Number(e.target.value))}
+            >
+              {availableTicketTypes.map((tt) => (
+                <MenuItem key={tt.id} value={tt.id}>
+                  {tt.displayName || tt.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
 
-            <TextField
-              label='Default Approved Estimate (hours)'
-              type='number'
-              size='small'
-              fullWidth
-              value={dlgHours}
-              onChange={(e) => {
-                const v = parseInt(e.target.value, 10);
-                setDlgHours(isNaN(v) || v < 0 ? 0 : v);
-              }}
-              slotProps={{ htmlInput: { min: 0 } }}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => {
-              setDialogOpen(false);
-              setEditingRow(null);
-            }}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            onClick={handleDlgSubmit}
-            disabled={!dlgTicketTypeId}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            {isEditing ? 'Save Changes' : 'Add Row'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <TextField
+          label='Default Approved Estimate (hours)'
+          type='number'
+          size='small'
+          fullWidth
+          value={dlgHours}
+          onChange={(e) => {
+            const v = parseInt(e.target.value, 10);
+            setDlgHours(isNaN(v) || v < 0 ? 0 : v);
+          }}
+          slotProps={{ htmlInput: { min: 0 } }}
+        />
+      </ConfigFormDialog>
 
       {/* ── Delete confirmation ── */}
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Approved Estimate Row</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Are you sure you want to delete the approved estimate for{' '}
-            <strong>{selectedRow?.ticketTypeName}</strong>? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => setDeleteOpen(false)}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            onClick={handleDelete}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Approved Estimate Row'
+        itemName={selectedRow?.ticketTypeName}
+      />
     </Box>
   );
 };

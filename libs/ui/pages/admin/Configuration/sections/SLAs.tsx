@@ -12,10 +12,6 @@ import {
   Tooltip,
   Link,
   Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
   InputAdornment,
 } from '@mui/material';
@@ -45,6 +41,7 @@ import ResponseAckSLAFormDialog from '../dialogs/ResponseAckSLAFormDialog';
 import ResolutionSLAFormDialog from '../dialogs/ResolutionSLAFormDialog';
 import DueDateFormDialog from '../dialogs/DueDateFormDialog';
 import ActivationRowFormDialog from '../dialogs/ActivationRowFormDialog';
+import { ConfigDeleteDialog } from '../dialogs/ConfigDialogs';
 
 // ── Default controls ──────────────────────────────────────────────────────────
 
@@ -1711,88 +1708,29 @@ const SLAs = () => {
         onSubmit={handleResSubmit}
       />
 
-      <Dialog open={ackDeleteOpen} onClose={() => setAckDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Response / Ack SLA Row</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Are you sure you want to delete the SLA row for{' '}
-            <strong>{selectedAckRow?.ticketTypeName}</strong>? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => setAckDeleteOpen(false)}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-            onClick={handleAckDelete}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigDeleteDialog
+        open={ackDeleteOpen}
+        onClose={() => setAckDeleteOpen(false)}
+        onConfirm={handleAckDelete}
+        entityName='Response / Ack SLA Row'
+        itemName={selectedAckRow?.ticketTypeName}
+      />
 
-      <Dialog open={resDeleteOpen} onClose={() => setResDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Resolution SLA Row</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Are you sure you want to delete the SLA row for{' '}
-            <strong>{selectedResRow?.ticketTypeName}</strong>? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => setResDeleteOpen(false)}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-            onClick={handleResDelete}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigDeleteDialog
+        open={resDeleteOpen}
+        onClose={() => setResDeleteOpen(false)}
+        onConfirm={handleResDelete}
+        entityName='Resolution SLA Row'
+        itemName={selectedResRow?.ticketTypeName}
+      />
 
-      <Dialog
+      <ConfigDeleteDialog
         open={dueDateDeleteOpen}
         onClose={() => setDueDateDeleteOpen(false)}
-        maxWidth='xs'
-        fullWidth
-      >
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Due Date SLA Row</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Are you sure you want to delete the SLA row for{' '}
-            <strong>{selectedDueDateRow?.ticketTypeName}</strong>? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => setDueDateDeleteOpen(false)}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-            onClick={handleDueDateDelete}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleDueDateDelete}
+        entityName='Due Date SLA Row'
+        itemName={selectedDueDateRow?.ticketTypeName}
+      />
 
       {/* ── Dialogs: ETA Activation ── */}
       <ActivationRowFormDialog
@@ -1809,36 +1747,13 @@ const SLAs = () => {
         onSubmit={handleEtaActSubmit}
       />
 
-      <Dialog
+      <ConfigDeleteDialog
         open={etaActDeleteOpen}
         onClose={() => setEtaActDeleteOpen(false)}
-        maxWidth='xs'
-        fullWidth
-      >
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete ETA Activation Row</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Are you sure you want to delete the ETA activation row for{' '}
-            <strong>{selectedEtaActRow?.ticketTypeName}</strong>? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => setEtaActDeleteOpen(false)}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-            onClick={handleEtaActDelete}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleEtaActDelete}
+        entityName='ETA Activation Row'
+        itemName={selectedEtaActRow?.ticketTypeName}
+      />
 
       {/* ── Dialogs: Time Log Activation ── */}
       <ActivationRowFormDialog
@@ -1855,36 +1770,13 @@ const SLAs = () => {
         onSubmit={handleTimeLogActSubmit}
       />
 
-      <Dialog
+      <ConfigDeleteDialog
         open={timeLogActDeleteOpen}
         onClose={() => setTimeLogActDeleteOpen(false)}
-        maxWidth='xs'
-        fullWidth
-      >
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Time Log Activation Row</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Are you sure you want to delete the time log activation row for{' '}
-            <strong>{selectedTimeLogActRow?.ticketTypeName}</strong>? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => setTimeLogActDeleteOpen(false)}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-            onClick={handleTimeLogActDelete}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleTimeLogActDelete}
+        entityName='Time Log Activation Row'
+        itemName={selectedTimeLogActRow?.ticketTypeName}
+      />
     </Box>
   );
 };

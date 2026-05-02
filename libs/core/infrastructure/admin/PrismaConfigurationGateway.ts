@@ -170,6 +170,12 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
         applicationSubCategories: data.categorization?.applicationSubCategories ?? [],
         applicationNumberSequences: data.categorization?.applicationNumberSequences ?? [],
       },
+      userConfig: {
+        workLocations: data.userConfig?.workLocations ?? [],
+        workingTimes: data.userConfig?.workingTimes ?? [],
+        shifts: data.userConfig?.shifts ?? [],
+        associatedProfiles: data.userConfig?.associatedProfiles ?? [],
+      },
     };
   }
 

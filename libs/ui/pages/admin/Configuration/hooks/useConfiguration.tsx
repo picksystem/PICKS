@@ -12,6 +12,10 @@ import {
   IConfigSLAs,
   IConfigCategorization,
   IConfigConsultantProfiles,
+  IConfigApprovals,
+  IConfigTicketUpdateTemplates,
+  IConfigCommentTemplates,
+  IConfigUserConfig,
   DEFAULT_CONFIGURATION_DATA,
 } from '@serviceops/interfaces';
 
@@ -57,6 +61,10 @@ export const useConfiguration = () => {
     slas: data.slas as IConfigSLAs,
     categorization: data.categorization as IConfigCategorization,
     consultantProfiles: data.consultantProfiles as IConfigConsultantProfiles,
+    approvals: data.approvals as IConfigApprovals,
+    ticketUpdateTemplates: data.ticketUpdateTemplates as IConfigTicketUpdateTemplates,
+    commentTemplates: data.commentTemplates as IConfigCommentTemplates,
+    userConfig: data.userConfig as IConfigUserConfig,
     ticketTypeKeys,
     saveSection,
     saveAll,

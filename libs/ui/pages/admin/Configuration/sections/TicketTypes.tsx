@@ -15,10 +15,6 @@ import {
   Divider,
   Tooltip,
   Link,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
@@ -35,6 +31,7 @@ import { useTicketTypes } from '../hooks/useTicketTypes';
 import TicketTypeTable from '../components/TicketTypeTable';
 import TicketTypeFormDialog from '../dialogs/TicketTypeFormDialog/TicketTypeFormDialog';
 import SequenceDialog from '../dialogs/SequenceDialog/SequenceDialog';
+import { ConfigDeleteDialog } from '../dialogs/ConfigDialogs';
 
 const TicketTypes = () => {
   const { classes } = useStyles();
@@ -340,40 +337,16 @@ const TicketTypes = () => {
       />
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      <ConfigDeleteDialog
         open={confirmDeleteOpen}
         onClose={() => setConfirmDeleteOpen(false)}
-        maxWidth='xs'
-        fullWidth
-      >
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Ticket Type</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Are you sure you want to delete{' '}
-            <strong>{selectedRow?.displayName || selectedRow?.name}</strong>? This action cannot be
-            undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button
-            onClick={() => setConfirmDeleteOpen(false)}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-            onClick={async () => {
-              await handleDelete();
-              setConfirmDeleteOpen(false);
-            }}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={async () => {
+          await handleDelete();
+          setConfirmDeleteOpen(false);
+        }}
+        entityName='Ticket Type'
+        itemName={selectedRow?.displayName || selectedRow?.name || ''}
+      />
     </Box>
   );
 };

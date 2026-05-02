@@ -1,14 +1,8 @@
 import { useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
   TextField,
   Switch,
   FormControlLabel,
-  Box,
   Typography,
   Select,
   MenuItem,
@@ -16,8 +10,9 @@ import {
   InputLabel,
   Grid,
 } from '@mui/material';
-import { IConfigResponseAckSLARow } from '@serviceops/interfaces';
-import { ITicketType } from '@serviceops/interfaces';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import { IConfigResponseAckSLARow, ITicketType } from '@serviceops/interfaces';
+import { ConfigFormDialog } from './ConfigDialogs';
 
 interface Props {
   open: boolean;
@@ -98,87 +93,75 @@ const ResponseAckSLAFormDialog = ({
   const isEditing = editingRow !== null;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth='sm' fullWidth>
-      <DialogTitle sx={{ fontWeight: 700 }}>
-        {isEditing ? 'Edit Response / Acknowledgement SLA' : 'New Response / Acknowledgement SLA'}
-      </DialogTitle>
+    <ConfigFormDialog
+      open={open}
+      onClose={onClose}
+      onSubmit={handleSubmit}
+      isEdit={isEditing}
+      icon={<AccessTimeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+      accent='#0369a1'
+      title='Response / Acknowledgement SLA Row'
+      subtitle='Set response time targets (in minutes) per priority level'
+      submitDisabled={!form.ticketTypeId}
+      submitLabel={isEditing ? 'Save Changes' : 'Add Row'}
+      maxWidth='sm'
+    >
+      {isEditing ? (
+        <TextField
+          label='Ticket Type'
+          value={form.ticketTypeName}
+          disabled
+          size='small'
+          fullWidth
+        />
+      ) : (
+        <FormControl size='small' fullWidth required>
+          <InputLabel>Ticket Type</InputLabel>
+          <Select
+            label='Ticket Type'
+            value={form.ticketTypeId || ''}
+            onChange={(e) => handleTicketTypeChange(Number(e.target.value))}
+          >
+            {availableTicketTypes.map((tt) => (
+              <MenuItem key={tt.id} value={tt.id}>
+                {tt.displayName || tt.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      )}
 
-      <DialogContent dividers>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-          {isEditing ? (
+      <FormControlLabel
+        control={
+          <Switch
+            checked={form.activation}
+            onChange={(e) => setForm((f) => ({ ...f, activation: e.target.checked }))}
+            color='primary'
+          />
+        }
+        label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activation</Typography>}
+      />
+
+      <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'text.secondary' }}>
+        Response time targets (minutes)
+      </Typography>
+
+      <Grid container spacing={1.5}>
+        {(['p1', 'p2', 'p3', 'p4', 'p5'] as const).map((p) => (
+          <Grid key={p} size={{ xs: 6, sm: 'grow' }}>
             <TextField
-              label='Ticket Type'
-              value={form.ticketTypeName}
-              disabled
+              label={p.toUpperCase()}
+              type='number'
               size='small'
               fullWidth
+              value={form[p]}
+              onChange={(e) => setNum(p, e.target.value)}
+              slotProps={{ htmlInput: { min: 0 } }}
             />
-          ) : (
-            <FormControl size='small' fullWidth required>
-              <InputLabel>Ticket Type</InputLabel>
-              <Select
-                label='Ticket Type'
-                value={form.ticketTypeId || ''}
-                onChange={(e) => handleTicketTypeChange(Number(e.target.value))}
-              >
-                {availableTicketTypes.map((tt) => (
-                  <MenuItem key={tt.id} value={tt.id}>
-                    {tt.displayName || tt.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          )}
-
-          <FormControlLabel
-            control={
-              <Switch
-                checked={form.activation}
-                onChange={(e) => setForm((f) => ({ ...f, activation: e.target.checked }))}
-                color='primary'
-              />
-            }
-            label={
-              <Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activation</Typography>
-            }
-          />
-
-          <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'text.secondary' }}>
-            Response time targets (minutes)
-          </Typography>
-
-          <Grid container spacing={1.5}>
-            {(['p1', 'p2', 'p3', 'p4', 'p5'] as const).map((p) => (
-              <Grid key={p} size={{ xs: 6, sm: 'grow' }}>
-                <TextField
-                  label={p.toUpperCase()}
-                  type='number'
-                  size='small'
-                  fullWidth
-                  value={form[p]}
-                  onChange={(e) => setNum(p, e.target.value)}
-                  slotProps={{ htmlInput: { min: 0 } }}
-                />
-              </Grid>
-            ))}
           </Grid>
-        </Box>
-      </DialogContent>
-
-      <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-        <Button onClick={onClose} sx={{ textTransform: 'none', borderRadius: 2 }}>
-          Cancel
-        </Button>
-        <Button
-          variant='contained'
-          onClick={handleSubmit}
-          disabled={!form.ticketTypeId}
-          sx={{ textTransform: 'none', borderRadius: 2 }}
-        >
-          {isEditing ? 'Save Changes' : 'Add Row'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        ))}
+      </Grid>
+    </ConfigFormDialog>
   );
 };
 

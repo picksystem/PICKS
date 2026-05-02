@@ -41,6 +41,10 @@ export class ConfigurationController {
       'statuses',
       'releaseStatuses',
       'slas',
+      'categorization',
+      'consultantProfiles',
+      'approvals',
+      'userConfig',
     ];
     if (!validSections.includes(section)) {
       res.status(400).json({ message: `Unknown section: ${section}` });

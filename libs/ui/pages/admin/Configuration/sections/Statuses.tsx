@@ -8,10 +8,6 @@ import {
   Paper,
   Button,
   Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
   InputAdornment,
   Switch,
@@ -33,6 +29,7 @@ import { IConfigStatusLevel } from '@serviceops/interfaces';
 import { useStyles } from '../styles';
 import { useConfiguration } from '../hooks/useConfiguration';
 import { useGetTicketTypeQuery } from '@serviceops/services';
+import { ConfigFormDialog, ConfigDeleteDialog } from '../dialogs/ConfigDialogs';
 
 // ── Color presets ─────────────────────────────────────────────────────────────
 
@@ -342,220 +339,6 @@ const Section = ({
   );
 };
 
-// ── Status form dialog ────────────────────────────────────────────────────────
-
-interface StatusFormDialogProps {
-  open: boolean;
-  editing: IConfigStatusLevel | null;
-  ticketTypeColumns: { key: string; label: string }[];
-  showTicketTypes?: boolean;
-  onClose: () => void;
-  onSave: (data: Partial<IConfigStatusLevel>) => void;
-}
-
-const StatusFormDialog = ({
-  open,
-  editing,
-  ticketTypeColumns,
-  showTicketTypes = true,
-  onClose,
-  onSave,
-}: StatusFormDialogProps) => {
-  const [form, setForm] = useState<Partial<IConfigStatusLevel>>({});
-
-  const handleEnter = () => {
-    setForm(
-      editing
-        ? {
-            displayName: editing.displayName,
-            description: editing.description,
-            bgColor: editing.bgColor,
-            isActive: editing.isActive,
-            slaActive: editing.slaActive,
-            isFinal: editing.isFinal,
-            enabledFor: { ...editing.enabledFor },
-          }
-        : {
-            displayName: '',
-            description: '',
-            bgColor: '#6366f1',
-            isActive: true,
-            slaActive: true,
-            isFinal: false,
-            enabledFor: showTicketTypes
-              ? Object.fromEntries(ticketTypeColumns.map((t) => [t.key, true]))
-              : {},
-          },
-    );
-  };
-
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth='sm'
-      fullWidth
-      TransitionProps={{ onEnter: handleEnter }}
-    >
-      <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
-        {editing ? 'Edit Status' : 'Add New Status'}
-      </DialogTitle>
-      <DialogContent
-        sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '16px !important' }}
-      >
-        <TextField
-          label='Status Name'
-          size='small'
-          value={form.displayName ?? ''}
-          onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
-          helperText='e.g. New, In Progress, Resolved'
-          required
-        />
-        <TextField
-          label='Description'
-          size='small'
-          value={form.description ?? ''}
-          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-          multiline
-          rows={2}
-        />
-
-        {/* Color picker */}
-        <Box>
-          <Typography
-            variant='caption'
-            fontWeight={700}
-            color='text.secondary'
-            sx={{ mb: 0.75, display: 'block' }}
-          >
-            Badge Color
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
-            {PRESET_COLORS.map((c) => (
-              <Box
-                key={c}
-                onClick={() => setForm((f) => ({ ...f, bgColor: c }))}
-                sx={{
-                  width: 22,
-                  height: 22,
-                  borderRadius: '50%',
-                  bgcolor: c,
-                  cursor: 'pointer',
-                  border: form.bgColor === c ? '2.5px solid #1976d2' : '2px solid transparent',
-                  boxShadow: form.bgColor === c ? `0 0 0 2px ${alpha('#1976d2', 0.3)}` : 'none',
-                  transition: 'all 0.15s',
-                  '&:hover': { transform: 'scale(1.18)' },
-                }}
-              />
-            ))}
-            <TextField
-              size='small'
-              value={form.bgColor ?? ''}
-              onChange={(e) => setForm((f) => ({ ...f, bgColor: e.target.value }))}
-              inputProps={{ style: { fontFamily: 'monospace', fontSize: '0.75rem', width: 72 } }}
-              sx={{ ml: 0.5 }}
-            />
-            {form.bgColor && (
-              <Chip
-                label={form.displayName || 'Preview'}
-                size='small'
-                sx={{ bgcolor: form.bgColor, color: '#fff', fontWeight: 700, fontSize: '0.72rem' }}
-              />
-            )}
-          </Box>
-        </Box>
-
-        {/* Flags */}
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          <FormControlLabel
-            control={
-              <Switch
-                size='small'
-                checked={form.isActive ?? true}
-                onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
-                color='success'
-              />
-            }
-            label={<Typography sx={{ fontSize: '0.8rem' }}>Status Active</Typography>}
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                size='small'
-                checked={form.slaActive ?? true}
-                onChange={(e) => setForm((f) => ({ ...f, slaActive: e.target.checked }))}
-                color='primary'
-              />
-            }
-            label={<Typography sx={{ fontSize: '0.8rem' }}>SLA Active</Typography>}
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                size='small'
-                checked={form.isFinal ?? false}
-                onChange={(e) => setForm((f) => ({ ...f, isFinal: e.target.checked }))}
-                color='warning'
-              />
-            }
-            label={<Typography sx={{ fontSize: '0.8rem' }}>Final Status</Typography>}
-          />
-        </Box>
-
-        {/* Ticket type toggles — only shown for ticket statuses */}
-        {showTicketTypes && (
-          <Box>
-            <Typography
-              variant='caption'
-              fontWeight={700}
-              color='text.secondary'
-              sx={{ mb: 1, display: 'block' }}
-            >
-              Enable for Ticket Types
-            </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-              {ticketTypeColumns.map((t) => (
-                <FormControlLabel
-                  key={t.key}
-                  labelPlacement='end'
-                  control={
-                    <Switch
-                      size='small'
-                      checked={form.enabledFor?.[t.key] ?? true}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          enabledFor: { ...(f.enabledFor ?? {}), [t.key]: e.target.checked },
-                        }))
-                      }
-                      color='success'
-                    />
-                  }
-                  label={<Typography sx={{ fontSize: '0.8rem' }}>{t.label}</Typography>}
-                  sx={{ mr: 2 }}
-                />
-              ))}
-            </Box>
-          </Box>
-        )}
-      </DialogContent>
-      <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-        <Button onClick={onClose} sx={{ textTransform: 'none' }}>
-          Cancel
-        </Button>
-        <Button
-          variant='contained'
-          onClick={() => onSave(form)}
-          disabled={!form.displayName}
-          sx={{ textTransform: 'none', borderRadius: 2 }}
-        >
-          {editing ? 'Save Changes' : 'Add Status'}
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-};
-
 // ── Reusable status badge column cell ─────────────────────────────────────────
 
 const StatusBadgeCell = ({ row }: { row: IConfigStatusLevel }) => (
@@ -638,41 +421,69 @@ const Statuses = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStatus, setEditingStatus] = useState<IConfigStatusLevel | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [statusForm, setStatusForm] = useState<Partial<IConfigStatusLevel>>({});
 
   const selectedStatus = statuses.find((s) => s.id === selectedId) ?? null;
 
+  const initStatusForm = (editing: IConfigStatusLevel | null) => {
+    setStatusForm(
+      editing
+        ? {
+            displayName: editing.displayName,
+            description: editing.description,
+            bgColor: editing.bgColor,
+            isActive: editing.isActive,
+            slaActive: editing.slaActive,
+            isFinal: editing.isFinal,
+            enabledFor: { ...editing.enabledFor },
+          }
+        : {
+            displayName: '',
+            description: '',
+            bgColor: '#6366f1',
+            isActive: true,
+            slaActive: true,
+            isFinal: false,
+            enabledFor: Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
+          },
+    );
+  };
+
   const handleOpenAdd = () => {
     setEditingStatus(null);
+    initStatusForm(null);
     setDialogOpen(true);
   };
 
   const handleOpenEdit = () => {
     if (selectedStatus) {
       setEditingStatus(selectedStatus);
+      initStatusForm(selectedStatus);
       setDialogOpen(true);
     }
   };
 
-  const handleSave = (data: Partial<IConfigStatusLevel>) => {
+  const handleSave = () => {
     let next: IConfigStatusLevel[];
     if (editingStatus) {
-      next = statuses.map((s) => (s.id === editingStatus.id ? { ...s, ...data } : s));
+      next = statuses.map((s) => (s.id === editingStatus.id ? { ...s, ...statusForm } : s));
     } else {
       const id =
-        (data.displayName ?? '').toLowerCase().replace(/[^a-z0-9]/g, '_') || `status_${Date.now()}`;
+        (statusForm.displayName ?? '').toLowerCase().replace(/[^a-z0-9]/g, '_') ||
+        `status_${Date.now()}`;
       const allEnabled = Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true]));
       const newItem: IConfigStatusLevel = {
         id,
         name: id,
-        displayName: data.displayName ?? id,
-        description: data.description ?? '',
+        displayName: statusForm.displayName ?? id,
+        description: statusForm.description ?? '',
         color: '#fff',
-        bgColor: data.bgColor ?? '#6366f1',
+        bgColor: statusForm.bgColor ?? '#6366f1',
         sortOrder: statuses.length + 1,
-        isActive: data.isActive ?? true,
-        slaActive: data.slaActive ?? true,
-        isFinal: data.isFinal ?? false,
-        enabledFor: data.enabledFor ?? allEnabled,
+        isActive: statusForm.isActive ?? true,
+        slaActive: statusForm.slaActive ?? true,
+        isFinal: statusForm.isFinal ?? false,
+        enabledFor: statusForm.enabledFor ?? allEnabled,
       };
       next = [...statuses, newItem];
     }
@@ -824,42 +635,71 @@ const Statuses = () => {
   const [relDialogOpen, setRelDialogOpen] = useState(false);
   const [relEditingStatus, setRelEditingStatus] = useState<IConfigStatusLevel | null>(null);
   const [relConfirmDeleteOpen, setRelConfirmDeleteOpen] = useState(false);
+  const [relStatusForm, setRelStatusForm] = useState<Partial<IConfigStatusLevel>>({});
 
   const relSelectedStatus = releaseStatuses.find((s) => s.id === relSelectedId) ?? null;
 
+  const initRelStatusForm = (editing: IConfigStatusLevel | null) => {
+    setRelStatusForm(
+      editing
+        ? {
+            displayName: editing.displayName,
+            description: editing.description,
+            bgColor: editing.bgColor,
+            isActive: editing.isActive,
+            slaActive: editing.slaActive,
+            isFinal: editing.isFinal,
+            enabledFor: { ...editing.enabledFor },
+          }
+        : {
+            displayName: '',
+            description: '',
+            bgColor: '#0891b2',
+            isActive: true,
+            slaActive: true,
+            isFinal: false,
+            enabledFor: Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
+          },
+    );
+  };
+
   const handleRelOpenAdd = () => {
     setRelEditingStatus(null);
+    initRelStatusForm(null);
     setRelDialogOpen(true);
   };
 
   const handleRelOpenEdit = () => {
     if (relSelectedStatus) {
       setRelEditingStatus(relSelectedStatus);
+      initRelStatusForm(relSelectedStatus);
       setRelDialogOpen(true);
     }
   };
 
-  const handleRelSave = (data: Partial<IConfigStatusLevel>) => {
+  const handleRelSave = () => {
     let next: IConfigStatusLevel[];
     if (relEditingStatus) {
-      next = releaseStatuses.map((s) => (s.id === relEditingStatus.id ? { ...s, ...data } : s));
+      next = releaseStatuses.map((s) =>
+        s.id === relEditingStatus.id ? { ...s, ...relStatusForm } : s,
+      );
     } else {
       const id =
-        (data.displayName ?? '').toLowerCase().replace(/[^a-z0-9]/g, '_') ||
+        (relStatusForm.displayName ?? '').toLowerCase().replace(/[^a-z0-9]/g, '_') ||
         `release_status_${Date.now()}`;
       const allEnabled = Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true]));
       const newItem: IConfigStatusLevel = {
         id,
         name: id,
-        displayName: data.displayName ?? id,
-        description: data.description ?? '',
+        displayName: relStatusForm.displayName ?? id,
+        description: relStatusForm.description ?? '',
         color: '#fff',
-        bgColor: data.bgColor ?? '#0891b2',
+        bgColor: relStatusForm.bgColor ?? '#0891b2',
         sortOrder: releaseStatuses.length + 1,
-        isActive: data.isActive ?? true,
-        slaActive: data.slaActive ?? true,
-        isFinal: data.isFinal ?? false,
-        enabledFor: data.enabledFor ?? allEnabled,
+        isActive: relStatusForm.isActive ?? true,
+        slaActive: relStatusForm.slaActive ?? true,
+        isFinal: relStatusForm.isFinal ?? false,
+        enabledFor: relStatusForm.enabledFor ?? allEnabled,
       };
       next = [...releaseStatuses, newItem];
     }
@@ -1224,80 +1064,330 @@ const Statuses = () => {
       </Section>
 
       {/* ── Ticket status dialogs ── */}
-      <StatusFormDialog
+      <ConfigFormDialog
         open={dialogOpen}
-        editing={editingStatus}
-        ticketTypeColumns={activeTicketTypeColumns}
-        showTicketTypes
         onClose={() => setDialogOpen(false)}
-        onSave={handleSave}
-      />
+        onSubmit={handleSave}
+        isEdit={!!editingStatus}
+        icon={<RadioButtonCheckedIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent='#7c3aed'
+        title='Status'
+        submitDisabled={!statusForm.displayName}
+        submitLabel={editingStatus ? 'Save Changes' : 'Add Status'}
+        maxWidth='sm'
+      >
+        <TextField
+          label='Status Name'
+          size='small'
+          value={statusForm.displayName ?? ''}
+          onChange={(e) => setStatusForm((f) => ({ ...f, displayName: e.target.value }))}
+          helperText='e.g. New, In Progress, Resolved'
+          required
+        />
+        <TextField
+          label='Description'
+          size='small'
+          value={statusForm.description ?? ''}
+          onChange={(e) => setStatusForm((f) => ({ ...f, description: e.target.value }))}
+          multiline
+          rows={2}
+        />
 
-      <Dialog
+        {/* Color picker */}
+        <Box>
+          <Typography
+            variant='caption'
+            fontWeight={700}
+            color='text.secondary'
+            sx={{ mb: 0.75, display: 'block' }}
+          >
+            Badge Color
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
+            {PRESET_COLORS.map((c) => (
+              <Box
+                key={c}
+                onClick={() => setStatusForm((f) => ({ ...f, bgColor: c }))}
+                sx={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: '50%',
+                  bgcolor: c,
+                  cursor: 'pointer',
+                  border:
+                    statusForm.bgColor === c ? '2.5px solid #1976d2' : '2px solid transparent',
+                  boxShadow:
+                    statusForm.bgColor === c ? `0 0 0 2px ${alpha('#1976d2', 0.3)}` : 'none',
+                  transition: 'all 0.15s',
+                  '&:hover': { transform: 'scale(1.18)' },
+                }}
+              />
+            ))}
+            <TextField
+              size='small'
+              value={statusForm.bgColor ?? ''}
+              onChange={(e) => setStatusForm((f) => ({ ...f, bgColor: e.target.value }))}
+              inputProps={{ style: { fontFamily: 'monospace', fontSize: '0.75rem', width: 72 } }}
+              sx={{ ml: 0.5 }}
+            />
+            {statusForm.bgColor && (
+              <Chip
+                label={statusForm.displayName || 'Preview'}
+                size='small'
+                sx={{
+                  bgcolor: statusForm.bgColor,
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: '0.72rem',
+                }}
+              />
+            )}
+          </Box>
+        </Box>
+
+        {/* Flags */}
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                size='small'
+                checked={statusForm.isActive ?? true}
+                onChange={(e) => setStatusForm((f) => ({ ...f, isActive: e.target.checked }))}
+                color='success'
+              />
+            }
+            label={<Typography sx={{ fontSize: '0.8rem' }}>Status Active</Typography>}
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                size='small'
+                checked={statusForm.slaActive ?? true}
+                onChange={(e) => setStatusForm((f) => ({ ...f, slaActive: e.target.checked }))}
+                color='primary'
+              />
+            }
+            label={<Typography sx={{ fontSize: '0.8rem' }}>SLA Active</Typography>}
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                size='small'
+                checked={statusForm.isFinal ?? false}
+                onChange={(e) => setStatusForm((f) => ({ ...f, isFinal: e.target.checked }))}
+                color='warning'
+              />
+            }
+            label={<Typography sx={{ fontSize: '0.8rem' }}>Final Status</Typography>}
+          />
+        </Box>
+
+        {/* Ticket type toggles */}
+        <Box>
+          <Typography
+            variant='caption'
+            fontWeight={700}
+            color='text.secondary'
+            sx={{ mb: 1, display: 'block' }}
+          >
+            Enable for Ticket Types
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {activeTicketTypeColumns.map((t) => (
+              <FormControlLabel
+                key={t.key}
+                labelPlacement='end'
+                control={
+                  <Switch
+                    size='small'
+                    checked={statusForm.enabledFor?.[t.key] ?? true}
+                    onChange={(e) =>
+                      setStatusForm((f) => ({
+                        ...f,
+                        enabledFor: { ...(f.enabledFor ?? {}), [t.key]: e.target.checked },
+                      }))
+                    }
+                    color='success'
+                  />
+                }
+                label={<Typography sx={{ fontSize: '0.8rem' }}>{t.label}</Typography>}
+                sx={{ mr: 2 }}
+              />
+            ))}
+          </Box>
+        </Box>
+      </ConfigFormDialog>
+
+      <ConfigDeleteDialog
         open={confirmDeleteOpen}
         onClose={() => setConfirmDeleteOpen(false)}
-        maxWidth='xs'
-        fullWidth
-      >
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Status</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Are you sure you want to delete <strong>{selectedStatus?.displayName}</strong>? This
-            action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setConfirmDeleteOpen(false)} sx={{ textTransform: 'none' }}>
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-            onClick={handleDelete}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* ── Release cycle status dialogs ── */}
-      <StatusFormDialog
-        open={relDialogOpen}
-        editing={relEditingStatus}
-        ticketTypeColumns={activeTicketTypeColumns}
-        showTicketTypes
-        onClose={() => setRelDialogOpen(false)}
-        onSave={handleRelSave}
+        onConfirm={handleDelete}
+        entityName='Status'
+        itemName={selectedStatus?.displayName ?? ''}
       />
 
-      <Dialog
+      {/* ── Release cycle status dialogs ── */}
+      <ConfigFormDialog
+        open={relDialogOpen}
+        onClose={() => setRelDialogOpen(false)}
+        onSubmit={handleRelSave}
+        isEdit={!!relEditingStatus}
+        icon={<ChangeCircleIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent='#0891b2'
+        title='Release Cycle Status'
+        submitDisabled={!relStatusForm.displayName}
+        submitLabel={relEditingStatus ? 'Save Changes' : 'Add Status'}
+        maxWidth='sm'
+      >
+        <TextField
+          label='Status Name'
+          size='small'
+          value={relStatusForm.displayName ?? ''}
+          onChange={(e) => setRelStatusForm((f) => ({ ...f, displayName: e.target.value }))}
+          helperText='e.g. Awaiting UAT, Under Deployment'
+          required
+        />
+        <TextField
+          label='Description'
+          size='small'
+          value={relStatusForm.description ?? ''}
+          onChange={(e) => setRelStatusForm((f) => ({ ...f, description: e.target.value }))}
+          multiline
+          rows={2}
+        />
+
+        {/* Color picker */}
+        <Box>
+          <Typography
+            variant='caption'
+            fontWeight={700}
+            color='text.secondary'
+            sx={{ mb: 0.75, display: 'block' }}
+          >
+            Badge Color
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
+            {PRESET_COLORS.map((c) => (
+              <Box
+                key={c}
+                onClick={() => setRelStatusForm((f) => ({ ...f, bgColor: c }))}
+                sx={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: '50%',
+                  bgcolor: c,
+                  cursor: 'pointer',
+                  border:
+                    relStatusForm.bgColor === c ? '2.5px solid #1976d2' : '2px solid transparent',
+                  boxShadow:
+                    relStatusForm.bgColor === c ? `0 0 0 2px ${alpha('#1976d2', 0.3)}` : 'none',
+                  transition: 'all 0.15s',
+                  '&:hover': { transform: 'scale(1.18)' },
+                }}
+              />
+            ))}
+            <TextField
+              size='small'
+              value={relStatusForm.bgColor ?? ''}
+              onChange={(e) => setRelStatusForm((f) => ({ ...f, bgColor: e.target.value }))}
+              inputProps={{ style: { fontFamily: 'monospace', fontSize: '0.75rem', width: 72 } }}
+              sx={{ ml: 0.5 }}
+            />
+            {relStatusForm.bgColor && (
+              <Chip
+                label={relStatusForm.displayName || 'Preview'}
+                size='small'
+                sx={{
+                  bgcolor: relStatusForm.bgColor,
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: '0.72rem',
+                }}
+              />
+            )}
+          </Box>
+        </Box>
+
+        {/* Flags */}
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                size='small'
+                checked={relStatusForm.isActive ?? true}
+                onChange={(e) => setRelStatusForm((f) => ({ ...f, isActive: e.target.checked }))}
+                color='success'
+              />
+            }
+            label={<Typography sx={{ fontSize: '0.8rem' }}>Status Active</Typography>}
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                size='small'
+                checked={relStatusForm.slaActive ?? true}
+                onChange={(e) => setRelStatusForm((f) => ({ ...f, slaActive: e.target.checked }))}
+                color='primary'
+              />
+            }
+            label={<Typography sx={{ fontSize: '0.8rem' }}>SLA Active</Typography>}
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                size='small'
+                checked={relStatusForm.isFinal ?? false}
+                onChange={(e) => setRelStatusForm((f) => ({ ...f, isFinal: e.target.checked }))}
+                color='warning'
+              />
+            }
+            label={<Typography sx={{ fontSize: '0.8rem' }}>Final Status</Typography>}
+          />
+        </Box>
+
+        {/* Ticket type toggles */}
+        <Box>
+          <Typography
+            variant='caption'
+            fontWeight={700}
+            color='text.secondary'
+            sx={{ mb: 1, display: 'block' }}
+          >
+            Enable for Ticket Types
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {activeTicketTypeColumns.map((t) => (
+              <FormControlLabel
+                key={t.key}
+                labelPlacement='end'
+                control={
+                  <Switch
+                    size='small'
+                    checked={relStatusForm.enabledFor?.[t.key] ?? true}
+                    onChange={(e) =>
+                      setRelStatusForm((f) => ({
+                        ...f,
+                        enabledFor: { ...(f.enabledFor ?? {}), [t.key]: e.target.checked },
+                      }))
+                    }
+                    color='success'
+                  />
+                }
+                label={<Typography sx={{ fontSize: '0.8rem' }}>{t.label}</Typography>}
+                sx={{ mr: 2 }}
+              />
+            ))}
+          </Box>
+        </Box>
+      </ConfigFormDialog>
+
+      <ConfigDeleteDialog
         open={relConfirmDeleteOpen}
         onClose={() => setRelConfirmDeleteOpen(false)}
-        maxWidth='xs'
-        fullWidth
-      >
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Release Status</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>
-            Are you sure you want to delete <strong>{relSelectedStatus?.displayName}</strong>? This
-            action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setRelConfirmDeleteOpen(false)} sx={{ textTransform: 'none' }}>
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-            onClick={handleRelDelete}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleRelDelete}
+        entityName='Release Cycle Status'
+        itemName={relSelectedStatus?.displayName ?? ''}
+      />
     </Box>
   );
 };

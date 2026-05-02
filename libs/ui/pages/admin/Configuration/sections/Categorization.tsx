@@ -11,10 +11,6 @@ import {
   Link,
   TextField,
   InputAdornment,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Select,
   MenuItem,
   FormControl,
@@ -30,6 +26,7 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material';
+import { ConfigFormDialog, ConfigDeleteDialog } from '../dialogs/ConfigDialogs';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import LinearScaleIcon from '@mui/icons-material/LinearScale';
 import NumbersIcon from '@mui/icons-material/Numbers';
@@ -157,29 +154,31 @@ const BusinessCategories = () => {
         </Paper>
       </AccordionDetails>
 
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>{editingRow ? 'Edit Business Category' : 'New Business Category'}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            <TextField label='Business Category Name' size='small' fullWidth required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
-            <TextField label='Description' size='small' fullWidth multiline minRows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
-            <TextField label='Business Category Head' size='small' fullWidth value={form.head} onChange={(e) => setForm((f) => ({ ...f, head: e.target.value }))} />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.name.trim()} sx={{ textTransform: 'none', borderRadius: 2 }}>{editingRow ? 'Save Changes' : 'Add'}</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<AccountTreeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent='#059669'
+        title='Business Category'
+        subtitle='Manage business category groups and their designated heads'
+        submitDisabled={!form.name.trim()}
+        submitLabel={editingRow ? 'Save Changes' : 'Add'}
+        maxWidth='sm'
+      >
+        <TextField label='Business Category Name' size='small' fullWidth required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+        <TextField label='Description' size='small' fullWidth multiline minRows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+        <TextField label='Business Category Head' size='small' fullWidth value={form.head} onChange={(e) => setForm((f) => ({ ...f, head: e.target.value }))} />
+      </ConfigFormDialog>
 
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Business Category</DialogTitle>
-        <DialogContent><Typography variant='body2'>Are you sure you want to delete <strong>{selectedRow?.name}</strong>? This action cannot be undone.</Typography></DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Delete</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Business Category'
+        itemName={selectedRow?.name}
+      />
     </Accordion>
   );
 };
@@ -445,69 +444,60 @@ const TimesheetPanel = ({ serviceLines, defaultServiceLineId, onBack, onSave }: 
         />
       </Paper>
 
-      {/* ── New / Edit dialog ── */}
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700, borderBottom: '1px solid', borderColor: 'divider', pb: 1.5 }}>
-          {editingRow ? 'Edit Timesheet Project' : 'New Timesheet Project'}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 2 }}>
-            {/* Service Line — dropdown on new, chip on edit */}
-            {editingRow ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant='caption' color='text.secondary' fontWeight={600}>Service Line:</Typography>
-                <Chip label={editingRow.serviceLineName} size='small' sx={{ bgcolor: alpha(ACCENT_TS, 0.1), color: ACCENT_TS, fontWeight: 600, fontSize: '0.78rem' }} />
-              </Box>
-            ) : (
-              <FormControl size='small' fullWidth required>
-                <InputLabel>Service Line</InputLabel>
-                <Select label='Service Line' value={form.serviceLineId} onChange={(e) => setForm((f) => ({ ...f, serviceLineId: e.target.value }))}>
-                  {serviceLines.length === 0
-                    ? <MenuItem disabled value=''><em>No service lines — add one first</em></MenuItem>
-                    : serviceLines.map((sl) => <MenuItem key={sl.id} value={sl.id}>{sl.name}</MenuItem>)
-                  }
-                </Select>
-              </FormControl>
-            )}
-            <TextField label='Project' size='small' fullWidth required value={form.project} onChange={(e) => setForm((f) => ({ ...f, project: e.target.value }))} />
-            <TextField label='Application' size='small' fullWidth value={form.application} onChange={(e) => setForm((f) => ({ ...f, application: e.target.value }))} />
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField label='From Date' type='date' size='small' fullWidth value={form.fromDate} onChange={(e) => setForm((f) => ({ ...f, fromDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
-              <TextField label='To Date' type='date' size='small' fullWidth value={form.toDate} onChange={(e) => setForm((f) => ({ ...f, toDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
-            </Box>
-            <TextField
-              label='Max Hours Allowed Per Day Per Resource' type='number' size='small' fullWidth
-              value={form.maxHoursPerDayPerResource}
-              onChange={(e) => setForm((f) => ({ ...f, maxHoursPerDayPerResource: Math.max(0, Number(e.target.value)) }))}
-              slotProps={{ htmlInput: { min: 0, max: 24, step: 0.5 } }}
-            />
-            <FormControlLabel
-              control={<Switch checked={form.activate} color='success' onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))} />}
-              label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>}
-            />
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<AccessTimeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_TS}
+        title='Timesheet Project'
+        subtitle='Add or edit a timesheet project for a service line'
+        submitDisabled={!form.project.trim() || (!editingRow && !form.serviceLineId)}
+        submitLabel={editingRow ? 'Save Changes' : 'Add Project'}
+        maxWidth='sm'
+      >
+        {editingRow ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant='caption' color='text.secondary' fontWeight={600}>Service Line:</Typography>
+            <Chip label={editingRow.serviceLineName} size='small' sx={{ bgcolor: alpha(ACCENT_TS, 0.1), color: ACCENT_TS, fontWeight: 600, fontSize: '0.78rem' }} />
           </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.project.trim() || (!editingRow && !form.serviceLineId)}
-            sx={{ textTransform: 'none', borderRadius: 2, bgcolor: ACCENT_TS, '&:hover': { bgcolor: '#0e7490' } }}
-          >
-            {editingRow ? 'Save Changes' : 'Add Project'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        ) : (
+          <FormControl size='small' fullWidth required>
+            <InputLabel>Service Line</InputLabel>
+            <Select label='Service Line' value={form.serviceLineId} onChange={(e) => setForm((f) => ({ ...f, serviceLineId: e.target.value }))}>
+              {serviceLines.length === 0
+                ? <MenuItem disabled value=''><em>No service lines — add one first</em></MenuItem>
+                : serviceLines.map((sl) => <MenuItem key={sl.id} value={sl.id}>{sl.name}</MenuItem>)
+              }
+            </Select>
+          </FormControl>
+        )}
+        <TextField label='Project' size='small' fullWidth required value={form.project} onChange={(e) => setForm((f) => ({ ...f, project: e.target.value }))} />
+        <TextField label='Application' size='small' fullWidth value={form.application} onChange={(e) => setForm((f) => ({ ...f, application: e.target.value }))} />
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TextField label='From Date' type='date' size='small' fullWidth value={form.fromDate} onChange={(e) => setForm((f) => ({ ...f, fromDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
+          <TextField label='To Date' type='date' size='small' fullWidth value={form.toDate} onChange={(e) => setForm((f) => ({ ...f, toDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
+        </Box>
+        <TextField
+          label='Max Hours Allowed Per Day Per Resource' type='number' size='small' fullWidth
+          value={form.maxHoursPerDayPerResource}
+          onChange={(e) => setForm((f) => ({ ...f, maxHoursPerDayPerResource: Math.max(0, Number(e.target.value)) }))}
+          slotProps={{ htmlInput: { min: 0, max: 24, step: 0.5 } }}
+        />
+        <FormControlLabel
+          control={<Switch checked={form.activate} color='success' onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))} />}
+          label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>}
+        />
+      </ConfigFormDialog>
 
-      {/* ── Delete dialog ── */}
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Timesheet Project</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>Delete <strong>{selectedRow?.project}</strong>? This cannot be undone.</Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Delete</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Timesheet Project'
+        itemName={selectedRow?.project}
+      />
     </Box>
   );
 };
@@ -682,68 +672,60 @@ const ExpensePanel = ({ serviceLines, defaultServiceLineId, onBack, onSave }: Ex
         />
       </Paper>
 
-      {/* ── New / Edit dialog ── */}
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700, borderBottom: '1px solid', borderColor: 'divider', pb: 1.5 }}>
-          {editingRow ? 'Edit Expense Project' : 'New Expense Project'}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 2 }}>
-            {editingRow ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant='caption' color='text.secondary' fontWeight={600}>Service Line:</Typography>
-                <Chip label={editingRow.serviceLineName} size='small' sx={{ bgcolor: alpha(ACCENT_EX, 0.1), color: ACCENT_EX, fontWeight: 600, fontSize: '0.78rem' }} />
-              </Box>
-            ) : (
-              <FormControl size='small' fullWidth required>
-                <InputLabel>Service Line</InputLabel>
-                <Select label='Service Line' value={form.serviceLineId} onChange={(e) => setForm((f) => ({ ...f, serviceLineId: e.target.value }))}>
-                  {serviceLines.length === 0
-                    ? <MenuItem disabled value=''><em>No service lines — add one first</em></MenuItem>
-                    : serviceLines.map((sl) => <MenuItem key={sl.id} value={sl.id}>{sl.name}</MenuItem>)
-                  }
-                </Select>
-              </FormControl>
-            )}
-            <TextField label='Expenses Project' size='small' fullWidth required value={form.project} onChange={(e) => setForm((f) => ({ ...f, project: e.target.value }))} />
-            <TextField label='Application' size='small' fullWidth value={form.application} onChange={(e) => setForm((f) => ({ ...f, application: e.target.value }))} />
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField label='From Date' type='date' size='small' fullWidth value={form.fromDate} onChange={(e) => setForm((f) => ({ ...f, fromDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
-              <TextField label='To Date' type='date' size='small' fullWidth value={form.toDate} onChange={(e) => setForm((f) => ({ ...f, toDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
-            </Box>
-            <TextField
-              label='Max Amount Allowed Per Day Per Resource ($)' type='number' size='small' fullWidth
-              value={form.maxAmountPerDay}
-              onChange={(e) => setForm((f) => ({ ...f, maxAmountPerDay: Math.max(0, Number(e.target.value)) }))}
-              slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
-            />
-            <FormControlLabel
-              control={<Switch checked={form.activate} color='success' onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))} />}
-              label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>}
-            />
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<ReceiptLongIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_EX}
+        title='Expense Project'
+        subtitle='Add or edit an expense project for a service line'
+        submitDisabled={!form.project.trim() || (!editingRow && !form.serviceLineId)}
+        submitLabel={editingRow ? 'Save Changes' : 'Add Project'}
+        maxWidth='sm'
+      >
+        {editingRow ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant='caption' color='text.secondary' fontWeight={600}>Service Line:</Typography>
+            <Chip label={editingRow.serviceLineName} size='small' sx={{ bgcolor: alpha(ACCENT_EX, 0.1), color: ACCENT_EX, fontWeight: 600, fontSize: '0.78rem' }} />
           </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.project.trim() || (!editingRow && !form.serviceLineId)}
-            sx={{ textTransform: 'none', borderRadius: 2, bgcolor: ACCENT_EX, '&:hover': { bgcolor: '#6d28d9' } }}
-          >
-            {editingRow ? 'Save Changes' : 'Add Project'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        ) : (
+          <FormControl size='small' fullWidth required>
+            <InputLabel>Service Line</InputLabel>
+            <Select label='Service Line' value={form.serviceLineId} onChange={(e) => setForm((f) => ({ ...f, serviceLineId: e.target.value }))}>
+              {serviceLines.length === 0
+                ? <MenuItem disabled value=''><em>No service lines — add one first</em></MenuItem>
+                : serviceLines.map((sl) => <MenuItem key={sl.id} value={sl.id}>{sl.name}</MenuItem>)
+              }
+            </Select>
+          </FormControl>
+        )}
+        <TextField label='Expenses Project' size='small' fullWidth required value={form.project} onChange={(e) => setForm((f) => ({ ...f, project: e.target.value }))} />
+        <TextField label='Application' size='small' fullWidth value={form.application} onChange={(e) => setForm((f) => ({ ...f, application: e.target.value }))} />
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TextField label='From Date' type='date' size='small' fullWidth value={form.fromDate} onChange={(e) => setForm((f) => ({ ...f, fromDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
+          <TextField label='To Date' type='date' size='small' fullWidth value={form.toDate} onChange={(e) => setForm((f) => ({ ...f, toDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
+        </Box>
+        <TextField
+          label='Max Amount Allowed Per Day Per Resource ($)' type='number' size='small' fullWidth
+          value={form.maxAmountPerDay}
+          onChange={(e) => setForm((f) => ({ ...f, maxAmountPerDay: Math.max(0, Number(e.target.value)) }))}
+          slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
+        />
+        <FormControlLabel
+          control={<Switch checked={form.activate} color='success' onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))} />}
+          label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>}
+        />
+      </ConfigFormDialog>
 
-      {/* ── Delete dialog ── */}
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Expense Project</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2'>Delete <strong>{selectedRow?.project}</strong>? This cannot be undone.</Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Delete</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Expense Project'
+        itemName={selectedRow?.project}
+      />
     </Box>
   );
 };
@@ -819,30 +801,32 @@ const ApprovalsPanel = ({ serviceLines, initialServiceLineId, onBack, onSave }: 
         </>
       )}
 
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>{editingRow ? 'Edit Approver' : 'New Approver'}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            <TextField label='Approver Name' size='small' fullWidth required value={form.approverName} onChange={(e) => setForm((f) => ({ ...f, approverName: e.target.value }))} />
-            <TextField label='Approver Role' size='small' fullWidth value={form.approverRole} onChange={(e) => setForm((f) => ({ ...f, approverRole: e.target.value }))} />
-            <TextField label='Approval Order' type='number' size='small' fullWidth value={form.approvalOrder} onChange={(e) => setForm((f) => ({ ...f, approvalOrder: Math.max(1, Number(e.target.value)) }))} slotProps={{ htmlInput: { min: 1 } }} />
-            <FormControlLabel control={<Switch checked={form.isRequired} color='success' onChange={(e) => setForm((f) => ({ ...f, isRequired: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Required</Typography>} />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.approverName.trim()} sx={{ textTransform: 'none', borderRadius: 2, bgcolor: ACCENT_AP, '&:hover': { bgcolor: '#047857' } }}>{editingRow ? 'Save Changes' : 'Add'}</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<ChecklistIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_AP}
+        title='Approver'
+        subtitle='Add or edit an approver in the service line approval chain'
+        submitDisabled={!form.approverName.trim()}
+        submitLabel={editingRow ? 'Save Changes' : 'Add'}
+        maxWidth='sm'
+      >
+        <TextField label='Approver Name' size='small' fullWidth required value={form.approverName} onChange={(e) => setForm((f) => ({ ...f, approverName: e.target.value }))} />
+        <TextField label='Approver Role' size='small' fullWidth value={form.approverRole} onChange={(e) => setForm((f) => ({ ...f, approverRole: e.target.value }))} />
+        <TextField label='Approval Order' type='number' size='small' fullWidth value={form.approvalOrder} onChange={(e) => setForm((f) => ({ ...f, approvalOrder: Math.max(1, Number(e.target.value)) }))} slotProps={{ htmlInput: { min: 1 } }} />
+        <FormControlLabel control={<Switch checked={form.isRequired} color='success' onChange={(e) => setForm((f) => ({ ...f, isRequired: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Required</Typography>} />
+      </ConfigFormDialog>
 
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Remove Approver</DialogTitle>
-        <DialogContent><Typography variant='body2'>Remove <strong>{selectedRow?.approverName}</strong>? This cannot be undone.</Typography></DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Remove</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Approver'
+        itemName={selectedRow?.approverName}
+      />
     </Box>
   );
 };
@@ -1053,37 +1037,37 @@ const ServiceLines = () => {
         )}
       </AccordionDetails>
 
-      {/* ── Service Line Form ── */}
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>{editingRow ? 'Edit Service Line' : 'New Service Line'}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            <FormControl size='small' fullWidth required>
-              <InputLabel>Business Category</InputLabel>
-              <Select label='Business Category' value={form.businessCategoryId} onChange={(e) => handleCategoryChange(e.target.value)}>
-                {businessCategories.map((cat) => <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>)}
-              </Select>
-            </FormControl>
-            <TextField label='Service Line Name' size='small' fullWidth required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
-            <TextField label='Description' size='small' fullWidth multiline minRows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
-            <TextField label='Service Line Manager' size='small' fullWidth value={form.manager} onChange={(e) => setForm((f) => ({ ...f, manager: e.target.value }))} />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.name.trim()} sx={{ textTransform: 'none', borderRadius: 2 }}>{editingRow ? 'Save Changes' : 'Add'}</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<LinearScaleIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent='#0891b2'
+        title='Service Line'
+        subtitle='Define service lines and associate them with business categories'
+        submitDisabled={!form.name.trim()}
+        submitLabel={editingRow ? 'Save Changes' : 'Add'}
+        maxWidth='sm'
+      >
+        <FormControl size='small' fullWidth required>
+          <InputLabel>Business Category</InputLabel>
+          <Select label='Business Category' value={form.businessCategoryId} onChange={(e) => handleCategoryChange(e.target.value)}>
+            {businessCategories.map((cat) => <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>)}
+          </Select>
+        </FormControl>
+        <TextField label='Service Line Name' size='small' fullWidth required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+        <TextField label='Description' size='small' fullWidth multiline minRows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+        <TextField label='Service Line Manager' size='small' fullWidth value={form.manager} onChange={(e) => setForm((f) => ({ ...f, manager: e.target.value }))} />
+      </ConfigFormDialog>
 
-      {/* ── Delete ── */}
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Service Line</DialogTitle>
-        <DialogContent><Typography variant='body2'>Delete <strong>{selectedRow?.name}</strong>? This cannot be undone.</Typography></DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Delete</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Service Line'
+        itemName={selectedRow?.name}
+      />
     </Accordion>
   );
 };
@@ -1193,31 +1177,35 @@ const AppApprovalsPanel = ({ applications, defaultApplicationId, onBack, onSave 
       <Paper elevation={1} sx={{ borderRadius: '0 0 10px 10px', overflow: 'hidden', border: '1px solid', borderColor: alpha(ACCENT_AAP, 0.25), borderTop: 'none' }}>
         <DataTable columns={columns} data={filtered} rowKey='id' searchable={false} initialRowsPerPage={10} onRowClick={(row) => setSelectedId(selectedId === row.id ? null : row.id)} activeRowKey={selectedId ?? undefined} />
       </Paper>
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>{editingRow ? 'Edit Approver' : 'New Approver'}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            {editingRow ? <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Typography variant='caption' color='text.secondary' fontWeight={600}>Application:</Typography><Chip label={editingRow.applicationName} size='small' sx={{ bgcolor: alpha(ACCENT_AAP, 0.1), color: ACCENT_AAP, fontWeight: 600, fontSize: '0.78rem' }} /></Box>
-              : <FormControl size='small' fullWidth required><InputLabel>Application</InputLabel><Select label='Application' value={form.applicationId} onChange={(e) => setForm((f) => ({ ...f, applicationId: e.target.value }))}>{applications.length === 0 ? <MenuItem disabled value=''><em>No applications</em></MenuItem> : applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}</Select></FormControl>}
-            <TextField label='Approver Name' size='small' fullWidth required value={form.approverName} onChange={(e) => setForm((f) => ({ ...f, approverName: e.target.value }))} />
-            <TextField label='Approver Role' size='small' fullWidth value={form.approverRole} onChange={(e) => setForm((f) => ({ ...f, approverRole: e.target.value }))} />
-            <TextField label='Approval Order' type='number' size='small' fullWidth value={form.approvalOrder} onChange={(e) => setForm((f) => ({ ...f, approvalOrder: Math.max(1, Number(e.target.value)) }))} slotProps={{ htmlInput: { min: 1 } }} />
-            <FormControlLabel control={<Switch checked={form.isRequired} color='success' onChange={(e) => setForm((f) => ({ ...f, isRequired: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Required</Typography>} />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.approverName.trim() || (!editingRow && !form.applicationId)} sx={{ textTransform: 'none', borderRadius: 2, bgcolor: ACCENT_AAP, '&:hover': { bgcolor: '#047857' } }}>{editingRow ? 'Save Changes' : 'Add'}</Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Remove Approver</DialogTitle>
-        <DialogContent><Typography variant='body2'>Remove <strong>{selectedRow?.approverName}</strong>? This cannot be undone.</Typography></DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Remove</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<ChecklistIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_AAP}
+        title='Approver'
+        subtitle='Add or edit an approver for an application'
+        submitDisabled={!form.approverName.trim() || (!editingRow && !form.applicationId)}
+        submitLabel={editingRow ? 'Save Changes' : 'Add'}
+        maxWidth='sm'
+      >
+        {editingRow
+          ? <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Typography variant='caption' color='text.secondary' fontWeight={600}>Application:</Typography><Chip label={editingRow.applicationName} size='small' sx={{ bgcolor: alpha(ACCENT_AAP, 0.1), color: ACCENT_AAP, fontWeight: 600, fontSize: '0.78rem' }} /></Box>
+          : <FormControl size='small' fullWidth required><InputLabel>Application</InputLabel><Select label='Application' value={form.applicationId} onChange={(e) => setForm((f) => ({ ...f, applicationId: e.target.value }))}>{applications.length === 0 ? <MenuItem disabled value=''><em>No applications</em></MenuItem> : applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}</Select></FormControl>}
+        <TextField label='Approver Name' size='small' fullWidth required value={form.approverName} onChange={(e) => setForm((f) => ({ ...f, approverName: e.target.value }))} />
+        <TextField label='Approver Role' size='small' fullWidth value={form.approverRole} onChange={(e) => setForm((f) => ({ ...f, approverRole: e.target.value }))} />
+        <TextField label='Approval Order' type='number' size='small' fullWidth value={form.approvalOrder} onChange={(e) => setForm((f) => ({ ...f, approvalOrder: Math.max(1, Number(e.target.value)) }))} slotProps={{ htmlInput: { min: 1 } }} />
+        <FormControlLabel control={<Switch checked={form.isRequired} color='success' onChange={(e) => setForm((f) => ({ ...f, isRequired: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Required</Typography>} />
+      </ConfigFormDialog>
+
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Approver'
+        itemName={selectedRow?.approverName}
+      />
     </Box>
   );
 };
@@ -1362,30 +1350,34 @@ const AppSupportLinesPanel = ({ applications, defaultApplicationId, onBack, onSa
       <Paper elevation={1} sx={{ borderRadius: '0 0 10px 10px', overflow: 'hidden', border: '1px solid', borderColor: alpha(ACCENT_ASL, 0.25), borderTop: 'none' }}>
         <DataTable columns={columns} data={filtered} rowKey='id' searchable={false} initialRowsPerPage={10} onRowClick={(row) => setSelectedId(selectedId === row.id ? null : row.id)} activeRowKey={selectedId ?? undefined} />
       </Paper>
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>{editingRow ? 'Edit Support Line / Queue' : 'New Support Line / Queue'}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            {editingRow ? <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Typography variant='caption' color='text.secondary' fontWeight={600}>Application:</Typography><Chip label={editingRow.applicationName} size='small' sx={{ bgcolor: alpha(ACCENT_ASL, 0.1), color: ACCENT_ASL, fontWeight: 600, fontSize: '0.78rem' }} /></Box>
-              : <FormControl size='small' fullWidth required><InputLabel>Application</InputLabel><Select label='Application' value={form.applicationId} onChange={(e) => setForm((f) => ({ ...f, applicationId: e.target.value }))}>{applications.length === 0 ? <MenuItem disabled value=''><em>No applications</em></MenuItem> : applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}</Select></FormControl>}
-            <TextField label='Support Line / Queue Name' size='small' fullWidth required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
-            <TextField label='Description' size='small' fullWidth multiline minRows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
-            <FormControlLabel control={<Switch checked={form.isActive} color='success' onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Active</Typography>} />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.name.trim() || (!editingRow && !form.applicationId)} sx={{ textTransform: 'none', borderRadius: 2, bgcolor: ACCENT_ASL, '&:hover': { bgcolor: '#0369a1' } }}>{editingRow ? 'Save Changes' : 'Add'}</Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Support Line</DialogTitle>
-        <DialogContent><Typography variant='body2'>Delete <strong>{selectedRow?.name}</strong>? This cannot be undone.</Typography></DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Delete</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<HeadsetMicIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_ASL}
+        title='Support Line / Queue'
+        subtitle='Add or edit an application-specific support line or queue'
+        submitDisabled={!form.name.trim() || (!editingRow && !form.applicationId)}
+        submitLabel={editingRow ? 'Save Changes' : 'Add'}
+        maxWidth='sm'
+      >
+        {editingRow
+          ? <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Typography variant='caption' color='text.secondary' fontWeight={600}>Application:</Typography><Chip label={editingRow.applicationName} size='small' sx={{ bgcolor: alpha(ACCENT_ASL, 0.1), color: ACCENT_ASL, fontWeight: 600, fontSize: '0.78rem' }} /></Box>
+          : <FormControl size='small' fullWidth required><InputLabel>Application</InputLabel><Select label='Application' value={form.applicationId} onChange={(e) => setForm((f) => ({ ...f, applicationId: e.target.value }))}>{applications.length === 0 ? <MenuItem disabled value=''><em>No applications</em></MenuItem> : applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}</Select></FormControl>}
+        <TextField label='Support Line / Queue Name' size='small' fullWidth required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+        <TextField label='Description' size='small' fullWidth multiline minRows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+        <FormControlLabel control={<Switch checked={form.isActive} color='success' onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Active</Typography>} />
+      </ConfigFormDialog>
+
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Support Line'
+        itemName={selectedRow?.name}
+      />
     </Box>
   );
 };
@@ -1468,30 +1460,34 @@ const AppBillingCodesPanel = ({ applications, defaultApplicationId, onBack, onSa
       <Paper elevation={1} sx={{ borderRadius: '0 0 10px 10px', overflow: 'hidden', border: '1px solid', borderColor: alpha(ACCENT_ABC, 0.25), borderTop: 'none' }}>
         <DataTable columns={columns} data={filtered} rowKey='id' searchable={false} initialRowsPerPage={10} onRowClick={(row) => setSelectedId(selectedId === row.id ? null : row.id)} activeRowKey={selectedId ?? undefined} />
       </Paper>
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>{editingRow ? 'Edit Billing Code' : 'New Billing Code'}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            {editingRow ? <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Typography variant='caption' color='text.secondary' fontWeight={600}>Application:</Typography><Chip label={editingRow.applicationName} size='small' sx={{ bgcolor: alpha(ACCENT_ABC, 0.1), color: ACCENT_ABC, fontWeight: 600, fontSize: '0.78rem' }} /></Box>
-              : <FormControl size='small' fullWidth required><InputLabel>Application</InputLabel><Select label='Application' value={form.applicationId} onChange={(e) => setForm((f) => ({ ...f, applicationId: e.target.value }))}>{applications.length === 0 ? <MenuItem disabled value=''><em>No applications</em></MenuItem> : applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}</Select></FormControl>}
-            <TextField label='Billing Code' size='small' fullWidth required value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))} />
-            <TextField label='Description' size='small' fullWidth multiline minRows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
-            <FormControlLabel control={<Switch checked={form.isActive} color='success' onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Active</Typography>} />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.code.trim() || (!editingRow && !form.applicationId)} sx={{ textTransform: 'none', borderRadius: 2, bgcolor: ACCENT_ABC, '&:hover': { bgcolor: '#0d6460' } }}>{editingRow ? 'Save Changes' : 'Add'}</Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Billing Code</DialogTitle>
-        <DialogContent><Typography variant='body2'>Delete <strong>{selectedRow?.code}</strong>? This cannot be undone.</Typography></DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Delete</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<CodeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_ABC}
+        title='Billing Code'
+        subtitle='Add or edit an application-specific time entry billing code'
+        submitDisabled={!form.code.trim() || (!editingRow && !form.applicationId)}
+        submitLabel={editingRow ? 'Save Changes' : 'Add'}
+        maxWidth='sm'
+      >
+        {editingRow
+          ? <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Typography variant='caption' color='text.secondary' fontWeight={600}>Application:</Typography><Chip label={editingRow.applicationName} size='small' sx={{ bgcolor: alpha(ACCENT_ABC, 0.1), color: ACCENT_ABC, fontWeight: 600, fontSize: '0.78rem' }} /></Box>
+          : <FormControl size='small' fullWidth required><InputLabel>Application</InputLabel><Select label='Application' value={form.applicationId} onChange={(e) => setForm((f) => ({ ...f, applicationId: e.target.value }))}>{applications.length === 0 ? <MenuItem disabled value=''><em>No applications</em></MenuItem> : applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}</Select></FormControl>}
+        <TextField label='Billing Code' size='small' fullWidth required value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))} />
+        <TextField label='Description' size='small' fullWidth multiline minRows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+        <FormControlLabel control={<Switch checked={form.isActive} color='success' onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Active</Typography>} />
+      </ConfigFormDialog>
+
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Billing Code'
+        itemName={selectedRow?.code}
+      />
     </Box>
   );
 };
@@ -1576,34 +1572,38 @@ const AppTimesheetPanel = ({ applications, defaultApplicationId, onBack, onSave 
       <Paper elevation={1} sx={{ borderRadius: '0 0 10px 10px', overflow: 'hidden', border: '1px solid', borderColor: alpha(ACCENT_ATS, 0.25), borderTop: 'none' }}>
         <DataTable columns={columns} data={filtered} rowKey='id' searchable={false} initialRowsPerPage={10} onRowClick={(row) => setSelectedId(selectedId === row.id ? null : row.id)} activeRowKey={selectedId ?? undefined} />
       </Paper>
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>{editingRow ? 'Edit Timesheet Project' : 'New Timesheet Project'}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            {editingRow ? <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Typography variant='caption' color='text.secondary' fontWeight={600}>Application:</Typography><Chip label={editingRow.applicationName} size='small' sx={{ bgcolor: alpha(ACCENT_ATS, 0.1), color: ACCENT_ATS, fontWeight: 600, fontSize: '0.78rem' }} /></Box>
-              : <FormControl size='small' fullWidth required><InputLabel>Application</InputLabel><Select label='Application' value={form.applicationId} onChange={(e) => setForm((f) => ({ ...f, applicationId: e.target.value }))}>{applications.length === 0 ? <MenuItem disabled value=''><em>No applications</em></MenuItem> : applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}</Select></FormControl>}
-            <TextField label='Project' size='small' fullWidth required value={form.project} onChange={(e) => setForm((f) => ({ ...f, project: e.target.value }))} />
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField label='From Date' type='date' size='small' fullWidth value={form.fromDate} onChange={(e) => setForm((f) => ({ ...f, fromDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
-              <TextField label='To Date' type='date' size='small' fullWidth value={form.toDate} onChange={(e) => setForm((f) => ({ ...f, toDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
-            </Box>
-            <TextField label='Max Hours Allowed Per Day Per Resource' type='number' size='small' fullWidth value={form.maxHoursPerDayPerResource} onChange={(e) => setForm((f) => ({ ...f, maxHoursPerDayPerResource: Math.max(0, Number(e.target.value)) }))} slotProps={{ htmlInput: { min: 0, max: 24, step: 0.5 } }} />
-            <FormControlLabel control={<Switch checked={form.activate} color='success' onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>} />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.project.trim() || (!editingRow && !form.applicationId)} sx={{ textTransform: 'none', borderRadius: 2, bgcolor: ACCENT_ATS, '&:hover': { bgcolor: '#0e7490' } }}>{editingRow ? 'Save Changes' : 'Add Project'}</Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Timesheet Project</DialogTitle>
-        <DialogContent><Typography variant='body2'>Delete <strong>{selectedRow?.project}</strong>? This cannot be undone.</Typography></DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Delete</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<AccessTimeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_ATS}
+        title='Timesheet Project'
+        subtitle='Add or edit an application-specific timesheet project'
+        submitDisabled={!form.project.trim() || (!editingRow && !form.applicationId)}
+        submitLabel={editingRow ? 'Save Changes' : 'Add Project'}
+        maxWidth='sm'
+      >
+        {editingRow
+          ? <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Typography variant='caption' color='text.secondary' fontWeight={600}>Application:</Typography><Chip label={editingRow.applicationName} size='small' sx={{ bgcolor: alpha(ACCENT_ATS, 0.1), color: ACCENT_ATS, fontWeight: 600, fontSize: '0.78rem' }} /></Box>
+          : <FormControl size='small' fullWidth required><InputLabel>Application</InputLabel><Select label='Application' value={form.applicationId} onChange={(e) => setForm((f) => ({ ...f, applicationId: e.target.value }))}>{applications.length === 0 ? <MenuItem disabled value=''><em>No applications</em></MenuItem> : applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}</Select></FormControl>}
+        <TextField label='Project' size='small' fullWidth required value={form.project} onChange={(e) => setForm((f) => ({ ...f, project: e.target.value }))} />
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TextField label='From Date' type='date' size='small' fullWidth value={form.fromDate} onChange={(e) => setForm((f) => ({ ...f, fromDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
+          <TextField label='To Date' type='date' size='small' fullWidth value={form.toDate} onChange={(e) => setForm((f) => ({ ...f, toDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
+        </Box>
+        <TextField label='Max Hours Allowed Per Day Per Resource' type='number' size='small' fullWidth value={form.maxHoursPerDayPerResource} onChange={(e) => setForm((f) => ({ ...f, maxHoursPerDayPerResource: Math.max(0, Number(e.target.value)) }))} slotProps={{ htmlInput: { min: 0, max: 24, step: 0.5 } }} />
+        <FormControlLabel control={<Switch checked={form.activate} color='success' onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>} />
+      </ConfigFormDialog>
+
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Timesheet Project'
+        itemName={selectedRow?.project}
+      />
     </Box>
   );
 };
@@ -1727,34 +1727,38 @@ const AppExpensePanel = ({ applications, defaultApplicationId, onBack, onSave }:
       <Paper elevation={1} sx={{ borderRadius: '0 0 10px 10px', overflow: 'hidden', border: '1px solid', borderColor: alpha(ACCENT_AEX, 0.25), borderTop: 'none' }}>
         <DataTable columns={columns} data={filtered} rowKey='id' searchable={false} initialRowsPerPage={10} onRowClick={(row) => setSelectedId(selectedId === row.id ? null : row.id)} activeRowKey={selectedId ?? undefined} />
       </Paper>
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>{editingRow ? 'Edit Expense Project' : 'New Expense Project'}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            {editingRow ? <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Typography variant='caption' color='text.secondary' fontWeight={600}>Application:</Typography><Chip label={editingRow.applicationName} size='small' sx={{ bgcolor: alpha(ACCENT_AEX, 0.1), color: ACCENT_AEX, fontWeight: 600, fontSize: '0.78rem' }} /></Box>
-              : <FormControl size='small' fullWidth required><InputLabel>Application</InputLabel><Select label='Application' value={form.applicationId} onChange={(e) => setForm((f) => ({ ...f, applicationId: e.target.value }))}>{applications.length === 0 ? <MenuItem disabled value=''><em>No applications</em></MenuItem> : applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}</Select></FormControl>}
-            <TextField label='Expenses Project' size='small' fullWidth required value={form.project} onChange={(e) => setForm((f) => ({ ...f, project: e.target.value }))} />
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField label='From Date' type='date' size='small' fullWidth value={form.fromDate} onChange={(e) => setForm((f) => ({ ...f, fromDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
-              <TextField label='To Date' type='date' size='small' fullWidth value={form.toDate} onChange={(e) => setForm((f) => ({ ...f, toDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
-            </Box>
-            <TextField label='Max Amount Allowed Per Day Per Resource ($)' type='number' size='small' fullWidth value={form.maxAmountPerDay} onChange={(e) => setForm((f) => ({ ...f, maxAmountPerDay: Math.max(0, Number(e.target.value)) }))} slotProps={{ htmlInput: { min: 0, step: 0.01 } }} />
-            <FormControlLabel control={<Switch checked={form.activate} color='success' onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>} />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.project.trim() || (!editingRow && !form.applicationId)} sx={{ textTransform: 'none', borderRadius: 2, bgcolor: ACCENT_AEX, '&:hover': { bgcolor: '#6d28d9' } }}>{editingRow ? 'Save Changes' : 'Add Project'}</Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Expense Project</DialogTitle>
-        <DialogContent><Typography variant='body2'>Delete <strong>{selectedRow?.project}</strong>? This cannot be undone.</Typography></DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Delete</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<ReceiptLongIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_AEX}
+        title='Expense Project'
+        subtitle='Add or edit an application-specific expense project'
+        submitDisabled={!form.project.trim() || (!editingRow && !form.applicationId)}
+        submitLabel={editingRow ? 'Save Changes' : 'Add Project'}
+        maxWidth='sm'
+      >
+        {editingRow
+          ? <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Typography variant='caption' color='text.secondary' fontWeight={600}>Application:</Typography><Chip label={editingRow.applicationName} size='small' sx={{ bgcolor: alpha(ACCENT_AEX, 0.1), color: ACCENT_AEX, fontWeight: 600, fontSize: '0.78rem' }} /></Box>
+          : <FormControl size='small' fullWidth required><InputLabel>Application</InputLabel><Select label='Application' value={form.applicationId} onChange={(e) => setForm((f) => ({ ...f, applicationId: e.target.value }))}>{applications.length === 0 ? <MenuItem disabled value=''><em>No applications</em></MenuItem> : applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}</Select></FormControl>}
+        <TextField label='Expenses Project' size='small' fullWidth required value={form.project} onChange={(e) => setForm((f) => ({ ...f, project: e.target.value }))} />
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TextField label='From Date' type='date' size='small' fullWidth value={form.fromDate} onChange={(e) => setForm((f) => ({ ...f, fromDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
+          <TextField label='To Date' type='date' size='small' fullWidth value={form.toDate} onChange={(e) => setForm((f) => ({ ...f, toDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
+        </Box>
+        <TextField label='Max Amount Allowed Per Day Per Resource ($)' type='number' size='small' fullWidth value={form.maxAmountPerDay} onChange={(e) => setForm((f) => ({ ...f, maxAmountPerDay: Math.max(0, Number(e.target.value)) }))} slotProps={{ htmlInput: { min: 0, step: 0.01 } }} />
+        <FormControlLabel control={<Switch checked={form.activate} color='success' onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>} />
+      </ConfigFormDialog>
+
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Expense Project'
+        itemName={selectedRow?.project}
+      />
     </Box>
   );
 };
@@ -1894,40 +1898,40 @@ const Applications = () => {
         {activePanel === 'expenses' && <AppExpensePanel applications={rows} defaultApplicationId={selectedId} onBack={() => setActivePanel('none')} onSave={handleSubPanelSave} />}
       </AccordionDetails>
 
-      {/* ── New / Edit Application dialog ── */}
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>{editingRow ? 'Edit Application' : 'New Application'}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            <FormControl size='small' fullWidth required>
-              <InputLabel>Service Line</InputLabel>
-              <Select label='Service Line' value={form.serviceLineId} onChange={(e) => handleServiceLineChange(e.target.value)}>
-                {serviceLines.map((sl) => <MenuItem key={sl.id} value={sl.id}>{sl.name}</MenuItem>)}
-              </Select>
-            </FormControl>
-            <TextField label='Application Name' size='small' fullWidth required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
-            <TextField label='Description' size='small' fullWidth multiline minRows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
-            <TextField label='Application Lead' size='small' fullWidth value={form.applicationLead} onChange={(e) => setForm((f) => ({ ...f, applicationLead: e.target.value }))} />
-            <TextField label='Manager Level 1' size='small' fullWidth value={form.managerLevel1} onChange={(e) => setForm((f) => ({ ...f, managerLevel1: e.target.value }))} />
-            <TextField label='Manager Level 2' size='small' fullWidth value={form.managerLevel2} onChange={(e) => setForm((f) => ({ ...f, managerLevel2: e.target.value }))} />
-            <FormControlLabel control={<Switch checked={form.enableSupportLevels} color='success' onChange={(e) => setForm((f) => ({ ...f, enableSupportLevels: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Enable Support Levels / Queues</Typography>} />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.name.trim()} sx={{ textTransform: 'none', borderRadius: 2 }}>{editingRow ? 'Save Changes' : 'Add'}</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<AppsIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent='#7c3aed'
+        title='Application'
+        subtitle='Manage applications linked to service lines and configure their specific settings'
+        submitDisabled={!form.name.trim()}
+        submitLabel={editingRow ? 'Save Changes' : 'Add'}
+        maxWidth='sm'
+      >
+        <FormControl size='small' fullWidth required>
+          <InputLabel>Service Line</InputLabel>
+          <Select label='Service Line' value={form.serviceLineId} onChange={(e) => handleServiceLineChange(e.target.value)}>
+            {serviceLines.map((sl) => <MenuItem key={sl.id} value={sl.id}>{sl.name}</MenuItem>)}
+          </Select>
+        </FormControl>
+        <TextField label='Application Name' size='small' fullWidth required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+        <TextField label='Description' size='small' fullWidth multiline minRows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+        <TextField label='Application Lead' size='small' fullWidth value={form.applicationLead} onChange={(e) => setForm((f) => ({ ...f, applicationLead: e.target.value }))} />
+        <TextField label='Manager Level 1' size='small' fullWidth value={form.managerLevel1} onChange={(e) => setForm((f) => ({ ...f, managerLevel1: e.target.value }))} />
+        <TextField label='Manager Level 2' size='small' fullWidth value={form.managerLevel2} onChange={(e) => setForm((f) => ({ ...f, managerLevel2: e.target.value }))} />
+        <FormControlLabel control={<Switch checked={form.enableSupportLevels} color='success' onChange={(e) => setForm((f) => ({ ...f, enableSupportLevels: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Enable Support Levels / Queues</Typography>} />
+      </ConfigFormDialog>
 
-      {/* ── Delete ── */}
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Application</DialogTitle>
-        <DialogContent><Typography variant='body2'>Delete <strong>{selectedRow?.name}</strong>? This cannot be undone.</Typography></DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Delete</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Application'
+        itemName={selectedRow?.name}
+      />
     </Accordion>
   );
 };
@@ -2015,33 +2019,36 @@ const QueueApprovalsPanel = ({ queues, defaultQueueId, onBack, onSave }: QueueAp
       <Paper elevation={1} sx={{ borderRadius: '0 0 10px 10px', overflow: 'hidden', border: '1px solid', borderColor: alpha(ACCENT_QAP, 0.25), borderTop: 'none' }}>
         <DataTable columns={columns} data={filtered} rowKey='id' searchable={false} initialRowsPerPage={10} onRowClick={(row) => setSelectedId(selectedId === row.id ? null : row.id)} activeRowKey={selectedId ?? undefined} />
       </Paper>
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>{editingRow ? 'Edit Queue Approver' : 'New Queue Approver'}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            {editingRow
-              ? <Chip label={editingRow.queueName} size='small' sx={{ bgcolor: alpha(ACCENT_QAP, 0.1), color: ACCENT_QAP, fontWeight: 600, alignSelf: 'flex-start' }} />
-              : <FormControl size='small' fullWidth required><InputLabel>Queue</InputLabel><Select label='Queue' value={form.queueId} onChange={(e) => setForm((f) => ({ ...f, queueId: e.target.value }))}>{queues.length === 0 ? <MenuItem disabled value=''><em>No queues</em></MenuItem> : queues.map((q) => <MenuItem key={q.id} value={q.id}>{q.name}</MenuItem>)}</Select></FormControl>
-            }
-            <TextField label='Approver Name' size='small' fullWidth required value={form.approverName} onChange={(e) => setForm((f) => ({ ...f, approverName: e.target.value }))} />
-            <TextField label='Approver Role' size='small' fullWidth value={form.approverRole} onChange={(e) => setForm((f) => ({ ...f, approverRole: e.target.value }))} />
-            <TextField label='Approval Order' type='number' size='small' fullWidth value={form.approvalOrder} onChange={(e) => setForm((f) => ({ ...f, approvalOrder: Math.max(1, Number(e.target.value)) }))} slotProps={{ htmlInput: { min: 1 } }} />
-            <FormControlLabel control={<Switch checked={form.isRequired} color='success' onChange={(e) => setForm((f) => ({ ...f, isRequired: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Required</Typography>} />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.approverName.trim() || !form.queueId} sx={{ textTransform: 'none', borderRadius: 2, bgcolor: ACCENT_QAP, '&:hover': { bgcolor: '#b45309' } }}>{editingRow ? 'Save Changes' : 'Add Approver'}</Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Queue Approver</DialogTitle>
-        <DialogContent><Typography variant='body2'>Delete <strong>{selectedRow?.approverName}</strong>? This cannot be undone.</Typography></DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Delete</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<ChecklistIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_QAP}
+        title='Queue Approver'
+        subtitle='Add or edit an approver for a queue'
+        submitDisabled={!form.approverName.trim() || !form.queueId}
+        submitLabel={editingRow ? 'Save Changes' : 'Add Approver'}
+        maxWidth='sm'
+      >
+        {editingRow
+          ? <Chip label={editingRow.queueName} size='small' sx={{ bgcolor: alpha(ACCENT_QAP, 0.1), color: ACCENT_QAP, fontWeight: 600, alignSelf: 'flex-start' }} />
+          : <FormControl size='small' fullWidth required><InputLabel>Queue</InputLabel><Select label='Queue' value={form.queueId} onChange={(e) => setForm((f) => ({ ...f, queueId: e.target.value }))}>{queues.length === 0 ? <MenuItem disabled value=''><em>No queues</em></MenuItem> : queues.map((q) => <MenuItem key={q.id} value={q.id}>{q.name}</MenuItem>)}</Select></FormControl>
+        }
+        <TextField label='Approver Name' size='small' fullWidth required value={form.approverName} onChange={(e) => setForm((f) => ({ ...f, approverName: e.target.value }))} />
+        <TextField label='Approver Role' size='small' fullWidth value={form.approverRole} onChange={(e) => setForm((f) => ({ ...f, approverRole: e.target.value }))} />
+        <TextField label='Approval Order' type='number' size='small' fullWidth value={form.approvalOrder} onChange={(e) => setForm((f) => ({ ...f, approvalOrder: Math.max(1, Number(e.target.value)) }))} slotProps={{ htmlInput: { min: 1 } }} />
+        <FormControlLabel control={<Switch checked={form.isRequired} color='success' onChange={(e) => setForm((f) => ({ ...f, isRequired: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Required</Typography>} />
+      </ConfigFormDialog>
+
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Queue Approver'
+        itemName={selectedRow?.approverName}
+      />
     </Box>
   );
 };
@@ -2184,34 +2191,38 @@ const QueueTimesheetPanel = ({ queues, defaultQueueId, onBack, onSave }: QueueTi
       <Paper elevation={1} sx={{ borderRadius: '0 0 10px 10px', overflow: 'hidden', border: '1px solid', borderColor: alpha(ACCENT_QTS, 0.25), borderTop: 'none' }}>
         <DataTable columns={columns} data={filtered} rowKey='id' searchable={false} initialRowsPerPage={10} onRowClick={(row) => setSelectedId(selectedId === row.id ? null : row.id)} activeRowKey={selectedId ?? undefined} />
       </Paper>
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>{editingRow ? 'Edit Timesheet Project' : 'New Timesheet Project'}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            {editingRow ? <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Typography variant='caption' color='text.secondary' fontWeight={600}>Queue:</Typography><Chip label={editingRow.queueName} size='small' sx={{ bgcolor: alpha(ACCENT_QTS, 0.1), color: ACCENT_QTS, fontWeight: 600, fontSize: '0.78rem' }} /></Box>
-              : <FormControl size='small' fullWidth required><InputLabel>Queue</InputLabel><Select label='Queue' value={form.queueId} onChange={(e) => setForm((f) => ({ ...f, queueId: e.target.value }))}>{queues.length === 0 ? <MenuItem disabled value=''><em>No queues</em></MenuItem> : queues.map((q) => <MenuItem key={q.id} value={q.id}>{q.name}</MenuItem>)}</Select></FormControl>}
-            <TextField label='Timesheet Project' size='small' fullWidth required value={form.project} onChange={(e) => setForm((f) => ({ ...f, project: e.target.value }))} />
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField label='From Date' type='date' size='small' fullWidth value={form.fromDate} onChange={(e) => setForm((f) => ({ ...f, fromDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
-              <TextField label='To Date' type='date' size='small' fullWidth value={form.toDate} onChange={(e) => setForm((f) => ({ ...f, toDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
-            </Box>
-            <TextField label='Max Hours Per Day Per Resource' type='number' size='small' fullWidth value={form.maxHoursPerDayPerResource} onChange={(e) => setForm((f) => ({ ...f, maxHoursPerDayPerResource: Math.max(0, Number(e.target.value)) }))} slotProps={{ htmlInput: { min: 0, step: 0.5 } }} />
-            <FormControlLabel control={<Switch checked={form.activate} color='success' onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>} />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.project.trim() || (!editingRow && !form.queueId)} sx={{ textTransform: 'none', borderRadius: 2, bgcolor: ACCENT_QTS, '&:hover': { bgcolor: '#0f5e56' } }}>{editingRow ? 'Save Changes' : 'Add Project'}</Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Timesheet Project</DialogTitle>
-        <DialogContent><Typography variant='body2'>Delete <strong>{selectedRow?.project}</strong>? This cannot be undone.</Typography></DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Delete</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<AccessTimeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_QTS}
+        title='Timesheet Project'
+        subtitle='Add or edit a queue-specific timesheet project'
+        submitDisabled={!form.project.trim() || (!editingRow && !form.queueId)}
+        submitLabel={editingRow ? 'Save Changes' : 'Add Project'}
+        maxWidth='sm'
+      >
+        {editingRow
+          ? <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Typography variant='caption' color='text.secondary' fontWeight={600}>Queue:</Typography><Chip label={editingRow.queueName} size='small' sx={{ bgcolor: alpha(ACCENT_QTS, 0.1), color: ACCENT_QTS, fontWeight: 600, fontSize: '0.78rem' }} /></Box>
+          : <FormControl size='small' fullWidth required><InputLabel>Queue</InputLabel><Select label='Queue' value={form.queueId} onChange={(e) => setForm((f) => ({ ...f, queueId: e.target.value }))}>{queues.length === 0 ? <MenuItem disabled value=''><em>No queues</em></MenuItem> : queues.map((q) => <MenuItem key={q.id} value={q.id}>{q.name}</MenuItem>)}</Select></FormControl>}
+        <TextField label='Timesheet Project' size='small' fullWidth required value={form.project} onChange={(e) => setForm((f) => ({ ...f, project: e.target.value }))} />
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TextField label='From Date' type='date' size='small' fullWidth value={form.fromDate} onChange={(e) => setForm((f) => ({ ...f, fromDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
+          <TextField label='To Date' type='date' size='small' fullWidth value={form.toDate} onChange={(e) => setForm((f) => ({ ...f, toDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
+        </Box>
+        <TextField label='Max Hours Per Day Per Resource' type='number' size='small' fullWidth value={form.maxHoursPerDayPerResource} onChange={(e) => setForm((f) => ({ ...f, maxHoursPerDayPerResource: Math.max(0, Number(e.target.value)) }))} slotProps={{ htmlInput: { min: 0, step: 0.5 } }} />
+        <FormControlLabel control={<Switch checked={form.activate} color='success' onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>} />
+      </ConfigFormDialog>
+
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Timesheet Project'
+        itemName={selectedRow?.project}
+      />
     </Box>
   );
 };
@@ -2292,34 +2303,38 @@ const QueueExpensesPanel = ({ queues, defaultQueueId, onBack, onSave }: QueueExp
       <Paper elevation={1} sx={{ borderRadius: '0 0 10px 10px', overflow: 'hidden', border: '1px solid', borderColor: alpha(ACCENT_QEX, 0.25), borderTop: 'none' }}>
         <DataTable columns={columns} data={filtered} rowKey='id' searchable={false} initialRowsPerPage={10} onRowClick={(row) => setSelectedId(selectedId === row.id ? null : row.id)} activeRowKey={selectedId ?? undefined} />
       </Paper>
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>{editingRow ? 'Edit Expense Project' : 'New Expense Project'}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            {editingRow ? <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Typography variant='caption' color='text.secondary' fontWeight={600}>Queue:</Typography><Chip label={editingRow.queueName} size='small' sx={{ bgcolor: alpha(ACCENT_QEX, 0.1), color: ACCENT_QEX, fontWeight: 600, fontSize: '0.78rem' }} /></Box>
-              : <FormControl size='small' fullWidth required><InputLabel>Queue</InputLabel><Select label='Queue' value={form.queueId} onChange={(e) => setForm((f) => ({ ...f, queueId: e.target.value }))}>{queues.length === 0 ? <MenuItem disabled value=''><em>No queues</em></MenuItem> : queues.map((q) => <MenuItem key={q.id} value={q.id}>{q.name}</MenuItem>)}</Select></FormControl>}
-            <TextField label='Expenses Project' size='small' fullWidth required value={form.project} onChange={(e) => setForm((f) => ({ ...f, project: e.target.value }))} />
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField label='From Date' type='date' size='small' fullWidth value={form.fromDate} onChange={(e) => setForm((f) => ({ ...f, fromDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
-              <TextField label='To Date' type='date' size='small' fullWidth value={form.toDate} onChange={(e) => setForm((f) => ({ ...f, toDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
-            </Box>
-            <TextField label='Max Amount Allowed Per Day Per Resource ($)' type='number' size='small' fullWidth value={form.maxAmountPerDay} onChange={(e) => setForm((f) => ({ ...f, maxAmountPerDay: Math.max(0, Number(e.target.value)) }))} slotProps={{ htmlInput: { min: 0, step: 0.01 } }} />
-            <FormControlLabel control={<Switch checked={form.activate} color='success' onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>} />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.project.trim() || (!editingRow && !form.queueId)} sx={{ textTransform: 'none', borderRadius: 2, bgcolor: ACCENT_QEX, '&:hover': { bgcolor: '#6d28d9' } }}>{editingRow ? 'Save Changes' : 'Add Project'}</Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Expense Project</DialogTitle>
-        <DialogContent><Typography variant='body2'>Delete <strong>{selectedRow?.project}</strong>? This cannot be undone.</Typography></DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Delete</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<ReceiptLongIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_QEX}
+        title='Expense Project'
+        subtitle='Add or edit a queue-specific expense project'
+        submitDisabled={!form.project.trim() || (!editingRow && !form.queueId)}
+        submitLabel={editingRow ? 'Save Changes' : 'Add Project'}
+        maxWidth='sm'
+      >
+        {editingRow
+          ? <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Typography variant='caption' color='text.secondary' fontWeight={600}>Queue:</Typography><Chip label={editingRow.queueName} size='small' sx={{ bgcolor: alpha(ACCENT_QEX, 0.1), color: ACCENT_QEX, fontWeight: 600, fontSize: '0.78rem' }} /></Box>
+          : <FormControl size='small' fullWidth required><InputLabel>Queue</InputLabel><Select label='Queue' value={form.queueId} onChange={(e) => setForm((f) => ({ ...f, queueId: e.target.value }))}>{queues.length === 0 ? <MenuItem disabled value=''><em>No queues</em></MenuItem> : queues.map((q) => <MenuItem key={q.id} value={q.id}>{q.name}</MenuItem>)}</Select></FormControl>}
+        <TextField label='Expenses Project' size='small' fullWidth required value={form.project} onChange={(e) => setForm((f) => ({ ...f, project: e.target.value }))} />
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TextField label='From Date' type='date' size='small' fullWidth value={form.fromDate} onChange={(e) => setForm((f) => ({ ...f, fromDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
+          <TextField label='To Date' type='date' size='small' fullWidth value={form.toDate} onChange={(e) => setForm((f) => ({ ...f, toDate: e.target.value }))} slotProps={{ inputLabel: { shrink: true } }} />
+        </Box>
+        <TextField label='Max Amount Allowed Per Day Per Resource ($)' type='number' size='small' fullWidth value={form.maxAmountPerDay} onChange={(e) => setForm((f) => ({ ...f, maxAmountPerDay: Math.max(0, Number(e.target.value)) }))} slotProps={{ htmlInput: { min: 0, step: 0.01 } }} />
+        <FormControlLabel control={<Switch checked={form.activate} color='success' onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))} />} label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>} />
+      </ConfigFormDialog>
+
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Expense Project'
+        itemName={selectedRow?.project}
+      />
     </Box>
   );
 };
@@ -2451,41 +2466,43 @@ const ApplicationQueues = () => {
         )}
       </AccordionDetails>
 
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>{editingRow ? 'Edit Application Queue' : 'New Application Queue'}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            {editingRow
-              ? <TextField label='Application' size='small' fullWidth value={form.applicationName} disabled />
-              : <FormControl size='small' fullWidth required><InputLabel>Application</InputLabel><Select label='Application' value={form.applicationId} onChange={(e) => handleApplicationChange(e.target.value)}>{applications.length === 0 ? <MenuItem disabled value=''><em>No applications</em></MenuItem> : applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}</Select></FormControl>
-            }
-            <TextField label='Queue Name' size='small' fullWidth required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
-            <TextField label='Description' size='small' fullWidth multiline minRows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField label='Predecessor' size='small' fullWidth value={form.predecessor} onChange={(e) => setForm((f) => ({ ...f, predecessor: e.target.value }))} />
-              <TextField label='Successor' size='small' fullWidth value={form.successor} onChange={(e) => setForm((f) => ({ ...f, successor: e.target.value }))} />
-            </Box>
-            <TextField label='Queue Specific Lead' size='small' fullWidth value={form.queueSpecificLead} onChange={(e) => setForm((f) => ({ ...f, queueSpecificLead: e.target.value }))} />
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField label='Manager Level 1' size='small' fullWidth value={form.managerLevel1} onChange={(e) => setForm((f) => ({ ...f, managerLevel1: e.target.value }))} />
-              <TextField label='Manager Level 2' size='small' fullWidth value={form.managerLevel2} onChange={(e) => setForm((f) => ({ ...f, managerLevel2: e.target.value }))} />
-            </Box>
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.name.trim()} sx={{ textTransform: 'none', borderRadius: 2 }}>{editingRow ? 'Save Changes' : 'Add'}</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<HeadsetMicIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent='#d97706'
+        title='Application Queue'
+        subtitle='Manage application queues and configure their routing settings'
+        submitDisabled={!form.name.trim()}
+        submitLabel={editingRow ? 'Save Changes' : 'Add'}
+        maxWidth='sm'
+      >
+        {editingRow
+          ? <TextField label='Application' size='small' fullWidth value={form.applicationName} disabled />
+          : <FormControl size='small' fullWidth required><InputLabel>Application</InputLabel><Select label='Application' value={form.applicationId} onChange={(e) => handleApplicationChange(e.target.value)}>{applications.length === 0 ? <MenuItem disabled value=''><em>No applications</em></MenuItem> : applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}</Select></FormControl>
+        }
+        <TextField label='Queue Name' size='small' fullWidth required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+        <TextField label='Description' size='small' fullWidth multiline minRows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TextField label='Predecessor' size='small' fullWidth value={form.predecessor} onChange={(e) => setForm((f) => ({ ...f, predecessor: e.target.value }))} />
+          <TextField label='Successor' size='small' fullWidth value={form.successor} onChange={(e) => setForm((f) => ({ ...f, successor: e.target.value }))} />
+        </Box>
+        <TextField label='Queue Specific Lead' size='small' fullWidth value={form.queueSpecificLead} onChange={(e) => setForm((f) => ({ ...f, queueSpecificLead: e.target.value }))} />
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TextField label='Manager Level 1' size='small' fullWidth value={form.managerLevel1} onChange={(e) => setForm((f) => ({ ...f, managerLevel1: e.target.value }))} />
+          <TextField label='Manager Level 2' size='small' fullWidth value={form.managerLevel2} onChange={(e) => setForm((f) => ({ ...f, managerLevel2: e.target.value }))} />
+        </Box>
+      </ConfigFormDialog>
 
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Application Queue</DialogTitle>
-        <DialogContent><Typography variant='body2'>Delete <strong>{selectedRow?.name}</strong>? This cannot be undone.</Typography></DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Delete</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Application Queue'
+        itemName={selectedRow?.name}
+      />
     </Accordion>
   );
 };
@@ -2589,38 +2606,40 @@ const ApplicationCategories = () => {
         </Paper>
       </AccordionDetails>
 
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>{editingRow ? 'Edit Application Category' : 'New Application Category'}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            {editingRow ? (
-              <TextField label='Application' size='small' fullWidth value={form.applicationName} disabled />
-            ) : (
-              <FormControl size='small' fullWidth required>
-                <InputLabel>Application</InputLabel>
-                <Select label='Application' value={form.applicationId} onChange={(e) => handleApplicationChange(e.target.value)}>
-                  {applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}
-                </Select>
-              </FormControl>
-            )}
-            <TextField label='Application Category' size='small' fullWidth required value={form.categoryName} onChange={(e) => setForm((f) => ({ ...f, categoryName: e.target.value }))} />
-            <TextField label='Description' size='small' fullWidth multiline minRows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.categoryName.trim()} sx={{ textTransform: 'none', borderRadius: 2 }}>{editingRow ? 'Save Changes' : 'Add'}</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<CategoryIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent='#0891b2'
+        title='Application Category'
+        subtitle='Manage categories assigned to applications'
+        submitDisabled={!form.categoryName.trim()}
+        submitLabel={editingRow ? 'Save Changes' : 'Add'}
+        maxWidth='sm'
+      >
+        {editingRow ? (
+          <TextField label='Application' size='small' fullWidth value={form.applicationName} disabled />
+        ) : (
+          <FormControl size='small' fullWidth required>
+            <InputLabel>Application</InputLabel>
+            <Select label='Application' value={form.applicationId} onChange={(e) => handleApplicationChange(e.target.value)}>
+              {applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}
+            </Select>
+          </FormControl>
+        )}
+        <TextField label='Application Category' size='small' fullWidth required value={form.categoryName} onChange={(e) => setForm((f) => ({ ...f, categoryName: e.target.value }))} />
+        <TextField label='Description' size='small' fullWidth multiline minRows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+      </ConfigFormDialog>
 
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Application Category</DialogTitle>
-        <DialogContent><Typography variant='body2'>Are you sure you want to delete <strong>{selectedRow?.categoryName}</strong>? This action cannot be undone.</Typography></DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Delete</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Application Category'
+        itemName={selectedRow?.categoryName}
+      />
     </Accordion>
   );
 };
@@ -2732,49 +2751,51 @@ const ApplicationSubCategories = () => {
         </Paper>
       </AccordionDetails>
 
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>{editingRow ? 'Edit Application Sub-Category' : 'New Application Sub-Category'}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            {editingRow ? (
-              <>
-                <TextField label='Application' size='small' fullWidth value={form.applicationName} disabled />
-                <TextField label='Application Category' size='small' fullWidth value={form.applicationCategoryName} disabled />
-              </>
-            ) : (
-              <>
-                <FormControl size='small' fullWidth required>
-                  <InputLabel>Application</InputLabel>
-                  <Select label='Application' value={form.applicationId} onChange={(e) => handleApplicationChange(e.target.value)}>
-                    {applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}
-                  </Select>
-                </FormControl>
-                <FormControl size='small' fullWidth required disabled={!form.applicationId}>
-                  <InputLabel>Application Category</InputLabel>
-                  <Select label='Application Category' value={form.applicationCategoryId} onChange={(e) => handleCategoryChange(e.target.value)}>
-                    {filteredCategories.map((c) => <MenuItem key={c.id} value={c.id}>{c.categoryName}</MenuItem>)}
-                  </Select>
-                </FormControl>
-              </>
-            )}
-            <TextField label='Application Sub-Category' size='small' fullWidth required value={form.subCategoryName} onChange={(e) => setForm((f) => ({ ...f, subCategoryName: e.target.value }))} />
-            <TextField label='Description' size='small' fullWidth multiline minRows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.subCategoryName.trim()} sx={{ textTransform: 'none', borderRadius: 2 }}>{editingRow ? 'Save Changes' : 'Add'}</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<CategoryIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent='#7c3aed'
+        title='Application Sub-Category'
+        subtitle='Manage sub-categories assigned to application categories'
+        submitDisabled={!form.subCategoryName.trim()}
+        submitLabel={editingRow ? 'Save Changes' : 'Add'}
+        maxWidth='sm'
+      >
+        {editingRow ? (
+          <>
+            <TextField label='Application' size='small' fullWidth value={form.applicationName} disabled />
+            <TextField label='Application Category' size='small' fullWidth value={form.applicationCategoryName} disabled />
+          </>
+        ) : (
+          <>
+            <FormControl size='small' fullWidth required>
+              <InputLabel>Application</InputLabel>
+              <Select label='Application' value={form.applicationId} onChange={(e) => handleApplicationChange(e.target.value)}>
+                {applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <FormControl size='small' fullWidth required disabled={!form.applicationId}>
+              <InputLabel>Application Category</InputLabel>
+              <Select label='Application Category' value={form.applicationCategoryId} onChange={(e) => handleCategoryChange(e.target.value)}>
+                {filteredCategories.map((c) => <MenuItem key={c.id} value={c.id}>{c.categoryName}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </>
+        )}
+        <TextField label='Application Sub-Category' size='small' fullWidth required value={form.subCategoryName} onChange={(e) => setForm((f) => ({ ...f, subCategoryName: e.target.value }))} />
+        <TextField label='Description' size='small' fullWidth multiline minRows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+      </ConfigFormDialog>
 
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Application Sub-Category</DialogTitle>
-        <DialogContent><Typography variant='body2'>Are you sure you want to delete <strong>{selectedRow?.subCategoryName}</strong>? This action cannot be undone.</Typography></DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Delete</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Application Sub-Category'
+        itemName={selectedRow?.subCategoryName}
+      />
     </Accordion>
   );
 };
@@ -2887,50 +2908,52 @@ const ApplicationNumberSequences = () => {
         </Paper>
       </AccordionDetails>
 
-      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditingRow(null); }} maxWidth='sm' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>{editingRow ? 'Edit Number Sequence' : 'New Number Sequence'}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 0.5 }}>
-            {editingRow ? (
-              <>
-                <TextField label='Application' size='small' fullWidth value={form.applicationName} disabled />
-                <TextField label='Ticket Type' size='small' fullWidth value={form.ticketTypeName} disabled />
-              </>
-            ) : (
-              <>
-                <FormControl size='small' fullWidth required>
-                  <InputLabel>Application</InputLabel>
-                  <Select label='Application' value={form.applicationId} onChange={(e) => handleApplicationChange(e.target.value)}>
-                    {applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}
-                  </Select>
-                </FormControl>
-                <FormControl size='small' fullWidth required>
-                  <InputLabel>Ticket Type</InputLabel>
-                  <Select label='Ticket Type' value={form.ticketTypeId || ''} onChange={(e) => handleTicketTypeChange(Number(e.target.value))}>
-                    {activeTicketTypes.map((tt) => <MenuItem key={tt.id} value={tt.id}>{tt.displayName || tt.name}</MenuItem>)}
-                  </Select>
-                </FormControl>
-              </>
-            )}
-            <TextField label='Number Sequence Code' size='small' fullWidth required value={form.numberSequenceCode} onChange={(e) => setForm((f) => ({ ...f, numberSequenceCode: e.target.value }))} />
-            <TextField label='Numeric Char Length' type='number' size='small' fullWidth value={form.numericCharLength} onChange={(e) => { const v = parseInt(e.target.value, 10); setForm((f) => ({ ...f, numericCharLength: isNaN(v) || v < 0 ? 0 : v })); }} slotProps={{ htmlInput: { min: 0 } }} />
-            <TextField label='Number Sequence Format' size='small' fullWidth value={form.numberSequenceFormat} onChange={(e) => setForm((f) => ({ ...f, numberSequenceFormat: e.target.value }))} />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => { setDialogOpen(false); setEditingRow(null); }} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={!form.numberSequenceCode.trim()} sx={{ textTransform: 'none', borderRadius: 2 }}>{editingRow ? 'Save Changes' : 'Add'}</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditingRow(null); }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<NumbersIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent='#0f766e'
+        title='Number Sequence'
+        subtitle='Manage number sequences per application and ticket type'
+        submitDisabled={!form.numberSequenceCode.trim()}
+        submitLabel={editingRow ? 'Save Changes' : 'Add'}
+        maxWidth='sm'
+      >
+        {editingRow ? (
+          <>
+            <TextField label='Application' size='small' fullWidth value={form.applicationName} disabled />
+            <TextField label='Ticket Type' size='small' fullWidth value={form.ticketTypeName} disabled />
+          </>
+        ) : (
+          <>
+            <FormControl size='small' fullWidth required>
+              <InputLabel>Application</InputLabel>
+              <Select label='Application' value={form.applicationId} onChange={(e) => handleApplicationChange(e.target.value)}>
+                {applications.map((a) => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <FormControl size='small' fullWidth required>
+              <InputLabel>Ticket Type</InputLabel>
+              <Select label='Ticket Type' value={form.ticketTypeId || ''} onChange={(e) => handleTicketTypeChange(Number(e.target.value))}>
+                {activeTicketTypes.map((tt) => <MenuItem key={tt.id} value={tt.id}>{tt.displayName || tt.name}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </>
+        )}
+        <TextField label='Number Sequence Code' size='small' fullWidth required value={form.numberSequenceCode} onChange={(e) => setForm((f) => ({ ...f, numberSequenceCode: e.target.value }))} />
+        <TextField label='Numeric Char Length' type='number' size='small' fullWidth value={form.numericCharLength} onChange={(e) => { const v = parseInt(e.target.value, 10); setForm((f) => ({ ...f, numericCharLength: isNaN(v) || v < 0 ? 0 : v })); }} slotProps={{ htmlInput: { min: 0 } }} />
+        <TextField label='Number Sequence Format' size='small' fullWidth value={form.numberSequenceFormat} onChange={(e) => setForm((f) => ({ ...f, numberSequenceFormat: e.target.value }))} />
+      </ConfigFormDialog>
 
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth='xs' fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Number Sequence</DialogTitle>
-        <DialogContent><Typography variant='body2'>Are you sure you want to delete the number sequence <strong>{selectedRow?.numberSequenceCode}</strong>? This action cannot be undone.</Typography></DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-          <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: 'none', borderRadius: 2 }}>Cancel</Button>
-          <Button variant='contained' color='error' onClick={handleDelete} sx={{ textTransform: 'none', borderRadius: 2 }}>Delete</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Number Sequence'
+        itemName={selectedRow?.numberSequenceCode}
+      />
     </Accordion>
   );
 };
