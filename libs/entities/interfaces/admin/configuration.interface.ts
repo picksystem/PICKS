@@ -298,6 +298,326 @@ export interface IConfigApplicationNumberSequence {
   numberSequenceFormat: string;
 }
 
+export interface IConfigPriorityChangeReasonCode {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface IConfigRoleChangeReasonCode {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface IConfigResolutionCode {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface IConfigCancellationReasonCode {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface IConfigReopenReasonCode {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface IConfigConversionReasonCode {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface IConfigTimesheetConversionCode {
+  id: string;
+  name: string;
+  description: string;
+  projectType: string;
+  transitionType: string;
+  serviceLines: string[];
+  applications: string[];
+  queues: string[];
+  resources: string[];
+}
+
+export interface IConfigTimesheetCancellationCode {
+  id: string;
+  name: string;
+  description: string;
+  projectType: string;
+  transitionType: string;
+  serviceLines: string[];
+  applications: string[];
+  queues: string[];
+  resources: string[];
+}
+
+export interface IConfigTimesheetProjectEntry {
+  id: string;
+  name: string;
+  description: string;
+  projectType: string;
+  transitionType: string;
+  serviceLines: string[];
+  applications: string[];
+  queues: string[];
+  resources: string[];
+}
+
+export interface IConfigTimesheetServiceLineEntry {
+  id: string;
+  project: string;
+  serviceLine: string;
+  fromDate: string;
+  toDate: string;
+  activate: boolean;
+  maxHoursPerDayPerResource: number;
+}
+
+export interface IConfigTimesheetApplicationEntry {
+  id: string;
+  project: string;
+  application: string;
+  fromDate: string;
+  toDate: string;
+  activate: boolean;
+  maxHoursPerDayPerResource: number;
+}
+
+export interface IConfigTimesheetQueueEntry {
+  id: string;
+  project: string;
+  queue: string;
+  fromDate: string;
+  toDate: string;
+  activate: boolean;
+  maxHoursPerDayPerResource: number;
+}
+
+export interface IConfigTimesheetResourceEntry {
+  id: string;
+  project: string;
+  resource: string;
+  fromDate: string;
+  toDate: string;
+  activate: boolean;
+  maxHoursPerDayPerResource: number;
+}
+
+export interface IConfigTimesheetProjectCategory {
+  id: string;
+  project: string;
+  name: string;
+  description: string;
+  transitionType: string;
+  billability: string;
+}
+
+export interface IConfigTimesheets {
+  conversionReasonCodes: IConfigTimesheetConversionCode[];
+  cancellationReasonCodes: IConfigTimesheetCancellationCode[];
+  timesheetProjects: IConfigTimesheetProjectEntry[];
+  serviceLineEntries: IConfigTimesheetServiceLineEntry[];
+  applicationEntries: IConfigTimesheetApplicationEntry[];
+  queueEntries: IConfigTimesheetQueueEntry[];
+  resourceEntries: IConfigTimesheetResourceEntry[];
+  projectCategories: IConfigTimesheetProjectCategory[];
+}
+
+export interface IConfigExpenseProjectEntry {
+  id: string;
+  project: string;
+  name: string;
+  description: string;
+  expensesGroup: string;
+  expensesType: string;
+  billable: string;
+  itemization: string;
+}
+
+export interface IConfigExpenseProjectSubCategory {
+  id: string;
+  category: string;
+  subCategory: string;
+  description: string;
+  expensesGroup: string;
+  expensesType: string;
+  billable: string;
+}
+
+export interface IConfigExpenseCategoryEntry {
+  id: string;
+  project: string;
+  name: string;
+  description: string;
+  expensesGroup: string;
+  expensesType: string;
+  billable: string;
+  itemization: string;
+}
+
+export interface IConfigExpenseCategorySubCategory {
+  id: string;
+  category: string;
+  subCategory: string;
+  description: string;
+  expensesGroup: string;
+  expensesType: string;
+  billable: string;
+}
+
+export interface IConfigExpenseServiceLineEntry {
+  id: string;
+  project: string;
+  serviceLine: string;
+  fromDate: string;
+  toDate: string;
+  activate: boolean;
+  maxHoursPerDayPerResource: number;
+}
+
+export interface IConfigExpenseApplicationEntry {
+  id: string;
+  project: string;
+  application: string;
+  fromDate: string;
+  toDate: string;
+  activate: boolean;
+  maxHoursPerDayPerResource: number;
+}
+
+export interface IConfigExpenseQueueEntry {
+  id: string;
+  project: string;
+  queue: string;
+  fromDate: string;
+  toDate: string;
+  activate: boolean;
+  maxHoursPerDayPerResource: number;
+}
+
+export interface IConfigExpenseResourceEntry {
+  id: string;
+  project: string;
+  resource: string;
+  fromDate: string;
+  toDate: string;
+  activate: boolean;
+  maxHoursPerDayPerResource: number;
+}
+
+export interface IConfigExpenses {
+  expenseProjects: IConfigExpenseProjectEntry[];
+  expenseProjectSubCategories: IConfigExpenseProjectSubCategory[];
+  expenseCategories: IConfigExpenseCategoryEntry[];
+  expenseCategorySubCategories: IConfigExpenseCategorySubCategory[];
+  serviceLineEntries: IConfigExpenseServiceLineEntry[];
+  applicationEntries: IConfigExpenseApplicationEntry[];
+  queueEntries: IConfigExpenseQueueEntry[];
+  resourceEntries: IConfigExpenseResourceEntry[];
+}
+
+// ── Calendars section ─────────────────────────────────────────────────────────
+
+export interface IConfigWorkingDayTemplate {
+  id: string;
+  name: string;
+  description: string;
+  mondayHours: number;
+  tuesdayHours: number;
+  wednesdayHours: number;
+  thursdayHours: number;
+  fridayHours: number;
+  saturdayHours: number;
+  sundayHours: number;
+}
+
+export interface IConfigHolidayCalendar {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface IConfigBankHoliday {
+  id: string;
+  calendarName: string;
+  calendarYear: number;
+  date: string;
+  day: string;
+  holidayDescription: string;
+}
+
+export interface IConfigWorkingCalendar {
+  id: string;
+  name: string;
+  holidayCalendar: string;
+  workingDayTemplate: string;
+}
+
+export interface IConfigWorkingCalendarTime {
+  id: string;
+  calendarName: string;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  isWorkingDay: boolean;
+}
+
+export interface IConfigComposedWorkingTime {
+  id: string;
+  calendarName: string;
+  date: string;
+  day: string;
+  startTime: string;
+  endTime: string;
+  isWorkingDay: boolean;
+  note: string;
+}
+
+export interface IConfigCalendarWorkLocation {
+  id: string;
+  calendarName: string;
+  workLocation: string;
+  effectiveFrom: string;
+  effectiveTo: string;
+}
+
+export interface IConfigCalendarConsultant {
+  id: string;
+  calendarName: string;
+  consultantName: string;
+  role: string;
+  application: string;
+  effectiveFrom: string;
+  effectiveTo: string;
+}
+
+export interface IConfigCalendars {
+  workingDayTemplates: IConfigWorkingDayTemplate[];
+  holidayCalendars: IConfigHolidayCalendar[];
+  bankHolidays: IConfigBankHoliday[];
+  workingCalendars: IConfigWorkingCalendar[];
+  workingCalendarTimes: IConfigWorkingCalendarTime[];
+  composedWorkingTimes: IConfigComposedWorkingTime[];
+  calendarWorkLocations: IConfigCalendarWorkLocation[];
+  calendarConsultants: IConfigCalendarConsultant[];
+}
+
+export interface IConfigReasonCodes {
+  priorityChangeReasonCodes: IConfigPriorityChangeReasonCode[];
+  roleChangeReasonCodes: IConfigRoleChangeReasonCode[];
+  resolutionCodes: IConfigResolutionCode[];
+  cancellationReasonCodes: IConfigCancellationReasonCode[];
+  reopenReasonCodes: IConfigReopenReasonCode[];
+  conversionReasonCodes: IConfigConversionReasonCode[];
+}
+
 export interface IConfigConsultantProfile {
   id: string;
   consultantName: string;
@@ -471,6 +791,7 @@ export interface IConfigTicketUpdateTemplate {
 }
 
 export type IConfigCommentTemplate = IConfigTicketUpdateTemplate;
+export type IConfigInternalNoteTemplate = IConfigTicketUpdateTemplate;
 
 export interface IConfigTicketUpdateTemplates {
   items: IConfigTicketUpdateTemplate[];
@@ -478,6 +799,62 @@ export interface IConfigTicketUpdateTemplates {
 
 export interface IConfigCommentTemplates {
   items: IConfigCommentTemplate[];
+}
+
+export interface IConfigInternalNoteTemplates {
+  items: IConfigInternalNoteTemplate[];
+}
+
+export interface IConfigResolutionTemplate {
+  id: string;
+  name: string;
+  description: string;
+  active: boolean;
+  ticketStatus: string;
+  application: string;
+  applicationCategory: string;
+  applicationSubCategory: string;
+  receivedCustomerInformation: boolean;
+  recurringIssue: boolean;
+  rootCauseIdentified: boolean;
+  rootCause: string;
+  resolutionCode: string;
+  resolution: string;
+  resolutionInternalNote: string;
+}
+
+export interface IConfigResolutionTemplates {
+  items: IConfigResolutionTemplate[];
+}
+
+export interface IConfigTimeEntryLine {
+  id: string;
+  billingCode: string;
+  activityTask: string;
+  nonBillable: boolean;
+  mon: number;
+  tue: number;
+  wed: number;
+  thu: number;
+  fri: number;
+  sat: number;
+  sun: number;
+}
+
+export interface IConfigTimeEntryTemplate {
+  id: string;
+  name: string;
+  description: string;
+  active: boolean;
+  ticketStatus: string;
+  weekStartDate: string;
+  entries: IConfigTimeEntryLine[];
+  externalComment: string;
+  internalComment: string;
+}
+
+export interface IConfigTimeEntryTemplates {
+  items: IConfigTimeEntryTemplate[];
 }
 
 // ── Approvals section ─────────────────────────────────────────────────────────
@@ -537,7 +914,14 @@ export interface IConfigurationData {
   approvals: IConfigApprovals;
   ticketUpdateTemplates: IConfigTicketUpdateTemplates;
   commentTemplates: IConfigCommentTemplates;
+  internalNoteTemplates: IConfigInternalNoteTemplates;
+  resolutionTemplates: IConfigResolutionTemplates;
+  timeEntryTemplates: IConfigTimeEntryTemplates;
   userConfig: IConfigUserConfig;
+  reasonCodes: IConfigReasonCodes;
+  timesheets: IConfigTimesheets;
+  expenses: IConfigExpenses;
+  calendars: IConfigCalendars;
 }
 
 export interface IConfiguration {
@@ -1079,10 +1463,51 @@ export const DEFAULT_CONFIGURATION_DATA: IConfigurationData = {
   },
   ticketUpdateTemplates: { items: [] },
   commentTemplates: { items: [] },
+  internalNoteTemplates: { items: [] },
+  resolutionTemplates: { items: [] },
+  timeEntryTemplates: { items: [] },
   userConfig: {
     workLocations: [],
     workingTimes: [],
     shifts: [],
     associatedProfiles: [],
+  },
+  reasonCodes: {
+    priorityChangeReasonCodes: [],
+    roleChangeReasonCodes: [],
+    resolutionCodes: [],
+    cancellationReasonCodes: [],
+    reopenReasonCodes: [],
+    conversionReasonCodes: [],
+  },
+  timesheets: {
+    conversionReasonCodes: [],
+    cancellationReasonCodes: [],
+    timesheetProjects: [],
+    serviceLineEntries: [],
+    applicationEntries: [],
+    queueEntries: [],
+    resourceEntries: [],
+    projectCategories: [],
+  },
+  expenses: {
+    expenseProjects: [],
+    expenseProjectSubCategories: [],
+    expenseCategories: [],
+    expenseCategorySubCategories: [],
+    serviceLineEntries: [],
+    applicationEntries: [],
+    queueEntries: [],
+    resourceEntries: [],
+  },
+  calendars: {
+    workingDayTemplates: [],
+    holidayCalendars: [],
+    bankHolidays: [],
+    workingCalendars: [],
+    workingCalendarTimes: [],
+    composedWorkingTimes: [],
+    calendarWorkLocations: [],
+    calendarConsultants: [],
   },
 };

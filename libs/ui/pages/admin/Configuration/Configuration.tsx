@@ -13,6 +13,7 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import CommentIcon from '@mui/icons-material/Comment';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { useCollapse, useDevice } from '@serviceops/hooks';
 
 import General from './sections/General';
@@ -27,6 +28,8 @@ import UserConfig from './sections/UserConfig';
 import Templates from './sections/Templates';
 import ReasonCodes from './sections/ReasonCodes';
 import Calendars from './sections/Calendars';
+import Timesheets from './sections/Timesheets';
+import Expenses from './sections/Expenses';
 
 const BASE = '/app/admin/configuration';
 const INNER_NAV_WIDTH = 220;
@@ -63,7 +66,9 @@ const NAV_ITEMS = [
   },
   { label: 'Templates', path: `${BASE}/templates`, Icon: FileCopyIcon, accent: '#4f46e5' },
   { label: 'Reason Codes', path: `${BASE}/reason-codes`, Icon: CommentIcon, accent: '#0f766e' },
-  { label: 'Calendars', path: `${BASE}/calendars`, Icon: CalendarMonthIcon, accent: '#b45309' },
+  { label: 'Calendars', path: `${BASE}/calendars`, Icon: CalendarMonthIcon, accent: '#7e09b4' },
+  { label: 'Timesheets', path: `${BASE}/timesheets`, Icon: TuneIcon, accent: '#b4a309' },
+  { label: 'Expenses', path: `${BASE}/expenses`, Icon: ReceiptLongIcon, accent: '#16a34a' },
 ];
 
 // ── Desktop inner nav list ─────────────────────────────────────────────────────
@@ -208,6 +213,8 @@ const ConfigRoutes = () => (
     <Route path='templates' element={<Templates />} />
     <Route path='reason-codes' element={<ReasonCodes />} />
     <Route path='calendars' element={<Calendars />} />
+    <Route path='timesheets' element={<Timesheets />} />
+    <Route path='expenses' element={<Expenses />} />
     <Route path='*' element={<Navigate to='general' replace />} />
   </Routes>
 );

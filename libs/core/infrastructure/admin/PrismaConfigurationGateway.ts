@@ -10,6 +10,7 @@ import {
   IConfigSupportLine,
   IConfigBillingCode,
   IConfigApplicationQueue,
+  IConfigTimesheetConversionCode,
 } from '@serviceops/interfaces';
 
 /**
@@ -175,6 +176,40 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
         workingTimes: data.userConfig?.workingTimes ?? [],
         shifts: data.userConfig?.shifts ?? [],
         associatedProfiles: data.userConfig?.associatedProfiles ?? [],
+      },
+      reasonCodes: {
+        priorityChangeReasonCodes: data.reasonCodes?.priorityChangeReasonCodes ?? [],
+        roleChangeReasonCodes: data.reasonCodes?.roleChangeReasonCodes ?? [],
+        resolutionCodes: data.reasonCodes?.resolutionCodes ?? [],
+        cancellationReasonCodes: data.reasonCodes?.cancellationReasonCodes ?? [],
+        reopenReasonCodes: data.reasonCodes?.reopenReasonCodes ?? [],
+        conversionReasonCodes: data.reasonCodes?.conversionReasonCodes ?? [],
+      },
+      calendars: {
+        workingDayTemplates: data.calendars?.workingDayTemplates ?? [],
+        holidayCalendars: data.calendars?.holidayCalendars ?? [],
+        bankHolidays: data.calendars?.bankHolidays ?? [],
+        workingCalendars: data.calendars?.workingCalendars ?? [],
+        workingCalendarTimes: data.calendars?.workingCalendarTimes ?? [],
+        composedWorkingTimes: data.calendars?.composedWorkingTimes ?? [],
+        calendarWorkLocations: data.calendars?.calendarWorkLocations ?? [],
+        calendarConsultants: data.calendars?.calendarConsultants ?? [],
+      },
+      timesheets: {
+        conversionReasonCodes: ((data.timesheets?.conversionReasonCodes ?? []) as IConfigTimesheetConversionCode[]).map((r) => ({
+          ...r,
+          serviceLines: r.serviceLines ?? [],
+          applications: r.applications ?? [],
+          queues: r.queues ?? [],
+          resources: r.resources ?? [],
+        })),
+        cancellationReasonCodes: data.timesheets?.cancellationReasonCodes ?? [],
+        timesheetProjects: data.timesheets?.timesheetProjects ?? [],
+        serviceLineEntries: data.timesheets?.serviceLineEntries ?? [],
+        applicationEntries: data.timesheets?.applicationEntries ?? [],
+        queueEntries: data.timesheets?.queueEntries ?? [],
+        resourceEntries: data.timesheets?.resourceEntries ?? [],
+        projectCategories: data.timesheets?.projectCategories ?? [],
       },
     };
   }

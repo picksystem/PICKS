@@ -1358,9 +1358,7 @@ const TimesheetProjectsPanel = ({
               onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))}
             />
           }
-          label={
-            <Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>
-          }
+          label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>}
         />
       </ConfigFormDialog>
 
@@ -1842,9 +1840,7 @@ const ExpenseProjectsPanel = ({
               onChange={(e) => setForm((f) => ({ ...f, activate: e.target.checked }))}
             />
           }
-          label={
-            <Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>
-          }
+          label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }}>Activate</Typography>}
         />
       </ConfigFormDialog>
 

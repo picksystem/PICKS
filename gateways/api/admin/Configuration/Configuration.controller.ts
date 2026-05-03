@@ -45,6 +45,15 @@ export class ConfigurationController {
       'consultantProfiles',
       'approvals',
       'userConfig',
+      'reasonCodes',
+      'timesheets',
+      'expenses',
+      'calendars',
+      'ticketUpdateTemplates',
+      'commentTemplates',
+      'internalNoteTemplates',
+      'resolutionTemplates',
+      'timeEntryTemplates',
     ];
     if (!validSections.includes(section)) {
       res.status(400).json({ message: `Unknown section: ${section}` });
