@@ -21,7 +21,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import { DataTable, Column } from '@serviceops/component';
 import { useStyles } from '../styles';
-import { ConfigFormDialog, ConfigDeleteDialog } from '../dialogs/ConfigDialogs';
+import { ConfigFormDialog, ConfigDeleteDialog } from '../dialogs/ConfigDialogs/ConfigDialogs';
 
 // ── ActiveChip ─────────────────────────────────────────────────────────────────
 
