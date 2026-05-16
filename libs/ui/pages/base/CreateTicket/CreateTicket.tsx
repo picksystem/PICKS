@@ -1,8 +1,8 @@
-import { Typography, Chip, alpha, darken } from '@mui/material';
+import { alpha, darken } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { useStyles } from './styles';
-import { Box, Button, Loader } from '@serviceops/component';
+import { Box, Button, Loader, Typography, Chip } from '@serviceops/component';
 import useCreateTicket from './hooks/useCreateTicket';
 import { useGetTicketTypeQuery } from '../../../../services';
 import {
@@ -73,6 +73,9 @@ const CreateTicket = () => {
             const { accent, gradient, glow } = getVisuals(t.type);
             const iconKey = iconMap[t.type];
             const tag = tagMap[t.type] ?? '';
+            // Use creation page specific fields if set, otherwise fall back to defaults
+            const displayText = t.creationPageDisplayText || t.displayName || t.name;
+            const displayTag = t.creationPageDisplayTag || tag;
 
             return (
               <Box
@@ -114,12 +117,10 @@ const CreateTicket = () => {
                     {getIconComponent(iconKey, { fontSize: 24, color: '#fff' })}
                   </Box>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography className={classes.ticketCardTitle}>
-                      {t.displayName || t.name}
-                    </Typography>
-                    {tag && (
+                    <Typography className={classes.ticketCardTitle}>{displayText}</Typography>
+                    {displayTag && (
                       <Chip
-                        label={tag}
+                        label={displayTag}
                         size='small'
                         className={classes.ticketTag}
                         sx={{

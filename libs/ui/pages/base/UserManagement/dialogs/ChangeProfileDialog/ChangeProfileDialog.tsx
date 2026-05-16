@@ -1,22 +1,25 @@
-import { UserAvatar } from '@serviceops/component';
 import {
+  UserAvatar,
   Box,
   Typography,
   IconButton,
-  Dialog,
-  DialogContent,
-  DialogActions,
-  DialogTitle,
   Button,
   Chip,
   Divider,
   TextField,
   Select,
   MenuItem,
+  Grid,
+} from '@serviceops/component';
+import {
+  Dialog,
+  DialogContent,
+  DialogActions,
+  DialogTitle,
   FormControl,
   InputLabel,
   FormHelperText,
-  Grid,
+  TextField as MuiTextField,
 } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -312,7 +315,7 @@ const ChangeProfileDialog = ({
               ))}
             </Box>
 
-            <TextField
+            <MuiTextField
               inputRef={noteRef}
               fullWidth
               multiline

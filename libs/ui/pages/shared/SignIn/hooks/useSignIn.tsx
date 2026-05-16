@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, useFormWithSessionStorage, useNotification, useFieldError } from '@serviceops/hooks';
+import {
+  useAuth,
+  useFormWithSessionStorage,
+  useNotification,
+  useFieldError,
+} from '@serviceops/hooks';
 import { SignInSchema, UserRole } from '@serviceops/interfaces';
 import { constants } from '@serviceops/utils';
 
@@ -41,7 +46,8 @@ const useSignIn = () => {
         if (error?.status === 'FETCH_ERROR' || error?.status === 'PARSING_ERROR') {
           message = 'Unable to reach the server. Please check that the backend is running.';
         } else {
-          message = error?.data?.message || error?.message || error?.error || 'Invalid email or password';
+          message =
+            error?.data?.message || error?.message || error?.error || 'Invalid email or password';
         }
         if (message.toLowerCase().includes('pending admin approval')) {
           notify.warning(message);

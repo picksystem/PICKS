@@ -1,5 +1,5 @@
-import { Typography, ClickAwayListener, Chip } from '@mui/material';
-import { Box, TextField } from '@serviceops/component';
+import { ClickAwayListener, Chip } from '@mui/material';
+import { Typography, Box, TextField } from '@serviceops/component';
 import { IIncident } from '@serviceops/interfaces';
 import SearchIcon from '@mui/icons-material/Search';
 

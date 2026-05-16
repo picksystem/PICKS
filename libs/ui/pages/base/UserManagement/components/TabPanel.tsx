@@ -1,5 +1,4 @@
-import React from 'react';
-import { Box } from '@mui/material';
+import { Box } from '@serviceops/component';
 import { TabPanelProps } from '../types/userManagement.types';
 
 const TabPanel = (props: TabPanelProps) => {

@@ -2,24 +2,29 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Paper,
   Button,
   Chip,
   TextField,
+  Tooltip,
+  Switch,
+  Checkbox,
+  Link,
+  DataTable,
+  Column,
+  Loader,
+} from '@serviceops/component';
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   InputAdornment,
   Select,
   MenuItem,
   FormControl,
-  Tooltip,
-  Switch,
   FormControlLabel,
-  Checkbox,
   InputLabel,
   Divider,
-  Link,
   alpha,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
@@ -37,7 +42,6 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import TuneIcon from '@mui/icons-material/Tune';
-import { DataTable, Column, Loader } from '@serviceops/component';
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { useGetTicketTypeQuery } from '@serviceops/services';

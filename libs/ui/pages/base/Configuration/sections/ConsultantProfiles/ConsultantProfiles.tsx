@@ -3,22 +3,26 @@ import {
   Box,
   Typography,
   Paper,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Button,
   Tooltip,
   Link,
   TextField,
+  Switch,
+  Chip,
+  DataTable,
+  Column,
+} from '@serviceops/component';
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   InputAdornment,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
   Divider,
-  Switch,
   FormControlLabel,
-  Chip,
   alpha,
 } from '@mui/material';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
@@ -45,7 +49,6 @@ import {
   IConfigConsultantRole,
   IConfigAssociatedConsultantProfile,
 } from '@serviceops/interfaces';
-import { DataTable, Column } from '@serviceops/component';
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { ConfigFormDialog, ConfigDeleteDialog } from '../../dialogs/ConfigDialogs/ConfigDialogs';

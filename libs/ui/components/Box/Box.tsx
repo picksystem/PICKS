@@ -1,13 +1,10 @@
 import { Box as MUIBox } from '@mui/material';
 import { useStyles } from './styles';
 
-export interface DSBoxProps extends React.ComponentProps<typeof MUIBox> {
+export interface DSBoxProps {
   children?: React.ReactNode;
   className?: string;
-  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
-  onMouseEnter?: (event: React.MouseEvent<HTMLDivElement>) => void;
-  onMouseLeave?: (event: React.MouseEvent<HTMLDivElement>) => void;
-  style?: React.CSSProperties;
+  [key: string]: unknown;
 }
 
 const Box: React.FC<DSBoxProps> = ({ children, className, ...props }) => {

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Typography } from '@mui/material';
+import { Typography } from '@serviceops/component';
 import { makeStyles } from 'tss-react/mui';
 
 const useStyles = makeStyles()(() => ({

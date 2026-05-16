@@ -1,6 +1,7 @@
 import {
   Box,
   CheckIcon,
+  Typography,
   AssignmentIndIcon,
   CommentIcon,
   CheckCircleIcon,
@@ -15,7 +16,6 @@ import {
   EditIcon,
   IconButton,
 } from '../../../../components';
-import { Typography } from '@mui/material';
 import { ActionButtonConfig } from '../types/incidentDetail.types';
 
 interface ActionBarProps {

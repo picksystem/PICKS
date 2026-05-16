@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { Box, Typography, List, ListItem, ListItemIcon, ListItemText, alpha } from '@mui/material';
+import { List, ListItem, ListItemIcon, ListItemText, alpha } from '@mui/material';
+import { Box, Typography } from '@serviceops/component';
 import TuneIcon from '@mui/icons-material/Tune';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';

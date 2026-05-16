@@ -1,6 +1,13 @@
 import { useState } from 'react';
-import { Box, Modal, Select, Checkbox, Button, UploadFile } from '../../../../components';
-import { TextField } from '@mui/material';
+import {
+  Box,
+  Modal,
+  Select,
+  Checkbox,
+  Button,
+  UploadFile,
+  TextField,
+} from '../../../../components';
 import { IIncident, IncidentStatus } from '@serviceops/interfaces';
 import { useCreateCommentMutation } from '../../../../../services';
 import { useAuth, useNotification } from '@serviceops/hooks';
@@ -24,7 +31,11 @@ const footerSx = {
   flexDirection: { xs: 'column' as const, sm: 'row' as const },
 };
 const contentSx = { display: 'flex', flexDirection: 'column', gap: 2 };
-const rowSx = { display: 'flex', gap: 2, flexDirection: { xs: 'column' as const, sm: 'row' as const } };
+const rowSx = {
+  display: 'flex',
+  gap: 2,
+  flexDirection: { xs: 'column' as const, sm: 'row' as const },
+};
 const fieldSx = { flex: 1, minWidth: 0 };
 
 const CommentWindow = ({ open, onClose, incident, onSuccess }: CommentWindowProps) => {

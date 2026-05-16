@@ -4,17 +4,16 @@ import {
   Typography,
   Paper,
   Switch,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Divider,
   Button,
   Tooltip,
   Link,
   Chip,
   TextField,
-  InputAdornment,
-} from '@mui/material';
+  DataTable,
+  Column,
+} from '@serviceops/component';
+import { Accordion, AccordionSummary, AccordionDetails, InputAdornment } from '@mui/material';
 import TimerIcon from '@mui/icons-material/Timer';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -33,7 +32,6 @@ import {
   IConfigResponseAckSLARow,
   IConfigActivationRow,
 } from '@serviceops/interfaces';
-import { DataTable, Column } from '@serviceops/component';
 import { useGetTicketTypeQuery } from '@serviceops/services';
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';

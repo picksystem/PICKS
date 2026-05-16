@@ -1,25 +1,27 @@
 import { useEffect } from 'react';
 import {
-  Dialog,
-  DialogContent,
   Button,
   TextField,
   Switch,
   FormControlLabel,
   Box,
   Typography,
-  alpha,
-  darken,
   Select,
   MenuItem,
-  FormControl,
-  InputLabel,
   ListItemIcon,
   ListItemText,
-  ListSubheader,
   Chip,
   Grid,
   Divider,
+} from '@serviceops/component';
+import {
+  alpha,
+  darken,
+  Dialog,
+  DialogContent,
+  ListSubheader,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import { CreateTicketTypeSchema, ITicketType } from '@serviceops/interfaces';
@@ -64,6 +66,8 @@ interface TicketTypeFormDialogProps {
     numberLength: number;
     iconKey: string;
     tag: string;
+    creationPageDisplayText: string;
+    creationPageDisplayTag: string;
   }) => Promise<void>;
 }
 
@@ -103,6 +107,8 @@ const TicketTypeFormDialog = ({
       numberLength: editingItem?.numberLength ?? 7,
       iconKey: getInitialIcon(),
       tag: getInitialTag(),
+      creationPageDisplayText: editingItem?.creationPageDisplayText ?? '',
+      creationPageDisplayTag: editingItem?.creationPageDisplayTag ?? '',
     },
     validationSchema: CreateTicketTypeSchema,
     onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -117,6 +123,8 @@ const TicketTypeFormDialog = ({
           numberLength: values.numberLength ?? 7,
           iconKey: values.iconKey,
           tag: values.tag,
+          creationPageDisplayText: values.creationPageDisplayText ?? '',
+          creationPageDisplayTag: values.creationPageDisplayTag ?? '',
         });
         resetForm();
       } finally {
@@ -488,6 +496,56 @@ const TicketTypeFormDialog = ({
                   })}
                 </Select>
               </FormControl>
+            </Grid>
+
+            {/* Creation Page Display Text */}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label='Creation Page Display Text'
+                name='creationPageDisplayText'
+                value={formik.values.creationPageDisplayText}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={Boolean(
+                  reqError(
+                    formik.touched.creationPageDisplayText,
+                    formik.errors.creationPageDisplayText as string,
+                  ),
+                )}
+                helperText={
+                  reqError(
+                    formik.touched.creationPageDisplayText,
+                    formik.errors.creationPageDisplayText as string,
+                  ) || 'Text displayed on ticket creation page'
+                }
+                fullWidth
+                size='small'
+              />
+            </Grid>
+
+            {/* Creation Page Display Tag */}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label='Creation Page Display Tag'
+                name='creationPageDisplayTag'
+                value={formik.values.creationPageDisplayTag}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={Boolean(
+                  reqError(
+                    formik.touched.creationPageDisplayTag,
+                    formik.errors.creationPageDisplayTag as string,
+                  ),
+                )}
+                helperText={
+                  reqError(
+                    formik.touched.creationPageDisplayTag,
+                    formik.errors.creationPageDisplayTag as string,
+                  ) || 'Tag/label for creation page display'
+                }
+                fullWidth
+                size='small'
+              />
             </Grid>
 
             {/* Active switch */}

@@ -1,17 +1,15 @@
-import { UserAvatar } from '@serviceops/component';
 import {
+  UserAvatar,
   Box,
   Typography,
   IconButton,
-  Dialog,
-  DialogContent,
-  DialogActions,
   Button,
   Chip,
   Divider,
   Alert,
   Grid,
-} from '@mui/material';
+} from '@serviceops/component';
+import { Dialog, DialogContent, DialogActions } from '@mui/material';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import CloseIcon from '@mui/icons-material/Close';
 import { useStyles } from './styles';

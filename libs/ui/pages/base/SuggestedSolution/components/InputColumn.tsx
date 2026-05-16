@@ -1,7 +1,6 @@
-import { Typography } from '@mui/material';
 import SubjectIcon from '@mui/icons-material/Subject';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
-import { Box, TextField } from '@serviceops/component';
+import { Box, TextField, Typography } from '@serviceops/component';
 import { useStyles } from '../styles';
 
 interface InputColumnProps {

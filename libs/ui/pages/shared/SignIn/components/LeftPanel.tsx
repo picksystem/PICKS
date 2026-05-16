@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Typography } from '@serviceops/component';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import SpeedIcon from '@mui/icons-material/Speed';
 import GroupsIcon from '@mui/icons-material/Groups';

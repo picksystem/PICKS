@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Box, Modal, Button } from '../../../../components';
-import { TextField } from '@mui/material';
+import { Box, Modal, Button, TextField } from '../../../../components';
 import { IIncident, IncidentStatus } from '@serviceops/interfaces';
 import { useUpdateIncidentMutation } from '../../../../../services';
 import { useNotification } from '@serviceops/hooks';

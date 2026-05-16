@@ -1,5 +1,6 @@
 import React from 'react';
-import { Typography, Chip, alpha } from '@mui/material';
+import { alpha } from '@mui/material';
+import { Typography, Chip } from '@serviceops/component';
 
 export const mkCell =
   (bold = false) =>

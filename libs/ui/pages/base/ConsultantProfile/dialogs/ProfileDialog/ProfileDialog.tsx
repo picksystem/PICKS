@@ -6,16 +6,12 @@ import {
   TextField,
   Select,
   MenuItem,
-  FormControl,
-  InputLabel,
   FormControlLabel,
   Switch,
   IconButton,
-  Dialog,
-  DialogContent,
-  DialogActions,
   Button,
-} from '@mui/material';
+} from '@serviceops/component';
+import { Dialog, DialogContent, DialogActions, FormControl, InputLabel } from '@mui/material';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import CloseIcon from '@mui/icons-material/Close';
 import { IAuthUser, IConsultantRole } from '@serviceops/interfaces';
@@ -150,11 +146,11 @@ const ProfileDialog = ({
             <Divider />
           </Grid>
           <Grid size={{ xs: 12 }}>
-            <SectionLabel>SLA Calendars</SectionLabel>
+            <SectionLabel>Calendars</SectionLabel>
           </Grid>
           <Grid size={{ xs: 6 }}>
             <TextField
-              label='SLA Working Calendar'
+              label='Working Calendar'
               fullWidth
               size='small'
               value={profileForm.slaWorkingCalendar}
@@ -164,7 +160,7 @@ const ProfileDialog = ({
           </Grid>
           <Grid size={{ xs: 6 }}>
             <TextField
-              label='SLA Exception Calendar'
+              label='Holiday Calendar'
               fullWidth
               size='small'
               value={profileForm.slaExceptionCalendar}

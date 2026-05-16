@@ -1,7 +1,7 @@
 import Chart from 'react-apexcharts';
 import { useStyles } from './styles';
 import { useCurrentDate, useEventCallback, useForm } from '../../../hooks';
-import { Box, Button, Card, TextField, Typography, DataTable } from '../../../components';
+import { Box, Button, Card, TextField, Typography } from '../../../components';
 import { DATE_FORMATS } from '../../../../utils';
 
 // Static chart configuration - defined outside component for optimal performance

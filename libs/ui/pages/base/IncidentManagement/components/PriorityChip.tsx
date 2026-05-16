@@ -1,5 +1,4 @@
-import React from 'react';
-import { Chip } from '@mui/material';
+import { Chip } from '@serviceops/component';
 
 const PriorityChip = ({ value }: { value: unknown }) => {
   const p = String(value || '').toLowerCase();

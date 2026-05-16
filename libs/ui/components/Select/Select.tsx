@@ -13,8 +13,8 @@ export interface DSSelectOption {
   disabled?: boolean;
 }
 
-export interface DSSelectProps {
-  options: DSSelectOption[];
+export interface DSSelectProps extends Omit<React.ComponentProps<typeof MUISelect>, 'children'> {
+  options?: DSSelectOption[];
   label?: string;
   variant?: 'outlined' | 'filled' | 'standard';
   helperText?: React.ReactNode;
@@ -31,6 +31,11 @@ export interface DSSelectProps {
   multiple?: boolean;
   placeholder?: string;
   size?: 'small' | 'medium';
+  children?: React.ReactNode;
+  renderValue?: (value: any) => React.ReactNode;
+  MenuProps?: Record<string, unknown>;
+  notched?: boolean;
+  inputRef?: React.RefObject<HTMLInputElement>;
 }
 
 const Select: React.FC<DSSelectProps> = ({
@@ -51,6 +56,11 @@ const Select: React.FC<DSSelectProps> = ({
   multiple,
   placeholder,
   size = 'medium',
+  children,
+  renderValue,
+  MenuProps,
+  notched,
+  inputRef,
   ...rest
 }) => {
   const { cx, classes } = useStyles();
@@ -75,14 +85,19 @@ const Select: React.FC<DSSelectProps> = ({
         multiple={multiple}
         displayEmpty={Boolean(placeholder)}
         size={size}
+        renderValue={renderValue}
+        MenuProps={MenuProps}
+        notched={notched}
+        inputRef={inputRef}
         {...rest}
       >
-        {placeholder && (
-          <MenuItem value='' disabled>
-            {placeholder}
-          </MenuItem>
-        )}
-        {options.map((option) => (
+        {children ??
+          (placeholder ? (
+            <MenuItem value='' disabled>
+              {placeholder}
+            </MenuItem>
+          ) : null)}
+        {options?.map((option) => (
           <MenuItem key={option.value} value={option.value} disabled={option.disabled}>
             {option.label}
           </MenuItem>

@@ -1,4 +1,4 @@
-import { Box, Typography, Divider, Paper } from '@mui/material';
+import { Box, Typography, Divider, Paper } from '@serviceops/component';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import { constants } from '@serviceops/utils';
 import { useStyles } from './styles';

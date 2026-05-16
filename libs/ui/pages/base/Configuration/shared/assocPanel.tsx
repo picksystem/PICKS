@@ -7,19 +7,19 @@ import {
   Tooltip,
   Link,
   TextField,
-  InputAdornment,
   Divider,
-  alpha,
   Chip,
   FormControlLabel,
   Switch,
-} from '@mui/material';
+  DataTable,
+  Column,
+} from '@serviceops/component';
+import { InputAdornment, alpha } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
-import { DataTable, Column } from '@serviceops/component';
 import { useStyles } from '../styles';
 import { ConfigFormDialog, ConfigDeleteDialog } from '../dialogs/ConfigDialogs/ConfigDialogs';
 

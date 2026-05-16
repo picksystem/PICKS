@@ -3,19 +3,23 @@ import {
   Box,
   Typography,
   Paper,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Button,
   Tooltip,
   Link,
   TextField,
+  Divider,
+  DataTable,
+  Column,
+} from '@serviceops/component';
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   InputAdornment,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
-  Divider,
   alpha,
 } from '@mui/material';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
@@ -34,7 +38,6 @@ import {
   IConfigApprovalConsultantRole,
   IConfigApprovalWorkingTime,
 } from '@serviceops/interfaces';
-import { DataTable, Column } from '@serviceops/component';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { ConfigFormDialog, ConfigDeleteDialog } from '../../dialogs/ConfigDialogs/ConfigDialogs';
 import { useStyles } from './styles';

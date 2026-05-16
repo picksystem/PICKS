@@ -3,17 +3,21 @@ import {
   Box,
   Typography,
   Paper,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Button,
   Tooltip,
   Link,
   TextField,
+  Chip,
+  DataTable,
+  Column,
+} from '@serviceops/component';
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   InputAdornment,
   Divider,
   alpha,
-  Chip,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -30,7 +34,6 @@ import {
   IConfigTimesheetProjectEntry,
   IConfigTimesheetProjectCategory,
 } from '@serviceops/interfaces';
-import { DataTable, Column } from '@serviceops/component';
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { ConfigFormDialog, ConfigDeleteDialog } from '../../dialogs/ConfigDialogs/ConfigDialogs';

@@ -3,22 +3,26 @@ import {
   Box,
   Typography,
   Paper,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Button,
   Tooltip,
   Link,
   TextField,
+  Divider,
+  Switch,
+  Chip,
+  DataTable,
+  Column,
+} from '@serviceops/component';
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   InputAdornment,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
-  Divider,
-  Switch,
   FormControlLabel,
-  Chip,
   alpha,
   Table,
   TableBody,
@@ -60,7 +64,6 @@ import {
   IConfigApplicationSubCategory,
   IConfigApplicationNumberSequence,
 } from '@serviceops/interfaces';
-import { DataTable, Column } from '@serviceops/component';
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { useGetTicketTypeQuery } from '@serviceops/services';
@@ -8254,7 +8257,18 @@ const ApplicationNumberSequences = () => {
 
   const handleTicketTypeChange = (id: number) => {
     const tt = activeTicketTypes.find((t) => t.id === id);
-    setForm((f) => ({ ...f, ticketTypeId: id, ticketTypeName: tt?.displayName ?? tt?.name ?? '' }));
+    setForm((f) => {
+      const ttName = tt?.displayName ?? tt?.name ?? '';
+      const appName = f.applicationName ?? '';
+      // Auto-generate code: APP_TYPE (e.g., "ERP_Incident")
+      const autoCode = `${appName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}_${ttName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`;
+      return {
+        ...f,
+        ticketTypeId: id,
+        ticketTypeName: ttName,
+        numberSequenceCode: f.numberSequenceCode || autoCode,
+      };
+    });
   };
 
   const handleSubmit = () => {

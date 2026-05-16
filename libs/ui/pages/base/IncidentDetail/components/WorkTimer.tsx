@@ -6,8 +6,8 @@ import {
   PauseIcon,
   StopIcon,
   CancelIcon,
+  Typography,
 } from '../../../../components';
-import { Typography } from '@mui/material';
 import { formatTimer } from '../utils/incidentDetail.utils';
 
 interface WorkTimerProps {

@@ -3,25 +3,26 @@ import {
   Box,
   Typography,
   Paper,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Button,
   Tooltip,
   Link,
   TextField,
+  Checkbox,
+  Chip,
+  Switch,
+  DataTable,
+  Column,
+} from '@serviceops/component';
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   InputAdornment,
-  Dialog,
-  DialogContent,
-  DialogActions,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
   Divider,
-  Checkbox,
-  Chip,
-  Switch,
   alpha,
   Table,
   TableBody,
@@ -30,6 +31,9 @@ import {
   TableHead,
   TableRow,
   IconButton,
+  Dialog,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -48,7 +52,6 @@ import {
   IConfigTimeEntryTemplate,
   IConfigTimeEntryLine,
 } from '@serviceops/interfaces';
-import { DataTable, Column } from '@serviceops/component';
 import { useStyles } from '../../styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
 

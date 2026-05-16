@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Typography } from '@serviceops/component';
 import { SvgIconComponent } from '@mui/icons-material';
 
 interface ConfigPlaceholderProps {

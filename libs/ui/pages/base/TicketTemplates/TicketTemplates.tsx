@@ -3,11 +3,8 @@ import {
   Box,
   Typography,
   Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Alert,
   TextField,
-  InputAdornment,
   Paper,
   Button,
   Checkbox,
@@ -15,6 +12,11 @@ import {
   Divider,
   Tooltip,
   Link,
+} from '@serviceops/component';
+import {
+  AccordionSummary,
+  AccordionDetails,
+  InputAdornment,
   Dialog,
   DialogTitle,
   DialogContent,

@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Box, Modal, Button, UploadFile } from '../../../../components';
-import { Typography } from '@mui/material';
+import { Box, Modal, Button, UploadFile, Typography } from '../../../../components';
 import { IIncident } from '@serviceops/interfaces';
 import { useUpdateIncidentMutation } from '../../../../../services';
 import { useNotification } from '@serviceops/hooks';

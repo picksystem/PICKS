@@ -1,14 +1,6 @@
 import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogActions,
-  Button,
-  Box,
-  Typography,
-  alpha,
-  darken,
-} from '@mui/material';
+import { Button, Box, Typography } from '@serviceops/component';
+import { Dialog, DialogContent, DialogActions, alpha, darken } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
 // ── ConfigFormDialog ───────────────────────────────────────────────────────────

@@ -2,23 +2,25 @@ import {
   Box,
   Typography,
   IconButton,
-  Dialog,
-  DialogContent,
-  DialogActions,
   Button,
-  Avatar,
   Chip,
   Divider,
   Alert,
   TextField,
   Select,
   MenuItem,
+  Grid,
+} from '@serviceops/component';
+import {
+  Dialog,
+  DialogContent,
+  DialogActions,
+  Avatar,
   FormControl,
   InputLabel,
   InputAdornment,
   FormHelperText,
   Stack,
-  Grid,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import PersonIcon from '@mui/icons-material/Person';

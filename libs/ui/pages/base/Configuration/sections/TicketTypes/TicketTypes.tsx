@@ -2,19 +2,21 @@ import { useState } from 'react';
 import {
   Box,
   Typography,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Alert,
   TextField,
-  InputAdornment,
   Paper,
   Button,
   Switch,
-  FormControlLabel,
-  Divider,
   Tooltip,
   Link,
+} from '@serviceops/component';
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  InputAdornment,
+  Divider,
+  FormControlLabel,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
@@ -30,22 +32,21 @@ import { useStyles } from '../../styles';
 import { useTicketTypes } from '../../hooks/useTicketTypes';
 import TicketTypeTable from '../../components/TicketTypeTable/TicketTypeTable';
 import TicketTypeFormDialog from '../../dialogs/TicketTypeFormDialog/TicketTypeFormDialog';
-import SequenceDialog from '../../dialogs/SequenceDialog/SequenceDialog';
 import { ConfigDeleteDialog } from '../../dialogs/ConfigDialogs/ConfigDialogs';
+import SequenceDialog from '../../dialogs/SequenceDialog/SequenceDialog';
 
 const TicketTypes = () => {
   const { classes } = useStyles();
   const [tableSearch, setTableSearch] = useState('');
   const [accordionOpen, setAccordionOpen] = useState(true);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [sequenceOpen, setSequenceOpen] = useState(false);
+  const [sequenceOpen, setDisplaySequenceOpen] = useState(false);
+  const [advancedDisplaySequences, setAdvancedDisplaySequences] = useState(false);
 
   const {
     ticketTypes,
     isLoading,
     error,
-    advancedSequences,
-    setAdvancedSequences,
     dialogOpen,
     editingItem,
     selectedRow,
@@ -122,7 +123,7 @@ const TicketTypes = () => {
                     onClick={openAddDialog}
                     sx={{ width: { xs: '100%', sm: 'auto' } }}
                   >
-                    Add New Ticket
+                    Add New Ticket Type
                   </Button>
                 </Tooltip>
               )}
@@ -158,10 +159,10 @@ const TicketTypes = () => {
                   variant='outlined'
                   color='primary'
                   startIcon={<SortIcon />}
-                  onClick={() => setSequenceOpen(true)}
+                  onClick={() => setDisplaySequenceOpen(true)}
                   sx={{ width: { xs: '100%', sm: 'auto' } }}
                 >
-                  Sequence
+                  Display Sequence
                 </Button>
               </Tooltip>
 
@@ -176,15 +177,15 @@ const TicketTypes = () => {
                 labelPlacement='start'
                 control={
                   <Switch
-                    checked={advancedSequences}
-                    onChange={(e) => setAdvancedSequences(e.target.checked)}
+                    checked={advancedDisplaySequences}
+                    onChange={(e) => setAdvancedDisplaySequences(e.target.checked)}
                     size='small'
                     color='primary'
                   />
                 }
                 label={
                   <Typography variant='body2' fontWeight={500} fontSize='0.82rem'>
-                    Use Advanced Number Sequences
+                    Use Advanced Number Display Sequences
                   </Typography>
                 }
                 sx={{ mr: 0, ml: 0, gap: 1, width: { xs: '100%', sm: 'auto' } }}
@@ -204,7 +205,7 @@ const TicketTypes = () => {
                   color='secondary'
                   sx={{ width: { xs: '100%', sm: 'auto' } }}
                 >
-                  Define Advanced Number Sequences
+                  Define Advanced Number Display Sequences
                 </Button>
               </Tooltip>
 
@@ -215,7 +216,7 @@ const TicketTypes = () => {
                   color='secondary'
                   sx={{ width: { xs: '100%', sm: 'auto' } }}
                 >
-                  Define Application Specific Number Sequences
+                  Define Application Specific Number Display Sequences
                 </Button>
               </Tooltip>
 
@@ -317,19 +318,19 @@ const TicketTypes = () => {
         </AccordionDetails>
       </Accordion>
 
-      {/* Sequence Dialog */}
+      {/* Display Sequence Dialog */}
       <SequenceDialog
         open={sequenceOpen}
         ticketTypes={ticketTypes || []}
-        onClose={() => setSequenceOpen(false)}
-        onSave={() => setSequenceOpen(false)}
+        onClose={() => setDisplaySequenceOpen(false)}
+        onSave={() => setDisplaySequenceOpen(false)}
       />
 
       {/* Form Dialog */}
       <TicketTypeFormDialog
         open={dialogOpen}
         editingItem={editingItem}
-        advancedSequences={advancedSequences}
+        advancedSequences={advancedDisplaySequences}
         iconMap={iconMap}
         tagMap={tagMap}
         onClose={closeDialog}

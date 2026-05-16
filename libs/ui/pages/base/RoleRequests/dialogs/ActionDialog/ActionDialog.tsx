@@ -1,14 +1,5 @@
-import {
-  Box,
-  Typography,
-  Avatar,
-  IconButton,
-  Dialog,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-} from '@mui/material';
+import { Box, Typography, IconButton, Button, TextField } from '@serviceops/component';
+import { Dialog, DialogContent, DialogActions, Avatar } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';

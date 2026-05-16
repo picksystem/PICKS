@@ -1,16 +1,5 @@
-import {
-  Box,
-  Typography,
-  Chip,
-  Grid,
-  Divider,
-  Avatar,
-  IconButton,
-  Dialog,
-  DialogContent,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { Box, Typography, Chip, Grid, Divider, IconButton, Button } from '@serviceops/component';
+import { Dialog, DialogContent, DialogActions, Avatar } from '@mui/material';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
@@ -122,16 +111,13 @@ const ViewProfileDialog = ({
                 <Divider />
               </Grid>
               <Grid size={{ xs: 12 }}>
-                <SectionLabel>SLA Calendars</SectionLabel>
+                <SectionLabel>Calendars</SectionLabel>
               </Grid>
               <Grid size={{ xs: 6 }}>
-                <ReadField label='SLA Working Calendar' value={viewProfile.slaWorkingCalendar} />
+                <ReadField label='Working Calendar' value={viewProfile.slaWorkingCalendar} />
               </Grid>
               <Grid size={{ xs: 6 }}>
-                <ReadField
-                  label='SLA Exception Calendar'
-                  value={viewProfile.slaExceptionCalendar}
-                />
+                <ReadField label='Holiday Calendar' value={viewProfile.slaExceptionCalendar} />
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <Divider />

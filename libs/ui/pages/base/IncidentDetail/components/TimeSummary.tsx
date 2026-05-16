@@ -1,5 +1,4 @@
-import { Box } from '../../../../components';
-import { Typography } from '@mui/material';
+import { Box, Typography } from '../../../../components';
 import { TimeSummaryData } from '../types/incidentDetail.types';
 import { formatTimeSummary, calculateRemainingTime } from '../utils/incidentDetail.utils';
 import { useStyles } from '../styles';

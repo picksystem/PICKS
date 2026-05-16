@@ -1,7 +1,6 @@
-import { Typography, Chip } from '@mui/material';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import SearchIcon from '@mui/icons-material/Search';
-import { Box } from '@serviceops/component';
+import { Box, Typography, Chip } from '@serviceops/component';
 import { useStyles } from '../styles';
 
 interface HeroBannerProps {

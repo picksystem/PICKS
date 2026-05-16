@@ -1,6 +1,15 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { Box, Typography, Paper, Chip, Divider, IconButton, Tooltip } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Paper,
+  Chip,
+  Divider,
+  IconButton,
+  Tooltip,
+  TextField,
+} from '@serviceops/component';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import SearchIcon from '@mui/icons-material/Search';
@@ -9,7 +18,6 @@ import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
-import { TextField } from '@serviceops/component';
 import { Loader } from '../../../components';
 import { useGetTicketByNumberQuery } from '@serviceops/services';
 import { constants } from '@serviceops/utils';

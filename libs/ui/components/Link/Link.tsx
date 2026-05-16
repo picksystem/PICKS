@@ -7,6 +7,7 @@ export interface DSLinkProps {
   underline?: 'none' | 'hover' | 'always';
   target?: '_blank' | '_self' | '_parent' | '_top';
   className?: string;
+  sx?: Record<string, unknown>;
   color?:
     | 'inherit'
     | 'initial'
@@ -41,6 +42,7 @@ const Link: React.FC<DSLinkProps> = ({
   underline = 'hover',
   target,
   className,
+  sx,
   color = 'primary',
   variant = 'inherit',
   onClick,
@@ -61,7 +63,7 @@ const Link: React.FC<DSLinkProps> = ({
       variant={variant}
       onClick={onClick}
       {...(component && { component })}
-      sx={{ pointerEvents: disabled ? 'none' : 'auto', opacity: disabled ? 0.5 : 1 }}
+      sx={{ pointerEvents: disabled ? 'none' : 'auto', opacity: disabled ? 0.5 : 1, ...sx }}
       {...rest}
     >
       {children}

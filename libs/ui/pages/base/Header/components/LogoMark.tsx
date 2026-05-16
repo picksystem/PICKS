@@ -1,5 +1,4 @@
-import { Typography } from '@mui/material';
-import { Box } from '@serviceops/component';
+import { Typography, Box } from '@serviceops/component';
 
 interface LogoMarkProps {
   compact?: boolean;

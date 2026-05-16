@@ -12,6 +12,7 @@ export interface DSCheckboxProps {
   indeterminate?: boolean;
   color?: 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' | 'default';
   size?: 'small' | 'medium';
+  sx?: Record<string, unknown>;
 }
 
 const Checkbox: React.FC<DSCheckboxProps> = ({
@@ -25,6 +26,7 @@ const Checkbox: React.FC<DSCheckboxProps> = ({
   indeterminate,
   color = 'primary',
   size = 'medium',
+  sx,
   ...rest
 }) => {
   const { cx, classes } = useStyles();
@@ -42,6 +44,7 @@ const Checkbox: React.FC<DSCheckboxProps> = ({
               indeterminate={indeterminate}
               color={color}
               size={size}
+              sx={sx}
               {...rest}
             />
           }

@@ -1,15 +1,5 @@
-import {
-  Box,
-  Typography,
-  Chip,
-  Card,
-  CardContent,
-  CardActions,
-  IconButton,
-  Tooltip,
-  alpha,
-  Grid,
-} from '@mui/material';
+import { Box, Typography, Chip, Card, IconButton, Tooltip, Grid } from '@serviceops/component';
+import { alpha, CardContent, CardActions } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { ITicketType } from '@serviceops/interfaces';

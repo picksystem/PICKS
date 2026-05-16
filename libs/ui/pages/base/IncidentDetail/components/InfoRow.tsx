@@ -1,6 +1,13 @@
 import { useState } from 'react';
-import { Box, Chip, EditIcon, LinearProgress, Tooltip, UserAvatar } from '../../../../components';
-import { Typography, Popover } from '@mui/material';
+import {
+  Box,
+  Chip,
+  EditIcon,
+  LinearProgress,
+  Typography,
+  UserAvatar,
+} from '../../../../components';
+import { Popover } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
 import BusinessIcon from '@mui/icons-material/Business';
@@ -71,7 +78,7 @@ const InfoRow = ({ classes, incident, eta, onEtaChange, onPriorityClick }: InfoR
         <Typography className={classes.infoLabel}>Affected User</Typography>
         <Box
           className={classes.infoCallerBox}
-          onMouseEnter={(e) => setCallerAnchor(e.currentTarget)}
+          onMouseEnter={(e: React.MouseEvent) => setCallerAnchor(e.currentTarget as HTMLElement)}
           onMouseLeave={() => setCallerAnchor(null)}
           sx={{ cursor: 'default' }}
         >

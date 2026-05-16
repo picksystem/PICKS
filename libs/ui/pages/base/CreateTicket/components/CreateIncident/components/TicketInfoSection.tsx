@@ -1,5 +1,5 @@
 import SearchIcon from '@mui/icons-material/Search';
-import { Box, Typography, TextField, Select, Checkbox, Button } from '@serviceops/component';
+import { Box, Typography, TextField, Checkbox, Button } from '@serviceops/component';
 import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from '../styles';
 import { useState, useRef } from 'react';

@@ -19,12 +19,14 @@ import {
   DraftAdvisoryRequestSchema,
   calculatePriority,
 } from '@serviceops/interfaces';
-import { useAuth, useFormWithSessionStorage, useNotification, useTicketConfig } from '@serviceops/hooks';
-import { constants } from '@serviceops/utils';
 import {
-  generateTicketNumber,
-  srInitialValues,
-} from '../util';
+  useAuth,
+  useFormWithSessionStorage,
+  useNotification,
+  useTicketConfig,
+} from '@serviceops/hooks';
+import { constants } from '@serviceops/utils';
+import { generateTicketNumber, srInitialValues } from '../util';
 
 export interface CreateGenericRequestProps {
   ticketTypeKey: 'service_request' | 'advisory_request';
@@ -32,12 +34,17 @@ export interface CreateGenericRequestProps {
   onSuccess?: (ticketNumber: string) => void;
 }
 
-const useCreateGenericRequest = ({ ticketTypeKey, onCancel, onSuccess }: CreateGenericRequestProps) => {
+const useCreateGenericRequest = ({
+  ticketTypeKey,
+  onCancel,
+  onSuccess,
+}: CreateGenericRequestProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { BasePath } = constants;
   const notify = useNotification();
-  const { impactOptions, urgencyOptions, priorityOptions, statusOptions } = useTicketConfig(ticketTypeKey);
+  const { impactOptions, urgencyOptions, priorityOptions, statusOptions } =
+    useTicketConfig(ticketTypeKey);
 
   const isSR = ticketTypeKey === 'service_request';
   const prefix = isSR ? 'SRQ' : 'ADV';
@@ -205,10 +212,7 @@ const useCreateGenericRequest = ({ ticketTypeKey, onCancel, onSuccess }: CreateG
     }
   };
 
-  const buildTicketData = (
-    statusOverride?: string,
-    uploadedFilenames?: string[],
-  ) => ({
+  const buildTicketData = (statusOverride?: string, uploadedFilenames?: string[]) => ({
     number: ticketNumber,
     client: formik.values.client || undefined,
     caller: formik.values.caller,

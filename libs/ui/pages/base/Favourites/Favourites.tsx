@@ -1,5 +1,5 @@
-import { Box, DataTable, Loader } from '../../../components';
-import { Grid, Typography, TextField, InputAdornment, Tabs, Tab } from '@mui/material';
+import { Grid, Typography, TextField, Box, DataTable, Loader } from '../../../components';
+import { InputAdornment, Tabs, Tab } from '@mui/material';
 import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import SearchIcon from '@mui/icons-material/Search';
 import { useStyles } from './styles';

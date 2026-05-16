@@ -1,24 +1,26 @@
 import { useEffect } from 'react';
 import {
-  Dialog,
-  DialogContent,
   Button,
   TextField,
   Switch,
   FormControlLabel,
   Box,
   Typography,
-  alpha,
   Select,
   MenuItem,
-  FormControl,
-  InputLabel,
   ListItemIcon,
   ListItemText,
-  ListSubheader,
   Chip,
   Grid,
   Divider,
+} from '@serviceops/component';
+import {
+  Dialog,
+  DialogContent,
+  alpha,
+  FormControl,
+  InputLabel,
+  ListSubheader,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import { CreateTicketTypeSchema, ITicketType } from '@serviceops/interfaces';

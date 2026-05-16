@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography } from '@serviceops/component';
 
 const SectionHeader = ({
   icon,

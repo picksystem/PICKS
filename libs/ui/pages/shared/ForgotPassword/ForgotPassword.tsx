@@ -1,4 +1,4 @@
-import { Box, Typography, Paper } from '@mui/material';
+import { Box, Typography, Paper } from '@serviceops/component';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import LockResetIcon from '@mui/icons-material/LockReset';

@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Box, Loader } from '../../../components';
-import { Typography } from '@mui/material';
+import { Box, Loader, Typography } from '../../../components';
 import { useStyles } from './styles';
 import { IncidentStatus, IUpdateIncidentInput } from '../../../../entities/interfaces';
 import { useIncidentDetail } from './hooks/useIncidentDetail';

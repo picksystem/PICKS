@@ -1,28 +1,31 @@
 import {
-  Box,
-  Typography,
-  IconButton,
-  Dialog,
-  DialogContent,
-  Chip,
-  TextField,
-  Select,
-  MenuItem,
   FormControl,
   InputLabel,
   InputAdornment,
-  Button,
-  Table,
   TableHead,
   TableBody,
   TableRow,
   TableCell,
   TableSortLabel,
   TablePagination,
+  Dialog,
+  DialogContent,
+} from '@mui/material';
+import {
+  Loader,
+  UserAvatar,
+  Box,
+  Typography,
+  IconButton,
+  Chip,
+  TextField,
+  Select,
+  MenuItem,
+  Button,
+  Table,
   Tooltip,
   Grid,
-} from '@mui/material';
-import { Loader, UserAvatar } from '@serviceops/component';
+} from '@serviceops/component';
 import HistoryIcon from '@mui/icons-material/History';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
@@ -395,85 +398,22 @@ const ChangesLogDialog = ({
             )}
           </Box>
         ) : (
-          <Table size='small' stickyHeader>
-            <TableHead>
-              <TableRow>
-                {LOG_COLUMNS.map((col) => (
-                  <TableCell key={col.id} className={classes.tableHeaderCell}>
-                    <TableSortLabel
-                      active={logSortBy === col.id}
-                      direction={logSortBy === col.id ? logSortOrder : 'asc'}
-                      onClick={() => onLogSort(col.id)}
-                      className={classes.tableSortLabel}
-                    >
-                      {col.label}
-                    </TableSortLabel>
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedLog.map((log, idx) => (
-                <TableRow
-                  key={(log.id as string | number | null | undefined) ?? idx}
-                  hover
-                  className={classes.tableRow}
-                >
-                  <TableCell className={classes.cellDate}>{fmtDateTime(log.createdAt)}</TableCell>
-                  <TableCell>
-                    {log.changeType ? (
-                      <Chip
-                        label={formatChangeType(log.changeType)}
-                        size='small'
-                        color={CHANGE_TYPE_COLORS[log.changeType] || 'default'}
-                        sx={{ fontSize: '0.7rem', height: 22, fontWeight: 600 }}
-                      />
-                    ) : (
-                      '-'
-                    )}
-                  </TableCell>
-                  <TableCell className={classes.cellFieldName}>{log.fieldName || '-'}</TableCell>
-                  <TableCell className={classes.cellPrevValue}>
-                    <Tooltip title={log.previousValue || ''}>
-                      <span>{log.previousValue || '-'}</span>
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell className={classes.cellNewValue}>
-                    <Tooltip title={log.newValue || ''}>
-                      <span>{log.newValue || '-'}</span>
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell className={classes.cellChangedBy}>
-                    {log.changedByName || '-'}
-                  </TableCell>
-                  <TableCell>
-                    {log.reasonCode ? (
-                      <Chip
-                        label={
-                          ROLE_CHANGE_REASON_CODES.find((r) => r.value === log.reasonCode)?.label ||
-                          log.reasonCode
-                        }
-                        size='small'
-                        variant='outlined'
-                        sx={{ fontSize: '0.7rem', height: 22 }}
-                      />
-                    ) : (
-                      '-'
-                    )}
-                  </TableCell>
-                  <TableCell className={classes.cellReasonNote}>
-                    {log.reasonNotes ? (
-                      <Tooltip title={log.reasonNotes}>
-                        <span>{log.reasonNotes}</span>
-                      </Tooltip>
-                    ) : (
-                      '-'
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <Table
+            size='small'
+            stickyHeader
+            columns={LOG_COLUMNS.map((col) => ({ id: col.id, label: col.label }))}
+            rows={paginatedLog.map((log) => ({
+              id: log.id,
+              createdAt: fmtDateTime(log.createdAt),
+              changeType: log.changeType,
+              fieldName: log.fieldName || '-',
+              previousValue: log.previousValue || '-',
+              newValue: log.newValue || '-',
+              changedByName: log.changedByName || '-',
+              reasonCode: log.reasonCode || '-',
+              reasonNotes: log.reasonNotes || '-',
+            }))}
+          />
         )}
       </DialogContent>
 

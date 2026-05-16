@@ -6,8 +6,8 @@ import {
   LinkIcon,
   NavigateBeforeIcon,
   NavigateNextIcon,
+  Typography,
 } from '../../../../components';
-import { Typography } from '@mui/material';
 import { IIncident } from '@serviceops/interfaces';
 import { copyRichLink, copyToClipboard } from '../utils/incidentDetail.utils';
 

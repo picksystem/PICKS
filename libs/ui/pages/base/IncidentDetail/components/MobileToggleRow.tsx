@@ -1,5 +1,4 @@
-import { Box, ExpandMoreIcon } from '../../../../components';
-import { Typography } from '@mui/material';
+import { Box, ExpandMoreIcon, Typography } from '../../../../components';
 
 interface MobileToggleRowProps {
   classes: Record<string, string>;

@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import { Chip, Switch } from '@mui/material';
 import { useThemeContext } from '@serviceops/theme';
 import {
   useAuthActionMutation,
@@ -42,7 +41,7 @@ import {
   DRAFT_DAYS,
   UM_SESSION_KEY,
 } from '../utils/userManagement.utils';
-import { Column } from '@serviceops/component';
+import { Column, Chip, Switch } from '@serviceops/component';
 
 const useUserManagement = () => {
   const [authAction] = useAuthActionMutation();

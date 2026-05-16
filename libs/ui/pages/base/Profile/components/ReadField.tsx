@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Box } from '@mui/material';
+import { Box } from '@serviceops/component';
 import { makeStyles } from 'tss-react/mui';
 
 const useStyles = makeStyles()(() => ({

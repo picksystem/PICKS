@@ -1,10 +1,9 @@
-import { Button } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CancelIcon from '@mui/icons-material/Cancel';
 import SaveIcon from '@mui/icons-material/Save';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
-import { Box } from '@serviceops/component';
+import { Button, Box } from '@serviceops/component';
 import { useStyles } from '../styles';
 
 interface ActionButtonsProps {

@@ -6,10 +6,9 @@ import {
   Typography,
   Select,
   MenuItem,
-  FormControl,
-  InputLabel,
   Grid,
-} from '@mui/material';
+} from '@serviceops/component';
+import { FormControl, InputLabel } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { IConfigResponseAckSLARow, ITicketType } from '@serviceops/interfaces';
 import { ConfigFormDialog } from '../ConfigDialogs/ConfigDialogs';

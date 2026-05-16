@@ -1,11 +1,12 @@
 import {
+  Box,
   Typography,
   LinearProgress,
   Divider,
   IconButton,
   Checkbox,
   FormControlLabel,
-} from '@mui/material';
+} from '@serviceops/component';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import EmojiObjectsOutlinedIcon from '@mui/icons-material/EmojiObjectsOutlined';
@@ -15,7 +16,6 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import SpeedIcon from '@mui/icons-material/Speed';
 import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
-import { Box } from '@serviceops/component';
 import { IncidentStatus, IIncident } from '../../../../../entities/interfaces';
 import { useStyles } from '../styles';
 

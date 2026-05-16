@@ -1,9 +1,14 @@
-import { Box, Typography, InputAdornment, IconButton } from '@mui/material';
+import {
+  Box,
+  Typography,
+  IconButton,
+  TextField,
+  Button,
+} from '@serviceops/component';
+import { InputAdornment } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useFieldError } from '@serviceops/hooks';
-import TextField from '../../../../components/TextField/TextField';
-import Button from '../../../../components/Button/Button';
 
 function getStrength(pw: string) {
   let score = 0;

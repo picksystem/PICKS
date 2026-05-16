@@ -1,9 +1,5 @@
 import { useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   List,
   ListItem,
@@ -13,8 +9,8 @@ import {
   Box,
   Chip,
   Tooltip,
-  CircularProgress,
-} from '@mui/material';
+} from '@serviceops/component';
+import { Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress } from '@mui/material';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';

@@ -1,26 +1,22 @@
 import { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { UserAvatar } from '@serviceops/component';
 import {
+  UserAvatar,
   Box,
   Typography,
   IconButton,
-  Dialog,
-  DialogContent,
-  DialogActions,
   Button,
   Chip,
   Divider,
   TextField,
   Select,
   MenuItem,
-  FormControl,
-  InputLabel,
   FormControlLabel,
   Switch,
   Grid,
-} from '@mui/material';
+} from '@serviceops/component';
+import { Dialog, DialogContent, DialogActions, FormControl, InputLabel } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 import { useFieldError } from '@serviceops/hooks';

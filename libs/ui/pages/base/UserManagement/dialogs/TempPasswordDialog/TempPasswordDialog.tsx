@@ -1,35 +1,37 @@
 import {
-  Box,
-  Typography,
-  IconButton,
   Dialog,
   DialogContent,
   DialogActions,
-  Button,
   Avatar,
+  FormControl,
+  InputLabel,
+  ToggleButtonGroup,
+  ToggleButton,
+} from '@mui/material';
+import KeyIcon from '@mui/icons-material/Key';
+import CloseIcon from '@mui/icons-material/Close';
+import PeopleIcon from '@mui/icons-material/People';
+import SecurityIcon from '@mui/icons-material/Security';
+import {
+  UserAvatar,
+  Box,
+  Typography,
+  IconButton,
+  Button,
   Chip,
   Divider,
   Alert,
   TextField,
   Select,
   MenuItem,
-  FormControl,
-  InputLabel,
   FormControlLabel,
   Switch,
-  ToggleButtonGroup,
-  ToggleButton,
   ListItem,
   ListItemText,
   ListItemIcon,
   Checkbox,
   Grid,
-} from '@mui/material';
-import KeyIcon from '@mui/icons-material/Key';
-import CloseIcon from '@mui/icons-material/Close';
-import PeopleIcon from '@mui/icons-material/People';
-import SecurityIcon from '@mui/icons-material/Security';
-import { UserAvatar } from '@serviceops/component';
+} from '@serviceops/component';
 import { useStyles } from './styles';
 import { UserRow } from '../../types/userManagement.types';
 import { IAuthUser } from '@serviceops/interfaces';

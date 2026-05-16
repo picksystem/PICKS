@@ -1,8 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Alert, Button } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { Box } from '@serviceops/component';
+import { Alert, Button, Box } from '@serviceops/component';
 import { useGetIncidentsQuery, useCreateIncidentMutation } from '../../../../services';
 import { IncidentStatus, ICreateIncidentInput } from '../../../../entities/interfaces';
 import { constants } from '@serviceops/utils';

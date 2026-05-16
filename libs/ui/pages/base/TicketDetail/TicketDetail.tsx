@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography } from '@serviceops/component';
 import IncidentDetail from '../IncidentDetail/IncidentDetail';
 import GenericTicketDetailView from './GenericTicketDetailView';
 

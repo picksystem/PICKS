@@ -1,4 +1,4 @@
-import { Typography, ClickAwayListener, useMediaQuery, useTheme } from '@mui/material';
+import { ClickAwayListener, useMediaQuery, useTheme } from '@mui/material';
 import {
   Box,
   Tooltip,
@@ -22,6 +22,7 @@ import {
   BusinessCenterIcon,
   HelpOutlineIcon,
   LogoutIcon,
+  Typography,
 } from '../../../../components';
 import { IIncident } from '@serviceops/interfaces';
 

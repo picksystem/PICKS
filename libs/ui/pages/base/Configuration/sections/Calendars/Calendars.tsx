@@ -3,27 +3,31 @@ import {
   Box,
   Typography,
   Paper,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Button,
   Tooltip,
   Link,
   TextField,
-  InputAdornment,
-  Dialog,
-  DialogContent,
-  DialogActions,
-  alpha,
-  IconButton,
   Chip,
   Divider,
-  FormControlLabel,
   Switch,
+  DataTable,
+  Column,
+} from '@serviceops/component';
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  InputAdornment,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
+  alpha,
+  IconButton,
+  FormControlLabel,
+  Dialog,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -55,7 +59,6 @@ import {
   IConfigCalendarWorkLocation,
   IConfigCalendarConsultant,
 } from '@serviceops/interfaces';
-import { DataTable, Column } from '@serviceops/component';
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { ConfigFormDialog, ConfigDeleteDialog } from '../../dialogs/ConfigDialogs/ConfigDialogs';
@@ -927,19 +930,26 @@ const BankHolidaysPanel = ({
   const [editingRow, setEditingRow] = useState<IConfigBankHoliday | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [filterCalendar, setFilterCalendar] = useState<string>('');
   const [bhForm, setBhForm] = useState({ ...EMPTY_BH_FORM });
 
   const selectedRow = rows.find((r) => r.id === selectedId) ?? null;
 
+  // Get unique calendar names for filter dropdown
+  const calendarNames = [...new Set(allBankHolidays.map((b) => b.calendarName).filter(Boolean))];
+
   const filtered = search
     ? rows.filter(
         (r) =>
-          r.holidayDescription.toLowerCase().includes(search.toLowerCase()) ||
-          r.date.toLowerCase().includes(search.toLowerCase()) ||
-          r.day.toLowerCase().includes(search.toLowerCase()) ||
-          String(r.calendarYear).includes(search),
+          (r.holidayDescription.toLowerCase().includes(search.toLowerCase()) ||
+            r.date.toLowerCase().includes(search.toLowerCase()) ||
+            r.day.toLowerCase().includes(search.toLowerCase()) ||
+            String(r.calendarYear).includes(search)) &&
+          (!filterCalendar || r.calendarName === filterCalendar),
       )
-    : rows;
+    : filterCalendar
+      ? rows.filter((r) => r.calendarName === filterCalendar)
+      : rows;
 
   useEffect(() => {
     if (!dialogOpen) return;
@@ -992,8 +1002,8 @@ const BankHolidaysPanel = ({
   };
 
   const panelTitle = calendarRow
-    ? `Bank Holidays — ${calendarRow.name}`
-    : 'Bank Holidays (All Calendars)';
+    ? `Bank Holidays/Public Holidays — ${calendarRow.name}`
+    : 'Bank Holidays/Public Holidays (All Calendars)';
 
   const bhColumns: Column<IConfigBankHoliday>[] = [
     {
@@ -1055,6 +1065,54 @@ const BankHolidaysPanel = ({
         title={panelTitle}
         onBack={onBack}
       />
+      {/* Calendar Filter */}
+      <Paper
+        variant='outlined'
+        sx={{
+          borderRadius: 0,
+          borderTop: 'none',
+          borderBottom: 'none',
+          px: 1.5,
+          py: 0.75,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          bgcolor: alpha(ACCENT_BH, 0.02),
+        }}
+      >
+        <Typography variant='caption' fontWeight={600} color='text.secondary'>
+          Filter by Holiday Calendar:
+        </Typography>
+        <FormControl size='small' sx={{ minWidth: 160 }}>
+          <Select
+            displayEmpty
+            value={filterCalendar}
+            onChange={(e) => setFilterCalendar(e.target.value)}
+            sx={{ fontSize: '0.82rem' }}
+            renderValue={(v) => {
+              if (!v)
+                return (
+                  <Typography sx={{ fontSize: '0.82rem', color: 'text.disabled' }}>
+                    All Calendars
+                  </Typography>
+                );
+              return <Typography sx={{ fontSize: '0.82rem' }}>{v}</Typography>;
+            }}
+          >
+            <MenuItem value=''>
+              <em>All Calendars</em>
+            </MenuItem>
+            {calendarNames.map((name) => (
+              <MenuItem key={name} value={name} sx={{ fontSize: '0.82rem' }}>
+                {name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <Typography variant='caption' color='text.secondary'>
+          {filtered.length} holiday{filtered.length !== 1 ? 's' : ''}
+        </Typography>
+      </Paper>
       <PanelToolbar
         accent={ACCENT_BH}
         selectedLabel={
@@ -1536,8 +1594,7 @@ const EMPTY_WC_FORM = { name: '', holidayCalendar: '', workingDayTemplate: '' };
 const EMPTY_WT_FORM = {
   calendarName: '',
   dayOfWeek: 'Monday',
-  startTime: '09:00',
-  endTime: '17:00',
+  timeBlocks: [{ startTime: '09:00', endTime: '17:00' }],
   isWorkingDay: true,
 };
 const EMPTY_CT_FORM = {
@@ -1586,8 +1643,7 @@ const WorkingTimePanel = ({
     ? rows.filter(
         (r) =>
           r.dayOfWeek.toLowerCase().includes(search.toLowerCase()) ||
-          r.startTime.includes(search) ||
-          r.endTime.includes(search),
+          r.timeBlocks.some((b) => b.startTime.includes(search) || b.endTime.includes(search)),
       )
     : rows;
 
@@ -1598,8 +1654,7 @@ const WorkingTimePanel = ({
         ? {
             calendarName: editingRow.calendarName,
             dayOfWeek: editingRow.dayOfWeek,
-            startTime: editingRow.startTime,
-            endTime: editingRow.endTime,
+            timeBlocks: editingRow.timeBlocks || [{ startTime: '09:00', endTime: '17:00' }],
             isWorkingDay: editingRow.isWorkingDay,
           }
         : { ...EMPTY_WT_FORM, calendarName: calendarRow?.name ?? '' },
@@ -1608,12 +1663,18 @@ const WorkingTimePanel = ({
 
   const handleSubmit = () => {
     if (!wtForm.calendarName.trim()) return;
+    // Ensure at least one valid time block
+    const validBlocks = wtForm.timeBlocks.filter((b) => b.startTime && b.endTime);
+    if (validBlocks.length === 0) {
+      validBlocks.push({ startTime: '09:00', endTime: '17:00' });
+    }
+    const formData = { ...wtForm, timeBlocks: validBlocks };
     let next: IConfigWorkingCalendarTime[];
     if (editingRow) {
-      next = allTimes.map((t) => (t.id === editingRow.id ? { ...editingRow, ...wtForm } : t));
+      next = allTimes.map((t) => (t.id === editingRow.id ? { ...editingRow, ...formData } : t));
       setSelectedId(editingRow.id);
     } else {
-      const n: IConfigWorkingCalendarTime = { id: `wt_${Date.now()}`, ...wtForm };
+      const n: IConfigWorkingCalendarTime = { id: `wt_${Date.now()}`, ...formData };
       next = [...allTimes, n];
       setSelectedId(n.id);
     }
@@ -1641,42 +1702,37 @@ const WorkingTimePanel = ({
       ),
     },
     {
-      id: 'startTime',
-      label: 'Start Time',
-      minWidth: 110,
-      format: (v): React.ReactNode => (
-        <Chip
-          label={String(v || '—')}
-          size='small'
-          sx={{
-            fontWeight: 700,
-            fontSize: '0.72rem',
-            height: 22,
-            borderRadius: '6px',
-            bgcolor: alpha(ACCENT_WT, 0.1),
-            color: ACCENT_WT,
-          }}
-        />
-      ),
-    },
-    {
-      id: 'endTime',
-      label: 'End Time',
-      minWidth: 110,
-      format: (v): React.ReactNode => (
-        <Chip
-          label={String(v || '—')}
-          size='small'
-          sx={{
-            fontWeight: 700,
-            fontSize: '0.72rem',
-            height: 22,
-            borderRadius: '6px',
-            bgcolor: alpha('#dc2626', 0.1),
-            color: '#dc2626',
-          }}
-        />
-      ),
+      id: 'timeBlocks',
+      label: 'Working Hours',
+      minWidth: 250,
+      format: (v): React.ReactNode => {
+        const blocks = Array.isArray(v) ? v : [];
+        if (blocks.length === 0)
+          return (
+            <Typography variant='body2' color='text.disabled'>
+              —
+            </Typography>
+          );
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            {blocks.map((block: { startTime: string; endTime: string }, idx: number) => (
+              <Chip
+                key={idx}
+                label={`${block.startTime} – ${block.endTime}`}
+                size='small'
+                sx={{
+                  fontWeight: 700,
+                  fontSize: '0.72rem',
+                  height: 22,
+                  borderRadius: '6px',
+                  bgcolor: alpha(ACCENT_WT, 0.1),
+                  color: ACCENT_WT,
+                }}
+              />
+            ))}
+          </Box>
+        );
+      },
     },
     { id: 'isWorkingDay', label: 'Working Day', minWidth: 110, format: ActiveChip },
   ];
@@ -1695,7 +1751,7 @@ const WorkingTimePanel = ({
         accent={ACCENT_WT}
         selectedLabel={
           selectedRow
-            ? `${selectedRow.dayOfWeek}  ${selectedRow.startTime}–${selectedRow.endTime}`
+            ? `${selectedRow.dayOfWeek} (${(selectedRow.timeBlocks || []).map((b) => `${b.startTime}–${b.endTime}`).join(', ')})`
             : null
         }
         onNew={() => {
@@ -1735,6 +1791,7 @@ const WorkingTimePanel = ({
         accent={ACCENT_WT}
         title='Working Time'
         submitDisabled={!wtForm.calendarName.trim()}
+        maxWidth='sm'
       >
         <TextField
           label='Calendar Name'
@@ -1758,25 +1815,65 @@ const WorkingTimePanel = ({
             ))}
           </Select>
         </FormControl>
-        <Box sx={{ display: 'flex', gap: 1.5 }}>
-          <TextField
-            label='Start Time'
-            type='time'
+        <Box>
+          <Typography variant='body2' fontWeight={600} sx={{ mb: 1 }}>
+            Working Hours (add multiple blocks for breaks)
+          </Typography>
+          {wtForm.timeBlocks.map((block, idx) => (
+            <Box key={idx} sx={{ display: 'flex', gap: 1, mb: 1 }}>
+              <TextField
+                label='Start Time'
+                type='time'
+                size='small'
+                sx={{ flex: 1 }}
+                value={block.startTime}
+                onChange={(e) => {
+                  const newBlocks = [...wtForm.timeBlocks];
+                  newBlocks[idx] = { ...block, startTime: e.target.value };
+                  setWtForm((f) => ({ ...f, timeBlocks: newBlocks }));
+                }}
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              <TextField
+                label='End Time'
+                type='time'
+                size='small'
+                sx={{ flex: 1 }}
+                value={block.endTime}
+                onChange={(e) => {
+                  const newBlocks = [...wtForm.timeBlocks];
+                  newBlocks[idx] = { ...block, endTime: e.target.value };
+                  setWtForm((f) => ({ ...f, timeBlocks: newBlocks }));
+                }}
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              {wtForm.timeBlocks.length > 1 && (
+                <IconButton
+                  size='small'
+                  color='error'
+                  onClick={() => {
+                    const newBlocks = wtForm.timeBlocks.filter((_, i) => i !== idx);
+                    setWtForm((f) => ({ ...f, timeBlocks: newBlocks }));
+                  }}
+                >
+                  <DeleteIcon fontSize='small' />
+                </IconButton>
+              )}
+            </Box>
+          ))}
+          <Button
             size='small'
-            sx={{ flex: 1 }}
-            value={wtForm.startTime}
-            onChange={(e) => setWtForm((f) => ({ ...f, startTime: e.target.value }))}
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-          <TextField
-            label='End Time'
-            type='time'
-            size='small'
-            sx={{ flex: 1 }}
-            value={wtForm.endTime}
-            onChange={(e) => setWtForm((f) => ({ ...f, endTime: e.target.value }))}
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
+            startIcon={<AddIcon />}
+            onClick={() => {
+              setWtForm((f) => ({
+                ...f,
+                timeBlocks: [...f.timeBlocks, { startTime: '12:00', endTime: '13:00' }],
+              }));
+            }}
+            sx={{ mt: 0.5 }}
+          >
+            Add Time Block
+          </Button>
         </Box>
         <FormControlLabel
           control={
@@ -1801,7 +1898,7 @@ const WorkingTimePanel = ({
         entityName='Working Time'
         itemName={
           selectedRow
-            ? `${selectedRow.dayOfWeek} (${selectedRow.startTime}–${selectedRow.endTime})`
+            ? `${selectedRow.dayOfWeek} (${(selectedRow.timeBlocks || []).map((b) => `${b.startTime}–${b.endTime}`).join(', ')})`
             : undefined
         }
       />

@@ -34,6 +34,8 @@ export const CreateTicketTypeSchema = yup.object({
     .min(1, 'Must be at least 1')
     .max(12, 'Must be 12 or less')
     .default(7),
+  creationPageDisplayText: yup.string().max(200, 'Must be 200 characters or less').default(''),
+  creationPageDisplayTag: yup.string().max(100, 'Must be 100 characters or less').default(''),
 });
 
 /**
@@ -52,6 +54,8 @@ export const UpdateTicketTypeSchema = yup.object({
     .matches(/^[A-Z0-9]*$/i, 'Only letters and numbers allowed'),
   isActive: yup.boolean(),
   numberLength: yup.number().integer().min(1, 'Must be at least 1').max(12, 'Must be 12 or less'),
+  creationPageDisplayText: yup.string().max(200, 'Must be 200 characters or less'),
+  creationPageDisplayTag: yup.string().max(100, 'Must be 100 characters or less'),
 });
 
 /**

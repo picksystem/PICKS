@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Typography } from '@serviceops/component';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import SecurityIcon from '@mui/icons-material/Security';
 import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize';

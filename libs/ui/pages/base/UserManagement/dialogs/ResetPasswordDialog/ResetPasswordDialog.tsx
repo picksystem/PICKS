@@ -1,23 +1,25 @@
-import { UserAvatar } from '@serviceops/component';
 import {
+  UserAvatar,
   Box,
   Typography,
   IconButton,
-  Dialog,
-  DialogContent,
-  DialogActions,
   Button,
   Chip,
   Divider,
   Alert,
   TextField,
-  InputAdornment,
   FormControlLabel,
   Switch,
+  LinearProgress,
+} from '@serviceops/component';
+import {
+  Dialog,
+  DialogContent,
+  DialogActions,
+  InputAdornment,
   ToggleButtonGroup,
   ToggleButton,
   Stack,
-  LinearProgress,
 } from '@mui/material';
 import LockResetIcon from '@mui/icons-material/LockReset';
 import CloseIcon from '@mui/icons-material/Close';

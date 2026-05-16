@@ -1,5 +1,4 @@
-import { Box, TimerIcon } from '../../../../components';
-import { Typography } from '@mui/material';
+import { Typography, Box, TimerIcon } from '../../../../components';
 
 interface DraftExpiryBannerProps {
   classes: Record<string, string>;

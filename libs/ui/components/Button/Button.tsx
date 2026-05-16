@@ -8,7 +8,7 @@ export interface DSButtonProps {
   icon?: React.ReactNode;
   iconPosition?: 'start' | 'end';
   variant?: 'contained' | 'outlined' | 'text';
-  color?: 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
+  color?: 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' | 'inherit';
   disabled?: boolean;
   className?: string;
   onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
@@ -17,6 +17,7 @@ export interface DSButtonProps {
   sx?: Record<string, unknown>;
   startIcon?: React.ReactNode;
   endIcon?: React.ReactNode;
+  form?: string;
 }
 
 const Button: React.FC<DSButtonProps> = ({
@@ -35,6 +36,7 @@ const Button: React.FC<DSButtonProps> = ({
   sx,
   startIcon: startIconProp,
   endIcon: endIconProp,
+  form,
   ...rest
 }) => {
   const { cx, classes } = useStyles();
@@ -56,6 +58,7 @@ const Button: React.FC<DSButtonProps> = ({
       size={size}
       className={cx(classes.root, className)}
       sx={sx}
+      form={form}
       {...rest}
     >
       {loading ? (

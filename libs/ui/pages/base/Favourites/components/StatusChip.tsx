@@ -1,4 +1,4 @@
-import { Chip } from '@mui/material';
+import { Chip } from '@serviceops/component';
 
 const StatusChip = ({ value }: { value: unknown }) => {
   const s = String(value || '').toLowerCase();

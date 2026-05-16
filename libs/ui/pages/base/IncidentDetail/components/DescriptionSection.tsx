@@ -1,5 +1,4 @@
-import { Box } from '../../../../components';
-import { TextField, Typography } from '@mui/material';
+import { TextField, Typography, Box } from '../../../../components';
 import { IIncident, IUpdateIncidentInput } from '@serviceops/interfaces';
 import { useStyles } from '../styles';
 

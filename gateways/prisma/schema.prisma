@@ -142,15 +142,17 @@ model AdminHeader {
 }
 
 model AdminTicketType {
-  id           Int     @id @default(autoincrement())
-  type         String  @unique
-  name         String
-  displayName  String  @default("")
-  description  String  @default("")
-  prefix       String  @default("")
-  isActive     Boolean @default(true)
-  numberLength Int     @default(7)
-  displayOrder Int     @default(0)
+  id                      Int     @id @default(autoincrement())
+  type                    String  @unique
+  name                    String
+  displayName             String  @default("")
+  description             String  @default("")
+  prefix                  String  @default("")
+  isActive                Boolean @default(true)
+  numberLength            Int     @default(7)
+  displayOrder            Int     @default(0)
+  creationPageDisplayText String  @default("")
+  creationPageDisplayTag  String  @default("")
 }
 
 model AdminIncident {

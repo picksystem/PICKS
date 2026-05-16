@@ -1,5 +1,7 @@
-import { Box, Loader, DataTable } from '@serviceops/component';
 import {
+  Box,
+  Loader,
+  DataTable,
   Typography,
   Button,
   Grid,
@@ -10,8 +12,8 @@ import {
   Link,
   Tooltip,
   TextField,
-  InputAdornment,
-} from '@mui/material';
+} from '@serviceops/component';
+import { InputAdornment } from '@mui/material';
 import GroupIcon from '@mui/icons-material/Group';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';

@@ -11,16 +11,13 @@ import {
   ExpandMoreIcon,
   EditIcon,
   UserAvatar,
-} from '../../../../components';
-import {
-  Typography,
+    Typography,
   Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Switch,
   Select,
   MenuItem,
-} from '@mui/material';
+} from '../../../../components';
+import { AccordionSummary, AccordionDetails } from '@mui/material';
 import { IIncident, IUpdateIncidentInput } from '@serviceops/interfaces';
 import { TimeSummaryData } from '../types/incidentDetail.types';
 

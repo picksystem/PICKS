@@ -2,20 +2,22 @@ import {
   Box,
   Typography,
   IconButton,
-  Dialog,
-  DialogContent,
-  DialogActions,
   Button,
   Checkbox,
   FormControlLabel,
   TextField,
-  Radio,
-  RadioGroup,
   Accordion,
+  Chip,
+} from '@serviceops/component';
+import {
+  Dialog,
+  DialogContent,
+  DialogActions,
   AccordionSummary,
   AccordionDetails,
-  Chip,
   CircularProgress,
+  Radio,
+  RadioGroup as MUIRadioGroup,
 } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import CloseIcon from '@mui/icons-material/Close';
@@ -290,10 +292,12 @@ const AdminControlsDialog = ({
                   >
                     {labels[page].desc}
                   </Typography>
-                  <RadioGroup
+                  <MUIRadioGroup
                     row
                     value={pageStyles[page]}
-                    onChange={(e) => onPageStyleChange(page, e.target.value as 'old' | 'new')}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      onPageStyleChange(page, e.target.value as 'old' | 'new')
+                    }
                   >
                     <FormControlLabel
                       value='old'
@@ -305,7 +309,7 @@ const AdminControlsDialog = ({
                       control={<Radio size='small' />}
                       label={<Typography variant='body2'>New</Typography>}
                     />
-                  </RadioGroup>
+                  </MUIRadioGroup>
                 </Box>
               );
             })}

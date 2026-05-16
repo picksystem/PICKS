@@ -4,23 +4,27 @@ import {
   Typography,
   Paper,
   Switch,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Divider,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
   Button,
   Tooltip,
   Link,
   Chip,
   TextField,
+  DataTable,
+  Column,
+} from '@serviceops/component';
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   InputAdornment,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
 } from '@mui/material';
 import { ConfigFormDialog, ConfigDeleteDialog } from '../../dialogs/ConfigDialogs/ConfigDialogs';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -30,7 +34,6 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
-import { DataTable, Column } from '@serviceops/component';
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { useGetTicketTypeQuery } from '@serviceops/services';
@@ -45,6 +48,7 @@ const DEFAULT_GENERAL: IConfigGeneral = {
   dateFormat: 'MM/DD/YYYY',
   language: 'en',
   timeEntriesEnabled: false,
+  activateDefaultApprovedHours: false,
   timeEntriesDisplayName: 'estimated_hours',
   approvedEstimateRows: [],
 };
@@ -115,17 +119,32 @@ const General = () => {
   // ── Dialog form ───────────────────────────────────────────────────────────
   const [dlgTicketTypeId, setDlgTicketTypeId] = useState(0);
   const [dlgTicketTypeName, setDlgTicketTypeName] = useState('');
+  const [dlgServiceLine, setDlgServiceLine] = useState('');
+  const [dlgApplication, setDlgApplication] = useState('');
+  const [dlgQueue, setDlgQueue] = useState('');
   const [dlgHours, setDlgHours] = useState(0);
+
+  // Get data from categorization for dropdowns
+  const { categorization } = useConfiguration();
+  const serviceLines = (categorization?.serviceLines ?? []).map((sl) => sl.name);
+  const applications = (categorization?.applications ?? []).map((app) => app.name);
+  const queues = (categorization?.queues ?? []).map((q) => q.name);
 
   useEffect(() => {
     if (dialogOpen) {
       if (editingRow) {
         setDlgTicketTypeId(editingRow.ticketTypeId);
         setDlgTicketTypeName(editingRow.ticketTypeName);
+        setDlgServiceLine(editingRow.serviceLine ?? '');
+        setDlgApplication(editingRow.application ?? '');
+        setDlgQueue(editingRow.queue ?? '');
         setDlgHours(editingRow.hours);
       } else {
         setDlgTicketTypeId(0);
         setDlgTicketTypeName('');
+        setDlgServiceLine('');
+        setDlgApplication('');
+        setDlgQueue('');
         setDlgHours(0);
       }
     }
@@ -147,6 +166,9 @@ const General = () => {
       id: editingRow?.id ?? `est_${Date.now()}`,
       ticketTypeId: dlgTicketTypeId,
       ticketTypeName: dlgTicketTypeName,
+      serviceLine: dlgServiceLine || undefined,
+      application: dlgApplication || undefined,
+      queue: dlgQueue || undefined,
       hours: dlgHours,
     });
   };
@@ -156,7 +178,7 @@ const General = () => {
   const estColumns: Column<IConfigApprovedEstimateRow>[] = [
     {
       id: 'ticketTypeName',
-      label: 'Ticket Types',
+      label: 'Ticket Type',
       minWidth: 140,
       format: (_v, row) => {
         const color =
@@ -180,9 +202,49 @@ const General = () => {
       },
     },
     {
+      id: 'serviceLine',
+      label: 'Service Line',
+      minWidth: 130,
+      format: (v) => {
+        const val = v as string | undefined;
+        return (
+          <Typography sx={{ fontSize: '0.82rem', color: val ? 'text.primary' : 'text.disabled' }}>
+            {val || '—'}
+          </Typography>
+        );
+      },
+    },
+    {
+      id: 'application',
+      label: 'Application',
+      minWidth: 130,
+      format: (v) => {
+        const val = v as string | undefined;
+        return (
+          <Typography sx={{ fontSize: '0.82rem', color: val ? 'text.primary' : 'text.disabled' }}>
+            {val || '—'}
+          </Typography>
+        );
+      },
+    },
+    {
+      id: 'queue',
+      label: 'Queue',
+      minWidth: 130,
+      format: (v) => {
+        const val = v as string | undefined;
+        return (
+          <Typography sx={{ fontSize: '0.82rem', color: val ? 'text.primary' : 'text.disabled' }}>
+            {val || '—'}
+          </Typography>
+        );
+      },
+    },
+    {
       id: 'hours',
-      label: 'Default Approved Estimate (hours)',
-      minWidth: 200,
+      label: 'Default Hours',
+      minWidth: 120,
+      align: 'right',
       format: (v) => (
         <Typography sx={{ fontSize: '0.82rem', fontFamily: 'monospace', fontWeight: 700 }}>
           {String(v)}
@@ -225,6 +287,28 @@ const General = () => {
             variant='outlined'
             sx={{ borderRadius: 1.5, overflow: 'hidden', px: 1.5, py: 0.5 }}
           >
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                py: 0.75,
+              }}
+            >
+              <Typography sx={{ fontSize: '0.83rem', fontWeight: 500, color: 'text.primary' }}>
+                Activate default approved hours
+              </Typography>
+              <Switch
+                size='small'
+                color='primary'
+                checked={form.activateDefaultApprovedHours}
+                onChange={(e) => update('activateDefaultApprovedHours', e.target.checked)}
+                sx={{ flexShrink: 0 }}
+              />
+            </Box>
+
+            <Divider sx={{ opacity: 0.45 }} />
+
             <Box
               sx={{
                 display: 'flex',
@@ -460,6 +544,56 @@ const General = () => {
             </Select>
           </FormControl>
         )}
+
+        <FormControl size='small' fullWidth>
+          <InputLabel>Service Line</InputLabel>
+          <Select
+            label='Service Line'
+            value={dlgServiceLine}
+            onChange={(e) => setDlgServiceLine(e.target.value)}
+          >
+            <MenuItem value=''>
+              <em>None</em>
+            </MenuItem>
+            {serviceLines.map((sl: string) => (
+              <MenuItem key={sl} value={sl}>
+                {sl}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <FormControl size='small' fullWidth>
+          <InputLabel>Application</InputLabel>
+          <Select
+            label='Application'
+            value={dlgApplication}
+            onChange={(e) => setDlgApplication(e.target.value)}
+          >
+            <MenuItem value=''>
+              <em>None</em>
+            </MenuItem>
+            {applications.map((app: string) => (
+              <MenuItem key={app} value={app}>
+                {app}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <FormControl size='small' fullWidth>
+          <InputLabel>Queue</InputLabel>
+          <Select label='Queue' value={dlgQueue} onChange={(e) => setDlgQueue(e.target.value)}>
+            <MenuItem value=''>
+              <em>None</em>
+            </MenuItem>
+            {queues.map((q: string) => (
+              <MenuItem key={q} value={q}>
+                {q}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
         <TextField
           label='Default Approved Estimate (hours)'

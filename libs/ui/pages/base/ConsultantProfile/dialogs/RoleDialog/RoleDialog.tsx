@@ -1,14 +1,5 @@
-import {
-  Box,
-  Typography,
-  Grid,
-  TextField,
-  IconButton,
-  Dialog,
-  DialogContent,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { Box, Typography, Grid, TextField, IconButton, Button } from '@serviceops/component';
+import { Dialog, DialogContent, DialogActions } from '@mui/material';
 import WorkIcon from '@mui/icons-material/Work';
 import CloseIcon from '@mui/icons-material/Close';
 import { RoleForm } from '../../types/consultantProfile.types';

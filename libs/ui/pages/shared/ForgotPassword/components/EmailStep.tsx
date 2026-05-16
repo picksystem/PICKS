@@ -1,7 +1,5 @@
-import { Box } from '@mui/material';
+import { Box, TextField, Button } from '@serviceops/component';
 import { useFieldError } from '@serviceops/hooks';
-import TextField from '../../../../components/TextField/TextField';
-import Button from '../../../../components/Button/Button';
 
 interface EmailStepProps {
   form: {

@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Typography } from '@serviceops/component';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import type { Step } from '../hooks/useForgotPassword';
 

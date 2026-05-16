@@ -3,20 +3,24 @@ import {
   Box,
   Typography,
   Paper,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Button,
   Tooltip,
   Link,
   TextField,
+  Chip,
+  DataTable,
+  Column,
+} from '@serviceops/component';
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   InputAdornment,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
   Divider,
-  Chip,
   alpha,
 } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -35,7 +39,6 @@ import {
   IConfigWorkLocationShift,
   IConfigWorkLocationAssociatedProfile,
 } from '@serviceops/interfaces';
-import { DataTable, Column } from '@serviceops/component';
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { ConfigFormDialog, ConfigDeleteDialog } from '../../dialogs/ConfigDialogs/ConfigDialogs';
@@ -1164,6 +1167,7 @@ const EMPTY_WL_FORM = {
   description: '',
   country: '',
   state: '',
+  city: '',
   dateFormat: 'MM/DD/YYYY',
   timeFormat: '12h',
   language: 'en',
@@ -1179,6 +1183,68 @@ const LANGUAGES = [
   { value: 'fr', label: 'French' },
   { value: 'de', label: 'German' },
   { value: 'es', label: 'Spanish' },
+];
+
+const COUNTRIES = [
+  { code: 'AF', name: 'Afghanistan' },
+  { code: 'AL', name: 'Albania' },
+  { code: 'DZ', name: 'Algeria' },
+  { code: 'AR', name: 'Argentina' },
+  { code: 'AU', name: 'Australia' },
+  { code: 'AT', name: 'Austria' },
+  { code: 'BD', name: 'Bangladesh' },
+  { code: 'BE', name: 'Belgium' },
+  { code: 'BR', name: 'Brazil' },
+  { code: 'CA', name: 'Canada' },
+  { code: 'CN', name: 'China' },
+  { code: 'CO', name: 'Colombia' },
+  { code: 'HR', name: 'Croatia' },
+  { code: 'CZ', name: 'Czech Republic' },
+  { code: 'DK', name: 'Denmark' },
+  { code: 'EG', name: 'Egypt' },
+  { code: 'FI', name: 'Finland' },
+  { code: 'FR', name: 'France' },
+  { code: 'DE', name: 'Germany' },
+  { code: 'GH', name: 'Ghana' },
+  { code: 'GR', name: 'Greece' },
+  { code: 'HK', name: 'Hong Kong' },
+  { code: 'HU', name: 'Hungary' },
+  { code: 'IN', name: 'India' },
+  { code: 'ID', name: 'Indonesia' },
+  { code: 'IE', name: 'Ireland' },
+  { code: 'IL', name: 'Israel' },
+  { code: 'IT', name: 'Italy' },
+  { code: 'JP', name: 'Japan' },
+  { code: 'KE', name: 'Kenya' },
+  { code: 'KR', name: 'South Korea' },
+  { code: 'MY', name: 'Malaysia' },
+  { code: 'MX', name: 'Mexico' },
+  { code: 'MA', name: 'Morocco' },
+  { code: 'NL', name: 'Netherlands' },
+  { code: 'NZ', name: 'New Zealand' },
+  { code: 'NG', name: 'Nigeria' },
+  { code: 'NO', name: 'Norway' },
+  { code: 'PK', name: 'Pakistan' },
+  { code: 'PE', name: 'Peru' },
+  { code: 'PH', name: 'Philippines' },
+  { code: 'PL', name: 'Poland' },
+  { code: 'PT', name: 'Portugal' },
+  { code: 'RO', name: 'Romania' },
+  { code: 'RU', name: 'Russia' },
+  { code: 'SA', name: 'Saudi Arabia' },
+  { code: 'SG', name: 'Singapore' },
+  { code: 'ZA', name: 'South Africa' },
+  { code: 'ES', name: 'Spain' },
+  { code: 'SE', name: 'Sweden' },
+  { code: 'CH', name: 'Switzerland' },
+  { code: 'TW', name: 'Taiwan' },
+  { code: 'TH', name: 'Thailand' },
+  { code: 'TR', name: 'Turkey' },
+  { code: 'UA', name: 'Ukraine' },
+  { code: 'AE', name: 'United Arab Emirates' },
+  { code: 'GB', name: 'United Kingdom' },
+  { code: 'US', name: 'United States' },
+  { code: 'VN', name: 'Vietnam' },
 ];
 
 type WLActivePanel = 'none' | 'workingTimes' | 'associatedProfiles' | 'shifts';
@@ -1209,6 +1275,7 @@ const WorkLocations = () => {
               description: editingRow.description,
               country: editingRow.country,
               state: editingRow.state,
+              city: editingRow.city,
               dateFormat: editingRow.dateFormat,
               timeFormat: editingRow.timeFormat,
               language: editingRow.language,
@@ -1280,6 +1347,16 @@ const WorkLocations = () => {
       ),
     },
     {
+      id: 'city',
+      label: 'City',
+      minWidth: 120,
+      format: (v): React.ReactNode => (
+        <Typography variant='body2' fontSize='0.82rem'>
+          {String(v || '—')}
+        </Typography>
+      ),
+    },
+    {
       id: 'description',
       label: 'Description',
       minWidth: 180,
@@ -1301,8 +1378,8 @@ const WorkLocations = () => {
     },
     {
       id: 'state',
-      label: 'State',
-      minWidth: 110,
+      label: 'State / Province',
+      minWidth: 130,
       format: (v): React.ReactNode => (
         <Typography variant='body2' fontSize='0.82rem'>
           {String(v || '—')}
@@ -1597,21 +1674,35 @@ const WorkLocations = () => {
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
         />
         <Box sx={{ display: 'flex', gap: 2 }}>
+          <FormControl size='small' fullWidth required>
+            <InputLabel>Country</InputLabel>
+            <Select
+              label='Country'
+              value={form.country}
+              onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
+            >
+              {COUNTRIES.map((c) => (
+                <MenuItem key={c.code} value={c.name}>
+                  {c.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <TextField
-            label='Country'
+            label='City'
             size='small'
             fullWidth
-            value={form.country}
-            onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
-          />
-          <TextField
-            label='State / Province'
-            size='small'
-            fullWidth
-            value={form.state}
-            onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))}
+            value={form.city}
+            onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
           />
         </Box>
+        <TextField
+          label='State / Province'
+          size='small'
+          fullWidth
+          value={form.state}
+          onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))}
+        />
         <Box sx={{ display: 'flex', gap: 2 }}>
           <FormControl size='small' fullWidth>
             <InputLabel>Date Format</InputLabel>

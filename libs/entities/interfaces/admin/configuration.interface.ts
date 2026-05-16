@@ -122,6 +122,7 @@ export interface IConfigGeneral {
   dateFormat: string;
   language: string;
   timeEntriesEnabled: boolean;
+  activateDefaultApprovedHours: boolean;
   timeEntriesDisplayName: 'approved_estimates' | 'estimated_hours';
   approvedEstimateRows: IConfigApprovedEstimateRow[];
 }
@@ -155,6 +156,9 @@ export interface IConfigApprovedEstimateRow {
   id: string;
   ticketTypeId: number;
   ticketTypeName: string;
+  serviceLine?: string;
+  application?: string;
+  queue?: string;
   hours: number;
 }
 
@@ -564,9 +568,13 @@ export interface IConfigWorkingCalendarTime {
   id: string;
   calendarName: string;
   dayOfWeek: string;
+  timeBlocks: IConfigTimeBlock[];
+  isWorkingDay: boolean;
+}
+
+export interface IConfigTimeBlock {
   startTime: string;
   endTime: string;
-  isWorkingDay: boolean;
 }
 
 export interface IConfigComposedWorkingTime {
@@ -733,6 +741,7 @@ export interface IConfigWorkLocation {
   description: string;
   country: string;
   state: string;
+  city: string;
   dateFormat: string;
   timeFormat: string;
   language: string;
@@ -997,6 +1006,7 @@ export const DEFAULT_CONFIGURATION_DATA: IConfigurationData = {
     dateFormat: 'MM/DD/YYYY',
     language: 'en',
     timeEntriesEnabled: false,
+    activateDefaultApprovedHours: false,
     timeEntriesDisplayName: 'estimated_hours',
     approvedEstimateRows: [],
   },

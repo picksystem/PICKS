@@ -1,4 +1,4 @@
-import { Box, Typography, FormControlLabel, Checkbox, Tooltip, Link } from '@mui/material';
+import { Box, Typography, FormControlLabel, Checkbox, Tooltip, Link } from '@serviceops/component';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { useDevice } from '@serviceops/hooks';
 

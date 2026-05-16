@@ -8,7 +8,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useStyles } from './styles/Accordion.styles';
 
 interface DSAccordionProps {
-  title: string | React.ReactNode;
+  title?: string | React.ReactNode;
   children: React.ReactNode;
   defaultExpanded?: boolean;
   expanded?: boolean;
@@ -16,6 +16,9 @@ interface DSAccordionProps {
   expandIcon?: React.ReactNode;
   className?: string;
   disabled?: boolean;
+  sx?: Record<string, unknown>;
+  disableGutters?: boolean;
+  elevation?: number;
 }
 
 const Accordion: React.FC<DSAccordionProps> = ({
@@ -27,6 +30,9 @@ const Accordion: React.FC<DSAccordionProps> = ({
   expandIcon,
   className,
   disabled = false,
+  sx,
+  disableGutters,
+  elevation = 1,
   ...rest
 }) => {
   const { cx, classes } = useStyles();
@@ -38,6 +44,9 @@ const Accordion: React.FC<DSAccordionProps> = ({
       onChange={onChange}
       disabled={disabled}
       className={cx(classes.root, className)}
+      sx={sx}
+      disableGutters={disableGutters}
+      elevation={elevation}
       {...rest}
     >
       <AccordionSummary expandIcon={expandIcon || <ExpandMoreIcon />}>

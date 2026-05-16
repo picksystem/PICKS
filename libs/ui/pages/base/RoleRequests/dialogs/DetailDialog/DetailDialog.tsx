@@ -1,16 +1,5 @@
-import {
-  Box,
-  Typography,
-  Chip,
-  Grid,
-  Divider,
-  Avatar,
-  IconButton,
-  Dialog,
-  DialogContent,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { Box, Typography, Chip, Grid, Divider, IconButton, Button } from '@serviceops/component';
+import { Dialog, DialogContent, DialogActions, Avatar } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import HowToRegIcon from '@mui/icons-material/HowToReg';

@@ -8,10 +8,9 @@ import {
   useGetTimeEntriesQuery,
   useCreateTimeEntryMutation,
 } from '../../../../../services';
-import { useGetAllUsersMutation } from '@serviceops/services';
+import { useGetAllUsersMutation, showNotification } from '@serviceops/services';
 import { useAuth } from '@serviceops/hooks';
 import { useAppDispatch } from '../../../../hooks/useAppDispatch';
-import { showNotification } from '@serviceops/services';
 import { IncidentStatus, IUpdateIncidentInput } from '@serviceops/interfaces';
 import { ModalType, TimeSummaryData } from '../types/incidentDetail.types';
 import { useIncidentTimer } from './useIncidentTimer';

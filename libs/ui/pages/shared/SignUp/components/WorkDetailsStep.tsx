@@ -1,18 +1,8 @@
-import {
-  Box,
-  Typography,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  FormHelperText,
-  SelectChangeEvent,
-} from '@mui/material';
+import { Box, Typography, Grid, Select, MenuItem, TextField } from '@serviceops/component';
+import { FormControl, InputLabel, FormHelperText, SelectChangeEvent } from '@mui/material';
 import WorkIcon from '@mui/icons-material/Work';
 import SearchIcon from '@mui/icons-material/Search';
 import { useFieldError } from '@serviceops/hooks';
-import TextField from '../../../../components/TextField/TextField';
 
 interface WorkDetailsStepProps {
   values: {
@@ -159,9 +149,6 @@ const WorkDetailsStep = ({
           </Grid>
           <Grid size={{ xs: 12 }}>
             <FormControl fullWidth required error={touched.role && Boolean(errors.role)}>
-              <InputLabel id='role-label' required>
-                Requested Role
-              </InputLabel>
               <Select
                 labelId='role-label'
                 id='role'
@@ -170,6 +157,7 @@ const WorkDetailsStep = ({
                 label='Requested Role'
                 onChange={onRoleChange}
                 onBlur={onBlur}
+                required
               >
                 <MenuItem value='admin'>Admin</MenuItem>
                 <MenuItem value='user'>User</MenuItem>

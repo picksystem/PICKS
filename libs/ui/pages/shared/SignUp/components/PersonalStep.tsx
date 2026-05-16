@@ -1,7 +1,6 @@
-import { Box, Typography, Grid } from '@mui/material';
+import { Box, Typography, Grid, TextField } from '@serviceops/component';
 import PersonIcon from '@mui/icons-material/Person';
 import { useFieldError } from '@serviceops/hooks';
-import TextField from '../../../../components/TextField/TextField';
 
 interface PersonalStepProps {
   values: { firstName: string; lastName: string; email: string; phone: string };

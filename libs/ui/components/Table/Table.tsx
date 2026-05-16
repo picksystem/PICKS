@@ -22,8 +22,8 @@ export interface DSTableColumn {
 }
 
 export interface DSTableProps {
-  columns: DSTableColumn[];
-  rows: Record<string, any>[];
+  columns?: DSTableColumn[];
+  rows?: Record<string, any>[];
   onRowClick?: (row: Record<string, any>) => void;
   stickyHeader?: boolean;
   maxHeight?: number | string;
@@ -40,6 +40,7 @@ export interface DSTableProps {
   onSort?: (columnId: string) => void;
   loading?: boolean;
   emptyMessage?: string;
+  children?: React.ReactNode;
 }
 
 const Table: React.FC<DSTableProps> = ({
@@ -61,13 +62,14 @@ const Table: React.FC<DSTableProps> = ({
   onSort,
   loading = false,
   emptyMessage = 'No data available',
+  children,
   ...rest
 }) => {
   const { cx, classes } = useStyles();
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      onSelectionChange?.(rows.map((_, index) => index.toString()));
+      onSelectionChange?.((rows || []).map((_, index) => index.toString()));
     } else {
       onSelectionChange?.([]);
     }
@@ -92,7 +94,23 @@ const Table: React.FC<DSTableProps> = ({
     );
   }
 
-  if (rows.length === 0) {
+  if (children) {
+    return (
+      <TableContainer
+        component={Paper}
+        className={cx(classes.root, className)}
+        variant={variant}
+        elevation={elevation}
+        sx={{ maxHeight: maxHeight || 440 }}
+      >
+        <MUITable stickyHeader={stickyHeader} className={classes.table} size={size} {...rest}>
+          {children}
+        </MUITable>
+      </TableContainer>
+    );
+  }
+
+  if (!rows || rows.length === 0) {
     return (
       <TableContainer component={Paper} className={cx(classes.root, className)}>
         <div className={classes.empty}>{emptyMessage}</div>
@@ -120,7 +138,7 @@ const Table: React.FC<DSTableProps> = ({
                 />
               </TableCell>
             )}
-            {columns.map((column) => (
+            {columns?.map((column) => (
               <TableCell
                 key={column.id}
                 align={column.align || 'left'}
@@ -159,7 +177,7 @@ const Table: React.FC<DSTableProps> = ({
                   />
                 </TableCell>
               )}
-              {columns.map((column) => (
+              {columns?.map((column) => (
                 <TableCell
                   key={column.id}
                   align={column.align || 'left'}

@@ -1,5 +1,5 @@
-import { Box, Loader, DataTable } from '@serviceops/component';
-import { Typography, Tabs, TextField, InputAdornment } from '@mui/material';
+import { Box, Loader, DataTable, Typography, Tabs, TextField } from '@serviceops/component';
+import { InputAdornment } from '@mui/material';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import SearchIcon from '@mui/icons-material/Search';
 import { IAuthUser } from '@serviceops/interfaces';

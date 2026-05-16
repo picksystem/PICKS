@@ -1,5 +1,5 @@
-import { Box, Tabs, Tab } from '../../../../components';
-import { Typography, IconButton, Tooltip } from '@mui/material';
+import { Box, Tabs, Tab, Typography, Tooltip } from '../../../../components';
+import { IconButton } from '@mui/material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import DescriptionIcon from '@mui/icons-material/Description';
 import TableChartIcon from '@mui/icons-material/TableChart';

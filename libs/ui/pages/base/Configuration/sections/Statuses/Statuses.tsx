@@ -2,20 +2,25 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Paper,
   Button,
   Chip,
   TextField,
-  InputAdornment,
   Switch,
+  Tooltip,
+  Link,
+  DataTable,
+  Column,
+  Loader,
+} from '@serviceops/component';
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  InputAdornment,
   FormControlLabel,
   Divider,
-  Link,
   alpha,
-  Tooltip,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -24,7 +29,6 @@ import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import { DataTable, Column, Loader } from '@serviceops/component';
 import { IConfigStatusLevel } from '@serviceops/interfaces';
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
