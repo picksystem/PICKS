@@ -6,7 +6,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { CollapseProvider } from '@serviceops/hooks';
 import { Loader, NotificationModal } from '@serviceops/component';
 import { DynamicThemeProvider } from '@serviceops/theme';
-import { store } from '@serviceops/state';
+import { store } from '@serviceops/services';
 import App from './app';
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);

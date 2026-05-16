@@ -9,51 +9,30 @@ import { useAuth } from '@serviceops/hooks';
 import { AppRoleContext } from '@serviceops/theme';
 
 const {
-  // Admin pages
-  AdminDashboardPage,
-  AdminFavouritesPage,
-  AdminRecentItemsPage,
-  AdminIncidentManagementPage,
-  AdminChangeManagementPage,
-  AdminProblemManagementPage,
-  AdminTimeManagementPage,
-  AdminReportsPage,
-  AdminTicketTemplatesPage,
-  AdminCabRequestPage,
-  AdminKnowledgeBasePage,
-  AdminTestScriptsPage,
-  AdminCreateTicketPage,
-  AdminCreateTicketFormPage,
-  AdminUserManagementPage,
-  AdminRoleRequestsPage,
-  AdminConsultantProfilePage,
-  AdminProfilePage,
-  AdminIncidentDetailPage,
-  AdminTicketDetailPage,
-  AdminSuggestedSolutionPage,
-  AdminHeaderPage,
-  AdminSideNavPage,
-  AdminConfigurationPage,
-
-  // User pages
-  UserDashboardPage,
-  UserFavouritesPage,
-  UserRecentItemsPage,
-  UserIncidentManagementPage,
-  UserChangeManagementPage,
-  UserProblemManagementPage,
-  UserHeaderPage,
-  UserSideNavPage,
-
-  // Consultant pages
-  ConsultantDashboardPage,
-  ConsultantChangeManagementPage,
-  ConsultantProblemManagementPage,
-  ConsultantCreateTicketPage,
-  ConsultantHeaderPage,
-  ConsultantSideNavPage,
-
-  // Auth pages
+  BaseDashboardPage,
+  BaseFavouritesPage,
+  BaseRecentItemsPage,
+  BaseIncidentManagementPage,
+  BaseChangeManagementPage,
+  BaseProblemManagementPage,
+  BaseTimeManagementPage,
+  BaseReportsPage,
+  BaseTicketTemplatesPage,
+  BaseCabRequestPage,
+  BaseKnowledgeBasePage,
+  BaseTestScriptsPage,
+  BaseCreateTicketPage,
+  BaseCreateTicketFormPage,
+  BaseUserManagementPage,
+  BaseRoleRequestsPage,
+  BaseConsultantProfilePage,
+  BaseProfilePage,
+  BaseIncidentDetailPage,
+  BaseTicketDetailPage,
+  BaseSuggestedSolutionPage,
+  BaseHeaderPage,
+  BaseSideNavPage,
+  BaseConfigurationPage,
   SignInPage,
   SignUpPage,
   ForgotPasswordPage,
@@ -61,11 +40,10 @@ const {
 } = LazyMenuItems;
 
 const AppRoutes = () => {
-  const { AdminPath, UserPath, ConsultantPath, AuthPath, Path, DefalutPage } = constants;
+  const { BasePath, UserPath, ConsultantPath, AuthPath, Path, DefalutPage } = constants;
   const { isAuthenticated, isAdmin, isConsultant } = useAuth();
   const location = useLocation();
 
-  // Not authenticated — show auth pages
   if (!isAuthenticated) {
     return (
       <ErrorBoundary>
@@ -79,122 +57,148 @@ const AppRoutes = () => {
     );
   }
 
-  // Authenticated as Admin — admin layout + admin routes
+  const currentPath = location.pathname;
+  const isOnUserPage = currentPath.startsWith('/app/user');
+  const isOnConsultantPage = currentPath.startsWith('/app/consultant');
+
+  // Determine effective role - admin can switch modes
+  let effectiveRole: 'admin' | 'user' | 'consultant' = 'admin';
+  if (isConsultant) {
+    effectiveRole = 'consultant';
+  } else if (isAdmin) {
+    if (isOnUserPage) effectiveRole = 'user';
+    else if (isOnConsultantPage) effectiveRole = 'consultant';
+  }
+
+  // Get mode-specific paths
+  const getModeDashboard = () => {
+    if (effectiveRole === 'user') return UserPath.DASHBOARD;
+    if (effectiveRole === 'consultant') return ConsultantPath.DASHBOARD;
+    return BasePath.DASHBOARD;
+  };
+
+  const getModeIncidentManagement = () => {
+    if (effectiveRole === 'user') return UserPath.INCIDENT_MANAGEMENT;
+    if (effectiveRole === 'consultant') return ConsultantPath.INCIDENT_MANAGEMENT;
+    return BasePath.INCIDENT_MANAGEMENT;
+  };
+
+  const getModeFavourites = () => {
+    if (effectiveRole === 'user') return UserPath.FAVOURITES;
+    if (effectiveRole === 'consultant') return ConsultantPath.FAVOURITES;
+    return BasePath.FAVOURITES;
+  };
+
+  const getModeRecentItems = () => {
+    if (effectiveRole === 'user') return UserPath.RECENT_ITEMS;
+    if (effectiveRole === 'consultant') return ConsultantPath.RECENT_ITEMS;
+    return BasePath.RECENT_ITEMS;
+  };
+
+  const getModeChangeManagement = () => {
+    if (effectiveRole === 'consultant') return ConsultantPath.CHANGE_MANAGEMENT;
+    if (effectiveRole === 'user') return UserPath.CHANGE_MANAGEMENT;
+    return BasePath.CHANGE_MANAGEMENT;
+  };
+
+  const getModeProblemManagement = () => {
+    if (effectiveRole === 'consultant') return ConsultantPath.PROBLEM_MANAGEMENT;
+    if (effectiveRole === 'user') return UserPath.PROBLEM_MANAGEMENT;
+    return BasePath.PROBLEM_MANAGEMENT;
+  };
+
+  const getModeCreateTicket = () => {
+    if (effectiveRole === 'consultant') return ConsultantPath.CREATE_TICKET;
+    if (effectiveRole === 'user') return UserPath.CREATE_TICKET;
+    return BasePath.CREATE_TICKET;
+  };
+
+  const getModeProfile = () => {
+    if (effectiveRole === 'consultant') return ConsultantPath.PROFILE || BasePath.PROFILE;
+    if (effectiveRole === 'user') return UserPath.PROFILE || BasePath.PROFILE;
+    return BasePath.PROFILE;
+  };
+
+  const getModeIncidentDetail = () => {
+    if (effectiveRole === 'consultant')
+      return ConsultantPath.INCIDENT_DETAIL || BasePath.INCIDENT_DETAIL;
+    if (effectiveRole === 'user') return UserPath.INCIDENT_DETAIL || BasePath.INCIDENT_DETAIL;
+    return BasePath.INCIDENT_DETAIL;
+  };
+
+  const getModeTicketDetail = () => {
+    if (effectiveRole === 'consultant')
+      return ConsultantPath.TICKET_DETAIL || BasePath.TICKET_DETAIL;
+    if (effectiveRole === 'user') return UserPath.TICKET_DETAIL || BasePath.TICKET_DETAIL;
+    return BasePath.TICKET_DETAIL;
+  };
+
+  const isOnIncidentDetail =
+    currentPath.match(/^\/app\/(?:admin|user|consultant)\/incident\/.+/) ||
+    currentPath.match(/^\/app\/(?:admin|user|consultant)\/ticket\/.+/);
+  const isOnConfiguration = currentPath.startsWith('/app/admin/configuration');
+
   if (isAdmin) {
-    // Check which page admin is viewing
-    const isOnUserPage = location.pathname.startsWith('/app/user');
-    const isOnConsultantPage = location.pathname.startsWith('/app/consultant');
-    const isOnIncidentDetail =
-      location.pathname.match(/^\/app\/admin\/incident\/.+/) ||
-      location.pathname.match(/^\/app\/admin\/ticket\/.+/);
-    const isOnConfiguration = location.pathname.startsWith('/app/admin/configuration');
-
-    let contextValue: 'admin' | 'user' | 'consultant' = 'admin';
-    if (isOnUserPage) contextValue = 'user';
-    if (isOnConsultantPage) contextValue = 'consultant';
-
     return (
-      <AppRoleContext.Provider value={contextValue}>
+      <AppRoleContext.Provider value={effectiveRole}>
         <ErrorBoundary>
-          {!isOnIncidentDetail &&
-            (isOnUserPage ? (
-              <>
-                <UserHeaderPage />
-                <UserSideNavPage />
-              </>
-            ) : isOnConsultantPage ? (
-              <>
-                <ConsultantHeaderPage />
-                <ConsultantSideNavPage />
-              </>
-            ) : (
-              <>
-                <AdminHeaderPage />
-                <AdminSideNavPage />
-              </>
-            ))}
+          {!isOnIncidentDetail && (
+            <>
+              <BaseHeaderPage />
+              <BaseSideNavPage />
+            </>
+          )}
           {isOnIncidentDetail ? (
             <Routes>
-              <Route path={AdminPath.INCIDENT_DETAIL} element={<AdminIncidentDetailPage />} />
-              <Route path={AdminPath.TICKET_DETAIL} element={<AdminTicketDetailPage />} />
+              <Route path={getModeIncidentDetail()} element={<BaseIncidentDetailPage />} />
+              <Route path={getModeTicketDetail()} element={<BaseTicketDetailPage />} />
             </Routes>
           ) : isOnConfiguration ? (
             <Routes>
-              <Route path={`${AdminPath.CONFIGURATION}/*`} element={<AdminConfigurationPage />} />
+              <Route path={`${BasePath.CONFIGURATION}/*`} element={<BaseConfigurationPage />} />
             </Routes>
           ) : (
             <MainContent>
               <Routes>
-                {/* Redirect root to admin dashboard */}
                 <Route
                   path={Path.DEFAULT_PAGE}
-                  element={<Navigate to={AdminPath.DASHBOARD} replace />}
+                  element={<Navigate to={getModeDashboard()} replace />}
                 />
-
-                {/* Admin routes */}
-                <Route path={AdminPath.DASHBOARD} element={<AdminDashboardPage />} />
-                <Route path={AdminPath.FAVOURITES} element={<AdminFavouritesPage />} />
-                <Route path={AdminPath.RECENT_ITEMS} element={<AdminRecentItemsPage />} />
+                <Route path={getModeDashboard()} element={<BaseDashboardPage />} />
+                <Route path={getModeFavourites()} element={<BaseFavouritesPage />} />
+                <Route path={getModeRecentItems()} element={<BaseRecentItemsPage />} />
                 <Route
-                  path={AdminPath.INCIDENT_MANAGEMENT}
-                  element={<AdminIncidentManagementPage />}
+                  path={getModeIncidentManagement()}
+                  element={<BaseIncidentManagementPage />}
                 />
-                <Route path={AdminPath.CHANGE_MANAGEMENT} element={<AdminChangeManagementPage />} />
-                <Route
-                  path={AdminPath.PROBLEM_MANAGEMENT}
-                  element={<AdminProblemManagementPage />}
-                />
-                <Route path={AdminPath.TIME_MANAGEMENT} element={<AdminTimeManagementPage />} />
-                <Route path={AdminPath.REPORTS} element={<AdminReportsPage />} />
-                <Route path={AdminPath.TICKET_TEMPLATES} element={<AdminTicketTemplatesPage />} />
-                <Route path={AdminPath.CAB_REQUEST} element={<AdminCabRequestPage />} />
-                <Route path={AdminPath.KNOWLEDGE_BASE} element={<AdminKnowledgeBasePage />} />
-                <Route path={AdminPath.TEST_SCRIPTS} element={<AdminTestScriptsPage />} />
-                <Route path={AdminPath.CREATE_TICKET} element={<AdminCreateTicketPage />} />
-                <Route
-                  path={AdminPath.CREATE_TICKET_TYPE}
-                  element={<AdminCreateTicketFormPage />}
-                />
-                <Route path={AdminPath.USER_MANAGEMENT} element={<AdminUserManagementPage />} />
-                <Route path={AdminPath.ROLE_REQUESTS} element={<AdminRoleRequestsPage />} />
-                <Route
-                  path={AdminPath.CONSULTANT_PROFILE}
-                  element={<AdminConsultantProfilePage />}
-                />
-                <Route path={AdminPath.PROFILE} element={<AdminProfilePage />} />
-                <Route path={AdminPath.INCIDENT_DETAIL} element={<AdminIncidentDetailPage />} />
-                <Route path={AdminPath.TICKET_DETAIL} element={<AdminTicketDetailPage />} />
-                <Route
-                  path={AdminPath.SUGGESTED_SOLUTION}
-                  element={<AdminSuggestedSolutionPage />}
-                />
-
-                {/* User routes accessible to admin */}
-                <Route path={UserPath.DASHBOARD} element={<UserDashboardPage />} />
-                <Route path={UserPath.FAVOURITES} element={<UserFavouritesPage />} />
-                <Route path={UserPath.RECENT_ITEMS} element={<UserRecentItemsPage />} />
-                <Route
-                  path={UserPath.INCIDENT_MANAGEMENT}
-                  element={<UserIncidentManagementPage />}
-                />
-                <Route path={UserPath.CHANGE_MANAGEMENT} element={<UserChangeManagementPage />} />
-                <Route path={UserPath.PROBLEM_MANAGEMENT} element={<UserProblemManagementPage />} />
-
-                {/* Consultant routes accessible to admin */}
-                <Route path={ConsultantPath.DASHBOARD} element={<ConsultantDashboardPage />} />
-                <Route
-                  path={ConsultantPath.CHANGE_MANAGEMENT}
-                  element={<ConsultantChangeManagementPage />}
-                />
-                <Route
-                  path={ConsultantPath.PROBLEM_MANAGEMENT}
-                  element={<ConsultantProblemManagementPage />}
-                />
-                <Route
-                  path={ConsultantPath.CREATE_TICKET}
-                  element={<ConsultantCreateTicketPage />}
-                />
-
+                <Route path={getModeChangeManagement()} element={<BaseChangeManagementPage />} />
+                <Route path={getModeProblemManagement()} element={<BaseProblemManagementPage />} />
+                <Route path={getModeCreateTicket()} element={<BaseCreateTicketPage />} />
+                <Route path={getModeProfile()} element={<BaseProfilePage />} />
+                <Route path={getModeIncidentDetail()} element={<BaseIncidentDetailPage />} />
+                <Route path={getModeTicketDetail()} element={<BaseTicketDetailPage />} />
+                <Route path={BasePath.SUGGESTED_SOLUTION} element={<BaseSuggestedSolutionPage />} />
+                {effectiveRole === 'admin' && (
+                  <>
+                    <Route path={BasePath.TIME_MANAGEMENT} element={<BaseTimeManagementPage />} />
+                    <Route path={BasePath.REPORTS} element={<BaseReportsPage />} />
+                    <Route path={BasePath.TICKET_TEMPLATES} element={<BaseTicketTemplatesPage />} />
+                    <Route path={BasePath.CAB_REQUEST} element={<BaseCabRequestPage />} />
+                    <Route path={BasePath.KNOWLEDGE_BASE} element={<BaseKnowledgeBasePage />} />
+                    <Route path={BasePath.TEST_SCRIPTS} element={<BaseTestScriptsPage />} />
+                    <Route path={BasePath.CREATE_TICKET} element={<BaseCreateTicketPage />} />
+                    <Route
+                      path={BasePath.CREATE_TICKET_TYPE}
+                      element={<BaseCreateTicketFormPage />}
+                    />
+                    <Route path={BasePath.USER_MANAGEMENT} element={<BaseUserManagementPage />} />
+                    <Route path={BasePath.ROLE_REQUESTS} element={<BaseRoleRequestsPage />} />
+                    <Route
+                      path={BasePath.CONSULTANT_PROFILE}
+                      element={<BaseConsultantProfilePage />}
+                    />
+                  </>
+                )}
                 <Route path={Path.NOT_FOUND} element={<NotFoundPage />} />
               </Routes>
             </MainContent>
@@ -204,61 +208,42 @@ const AppRoutes = () => {
     );
   }
 
-  // Authenticated as Consultant — consultant layout + consultant routes + user routes
   if (isConsultant) {
-    // Check which page consultant is viewing
-    const isOnUserPage = location.pathname.startsWith('/app/user');
-
-    const contextValue: 'consultant' | 'user' = isOnUserPage ? 'user' : 'consultant';
-
     return (
-      <AppRoleContext.Provider value={contextValue}>
+      <AppRoleContext.Provider value='consultant'>
         <ErrorBoundary>
-          {isOnUserPage ? (
-            <>
-              <UserHeaderPage />
-              <UserSideNavPage />
-            </>
-          ) : (
-            <>
-              <ConsultantHeaderPage />
-              <ConsultantSideNavPage />
-            </>
-          )}
+          <>
+            <BaseHeaderPage />
+            <BaseSideNavPage />
+          </>
           <MainContent>
             <Routes>
-              {/* Redirect root to consultant dashboard */}
               <Route
                 path={Path.DEFAULT_PAGE}
                 element={<Navigate to={ConsultantPath.DASHBOARD} replace />}
               />
-
-              {/* Consultant routes */}
-              <Route path={ConsultantPath.DASHBOARD} element={<ConsultantDashboardPage />} />
+              <Route path={ConsultantPath.DASHBOARD} element={<BaseDashboardPage />} />
+              <Route path={ConsultantPath.FAVOURITES} element={<BaseFavouritesPage />} />
+              <Route path={ConsultantPath.RECENT_ITEMS} element={<BaseRecentItemsPage />} />
+              <Route
+                path={ConsultantPath.INCIDENT_MANAGEMENT}
+                element={<BaseIncidentManagementPage />}
+              />
               <Route
                 path={ConsultantPath.CHANGE_MANAGEMENT}
-                element={<ConsultantChangeManagementPage />}
+                element={<BaseChangeManagementPage />}
               />
               <Route
                 path={ConsultantPath.PROBLEM_MANAGEMENT}
-                element={<ConsultantProblemManagementPage />}
+                element={<BaseProblemManagementPage />}
               />
-              <Route path={ConsultantPath.CREATE_TICKET} element={<ConsultantCreateTicketPage />} />
-
-              {/* User routes accessible to consultant */}
-              <Route path={UserPath.DASHBOARD} element={<UserDashboardPage />} />
-              <Route path={UserPath.FAVOURITES} element={<UserFavouritesPage />} />
-              <Route path={UserPath.RECENT_ITEMS} element={<UserRecentItemsPage />} />
-              <Route path={UserPath.INCIDENT_MANAGEMENT} element={<UserIncidentManagementPage />} />
-              <Route path={UserPath.CHANGE_MANAGEMENT} element={<UserChangeManagementPage />} />
-              <Route path={UserPath.PROBLEM_MANAGEMENT} element={<UserProblemManagementPage />} />
-
-              {/* Redirect /app/admin/* to consultant dashboard */}
+              <Route path={ConsultantPath.CREATE_TICKET} element={<BaseCreateTicketPage />} />
+              <Route path={ConsultantPath.PROFILE} element={<BaseProfilePage />} />
+              <Route path={ConsultantPath.INCIDENT_DETAIL} element={<BaseIncidentDetailPage />} />
               <Route
-                path={DefalutPage.ADMIN_DEFAULT_PAGE}
+                path={DefalutPage.BASE_DEFAULT_PAGE}
                 element={<Navigate to={ConsultantPath.DASHBOARD} replace />}
               />
-
               <Route path={Path.NOT_FOUND} element={<NotFoundPage />} />
             </Routes>
           </MainContent>
@@ -267,38 +252,33 @@ const AppRoutes = () => {
     );
   }
 
-  // Authenticated as User — user layout + user routes
   return (
     <AppRoleContext.Provider value='user'>
       <ErrorBoundary>
-        <UserHeaderPage />
-        <UserSideNavPage />
+        <BaseHeaderPage />
+        <BaseSideNavPage />
         <MainContent>
           <Routes>
-            {/* Redirect root to user dashboard */}
             <Route
               path={Path.DEFAULT_PAGE}
               element={<Navigate to={UserPath.DASHBOARD} replace />}
             />
-
-            {/* User routes */}
-            <Route path={UserPath.DASHBOARD} element={<UserDashboardPage />} />
-            <Route path={UserPath.FAVOURITES} element={<UserFavouritesPage />} />
-            <Route path={UserPath.RECENT_ITEMS} element={<UserRecentItemsPage />} />
-            <Route path={UserPath.INCIDENT_MANAGEMENT} element={<UserIncidentManagementPage />} />
-            <Route path={UserPath.CHANGE_MANAGEMENT} element={<UserChangeManagementPage />} />
-            <Route path={UserPath.PROBLEM_MANAGEMENT} element={<UserProblemManagementPage />} />
-
-            {/* Redirect /app/admin/* and /app/consultant/* to user dashboard */}
+            <Route path={UserPath.DASHBOARD} element={<BaseDashboardPage />} />
+            <Route path={UserPath.FAVOURITES} element={<BaseFavouritesPage />} />
+            <Route path={UserPath.RECENT_ITEMS} element={<BaseRecentItemsPage />} />
+            <Route path={UserPath.INCIDENT_MANAGEMENT} element={<BaseIncidentManagementPage />} />
+            <Route path={UserPath.CHANGE_MANAGEMENT} element={<BaseChangeManagementPage />} />
+            <Route path={UserPath.PROBLEM_MANAGEMENT} element={<BaseProblemManagementPage />} />
+            <Route path={UserPath.PROFILE} element={<BaseProfilePage />} />
+            <Route path={UserPath.INCIDENT_DETAIL} element={<BaseIncidentDetailPage />} />
             <Route
-              path={DefalutPage.ADMIN_DEFAULT_PAGE}
+              path={DefalutPage.BASE_DEFAULT_PAGE}
               element={<Navigate to={UserPath.DASHBOARD} replace />}
             />
             <Route
               path={DefalutPage.CONSULTANT_DEFAULT_PAGE}
               element={<Navigate to={UserPath.DASHBOARD} replace />}
             />
-
             <Route path={Path.NOT_FOUND} element={<NotFoundPage />} />
           </Routes>
         </MainContent>

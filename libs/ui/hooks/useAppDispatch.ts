@@ -1,5 +1,5 @@
 import { useDispatch } from 'react-redux';
-import { AppDispatch } from '../state';
+import { AppDispatch } from '@serviceops/services';
 
 /**
  * Typed version of useDispatch hook for the app's store

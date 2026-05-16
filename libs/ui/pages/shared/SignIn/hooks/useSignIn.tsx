@@ -25,7 +25,7 @@ const useSignIn = () => {
         const { role } = result.data.user;
         let destination = constants.UserPath.DASHBOARD;
         if (role === UserRole.ADMIN) {
-          destination = constants.AdminPath.DASHBOARD;
+          destination = constants.BasePath.DASHBOARD;
         } else if (role === UserRole.CONSULTANT) {
           destination = constants.ConsultantPath.DASHBOARD;
         }

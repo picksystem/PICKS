@@ -13,6 +13,9 @@ export * from './useForm';
 export * from './useFormWithSessionStorage';
 export * from './useEnv';
 
+// Re-export useAppRole from theme for convenient access
+export { useAppRole } from '@serviceops/theme';
+
 // Performance Optimization Hooks
 export * from './useDebounce';
 export * from './useThrottle';
@@ -32,6 +35,7 @@ export * from './useNotification';
 
 // Form Utilities
 export * from './useFieldError';
+export * from './useLoader';
 
 // Date & Time Hooks
 export * from './useCurrentDate';

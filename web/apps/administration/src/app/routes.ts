@@ -2,55 +2,35 @@ import { lazy } from 'react';
 
 // Lazy-loaded pages
 export const LazyMenuItems = {
-  // Admin pages
-  AdminDashboardPage: lazy(() => import('@serviceops/pages/admin/Dashboard')),
-  AdminFavouritesPage: lazy(() => import('@serviceops/pages/admin/Favourites')),
-  AdminRecentItemsPage: lazy(() => import('@serviceops/pages/admin/RecentItems')),
-  AdminIncidentManagementPage: lazy(() => import('@serviceops/pages/admin/IncidentManagement')),
-  AdminChangeManagementPage: lazy(() => import('@serviceops/pages/admin/ChangeManagement')),
-  AdminProblemManagementPage: lazy(() => import('@serviceops/pages/admin/ProblemManagement')),
-  AdminTimeManagementPage: lazy(() => import('@serviceops/pages/admin/TimeManagement')),
-  AdminReportsPage: lazy(() => import('@serviceops/pages/admin/Reports')),
-  AdminTicketTemplatesPage: lazy(() => import('@serviceops/pages/admin/TicketTemplates')),
-  AdminCabRequestPage: lazy(() => import('@serviceops/pages/admin/CabRequest')),
-  AdminKnowledgeBasePage: lazy(() => import('@serviceops/pages/admin/KnowledgeBase')),
-  AdminTestScriptsPage: lazy(() => import('@serviceops/pages/admin/TestScripts')),
-  AdminCreateTicketPage: lazy(() => import('@serviceops/pages/admin/CreateTicket')),
-  AdminCreateTicketFormPage: lazy(() => import('@serviceops/pages/admin/CreateTicket/CreateTicketForm')),
-  AdminUserManagementPage: lazy(() => import('@serviceops/pages/admin/UserManagement')),
-  AdminRoleRequestsPage: lazy(() => import('@serviceops/pages/admin/RoleRequests')),
-  AdminConsultantProfilePage: lazy(() => import('@serviceops/pages/admin/ConsultantProfile')),
-  AdminProfilePage: lazy(() => import('@serviceops/pages/admin/Profile')),
-  AdminIncidentDetailPage: lazy(() => import('@serviceops/pages/admin/IncidentDetail')),
-  AdminTicketDetailPage: lazy(() => import('@serviceops/pages/admin/TicketDetail')),
-  AdminSuggestedSolutionPage: lazy(() => import('@serviceops/pages/admin/SuggestedSolution')),
-  AdminConfigurationPage: lazy(() => import('@serviceops/pages/admin/Configuration')),
+  // Base pages (shared for admin, user, consultant)
+  BaseDashboardPage: lazy(() => import('@serviceops/pages/base/Dashboard')),
+  BaseFavouritesPage: lazy(() => import('@serviceops/pages/base/Favourites')),
+  BaseRecentItemsPage: lazy(() => import('@serviceops/pages/base/RecentItems')),
+  BaseIncidentManagementPage: lazy(() => import('@serviceops/pages/base/IncidentManagement')),
+  BaseChangeManagementPage: lazy(() => import('@serviceops/pages/base/ChangeManagement')),
+  BaseProblemManagementPage: lazy(() => import('@serviceops/pages/base/ProblemManagement')),
+  BaseTimeManagementPage: lazy(() => import('@serviceops/pages/base/TimeManagement')),
+  BaseReportsPage: lazy(() => import('@serviceops/pages/base/Reports')),
+  BaseTicketTemplatesPage: lazy(() => import('@serviceops/pages/base/TicketTemplates')),
+  BaseCabRequestPage: lazy(() => import('@serviceops/pages/base/CabRequest')),
+  BaseKnowledgeBasePage: lazy(() => import('@serviceops/pages/base/KnowledgeBase')),
+  BaseTestScriptsPage: lazy(() => import('@serviceops/pages/base/TestScripts')),
+  BaseCreateTicketPage: lazy(() => import('@serviceops/pages/base/CreateTicket')),
+  BaseCreateTicketFormPage: lazy(
+    () => import('@serviceops/pages/base/CreateTicket/CreateTicketForm'),
+  ),
+  BaseUserManagementPage: lazy(() => import('@serviceops/pages/base/UserManagement')),
+  BaseRoleRequestsPage: lazy(() => import('@serviceops/pages/base/RoleRequests')),
+  BaseConsultantProfilePage: lazy(() => import('@serviceops/pages/base/ConsultantProfile')),
+  BaseProfilePage: lazy(() => import('@serviceops/pages/base/Profile')),
+  BaseIncidentDetailPage: lazy(() => import('@serviceops/pages/base/IncidentDetail')),
+  BaseTicketDetailPage: lazy(() => import('@serviceops/pages/base/TicketDetail')),
+  BaseSuggestedSolutionPage: lazy(() => import('@serviceops/pages/base/SuggestedSolution')),
+  BaseConfigurationPage: lazy(() => import('@serviceops/pages/base/Configuration')),
 
-  // Admin layout
-  AdminHeaderPage: lazy(() => import('@serviceops/pages/admin/Header')),
-  AdminSideNavPage: lazy(() => import('@serviceops/pages/admin/SideNav')),
-
-  // User pages
-  UserDashboardPage: lazy(() => import('@serviceops/pages/user/Dashboard')),
-  UserFavouritesPage: lazy(() => import('@serviceops/pages/user/Favourites')),
-  UserRecentItemsPage: lazy(() => import('@serviceops/pages/user/RecentItems')),
-  UserIncidentManagementPage: lazy(() => import('@serviceops/pages/user/IncidentManagement')),
-  UserChangeManagementPage: lazy(() => import('@serviceops/pages/user/ChangeManagement')),
-  UserProblemManagementPage: lazy(() => import('@serviceops/pages/user/ProblemManagement')),
-
-  // User layout
-  UserHeaderPage: lazy(() => import('@serviceops/pages/user/Header')),
-  UserSideNavPage: lazy(() => import('@serviceops/pages/user/SideNav')),
-
-  // Consultant pages
-  ConsultantDashboardPage: lazy(() => import('@serviceops/pages/consultant/Dashboard')),
-  ConsultantChangeManagementPage: lazy(() => import('@serviceops/pages/consultant/ChangeManagement')),
-  ConsultantProblemManagementPage: lazy(() => import('@serviceops/pages/consultant/ProblemManagement')),
-  ConsultantCreateTicketPage: lazy(() => import('@serviceops/pages/consultant/CreateTicket')),
-
-  // Consultant layout
-  ConsultantHeaderPage: lazy(() => import('@serviceops/pages/consultant/Header')),
-  ConsultantSideNavPage: lazy(() => import('@serviceops/pages/consultant/SideNav')),
+  // Base layout
+  BaseHeaderPage: lazy(() => import('@serviceops/pages/base/Header')),
+  BaseSideNavPage: lazy(() => import('@serviceops/pages/base/SideNav')),
 
   // Auth pages (shared/public)
   SignInPage: lazy(() => import('@serviceops/pages/shared/SignIn')),

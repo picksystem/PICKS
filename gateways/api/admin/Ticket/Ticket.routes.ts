@@ -21,8 +21,11 @@ import {
 
 // ── Gateways ─────────────────────────────────────────────────────────────────
 const incidentGateway = new PrismaIncidentGateway(prisma as PrismaClient);
-const serviceRequestGateway = new PrismaServiceRequestGateway(prisma as PrismaClient);
-const advisoryRequestGateway = new PrismaAdvisoryRequestGateway(prisma as PrismaClient);
+const serviceRequestGateway = new PrismaServiceRequestGateway(prisma as PrismaClient, null as any);
+const advisoryRequestGateway = new PrismaAdvisoryRequestGateway(
+  prisma as PrismaClient,
+  null as any,
+);
 
 // ── Use Cases ─────────────────────────────────────────────────────────────────
 const createIncidentUseCase = new CreateIncidentUseCase(incidentGateway);
