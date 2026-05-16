@@ -1,26 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
 import { useStyles } from './styles';
-
-export interface DSScrollSpySection {
-  id: string;
-  label: string;
-}
-
-export interface DSScrollSpyProps {
-  sections: DSScrollSpySection[];
-  offset?: number;
-  onSectionChange?: (sectionId: string) => void;
-  className?: string;
-  variant?: 'vertical' | 'horizontal';
-  position?: 'fixed' | 'absolute' | 'relative' | 'sticky';
-  top?: number | string;
-  bottom?: number | string;
-  left?: number | string;
-  right?: number | string;
-  smoothScroll?: boolean;
-  scrollBehavior?: 'smooth' | 'auto';
-}
+import { DSScrollSpyProps } from './util';
 
 const ScrollSpy: React.FC<DSScrollSpyProps> = ({
   sections,

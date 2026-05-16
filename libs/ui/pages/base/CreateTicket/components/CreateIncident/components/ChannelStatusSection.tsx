@@ -1,6 +1,7 @@
 import { Box, Typography, Select } from '@serviceops/component';
 import { IncidentStatus } from '@serviceops/interfaces';
 import { useStyles } from '../styles';
+import { ChannelStatusSectionProps } from './ChannelStatusSection.tsx.util';
 
 const statusOptions = [
   { value: IncidentStatus.DRAFT, label: 'Draft' },
@@ -11,14 +12,6 @@ const statusOptions = [
   { value: IncidentStatus.CLOSED, label: 'Closed' },
   { value: IncidentStatus.CANCELLED, label: 'Cancelled' },
 ];
-
-interface ChannelStatusSectionProps {
-  channel: string;
-  status: string;
-  channelOptions: { value: string; label: string }[];
-  onChannelChange: (v: string) => void;
-  onStatusChange: (v: string) => void;
-}
 
 const ChannelStatusSection = ({
   channel,

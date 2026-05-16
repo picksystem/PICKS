@@ -1,9 +1,6 @@
 import { IconButton as MUIIconButton } from '@mui/material';
 import { useStyles } from './styles';
-
-export interface DSIconButtonProps extends React.ComponentProps<typeof MUIIconButton> {
-  className?: string;
-}
+import { DSIconButtonProps } from './util';
 
 const IconButton: React.FC<DSIconButtonProps> = ({ className, ...props }) => {
   const { cx, classes } = useStyles();

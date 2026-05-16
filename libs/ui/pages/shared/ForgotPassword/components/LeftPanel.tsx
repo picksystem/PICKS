@@ -1,19 +1,12 @@
 import { Box, Typography } from '@serviceops/component';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
-import type { Step } from '../hooks/useForgotPassword';
+import type { LeftPanelProps } from './util';
 
 const LEFT_STEPS = [
   { num: '01', title: 'Enter your email', desc: "We'll send a one-time passcode to your inbox" },
   { num: '02', title: 'Verify the OTP', desc: 'Enter the 6-digit code from your email' },
   { num: '03', title: 'Set new password', desc: 'Choose a strong password to secure your account' },
 ];
-
-interface LeftPanelProps {
-  step: Step;
-  stepIndex: number;
-  classes: Record<string, string>;
-  onNavigateSignIn: () => void;
-}
 
 const LeftPanel = ({ stepIndex, classes, onNavigateSignIn }: LeftPanelProps) => (
   <Box className={classes.leftPanel}>

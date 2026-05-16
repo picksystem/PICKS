@@ -54,6 +54,7 @@ import {
 } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
+import type { TemplateSectionProps, ResolutionSectionProps, TimeEntrySectionProps } from './util';
 
 // ── Shared cell renderers ─────────────────────────────────────────────────────
 
@@ -159,20 +160,6 @@ const BOOL_FIELDS: { key: BoolFormKey; label: string; hint: string }[] = [
 ];
 
 // ── Shared TemplateSection accordion ─────────────────────────────────────────
-
-interface TemplateSectionProps {
-  title: string;
-  subtitle: string;
-  accent: string;
-  gradientEnd: string;
-  idPrefix: string;
-  Icon: React.ElementType;
-  defaultExpanded?: boolean;
-  boolFields?: { key: BoolFormKey; label: string; hint: string }[];
-  rows: IConfigTicketUpdateTemplate[];
-  onSave: (next: IConfigTicketUpdateTemplate[]) => void;
-  statusItems: { id: string; name: string; displayName: string }[];
-}
 
 const TemplateSection = ({
   title,
@@ -783,19 +770,6 @@ const EMPTY_RES_FORM: IConfigResolutionTemplate = {
   resolution: '',
   resolutionInternalNote: '',
 };
-
-interface ResolutionSectionProps {
-  rows: IConfigResolutionTemplate[];
-  onSave: (next: IConfigResolutionTemplate[]) => void;
-  statusItems: { id: string; name: string; displayName: string }[];
-  applications: { id: string; name: string }[];
-  applicationCategories: { id: string; applicationName: string; categoryName: string }[];
-  applicationSubCategories: {
-    id: string;
-    applicationCategoryName: string;
-    subCategoryName: string;
-  }[];
-}
 
 const ResolutionSection = ({
   rows,
@@ -1624,13 +1598,6 @@ const EMPTY_TE_FORM: TimeEntryTemplateForm = {
   externalComment: '',
   internalComment: '',
 };
-
-interface TimeEntrySectionProps {
-  rows: IConfigTimeEntryTemplate[];
-  onSave: (next: IConfigTimeEntryTemplate[]) => void;
-  statusItems: { id: string; name: string; displayName: string }[];
-  billingCodes: { id: string; code: string; description: string }[];
-}
 
 const TimeEntrySection = ({ rows, onSave, statusItems, billingCodes }: TimeEntrySectionProps) => {
   const { classes } = useStyles();

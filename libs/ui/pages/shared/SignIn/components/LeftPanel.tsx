@@ -4,6 +4,7 @@ import SpeedIcon from '@mui/icons-material/Speed';
 import GroupsIcon from '@mui/icons-material/Groups';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import type { LeftPanelProps } from './util';
 
 const FEATURES = [
   { icon: SpeedIcon, label: 'Blazing-fast incident resolution' },
@@ -11,11 +12,6 @@ const FEATURES = [
   { icon: BarChartIcon, label: 'Real-time SLA dashboards' },
   { icon: VerifiedUserIcon, label: 'Enterprise-grade audit trails' },
 ];
-
-interface LeftPanelProps {
-  classes: Record<string, string>;
-  onNavigateSignUp: () => void;
-}
 
 const LeftPanel = ({ classes, onNavigateSignUp }: LeftPanelProps) => (
   <Box className={classes.leftPanel}>

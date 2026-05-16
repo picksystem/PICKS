@@ -3,15 +3,9 @@ import { Dialog, DialogContent, DialogActions } from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
 import CloseIcon from '@mui/icons-material/Close';
 import { useStyles } from './styles';
-import { UserRow } from '../../types/userManagement.types';
+import { LoginDataDialogProps } from './util';
 import ReadField from '../../components/ReadField';
 import { fmtDateTime, fmtDate } from '../../utils/userManagement.utils';
-
-interface LoginDataDialogProps {
-  open: boolean;
-  onClose: () => void;
-  selectedRow: UserRow | null;
-}
 
 const LoginDataDialog = ({ open, onClose, selectedRow }: LoginDataDialogProps) => {
   const { classes } = useStyles();

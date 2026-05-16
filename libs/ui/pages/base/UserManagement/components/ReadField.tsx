@@ -1,11 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@serviceops/component';
-
-interface ReadFieldProps {
-  label: string;
-  value: React.ReactNode;
-  muted?: boolean;
-}
+import { ReadFieldProps } from './util';
 
 const ReadField = ({ label, value, muted }: ReadFieldProps) => (
   <Box sx={{ mb: 1.5 }}>

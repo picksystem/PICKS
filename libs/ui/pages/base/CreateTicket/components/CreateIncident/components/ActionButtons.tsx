@@ -5,14 +5,7 @@ import SkipNextIcon from '@mui/icons-material/SkipNext';
 import SearchIcon from '@mui/icons-material/Search';
 import { Box, Button } from '@serviceops/component';
 import { useStyles } from '../styles';
-
-interface ActionButtonsProps {
-  isLoading: boolean;
-  onBack: () => void;
-  onCancel: () => void;
-  onSaveAsDraft: () => void;
-  onSearchForSolution: () => void;
-}
+import { ActionButtonsProps } from './ActionButtons.tsx.util';
 
 const ActionButtons = ({
   isLoading,

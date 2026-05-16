@@ -1,12 +1,5 @@
 import { Box, Typography } from '@serviceops/component';
-import { SvgIconComponent } from '@mui/icons-material';
-
-interface ConfigPlaceholderProps {
-  title: string;
-  description: string;
-  Icon: SvgIconComponent;
-  accentColor?: string;
-}
+import type { ConfigPlaceholderProps } from './ConfigPlaceholder.tsx.util';
 
 const ConfigPlaceholder = ({
   title,

@@ -12,6 +12,7 @@ import {
   Link,
   Tooltip,
   TextField,
+  PageHeader,
 } from '@serviceops/component';
 import { InputAdornment } from '@mui/material';
 import GroupIcon from '@mui/icons-material/Group';
@@ -229,16 +230,11 @@ const UserManagement = () => {
   return (
     <Grid className={classes.container}>
       {/* ── Page header ── */}
-      <Box className={classes.pageHeader}>
-        <Box className={classes.pageHeaderRow}>
-          <Typography variant='h5' className={classes.title}>
-            User Management
-          </Typography>
-        </Box>
-        <Typography variant='body2' className={classes.description}>
-          View and manage all users across different roles in the system.
-        </Typography>
-      </Box>
+      <PageHeader
+        title='User Management'
+        description='View and manage all users across different roles in the system.'
+        className={classes.pageHeader}
+      />
 
       {/* ── Tabs + Search ── */}
       <Box className={classes.tabsBox}>

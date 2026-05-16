@@ -4,13 +4,9 @@ import WorkIcon from '@mui/icons-material/Work';
 import LockIcon from '@mui/icons-material/Lock';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { STEPS } from '../hooks/useSignUp';
+import type { StepProgressProps } from './util';
 
 const STEP_ICONS = [PersonIcon, WorkIcon, LockIcon];
-
-interface StepProgressProps {
-  step: number;
-  classes: Record<string, string>;
-}
 
 const StepProgress = ({ step, classes }: StepProgressProps) => (
   <Box className={classes.stepRow}>

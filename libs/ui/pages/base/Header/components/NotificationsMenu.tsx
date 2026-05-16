@@ -1,12 +1,5 @@
 import { Menu, MenuItem, Divider, Avatar, ListItemIcon, ListItemText } from '@mui/material';
-import { IAuthUser } from '@serviceops/interfaces';
-
-interface NotificationsMenuProps {
-  anchorEl: HTMLElement | null;
-  onClose: () => void;
-  onViewAll: () => void;
-  notifications: IAuthUser[];
-}
+import { NotificationsMenuProps } from './util';
 
 const NotificationsMenu = ({
   anchorEl,

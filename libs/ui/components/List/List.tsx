@@ -1,9 +1,6 @@
 import { List as MUIList } from '@mui/material';
 import { useStyles } from './styles';
-
-export interface DSListProps extends React.ComponentProps<typeof MUIList> {
-  className?: string;
-}
+import { DSListProps } from './util';
 
 const List: React.FC<DSListProps> = ({ className, ...props }) => {
   const { cx, classes } = useStyles();

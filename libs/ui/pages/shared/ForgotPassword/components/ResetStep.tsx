@@ -1,14 +1,9 @@
-import {
-  Box,
-  Typography,
-  IconButton,
-  TextField,
-  Button,
-} from '@serviceops/component';
+import { Box, Typography, IconButton, TextField, Button } from '@serviceops/component';
 import { InputAdornment } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useFieldError } from '@serviceops/hooks';
+import type { ResetStepProps } from './util';
 
 function getStrength(pw: string) {
   let score = 0;
@@ -20,22 +15,6 @@ function getStrength(pw: string) {
   const labels = ['', 'Very Weak', 'Weak', 'Fair', 'Strong', 'Very Strong'];
   const colors = ['', '#ef4444', '#f97316', '#eab308', '#22c55e', '#16a34a'];
   return { score, label: pw ? labels[score] : '', color: pw ? colors[score] : '' };
-}
-
-interface ResetStepProps {
-  form: {
-    values: { newPassword: string; confirmPassword: string };
-    errors: { newPassword?: string; confirmPassword?: string };
-    touched: { newPassword?: boolean; confirmPassword?: boolean };
-    handleChange: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>;
-    handleBlur: React.FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>;
-    handleSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
-  };
-  isResetting: boolean;
-  showNew: boolean;
-  showConfirm: boolean;
-  onToggleNew: () => void;
-  onToggleConfirm: () => void;
 }
 
 const ResetStep = ({

@@ -24,8 +24,8 @@ import {
   InputLabel,
 } from '@mui/material';
 import { useFormik } from 'formik';
-import { CreateTicketTypeSchema, ITicketType } from '@serviceops/interfaces';
-import { useFieldError } from '@serviceops/hooks';
+import { CreateTicketTypeSchema } from '@serviceops/interfaces';
+import { TicketTypeFormDialogProps } from './util';
 import {
   TICKET_ICON_OPTIONS,
   TICKET_TAG_OPTIONS,
@@ -35,6 +35,7 @@ import {
   getTagOption,
 } from '../../utils/ticketTypeIcons';
 import { useStyles } from '../../styles';
+import { useFieldError } from '@serviceops/hooks';
 
 function generateTicketId(name: string): string {
   return name
@@ -47,28 +48,6 @@ function generateTicketId(name: string): string {
 function buildPreview(prefix: string, length: number): string {
   const num = '1'.padStart(Math.max(1, length), '0');
   return `${prefix.toUpperCase()}${num}`;
-}
-
-interface TicketTypeFormDialogProps {
-  open: boolean;
-  editingItem: ITicketType | null;
-  advancedSequences: boolean;
-  iconMap: Record<string, string>;
-  tagMap: Record<string, string>;
-  onClose: () => void;
-  onSubmit: (data: {
-    type: string;
-    name: string;
-    displayName: string;
-    description: string;
-    prefix: string;
-    isActive: boolean;
-    numberLength: number;
-    iconKey: string;
-    tag: string;
-    creationPageDisplayText: string;
-    creationPageDisplayTag: string;
-  }) => Promise<void>;
 }
 
 const TicketTypeFormDialog = ({

@@ -7,7 +7,8 @@ import {
   TextField,
   Tabs,
   Tab,
-} from '../../../components';
+  PageHeader,
+} from '@serviceops/component';
 import { InputAdornment } from '@mui/material';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import SearchIcon from '@mui/icons-material/Search';
@@ -51,16 +52,11 @@ const IncidentManagement = () => {
 
   return (
     <Grid className={classes.container}>
-      <Box className={classes.pageHeader}>
-        <Box className={classes.pageHeaderRow}>
-          <Typography variant='h5' className={classes.title}>
-            Incident Management
-          </Typography>
-        </Box>
-        <Typography variant='body2' className={classes.description}>
-          View and manage all incidents across the system. Click a row to open it in a new tab.
-        </Typography>
-      </Box>
+      <PageHeader
+        title='Incident Management'
+        description='View and manage all incidents across the system. Click a row to open it in a new tab.'
+        className={classes.pageHeader}
+      />
 
       <Box className={classes.tabsBox}>
         <Tabs

@@ -1,4 +1,4 @@
-import { Box, Typography } from '../../../components';
+import { Box, PageHeader } from '../../../components';
 import { useStyles } from './styles';
 
 const KnowledgeBase = () => {
@@ -6,12 +6,11 @@ const KnowledgeBase = () => {
 
   return (
     <Box className={classes.container}>
-      <Typography variant='h4' className={classes.title}>
-        Knowledge Base
-      </Typography>
-      <Typography className={classes.description}>
-        Here you can manage your Knowledge Base posts
-      </Typography>
+      <PageHeader
+        title='Knowledge Base'
+        description='View and manage all knowledge base articles across the system.'
+        className={classes.pageHeader}
+      />
     </Box>
   );
 };

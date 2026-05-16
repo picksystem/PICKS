@@ -1,21 +1,7 @@
 import { Box, Typography, Chip, TextField, Button } from '@serviceops/component';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import { useFieldError } from '@serviceops/hooks';
-
-interface OtpStepProps {
-  email: string;
-  form: {
-    values: { otp: string };
-    errors: { otp?: string };
-    touched: { otp?: boolean };
-    handleChange: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>;
-    handleBlur: React.FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>;
-    handleSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
-  };
-  isVerifying: boolean;
-  emailChipClass: string;
-  onResend: () => void;
-}
+import type { OtpStepProps } from './util';
 
 const OtpStep = ({ email, form, isVerifying, emailChipClass, onResend }: OtpStepProps) => {
   const reqError = useFieldError();

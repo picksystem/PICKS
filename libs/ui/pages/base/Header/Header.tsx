@@ -37,7 +37,6 @@ const Header = () => {
   const { classes } = useStyles();
   const {
     user,
-    isAdmin,
     userName,
     anchorEl,
     notifAnchorEl,
@@ -59,6 +58,8 @@ const Header = () => {
     handleProfile,
     handleUserPage,
     handleConsultantPage,
+    handleAdminPage,
+    currentRole,
     handleLogoClick,
     handleCreateTicket,
   } = useHeader();
@@ -197,8 +198,9 @@ const Header = () => {
             onProfile={handleProfile}
             onUserPage={handleUserPage}
             onConsultantPage={handleConsultantPage}
+            onAdminPage={handleAdminPage}
             onLogout={handleLogout}
-            isAdmin={isAdmin}
+            currentRole={currentRole}
           />
         </Box>
       </Toolbar>

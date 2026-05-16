@@ -2,12 +2,7 @@ import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import SearchIcon from '@mui/icons-material/Search';
 import { Box, Typography, Chip } from '@serviceops/component';
 import { useStyles } from '../styles';
-
-interface HeroBannerProps {
-  ticketNumber: string;
-  resolvedCount: number;
-  matchCount: number;
-}
+import { HeroBannerProps } from './util';
 
 const HeroBanner = ({ ticketNumber, resolvedCount, matchCount }: HeroBannerProps) => {
   const { classes } = useStyles();

@@ -1,4 +1,4 @@
-import { Box, Typography } from '../../../components';
+import { Box, PageHeader } from '../../../components';
 import { useStyles } from './styles';
 
 const RecentItems = () => {
@@ -6,10 +6,11 @@ const RecentItems = () => {
 
   return (
     <Box className={classes.container}>
-      <Typography variant='h4' className={classes.title}>
-        Recent Items
-      </Typography>
-      <Typography className={classes.description}>Here you can manage your products</Typography>
+      <PageHeader
+        title='Recent Items'
+        description='View your recently accessed items across the system.'
+        className={classes.pageHeader}
+      />
     </Box>
   );
 };

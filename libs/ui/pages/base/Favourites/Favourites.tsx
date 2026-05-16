@@ -1,4 +1,12 @@
-import { Grid, Typography, TextField, Box, DataTable, Loader } from '../../../components';
+import {
+  Grid,
+  TextField,
+  Box,
+  DataTable,
+  Loader,
+  PageHeader,
+  Typography,
+} from '../../../components';
 import { InputAdornment, Tabs, Tab } from '@mui/material';
 import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import SearchIcon from '@mui/icons-material/Search';
@@ -33,17 +41,11 @@ const Favourites = () => {
 
   return (
     <Grid className={classes.container}>
-      <Box className={classes.pageHeader}>
-        <Box className={classes.pageHeaderRow}>
-          <Typography variant='h5' className={classes.title}>
-            My Favourite Tickets
-          </Typography>
-        </Box>
-        <Typography variant='body2' className={classes.description}>
-          Your starred tickets across all types. Click a ticket number or row to open it in a new
-          tab.
-        </Typography>
-      </Box>
+      <PageHeader
+        title='My Favourite Tickets'
+        description='Your starred tickets across all types. Click a ticket number or row to open it in a new tab.'
+        className={classes.pageHeader}
+      />
 
       <Box className={classes.tabsBox}>
         <Tabs

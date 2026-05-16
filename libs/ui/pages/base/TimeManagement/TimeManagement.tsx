@@ -1,4 +1,4 @@
-import { Box, Typography } from '../../../components';
+import { Box, PageHeader } from '../../../components';
 import { useStyles } from './styles';
 
 const TimeManagement = () => {
@@ -6,12 +6,11 @@ const TimeManagement = () => {
 
   return (
     <Box className={classes.container}>
-      <Typography variant='h4' className={classes.title}>
-        Time Management
-      </Typography>
-      <Typography className={classes.description}>
-        Here you can manage your Time Management posts
-      </Typography>
+      <PageHeader
+        title='Time Management'
+        description='View and manage all time entries across different projects in the system.'
+        className={classes.pageHeader}
+      />
     </Box>
   );
 };

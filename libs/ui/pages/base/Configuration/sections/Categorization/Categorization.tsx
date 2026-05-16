@@ -65,6 +65,23 @@ import {
   IConfigApplicationNumberSequence,
 } from '@serviceops/interfaces';
 import { useStyles } from './styles';
+import {
+  TimesheetPanelProps,
+  ExpensePanelProps,
+  ServiceLineApprovalsPanelProps,
+  ServiceLineTicketTypePanelProps,
+  AppApprovalsPanelProps,
+  AppTicketTypePanelProps,
+  AppSupportLinesPanelProps,
+  AppBillingCodesPanelProps,
+  AppTimesheetPanelProps,
+  AppStickyNotePanelProps,
+  AppExpensePanelProps,
+  QueueApprovalsPanelProps,
+  QueueTicketTypePanelProps,
+  QueueTimesheetPanelProps,
+  QueueExpensesPanelProps,
+} from './util';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { useGetTicketTypeQuery } from '@serviceops/services';
 
@@ -610,13 +627,6 @@ const EMPTY_TS_FORM = {
   maxHoursPerDayPerResource: 8,
 };
 
-interface TimesheetPanelProps {
-  serviceLines: IConfigServiceLine[];
-  defaultServiceLineId: string | null;
-  onBack: () => void;
-  onSave: (updated: IConfigServiceLine) => void;
-}
-
 const TimesheetPanel = ({
   serviceLines,
   defaultServiceLineId,
@@ -1088,13 +1098,6 @@ const EMPTY_EX_FORM = {
   maxAmountPerDay: 0,
 };
 
-interface ExpensePanelProps {
-  serviceLines: IConfigServiceLine[];
-  defaultServiceLineId: string | null;
-  onBack: () => void;
-  onSave: (updated: IConfigServiceLine) => void;
-}
-
 const ExpensePanel = ({
   serviceLines,
   defaultServiceLineId,
@@ -1556,19 +1559,12 @@ const EMPTY_AP: Omit<IConfigApproval, 'id'> = {
   isRequired: true,
 };
 
-interface ApprovalsPanelProps {
-  serviceLines: IConfigServiceLine[];
-  initialServiceLineId: string | null;
-  onBack: () => void;
-  onSave: (updated: IConfigServiceLine) => void;
-}
-
 const ApprovalsPanel = ({
   serviceLines,
   initialServiceLineId,
   onBack,
   onSave,
-}: ApprovalsPanelProps) => {
+}: ServiceLineApprovalsPanelProps) => {
   const [slId, setSlId] = useState(initialServiceLineId ?? '');
   const [rows, setRows] = useState<IConfigApproval[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -1821,21 +1817,13 @@ const ApprovalsPanel = ({
 
 const ACCENT_TT = '#ea580c';
 
-interface TicketTypePanelProps {
-  serviceLines: IConfigServiceLine[];
-  initialServiceLineId: string | null;
-  allTicketTypeKeys: string[];
-  onBack: () => void;
-  onSave: (updated: IConfigServiceLine) => void;
-}
-
 const TicketTypePanel = ({
   serviceLines,
   initialServiceLineId,
   allTicketTypeKeys,
   onBack,
   onSave,
-}: TicketTypePanelProps) => {
+}: ServiceLineTicketTypePanelProps) => {
   const [slId, setSlId] = useState(initialServiceLineId ?? '');
   const [rows, setRows] = useState<IConfigServiceLineTicketType[]>([]);
 
@@ -2490,13 +2478,6 @@ const EMPTY_AAP: Omit<IConfigApproval, 'id'> = {
   isRequired: true,
 };
 
-interface AppApprovalsPanelProps {
-  applications: IConfigApplication[];
-  defaultApplicationId: string | null;
-  onBack: () => void;
-  onSave: (updated: IConfigApplication) => void;
-}
-
 const AppApprovalsPanel = ({
   applications,
   defaultApplicationId,
@@ -2915,14 +2896,6 @@ const AppApprovalsPanel = ({
 
 const ACCENT_ATT = '#ea580c';
 
-interface AppTicketTypePanelProps {
-  applications: IConfigApplication[];
-  defaultApplicationId: string | null;
-  allTicketTypeKeys: string[];
-  onBack: () => void;
-  onSave: (updated: IConfigApplication) => void;
-}
-
 const AppTicketTypePanel = ({
   applications,
   defaultApplicationId,
@@ -3089,13 +3062,6 @@ const AppTicketTypePanel = ({
 const ACCENT_ASL = '#0284c7';
 type FlatAppSlRow = IConfigSupportLine & { applicationId: string; applicationName: string };
 const EMPTY_ASL: Omit<IConfigSupportLine, 'id'> = { name: '', description: '', isActive: true };
-
-interface AppSupportLinesPanelProps {
-  applications: IConfigApplication[];
-  defaultApplicationId: string | null;
-  onBack: () => void;
-  onSave: (updated: IConfigApplication) => void;
-}
 
 const AppSupportLinesPanel = ({
   applications,
@@ -3489,13 +3455,6 @@ const AppSupportLinesPanel = ({
 const ACCENT_ABC = '#0f766e';
 type FlatAppBcRow = IConfigBillingCode & { applicationId: string; applicationName: string };
 const EMPTY_ABC: Omit<IConfigBillingCode, 'id'> = { code: '', description: '', isActive: true };
-
-interface AppBillingCodesPanelProps {
-  applications: IConfigApplication[];
-  defaultApplicationId: string | null;
-  onBack: () => void;
-  onSave: (updated: IConfigApplication) => void;
-}
 
 const AppBillingCodesPanel = ({
   applications,
@@ -3906,13 +3865,6 @@ const EMPTY_ATS_FORM = {
   activate: true,
   maxHoursPerDayPerResource: 8,
 };
-
-interface AppTimesheetPanelProps {
-  applications: IConfigApplication[];
-  defaultApplicationId: string | null;
-  onBack: () => void;
-  onSave: (updated: IConfigApplication) => void;
-}
 
 const AppTimesheetPanel = ({
   applications,
@@ -4361,13 +4313,6 @@ const AppTimesheetPanel = ({
 
 const ACCENT_ASN = '#d97706';
 
-interface AppStickyNotePanelProps {
-  applications: IConfigApplication[];
-  defaultApplicationId: string | null;
-  onBack: () => void;
-  onSave: (updated: IConfigApplication) => void;
-}
-
 const AppStickyNotePanel = ({
   applications,
   defaultApplicationId,
@@ -4464,13 +4409,6 @@ const EMPTY_AEX_FORM = {
   activate: true,
   maxAmountPerDay: 0,
 };
-
-interface AppExpensePanelProps {
-  applications: IConfigApplication[];
-  defaultApplicationId: string | null;
-  onBack: () => void;
-  onSave: (updated: IConfigApplication) => void;
-}
 
 const AppExpensePanel = ({
   applications,
@@ -5473,13 +5411,6 @@ const EMPTY_QAP: Omit<IConfigApproval, 'id'> = {
   isRequired: true,
 };
 
-interface QueueApprovalsPanelProps {
-  queues: IConfigApplicationQueue[];
-  defaultQueueId: string | null;
-  onBack: () => void;
-  onSave: (updated: IConfigApplicationQueue) => void;
-}
-
 const QueueApprovalsPanel = ({
   queues,
   defaultQueueId,
@@ -5882,14 +5813,6 @@ const QueueApprovalsPanel = ({
   );
 };
 
-interface QueueTicketTypePanelProps {
-  queues: IConfigApplicationQueue[];
-  initialQueueId: string | null;
-  allTicketTypeKeys: string[];
-  onBack: () => void;
-  onSave: (updated: IConfigApplicationQueue) => void;
-}
-
 const QueueTicketTypePanel = ({
   queues,
   initialQueueId,
@@ -6113,13 +6036,6 @@ const EMPTY_QTS = {
   activate: true,
   maxHoursPerDayPerResource: 8,
 };
-
-interface QueueTimesheetPanelProps {
-  queues: IConfigApplicationQueue[];
-  defaultQueueId: string | null;
-  onBack: () => void;
-  onSave: (updated: IConfigApplicationQueue) => void;
-}
 
 const QueueTimesheetPanel = ({
   queues,
@@ -6572,13 +6488,6 @@ const EMPTY_QEX = {
   activate: true,
   maxAmountPerDay: 0,
 };
-
-interface QueueExpensesPanelProps {
-  queues: IConfigApplicationQueue[];
-  defaultQueueId: string | null;
-  onBack: () => void;
-  onSave: (updated: IConfigApplicationQueue) => void;
-}
 
 const QueueExpensesPanel = ({
   queues,

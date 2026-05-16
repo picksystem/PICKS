@@ -1,4 +1,4 @@
-import { Box, Typography } from '../../../components';
+import { Box, PageHeader } from '../../../components';
 import { useStyles } from './styles';
 
 const ChangeManagement = () => {
@@ -6,12 +6,11 @@ const ChangeManagement = () => {
 
   return (
     <Box className={classes.container}>
-      <Typography variant='h4' className={classes.title}>
-        Change Management
-      </Typography>
-      <Typography className={classes.description}>
-        Here you can manage your Change Management posts
-      </Typography>
+      <PageHeader
+        title='Change Management'
+        description='View and manage all change management posts across different projects in the system.'
+        className={classes.pageHeader}
+      />
     </Box>
   );
 };

@@ -4,6 +4,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useFieldError } from '@serviceops/hooks';
+import type { SecurityStepProps } from './util';
 
 function getStrength(pw: string) {
   let score = 0;
@@ -15,22 +16,6 @@ function getStrength(pw: string) {
   const labels = ['', 'Very Weak', 'Weak', 'Fair', 'Strong', 'Very Strong'];
   const colors = ['', '#ef4444', '#f97316', '#eab308', '#22c55e', '#16a34a'];
   return { score, label: pw ? labels[score] : '', color: pw ? colors[score] : '' };
-}
-
-interface SecurityStepProps {
-  values: { password: string; confirmPassword: string };
-  errors: Partial<Record<string, string>>;
-  step2Touched: { password: boolean; confirmPassword: boolean };
-  step2Submitted: boolean;
-  onPasswordChange: React.ChangeEventHandler;
-  onPasswordBlur: (e: React.FocusEvent) => void;
-  onConfirmChange: React.ChangeEventHandler;
-  onConfirmBlur: (e: React.FocusEvent) => void;
-  showPassword: boolean;
-  onTogglePassword: () => void;
-  showConfirmPassword: boolean;
-  onToggleConfirmPassword: () => void;
-  classes: Record<string, string>;
 }
 
 const SecurityStep = ({

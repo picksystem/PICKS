@@ -1,19 +1,11 @@
-import { Menu, MenuItem, Divider, ListItemIcon, ListItemText } from '@mui/material';
+import { Menu, MenuItem, Divider, ListItemIcon, ListItemText, Chip } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import PersonIcon from '@mui/icons-material/Person';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import LogoutIcon from '@mui/icons-material/Logout';
-
-interface UserMenuProps {
-  anchorEl: HTMLElement | null;
-  onClose: () => void;
-  onProfile: () => void;
-  onUserPage: () => void;
-  onConsultantPage: () => void;
-  onLogout: () => void;
-  isAdmin: boolean;
-}
+import { UserMenuProps } from './util';
 
 const UserMenu = ({
   anchorEl,
@@ -21,8 +13,9 @@ const UserMenu = ({
   onProfile,
   onUserPage,
   onConsultantPage,
+  onAdminPage,
   onLogout,
-  isAdmin,
+  currentRole = 'admin',
 }: UserMenuProps) => (
   <Menu
     anchorEl={anchorEl}
@@ -38,22 +31,36 @@ const UserMenu = ({
       <ListItemText>Your Profile</ListItemText>
     </MenuItem>
     <Divider />
-    {isAdmin && (
-      <>
-        <MenuItem onClick={onUserPage}>
-          <ListItemIcon>
-            <PersonIcon fontSize='small' />
-          </ListItemIcon>
-          <ListItemText>User Page</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={onConsultantPage}>
-          <ListItemIcon>
-            <BusinessCenterIcon fontSize='small' />
-          </ListItemIcon>
-          <ListItemText>Consultant Page</ListItemText>
-        </MenuItem>
-      </>
-    )}
+
+    {/* Page switching options - visible to all users */}
+    <MenuItem onClick={onAdminPage}>
+      <ListItemIcon>
+        <AdminPanelSettingsIcon fontSize='small' />
+      </ListItemIcon>
+      <ListItemText>Admin Page</ListItemText>
+      {currentRole === 'admin' && (
+        <Chip label='Active' size='small' color='primary' sx={{ ml: 1 }} />
+      )}
+    </MenuItem>
+    <MenuItem onClick={onUserPage}>
+      <ListItemIcon>
+        <PersonIcon fontSize='small' />
+      </ListItemIcon>
+      <ListItemText>User Page</ListItemText>
+      {currentRole === 'user' && (
+        <Chip label='Active' size='small' color='primary' sx={{ ml: 1 }} />
+      )}
+    </MenuItem>
+    <MenuItem onClick={onConsultantPage}>
+      <ListItemIcon>
+        <BusinessCenterIcon fontSize='small' />
+      </ListItemIcon>
+      <ListItemText>Consultant Page</ListItemText>
+      {currentRole === 'consultant' && (
+        <Chip label='Active' size='small' color='primary' sx={{ ml: 1 }} />
+      )}
+    </MenuItem>
+
     <Divider />
     <MenuItem onClick={onClose}>
       <ListItemIcon>

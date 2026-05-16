@@ -1,11 +1,6 @@
 import { Box as MUIBox } from '@mui/material';
 import { useStyles } from './styles';
-
-export interface DSBoxProps {
-  children?: React.ReactNode;
-  className?: string;
-  [key: string]: unknown;
-}
+import { DSBoxProps } from './util';
 
 const Box: React.FC<DSBoxProps> = ({ children, className, ...props }) => {
   const { cx, classes } = useStyles();

@@ -3,18 +3,13 @@ import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import LockResetIcon from '@mui/icons-material/LockReset';
 import CheckIcon from '@mui/icons-material/Check';
-import type { Step } from '../hooks/useForgotPassword';
+import type { StepProgressProps } from './util';
 
 const RECOVERY_STEPS = [
   { label: 'Email', icon: MailOutlineIcon },
   { label: 'Verify OTP', icon: MarkEmailReadIcon },
   { label: 'New Password', icon: LockResetIcon },
 ];
-
-interface StepProgressProps {
-  step: Step;
-  classes: Record<string, string>;
-}
 
 const StepProgress = ({ step, classes }: StepProgressProps) => {
   const stepIndex = step === 'email' ? 0 : step === 'otp' ? 1 : 2;

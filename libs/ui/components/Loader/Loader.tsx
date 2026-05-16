@@ -1,11 +1,6 @@
 import { Backdrop, CircularProgress, Box, Typography } from '@mui/material';
 import { useAuth, useLoader } from '@serviceops/hooks';
-
-export interface DSLoaderProps {
-  text?: string;
-  className?: string;
-  globalOverlay?: boolean;
-}
+import { DSLoaderProps } from './util';
 
 const FullScreenLoader: React.FC<{ message?: string }> = ({ message }) => {
   const { isConsultantMode, isConsultant } = useAuth();
@@ -89,7 +84,7 @@ const Loader: React.FC<DSLoaderProps> = ({ text, className, globalOverlay = fals
     return <FullScreenLoader message={loaderMessage} />;
   }
 
-  return <FullScreenLoader message={text} />;
+  return <FullScreenLoader message={text} {...rest} />;
 };
 
 export default Loader;

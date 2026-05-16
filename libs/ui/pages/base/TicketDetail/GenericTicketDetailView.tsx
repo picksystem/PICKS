@@ -22,6 +22,7 @@ import { Loader } from '../../../components';
 import { useGetTicketByNumberQuery } from '@serviceops/services';
 import { constants } from '@serviceops/utils';
 import { IServiceRequest, IAdvisoryRequest } from '@serviceops/interfaces';
+import { GenericTicketDetailViewProps } from './util';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -90,10 +91,6 @@ const InfoRow = ({ label, value }: { label: string; value?: string | number | nu
 );
 
 // ── Main component ─────────────────────────────────────────────────────────────
-
-interface GenericTicketDetailViewProps {
-  ticketType: string;
-}
 
 const GenericTicketDetailView = ({ ticketType }: GenericTicketDetailViewProps) => {
   const { number } = useParams<{ number: string }>();

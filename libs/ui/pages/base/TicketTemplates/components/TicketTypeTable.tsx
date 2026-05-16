@@ -3,19 +3,13 @@ import { alpha } from '@mui/material';
 import { ITicketType } from '@serviceops/interfaces';
 import { DataTable, Column, Box, Typography, Chip, Tooltip, Switch } from '@serviceops/component';
 import { loadTagMap, getTagOption } from '../utils/ticketTypeIcons';
+import { TicketTypeTableProps } from './TicketTypeTable.util';
 
 const FALLBACK_COLOR = '#64748b';
 
 function buildPreview(prefix: string, length: number): string {
   const num = '1'.padStart(Math.max(1, length), '0');
   return `${prefix.toUpperCase()}${num}`;
-}
-
-interface TicketTypeTableProps {
-  ticketTypes: ITicketType[];
-  selectedRowId?: number;
-  onRowClick?: (row: ITicketType) => void;
-  onToggleActive?: (row: ITicketType) => void;
 }
 
 const TicketTypeTable = ({

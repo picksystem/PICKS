@@ -33,31 +33,8 @@ import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
 import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from './styles';
-import { UserRow, ChangeProfileErrors } from '../../types/userManagement.types';
 import { ROLE_CHANGE_REASON_CODES } from '../../utils/userManagement.utils';
-
-interface ChangeProfileDialogProps {
-  open: boolean;
-  onClose: () => void;
-  confirmOpen: boolean;
-  onConfirmClose: () => void;
-  selectedRow: UserRow | null;
-  changeProfileRole: string;
-  onRoleChange: (v: string) => void;
-  changeProfileReasonCode: string;
-  onReasonCodeChange: (v: string) => void;
-  changeProfileNoteText: string;
-  onNoteTextChange: (v: string) => void;
-  changeProfileAttachment: File | null;
-  onAttachmentChange: (f: File | null) => void;
-  changeProfileErrors: ChangeProfileErrors;
-  onErrorsChange: (e: ChangeProfileErrors) => void;
-  isSaving: boolean;
-  noteRef: React.RefObject<HTMLTextAreaElement | null>;
-  attachmentInputRef: React.RefObject<HTMLInputElement | null>;
-  onSubmit: () => void;
-  onConfirmSave: () => void;
-}
+import { ChangeProfileDialogProps } from './util';
 
 const ChangeProfileDialog = ({
   open,

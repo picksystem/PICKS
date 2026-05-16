@@ -14,16 +14,10 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress } f
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import { SequenceDialogProps } from './util';
 import { ITicketType } from '@serviceops/interfaces';
 import { useReorderTicketTypesMutation } from '@serviceops/services';
 import { getTypeColor } from '../../utils/ticketTypeIcons';
-
-interface SequenceDialogProps {
-  open: boolean;
-  ticketTypes: ITicketType[];
-  onClose: () => void;
-  onSave: () => void;
-}
 
 const SequenceDialog = ({ open, ticketTypes, onClose, onSave }: SequenceDialogProps) => {
   const [ordered, setOrdered] = useState<ITicketType[]>([]);

@@ -46,42 +46,20 @@ import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { useGetTicketTypeQuery } from '@serviceops/services';
 import { ConfigFormDialog, ConfigDeleteDialog } from '../../dialogs/ConfigDialogs/ConfigDialogs';
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-interface PriorityLevel {
-  id: string;
-  name: string;
-  description: string;
-  color: string; // text color (always #fff for dark badges)
-  bgColor: string; // badge background
-  sortOrder: number;
-  enabledFor: Record<string, boolean>; // ticketType → enabled
-}
-
-interface ImpactLevel {
-  id: string;
-  name: string;
-  displayName: string;
-  description: string;
-  bgColor: string;
-  sortOrder: number;
-  isActive: boolean;
-  enabledFor: Record<string, boolean>;
-}
-
-interface UrgencyLevel {
-  id: string;
-  name: string;
-  displayName: string;
-  description: string;
-  bgColor: string;
-  sortOrder: number;
-  isActive: boolean;
-  enabledFor: Record<string, boolean>;
-}
-
-type MatrixMap = Record<string, Record<string, string>>;
+import {
+  PriorityLevel,
+  ImpactLevel,
+  UrgencyLevel,
+  MatrixMap,
+  PriorityFormDialogProps,
+  MatrixTableProps,
+  SectionProps,
+  SimpleLevel,
+  SimpleLevelFormDialogProps,
+  SimpleLevelSectionProps,
+  MatrixRow,
+  TicketMatrixSectionProps,
+} from './util';
 
 // ── Ticket types shown as columns in the priority table ───────────────────────
 
@@ -316,14 +294,6 @@ const PRESET_COLORS = [
 
 // ── Priority form dialog ──────────────────────────────────────────────────────
 
-interface PriorityFormDialogProps {
-  open: boolean;
-  editing: PriorityLevel | null;
-  onClose: () => void;
-  onSave: (data: Partial<PriorityLevel>) => void;
-  ticketTypeColumns: { key: string; label: string }[];
-}
-
 const PriorityFormDialog = ({
   open,
   editing,
@@ -481,15 +451,6 @@ const ColorDot = ({ color }: { color: string }) => (
   />
 );
 
-interface MatrixTableProps {
-  priorities: PriorityLevel[];
-  impacts: ImpactLevel[];
-  urgencies: UrgencyLevel[];
-  matrix: MatrixMap;
-  editable: boolean;
-  onCellChange: (impact: string, urgency: string, priorityId: string) => void;
-}
-
 const MatrixTable = ({
   priorities,
   impacts,
@@ -623,15 +584,6 @@ const MatrixTable = ({
 
 // ── Section wrapper ───────────────────────────────────────────────────────────
 
-interface SectionProps {
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-  accentColor: string;
-  defaultExpanded?: boolean;
-  children: React.ReactNode;
-}
-
 const Section = ({
   icon,
   title,
@@ -672,27 +624,7 @@ const Section = ({
 
 // ── Impact / Urgency level section ────────────────────────────────────────────
 
-interface SimpleLevel {
-  id: string;
-  displayName: string;
-  description: string;
-  bgColor: string;
-  isActive: boolean;
-  enabledFor: Record<string, boolean>;
-}
-
 // ── Simple level form dialog ──────────────────────────────────────────────────
-
-interface SimpleLevelFormDialogProps {
-  open: boolean;
-  noun: string;
-  accent: string;
-  icon: React.ReactNode;
-  editing: SimpleLevel | null;
-  onClose: () => void;
-  onSave: (data: Partial<SimpleLevel>) => void;
-  ticketTypeColumns: { key: string; label: string }[];
-}
 
 const SimpleLevelFormDialog = ({
   open,
@@ -839,22 +771,6 @@ const SimpleLevelFormDialog = ({
 };
 
 // ── Simple level section ──────────────────────────────────────────────────────
-
-interface SimpleLevelSectionProps {
-  items: SimpleLevel[];
-  noun: string;
-  accent: string;
-  icon: React.ReactNode;
-  valueLabel: string;
-  defaultItems: SimpleLevel[];
-  ticketTypeColumns: { key: string; label: string }[];
-  onAdd: (data: Partial<SimpleLevel>) => void;
-  onEdit: (id: string, data: Partial<SimpleLevel>) => void;
-  onDelete: (id: string) => void;
-  onReset: (defaults: SimpleLevel[]) => void;
-  onToggleActive: (id: string) => void;
-  onToggleEnabledFor: (id: string, ticketType: string) => void;
-}
 
 const SimpleLevelSection = ({
   items,
@@ -1112,26 +1028,7 @@ const SimpleLevelSection = ({
 
 // ── Flat matrix row ───────────────────────────────────────────────────────────
 
-interface MatrixRow {
-  id: string;
-  impactId: string;
-  urgencyId: string;
-  priorityId: string;
-}
-
 // ── Ticket-type matrix section: flat table + toolbar ──────────────────────────
-
-interface TicketMatrixSectionProps {
-  label: string;
-  accentColor: string;
-  MatrixIcon: React.ElementType;
-  priorities: PriorityLevel[];
-  impacts: ImpactLevel[];
-  urgencies: UrgencyLevel[];
-  matrix: MatrixMap;
-  onMatrixChange: (impact: string, urgency: string, priorityId: string) => void;
-  onMatrixReset: (newMatrix: MatrixMap) => void;
-}
 
 const TicketMatrixSection = ({
   label,

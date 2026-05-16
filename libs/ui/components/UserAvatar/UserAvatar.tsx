@@ -1,17 +1,6 @@
 import { Avatar } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
-
-interface UserAvatarProps {
-  user: {
-    profilePicture?: string | null;
-    firstName?: string | null;
-    lastName?: string | null;
-    name?: string | null;
-  };
-  size?: number;
-  sx?: SxProps<Theme>;
-  className?: string;
-}
+import type { UserAvatarProps } from './util';
 
 function getInitials(user: UserAvatarProps['user']): string {
   if (user.firstName && user.lastName) {

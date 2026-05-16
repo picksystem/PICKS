@@ -21,7 +21,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from './styles';
-import { UserRow, EditFormShape } from '../../types/userManagement.types';
+import { EditUserDialogProps } from './util';
 import {
   TIMEZONES,
   DATE_FORMATS,
@@ -33,18 +33,6 @@ import {
   getTzDisplay,
   fmtDateTimeUser,
 } from '../../utils/userManagement.utils';
-
-interface EditUserDialogProps {
-  open: boolean;
-  onClose: () => void;
-  selectedRow: UserRow | null;
-  editForm: EditFormShape;
-  onFormChange: (updater: (prev: EditFormShape) => EditFormShape) => void;
-  isSaving: boolean;
-  isDirty: boolean;
-  onSave: () => void;
-  currentUserId?: number;
-}
 
 const EditUserDialog = ({
   open,

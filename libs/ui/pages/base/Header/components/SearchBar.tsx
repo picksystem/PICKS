@@ -1,20 +1,7 @@
 import { ClickAwayListener, Chip } from '@mui/material';
 import { Typography, Box, TextField } from '@serviceops/component';
-import { IIncident } from '@serviceops/interfaces';
 import SearchIcon from '@mui/icons-material/Search';
-
-interface SearchBarProps {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onClickAway: () => void;
-  showResults: boolean;
-  incidents: IIncident[];
-  onSelectIncident: (incident: IIncident) => void;
-  className?: string;
-  wrapperClassName?: string;
-  dropdownClassName?: string;
-  noResultsClassName?: string;
-}
+import { SearchBarProps } from './util';
 
 const SearchBar = ({
   value,

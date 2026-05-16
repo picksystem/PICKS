@@ -15,21 +15,9 @@ import { Dialog, DialogContent, DialogActions, FormControl, InputLabel } from '@
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import CloseIcon from '@mui/icons-material/Close';
 import { IAuthUser, IConsultantRole } from '@serviceops/interfaces';
-import { ProfileForm } from '../../types/consultantProfile.types';
+import { ProfileDialogProps } from './util';
 import SectionLabel from '../../components/SectionLabel';
 import { useStyles } from './styles';
-
-interface ProfileDialogProps {
-  open: boolean;
-  onClose: () => void;
-  editingProfileId: number | null;
-  profileForm: ProfileForm;
-  onFormChange: (form: ProfileForm) => void;
-  isSaving: boolean;
-  onSave: () => void;
-  consultantUsers: IAuthUser[];
-  consultantRoleOptions: IConsultantRole[];
-}
 
 const ProfileDialog = ({
   open,

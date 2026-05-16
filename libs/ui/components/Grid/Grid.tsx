@@ -1,9 +1,6 @@
 import { Grid as MUIGrid } from '@mui/material';
 import { useStyles } from './styles';
-
-export interface DSGridProps extends React.ComponentProps<typeof MUIGrid> {
-  className?: string;
-}
+import { DSGridProps } from './util';
 
 const Grid: React.FC<DSGridProps> = ({ className, ...props }) => {
   const { cx, classes } = useStyles();

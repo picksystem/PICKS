@@ -41,6 +41,13 @@ import { Box, TextField, Select, Checkbox, Button, UploadFile } from '@serviceop
 import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from './styles';
 import useCreateTicketDetail, { CreateTicketDetailProps } from './hooks/useCreateTicketDetail';
+import {
+  ClientFieldProps,
+  UserFieldProps,
+  ContactFieldProps,
+  CategoryFieldProps,
+  ResourceFieldProps,
+} from './util';
 
 // ── Section metadata ──────────────────────────────────────────────────────────
 const SECTION_META = [
@@ -96,15 +103,6 @@ const HERO_ICONS: Record<string, React.ElementType> = {
 };
 
 // ── Searchable Client Field Component ────────────────────────────
-interface ClientFieldProps {
-  value: string;
-  callerOptions: { value: string; label: string }[];
-  onChange: (value: string) => void;
-  onBlur?: React.FocusEventHandler;
-  error?: boolean;
-  errorText?: string | React.ReactNode;
-}
-
 const ClientSearchField = ({
   value,
   callerOptions,
@@ -186,16 +184,6 @@ const ClientSearchField = ({
 };
 
 // ── Searchable User Field Component ──────────────────────────
-interface UserFieldProps {
-  value: string;
-  callerOptions: { value: string; label: string }[];
-  onChange: (value: string) => void;
-  onBlur: React.FocusEventHandler;
-  error: boolean;
-  errorText?: string | React.ReactNode;
-  label: string;
-}
-
 const UserSearchField = ({
   value,
   callerOptions,
@@ -274,12 +262,6 @@ const UserSearchField = ({
 };
 
 // ── Searchable Contact Field Component ──────────────────────────
-interface ContactFieldProps {
-  value: string;
-  callerOptions: { value: string; label: string }[];
-  onChange: (value: string) => void;
-}
-
 const ContactSearchField = ({ value, callerOptions, onChange }: ContactFieldProps) => {
   const [searchText, setSearchText] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
@@ -351,17 +333,6 @@ const ContactSearchField = ({ value, callerOptions, onChange }: ContactFieldProp
 };
 
 // ── Searchable Category Field Component ─────────────────────────
-interface CategoryFieldProps {
-  value: string;
-  options: { value: string; label: string }[];
-  onChange: (value: string) => void;
-  onBlur?: React.FocusEventHandler;
-  error?: boolean;
-  errorText?: string | React.ReactNode;
-  label: string;
-  required?: boolean;
-}
-
 const CategorySearchField = ({
   value,
   options,
@@ -445,17 +416,6 @@ const CategorySearchField = ({
 };
 
 // ── Searchable Resource Field Component ─────────────────────────
-interface ResourceFieldProps {
-  value: string;
-  options: { value: string; label: string }[];
-  onChange: (value: string) => void;
-  onBlur?: React.FocusEventHandler;
-  error?: boolean;
-  errorText?: string | React.ReactNode;
-  label: string;
-  required?: boolean;
-}
-
 const ResourceSearchField = ({
   value,
   options,

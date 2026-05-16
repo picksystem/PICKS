@@ -5,19 +5,7 @@ import ErrorIcon from '@mui/icons-material/Error';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CloseIcon from '@mui/icons-material/Close';
 import { useStyles } from './styles';
-
-export interface DSHelpBoxProps {
-  title?: string;
-  message: string | React.ReactNode;
-  type?: 'info' | 'warning' | 'error' | 'success';
-  icon?: React.ReactNode;
-  onClose?: () => void;
-  className?: string;
-  closable?: boolean;
-  variant?: 'default' | 'outlined' | 'filled';
-  size?: 'small' | 'medium' | 'large';
-  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
-}
+import { DSHelpBoxProps } from './util';
 
 const HelpBox: React.FC<DSHelpBoxProps> = ({
   title,

@@ -34,6 +34,7 @@ import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { useGetTicketTypeQuery } from '@serviceops/services';
 import { ConfigFormDialog, ConfigDeleteDialog } from '../../dialogs/ConfigDialogs/ConfigDialogs';
+import type { SectionProps } from './util';
 
 // ── Color presets ─────────────────────────────────────────────────────────────
 
@@ -295,15 +296,6 @@ const DEFAULT_RELEASE_STATUSES: IConfigStatusLevel[] = [
 ];
 
 // ── Section wrapper ───────────────────────────────────────────────────────────
-
-interface SectionProps {
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-  accentColor: string;
-  defaultExpanded?: boolean;
-  children: React.ReactNode;
-}
 
 const Section = ({
   icon,

@@ -1,16 +1,8 @@
 import MuiDrawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
-
 import { useStyles } from './styles';
-
-export interface DrawerProps {
-  open: boolean;
-  onClose: () => void;
-  children?: React.ReactNode;
-  anchor?: 'left' | 'right' | 'top' | 'bottom';
-  className?: string;
-}
+import { DrawerProps } from './util';
 
 const Drawer: React.FC<DrawerProps> = ({ open, onClose, children, anchor = 'left', className }) => {
   const { cx, classes } = useStyles();

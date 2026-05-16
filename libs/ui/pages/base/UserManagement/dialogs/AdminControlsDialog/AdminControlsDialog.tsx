@@ -28,7 +28,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CloudDoneIcon from '@mui/icons-material/CloudDone';
 import { useStyles } from './styles';
-import { PageStyles } from '../../types/userManagement.types';
+import { AdminControlsDialogProps } from './util';
 
 const THEMES: { name: string; swatch: string; accent: string }[] = [
   { name: 'System', swatch: 'linear-gradient(135deg,#2d5ebb,#e2e8f0)', accent: '#2d5ebb' },
@@ -47,25 +47,6 @@ const THEMES: { name: string; swatch: string; accent: string }[] = [
   { name: 'Rose', swatch: 'linear-gradient(135deg,#881337,#f43f5e)', accent: '#881337' },
   { name: 'Forest', swatch: 'linear-gradient(135deg,#064e3b,#34d399)', accent: '#064e3b' },
 ];
-
-interface AdminControlsDialogProps {
-  open: boolean;
-  onClose: () => void;
-  adminTwoLevel: boolean;
-  onAdminTwoLevelChange: (v: boolean) => void;
-  adminManagerOnly: boolean;
-  onAdminManagerOnlyChange: (v: boolean) => void;
-  adminAdditionalApproval: boolean;
-  onAdminAdditionalApprovalChange: (v: boolean) => void;
-  adminApprover: string;
-  onAdminApproverChange: (v: string) => void;
-  onAdminApproverBlur?: () => void;
-  isSaving?: boolean;
-  pageStyles: PageStyles;
-  onPageStyleChange: (page: 'signIn' | 'signUp' | 'forgotPassword', value: 'old' | 'new') => void;
-  selectedTheme: string;
-  onThemeChange: (theme: string) => void;
-}
 
 const AdminControlsDialog = ({
   open,

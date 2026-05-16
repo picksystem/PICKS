@@ -1,20 +1,7 @@
 import { Modal as MUIModal, Fade, Box } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useStyles } from './styles';
-
-export interface DSModalProps {
-  open: boolean;
-  onClose?: (event: {}, reason: 'backdropClick' | 'escapeKeyDown') => void;
-  title?: string | React.ReactNode;
-  children?: React.ReactNode;
-  footer?: React.ReactNode;
-  maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  showCloseIcon?: boolean;
-  className?: string;
-  disableBackdropClick?: boolean;
-  disableEscapeKeyDown?: boolean;
-  keepMounted?: boolean;
-}
+import { DSModalProps } from './util';
 
 const Modal: React.FC<DSModalProps> = ({
   open,

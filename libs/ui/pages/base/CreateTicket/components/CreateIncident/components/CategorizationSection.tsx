@@ -4,32 +4,9 @@ import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from '../styles';
 import { useState, useRef } from 'react';
 import { Paper, Popper, MenuItem, MenuList } from '@mui/material';
-
-interface CategorizationSectionProps {
-  values: {
-    businessCategory: string;
-    serviceLine: string;
-    application: string;
-    applicationCategory: string;
-    applicationSubCategory: string;
-  };
-  touched: Partial<Record<string, boolean>>;
-  errors: Partial<Record<string, string>>;
-  onChange: React.ChangeEventHandler<HTMLInputElement>;
-  onBlur: React.FocusEventHandler;
-}
+import { CategorizationSectionProps, CategoryFieldProps } from './CategorizationSection.tsx.util';
 
 // ── Searchable Category Field Component ─────────────────────────
-interface CategoryFieldProps {
-  value: string;
-  options: { value: string; label: string }[];
-  onChange: (value: string) => void;
-  onBlur: React.FocusEventHandler;
-  error: boolean;
-  errorText?: string | React.ReactNode;
-  label: string;
-  required?: boolean;
-}
 
 const CategorySearchField = ({
   value,

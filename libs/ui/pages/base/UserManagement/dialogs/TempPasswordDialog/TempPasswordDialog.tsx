@@ -33,27 +33,7 @@ import {
   Grid,
 } from '@serviceops/component';
 import { useStyles } from './styles';
-import { UserRow } from '../../types/userManagement.types';
-import { IAuthUser } from '@serviceops/interfaces';
-
-interface TempPasswordDialogProps {
-  open: boolean;
-  onClose: () => void;
-  selectedRow: UserRow | null;
-  allUsers: IAuthUser[];
-  tempPwBulkMode: boolean;
-  onBulkModeChange: (v: boolean) => void;
-  bulkSelectedIds: number[];
-  onBulkIdsChange: (ids: number[]) => void;
-  tempPwValidity: string;
-  onValidityChange: (v: string) => void;
-  tempPwForceReset: boolean;
-  onForceResetChange: (v: boolean) => void;
-  tempPwNote: string;
-  onNoteChange: (v: string) => void;
-  isGenerating: boolean;
-  onGenerate: () => void;
-}
+import { TempPasswordDialogProps } from './util';
 
 const TempPasswordDialog = ({
   open,

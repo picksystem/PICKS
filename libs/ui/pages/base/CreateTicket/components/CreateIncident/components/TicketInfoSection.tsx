@@ -4,14 +4,13 @@ import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from '../styles';
 import { useState, useRef } from 'react';
 import { Paper, Popper, MenuItem, MenuList } from '@mui/material';
-
-// ── Searchable Client Field Component ────────────────────────────
-interface ClientFieldProps {
-  value: string;
-  callerOptions: { value: string; label: string }[];
-  onChange: (value: string) => void;
-  classes: any;
-}
+import {
+  ClientFieldProps,
+  UserFieldProps,
+  ContactFieldProps,
+  TicketInfoContentProps,
+  TicketInfoSectionProps,
+} from './TicketInfoSection.tsx.util';
 
 const ClientSearchField = ({ value, callerOptions, onChange, classes }: ClientFieldProps) => {
   const [searchText, setSearchText] = useState(value);
@@ -85,16 +84,6 @@ const ClientSearchField = ({ value, callerOptions, onChange, classes }: ClientFi
 };
 
 // ── Searchable User Field Component ──────────────────────────
-interface UserFieldProps {
-  value: string;
-  callerOptions: { value: string; label: string }[];
-  onChange: (value: string) => void;
-  onBlur: React.FocusEventHandler;
-  error: boolean;
-  errorText?: string | React.ReactNode;
-  label: string;
-}
-
 const UserSearchField = ({
   value,
   callerOptions,
@@ -177,12 +166,6 @@ const UserSearchField = ({
 };
 
 // ── Searchable Contact Field Component ──────────────────────────
-interface ContactFieldProps {
-  value: string;
-  callerOptions: { value: string; label: string }[];
-  onChange: (value: string) => void;
-}
-
 const ContactSearchField = ({ value, callerOptions, onChange }: ContactFieldProps) => {
   const [searchText, setSearchText] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
@@ -254,14 +237,6 @@ const ContactSearchField = ({ value, callerOptions, onChange }: ContactFieldProp
 };
 
 // ── Ticket Info Content Component ────────────────────────────
-interface TicketInfoContentProps {
-  ticketNumber: string;
-  client: string;
-  onClientChange: (value: string) => void;
-  callerOptions: { value: string; label: string }[];
-  classes: any;
-}
-
 const TicketInfoContent = ({
   ticketNumber,
   client,
@@ -286,35 +261,6 @@ const TicketInfoContent = ({
     </Box>
   );
 };
-
-interface TicketInfoSectionProps {
-  ticketNumber: string;
-  callerOptions: { value: string; label: string }[];
-  caller: string;
-  callerTouched: boolean | undefined;
-  callerError: string | undefined;
-  callerFirstName: string;
-  callerLastName: string;
-  client: string;
-  additionalContacts: string;
-  manualCallerOpen: boolean;
-  callerEmail: string;
-  callerEmailTouched: boolean | undefined;
-  callerEmailError: string | undefined;
-  callerPhone: string;
-  callerDepartment: string;
-  callerLocation: string;
-  callerReportingManager: string;
-  isUpdatingCaller: boolean;
-  onClientChange: (v: string) => void;
-  onCallerChange: (v: string) => void;
-  onCallerBlur: React.FocusEventHandler;
-  onAdditionalContactsChange: (v: string) => void;
-  onManualCallerToggle: () => void;
-  onFieldChange: React.ChangeEventHandler<HTMLInputElement>;
-  onFieldBlur: React.FocusEventHandler;
-  onManualCallerUpdate: () => void;
-}
 
 const TicketInfoSection = ({
   ticketNumber,

@@ -3,24 +3,7 @@ import { FormControl, InputLabel, FormHelperText, SelectChangeEvent } from '@mui
 import WorkIcon from '@mui/icons-material/Work';
 import SearchIcon from '@mui/icons-material/Search';
 import { useFieldError } from '@serviceops/hooks';
-
-interface WorkDetailsStepProps {
-  values: {
-    workLocation: string;
-    department: string;
-    employeeId: string;
-    businessUnit: string;
-    managerName: string;
-    reasonForAccess: string;
-    role: string;
-  };
-  touched: Partial<Record<string, boolean>>;
-  errors: Partial<Record<string, string>>;
-  onChange: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>;
-  onRoleChange: (event: SelectChangeEvent<string>) => void;
-  onBlur: React.FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>;
-  classes: Record<string, string>;
-}
+import type { WorkDetailsStepProps } from './util';
 
 const WorkDetailsStep = ({
   values,

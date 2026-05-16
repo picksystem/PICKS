@@ -1,9 +1,6 @@
 import { ListItemIcon as MUIListItemIcon } from '@mui/material';
 import { useStyles } from './styles';
-
-export interface DSListItemIconProps extends React.ComponentProps<typeof MUIListItemIcon> {
-  className?: string;
-}
+import { DSListItemIconProps } from './util';
 
 const ListItemIcon: React.FC<DSListItemIconProps> = ({ className, ...props }) => {
   const { cx, classes } = useStyles();

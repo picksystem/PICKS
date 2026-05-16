@@ -1,15 +1,7 @@
 import { Box, Typography, Grid, TextField } from '@serviceops/component';
 import PersonIcon from '@mui/icons-material/Person';
 import { useFieldError } from '@serviceops/hooks';
-
-interface PersonalStepProps {
-  values: { firstName: string; lastName: string; email: string; phone: string };
-  touched: Partial<Record<string, boolean>>;
-  errors: Partial<Record<string, string>>;
-  onChange: React.ChangeEventHandler;
-  onBlur: React.FocusEventHandler;
-  classes: Record<string, string>;
-}
+import type { PersonalStepProps } from './util';
 
 const PersonalStep = ({
   values,

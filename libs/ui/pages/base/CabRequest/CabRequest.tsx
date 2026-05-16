@@ -1,4 +1,4 @@
-import { Box, Typography } from '../../../components';
+import { Box, PageHeader } from '../../../components';
 import { useStyles } from './styles';
 
 const CabRequest = () => {
@@ -6,12 +6,11 @@ const CabRequest = () => {
 
   return (
     <Box className={classes.container}>
-      <Typography variant='h4' className={classes.title}>
-        Cab Request
-      </Typography>
-      <Typography className={classes.description}>
-        Here you can manage your Cab Request posts
-      </Typography>
+      <PageHeader
+        title='Cab Request'
+        description='View and manage all cab requests across different projects in the system.'
+        className={classes.pageHeader}
+      />
     </Box>
   );
 };

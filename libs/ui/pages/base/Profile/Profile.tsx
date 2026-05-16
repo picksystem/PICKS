@@ -37,7 +37,7 @@ import WorkIcon from '@mui/icons-material/Work';
 import EmailIcon from '@mui/icons-material/Email';
 import BadgeIcon from '@mui/icons-material/Badge';
 import { DataTable, Loader } from '../../../components';
-import type { Column } from '../../../components/DataTable/DataTable';
+import type { Column } from '../../../components/DataTable';
 
 // ─── Password strength ────────────────────────────────────────────────────────
 function getStrength(pw: string): { score: number; label: string; color: string } {

@@ -5,16 +5,7 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import { Button, Box } from '@serviceops/component';
 import { useStyles } from '../styles';
-
-interface ActionButtonsProps {
-  canApply: boolean;
-  isSubmitting: boolean;
-  onBack: () => void;
-  onCancel: () => void;
-  onSaveAsDraft: () => void;
-  onCreateNew: () => void;
-  onApplyAndSubmit: () => void;
-}
+import { ActionButtonsProps } from './util';
 
 const ActionButtons = ({
   canApply,

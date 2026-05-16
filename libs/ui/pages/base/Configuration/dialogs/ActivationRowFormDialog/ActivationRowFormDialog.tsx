@@ -9,19 +9,8 @@ import {
 } from '@serviceops/component';
 import { FormControl, InputLabel } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import { IConfigActivationRow, ITicketType } from '@serviceops/interfaces';
+import { ActivationRowFormDialogProps } from './util';
 import { ConfigFormDialog } from '../ConfigDialogs/ConfigDialogs';
-
-interface Props {
-  open: boolean;
-  title: string;
-  editingRow: IConfigActivationRow | null;
-  ticketTypes: ITicketType[];
-  usedTicketTypeIds: number[];
-  idPrefix: string;
-  onClose: () => void;
-  onSubmit: (row: IConfigActivationRow) => void;
-}
 
 const ActivationRowFormDialog = ({
   open,
@@ -32,7 +21,7 @@ const ActivationRowFormDialog = ({
   idPrefix,
   onClose,
   onSubmit,
-}: Props) => {
+}: ActivationRowFormDialogProps) => {
   const [ticketTypeId, setTicketTypeId] = useState(0);
   const [ticketTypeName, setTicketTypeName] = useState('');
   const [activation, setActivation] = useState(true);

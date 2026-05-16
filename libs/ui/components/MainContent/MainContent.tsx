@@ -1,18 +1,7 @@
-import { ReactNode } from 'react';
 import { Box } from '@mui/material';
 import { useCollapse } from '../../hooks';
 import { useStyles } from './styles';
-
-export interface DSMainContentProps {
-  children: ReactNode;
-  className?: string;
-  maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | false;
-  disableGutters?: boolean;
-  padding?: number | string;
-  margin?: number | string;
-  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
-  style?: React.CSSProperties;
-}
+import { DSMainContentProps } from './util';
 
 const MainContent = ({
   children,

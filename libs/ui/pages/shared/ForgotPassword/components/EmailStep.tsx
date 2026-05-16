@@ -1,17 +1,6 @@
 import { Box, TextField, Button } from '@serviceops/component';
 import { useFieldError } from '@serviceops/hooks';
-
-interface EmailStepProps {
-  form: {
-    values: { email: string };
-    errors: { email?: string };
-    touched: { email?: boolean };
-    handleChange: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>;
-    handleBlur: React.FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>;
-    handleSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
-  };
-  isSendingOtp: boolean;
-}
+import type { EmailStepProps } from './util';
 
 const EmailStep = ({ form, isSendingOtp }: EmailStepProps) => {
   const reqError = useFieldError();

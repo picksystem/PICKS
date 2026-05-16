@@ -4,6 +4,7 @@ import SecurityIcon from '@mui/icons-material/Security';
 import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import type { LeftPanelProps } from './util';
 
 const FEATURES = [
   { icon: DashboardCustomizeIcon, label: 'Unified incident & request management' },
@@ -11,11 +12,6 @@ const FEATURES = [
   { icon: NotificationsActiveIcon, label: 'Real-time alerts & notifications' },
   { icon: CheckCircleIcon, label: 'Enterprise-grade audit trails' },
 ];
-
-interface LeftPanelProps {
-  classes: Record<string, string>;
-  onNavigateSignIn: () => void;
-}
 
 const LeftPanel = ({ classes, onNavigateSignIn }: LeftPanelProps) => (
   <Box className={classes.leftPanel}>

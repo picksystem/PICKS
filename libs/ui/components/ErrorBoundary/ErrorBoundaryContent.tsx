@@ -1,14 +1,8 @@
-import { FC, ErrorInfo } from 'react';
+import { FC } from 'react';
 import { Box, Button, Typography, Container, Paper } from '@mui/material';
 import { ErrorOutline } from '@mui/icons-material';
 import { useStyles } from './styles';
-
-interface ErrorBoundaryContentProps {
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
-  onReset: () => void;
-  onReload: () => void;
-}
+import type { ErrorBoundaryContentProps } from './util';
 
 export const ErrorBoundaryContent: FC<ErrorBoundaryContentProps> = ({
   error,

@@ -10,17 +10,8 @@ import {
 } from '@serviceops/component';
 import { FormControl, InputLabel } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import { IConfigResponseAckSLARow, ITicketType } from '@serviceops/interfaces';
+import { ResponseAckSLAFormDialogProps } from './util';
 import { ConfigFormDialog } from '../ConfigDialogs/ConfigDialogs';
-
-interface Props {
-  open: boolean;
-  editingRow: IConfigResponseAckSLARow | null;
-  ticketTypes: ITicketType[];
-  usedTicketTypeIds: number[];
-  onClose: () => void;
-  onSubmit: (row: IConfigResponseAckSLARow) => void;
-}
 
 const EMPTY_FORM = {
   ticketTypeId: 0,
@@ -40,7 +31,7 @@ const ResponseAckSLAFormDialog = ({
   usedTicketTypeIds,
   onClose,
   onSubmit,
-}: Props) => {
+}: ResponseAckSLAFormDialogProps) => {
   const [form, setForm] = useState(EMPTY_FORM);
 
   useEffect(() => {

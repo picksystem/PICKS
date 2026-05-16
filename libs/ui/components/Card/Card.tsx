@@ -1,19 +1,6 @@
 import { Card as MUICard, CardHeader, CardContent, CardActions } from '@mui/material';
 import { useStyles } from './styles';
-
-export interface DSCardProps {
-  title?: string | React.ReactNode;
-  subtitle?: string | React.ReactNode;
-  headerAction?: React.ReactNode;
-  footer?: React.ReactNode;
-  children?: React.ReactNode;
-  className?: string;
-  sx?: any;
-  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
-  raised?: boolean;
-  variant?: 'elevation' | 'outlined';
-  elevation?: number;
-}
+import { DSCardProps } from './util';
 
 const Card: React.FC<DSCardProps> = ({
   title,

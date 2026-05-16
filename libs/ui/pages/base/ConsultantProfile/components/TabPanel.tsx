@@ -1,16 +1,11 @@
 import type { ReactNode } from 'react';
 import { Box } from '@serviceops/component';
 import { makeStyles } from 'tss-react/mui';
+import { TabPanelProps } from './util';
 
 const useStyles = makeStyles()((theme) => ({
   root: { paddingTop: theme.spacing(2) },
 }));
-
-interface TabPanelProps {
-  children?: ReactNode;
-  index: number;
-  value: number;
-}
 
 const TabPanel = ({ children, value, index }: TabPanelProps) => {
   const { classes } = useStyles();

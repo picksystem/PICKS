@@ -1,4 +1,12 @@
-import { Box, Loader, DataTable, Typography, Tabs, TextField } from '@serviceops/component';
+import {
+  Box,
+  Loader,
+  DataTable,
+  Typography,
+  Tabs,
+  TextField,
+  PageHeader,
+} from '@serviceops/component';
 import { InputAdornment } from '@mui/material';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import SearchIcon from '@mui/icons-material/Search';
@@ -43,15 +51,11 @@ const RoleRequests = () => {
   return (
     <Box className={classes.container}>
       {/* ── Page header ── */}
-      <Box className={classes.pageHeader}>
-        <Typography variant='h5' className={classes.title}>
-          Access Requests
-        </Typography>
-        <Typography variant='body2' className={classes.description}>
-          Review and manage all account access requests. Approve to activate with the requested
-          role, or reject to deny access.
-        </Typography>
-      </Box>
+      <PageHeader
+        title='Access Requests'
+        description='Review and manage all account access requests. Approve to activate with the requested role, or reject to deny access.'
+        className={classes.pageHeader}
+      />
 
       {/* ── Tabs + Search ── */}
       <Box className={classes.tabsBox}>

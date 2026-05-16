@@ -42,6 +42,7 @@ import {
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { ConfigFormDialog, ConfigDeleteDialog } from '../../dialogs/ConfigDialogs/ConfigDialogs';
+import type { WorkingTimesPanelProps, ShiftsPanelProps, AssocProfilesPanelProps } from './util';
 
 const ACCENT = '#be185d';
 
@@ -171,14 +172,6 @@ const LocationPicker = ({
 // ── Working Times panel ────────────────────────────────────────────────────────
 
 const EMPTY_WT = { workLocationId: '', dayOfWeek: 'Monday', startTime: '09:00', endTime: '17:00' };
-
-interface WorkingTimesPanelProps {
-  locations: IConfigWorkLocation[];
-  workingTimes: IConfigWorkLocationWorkingTime[];
-  defaultLocationId: string | null;
-  onBack: () => void;
-  onSave: (times: IConfigWorkLocationWorkingTime[]) => void;
-}
 
 const WorkingTimesPanel = ({
   locations,
@@ -511,14 +504,6 @@ const EMPTY_SHIFT = {
   startTime: '09:00',
   endTime: '17:00',
 };
-
-interface ShiftsPanelProps {
-  locations: IConfigWorkLocation[];
-  shifts: IConfigWorkLocationShift[];
-  defaultLocationId: string | null;
-  onBack: () => void;
-  onSave: (shifts: IConfigWorkLocationShift[]) => void;
-}
 
 const ShiftsPanel = ({
   locations,
@@ -857,14 +842,6 @@ const ShiftsPanel = ({
 // ── Associated Consultant Profiles panel ───────────────────────────────────────
 
 const EMPTY_ASSOC = { workLocationId: '', consultantProfileId: '', consultantName: '' };
-
-interface AssocProfilesPanelProps {
-  locations: IConfigWorkLocation[];
-  associatedProfiles: IConfigWorkLocationAssociatedProfile[];
-  defaultLocationId: string | null;
-  onBack: () => void;
-  onSave: (profiles: IConfigWorkLocationAssociatedProfile[]) => void;
-}
 
 const AssocProfilesPanel = ({
   locations,

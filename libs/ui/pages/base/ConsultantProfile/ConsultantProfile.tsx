@@ -14,10 +14,10 @@ import {
   Paper,
   Alert,
   TextField,
+  PageHeader,
 } from '@serviceops/component';
 import { Stack, FormControl, InputLabel, InputAdornment } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import WorkIcon from '@mui/icons-material/Work';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -91,20 +91,15 @@ const ConsultantProfile = () => {
   return (
     <Grid className={classes.container}>
       {/* ── Page header ── */}
-      <Box className={classes.pageHeader}>
-        <Box className={classes.pageHeaderRow}>
-          <Typography variant='h5' className={classes.title}>
-            Consultant Profiles
-          </Typography>
-          <Button variant='outlined' size='small' startIcon={<RefreshIcon />} onClick={fetchAll}>
-            Refresh
-          </Button>
-        </Box>
-        <Typography variant='body2' className={classes.description}>
-          Manage consultant profiles, roles, and working time configurations. Click a row to view
-          details.
-        </Typography>
-      </Box>
+      <PageHeader
+        title='Consultant Profiles'
+        description='Manage consultant profiles, roles, and working time configurations. Click a row to view details.'
+        className={classes.pageHeader}
+        action={{
+          label: 'Refresh',
+          onClick: fetchAll,
+        }}
+      />
 
       {/* ── Tabs ── */}
       <Box className={classes.tabsBox}>

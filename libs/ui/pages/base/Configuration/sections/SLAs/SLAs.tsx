@@ -40,6 +40,7 @@ import ResolutionSLAFormDialog from '../../dialogs/ResolutionSLAFormDialog/Resol
 import DueDateFormDialog from '../../dialogs/DueDateFormDialog/DueDateFormDialog';
 import ActivationRowFormDialog from '../../dialogs/ActivationRowFormDialog/ActivationRowFormDialog';
 import { ConfigDeleteDialog } from '../../dialogs/ConfigDialogs/ConfigDialogs';
+import type { SectionProps, ToggleRowProps } from './util';
 
 // ── Default controls ──────────────────────────────────────────────────────────
 
@@ -99,15 +100,6 @@ const FALLBACK_DEFAULTS = { activation: true, p1: 15, p2: 30, p3: 60, p4: 240, p
 
 // ── Section wrapper ───────────────────────────────────────────────────────────
 
-interface SectionProps {
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-  accentColor: string;
-  defaultExpanded?: boolean;
-  children: React.ReactNode;
-}
-
 const Section = ({
   icon,
   title,
@@ -147,15 +139,6 @@ const Section = ({
 };
 
 // ── Toggle row ────────────────────────────────────────────────────────────────
-
-interface ToggleRowProps {
-  label: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  disabled?: boolean;
-  indent?: boolean;
-  subtle?: boolean;
-}
 
 const ToggleRow = ({
   label,

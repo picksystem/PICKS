@@ -71,7 +71,7 @@ export const JobStatusCard: React.FC<JobStatusCardProps> = ({
   const { classes } = useStyles({
     statusColor: config.color,
     statusBgColor: config.bgColor,
-    priorityColor: priorityColor,
+    priorityColor,
     hasAction: !!onAction,
   });
 
@@ -80,20 +80,16 @@ export const JobStatusCard: React.FC<JobStatusCardProps> = ({
       <CardContent>
         {/* Header Row */}
         <Box className={classes.headerRow}>
-          <Typography variant="h6" component="h3" className={classes.title}>
+          <Typography variant='h6' component='h3' className={classes.title}>
             {title}
           </Typography>
           <Box className={classes.chipContainer}>
-            <Chip
-              size="small"
-              label={priority.toUpperCase()}
-              className={classes.priorityChip}
-            />
+            <Chip size='small' label={priority.toUpperCase()} className={classes.priorityChip} />
           </Box>
         </Box>
 
         {/* Description */}
-        <Typography variant="body2" color="text.secondary" className={classes.description}>
+        <Typography variant='body2' color='text.secondary' className={classes.description}>
           {description}
         </Typography>
 
@@ -101,15 +97,15 @@ export const JobStatusCard: React.FC<JobStatusCardProps> = ({
         {status === 'in_progress' && progress !== undefined && (
           <Box className={classes.progressContainer}>
             <Box className={classes.progressHeader}>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant='caption' color='text.secondary'>
                 Progress
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant='caption' color='text.secondary'>
                 {progress}%
               </Typography>
             </Box>
             <LinearProgress
-              variant="determinate"
+              variant='determinate'
               value={progress}
               className={classes.progressBar}
             />
@@ -121,18 +117,18 @@ export const JobStatusCard: React.FC<JobStatusCardProps> = ({
           {/* Status Badge */}
           <Box className={classes.statusBadge}>
             <StatusIcon className={classes.statusIcon} />
-            <Typography variant="caption" className={classes.statusLabel}>
+            <Typography variant='caption' className={classes.statusLabel}>
               {config.label}
             </Typography>
           </Box>
 
           {/* Meta Info */}
           <Box className={classes.metaInfo}>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant='caption' color='text.secondary'>
               Assignee: <strong>{assignee}</strong>
             </Typography>
             {dueDate && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant='caption' color='text.secondary'>
                 Due: {new Date(dueDate).toLocaleDateString()}
               </Typography>
             )}

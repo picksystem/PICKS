@@ -4,23 +4,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { constants } from '@serviceops/utils';
 import { useFieldError } from '@serviceops/hooks';
 import { InputAdornment } from '@mui/material';
-
-interface SignInFormProps {
-  formik: {
-    values: { email: string; password: string };
-    errors: { email?: string; password?: string };
-    touched: { email?: boolean; password?: boolean };
-    handleChange: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>;
-    handleBlur: React.FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>;
-    handleSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
-  };
-  isLoading: boolean;
-  showPassword: boolean;
-  onTogglePassword: () => void;
-  onNavigate: (path: string) => void;
-  loginError?: string | null;
-  onClearError?: () => void;
-}
+import type { SignInFormProps } from './util';
 
 const SignInForm = ({
   formik,

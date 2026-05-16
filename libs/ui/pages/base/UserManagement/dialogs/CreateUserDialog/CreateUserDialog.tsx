@@ -30,8 +30,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
-import { FormikProps } from 'formik';
 import { useStyles } from './styles';
+import { CreateUserDialogProps } from './util';
 import { useNotification } from '@serviceops/hooks';
 import {
   TIMEZONES,
@@ -46,30 +46,6 @@ import {
   clearNewUserDraft,
   DRAFT_DAYS,
 } from '../../utils/userManagement.utils';
-import { InitialCreateValues } from '../../types/userManagement.types';
-
-interface CreateUserDialogProps {
-  open: boolean;
-  onClose: () => void;
-  isOpenedAsDraft: boolean;
-  draftMeta: { savedAt: string; expiresAt: string } | null;
-  setDraftMeta: (v: null) => void;
-  setDraftValues: (v: null) => void;
-  setIsOpenedAsDraft: (v: boolean) => void;
-  createFormik: FormikProps<InitialCreateValues>;
-  reqError: (
-    touched: unknown,
-    error: string | undefined,
-  ) => string | React.ReactElement | undefined;
-  genPassword: string;
-  showGenPw: boolean;
-  setShowGenPw: (v: boolean | ((prev: boolean) => boolean)) => void;
-  onRegeneratePw: () => void;
-  onApplyGenPw: () => void;
-  onSaveDraft: () => void;
-  adminNotes: string;
-  setAdminNotes: (v: string) => void;
-}
 
 const CreateUserDialog = ({
   open,

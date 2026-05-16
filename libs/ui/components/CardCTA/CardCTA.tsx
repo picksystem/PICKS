@@ -1,21 +1,6 @@
 import { Card, CardMedia, CardContent, CardActions, Button, Typography } from '@mui/material';
 import { useStyles } from './styles';
-
-export interface DSCardCTAProps {
-  title: string;
-  description?: string;
-  buttonText: string;
-  onButtonClick: () => void;
-  image?: string;
-  imageAlt?: string;
-  className?: string;
-  variant?: 'elevation' | 'outlined';
-  elevation?: number;
-  buttonVariant?: 'text' | 'outlined' | 'contained';
-  buttonColor?: 'inherit' | 'primary' | 'secondary' | 'success' | 'error' | 'info' | 'warning';
-  disabled?: boolean;
-  onCardClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
-}
+import { DSCardCTAProps } from './util';
 
 const CardCTA: React.FC<DSCardCTAProps> = ({
   title,

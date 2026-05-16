@@ -2,18 +2,9 @@ import { Box, Typography, Grid, TextField, IconButton, Button } from '@serviceop
 import { Dialog, DialogContent, DialogActions } from '@mui/material';
 import WorkIcon from '@mui/icons-material/Work';
 import CloseIcon from '@mui/icons-material/Close';
+import { RoleDialogProps } from './util';
 import { RoleForm } from '../../types/consultantProfile.types';
 import { useStyles } from './styles';
-
-interface RoleDialogProps {
-  open: boolean;
-  onClose: () => void;
-  editingRoleId: number | null;
-  roleForm: RoleForm;
-  onFormChange: (form: RoleForm) => void;
-  isSaving: boolean;
-  onSave: () => void;
-}
 
 const RoleDialog = ({
   open,

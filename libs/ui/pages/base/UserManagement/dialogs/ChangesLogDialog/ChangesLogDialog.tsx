@@ -2,11 +2,6 @@ import {
   FormControl,
   InputLabel,
   InputAdornment,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  TableSortLabel,
   TablePagination,
   Dialog,
   DialogContent,
@@ -22,7 +17,7 @@ import {
   Select,
   MenuItem,
   Button,
-  Table,
+  DataTable,
   Tooltip,
   Grid,
 } from '@serviceops/component';
@@ -35,49 +30,13 @@ import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { useStyles } from './styles';
+import { ChangesLogDialogProps } from './util';
 import { UserRow, ChangeLogEntry } from '../../types/userManagement.types';
 import {
   LOG_COLUMNS,
-  CHANGE_TYPE_COLORS,
   ROLE_CHANGE_REASON_CODES,
-  formatChangeType,
   fmtDateTime,
 } from '../../utils/userManagement.utils';
-
-interface ChangesLogDialogProps {
-  open: boolean;
-  onClose: () => void;
-  selectedRow: UserRow | null;
-  changeLog: ChangeLogEntry[];
-  isLoadingLog: boolean;
-  logSearch: string;
-  onLogSearchChange: (v: string) => void;
-  logDateFrom: string;
-  onLogDateFromChange: (v: string) => void;
-  logDateTo: string;
-  onLogDateToChange: (v: string) => void;
-  logFilterField: string;
-  onLogFilterFieldChange: (v: string) => void;
-  logFilterReason: string;
-  onLogFilterReasonChange: (v: string) => void;
-  logSortBy: string;
-  logSortOrder: 'asc' | 'desc';
-  onLogSort: (col: string) => void;
-  logPage: number;
-  onLogPageChange: (p: number) => void;
-  logRowsPerPage: number;
-  onLogRowsPerPageChange: (rpp: number) => void;
-  logMaximized: boolean;
-  onLogMaximizedChange: (v: boolean) => void;
-  logShowFilters: boolean;
-  onLogShowFiltersChange: (v: boolean) => void;
-  uniqueLogFields: string[];
-  filteredLog: ChangeLogEntry[];
-  paginatedLog: ChangeLogEntry[];
-  hasLogFilters: boolean;
-  onClearLogFilters: () => void;
-  onExportCsv: () => void;
-}
 
 const ChangesLogDialog = ({
   open,
@@ -95,9 +54,6 @@ const ChangesLogDialog = ({
   onLogFilterFieldChange,
   logFilterReason,
   onLogFilterReasonChange,
-  logSortBy,
-  logSortOrder,
-  onLogSort,
   logPage,
   onLogPageChange,
   logRowsPerPage,
@@ -398,21 +354,12 @@ const ChangesLogDialog = ({
             )}
           </Box>
         ) : (
-          <Table
-            size='small'
-            stickyHeader
+          <DataTable
             columns={LOG_COLUMNS.map((col) => ({ id: col.id, label: col.label }))}
-            rows={paginatedLog.map((log) => ({
-              id: log.id,
-              createdAt: fmtDateTime(log.createdAt),
-              changeType: log.changeType,
-              fieldName: log.fieldName || '-',
-              previousValue: log.previousValue || '-',
-              newValue: log.newValue || '-',
-              changedByName: log.changedByName || '-',
-              reasonCode: log.reasonCode || '-',
-              reasonNotes: log.reasonNotes || '-',
-            }))}
+            data={paginatedLog}
+            rowKey='id'
+            searchable={false}
+            initialRowsPerPage={10}
           />
         )}
       </DialogContent>

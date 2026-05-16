@@ -1,4 +1,4 @@
-import { Box, Typography } from '../../../components';
+import { Box, PageHeader } from '../../../components';
 import { useStyles } from './styles';
 
 const ProblemManagement = () => {
@@ -6,12 +6,11 @@ const ProblemManagement = () => {
 
   return (
     <Box className={classes.container}>
-      <Typography variant='h4' className={classes.title}>
-        Problem Management
-      </Typography>
-      <Typography className={classes.description}>
-        Here you can manage your Problem Management posts
-      </Typography>
+      <PageHeader
+        title='Problem Management'
+        description='View and manage all problem management posts across the system.'
+        className={classes.pageHeader}
+      />
     </Box>
   );
 };

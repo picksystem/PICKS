@@ -1,10 +1,4 @@
-import type { ReactNode } from 'react';
-
-interface TabPanelProps {
-  children?: ReactNode;
-  index: number;
-  value: number;
-}
+import { TabPanelProps } from './util';
 
 const TabPanel = ({ children, value, index }: TabPanelProps) => (
   <div role='tabpanel' hidden={value !== index}>

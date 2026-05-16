@@ -52,6 +52,15 @@ import {
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { ConfigFormDialog, ConfigDeleteDialog } from '../../dialogs/ConfigDialogs/ConfigDialogs';
+import type {
+  AUPPanelProps,
+  WTPanelProps,
+  WSPanelProps,
+  TPPanelProps,
+  EPPanelProps,
+  ACPPanelProps,
+  CRSectionProps,
+} from './util';
 
 // ── Panel shared components ───────────────────────────────────────────────────
 
@@ -337,14 +346,6 @@ const EMPTY_EP = { project: '', application: '', fromDate: '', toDate: '', maxAm
 
 const ACCENT_AUP = '#2563eb';
 
-interface AUPPanelProps {
-  profiles: IConfigConsultantProfile[];
-  assocUsers: IConfigAssociatedUserProfile[];
-  defaultConsultantId: string | null;
-  onBack: () => void;
-  onSave: (next: IConfigAssociatedUserProfile[]) => void;
-}
-
 const AssocUserProfilePanel = ({
   profiles,
   assocUsers,
@@ -531,14 +532,6 @@ const AssocUserProfilePanel = ({
 
 const ACCENT_WT = '#0891b2';
 
-interface WTPanelProps {
-  profiles: IConfigConsultantProfile[];
-  wTimes: IConfigConsultantWorkingTime[];
-  defaultConsultantId: string | null;
-  onBack: () => void;
-  onSave: (next: IConfigConsultantWorkingTime[]) => void;
-}
-
 const WorkingTimesPanel = ({
   profiles,
   wTimes,
@@ -712,14 +705,6 @@ const WorkingTimesPanel = ({
 // ── Working Shift panel ───────────────────────────────────────────────────────
 
 const ACCENT_WS = '#059669';
-
-interface WSPanelProps {
-  profiles: IConfigConsultantProfile[];
-  wShifts: IConfigConsultantWorkingShift[];
-  defaultConsultantId: string | null;
-  onBack: () => void;
-  onSave: (next: IConfigConsultantWorkingShift[]) => void;
-}
 
 const WorkingShiftPanel = ({
   profiles,
@@ -905,14 +890,6 @@ const EMPTY_TP_FORM = {
   activate: true,
   maxHoursPerDayPerResource: 8,
 };
-
-interface TPPanelProps {
-  profiles: IConfigConsultantProfile[];
-  tsProjects: IConfigConsultantTimesheetProject[];
-  defaultConsultantId: string | null;
-  onBack: () => void;
-  onSave: (next: IConfigConsultantTimesheetProject[]) => void;
-}
 
 const TimesheetProjectsPanel = ({
   profiles,
@@ -1391,14 +1368,6 @@ const EMPTY_EP_FORM = {
   maxAmountPerDay: 0,
 };
 
-interface EPPanelProps {
-  profiles: IConfigConsultantProfile[];
-  exProjects: IConfigConsultantExpenseProject[];
-  defaultConsultantId: string | null;
-  onBack: () => void;
-  onSave: (next: IConfigConsultantExpenseProject[]) => void;
-}
-
 const ExpenseProjectsPanel = ({
   profiles,
   exProjects,
@@ -1863,14 +1832,6 @@ const ExpenseProjectsPanel = ({
 
 const ACCENT_ACP = '#2563eb';
 
-interface ACPPanelProps {
-  assocConsProfiles: IConfigAssociatedConsultantProfile[];
-  applications: { id: string; name: string }[];
-  consultantRoles: IConfigConsultantRole[];
-  onBack: () => void;
-  onSave: (next: IConfigAssociatedConsultantProfile[]) => void;
-}
-
 const AssocConsProfilesPanel = ({
   assocConsProfiles,
   applications,
@@ -2169,14 +2130,6 @@ const AssocConsProfilesPanel = ({
 // ── Define Consultant Roles section ──────────────────────────────────────────
 
 const ACCENT_CR = '#7c3aed';
-
-interface CRSectionProps {
-  roles: IConfigConsultantRole[];
-  assocConsProfiles: IConfigAssociatedConsultantProfile[];
-  applications: { id: string; name: string }[];
-  onSaveRoles: (next: IConfigConsultantRole[]) => void;
-  onSaveAssocConsProfiles: (next: IConfigAssociatedConsultantProfile[]) => void;
-}
 
 const DefineConsultantRolesSection = ({
   roles,

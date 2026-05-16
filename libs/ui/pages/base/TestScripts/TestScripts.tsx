@@ -1,4 +1,4 @@
-import { Box, Typography } from '../../../components';
+import { Box, PageHeader } from '../../../components';
 import { useStyles } from './styles';
 
 const TestScripts = () => {
@@ -6,12 +6,11 @@ const TestScripts = () => {
 
   return (
     <Box className={classes.container}>
-      <Typography variant='h4' className={classes.title}>
-        Test Scripts
-      </Typography>
-      <Typography className={classes.description}>
-        Here you can manage your Test Scripts posts
-      </Typography>
+      <PageHeader
+        title='Test Scripts'
+        description='View and manage all test scripts across the system. Click a row to open it in a new tab.'
+        className={classes.pageHeader}
+      />
     </Box>
   );
 };

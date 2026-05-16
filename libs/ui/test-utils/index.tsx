@@ -1,7 +1,8 @@
-import { ReactElement } from 'react';
+import { ReactElement, ReactNode } from 'react';
 import { render, RenderOptions, RenderResult } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CollapseProvider } from '../hooks/useCollapse';
+import { AllTheProvidersProps, CustomRenderOptions } from './util';
 
 const theme = createTheme({
   palette: {
@@ -14,10 +15,6 @@ const theme = createTheme({
   },
 });
 
-interface AllTheProvidersProps {
-  children: React.ReactNode;
-}
-
 const AllTheProviders = ({ children }: AllTheProvidersProps) => {
   return (
     <ThemeProvider theme={theme}>
@@ -26,7 +23,7 @@ const AllTheProviders = ({ children }: AllTheProvidersProps) => {
   );
 };
 
-const customRender = (ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>): RenderResult =>
+const customRender = (ui: ReactElement, options?: CustomRenderOptions): RenderResult =>
   render(ui, { wrapper: AllTheProviders, ...options });
 
 export * from '@testing-library/react';

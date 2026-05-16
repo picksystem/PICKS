@@ -1,8 +1,5 @@
 import { Typography, Box } from '@serviceops/component';
-
-interface LogoMarkProps {
-  compact?: boolean;
-}
+import { LogoMarkProps } from './util';
 
 // Colorful ServiceOps wordmark: each letter has its own vibrant color
 const LETTERS = [

@@ -4,17 +4,8 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CloseIcon from '@mui/icons-material/Close';
-import { RoleRequestRow, ActionType } from '../../types/roleRequests.types';
+import { ActionDialogProps } from './util';
 import { useStyles } from './styles';
-
-interface ActionDialogProps {
-  actionTarget: { user: RoleRequestRow; type: ActionType } | null;
-  actionNotes: string;
-  actionInProgress: number | null;
-  onClose: () => void;
-  onNotesChange: (v: string) => void;
-  onConfirm: () => void;
-}
 
 const ActionDialog = ({
   actionTarget,

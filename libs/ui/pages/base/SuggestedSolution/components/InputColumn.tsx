@@ -2,13 +2,7 @@ import SubjectIcon from '@mui/icons-material/Subject';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import { Box, TextField, Typography } from '@serviceops/component';
 import { useStyles } from '../styles';
-
-interface InputColumnProps {
-  shortDesc: string;
-  issueText: string;
-  onShortDescChange: (val: string) => void;
-  onIssueTextChange: (val: string) => void;
-}
+import { InputColumnProps } from './util';
 
 const InputColumn = ({
   shortDesc,

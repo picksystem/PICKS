@@ -18,24 +18,7 @@ import SpeedIcon from '@mui/icons-material/Speed';
 import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
 import { IncidentStatus, IIncident } from '../../../../../entities/interfaces';
 import { useStyles } from '../styles';
-
-interface SolutionMatch {
-  incident: IIncident;
-  similarity: number;
-}
-
-interface SolutionViewerProps {
-  isLoading: boolean;
-  current: SolutionMatch | null;
-  safeIndex: number;
-  total: number;
-  shortDesc: string;
-  issueText: string;
-  markedUseful: Set<number>;
-  onPrev: () => void;
-  onNext: () => void;
-  onToggleUseful: (id: number) => void;
-}
+import { SolutionViewerProps, SolutionMatch, MatchDetailProps } from './util';
 
 const getStatusStyle = (status: string) => {
   switch (status) {
@@ -193,13 +176,6 @@ const SolutionViewer = ({
     </Box>
   );
 };
-
-interface MatchDetailProps {
-  incident: IIncident;
-  similarity: number;
-  markedUseful: Set<number>;
-  onToggleUseful: (id: number) => void;
-}
 
 const MatchDetail = ({ incident, similarity, markedUseful, onToggleUseful }: MatchDetailProps) => {
   const { classes, cx } = useStyles();

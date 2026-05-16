@@ -4,16 +4,10 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import CloseIcon from '@mui/icons-material/Close';
-import { IAuthUser } from '@serviceops/interfaces';
-import { RoleRequestRow, ActionType } from '../../types/roleRequests.types';
+import { DetailDialogProps } from './util';
+import { RoleRequestRow } from '../../types/roleRequests.types';
 import DetailField from '../../components/DetailField';
 import { useStyles } from './styles';
-
-interface DetailDialogProps {
-  detailUser: IAuthUser | null;
-  onClose: () => void;
-  onOpenAction: (user: RoleRequestRow, type: ActionType) => void;
-}
 
 const DetailDialog = ({ detailUser, onClose, onOpenAction }: DetailDialogProps) => {
   const { classes } = useStyles();

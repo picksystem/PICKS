@@ -150,3 +150,52 @@ export const initialValues = {
   relatedRecords: '',
   attachments: '',
 };
+
+// ── Field Props Interfaces ───────────────────────────────────────────────────────
+
+export interface ClientFieldProps {
+  value: string;
+  callerOptions: { value: string; label: string }[];
+  onChange: (value: string) => void;
+  onBlur?: React.FocusEventHandler;
+  error?: boolean;
+  errorText?: string | React.ReactNode;
+}
+
+export interface UserFieldProps {
+  value: string;
+  callerOptions: { value: string; label: string }[];
+  onChange: (value: string) => void;
+  onBlur: React.FocusEventHandler;
+  error: boolean;
+  errorText?: string | React.ReactNode;
+  label: string;
+}
+
+export interface ContactFieldProps {
+  value: string;
+  callerOptions: { value: string; label: string }[];
+  onChange: (value: string) => void;
+}
+
+export interface CategoryFieldProps {
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+  onBlur?: React.FocusEventHandler;
+  error?: boolean;
+  errorText?: string | React.ReactNode;
+  label: string;
+  required?: boolean;
+}
+
+export interface ResourceFieldProps {
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+  onBlur?: React.FocusEventHandler;
+  error?: boolean;
+  errorText?: string | React.ReactNode;
+  label: string;
+  required?: boolean;
+}

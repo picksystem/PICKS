@@ -1,9 +1,6 @@
 import { MenuItem as MUIMenuItem } from '@mui/material';
 import { useStyles } from './styles';
-
-export interface DSMenuItemProps extends React.ComponentProps<typeof MUIMenuItem> {
-  className?: string;
-}
+import { DSMenuItemProps } from './util';
 
 const MenuItem: React.FC<DSMenuItemProps> = ({ className, ...props }) => {
   const { cx, classes } = useStyles();

@@ -6,20 +6,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useStyles } from './styles/Accordion.styles';
-
-interface DSAccordionProps {
-  title?: string | React.ReactNode;
-  children: React.ReactNode;
-  defaultExpanded?: boolean;
-  expanded?: boolean;
-  onChange?: (event: React.SyntheticEvent, expanded: boolean) => void;
-  expandIcon?: React.ReactNode;
-  className?: string;
-  disabled?: boolean;
-  sx?: Record<string, unknown>;
-  disableGutters?: boolean;
-  elevation?: number;
-}
+import type { DSAccordionProps } from './util';
 
 const Accordion: React.FC<DSAccordionProps> = ({
   title,

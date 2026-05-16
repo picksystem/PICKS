@@ -13,14 +13,8 @@ import { Dialog, DialogContent, DialogActions } from '@mui/material';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import CloseIcon from '@mui/icons-material/Close';
 import { useStyles } from './styles';
-import { UserRow } from '../../types/userManagement.types';
+import { ConsultantProfileDialogProps } from './util';
 import ReadField from '../../components/ReadField';
-
-interface ConsultantProfileDialogProps {
-  open: boolean;
-  onClose: () => void;
-  selectedRow: UserRow | null;
-}
 
 const ConsultantProfileDialog = ({ open, onClose, selectedRow }: ConsultantProfileDialogProps) => {
   const { classes } = useStyles();

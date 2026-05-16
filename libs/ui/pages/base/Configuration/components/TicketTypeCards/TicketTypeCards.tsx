@@ -2,7 +2,7 @@ import { alpha, CardContent, CardActions, darken } from '@mui/material';
 import { Typography, Chip, Card, IconButton, Tooltip, Grid, Box } from '@serviceops/component';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { ITicketType } from '@serviceops/interfaces';
+import { TicketTypeCardsProps } from './util';
 import { getIconComponent, loadTagMap, getTagOption } from '../../utils/ticketTypeIcons';
 import { useStyles } from './styles';
 
@@ -11,15 +11,6 @@ const FALLBACK_COLOR = '#64748b';
 function buildPreview(prefix: string, length: number): string {
   const num = '1'.padStart(Math.max(1, length), '0');
   return `${prefix.toUpperCase()}${num}`;
-}
-
-interface TicketTypeCardsProps {
-  ticketTypes: ITicketType[];
-  selectedRowId?: number;
-  iconMap: Record<string, string>;
-  onSelect: (row: ITicketType) => void;
-  onEdit: (row: ITicketType) => void;
-  onDelete: (row: ITicketType) => void;
 }
 
 const TicketTypeCards = ({

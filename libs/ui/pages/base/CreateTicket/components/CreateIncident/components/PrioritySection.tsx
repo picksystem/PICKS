@@ -4,39 +4,9 @@ import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from '../styles';
 import { useState, useRef } from 'react';
 import { Paper, Popper, MenuItem, MenuList } from '@mui/material';
-
-interface PrioritySectionProps {
-  values: {
-    impact: string;
-    urgency: string;
-    priority: string;
-    status: string;
-    assignmentGroup: string;
-    primaryResource: string;
-    secondaryResources: string;
-  };
-  touched: Partial<Record<string, boolean>>;
-  errors: Partial<Record<string, string>>;
-  impactOptions: { value: string; label: string }[];
-  urgencyOptions: { value: string; label: string }[];
-  priorityOptions: { value: string; label: string }[];
-  statusOptions: { value: string; label: string }[];
-  onChange: React.ChangeEventHandler<HTMLInputElement>;
-  onBlur: React.FocusEventHandler;
-  onSelectChange: (field: string, value: string) => void;
-}
+import { PrioritySectionProps, ResourceFieldProps } from './PrioritySection.tsx.util';
 
 // ── Searchable Resource Field Component ─────────────────────────
-interface ResourceFieldProps {
-  value: string;
-  options: { value: string; label: string }[];
-  onChange: (value: string) => void;
-  onBlur: React.FocusEventHandler;
-  error: boolean;
-  errorText?: string | React.ReactNode;
-  label: string;
-  required?: boolean;
-}
 
 const ResourceSearchField = ({
   value,

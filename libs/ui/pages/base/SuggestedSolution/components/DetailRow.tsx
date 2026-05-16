@@ -1,12 +1,6 @@
 import { Box, Typography } from '@serviceops/component';
 import { useStyles } from '../styles';
-
-interface DetailRowProps {
-  icon: React.ReactNode;
-  label: string;
-  value: React.ReactNode;
-  accent?: string;
-}
+import { DetailRowProps } from './util';
 
 const DetailRow = ({ icon, label, value, accent = '#6366f1' }: DetailRowProps) => {
   const { classes } = useStyles();

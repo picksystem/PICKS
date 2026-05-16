@@ -1,4 +1,4 @@
-import { Box, Typography } from '../../../components';
+import { Box, PageHeader } from '../../../components';
 import { useStyles } from './styles';
 
 const Reports = () => {
@@ -6,12 +6,11 @@ const Reports = () => {
 
   return (
     <Box className={classes.container}>
-      <Typography variant='h4' className={classes.title}>
-        Reports Management
-      </Typography>
-      <Typography className={classes.description}>
-        Here you can manage your Reports Management posts
-      </Typography>
+      <PageHeader
+        title='Reports Management'
+        description='View and manage all reports across the system. Click a row to open it in a new tab.'
+        className={classes.pageHeader}
+      />
     </Box>
   );
 };
