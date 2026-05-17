@@ -9,7 +9,7 @@
     "jsx": "react-jsx",
     "outDir": "../../dist/out-tsc/shared"
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "**/*.json"],
   "exclude": [
     "node_modules",
     "dist",

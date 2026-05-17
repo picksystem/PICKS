@@ -77,8 +77,11 @@ export const ConfigFormDialog = ({
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-        <Button onClick={onClose} sx={{ textTransform: 'none', borderRadius: 2 }}>
+      <DialogActions sx={{ px: 3, py: 2, gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}>
+        <Button
+          onClick={onClose}
+          sx={{ textTransform: 'none', borderRadius: 2, width: { xs: '100%', sm: 'auto' } }}
+        >
           Cancel
         </Button>
         <Button
@@ -91,6 +94,7 @@ export const ConfigFormDialog = ({
             bgcolor: accent,
             '&:hover': { bgcolor: darken(accent, 0.15) },
             minWidth: 120,
+            width: { xs: '100%', sm: 'auto' },
           }}
         >
           {resolvedSubmitLabel}
@@ -172,15 +176,18 @@ export const ConfigDeleteDialog = ({
       )}
     </DialogContent>
 
-    <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
-      <Button onClick={onClose} sx={{ textTransform: 'none', borderRadius: 2 }}>
+    <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}>
+      <Button
+        onClick={onClose}
+        sx={{ textTransform: 'none', borderRadius: 2, width: { xs: '100%', sm: 'auto' } }}
+      >
         Cancel
       </Button>
       <Button
         variant='contained'
         color='error'
         onClick={onConfirm}
-        sx={{ textTransform: 'none', borderRadius: 2 }}
+        sx={{ textTransform: 'none', borderRadius: 2, width: { xs: '100%', sm: 'auto' } }}
       >
         {confirmLabel ?? `Delete ${entityName}`}
       </Button>

@@ -1,5 +1,7 @@
 export interface DSAccordionProps {
-  title?: string | React.ReactNode;
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  icon?: React.ReactNode;
   children: React.ReactNode;
   defaultExpanded?: boolean;
   expanded?: boolean;
@@ -7,7 +9,7 @@ export interface DSAccordionProps {
   expandIcon?: React.ReactNode;
   className?: string;
   disabled?: boolean;
-  sx?: Record<string, unknown>;
+  sx?: any;
   disableGutters?: boolean;
   elevation?: number;
 }

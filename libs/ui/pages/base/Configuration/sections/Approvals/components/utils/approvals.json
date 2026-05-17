@@ -1,0 +1,225 @@
+{
+  "tables": {
+    "approvalRecords": {
+      "name": "approvalRecords",
+      "displayName": "Approval Records",
+      "buttonName": "Approval Records",
+      "columns": [
+        {
+          "id": "consultant",
+          "label": "Consultant",
+          "minWidth": 150,
+          "bold": true,
+          "required": true
+        },
+        {
+          "id": "application",
+          "label": "Application",
+          "minWidth": 140
+        },
+        {
+          "id": "consultantRole",
+          "label": "Consultant Role",
+          "minWidth": 150
+        },
+        {
+          "id": "slaWorkingTimeCalendar",
+          "label": "SLA Working Time Calendar",
+          "minWidth": 190
+        },
+        {
+          "id": "slaExceptionGroup",
+          "label": "SLA Exception Group",
+          "minWidth": 170
+        },
+        {
+          "id": "leadConsultant",
+          "label": "Lead Consultant",
+          "minWidth": 150
+        },
+        {
+          "id": "manager",
+          "label": "Manager",
+          "minWidth": 130
+        }
+      ],
+      "fields": [
+        {
+          "name": "consultant",
+          "label": "Consultant",
+          "required": true
+        },
+        {
+          "name": "application",
+          "label": "Application"
+        },
+        {
+          "name": "consultantRole",
+          "label": "Consultant Role"
+        },
+        {
+          "name": "slaWorkingTimeCalendar",
+          "label": "SLA Working Time Calendar"
+        },
+        {
+          "name": "slaExceptionGroup",
+          "label": "SLA Exception Group"
+        },
+        {
+          "name": "leadConsultant",
+          "label": "Lead Consultant"
+        },
+        {
+          "name": "manager",
+          "label": "Manager"
+        }
+      ],
+      "deleteEntityName": "Approval Record",
+      "deleteItemNameField": "consultant",
+      "searchFields": [
+        "consultant",
+        "application",
+        "consultantRole",
+        "leadConsultant",
+        "manager"
+      ]
+    },
+    "assocUserProfiles": {
+      "name": "assocUserProfiles",
+      "displayName": "Associated User Profiles",
+      "buttonName": "Associated User Profiles",
+      "columns": [
+        {
+          "id": "userId",
+          "label": "User ID",
+          "minWidth": 110
+        },
+        {
+          "id": "userName",
+          "label": "User Name",
+          "minWidth": 150,
+          "bold": true
+        },
+        {
+          "id": "email",
+          "label": "Email",
+          "minWidth": 200
+        },
+        {
+          "id": "role",
+          "label": "Role",
+          "minWidth": 130
+        }
+      ],
+      "fields": [
+        {
+          "name": "userId",
+          "label": "User ID"
+        },
+        {
+          "name": "userName",
+          "label": "User Name",
+          "required": true
+        },
+        {
+          "name": "email",
+          "label": "Email"
+        },
+        {
+          "name": "role",
+          "label": "Role"
+        }
+      ],
+      "deleteEntityName": "Associated User Profile",
+      "deleteItemNameField": "userName",
+      "searchFields": [
+        "userName",
+        "email",
+        "role"
+      ]
+    },
+    "consultantRoles": {
+      "name": "consultantRoles",
+      "displayName": "Consultant Roles",
+      "buttonName": "Consultant Roles",
+      "columns": [
+        {
+          "id": "roleName",
+          "label": "Role Name",
+          "minWidth": 200,
+          "bold": true
+        },
+        {
+          "id": "description",
+          "label": "Description",
+          "minWidth": 320,
+          "truncate": true
+        }
+      ],
+      "fields": [
+        {
+          "name": "roleName",
+          "label": "Role Name",
+          "required": true
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "type": "multiline"
+        }
+      ],
+      "deleteEntityName": "Consultant Role",
+      "deleteItemNameField": "roleName",
+      "searchFields": [
+        "roleName",
+        "description"
+      ]
+    },
+    "workingTimes": {
+      "name": "workingTimes",
+      "displayName": "Working Times",
+      "buttonName": "Working Times",
+      "columns": [
+        {
+          "id": "startTime",
+          "label": "Start Time",
+          "minWidth": 120,
+          "bold": true
+        },
+        {
+          "id": "endTime",
+          "label": "End Time",
+          "minWidth": 120
+        },
+        {
+          "id": "timezone",
+          "label": "Timezone",
+          "minWidth": 180
+        }
+      ],
+      "fields": [
+        {
+          "name": "startTime",
+          "label": "Start Time",
+          "type": "time",
+          "defaultValue": "09:00"
+        },
+        {
+          "name": "endTime",
+          "label": "End Time",
+          "type": "time",
+          "defaultValue": "17:00"
+        },
+        {
+          "name": "timezone",
+          "label": "Timezone"
+        }
+      ],
+      "deleteEntityName": "Working Time",
+      "deleteItemNameField": "timezone",
+      "searchFields": [
+        "timezone"
+      ]
+    }
+  }
+}

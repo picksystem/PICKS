@@ -3,6 +3,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Typography,
+  Box,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useStyles } from './styles/Accordion.styles';
@@ -10,6 +11,8 @@ import type { DSAccordionProps } from './util';
 
 const Accordion: React.FC<DSAccordionProps> = ({
   title,
+  description,
+  icon,
   children,
   defaultExpanded = false,
   expanded,
@@ -37,11 +40,19 @@ const Accordion: React.FC<DSAccordionProps> = ({
       {...rest}
     >
       <AccordionSummary expandIcon={expandIcon || <ExpandMoreIcon />}>
-        {typeof title === 'string' ? (
-          <Typography className={classes.title}>{title}</Typography>
-        ) : (
-          title
-        )}
+        <Box className={classes.header}>
+          {icon && <Box className={classes.icon}>{icon}</Box>}
+
+          <Box className={classes.textContainer}>
+            {typeof title === 'string' ? (
+              <Typography className={classes.title}>{title}</Typography>
+            ) : (
+              title
+            )}
+
+            {description && <Typography className={classes.description}>{description}</Typography>}
+          </Box>
+        </Box>
       </AccordionSummary>
 
       <AccordionDetails className={classes.details}>{children}</AccordionDetails>
