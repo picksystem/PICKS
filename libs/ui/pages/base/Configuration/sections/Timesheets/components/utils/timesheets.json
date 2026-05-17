@@ -1,0 +1,343 @@
+{
+  "tables": {
+    "timesheetProjects": {
+      "buttonName": "Timesheet Project",
+      "columns": [
+        {
+          "id": "name",
+          "label": "Name",
+          "minWidth": 200
+        },
+        {
+          "id": "description",
+          "label": "Description",
+          "minWidth": 220,
+          "truncate": true
+        },
+        {
+          "id": "projectType",
+          "label": "Project Type",
+          "minWidth": 140
+        },
+        {
+          "id": "transitionType",
+          "label": "Transition Type",
+          "minWidth": 140
+        }
+      ],
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "required": true
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "type": "multiline"
+        },
+        {
+          "name": "projectType",
+          "label": "Project Type"
+        },
+        {
+          "name": "transitionType",
+          "label": "Transition Type"
+        }
+      ],
+      "deleteEntityName": "Timesheet Project",
+      "deleteItemNameField": "name",
+      "searchFields": [
+        "name",
+        "description",
+        "projectType",
+        "transitionType"
+      ]
+    },
+    "projectCategories": {
+      "buttonName": "Project Category",
+      "columns": [
+        {
+          "id": "project",
+          "label": "Project",
+          "minWidth": 160
+        },
+        {
+          "id": "name",
+          "label": "Name",
+          "minWidth": 160
+        },
+        {
+          "id": "description",
+          "label": "Description",
+          "minWidth": 200,
+          "truncate": true
+        },
+        {
+          "id": "transitionType",
+          "label": "Transition Type",
+          "minWidth": 140
+        },
+        {
+          "id": "billability",
+          "label": "Billability",
+          "minWidth": 120
+        }
+      ],
+      "fields": [
+        {
+          "name": "project",
+          "label": "Project",
+          "required": true
+        },
+        {
+          "name": "name",
+          "label": "Name",
+          "required": true
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "type": "multiline"
+        },
+        {
+          "name": "transitionType",
+          "label": "Transition Type"
+        },
+        {
+          "name": "billability",
+          "label": "Billability"
+        }
+      ],
+      "deleteEntityName": "Project Category",
+      "deleteItemNameField": "name",
+      "searchFields": [
+        "project",
+        "name",
+        "description",
+        "transitionType",
+        "billability"
+      ]
+    },
+    "serviceLineEntries": {
+      "buttonName": "Service Line Entry",
+      "columns": [
+        {
+          "id": "project",
+          "label": "Project",
+          "minWidth": 160
+        },
+        {
+          "id": "assocValue",
+          "label": "Service Line",
+          "minWidth": 160
+        },
+        {
+          "id": "fromDate",
+          "label": "From Date",
+          "minWidth": 120
+        },
+        {
+          "id": "toDate",
+          "label": "To Date",
+          "minWidth": 120
+        }
+      ],
+      "fields": [
+        {
+          "name": "project",
+          "label": "Project",
+          "required": true
+        },
+        {
+          "name": "assocValue",
+          "label": "Service Line",
+          "required": true
+        },
+        {
+          "name": "fromDate",
+          "label": "From Date",
+          "type": "time"
+        },
+        {
+          "name": "toDate",
+          "label": "To Date",
+          "type": "time"
+        }
+      ],
+      "deleteEntityName": "Service Line Entry",
+      "deleteItemNameField": "assocValue",
+      "searchFields": [
+        "project",
+        "assocValue",
+        "fromDate",
+        "toDate"
+      ]
+    },
+    "applicationEntries": {
+      "buttonName": "Application Entry",
+      "columns": [
+        {
+          "id": "project",
+          "label": "Project",
+          "minWidth": 160
+        },
+        {
+          "id": "assocValue",
+          "label": "Application",
+          "minWidth": 160
+        },
+        {
+          "id": "fromDate",
+          "label": "From Date",
+          "minWidth": 120
+        },
+        {
+          "id": "toDate",
+          "label": "To Date",
+          "minWidth": 120
+        }
+      ],
+      "fields": [
+        {
+          "name": "project",
+          "label": "Project",
+          "required": true
+        },
+        {
+          "name": "assocValue",
+          "label": "Application",
+          "required": true
+        },
+        {
+          "name": "fromDate",
+          "label": "From Date",
+          "type": "time"
+        },
+        {
+          "name": "toDate",
+          "label": "To Date",
+          "type": "time"
+        }
+      ],
+      "deleteEntityName": "Application Entry",
+      "deleteItemNameField": "assocValue",
+      "searchFields": [
+        "project",
+        "assocValue",
+        "fromDate",
+        "toDate"
+      ]
+    },
+    "queueEntries": {
+      "buttonName": "Queue Entry",
+      "columns": [
+        {
+          "id": "project",
+          "label": "Project",
+          "minWidth": 160
+        },
+        {
+          "id": "assocValue",
+          "label": "Queue",
+          "minWidth": 160
+        },
+        {
+          "id": "fromDate",
+          "label": "From Date",
+          "minWidth": 120
+        },
+        {
+          "id": "toDate",
+          "label": "To Date",
+          "minWidth": 120
+        }
+      ],
+      "fields": [
+        {
+          "name": "project",
+          "label": "Project",
+          "required": true
+        },
+        {
+          "name": "assocValue",
+          "label": "Queue",
+          "required": true
+        },
+        {
+          "name": "fromDate",
+          "label": "From Date",
+          "type": "time"
+        },
+        {
+          "name": "toDate",
+          "label": "To Date",
+          "type": "time"
+        }
+      ],
+      "deleteEntityName": "Queue Entry",
+      "deleteItemNameField": "assocValue",
+      "searchFields": [
+        "project",
+        "assocValue",
+        "fromDate",
+        "toDate"
+      ]
+    },
+    "resourceEntries": {
+      "buttonName": "Resource Entry",
+      "columns": [
+        {
+          "id": "project",
+          "label": "Project",
+          "minWidth": 160
+        },
+        {
+          "id": "assocValue",
+          "label": "Resource",
+          "minWidth": 160
+        },
+        {
+          "id": "fromDate",
+          "label": "From Date",
+          "minWidth": 120
+        },
+        {
+          "id": "toDate",
+          "label": "To Date",
+          "minWidth": 120
+        }
+      ],
+      "fields": [
+        {
+          "name": "project",
+          "label": "Project",
+          "required": true
+        },
+        {
+          "name": "assocValue",
+          "label": "Resource",
+          "required": true
+        },
+        {
+          "name": "fromDate",
+          "label": "From Date",
+          "type": "time"
+        },
+        {
+          "name": "toDate",
+          "label": "To Date",
+          "type": "time"
+        }
+      ],
+      "deleteEntityName": "Resource Entry",
+      "deleteItemNameField": "assocValue",
+      "searchFields": [
+        "project",
+        "assocValue",
+        "fromDate",
+        "toDate"
+      ]
+    }
+  }
+}

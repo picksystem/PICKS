@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, Button, TextField, Accordion, Paper } from '@serviceops/component';
-import { AccordionSummary, AccordionDetails } from '@mui/material';
+import { Box, Button, TextField, Accordion } from '@serviceops/component';
+import { AccordionDetails } from '@mui/material';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import PersonIcon from '@mui/icons-material/Person';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 import {
   IConfigApprovalRecord,

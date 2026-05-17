@@ -1,5 +1,5 @@
 export interface DSAccordionProps {
-  title: React.ReactNode;
+  title?: React.ReactNode;
   description?: React.ReactNode;
   icon?: React.ReactNode;
   children: React.ReactNode;

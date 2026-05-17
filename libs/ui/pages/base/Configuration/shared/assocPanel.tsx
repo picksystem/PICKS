@@ -169,7 +169,7 @@ export const PanelHeader = ({
   accent: string;
   icon: React.ReactNode;
   title: string;
-  onBack: () => void;
+  onBack?: () => void;
 }) => (
   <Box
     sx={{
@@ -185,24 +185,28 @@ export const PanelHeader = ({
       borderBottom: 'none',
     }}
   >
-    <Button
-      size='small'
-      variant='text'
-      startIcon={<ArrowBackIcon />}
-      onClick={onBack}
-      sx={{
-        textTransform: 'none',
-        color: accent,
-        fontWeight: 600,
-        minWidth: 0,
-        px: 1,
-        py: 0.25,
-        '&:hover': { bgcolor: alpha(accent, 0.1) },
-      }}
-    >
-      Back
-    </Button>
-    <Divider orientation='vertical' flexItem sx={{ borderColor: alpha(accent, 0.3) }} />
+    {onBack ? (
+      <>
+        <Button
+          size='small'
+          variant='text'
+          startIcon={<ArrowBackIcon />}
+          onClick={onBack}
+          sx={{
+            textTransform: 'none',
+            color: accent,
+            fontWeight: 600,
+            minWidth: 0,
+            px: 1,
+            py: 0.25,
+            '&:hover': { bgcolor: alpha(accent, 0.1) },
+          }}
+        >
+          Back
+        </Button>
+        <Divider orientation='vertical' flexItem sx={{ borderColor: alpha(accent, 0.3) }} />
+      </>
+    ) : null}
     <Box sx={{ color: accent, display: 'flex', alignItems: 'center', fontSize: '1rem' }}>
       {icon}
     </Box>
@@ -435,7 +439,7 @@ export interface AssocPanelProps {
   idPrefix: string;
   rows: AssocRowBase[];
   onSave: (next: AssocRowBase[]) => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export const AssocPanel = ({
