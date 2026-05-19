@@ -31,13 +31,12 @@ export interface ITicketType {
   type: string;
   name: string;
   displayName: string;
+  shortDescription: string;
   description: string;
   prefix: string;
   isActive: boolean;
   numberLength: number;
   displayOrder: number;
-  creationPageDisplayText?: string;
-  creationPageDisplayTag?: string;
 }
 
 // ============================================
@@ -47,26 +46,24 @@ export interface ICreateTicketTypeInput {
   type: string;
   name: string;
   displayName?: string;
+  shortDescription?: string;
   description?: string;
   prefix?: string;
   isActive?: boolean;
   numberLength?: number;
   displayOrder?: number;
-  creationPageDisplayText?: string;
-  creationPageDisplayTag?: string;
 }
 
 export interface IUpdateTicketTypeInput {
   type?: string;
   name?: string;
   displayName?: string;
+  shortDescription?: string;
   description?: string;
   prefix?: string;
   isActive?: boolean;
   numberLength?: number;
   displayOrder?: number;
-  creationPageDisplayText?: string;
-  creationPageDisplayTag?: string;
 }
 
 // ============================================

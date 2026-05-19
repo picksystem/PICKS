@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, within } from '../../../test-utils';
 import '@testing-library/jest-dom';
-import { DataTable, Column } from '../DataTable';
+import { DataTable } from '../DataTable';
+import type { Column } from '../index';
 
 interface TestData {
   id: number;
@@ -195,7 +196,7 @@ describe('DataTable Component', () => {
       {
         id: 'name',
         label: 'Name',
-        format: (value) => <strong>{value as string}</strong>,
+        format: (value: unknown) => <strong>{value as string}</strong>,
       },
       { id: 'email', label: 'Email' },
     ];

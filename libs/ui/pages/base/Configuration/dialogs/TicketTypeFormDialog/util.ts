@@ -11,13 +11,12 @@ export interface TicketTypeFormDialogProps {
     type: string;
     name: string;
     displayName: string;
+    shortDescription: string;
     description: string;
     prefix: string;
     isActive: boolean;
     numberLength: number;
     iconKey: string;
     tag: string;
-    creationPageDisplayText: string;
-    creationPageDisplayTag: string;
   }) => Promise<void>;
 }

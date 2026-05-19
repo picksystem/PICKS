@@ -146,13 +146,12 @@ model AdminTicketType {
   type                    String  @unique
   name                    String
   displayName             String  @default("")
+  shortDescription        String  @default("")
   description             String  @default("")
   prefix                  String  @default("")
   isActive                Boolean @default(true)
   numberLength            Int     @default(7)
   displayOrder            Int     @default(0)
-  creationPageDisplayText String  @default("")
-  creationPageDisplayTag  String  @default("")
 }
 
 model AdminIncident {

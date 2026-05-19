@@ -27,7 +27,7 @@ const TicketTypeTable = ({
 
   const columns: Column<ITicketType>[] = [
     {
-      id: 'type',
+      id: 'displayName',
       label: 'Ticket Type',
       minWidth: 140,
       format: (_v, row): React.ReactNode => {
@@ -49,6 +49,16 @@ const TicketTypeTable = ({
           </Box>
         );
       },
+    },
+    {
+      id: 'shortDescription',
+      label: 'Short Description',
+      minWidth: 180,
+      format: (v): React.ReactNode => (
+        <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>
+          {String(v || '—')}
+        </Typography>
+      ),
     },
     {
       id: 'description',
@@ -137,7 +147,7 @@ const TicketTypeTable = ({
     },
     {
       id: 'displayName',
-      label: 'Display Name',
+      label: 'Creation page display text',
       minWidth: 150,
       format: (v): React.ReactNode => (
         <Typography variant='body2' fontWeight={500} fontSize='0.82rem'>

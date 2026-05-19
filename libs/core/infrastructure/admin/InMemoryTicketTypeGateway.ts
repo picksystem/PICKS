@@ -20,6 +20,7 @@ export class InMemoryTicketTypeGateway implements ITicketTypeGateway {
       type: data.type,
       name: data.name,
       displayName: data.displayName ?? '',
+      shortDescription: data.shortDescription ?? '',
       description: data.description ?? '',
       prefix: data.prefix ?? '',
       isActive: data.isActive ?? true,

@@ -13,14 +13,13 @@ export interface TicketTypeFormValues {
   type: string;
   name: string;
   displayName: string;
+  shortDescription: string;
   description: string;
   prefix: string;
   isActive: boolean;
   numberLength: number;
   iconKey: string;
   tag: string;
-  creationPageDisplayText: string;
-  creationPageDisplayTag: string;
 }
 
 export function useTicketTypes() {
@@ -65,12 +64,11 @@ export function useTicketTypes() {
           data: {
             name: values.name,
             displayName: values.displayName,
+            shortDescription: values.shortDescription,
             description: values.description,
             prefix: values.prefix,
             isActive: values.isActive,
             numberLength: values.numberLength,
-            creationPageDisplayText: values.creationPageDisplayText,
-            creationPageDisplayTag: values.creationPageDisplayTag,
           },
         }).unwrap();
         notify.success('Ticket type updated successfully');
@@ -79,12 +77,11 @@ export function useTicketTypes() {
           type: values.type,
           name: values.name,
           displayName: values.displayName,
+          shortDescription: values.shortDescription,
           description: values.description,
           prefix: values.prefix,
           isActive: values.isActive,
           numberLength: values.numberLength,
-          creationPageDisplayText: values.creationPageDisplayText,
-          creationPageDisplayTag: values.creationPageDisplayTag,
         }).unwrap();
         notify.success('Ticket type created successfully');
       }

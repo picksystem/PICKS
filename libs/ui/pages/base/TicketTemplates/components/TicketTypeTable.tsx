@@ -137,7 +137,7 @@ const TicketTypeTable = ({
     },
     {
       id: 'displayName',
-      label: 'Display Name',
+      label: '',
       minWidth: 150,
       format: (v): React.ReactNode => (
         <Typography variant='body2' fontWeight={500} fontSize='0.82rem'>

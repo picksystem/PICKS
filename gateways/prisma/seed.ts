@@ -52,10 +52,12 @@ async function createTables() {
       "type" TEXT UNIQUE NOT NULL,
       "name" TEXT NOT NULL,
       "displayName" TEXT NOT NULL DEFAULT '',
+      "shortDescription" TEXT NOT NULL DEFAULT '',
       "description" TEXT NOT NULL DEFAULT '',
       "prefix" TEXT NOT NULL DEFAULT '',
       "isActive" BOOLEAN NOT NULL DEFAULT true,
-      "numberLength" INTEGER NOT NULL DEFAULT 7
+      "numberLength" INTEGER NOT NULL DEFAULT 7,
+      "displayOrder" INTEGER NOT NULL DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS "AdminControls" (
@@ -363,13 +365,13 @@ async function clearAndSeed() {
     INSERT INTO "AdminDashboard" ("id", "name", "age") VALUES ('admin-dashboard-1', 'Admin Dashboard', 1);
     INSERT INTO "AdminHeader" ("ticketType", "key", "name", "description", "isActive", "app", "order")
       VALUES ('Support Ticket', 'support-ticket', 'Support Ticket Header', 'Header for support ticket management', true, 'admin', 1);
-    INSERT INTO "AdminTicketType" ("type", "name", "displayName", "description", "prefix", "isActive", "numberLength", "displayOrder") VALUES ('incident', 'Incident', 'Incident', 'Unplanned interruption or quality reduction in a service', 'INC', true, 7, 1);
-    INSERT INTO "AdminTicketType" ("type", "name", "displayName", "description", "prefix", "isActive", "numberLength", "displayOrder") VALUES ('service_request', 'Service Request', 'Service Request', 'Formal request for access, installation, or provisioning of a service', 'SR', true, 7, 2);
-    INSERT INTO "AdminTicketType" ("type", "name", "displayName", "description", "prefix", "isActive", "numberLength", "displayOrder") VALUES ('advisory_request', 'Advisory Request', 'Advisory Request', 'Advisory and consultation request for guidance and recommendations', 'AR', true, 7, 3);
-    INSERT INTO "AdminTicketType" ("type", "name", "displayName", "description", "prefix", "isActive", "numberLength", "displayOrder") VALUES ('task', 'Task', 'Task', 'Task and work item tracking', 'T', true, 6, 4);
-    INSERT INTO "AdminTicketType" ("type", "name", "displayName", "description", "prefix", "isActive", "numberLength", "displayOrder") VALUES ('change_request', 'Change Request', 'Change Request', 'Formal proposal to modify an existing system requiring review and approval', 'CR', true, 7, 5);
-    INSERT INTO "AdminTicketType" ("type", "name", "displayName", "description", "prefix", "isActive", "numberLength", "displayOrder") VALUES ('problem_request', 'Problem Request', 'Problem Request', 'Identify and eliminate the root cause of recurring incidents', 'PR', true, 7, 6);
-    INSERT INTO "AdminTicketType" ("type", "name", "displayName", "description", "prefix", "isActive", "numberLength", "displayOrder") VALUES ('ticket_template', 'Ticket Template', 'Ticket Template', 'Template definitions for ticket creation', 'TB', true, 5, 7);
+    INSERT INTO "AdminTicketType" ("type", "name", "displayName", "shortDescription", "description", "prefix", "isActive", "numberLength", "displayOrder") VALUES ('incident', 'Incident', 'Incident', 'Unplanned interruption or quality reduction', 'Unplanned interruption or quality reduction in a service', 'INC', true, 7, 1);
+    INSERT INTO "AdminTicketType" ("type", "name", "displayName", "shortDescription", "description", "prefix", "isActive", "numberLength", "displayOrder") VALUES ('service_request', 'Service Request', 'Service Request', 'Formal request for access or provisioning', 'Formal request for access, installation, or provisioning of a service', 'SR', true, 7, 2);
+    INSERT INTO "AdminTicketType" ("type", "name", "displayName", "shortDescription", "description", "prefix", "isActive", "numberLength", "displayOrder") VALUES ('advisory_request', 'Advisory Request', 'Advisory Request', 'Advisory and consultation request', 'Advisory and consultation request for guidance and recommendations', 'AR', true, 7, 3);
+    INSERT INTO "AdminTicketType" ("type", "name", "displayName", "shortDescription", "description", "prefix", "isActive", "numberLength", "displayOrder") VALUES ('task', 'Task', 'Task', 'Task and work item tracking', 'Task and work item tracking', 'T', true, 6, 4);
+    INSERT INTO "AdminTicketType" ("type", "name", "displayName", "shortDescription", "description", "prefix", "isActive", "numberLength", "displayOrder") VALUES ('change_request', 'Change Request', 'Change Request', 'Formal proposal to modify existing system', 'Formal proposal to modify an existing system requiring review and approval', 'CR', true, 7, 5);
+    INSERT INTO "AdminTicketType" ("type", "name", "displayName", "shortDescription", "description", "prefix", "isActive", "numberLength", "displayOrder") VALUES ('problem_request', 'Problem Request', 'Problem Request', 'Identify and eliminate root cause', 'Identify and eliminate the root cause of recurring incidents', 'PR', true, 7, 6);
+    INSERT INTO "AdminTicketType" ("type", "name", "displayName", "shortDescription", "description", "prefix", "isActive", "numberLength", "displayOrder") VALUES ('ticket_template', 'Ticket Template', 'Ticket Template', 'Template definitions for ticket creation', 'Template definitions for ticket creation', 'TB', true, 5, 7);
     INSERT INTO "AdminNotFound" ("id", "name", "age") VALUES ('admin-notfound-1', 'Admin 404 Page', 1);
     INSERT INTO "AdminSignIn" ("id", "name", "age") VALUES ('admin-signin-1', 'Admin Sign In', 1);
   `);

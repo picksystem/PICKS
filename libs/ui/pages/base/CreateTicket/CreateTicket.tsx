@@ -73,9 +73,9 @@ const CreateTicket = () => {
             const { accent, gradient, glow } = getVisuals(t.type);
             const iconKey = iconMap[t.type];
             const tag = tagMap[t.type] ?? '';
-            // Use creation page specific fields if set, otherwise fall back to defaults
-            const displayText = t.creationPageDisplayText || t.displayName || t.name;
-            const displayTag = t.creationPageDisplayTag || tag;
+            // Use short description if set, otherwise fall back to defaults
+            const displayText = t.shortDescription || t.displayName || t.name;
+            const displayTag = tag;
 
             return (
               <Box

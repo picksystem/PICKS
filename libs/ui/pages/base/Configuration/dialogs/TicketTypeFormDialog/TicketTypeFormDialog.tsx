@@ -80,14 +80,13 @@ const TicketTypeFormDialog = ({
       type: editingItem?.type ?? '',
       name: editingItem?.name ?? '',
       displayName: editingItem?.displayName ?? '',
+      shortDescription: editingItem?.shortDescription ?? '',
       description: editingItem?.description ?? '',
       prefix: editingItem?.prefix ?? '',
       isActive: editingItem?.isActive ?? true,
       numberLength: editingItem?.numberLength ?? 7,
       iconKey: getInitialIcon(),
       tag: getInitialTag(),
-      creationPageDisplayText: editingItem?.creationPageDisplayText ?? '',
-      creationPageDisplayTag: editingItem?.creationPageDisplayTag ?? '',
     },
     validationSchema: CreateTicketTypeSchema,
     onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -96,14 +95,13 @@ const TicketTypeFormDialog = ({
           type: values.type,
           name: values.name,
           displayName: values.displayName ?? '',
+          shortDescription: values.shortDescription ?? '',
           description: values.description ?? '',
           prefix: (values.prefix ?? '').toUpperCase(),
           isActive: values.isActive ?? true,
           numberLength: values.numberLength ?? 7,
           iconKey: values.iconKey,
           tag: values.tag,
-          creationPageDisplayText: values.creationPageDisplayText ?? '',
-          creationPageDisplayTag: values.creationPageDisplayTag ?? '',
         });
         resetForm();
       } finally {
@@ -242,7 +240,7 @@ const TicketTypeFormDialog = ({
             {/* Display Name */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
-                label='Display Name'
+                label='Creation page display text'
                 name='displayName'
                 value={formik.values.displayName}
                 onChange={formik.handleChange}
@@ -257,6 +255,30 @@ const TicketTypeFormDialog = ({
                 fullWidth
                 size='small'
                 required
+              />
+            </Grid>
+
+            {/* Short Description */}
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                label='Short Description'
+                name='shortDescription'
+                value={formik.values.shortDescription}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={Boolean(
+                  reqError(
+                    formik.touched.shortDescription,
+                    formik.errors.shortDescription as string,
+                  ),
+                )}
+                helperText={reqError(
+                  formik.touched.shortDescription,
+                  formik.errors.shortDescription as string,
+                )}
+                fullWidth
+                size='small'
+                placeholder='A brief summary of this ticket type...'
               />
             </Grid>
 
@@ -285,13 +307,6 @@ const TicketTypeFormDialog = ({
             </Grid>
 
             {/* ── NUMBERING & ICON ── */}
-            <Grid size={{ xs: 12 }}>
-              <Divider>
-                <Typography color='text.secondary' className={classes.dialogDividerLabel}>
-                  NUMBERING &amp; ICON
-                </Typography>
-              </Divider>
-            </Grid>
 
             {/* Prefix */}
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -339,7 +354,6 @@ const TicketTypeFormDialog = ({
             {/* Icon Picker */}
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <FormControl fullWidth size='small'>
-                <InputLabel>Icon</InputLabel>
                 <Select
                   name='iconKey'
                   value={formik.values.iconKey}
@@ -407,7 +421,6 @@ const TicketTypeFormDialog = ({
             {/* Priority Tag */}
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <FormControl fullWidth size='small'>
-                <InputLabel>Priority Tag</InputLabel>
                 <Select
                   name='tag'
                   value={formik.values.tag}
@@ -475,56 +488,6 @@ const TicketTypeFormDialog = ({
                   })}
                 </Select>
               </FormControl>
-            </Grid>
-
-            {/* Creation Page Display Text */}
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                label='Creation Page Display Text'
-                name='creationPageDisplayText'
-                value={formik.values.creationPageDisplayText}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={Boolean(
-                  reqError(
-                    formik.touched.creationPageDisplayText,
-                    formik.errors.creationPageDisplayText as string,
-                  ),
-                )}
-                helperText={
-                  reqError(
-                    formik.touched.creationPageDisplayText,
-                    formik.errors.creationPageDisplayText as string,
-                  ) || 'Text displayed on ticket creation page'
-                }
-                fullWidth
-                size='small'
-              />
-            </Grid>
-
-            {/* Creation Page Display Tag */}
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                label='Creation Page Display Tag'
-                name='creationPageDisplayTag'
-                value={formik.values.creationPageDisplayTag}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={Boolean(
-                  reqError(
-                    formik.touched.creationPageDisplayTag,
-                    formik.errors.creationPageDisplayTag as string,
-                  ),
-                )}
-                helperText={
-                  reqError(
-                    formik.touched.creationPageDisplayTag,
-                    formik.errors.creationPageDisplayTag as string,
-                  ) || 'Tag/label for creation page display'
-                }
-                fullWidth
-                size='small'
-              />
             </Grid>
 
             {/* Active switch */}
