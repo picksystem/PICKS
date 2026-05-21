@@ -1,19 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Typography, Paper, Button, Tooltip, InputAdornment, alpha } from '@mui/material';
-
 import { TextField, DataTable, Column } from '@serviceops/component';
-
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
-
 import tableConfig from './utils/approvals.json';
-
 import { ConfigFormDialog, ConfigDeleteDialog } from '../../../dialogs/ConfigDialogs/ConfigDialogs';
-
 import { useStyles } from './SharedComponents.styles';
-
 import {
   ConfigPanelProps,
   FormField,

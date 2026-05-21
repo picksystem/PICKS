@@ -5,7 +5,6 @@ import {
   Paper,
   Button,
   Tooltip,
-  Link,
   TextField,
   Chip,
   DataTable,
@@ -16,7 +15,6 @@ import {
   AccordionSummary,
   AccordionDetails,
   InputAdornment,
-  Divider,
   alpha,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -28,6 +26,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 import CategoryIcon from '@mui/icons-material/Category';
 import {
@@ -37,7 +36,14 @@ import {
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { ConfigFormDialog, ConfigDeleteDialog } from '../../dialogs/ConfigDialogs/ConfigDialogs';
-import { AssocPanel, toAssocRows, fromAssocRows } from '../../shared/assocPanel';
+import {
+  AssocPanel,
+  toAssocRows,
+  fromAssocRows,
+  PanelHeader,
+  PanelToolbar,
+  PanelTable,
+} from '../../shared/assocPanel';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -46,15 +52,17 @@ const ACCENT_SL = '#059669';
 const ACCENT_APP = '#2563eb';
 const ACCENT_QUE = '#7c3aed';
 const ACCENT_RES = '#be185d';
+const ACCENT_CAT = '#d97706';
 
-// ── Timesheet Projects (accordion with 4 association sub-panels) ───────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-type ActivePanel = 'none' | 'serviceLine' | 'application' | 'queue' | 'resource';
+type ActiveView = 'project' | 'serviceLine' | 'application' | 'queue' | 'resource';
 
 const EMPTY_PROJ_FORM = { name: '', description: '', projectType: '', transitionType: '' };
 
-const TimesheetProjects = () => {
-  const { classes } = useStyles();
+// ── Timesheet Project Panel ────────────────────────────────────────────────────
+
+const TimesheetProjectPanel = () => {
   const { timesheets: apiTS, saveSection } = useConfiguration();
 
   const [rows, setRows] = useState<IConfigTimesheetProjectEntry[]>([]);
@@ -64,9 +72,6 @@ const TimesheetProjects = () => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [form, setForm] = useState(EMPTY_PROJ_FORM);
-  const [activePanel, setActivePanel] = useState<ActivePanel>('none');
-
-  const panelActive = activePanel !== 'none';
 
   useEffect(() => {
     if (apiTS?.timesheetProjects) setRows(apiTS.timesheetProjects);
@@ -97,21 +102,18 @@ const TimesheetProjects = () => {
       )
     : rows;
 
-  // Full timesheet section snapshot — used as base when association panels save
-  const tsBase = () => ({
-    conversionReasonCodes: apiTS?.conversionReasonCodes ?? [],
-    cancellationReasonCodes: apiTS?.cancellationReasonCodes ?? [],
-    timesheetProjects: apiTS?.timesheetProjects ?? [],
-    serviceLineEntries: apiTS?.serviceLineEntries ?? [],
-    applicationEntries: apiTS?.applicationEntries ?? [],
-    queueEntries: apiTS?.queueEntries ?? [],
-    resourceEntries: apiTS?.resourceEntries ?? [],
-    projectCategories: apiTS?.projectCategories ?? [],
-  });
-
   const save = (next: IConfigTimesheetProjectEntry[]) => {
     setRows(next);
-    saveSection('timesheets', { ...tsBase(), timesheetProjects: next });
+    saveSection('timesheets', {
+      conversionReasonCodes: apiTS?.conversionReasonCodes ?? [],
+      cancellationReasonCodes: apiTS?.cancellationReasonCodes ?? [],
+      timesheetProjects: next,
+      serviceLineEntries: apiTS?.serviceLineEntries ?? [],
+      applicationEntries: apiTS?.applicationEntries ?? [],
+      queueEntries: apiTS?.queueEntries ?? [],
+      resourceEntries: apiTS?.resourceEntries ?? [],
+      projectCategories: apiTS?.projectCategories ?? [],
+    });
   };
 
   const handleSubmit = () => {
@@ -192,291 +194,39 @@ const TimesheetProjects = () => {
   ];
 
   return (
-    <Accordion defaultExpanded className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: 1.5,
-              bgcolor: ACCENT_MAIN,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <AccessTimeIcon sx={{ color: '#fff', fontSize: '1rem' }} />
-          </Box>
-          <Box>
-            <Typography className={classes.sectionTitle}>Timesheet Projects</Typography>
-            <Typography className={classes.sectionSubtitle}>
-              Define and manage timesheet project entries with their types and associations
-            </Typography>
-          </Box>
-        </Box>
-      </AccordionSummary>
-
-      <AccordionDetails sx={{ p: 2 }}>
-        {/* Toolbar — always visible; only +New/Edit/Delete and search hide when panel is active */}
-        <Paper variant='outlined' className={classes.actionToolbar}>
-          <Box className={classes.toolbarButtons}>
-            {!panelActive &&
-              (!selectedRow ? (
-                <Tooltip title='Add a new timesheet project'>
-                  <Button
-                    size='small'
-                    variant='contained'
-                    startIcon={<AddIcon />}
-                    onClick={() => {
-                      setEditingRow(null);
-                      setDialogOpen(true);
-                    }}
-                    sx={{
-                      textTransform: 'none',
-                      bgcolor: ACCENT_MAIN,
-                      '&:hover': { bgcolor: alpha(ACCENT_MAIN, 0.85) },
-                    }}
-                  >
-                    New
-                  </Button>
-                </Tooltip>
-              ) : (
-                <>
-                  <Button
-                    size='small'
-                    variant='contained'
-                    startIcon={<EditIcon />}
-                    onClick={() => {
-                      setEditingRow(selectedRow);
-                      setDialogOpen(true);
-                    }}
-                    sx={{
-                      textTransform: 'none',
-                      bgcolor: ACCENT_MAIN,
-                      '&:hover': { bgcolor: alpha(ACCENT_MAIN, 0.85) },
-                    }}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    size='small'
-                    variant='outlined'
-                    color='error'
-                    startIcon={<DeleteIcon />}
-                    onClick={() => setDeleteOpen(true)}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    Delete
-                  </Button>
-                </>
-              ))}
-
-            <Divider
-              orientation='vertical'
-              flexItem
-              className={classes.toolbarDivider}
-              sx={{ mx: 0.5 }}
-            />
-
-            <Button
-              size='small'
-              startIcon={<AccountTreeIcon />}
-              variant={activePanel === 'serviceLine' ? 'contained' : 'outlined'}
-              onClick={() => setActivePanel((p) => (p === 'serviceLine' ? 'none' : 'serviceLine'))}
-              sx={{
-                textTransform: 'none',
-                borderColor: ACCENT_SL,
-                color: activePanel === 'serviceLine' ? '#fff' : ACCENT_SL,
-                bgcolor: activePanel === 'serviceLine' ? ACCENT_SL : undefined,
-                '&:hover': {
-                  bgcolor:
-                    activePanel === 'serviceLine' ? alpha(ACCENT_SL, 0.85) : alpha(ACCENT_SL, 0.07),
-                  borderColor: ACCENT_SL,
-                },
-              }}
-            >
-              Add to Service Line
-            </Button>
-            <Button
-              size='small'
-              startIcon={<AppsIcon />}
-              variant={activePanel === 'application' ? 'contained' : 'outlined'}
-              onClick={() => setActivePanel((p) => (p === 'application' ? 'none' : 'application'))}
-              sx={{
-                textTransform: 'none',
-                borderColor: ACCENT_APP,
-                color: activePanel === 'application' ? '#fff' : ACCENT_APP,
-                bgcolor: activePanel === 'application' ? ACCENT_APP : undefined,
-                '&:hover': {
-                  bgcolor:
-                    activePanel === 'application'
-                      ? alpha(ACCENT_APP, 0.85)
-                      : alpha(ACCENT_APP, 0.07),
-                  borderColor: ACCENT_APP,
-                },
-              }}
-            >
-              Add to Application
-            </Button>
-            <Button
-              size='small'
-              startIcon={<QueueIcon />}
-              variant={activePanel === 'queue' ? 'contained' : 'outlined'}
-              onClick={() => setActivePanel((p) => (p === 'queue' ? 'none' : 'queue'))}
-              sx={{
-                textTransform: 'none',
-                borderColor: ACCENT_QUE,
-                color: activePanel === 'queue' ? '#fff' : ACCENT_QUE,
-                bgcolor: activePanel === 'queue' ? ACCENT_QUE : undefined,
-                '&:hover': {
-                  bgcolor:
-                    activePanel === 'queue' ? alpha(ACCENT_QUE, 0.85) : alpha(ACCENT_QUE, 0.07),
-                  borderColor: ACCENT_QUE,
-                },
-              }}
-            >
-              Add to Queue
-            </Button>
-            <Button
-              size='small'
-              startIcon={<PersonIcon />}
-              variant={activePanel === 'resource' ? 'contained' : 'outlined'}
-              onClick={() => setActivePanel((p) => (p === 'resource' ? 'none' : 'resource'))}
-              sx={{
-                textTransform: 'none',
-                borderColor: ACCENT_RES,
-                color: activePanel === 'resource' ? '#fff' : ACCENT_RES,
-                bgcolor: activePanel === 'resource' ? ACCENT_RES : undefined,
-                '&:hover': {
-                  bgcolor:
-                    activePanel === 'resource' ? alpha(ACCENT_RES, 0.85) : alpha(ACCENT_RES, 0.07),
-                  borderColor: ACCENT_RES,
-                },
-              }}
-            >
-              Add to Resource
-            </Button>
-
-            {!panelActive && (
-              <TextField
-                size='small'
-                placeholder='Search…'
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className={classes.tableSearchField}
-                sx={{ ml: { xs: 0, sm: 'auto' } }}
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position='end'>
-                        <SearchIcon fontSize='small' />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-            )}
-          </Box>
-
-          {!panelActive && selectedRow && (
-            <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
-              Selected: <strong>{selectedRow.name}</strong>&nbsp;·&nbsp;
-              <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-                Clear
-              </Link>
-            </Typography>
-          )}
-        </Paper>
-
-        {!panelActive && (
-          <Paper elevation={1} className={classes.tablePaper}>
-            <DataTable
-              columns={columns}
-              data={filtered}
-              rowKey='id'
-              searchable={false}
-              initialRowsPerPage={10}
-              onRowClick={(row) => setSelectedId((prev) => (prev === row.id ? null : row.id))}
-              activeRowKey={selectedId ?? undefined}
-            />
-          </Paper>
-        )}
-
-        {activePanel === 'serviceLine' && (
-          <AssocPanel
-            Icon={AccountTreeIcon}
-            accent={ACCENT_SL}
-            title='Service Line Associations'
-            entityName='Service Line Entry'
-            assocLabel='Service Line'
-            idPrefix='tssl'
-            rows={toAssocRows(apiTS?.serviceLineEntries ?? [], 'serviceLine')}
-            onSave={(next) =>
-              saveSection('timesheets', {
-                ...tsBase(),
-                serviceLineEntries: fromAssocRows(next, 'serviceLine'),
-              })
-            }
-            onBack={() => setActivePanel('none')}
-          />
-        )}
-        {activePanel === 'application' && (
-          <AssocPanel
-            Icon={AppsIcon}
-            accent={ACCENT_APP}
-            title='Application Associations'
-            entityName='Application Entry'
-            assocLabel='Application'
-            idPrefix='tsapp'
-            rows={toAssocRows(apiTS?.applicationEntries ?? [], 'application')}
-            onSave={(next) =>
-              saveSection('timesheets', {
-                ...tsBase(),
-                applicationEntries: fromAssocRows(next, 'application'),
-              })
-            }
-            onBack={() => setActivePanel('none')}
-          />
-        )}
-        {activePanel === 'queue' && (
-          <AssocPanel
-            Icon={QueueIcon}
-            accent={ACCENT_QUE}
-            title='Queue Associations'
-            entityName='Queue Entry'
-            assocLabel='Queue'
-            idPrefix='tsq'
-            rows={toAssocRows(apiTS?.queueEntries ?? [], 'queue')}
-            onSave={(next) =>
-              saveSection('timesheets', {
-                ...tsBase(),
-                queueEntries: fromAssocRows(next, 'queue'),
-              })
-            }
-            onBack={() => setActivePanel('none')}
-          />
-        )}
-        {activePanel === 'resource' && (
-          <AssocPanel
-            Icon={PersonIcon}
-            accent={ACCENT_RES}
-            title='Resource Associations'
-            entityName='Resource Entry'
-            assocLabel='Resource'
-            idPrefix='tsres'
-            rows={toAssocRows(apiTS?.resourceEntries ?? [], 'resource')}
-            onSave={(next) =>
-              saveSection('timesheets', {
-                ...tsBase(),
-                resourceEntries: fromAssocRows(next, 'resource'),
-              })
-            }
-            onBack={() => setActivePanel('none')}
-          />
-        )}
-      </AccordionDetails>
+    <Box sx={{ mt: 1.5 }}>
+      <PanelHeader
+        accent={ACCENT_MAIN}
+        icon={<AccessTimeIcon fontSize='small' />}
+        title='Timesheet Projects'
+      />
+      <PanelToolbar
+        accent={ACCENT_MAIN}
+        selectedLabel={selectedRow?.name ?? null}
+        onNew={() => {
+          setEditingRow(null);
+          setDialogOpen(true);
+        }}
+        onEdit={() => {
+          setEditingRow(selectedRow);
+          setDialogOpen(true);
+        }}
+        onDelete={() => setDeleteOpen(true)}
+        search={search}
+        onSearch={setSearch}
+        onClear={() => setSelectedId(null)}
+      />
+      <PanelTable accent={ACCENT_MAIN}>
+        <DataTable
+          columns={columns}
+          data={filtered}
+          rowKey='id'
+          searchable={false}
+          initialRowsPerPage={10}
+          onRowClick={(row) => setSelectedId((p) => (p === row.id ? null : row.id))}
+          activeRowKey={selectedId ?? undefined}
+        />
+      </PanelTable>
 
       <ConfigFormDialog
         open={dialogOpen}
@@ -537,13 +287,246 @@ const TimesheetProjects = () => {
         entityName='Timesheet Project'
         itemName={selectedRow?.name}
       />
+    </Box>
+  );
+};
+
+// ── Timesheet Projects Section ─────────────────────────────────────────────────
+
+const TimesheetProjectsSection = () => {
+  const { classes } = useStyles();
+  const { timesheets: apiTS, saveSection } = useConfiguration();
+  const [activeView, setActiveView] = useState<ActiveView>('project');
+
+  const tsBase = () => ({
+    conversionReasonCodes: apiTS?.conversionReasonCodes ?? [],
+    cancellationReasonCodes: apiTS?.cancellationReasonCodes ?? [],
+    timesheetProjects: apiTS?.timesheetProjects ?? [],
+    serviceLineEntries: apiTS?.serviceLineEntries ?? [],
+    applicationEntries: apiTS?.applicationEntries ?? [],
+    queueEntries: apiTS?.queueEntries ?? [],
+    resourceEntries: apiTS?.resourceEntries ?? [],
+    projectCategories: apiTS?.projectCategories ?? [],
+  });
+
+  return (
+    <Accordion defaultExpanded elevation={0} className={classes.sectionAccordion}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: 1.5,
+              bgcolor: ACCENT_MAIN,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <AccessTimeIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+          </Box>
+          <Box>
+            <Typography className={classes.sectionTitle}>Timesheet Projects</Typography>
+            <Typography className={classes.sectionSubtitle}>
+              Define and manage timesheet project entries with their types and associations
+            </Typography>
+          </Box>
+        </Box>
+      </AccordionSummary>
+
+      <AccordionDetails sx={{ p: 2 }}>
+        <Paper variant='outlined' sx={{ p: 1.5, mb: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              flexWrap: 'wrap',
+              gap: 1,
+            }}
+          >
+            <Button
+              size='small'
+              variant={activeView === 'project' ? 'contained' : 'outlined'}
+              onClick={() => setActiveView('project')}
+              startIcon={<AccessTimeIcon />}
+              sx={{
+                textTransform: 'none',
+                border: '1px solid',
+                borderColor: ACCENT_MAIN,
+                color: activeView === 'project' ? '#fff' : ACCENT_MAIN,
+                bgcolor: activeView === 'project' ? ACCENT_MAIN : undefined,
+                '&:hover': {
+                  bgcolor:
+                    activeView === 'project' ? alpha(ACCENT_MAIN, 0.85) : alpha(ACCENT_MAIN, 0.08),
+                  borderColor: ACCENT_MAIN,
+                },
+              }}
+            >
+              Timesheet Project
+            </Button>
+            <Button
+              size='small'
+              variant={activeView === 'serviceLine' ? 'contained' : 'outlined'}
+              onClick={() => setActiveView('serviceLine')}
+              startIcon={<AccountTreeIcon />}
+              sx={{
+                textTransform: 'none',
+                border: '1px solid',
+                borderColor: ACCENT_SL,
+                color: activeView === 'serviceLine' ? '#fff' : ACCENT_SL,
+                bgcolor: activeView === 'serviceLine' ? ACCENT_SL : undefined,
+                '&:hover': {
+                  bgcolor:
+                    activeView === 'serviceLine' ? alpha(ACCENT_SL, 0.85) : alpha(ACCENT_SL, 0.08),
+                  borderColor: ACCENT_SL,
+                },
+              }}
+            >
+              Add to Service Line
+            </Button>
+            <Button
+              size='small'
+              variant={activeView === 'application' ? 'contained' : 'outlined'}
+              onClick={() => setActiveView('application')}
+              startIcon={<AppsIcon />}
+              sx={{
+                textTransform: 'none',
+                border: '1px solid',
+                borderColor: ACCENT_APP,
+                color: activeView === 'application' ? '#fff' : ACCENT_APP,
+                bgcolor: activeView === 'application' ? ACCENT_APP : undefined,
+                '&:hover': {
+                  bgcolor:
+                    activeView === 'application'
+                      ? alpha(ACCENT_APP, 0.85)
+                      : alpha(ACCENT_APP, 0.08),
+                  borderColor: ACCENT_APP,
+                },
+              }}
+            >
+              Add to Application
+            </Button>
+            <Button
+              size='small'
+              variant={activeView === 'queue' ? 'contained' : 'outlined'}
+              onClick={() => setActiveView('queue')}
+              startIcon={<QueueIcon />}
+              sx={{
+                textTransform: 'none',
+                border: '1px solid',
+                borderColor: ACCENT_QUE,
+                color: activeView === 'queue' ? '#fff' : ACCENT_QUE,
+                bgcolor: activeView === 'queue' ? ACCENT_QUE : undefined,
+                '&:hover': {
+                  bgcolor:
+                    activeView === 'queue' ? alpha(ACCENT_QUE, 0.85) : alpha(ACCENT_QUE, 0.08),
+                  borderColor: ACCENT_QUE,
+                },
+              }}
+            >
+              Add to Queue
+            </Button>
+            <Button
+              size='small'
+              variant={activeView === 'resource' ? 'contained' : 'outlined'}
+              onClick={() => setActiveView('resource')}
+              startIcon={<PersonIcon />}
+              sx={{
+                textTransform: 'none',
+                border: '1px solid',
+                borderColor: ACCENT_RES,
+                color: activeView === 'resource' ? '#fff' : ACCENT_RES,
+                bgcolor: activeView === 'resource' ? ACCENT_RES : undefined,
+                '&:hover': {
+                  bgcolor:
+                    activeView === 'resource' ? alpha(ACCENT_RES, 0.85) : alpha(ACCENT_RES, 0.08),
+                  borderColor: ACCENT_RES,
+                },
+              }}
+            >
+              Add to Resource
+            </Button>
+          </Box>
+        </Paper>
+
+        {activeView === 'project' && <TimesheetProjectPanel />}
+        {activeView === 'serviceLine' && (
+          <AssocPanel
+            Icon={AccountTreeIcon}
+            accent={ACCENT_SL}
+            title='Service Line Associations'
+            entityName='Service Line Entry'
+            assocLabel='Service Line'
+            idPrefix='tssl'
+            rows={toAssocRows(apiTS?.serviceLineEntries ?? [], 'serviceLine')}
+            onSave={(next) =>
+              saveSection('timesheets', {
+                ...tsBase(),
+                serviceLineEntries: fromAssocRows(next, 'serviceLine'),
+              })
+            }
+          />
+        )}
+        {activeView === 'application' && (
+          <AssocPanel
+            Icon={AppsIcon}
+            accent={ACCENT_APP}
+            title='Application Associations'
+            entityName='Application Entry'
+            assocLabel='Application'
+            idPrefix='tsapp'
+            rows={toAssocRows(apiTS?.applicationEntries ?? [], 'application')}
+            onSave={(next) =>
+              saveSection('timesheets', {
+                ...tsBase(),
+                applicationEntries: fromAssocRows(next, 'application'),
+              })
+            }
+          />
+        )}
+        {activeView === 'queue' && (
+          <AssocPanel
+            Icon={QueueIcon}
+            accent={ACCENT_QUE}
+            title='Queue Associations'
+            entityName='Queue Entry'
+            assocLabel='Queue'
+            idPrefix='tsq'
+            rows={toAssocRows(apiTS?.queueEntries ?? [], 'queue')}
+            onSave={(next) =>
+              saveSection('timesheets', {
+                ...tsBase(),
+                queueEntries: fromAssocRows(next, 'queue'),
+              })
+            }
+          />
+        )}
+        {activeView === 'resource' && (
+          <AssocPanel
+            Icon={PersonIcon}
+            accent={ACCENT_RES}
+            title='Resource Associations'
+            entityName='Resource Entry'
+            assocLabel='Resource'
+            idPrefix='tsres'
+            rows={toAssocRows(apiTS?.resourceEntries ?? [], 'resource')}
+            onSave={(next) =>
+              saveSection('timesheets', {
+                ...tsBase(),
+                resourceEntries: fromAssocRows(next, 'resource'),
+              })
+            }
+          />
+        )}
+      </AccordionDetails>
     </Accordion>
   );
 };
 
 // ── Project Category ───────────────────────────────────────────────────────────
 
-const ACCENT_CAT = '#d97706';
 const EMPTY_CAT_FORM = {
   project: '',
   name: '',
@@ -774,6 +757,26 @@ const ProjectCategory = () => {
                 >
                   Delete
                 </Button>
+                <Box
+                  component='span'
+                  sx={{
+                    display: { xs: 'none', sm: 'block' },
+                    width: '1px',
+                    height: '20px',
+                    bgcolor: alpha(ACCENT_CAT, 0.3),
+                    mx: 0.75,
+                    alignSelf: 'center',
+                  }}
+                />
+                <Button
+                  size='small'
+                  variant='outlined'
+                  startIcon={<ClearIcon />}
+                  onClick={() => setSelectedId(null)}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Clear
+                </Button>
               </>
             )}
             <TextField
@@ -794,14 +797,6 @@ const ProjectCategory = () => {
               }}
             />
           </Box>
-          {selectedRow && (
-            <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
-              Selected: <strong>{selectedRow.name}</strong>&nbsp;·&nbsp;
-              <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-                Clear
-              </Link>
-            </Typography>
-          )}
         </Paper>
 
         <Paper elevation={1} className={classes.tablePaper}>
@@ -896,7 +891,7 @@ const Timesheets = () => {
 
   return (
     <Box className={classes.container}>
-      <TimesheetProjects />
+      <TimesheetProjectsSection />
       <ProjectCategory />
     </Box>
   );

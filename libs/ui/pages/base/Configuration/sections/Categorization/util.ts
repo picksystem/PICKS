@@ -1,11 +1,5 @@
 import {
   IConfigServiceLine,
-  IConfigTimesheetProject,
-  IConfigExpenseProject,
-  IConfigApproval,
-  IConfigServiceLineTicketType,
-  IConfigSupportLine,
-  IConfigBillingCode,
   IConfigApplication,
   IConfigApplicationQueue,
 } from '@serviceops/interfaces';

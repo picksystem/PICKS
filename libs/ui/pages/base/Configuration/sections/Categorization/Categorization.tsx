@@ -5,7 +5,6 @@ import {
   Paper,
   Button,
   Tooltip,
-  Link,
   TextField,
   Divider,
   Switch,
@@ -49,6 +48,7 @@ import CategoryIcon from '@mui/icons-material/Category';
 import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
 import CodeIcon from '@mui/icons-material/Code';
 import NoteAltIcon from '@mui/icons-material/NoteAlt';
+import ClearIcon from '@mui/icons-material/Clear';
 import {
   IConfigBusinessCategory,
   IConfigServiceLine,
@@ -260,6 +260,27 @@ const BusinessCategories = () => {
                 Delete
               </Button>
             )}
+            {selectedRow && (
+              <>
+                <Box
+                  sx={{
+                    width: '1px',
+                    height: '20px',
+                    bgcolor: alpha('#059669', 0.3),
+                    display: { xs: 'none', sm: 'block' },
+                  }}
+                />
+                <Button
+                  size='small'
+                  variant='text'
+                  startIcon={<ClearIcon />}
+                  onClick={() => setSelectedId(null)}
+                  sx={{ color: 'text.secondary' }}
+                >
+                  Clear
+                </Button>
+              </>
+            )}
             <TextField
               size='small'
               placeholder='Search…'
@@ -278,14 +299,6 @@ const BusinessCategories = () => {
               }}
             />
           </Box>
-          {selectedRow && (
-            <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
-              Selected: <strong>{selectedRow.name}</strong>&nbsp;·&nbsp;
-              <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-                Clear
-              </Link>
-            </Typography>
-          )}
         </Paper>
         <Paper elevation={1} className={classes.tablePaper}>
           <DataTable
@@ -544,6 +557,27 @@ const PanelToolbar = ({
             Delete
           </Button>
         )}
+        {selectedLabel && (
+          <>
+            <Box
+              sx={{
+                width: '1px',
+                height: '20px',
+                bgcolor: alpha(ACCENT_AAP, 0.3),
+                display: { xs: 'none', sm: 'block' },
+              }}
+            />
+            <Button
+              size='small'
+              variant='text'
+              startIcon={<ClearIcon />}
+              onClick={onClear}
+              sx={{ color: 'text.secondary' }}
+            >
+              Clear
+            </Button>
+          </>
+        )}
         <TextField
           size='small'
           placeholder='Search…'
@@ -561,14 +595,6 @@ const PanelToolbar = ({
           }}
         />
       </Box>
-      {selectedLabel && (
-        <Typography variant='caption' color='text.secondary'>
-          Selected: <strong>{selectedLabel}</strong>&nbsp;·&nbsp;
-          <Link component='button' variant='caption' onClick={onClear}>
-            Clear
-          </Link>
-        </Typography>
-      )}
     </Paper>
   );
 };
@@ -905,6 +931,27 @@ const TimesheetPanel = ({
               Delete
             </Button>
           )}
+          {selectedRow && (
+            <>
+              <Box
+                sx={{
+                  width: '1px',
+                  height: '20px',
+                  bgcolor: alpha(ACCENT_TS, 0.3),
+                  display: { xs: 'none', sm: 'block' },
+                }}
+              />
+              <Button
+                size='small'
+                variant='text'
+                startIcon={<ClearIcon />}
+                onClick={() => setSelectedId(null)}
+                sx={{ color: 'text.secondary' }}
+              >
+                Clear
+              </Button>
+            </>
+          )}
           <TextField
             size='small'
             placeholder='Search projects…'
@@ -922,14 +969,6 @@ const TimesheetPanel = ({
             }}
           />
         </Box>
-        {selectedRow && (
-          <Typography variant='caption' color='text.secondary'>
-            Selected: <strong>{selectedRow.project}</strong>&nbsp;·&nbsp;
-            <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-              Clear
-            </Link>
-          </Typography>
-        )}
       </Paper>
 
       {/* ── Table ── */}
@@ -1375,6 +1414,27 @@ const ExpensePanel = ({
               Delete
             </Button>
           )}
+          {selectedRow && (
+            <>
+              <Box
+                sx={{
+                  width: '1px',
+                  height: '20px',
+                  bgcolor: alpha(ACCENT_TS, 0.3),
+                  display: { xs: 'none', sm: 'block' },
+                }}
+              />
+              <Button
+                size='small'
+                variant='text'
+                startIcon={<ClearIcon />}
+                onClick={() => setSelectedId(null)}
+                sx={{ color: 'text.secondary' }}
+              >
+                Clear
+              </Button>
+            </>
+          )}
           <TextField
             size='small'
             placeholder='Search projects…'
@@ -1392,14 +1452,6 @@ const ExpensePanel = ({
             }}
           />
         </Box>
-        {selectedRow && (
-          <Typography variant='caption' color='text.secondary'>
-            Selected: <strong>{selectedRow.project}</strong>&nbsp;·&nbsp;
-            <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-              Clear
-            </Link>
-          </Typography>
-        )}
       </Paper>
 
       {/* ── Table ── */}
@@ -2202,6 +2254,27 @@ const ServiceLines = () => {
                   >
                     Delete
                   </Button>
+                  {selectedRow && (
+                    <>
+                      <Box
+                        sx={{
+                          width: '1px',
+                          height: '20px',
+                          bgcolor: alpha('#0891b2', 0.3),
+                          display: { xs: 'none', sm: 'block' },
+                        }}
+                      />
+                      <Button
+                        size='small'
+                        variant='text'
+                        startIcon={<ClearIcon />}
+                        onClick={() => setSelectedId(null)}
+                        sx={{ color: 'text.secondary' }}
+                      >
+                        Clear
+                      </Button>
+                    </>
+                  )}
                   <Divider
                     orientation='vertical'
                     flexItem
@@ -2268,14 +2341,6 @@ const ServiceLines = () => {
               />
             )}
           </Box>
-          {!panelActive && selectedRow && (
-            <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
-              Selected: <strong>{selectedRow.name}</strong>&nbsp;·&nbsp;
-              <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-                Clear
-              </Link>
-            </Typography>
-          )}
         </Paper>
 
         {/* ── Service Lines table: hidden while a panel is open ── */}
@@ -2741,6 +2806,27 @@ const AppApprovalsPanel = ({
               Delete
             </Button>
           )}
+          {selectedRow && (
+            <>
+              <Box
+                sx={{
+                  width: '1px',
+                  height: '20px',
+                  bgcolor: alpha(ACCENT_AAP, 0.3),
+                  display: { xs: 'none', sm: 'block' },
+                }}
+              />
+              <Button
+                size='small'
+                variant='text'
+                startIcon={<ClearIcon />}
+                onClick={() => setSelectedId(null)}
+                sx={{ color: 'text.secondary' }}
+              >
+                Clear
+              </Button>
+            </>
+          )}
           <TextField
             size='small'
             placeholder='Search…'
@@ -2758,14 +2844,6 @@ const AppApprovalsPanel = ({
             }}
           />
         </Box>
-        {selectedRow && (
-          <Typography variant='caption' color='text.secondary'>
-            Selected: <strong>{selectedRow.approverName}</strong>&nbsp;·&nbsp;
-            <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-              Clear
-            </Link>
-          </Typography>
-        )}
       </Paper>
       <Paper
         elevation={1}
@@ -3308,6 +3386,27 @@ const AppSupportLinesPanel = ({
               Delete
             </Button>
           )}
+          {selectedRow && (
+            <>
+              <Box
+                sx={{
+                  width: '1px',
+                  height: '20px',
+                  bgcolor: alpha(ACCENT_ASL, 0.3),
+                  display: { xs: 'none', sm: 'block' },
+                }}
+              />
+              <Button
+                size='small'
+                variant='text'
+                startIcon={<ClearIcon />}
+                onClick={() => setSelectedId(null)}
+                sx={{ color: 'text.secondary' }}
+              >
+                Clear
+              </Button>
+            </>
+          )}
           <TextField
             size='small'
             placeholder='Search…'
@@ -3325,14 +3424,6 @@ const AppSupportLinesPanel = ({
             }}
           />
         </Box>
-        {selectedRow && (
-          <Typography variant='caption' color='text.secondary'>
-            Selected: <strong>{selectedRow.name}</strong>&nbsp;·&nbsp;
-            <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-              Clear
-            </Link>
-          </Typography>
-        )}
       </Paper>
       <Paper
         elevation={1}
@@ -3711,6 +3802,27 @@ const AppBillingCodesPanel = ({
               Delete
             </Button>
           )}
+          {selectedRow && (
+            <>
+              <Box
+                sx={{
+                  width: '1px',
+                  height: '20px',
+                  bgcolor: alpha(ACCENT_ABC, 0.3),
+                  display: { xs: 'none', sm: 'block' },
+                }}
+              />
+              <Button
+                size='small'
+                variant='text'
+                startIcon={<ClearIcon />}
+                onClick={() => setSelectedId(null)}
+                sx={{ color: 'text.secondary' }}
+              >
+                Clear
+              </Button>
+            </>
+          )}
           <TextField
             size='small'
             placeholder='Search…'
@@ -3728,14 +3840,6 @@ const AppBillingCodesPanel = ({
             }}
           />
         </Box>
-        {selectedRow && (
-          <Typography variant='caption' color='text.secondary'>
-            Selected: <strong>{selectedRow.code}</strong>&nbsp;·&nbsp;
-            <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-              Clear
-            </Link>
-          </Typography>
-        )}
       </Paper>
       <Paper
         elevation={1}
@@ -4142,6 +4246,27 @@ const AppTimesheetPanel = ({
               Delete
             </Button>
           )}
+          {selectedRow && (
+            <>
+              <Box
+                sx={{
+                  width: '1px',
+                  height: '20px',
+                  bgcolor: alpha(ACCENT_ATS, 0.3),
+                  display: { xs: 'none', sm: 'block' },
+                }}
+              />
+              <Button
+                size='small'
+                variant='text'
+                startIcon={<ClearIcon />}
+                onClick={() => setSelectedId(null)}
+                sx={{ color: 'text.secondary' }}
+              >
+                Clear
+              </Button>
+            </>
+          )}
           <TextField
             size='small'
             placeholder='Search…'
@@ -4159,14 +4284,6 @@ const AppTimesheetPanel = ({
             }}
           />
         </Box>
-        {selectedRow && (
-          <Typography variant='caption' color='text.secondary'>
-            Selected: <strong>{selectedRow.project}</strong>&nbsp;·&nbsp;
-            <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-              Clear
-            </Link>
-          </Typography>
-        )}
       </Paper>
       <Paper
         elevation={1}
@@ -4686,6 +4803,27 @@ const AppExpensePanel = ({
               Delete
             </Button>
           )}
+          {selectedRow && (
+            <>
+              <Box
+                sx={{
+                  width: '1px',
+                  height: '20px',
+                  bgcolor: alpha(ACCENT_ATS, 0.3),
+                  display: { xs: 'none', sm: 'block' },
+                }}
+              />
+              <Button
+                size='small'
+                variant='text'
+                startIcon={<ClearIcon />}
+                onClick={() => setSelectedId(null)}
+                sx={{ color: 'text.secondary' }}
+              >
+                Clear
+              </Button>
+            </>
+          )}
           <TextField
             size='small'
             placeholder='Search…'
@@ -4703,14 +4841,6 @@ const AppExpensePanel = ({
             }}
           />
         </Box>
-        {selectedRow && (
-          <Typography variant='caption' color='text.secondary'>
-            Selected: <strong>{selectedRow.project}</strong>&nbsp;·&nbsp;
-            <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-              Clear
-            </Link>
-          </Typography>
-        )}
       </Paper>
       <Paper
         elevation={1}
@@ -5214,14 +5344,6 @@ const Applications = () => {
               />
             )}
           </Box>
-          {!panelActive && selectedRow && (
-            <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
-              Selected: <strong>{selectedRow.name}</strong>&nbsp;·&nbsp;
-              <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-                Clear
-              </Link>
-            </Typography>
-          )}
         </Paper>
 
         {/* ── Main table ── */}
@@ -5669,6 +5791,27 @@ const QueueApprovalsPanel = ({
               Delete
             </Button>
           )}
+          {selectedRow && (
+            <>
+              <Box
+                sx={{
+                  width: '1px',
+                  height: '20px',
+                  bgcolor: alpha(ACCENT_AAP, 0.3),
+                  display: { xs: 'none', sm: 'block' },
+                }}
+              />
+              <Button
+                size='small'
+                variant='text'
+                startIcon={<ClearIcon />}
+                onClick={() => setSelectedId(null)}
+                sx={{ color: 'text.secondary' }}
+              >
+                Clear
+              </Button>
+            </>
+          )}
           <TextField
             size='small'
             placeholder='Search…'
@@ -5686,14 +5829,6 @@ const QueueApprovalsPanel = ({
             }}
           />
         </Box>
-        {selectedRow && (
-          <Typography variant='caption' color='text.secondary'>
-            Selected: <strong>{selectedRow.approverName}</strong>&nbsp;·&nbsp;
-            <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-              Clear
-            </Link>
-          </Typography>
-        )}
       </Paper>
       <Paper
         elevation={1}
@@ -6314,6 +6449,27 @@ const QueueTimesheetPanel = ({
               Delete
             </Button>
           )}
+          {selectedRow && (
+            <>
+              <Box
+                sx={{
+                  width: '1px',
+                  height: '20px',
+                  bgcolor: alpha(ACCENT_ATS, 0.3),
+                  display: { xs: 'none', sm: 'block' },
+                }}
+              />
+              <Button
+                size='small'
+                variant='text'
+                startIcon={<ClearIcon />}
+                onClick={() => setSelectedId(null)}
+                sx={{ color: 'text.secondary' }}
+              >
+                Clear
+              </Button>
+            </>
+          )}
           <TextField
             size='small'
             placeholder='Search…'
@@ -6331,14 +6487,6 @@ const QueueTimesheetPanel = ({
             }}
           />
         </Box>
-        {selectedRow && (
-          <Typography variant='caption' color='text.secondary'>
-            Selected: <strong>{selectedRow.project}</strong>&nbsp;·&nbsp;
-            <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-              Clear
-            </Link>
-          </Typography>
-        )}
       </Paper>
       <Paper
         elevation={1}
@@ -6766,6 +6914,27 @@ const QueueExpensesPanel = ({
               Delete
             </Button>
           )}
+          {selectedRow && (
+            <>
+              <Box
+                sx={{
+                  width: '1px',
+                  height: '20px',
+                  bgcolor: alpha(ACCENT_ATS, 0.3),
+                  display: { xs: 'none', sm: 'block' },
+                }}
+              />
+              <Button
+                size='small'
+                variant='text'
+                startIcon={<ClearIcon />}
+                onClick={() => setSelectedId(null)}
+                sx={{ color: 'text.secondary' }}
+              >
+                Clear
+              </Button>
+            </>
+          )}
           <TextField
             size='small'
             placeholder='Search…'
@@ -6783,14 +6952,6 @@ const QueueExpensesPanel = ({
             }}
           />
         </Box>
-        {selectedRow && (
-          <Typography variant='caption' color='text.secondary'>
-            Selected: <strong>{selectedRow.project}</strong>&nbsp;·&nbsp;
-            <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-              Clear
-            </Link>
-          </Typography>
-        )}
       </Paper>
       <Paper
         elevation={1}
@@ -7239,14 +7400,6 @@ const ApplicationQueues = () => {
               />
             )}
           </Box>
-          {!panelActive && selectedRow && (
-            <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
-              Selected: <strong>{selectedRow.name}</strong>&nbsp;·&nbsp;
-              <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-                Clear
-              </Link>
-            </Typography>
-          )}
         </Paper>
 
         {!panelActive && (
@@ -7609,6 +7762,27 @@ const ApplicationCategories = () => {
                 Delete
               </Button>
             )}
+            {selectedRow && (
+              <>
+                <Box
+                  sx={{
+                    width: '1px',
+                    height: '20px',
+                    bgcolor: alpha('#0f766e', 0.3),
+                    display: { xs: 'none', sm: 'block' },
+                  }}
+                />
+                <Button
+                  size='small'
+                  variant='text'
+                  startIcon={<ClearIcon />}
+                  onClick={() => setSelectedId(null)}
+                  sx={{ color: 'text.secondary' }}
+                >
+                  Clear
+                </Button>
+              </>
+            )}
             <TextField
               size='small'
               placeholder='Search…'
@@ -7627,14 +7801,6 @@ const ApplicationCategories = () => {
               }}
             />
           </Box>
-          {selectedRow && (
-            <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
-              Selected: <strong>{selectedRow.categoryName}</strong>&nbsp;·&nbsp;
-              <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-                Clear
-              </Link>
-            </Typography>
-          )}
         </Paper>
         <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
           <DataTable
@@ -7949,6 +8115,27 @@ const ApplicationSubCategories = () => {
                 Delete
               </Button>
             )}
+            {selectedRow && (
+              <>
+                <Box
+                  sx={{
+                    width: '1px',
+                    height: '20px',
+                    bgcolor: alpha('#0f766e', 0.3),
+                    display: { xs: 'none', sm: 'block' },
+                  }}
+                />
+                <Button
+                  size='small'
+                  variant='text'
+                  startIcon={<ClearIcon />}
+                  onClick={() => setSelectedId(null)}
+                  sx={{ color: 'text.secondary' }}
+                >
+                  Clear
+                </Button>
+              </>
+            )}
             <TextField
               size='small'
               placeholder='Search…'
@@ -7967,14 +8154,6 @@ const ApplicationSubCategories = () => {
               }}
             />
           </Box>
-          {selectedRow && (
-            <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
-              Selected: <strong>{selectedRow.subCategoryName}</strong>&nbsp;·&nbsp;
-              <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-                Clear
-              </Link>
-            </Typography>
-          )}
         </Paper>
         <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
           <DataTable
@@ -8327,6 +8506,27 @@ const ApplicationNumberSequences = () => {
                 Delete
               </Button>
             )}
+            {selectedRow && (
+              <>
+                <Box
+                  sx={{
+                    width: '1px',
+                    height: '20px',
+                    bgcolor: alpha('#0f766e', 0.3),
+                    display: { xs: 'none', sm: 'block' },
+                  }}
+                />
+                <Button
+                  size='small'
+                  variant='text'
+                  startIcon={<ClearIcon />}
+                  onClick={() => setSelectedId(null)}
+                  sx={{ color: 'text.secondary' }}
+                >
+                  Clear
+                </Button>
+              </>
+            )}
             <TextField
               size='small'
               placeholder='Search…'
@@ -8345,14 +8545,6 @@ const ApplicationNumberSequences = () => {
               }}
             />
           </Box>
-          {selectedRow && (
-            <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
-              Selected: <strong>{selectedRow.numberSequenceCode}</strong>&nbsp;·&nbsp;
-              <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-                Clear
-              </Link>
-            </Typography>
-          )}
         </Paper>
         <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
           <DataTable

@@ -36,12 +36,12 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import BeachAccessIcon from '@mui/icons-material/BeachAccess';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import BusinessIcon from '@mui/icons-material/Business';
 import GroupIcon from '@mui/icons-material/Group';
@@ -808,12 +808,26 @@ const WorkingDayTemplates = () => {
                   >
                     Delete
                   </Button>
-                  <Divider
-                    orientation='vertical'
-                    flexItem
-                    className={classes.toolbarDivider}
-                    sx={{ mx: 0.5 }}
+                  <Box
+                    component='span'
+                    sx={{
+                      display: { xs: 'none', sm: 'block' },
+                      width: '1px',
+                      height: '20px',
+                      bgcolor: alpha(ACCENT, 0.3),
+                      mx: 0.75,
+                      alignSelf: 'center',
+                    }}
                   />
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    startIcon={<ClearIcon />}
+                    sx={{ textTransform: 'none' }}
+                    onClick={() => setSelectedId(null)}
+                  >
+                    Clear
+                  </Button>
                 </>
               )}
 
@@ -835,19 +849,6 @@ const WorkingDayTemplates = () => {
                 }}
               />
             </Box>
-
-            {selectedRow && (
-              <Typography
-                variant='caption'
-                color='text.secondary'
-                className={classes.selectionInfo}
-              >
-                Selected: <strong>{selectedRow.name}</strong>&nbsp;·&nbsp;
-                <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-                  Clear
-                </Link>
-              </Typography>
-            )}
           </Paper>
 
           {/* Table */}
@@ -891,7 +892,322 @@ const WorkingDayTemplates = () => {
 const ACCENT_HC = '#0369a1';
 const ACCENT_BH = '#7c3aed';
 
-type HCActivePanel = 'none' | 'bankHolidays';
+// ── Holiday Calendar Panel ─────────────────────────────────────────────────────
+
+const HolidayCalendarPanel = () => {
+  const { calendars: apiCAL, saveSection } = useConfiguration();
+
+  const [rows, setRows] = useState<IConfigHolidayCalendar[]>([]);
+  const [bankHolidays, setBankHolidays] = useState<IConfigBankHoliday[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingRow, setEditingRow] = useState<IConfigHolidayCalendar | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [hcForm, setHcForm] = useState({ ...EMPTY_HC_FORM });
+
+  useEffect(() => {
+    if (apiCAL?.holidayCalendars) setRows(apiCAL.holidayCalendars);
+    if (apiCAL?.bankHolidays) setBankHolidays(apiCAL.bankHolidays);
+  }, [apiCAL]);
+
+  useEffect(() => {
+    if (!dialogOpen) return;
+    setHcForm(
+      editingRow
+        ? { name: editingRow.name, description: editingRow.description }
+        : { ...EMPTY_HC_FORM },
+    );
+  }, [dialogOpen, editingRow]);
+
+  const selectedRow = rows.find((r) => r.id === selectedId) ?? null;
+
+  const filtered = search
+    ? rows.filter(
+        (r) =>
+          r.name.toLowerCase().includes(search.toLowerCase()) ||
+          r.description.toLowerCase().includes(search.toLowerCase()),
+      )
+    : rows;
+
+  const save = (nextRows: IConfigHolidayCalendar[], nextBH?: IConfigBankHoliday[]) => {
+    const bh = nextBH ?? bankHolidays;
+    setRows(nextRows);
+    if (nextBH) setBankHolidays(nextBH);
+    saveSection('calendars', {
+      workingDayTemplates: apiCAL?.workingDayTemplates ?? [],
+      holidayCalendars: nextRows,
+      bankHolidays: bh,
+      workingCalendars: apiCAL?.workingCalendars ?? [],
+      workingCalendarTimes: apiCAL?.workingCalendarTimes ?? [],
+      composedWorkingTimes: apiCAL?.composedWorkingTimes ?? [],
+      calendarWorkLocations: apiCAL?.calendarWorkLocations ?? [],
+      calendarConsultants: apiCAL?.calendarConsultants ?? [],
+    });
+  };
+
+  const handleSubmit = () => {
+    if (!hcForm.name.trim()) return;
+    if (editingRow) {
+      save(rows.map((r) => (r.id === editingRow.id ? { ...editingRow, ...hcForm } : r)));
+      setSelectedId(editingRow.id);
+    } else {
+      const n: IConfigHolidayCalendar = { id: `hc_${Date.now()}`, ...hcForm };
+      save([...rows, n]);
+      setSelectedId(n.id);
+    }
+    setDialogOpen(false);
+    setEditingRow(null);
+  };
+
+  const handleDelete = () => {
+    if (!selectedRow) return;
+    const nextBH = bankHolidays.filter((b) => b.calendarName !== selectedRow.name);
+    save(
+      rows.filter((r) => r.id !== selectedRow.id),
+      nextBH,
+    );
+    setSelectedId(null);
+    setDeleteOpen(false);
+  };
+
+  const hcColumns: Column<IConfigHolidayCalendar>[] = [
+    {
+      id: 'name',
+      label: 'Name',
+      minWidth: 200,
+      format: (v): React.ReactNode => (
+        <Typography variant='body2' fontWeight={700} fontSize='0.82rem'>
+          {String(v || '—')}
+        </Typography>
+      ),
+    },
+    {
+      id: 'description',
+      label: 'Description',
+      minWidth: 260,
+      format: (v): React.ReactNode => (
+        <Typography
+          variant='body2'
+          color='text.secondary'
+          fontSize='0.8rem'
+          noWrap
+          sx={{ maxWidth: 300 }}
+        >
+          {String(v || '—')}
+        </Typography>
+      ),
+    },
+    {
+      id: 'id',
+      label: 'Holidays',
+      minWidth: 90,
+      format: (_v, row): React.ReactNode => {
+        const count = bankHolidays.filter(
+          (b) => b.calendarName === (row as IConfigHolidayCalendar).name,
+        ).length;
+        return (
+          <Chip
+            label={count}
+            size='small'
+            sx={{
+              fontWeight: 700,
+              fontSize: '0.72rem',
+              height: 22,
+              borderRadius: '6px',
+              bgcolor: count > 0 ? alpha(ACCENT_BH, 0.1) : 'grey.100',
+              color: count > 0 ? ACCENT_BH : 'text.disabled',
+            }}
+          />
+        );
+      },
+    },
+  ];
+
+  return (
+    <Box sx={{ mt: 1.5 }}>
+      <PanelHeader
+        accent={ACCENT_HC}
+        icon={<CalendarMonthIcon fontSize='small' />}
+        title='Holiday Calendars'
+      />
+      <PanelToolbar
+        accent={ACCENT_HC}
+        selectedLabel={selectedRow?.name ?? null}
+        onNew={() => {
+          setEditingRow(null);
+          setDialogOpen(true);
+        }}
+        onEdit={() => {
+          setEditingRow(selectedRow);
+          setDialogOpen(true);
+        }}
+        onDelete={() => setDeleteOpen(true)}
+        search={search}
+        onSearch={setSearch}
+        onClear={() => setSelectedId(null)}
+      />
+      <PanelTable accent={ACCENT_HC}>
+        <DataTable
+          columns={hcColumns}
+          data={filtered}
+          rowKey='id'
+          searchable={false}
+          initialRowsPerPage={10}
+          onRowClick={(row) => setSelectedId((p) => (p === row.id ? null : row.id))}
+          activeRowKey={selectedId ?? undefined}
+        />
+      </PanelTable>
+
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => {
+          setDialogOpen(false);
+          setEditingRow(null);
+        }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<CalendarMonthIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent={ACCENT_HC}
+        title='Holiday Calendar'
+        submitDisabled={!hcForm.name.trim()}
+      >
+        <TextField
+          label='Calendar Name'
+          size='small'
+          fullWidth
+          required
+          value={hcForm.name}
+          onChange={(e) => setHcForm((f) => ({ ...f, name: e.target.value }))}
+          placeholder='e.g. UK Public Holidays 2025'
+        />
+        <TextField
+          label='Description'
+          size='small'
+          fullWidth
+          value={hcForm.description}
+          onChange={(e) => setHcForm((f) => ({ ...f, description: e.target.value }))}
+          placeholder='Optional — brief note about this calendar'
+        />
+      </ConfigFormDialog>
+
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Holiday Calendar'
+        itemName={selectedRow?.name}
+      />
+    </Box>
+  );
+};
+
+// ── Holiday Calendar Section ───────────────────────────────────────────────────
+
+type HCActiveView = 'holiday' | 'bankHolidays';
+
+const HolidayCalendarSection = () => {
+  const { classes } = useStyles();
+  const { calendars: apiCAL } = useConfiguration();
+  const [activeView, setActiveView] = useState<HCActiveView>('holiday');
+  const [bankHolidays] = useState<IConfigBankHoliday[]>(apiCAL?.bankHolidays ?? []);
+
+  return (
+    <Accordion className={classes.sectionAccordion} elevation={0}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: 1.5,
+              bgcolor: ACCENT_HC,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <CalendarMonthIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+          </Box>
+          <Box>
+            <Typography className={classes.sectionTitle}>Holiday Calendar</Typography>
+            <Typography className={classes.sectionSubtitle}>
+              Manage holiday calendars and their public bank holidays
+            </Typography>
+          </Box>
+        </Box>
+      </AccordionSummary>
+
+      <AccordionDetails sx={{ p: 2 }}>
+        <Paper variant='outlined' sx={{ p: 1.5, mb: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              flexWrap: 'wrap',
+              gap: 1,
+            }}
+          >
+            <Button
+              size='small'
+              variant={activeView === 'holiday' ? 'contained' : 'outlined'}
+              onClick={() => setActiveView('holiday')}
+              startIcon={<CalendarMonthIcon />}
+              sx={{
+                textTransform: 'none',
+                border: '1px solid',
+                borderColor: ACCENT_HC,
+                color: activeView === 'holiday' ? '#fff' : ACCENT_HC,
+                bgcolor: activeView === 'holiday' ? ACCENT_HC : undefined,
+                '&:hover': {
+                  bgcolor:
+                    activeView === 'holiday' ? alpha(ACCENT_HC, 0.85) : alpha(ACCENT_HC, 0.08),
+                  borderColor: ACCENT_HC,
+                },
+              }}
+            >
+              Holiday Calendar
+            </Button>
+            <Button
+              size='small'
+              variant={activeView === 'bankHolidays' ? 'contained' : 'outlined'}
+              onClick={() => setActiveView('bankHolidays')}
+              startIcon={<BeachAccessIcon />}
+              sx={{
+                textTransform: 'none',
+                border: '1px solid',
+                borderColor: ACCENT_BH,
+                color: activeView === 'bankHolidays' ? '#fff' : ACCENT_BH,
+                bgcolor: activeView === 'bankHolidays' ? ACCENT_BH : undefined,
+                '&:hover': {
+                  bgcolor:
+                    activeView === 'bankHolidays' ? alpha(ACCENT_BH, 0.85) : alpha(ACCENT_BH, 0.08),
+                  borderColor: ACCENT_BH,
+                },
+              }}
+            >
+              Bank Holidays
+            </Button>
+          </Box>
+        </Paper>
+
+        {activeView === 'holiday' && <HolidayCalendarPanel />}
+        {activeView === 'bankHolidays' && (
+          <BankHolidaysPanel
+            calendarRow={null}
+            allBankHolidays={bankHolidays}
+            onSave={() => {
+              /* unused — bank holidays are managed via WorkingCalendarsPanel */
+            }}
+          />
+        )}
+      </AccordionDetails>
+    </Accordion>
+  );
+};
+
+// ── Working Calendars section ─────────────────────────────────────────────────
 
 const EMPTY_HC_FORM = { name: '', description: '' };
 const EMPTY_BH_FORM = {
@@ -914,12 +1230,10 @@ const BankHolidaysPanel = ({
   calendarRow,
   allBankHolidays,
   onSave,
-  onBack,
 }: {
   calendarRow: IConfigHolidayCalendar | null;
   allBankHolidays: IConfigBankHoliday[];
   onSave: (next: IConfigBankHoliday[]) => void;
-  onBack: () => void;
 }) => {
   const rows = calendarRow
     ? allBankHolidays.filter((b) => b.calendarName === calendarRow.name)
@@ -930,26 +1244,19 @@ const BankHolidaysPanel = ({
   const [editingRow, setEditingRow] = useState<IConfigBankHoliday | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [filterCalendar, setFilterCalendar] = useState<string>('');
   const [bhForm, setBhForm] = useState({ ...EMPTY_BH_FORM });
 
   const selectedRow = rows.find((r) => r.id === selectedId) ?? null;
 
-  // Get unique calendar names for filter dropdown
-  const calendarNames = [...new Set(allBankHolidays.map((b) => b.calendarName).filter(Boolean))];
-
   const filtered = search
     ? rows.filter(
         (r) =>
-          (r.holidayDescription.toLowerCase().includes(search.toLowerCase()) ||
-            r.date.toLowerCase().includes(search.toLowerCase()) ||
-            r.day.toLowerCase().includes(search.toLowerCase()) ||
-            String(r.calendarYear).includes(search)) &&
-          (!filterCalendar || r.calendarName === filterCalendar),
+          r.holidayDescription.toLowerCase().includes(search.toLowerCase()) ||
+          r.date.toLowerCase().includes(search.toLowerCase()) ||
+          r.day.toLowerCase().includes(search.toLowerCase()) ||
+          String(r.calendarYear).includes(search),
       )
-    : filterCalendar
-      ? rows.filter((r) => r.calendarName === filterCalendar)
-      : rows;
+    : rows;
 
   useEffect(() => {
     if (!dialogOpen) return;
@@ -1063,56 +1370,7 @@ const BankHolidaysPanel = ({
         accent={ACCENT_BH}
         icon={<BeachAccessIcon fontSize='small' />}
         title={panelTitle}
-        onBack={onBack}
       />
-      {/* Calendar Filter */}
-      <Paper
-        variant='outlined'
-        sx={{
-          borderRadius: 0,
-          borderTop: 'none',
-          borderBottom: 'none',
-          px: 1.5,
-          py: 0.75,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1.5,
-          bgcolor: alpha(ACCENT_BH, 0.02),
-        }}
-      >
-        <Typography variant='caption' fontWeight={600} color='text.secondary'>
-          Filter by Holiday Calendar:
-        </Typography>
-        <FormControl size='small' sx={{ minWidth: 160 }}>
-          <Select
-            displayEmpty
-            value={filterCalendar}
-            onChange={(e) => setFilterCalendar(e.target.value)}
-            sx={{ fontSize: '0.82rem' }}
-            renderValue={(v) => {
-              if (!v)
-                return (
-                  <Typography sx={{ fontSize: '0.82rem', color: 'text.disabled' }}>
-                    All Calendars
-                  </Typography>
-                );
-              return <Typography sx={{ fontSize: '0.82rem' }}>{v}</Typography>;
-            }}
-          >
-            <MenuItem value=''>
-              <em>All Calendars</em>
-            </MenuItem>
-            {calendarNames.map((name) => (
-              <MenuItem key={name} value={name} sx={{ fontSize: '0.82rem' }}>
-                {name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <Typography variant='caption' color='text.secondary'>
-          {filtered.length} holiday{filtered.length !== 1 ? 's' : ''}
-        </Typography>
-      </Paper>
       <PanelToolbar
         accent={ACCENT_BH}
         selectedLabel={
@@ -1215,369 +1473,6 @@ const BankHolidaysPanel = ({
   );
 };
 
-// ── Holiday Calendar accordion ────────────────────────────────────────────────
-
-const HolidayCalendar = () => {
-  const { classes } = useStyles();
-  const { calendars: apiCAL, saveSection } = useConfiguration();
-
-  const [rows, setRows] = useState<IConfigHolidayCalendar[]>([]);
-  const [bankHolidays, setBankHolidays] = useState<IConfigBankHoliday[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingRow, setEditingRow] = useState<IConfigHolidayCalendar | null>(null);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const [hcForm, setHcForm] = useState({ ...EMPTY_HC_FORM });
-  const [activePanel, setActivePanel] = useState<HCActivePanel>('none');
-
-  const panelActive = activePanel !== 'none';
-
-  useEffect(() => {
-    if (apiCAL?.holidayCalendars) setRows(apiCAL.holidayCalendars);
-    if (apiCAL?.bankHolidays) setBankHolidays(apiCAL.bankHolidays);
-  }, [apiCAL]);
-
-  useEffect(() => {
-    if (!dialogOpen) return;
-    setHcForm(
-      editingRow
-        ? { name: editingRow.name, description: editingRow.description }
-        : { ...EMPTY_HC_FORM },
-    );
-  }, [dialogOpen, editingRow]);
-
-  const selectedRow = rows.find((r) => r.id === selectedId) ?? null;
-
-  const filtered = search
-    ? rows.filter(
-        (r) =>
-          r.name.toLowerCase().includes(search.toLowerCase()) ||
-          r.description.toLowerCase().includes(search.toLowerCase()),
-      )
-    : rows;
-
-  const calBase = () => ({
-    workingDayTemplates: apiCAL?.workingDayTemplates ?? [],
-    holidayCalendars: rows,
-    bankHolidays,
-  });
-
-  const save = (nextRows: IConfigHolidayCalendar[], nextBH?: IConfigBankHoliday[]) => {
-    const bh = nextBH ?? bankHolidays;
-    setRows(nextRows);
-    if (nextBH) setBankHolidays(nextBH);
-    saveSection('calendars', {
-      workingDayTemplates: apiCAL?.workingDayTemplates ?? [],
-      holidayCalendars: nextRows,
-      bankHolidays: bh,
-      workingCalendars: apiCAL?.workingCalendars ?? [],
-      workingCalendarTimes: apiCAL?.workingCalendarTimes ?? [],
-      composedWorkingTimes: apiCAL?.composedWorkingTimes ?? [],
-      calendarWorkLocations: apiCAL?.calendarWorkLocations ?? [],
-      calendarConsultants: apiCAL?.calendarConsultants ?? [],
-    });
-  };
-
-  const handleSubmit = () => {
-    if (!hcForm.name.trim()) return;
-    if (editingRow) {
-      save(rows.map((r) => (r.id === editingRow.id ? { ...editingRow, ...hcForm } : r)));
-      setSelectedId(editingRow.id);
-    } else {
-      const n: IConfigHolidayCalendar = { id: `hc_${Date.now()}`, ...hcForm };
-      save([...rows, n]);
-      setSelectedId(n.id);
-    }
-    setDialogOpen(false);
-    setEditingRow(null);
-  };
-
-  const handleDelete = () => {
-    if (!selectedRow) return;
-    // Also remove associated bank holidays
-    const nextBH = bankHolidays.filter((b) => b.calendarName !== selectedRow.name);
-    save(
-      rows.filter((r) => r.id !== selectedRow.id),
-      nextBH,
-    );
-    setSelectedId(null);
-    setDeleteOpen(false);
-  };
-
-  const hcColumns: Column<IConfigHolidayCalendar>[] = [
-    {
-      id: 'name',
-      label: 'Name',
-      minWidth: 200,
-      format: (v): React.ReactNode => (
-        <Typography variant='body2' fontWeight={700} fontSize='0.82rem'>
-          {String(v || '—')}
-        </Typography>
-      ),
-    },
-    {
-      id: 'description',
-      label: 'Description',
-      minWidth: 260,
-      format: (v): React.ReactNode => (
-        <Typography
-          variant='body2'
-          color='text.secondary'
-          fontSize='0.8rem'
-          noWrap
-          sx={{ maxWidth: 300 }}
-        >
-          {String(v || '—')}
-        </Typography>
-      ),
-    },
-    {
-      id: 'id',
-      label: 'Holidays',
-      minWidth: 90,
-      format: (_v, row): React.ReactNode => {
-        const count = bankHolidays.filter(
-          (b) => b.calendarName === (row as IConfigHolidayCalendar).name,
-        ).length;
-        return (
-          <Chip
-            label={count}
-            size='small'
-            sx={{
-              fontWeight: 700,
-              fontSize: '0.72rem',
-              height: 22,
-              borderRadius: '6px',
-              bgcolor: count > 0 ? alpha(ACCENT_BH, 0.1) : 'grey.100',
-              color: count > 0 ? ACCENT_BH : 'text.disabled',
-            }}
-          />
-        );
-      },
-    },
-  ];
-
-  return (
-    <>
-      <Accordion className={classes.sectionAccordion} elevation={0}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: 1.5,
-                bgcolor: ACCENT_HC,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <CalendarMonthIcon sx={{ color: '#fff', fontSize: '1rem' }} />
-            </Box>
-            <Box>
-              <Typography className={classes.sectionTitle}>Holiday Calendar</Typography>
-              <Typography className={classes.sectionSubtitle}>
-                Manage holiday calendars and their public bank holidays
-              </Typography>
-            </Box>
-          </Box>
-        </AccordionSummary>
-
-        <AccordionDetails sx={{ p: 2 }}>
-          {/* Toolbar */}
-          <Paper variant='outlined' className={classes.actionToolbar}>
-            <Box className={classes.toolbarButtons}>
-              {!panelActive &&
-                (!selectedRow ? (
-                  <Tooltip title='Add new holiday calendar'>
-                    <Button
-                      size='small'
-                      variant='contained'
-                      startIcon={<AddIcon />}
-                      onClick={() => {
-                        setEditingRow(null);
-                        setDialogOpen(true);
-                      }}
-                      sx={{
-                        textTransform: 'none',
-                        bgcolor: ACCENT_HC,
-                        '&:hover': { bgcolor: alpha(ACCENT_HC, 0.85) },
-                      }}
-                    >
-                      New
-                    </Button>
-                  </Tooltip>
-                ) : (
-                  <>
-                    <Button
-                      size='small'
-                      variant='contained'
-                      startIcon={<EditIcon />}
-                      onClick={() => {
-                        setEditingRow(selectedRow);
-                        setDialogOpen(true);
-                      }}
-                      sx={{
-                        textTransform: 'none',
-                        bgcolor: ACCENT_HC,
-                        '&:hover': { bgcolor: alpha(ACCENT_HC, 0.85) },
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      size='small'
-                      variant='outlined'
-                      color='error'
-                      startIcon={<DeleteIcon />}
-                      onClick={() => setDeleteOpen(true)}
-                      sx={{ textTransform: 'none' }}
-                    >
-                      Delete
-                    </Button>
-                  </>
-                ))}
-
-              <Divider
-                orientation='vertical'
-                flexItem
-                className={classes.toolbarDivider}
-                sx={{ mx: 0.5 }}
-              />
-
-              <Button
-                size='small'
-                startIcon={<BeachAccessIcon />}
-                variant={activePanel === 'bankHolidays' ? 'contained' : 'outlined'}
-                disabled={false}
-                onClick={() =>
-                  setActivePanel((p) => (p === 'bankHolidays' ? 'none' : 'bankHolidays'))
-                }
-                sx={{
-                  textTransform: 'none',
-                  borderColor: ACCENT_BH,
-                  color: activePanel === 'bankHolidays' ? '#fff' : ACCENT_BH,
-                  bgcolor: activePanel === 'bankHolidays' ? ACCENT_BH : undefined,
-                  '&:hover': {
-                    bgcolor:
-                      activePanel === 'bankHolidays'
-                        ? alpha(ACCENT_BH, 0.85)
-                        : alpha(ACCENT_BH, 0.07),
-                    borderColor: ACCENT_BH,
-                  },
-                }}
-              >
-                View Bank Holidays
-              </Button>
-
-              {!panelActive && (
-                <TextField
-                  size='small'
-                  placeholder='Search…'
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className={classes.tableSearchField}
-                  sx={{ ml: { xs: 0, sm: 'auto' } }}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position='end'>
-                          <SearchIcon fontSize='small' />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
-              )}
-            </Box>
-
-            {!panelActive && selectedRow && (
-              <Typography
-                variant='caption'
-                color='text.secondary'
-                className={classes.selectionInfo}
-              >
-                Selected: <strong>{selectedRow.name}</strong>&nbsp;·&nbsp;
-                <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-                  Clear
-                </Link>
-              </Typography>
-            )}
-          </Paper>
-
-          {!panelActive && (
-            <Paper elevation={1} className={classes.tablePaper}>
-              <DataTable
-                columns={hcColumns}
-                data={filtered}
-                rowKey='id'
-                searchable={false}
-                initialRowsPerPage={10}
-                onRowClick={(row) => setSelectedId((prev) => (prev === row.id ? null : row.id))}
-                activeRowKey={selectedId ?? undefined}
-              />
-            </Paper>
-          )}
-
-          {activePanel === 'bankHolidays' && (
-            <BankHolidaysPanel
-              calendarRow={selectedRow}
-              allBankHolidays={bankHolidays}
-              onSave={(nextBH) => save(rows, nextBH)}
-              onBack={() => setActivePanel('none')}
-            />
-          )}
-        </AccordionDetails>
-      </Accordion>
-
-      {/* Add/Edit dialog */}
-      <ConfigFormDialog
-        open={dialogOpen}
-        onClose={() => {
-          setDialogOpen(false);
-          setEditingRow(null);
-        }}
-        onSubmit={handleSubmit}
-        isEdit={!!editingRow}
-        icon={<CalendarMonthIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_HC}
-        title='Holiday Calendar'
-        submitDisabled={!hcForm.name.trim()}
-      >
-        <TextField
-          label='Calendar Name'
-          size='small'
-          fullWidth
-          required
-          value={hcForm.name}
-          onChange={(e) => setHcForm((f) => ({ ...f, name: e.target.value }))}
-          placeholder='e.g. UK Public Holidays 2025'
-        />
-        <TextField
-          label='Description'
-          size='small'
-          fullWidth
-          value={hcForm.description}
-          onChange={(e) => setHcForm((f) => ({ ...f, description: e.target.value }))}
-          placeholder='Optional — brief note about this calendar'
-        />
-      </ConfigFormDialog>
-
-      {/* Delete confirmation */}
-      <ConfigDeleteDialog
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        onConfirm={handleDelete}
-        entityName='Holiday Calendar'
-        itemName={selectedRow?.name}
-      />
-    </>
-  );
-};
-
 // ── Working Calendars section ─────────────────────────────────────────────────
 
 const ACCENT_WC = '#0f766e';
@@ -1588,7 +1483,7 @@ const ACCENT_CO = '#be185d';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-type WCActivePanel = 'none' | 'workingTime' | 'composedTimes' | 'workLocations' | 'consultants';
+type WCActiveView = 'calendar' | 'workingTime' | 'composedTimes' | 'workLocations' | 'consultants';
 
 const EMPTY_WC_FORM = { name: '', holidayCalendar: '', workingDayTemplate: '' };
 const EMPTY_WT_FORM = {
@@ -1627,7 +1522,7 @@ const WorkingTimePanel = ({
   calendarRow: IConfigWorkingCalendar | null;
   allTimes: IConfigWorkingCalendarTime[];
   onSave: (next: IConfigWorkingCalendarTime[]) => void;
-  onBack: () => void;
+  onBack?: () => void;
 }) => {
   const rows = calendarRow ? allTimes.filter((t) => t.calendarName === calendarRow.name) : allTimes;
 
@@ -1917,7 +1812,7 @@ const ComposedTimesPanel = ({
   calendarRow: IConfigWorkingCalendar | null;
   allComposed: IConfigComposedWorkingTime[];
   onSave: (next: IConfigComposedWorkingTime[]) => void;
-  onBack: () => void;
+  onBack?: () => void;
 }) => {
   const rows = calendarRow
     ? allComposed.filter((c) => c.calendarName === calendarRow.name)
@@ -2201,7 +2096,7 @@ const WorkLocationsPanel = ({
   calendarRow: IConfigWorkingCalendar | null;
   allLocations: IConfigCalendarWorkLocation[];
   onSave: (next: IConfigCalendarWorkLocation[]) => void;
-  onBack: () => void;
+  onBack?: () => void;
 }) => {
   const rows = calendarRow
     ? allLocations.filter((l) => l.calendarName === calendarRow.name)
@@ -2409,7 +2304,7 @@ const ConsultantsPanel = ({
   calendarRow: IConfigWorkingCalendar | null;
   allConsultants: IConfigCalendarConsultant[];
   onSave: (next: IConfigCalendarConsultant[]) => void;
-  onBack: () => void;
+  onBack?: () => void;
 }) => {
   const rows = calendarRow
     ? allConsultants.filter((c) => c.calendarName === calendarRow.name)
@@ -2653,10 +2548,9 @@ const ConsultantsPanel = ({
   );
 };
 
-// ── Working Calendars accordion ───────────────────────────────────────────────
+// ── Working Calendar Panel ─────────────────────────────────────────────────────
 
-const WorkingCalendars = () => {
-  const { classes } = useStyles();
+const WorkingCalendarPanel = () => {
   const { calendars: apiCAL, saveSection } = useConfiguration();
 
   const [rows, setRows] = useState<IConfigWorkingCalendar[]>([]);
@@ -2671,11 +2565,8 @@ const WorkingCalendars = () => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [wcForm, setWcForm] = useState({ ...EMPTY_WC_FORM });
-  const [activePanel, setActivePanel] = useState<WCActivePanel>('none');
   const [copyDialogOpen, setCopyDialogOpen] = useState(false);
   const [copyName, setCopyName] = useState('');
-
-  const panelActive = activePanel !== 'none';
 
   useEffect(() => {
     if (apiCAL?.workingCalendars) setRows(apiCAL.workingCalendars);
@@ -2849,244 +2740,49 @@ const WorkingCalendars = () => {
             fontSize: '0.72rem',
             height: 22,
             borderRadius: '6px',
-            bgcolor: v ? alpha(ACCENT, 0.1) : 'grey.100',
-            color: v ? ACCENT : 'text.disabled',
+            bgcolor: v ? alpha(ACCENT_WC, 0.1) : 'grey.100',
+            color: v ? ACCENT_WC : 'text.disabled',
           }}
         />
       ),
     },
   ];
 
-  const togglePanel = (panel: Exclude<WCActivePanel, 'none'>) =>
-    setActivePanel((p) => (p === panel ? 'none' : panel));
-
-  const panelBtn = (
-    panel: Exclude<WCActivePanel, 'none'>,
-    label: string,
-    accent: string,
-    Icon: React.ElementType,
-  ) => (
-    <Button
-      size='small'
-      startIcon={<Icon />}
-      variant={activePanel === panel ? 'contained' : 'outlined'}
-      onClick={() => togglePanel(panel)}
-      sx={{
-        textTransform: 'none',
-        borderColor: accent,
-        color: activePanel === panel ? '#fff' : accent,
-        bgcolor: activePanel === panel ? accent : undefined,
-        '&:hover': {
-          bgcolor: activePanel === panel ? alpha(accent, 0.85) : alpha(accent, 0.07),
-          borderColor: accent,
-        },
-      }}
-    >
-      {label}
-    </Button>
-  );
-
   return (
-    <>
-      <Accordion className={classes.sectionAccordion} elevation={0}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: 1.5,
-                bgcolor: ACCENT_WC,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <CalendarTodayIcon sx={{ color: '#fff', fontSize: '1rem' }} />
-            </Box>
-            <Box>
-              <Typography className={classes.sectionTitle}>Working Calendars</Typography>
-              <Typography className={classes.sectionSubtitle}>
-                Define working calendars with schedules, exceptions, and resource associations
-              </Typography>
-            </Box>
-          </Box>
-        </AccordionSummary>
+    <Box sx={{ mt: 1.5 }}>
+      <PanelHeader
+        accent={ACCENT_WC}
+        icon={<CalendarTodayIcon fontSize='small' />}
+        title='Working Calendars'
+      />
+      <PanelToolbar
+        accent={ACCENT_WC}
+        selectedLabel={selectedRow?.name ?? null}
+        onNew={() => {
+          setEditingRow(null);
+          setDialogOpen(true);
+        }}
+        onEdit={() => {
+          setEditingRow(selectedRow);
+          setDialogOpen(true);
+        }}
+        onDelete={() => setDeleteOpen(true)}
+        search={search}
+        onSearch={setSearch}
+        onClear={() => setSelectedId(null)}
+      />
+      <PanelTable accent={ACCENT_WC}>
+        <DataTable
+          columns={wcCols}
+          data={filtered}
+          rowKey='id'
+          searchable={false}
+          initialRowsPerPage={10}
+          onRowClick={(row) => setSelectedId((p) => (p === row.id ? null : row.id))}
+          activeRowKey={selectedId ?? undefined}
+        />
+      </PanelTable>
 
-        <AccordionDetails sx={{ p: 2 }}>
-          <Paper variant='outlined' className={classes.actionToolbar}>
-            <Box className={classes.toolbarButtons}>
-              {!panelActive &&
-                (!selectedRow ? (
-                  <Tooltip title='Add new working calendar'>
-                    <Button
-                      size='small'
-                      variant='contained'
-                      startIcon={<AddIcon />}
-                      onClick={() => {
-                        setEditingRow(null);
-                        setDialogOpen(true);
-                      }}
-                      sx={{
-                        textTransform: 'none',
-                        bgcolor: ACCENT_WC,
-                        '&:hover': { bgcolor: alpha(ACCENT_WC, 0.85) },
-                      }}
-                    >
-                      New
-                    </Button>
-                  </Tooltip>
-                ) : (
-                  <>
-                    <Button
-                      size='small'
-                      variant='contained'
-                      startIcon={<EditIcon />}
-                      onClick={() => {
-                        setEditingRow(selectedRow);
-                        setDialogOpen(true);
-                      }}
-                      sx={{
-                        textTransform: 'none',
-                        bgcolor: ACCENT_WC,
-                        '&:hover': { bgcolor: alpha(ACCENT_WC, 0.85) },
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      size='small'
-                      variant='outlined'
-                      color='error'
-                      startIcon={<DeleteIcon />}
-                      onClick={() => setDeleteOpen(true)}
-                      sx={{ textTransform: 'none' }}
-                    >
-                      Delete
-                    </Button>
-                  </>
-                ))}
-
-              <Divider
-                orientation='vertical'
-                flexItem
-                className={classes.toolbarDivider}
-                sx={{ mx: 0.5 }}
-              />
-
-              {panelBtn('workingTime', 'View Working Time', ACCENT_WT, AccessTimeIcon)}
-              <Tooltip title={!selectedRow ? 'Select a calendar to copy' : ''}>
-                <span>
-                  <Button
-                    size='small'
-                    startIcon={<ContentCopyIcon />}
-                    variant='outlined'
-                    disabled={!selectedRow}
-                    onClick={() => {
-                      setCopyName(`${selectedRow!.name} (Copy)`);
-                      setCopyDialogOpen(true);
-                    }}
-                    sx={{
-                      textTransform: 'none',
-                      borderColor: ACCENT_WC,
-                      color: ACCENT_WC,
-                      '&:hover': { bgcolor: alpha(ACCENT_WC, 0.07), borderColor: ACCENT_WC },
-                    }}
-                  >
-                    Copy Calendar
-                  </Button>
-                </span>
-              </Tooltip>
-              {panelBtn('composedTimes', 'Compose Working Times', ACCENT_CT, EventNoteIcon)}
-              {panelBtn('workLocations', 'Associated Work Locations', ACCENT_WL, BusinessIcon)}
-              {panelBtn('consultants', 'Associated Consultants', ACCENT_CO, GroupIcon)}
-
-              {!panelActive && (
-                <TextField
-                  size='small'
-                  placeholder='Search…'
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className={classes.tableSearchField}
-                  sx={{ ml: { xs: 0, sm: 'auto' } }}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position='end'>
-                          <SearchIcon fontSize='small' />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
-              )}
-            </Box>
-
-            {!panelActive && selectedRow && (
-              <Typography
-                variant='caption'
-                color='text.secondary'
-                className={classes.selectionInfo}
-              >
-                Selected: <strong>{selectedRow.name}</strong>&nbsp;·&nbsp;
-                <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-                  Clear
-                </Link>
-              </Typography>
-            )}
-          </Paper>
-
-          {!panelActive && (
-            <Paper elevation={1} className={classes.tablePaper}>
-              <DataTable
-                columns={wcCols}
-                data={filtered}
-                rowKey='id'
-                searchable={false}
-                initialRowsPerPage={10}
-                onRowClick={(row) => setSelectedId((p) => (p === row.id ? null : row.id))}
-                activeRowKey={selectedId ?? undefined}
-              />
-            </Paper>
-          )}
-
-          {activePanel === 'workingTime' && (
-            <WorkingTimePanel
-              calendarRow={selectedRow}
-              allTimes={wcTimes}
-              onSave={(next) => save({ workingCalendarTimes: next })}
-              onBack={() => setActivePanel('none')}
-            />
-          )}
-          {activePanel === 'composedTimes' && (
-            <ComposedTimesPanel
-              calendarRow={selectedRow}
-              allComposed={composedTimes}
-              onSave={(next) => save({ composedWorkingTimes: next })}
-              onBack={() => setActivePanel('none')}
-            />
-          )}
-          {activePanel === 'workLocations' && (
-            <WorkLocationsPanel
-              calendarRow={selectedRow}
-              allLocations={workLocations}
-              onSave={(next) => save({ calendarWorkLocations: next })}
-              onBack={() => setActivePanel('none')}
-            />
-          )}
-          {activePanel === 'consultants' && (
-            <ConsultantsPanel
-              calendarRow={selectedRow}
-              allConsultants={consultants}
-              onSave={(next) => save({ calendarConsultants: next })}
-              onBack={() => setActivePanel('none')}
-            />
-          )}
-        </AccordionDetails>
-      </Accordion>
-
-      {/* Add / Edit working calendar dialog */}
       <ConfigFormDialog
         open={dialogOpen}
         onClose={() => {
@@ -3098,7 +2794,9 @@ const WorkingCalendars = () => {
         icon={<CalendarTodayIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
         accent={ACCENT_WC}
         title='Working Calendar'
+        subtitle='Define a working calendar with holiday calendar and working day template'
         submitDisabled={!wcForm.name.trim()}
+        maxWidth='sm'
       >
         <TextField
           label='Calendar Name'
@@ -3141,95 +2839,6 @@ const WorkingCalendars = () => {
         </FormControl>
       </ConfigFormDialog>
 
-      {/* Copy calendar dialog */}
-      <Dialog
-        open={copyDialogOpen}
-        onClose={() => setCopyDialogOpen(false)}
-        maxWidth='xs'
-        fullWidth
-        PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}
-      >
-        <Box
-          sx={{
-            px: 3,
-            py: 2.5,
-            background: `linear-gradient(135deg, ${alpha(ACCENT_WC, 0.85)}, ${ACCENT_WC})`,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1.5,
-          }}
-        >
-          <Box
-            sx={{
-              width: 38,
-              height: 38,
-              borderRadius: 1.5,
-              bgcolor: 'rgba(255,255,255,0.18)',
-              border: '1.5px solid rgba(255,255,255,0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <ContentCopyIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />
-          </Box>
-          <Box>
-            <Typography
-              sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff', lineHeight: 1.2 }}
-            >
-              Copy Calendar
-            </Typography>
-            <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}>
-              Duplicates all working times, exceptions, and associations
-            </Typography>
-          </Box>
-        </Box>
-        <DialogContent dividers sx={{ p: 0 }}>
-          <Box sx={{ px: 3, py: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              label='Source Calendar'
-              size='small'
-              fullWidth
-              value={selectedRow?.name ?? ''}
-              disabled
-            />
-            <TextField
-              label='New Calendar Name'
-              size='small'
-              fullWidth
-              required
-              autoFocus
-              value={copyName}
-              onChange={(e) => setCopyName(e.target.value)}
-              placeholder='e.g. UK Standard 2026'
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-          <Button
-            onClick={() => setCopyDialogOpen(false)}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            disabled={!copyName.trim()}
-            onClick={handleCopy}
-            sx={{
-              textTransform: 'none',
-              borderRadius: 2,
-              bgcolor: ACCENT_WC,
-              '&:hover': { bgcolor: alpha(ACCENT_WC, 0.85) },
-              minWidth: 120,
-            }}
-          >
-            Copy Calendar
-          </Button>
-        </DialogActions>
-      </Dialog>
-
       <ConfigDeleteDialog
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
@@ -3237,6 +2846,190 @@ const WorkingCalendars = () => {
         entityName='Working Calendar'
         itemName={selectedRow?.name}
       />
+
+      <Dialog open={copyDialogOpen} onClose={() => setCopyDialogOpen(false)} maxWidth='xs'>
+        <DialogContent>
+          <Typography variant='body2' sx={{ mb: 1.5 }}>
+            Copy calendar as:
+          </Typography>
+          <TextField
+            size='small'
+            fullWidth
+            value={copyName}
+            onChange={(e) => setCopyName(e.target.value)}
+            placeholder='New calendar name'
+            autoFocus
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button size='small' onClick={() => setCopyDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button size='small' variant='contained' onClick={handleCopy} disabled={!copyName.trim()}>
+            Copy
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
+
+// ── Working Calendars section ─────────────────────────────────────────────────
+
+const WorkingCalendarsSection = () => {
+  const { classes } = useStyles();
+  const { calendars: apiCAL, saveSection } = useConfiguration();
+
+  const [rows, setRows] = useState<IConfigWorkingCalendar[]>([]);
+  const [wcTimes, setWcTimes] = useState<IConfigWorkingCalendarTime[]>([]);
+  const [composedTimes, setComposedTimes] = useState<IConfigComposedWorkingTime[]>([]);
+  const [workLocations, setWorkLocations] = useState<IConfigCalendarWorkLocation[]>([]);
+  const [consultants, setConsultants] = useState<IConfigCalendarConsultant[]>([]);
+
+  const [activeView, setActiveView] = useState<WCActiveView>('calendar');
+
+  useEffect(() => {
+    if (apiCAL?.workingCalendars) setRows(apiCAL.workingCalendars);
+    if (apiCAL?.workingCalendarTimes) setWcTimes(apiCAL.workingCalendarTimes);
+    if (apiCAL?.composedWorkingTimes) setComposedTimes(apiCAL.composedWorkingTimes);
+    if (apiCAL?.calendarWorkLocations) setWorkLocations(apiCAL.calendarWorkLocations);
+    if (apiCAL?.calendarConsultants) setConsultants(apiCAL.calendarConsultants);
+  }, [apiCAL]);
+
+  const save = (
+    updates: Partial<{
+      workingCalendars: IConfigWorkingCalendar[];
+      workingCalendarTimes: IConfigWorkingCalendarTime[];
+      composedWorkingTimes: IConfigComposedWorkingTime[];
+      calendarWorkLocations: IConfigCalendarWorkLocation[];
+      calendarConsultants: IConfigCalendarConsultant[];
+    }>,
+  ) => {
+    if (updates.workingCalendars) setRows(updates.workingCalendars);
+    if (updates.workingCalendarTimes) setWcTimes(updates.workingCalendarTimes);
+    if (updates.composedWorkingTimes) setComposedTimes(updates.composedWorkingTimes);
+    if (updates.calendarWorkLocations) setWorkLocations(updates.calendarWorkLocations);
+    if (updates.calendarConsultants) setConsultants(updates.calendarConsultants);
+    saveSection('calendars', {
+      workingDayTemplates: apiCAL?.workingDayTemplates ?? [],
+      holidayCalendars: apiCAL?.holidayCalendars ?? [],
+      bankHolidays: apiCAL?.bankHolidays ?? [],
+      workingCalendars: rows,
+      workingCalendarTimes: wcTimes,
+      composedWorkingTimes: composedTimes,
+      calendarWorkLocations: workLocations,
+      calendarConsultants: consultants,
+      ...updates,
+    });
+  };
+
+  const togglePanel = (panel: Exclude<WCActiveView, 'calendar'>) =>
+    setActiveView((p) => (p === panel ? 'calendar' : panel));
+
+  const panelBtn = (
+    panel: WCActiveView,
+    label: string,
+    accent: string,
+    Icon: React.ElementType,
+  ) => (
+    <Button
+      size='small'
+      startIcon={<Icon />}
+      variant={activeView === panel ? 'contained' : 'outlined'}
+      onClick={() => (panel === 'calendar' ? setActiveView('calendar') : togglePanel(panel))}
+      sx={{
+        textTransform: 'none',
+        border: '1px solid',
+        borderColor: accent,
+        color: activeView === panel ? '#fff' : accent,
+        bgcolor: activeView === panel ? accent : undefined,
+        '&:hover': {
+          bgcolor: activeView === panel ? alpha(accent, 0.85) : alpha(accent, 0.08),
+          borderColor: accent,
+        },
+      }}
+    >
+      {label}
+    </Button>
+  );
+
+  return (
+    <>
+      <Accordion className={classes.sectionAccordion} elevation={0}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: 1.5,
+                bgcolor: ACCENT_WC,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <CalendarTodayIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+            </Box>
+            <Box>
+              <Typography className={classes.sectionTitle}>Working Calendars</Typography>
+              <Typography className={classes.sectionSubtitle}>
+                Define working calendars with schedules, exceptions, and resource associations
+              </Typography>
+            </Box>
+          </Box>
+        </AccordionSummary>
+
+        <AccordionDetails sx={{ p: 2 }}>
+          <Paper variant='outlined' sx={{ p: 1.5, mb: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                flexWrap: 'wrap',
+                gap: 1,
+              }}
+            >
+              {panelBtn('calendar', 'Working Calendar', ACCENT_WC, CalendarTodayIcon)}
+              {panelBtn('workingTime', 'View Working Time', ACCENT_WT, AccessTimeIcon)}
+              {panelBtn('composedTimes', 'Compose Working Times', ACCENT_CT, EventNoteIcon)}
+              {panelBtn('workLocations', 'Associated Work Locations', ACCENT_WL, BusinessIcon)}
+              {panelBtn('consultants', 'Associated Consultants', ACCENT_CO, GroupIcon)}
+            </Box>
+          </Paper>
+
+          {activeView === 'calendar' && <WorkingCalendarPanel />}
+          {activeView === 'workingTime' && (
+            <WorkingTimePanel
+              calendarRow={null}
+              allTimes={wcTimes}
+              onSave={(next) => save({ workingCalendarTimes: next })}
+            />
+          )}
+          {activeView === 'composedTimes' && (
+            <ComposedTimesPanel
+              calendarRow={null}
+              allComposed={composedTimes}
+              onSave={(next) => save({ composedWorkingTimes: next })}
+            />
+          )}
+          {activeView === 'workLocations' && (
+            <WorkLocationsPanel
+              calendarRow={null}
+              allLocations={workLocations}
+              onSave={(next) => save({ calendarWorkLocations: next })}
+            />
+          )}
+          {activeView === 'consultants' && (
+            <ConsultantsPanel
+              calendarRow={null}
+              allConsultants={consultants}
+              onSave={(next) => save({ calendarConsultants: next })}
+            />
+          )}
+        </AccordionDetails>
+      </Accordion>
     </>
   );
 };
@@ -3246,8 +3039,8 @@ const WorkingCalendars = () => {
 const Calendars = () => (
   <Box sx={{ p: 3, width: '100%' }}>
     <WorkingDayTemplates />
-    <HolidayCalendar />
-    <WorkingCalendars />
+    <HolidayCalendarSection />
+    <WorkingCalendarsSection />
   </Box>
 );
 

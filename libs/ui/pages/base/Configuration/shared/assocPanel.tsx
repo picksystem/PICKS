@@ -5,7 +5,6 @@ import {
   Paper,
   Button,
   Tooltip,
-  Link,
   TextField,
   Divider,
   Chip,
@@ -19,6 +18,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 import { useStyles } from '../styles';
 import { ConfigFormDialog, ConfigDeleteDialog } from '../dialogs/ConfigDialogs/ConfigDialogs';
@@ -169,7 +169,7 @@ export const PanelHeader = ({
   accent: string;
   icon: React.ReactNode;
   title: string;
-  onBack: () => void;
+  onBack?: () => void;
 }) => (
   <Box
     sx={{
@@ -185,28 +185,34 @@ export const PanelHeader = ({
       borderBottom: 'none',
     }}
   >
-    <Button
-      size='small'
-      variant='text'
-      startIcon={<ArrowBackIcon />}
-      onClick={onBack}
-      sx={{
-        textTransform: 'none',
-        color: accent,
-        fontWeight: 600,
-        minWidth: 0,
-        px: 1,
-        py: 0.25,
-        '&:hover': { bgcolor: alpha(accent, 0.1) },
-      }}
-    >
-      Back
-    </Button>
-    <Divider orientation='vertical' flexItem sx={{ borderColor: alpha(accent, 0.3) }} />
-    <Box sx={{ color: accent, display: 'flex', alignItems: 'center', fontSize: '1rem' }}>
-      {icon}
-    </Box>
-    <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: accent }}>{title}</Typography>
+    <>
+      {onBack && (
+        <>
+          <Button
+            size='small'
+            variant='text'
+            startIcon={<ArrowBackIcon />}
+            onClick={onBack}
+            sx={{
+              textTransform: 'none',
+              color: accent,
+              fontWeight: 600,
+              minWidth: 0,
+              px: 1,
+              py: 0.25,
+              '&:hover': { bgcolor: alpha(accent, 0.1) },
+            }}
+          >
+            Back
+          </Button>
+          <Divider orientation='vertical' flexItem sx={{ borderColor: alpha(accent, 0.3) }} />
+        </>
+      )}
+      <Box sx={{ color: accent, display: 'flex', alignItems: 'center', fontSize: '1rem' }}>
+        {icon}
+      </Box>
+      <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: accent }}>{title}</Typography>
+    </>
   </Box>
 );
 
@@ -279,23 +285,76 @@ export const PanelToolbar = ({
           </Button>
         )}
         {selectedLabel && (
-          <Button
-            size='small'
-            variant='outlined'
-            color='error'
-            startIcon={<DeleteIcon />}
-            sx={{ textTransform: 'none' }}
-            onClick={onDelete}
-          >
-            Delete
-          </Button>
+          <>
+            <Button
+              size='small'
+              variant='outlined'
+              color='error'
+              startIcon={<DeleteIcon />}
+              sx={{ textTransform: 'none' }}
+              onClick={onDelete}
+            >
+              Delete
+            </Button>
+            <Box
+              component='span'
+              sx={{
+                display: { xs: 'block', sm: 'none' },
+                width: '100%',
+                height: '1px',
+                bgcolor: alpha(accent, 0.3),
+                my: 0.5,
+              }}
+            />
+            <Box
+              component='span'
+              sx={{
+                display: { xs: 'none', sm: 'block' },
+                width: '1px',
+                height: '20px',
+                bgcolor: alpha(accent, 0.3),
+                mx: 0.75,
+                alignSelf: 'center',
+              }}
+            />
+            <Button
+              size='small'
+              variant='outlined'
+              startIcon={<ClearIcon />}
+              sx={{ textTransform: 'none' }}
+              onClick={onClear}
+            >
+              Clear
+            </Button>
+          </>
         )}
         <TextField
           size='small'
           placeholder='Search…'
           value={search}
           onChange={(e) => onSearch(e.target.value)}
-          sx={{ ml: { xs: 0, sm: 'auto' }, width: 200 }}
+          sx={{
+            ml: { xs: 0, sm: 'auto' },
+            flexShrink: 0,
+            width: { xs: '100%', sm: '160px' },
+            '& .MuiOutlinedInput-root': {
+              height: '30px',
+              fontSize: '0.8rem',
+              backgroundColor: '#fff',
+              borderRadius: '6px',
+            },
+            '& .MuiInputBase-input': {
+              padding: '4px 6px',
+              fontSize: '0.8rem',
+            },
+            '& .MuiInputBase-input::placeholder': {
+              opacity: 0.7,
+            },
+            '& .MuiInputAdornment-root .MuiSvgIcon-root': {
+              fontSize: '1.1rem',
+              color: '#7f7f7f',
+            },
+          }}
           slotProps={{
             input: {
               endAdornment: (
@@ -307,14 +366,6 @@ export const PanelToolbar = ({
           }}
         />
       </Box>
-      {selectedLabel && (
-        <Typography variant='caption' color='text.secondary'>
-          Selected: <strong>{selectedLabel}</strong>&nbsp;·&nbsp;
-          <Link component='button' variant='caption' onClick={onClear}>
-            Clear
-          </Link>
-        </Typography>
-      )}
     </Paper>
   );
 };
@@ -435,7 +486,7 @@ export interface AssocPanelProps {
   idPrefix: string;
   rows: AssocRowBase[];
   onSave: (next: AssocRowBase[]) => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export const AssocPanel = ({

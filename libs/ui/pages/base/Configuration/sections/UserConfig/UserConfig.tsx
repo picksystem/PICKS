@@ -20,7 +20,8 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Divider,
+  Autocomplete,
+  CircularProgress,
   alpha,
 } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -29,10 +30,10 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import GroupIcon from '@mui/icons-material/Group';
 import WatchLaterIcon from '@mui/icons-material/WatchLater';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import {
   IConfigWorkLocation,
   IConfigWorkLocationWorkingTime,
@@ -42,9 +43,18 @@ import {
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { ConfigFormDialog, ConfigDeleteDialog } from '../../dialogs/ConfigDialogs/ConfigDialogs';
-import type { WorkingTimesPanelProps, ShiftsPanelProps, AssocProfilesPanelProps } from './util';
+import {
+  type WorkingTimesPanelProps,
+  type ShiftsPanelProps,
+  type AssocProfilesPanelProps,
+  searchLocations,
+  NominatimResult,
+} from './util';
 
-const ACCENT = '#be185d';
+const ACCENT_WL = '#be185d';
+const ACCENT_WT = '#0369a1';
+const ACCENT_AP = '#059669';
+const ACCENT_SM = '#7c3aed';
 
 const DAY_OPTIONS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -55,13 +65,13 @@ const PanelHeader = ({
   title,
   count,
   countLabel,
-  onBack,
+  accent,
 }: {
   icon: React.ReactNode;
   title: string;
   count: number;
   countLabel: string;
-  onBack: () => void;
+  accent: string;
 }) => (
   <Box
     sx={{
@@ -70,102 +80,19 @@ const PanelHeader = ({
       gap: 1.5,
       px: 2,
       py: 1.25,
-      bgcolor: alpha(ACCENT, 0.08),
+      bgcolor: alpha(accent, 0.08),
       border: '1px solid',
-      borderColor: alpha(ACCENT, 0.25),
+      borderColor: alpha(accent, 0.25),
       borderRadius: '10px 10px 0 0',
       borderBottom: 'none',
     }}
   >
-    <Button
-      size='small'
-      variant='text'
-      startIcon={<ArrowBackIcon />}
-      onClick={onBack}
-      sx={{
-        textTransform: 'none',
-        color: ACCENT,
-        fontWeight: 600,
-        minWidth: 0,
-        px: 1,
-        py: 0.25,
-        '&:hover': { bgcolor: alpha(ACCENT, 0.1) },
-      }}
-    >
-      Back
-    </Button>
-    <Divider orientation='vertical' flexItem sx={{ borderColor: alpha(ACCENT, 0.3) }} />
-    <Box sx={{ color: ACCENT, display: 'flex', alignItems: 'center' }}>{icon}</Box>
-    <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT }}>{title}</Typography>
+    <Box sx={{ color: accent, display: 'flex', alignItems: 'center' }}>{icon}</Box>
+    <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: accent }}>{title}</Typography>
     <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
       {count} {countLabel}
       {count !== 1 ? 's' : ''}
     </Typography>
-  </Box>
-);
-
-// ── Location picker bar ────────────────────────────────────────────────────────
-
-const LocationPicker = ({
-  locations,
-  value,
-  onChange,
-}: {
-  locations: IConfigWorkLocation[];
-  value: string;
-  onChange: (id: string) => void;
-}) => (
-  <Box
-    sx={{
-      px: 2,
-      py: 1,
-      display: 'flex',
-      alignItems: 'center',
-      gap: 1.5,
-      bgcolor: alpha(ACCENT, 0.04),
-      border: '1px solid',
-      borderColor: alpha(ACCENT, 0.2),
-      borderTop: 'none',
-      borderBottom: 'none',
-    }}
-  >
-    <Typography
-      variant='caption'
-      fontWeight={600}
-      color='text.secondary'
-      sx={{ whiteSpace: 'nowrap' }}
-    >
-      Work Location:
-    </Typography>
-    <FormControl size='small' sx={{ minWidth: 260 }}>
-      <Select
-        displayEmpty
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        sx={{ fontSize: '0.82rem', '& .MuiSelect-select': { py: 0.6 } }}
-        renderValue={(v) => {
-          if (!v)
-            return (
-              <Typography component='span' sx={{ fontSize: '0.82rem', color: 'text.disabled' }}>
-                — select a location —
-              </Typography>
-            );
-          return locations.find((l) => l.id === v)?.name ?? v;
-        }}
-      >
-        {locations.length === 0 ? (
-          <MenuItem disabled value=''>
-            <em>No work locations</em>
-          </MenuItem>
-        ) : (
-          locations.map((l) => (
-            <MenuItem key={l.id} value={l.id} sx={{ fontSize: '0.82rem' }}>
-              {l.name}
-            </MenuItem>
-          ))
-        )}
-      </Select>
-    </FormControl>
   </Box>
 );
 
@@ -177,7 +104,6 @@ const WorkingTimesPanel = ({
   locations,
   workingTimes,
   defaultLocationId,
-  onBack,
   onSave,
 }: WorkingTimesPanelProps) => {
   const { classes } = useStyles();
@@ -255,8 +181,8 @@ const WorkingTimesPanel = ({
           label={String(v || '—')}
           size='small'
           sx={{
-            bgcolor: alpha(ACCENT, 0.1),
-            color: ACCENT,
+            bgcolor: alpha(ACCENT_WT, 0.1),
+            color: ACCENT_WT,
             fontWeight: 600,
             fontSize: '0.75rem',
             height: 20,
@@ -303,7 +229,7 @@ const WorkingTimesPanel = ({
         title='Working Times'
         count={workingTimes.length}
         countLabel='entry'
-        onBack={onBack}
+        accent={ACCENT_WT}
       />
       <Paper
         variant='outlined'
@@ -325,7 +251,7 @@ const WorkingTimesPanel = ({
                 size='small'
                 variant='contained'
                 startIcon={<AddIcon />}
-                sx={{ bgcolor: ACCENT, '&:hover': { bgcolor: '#9d174d' } }}
+                sx={{ bgcolor: ACCENT_WT, '&:hover': { bgcolor: alpha(ACCENT_WT, 0.85) } }}
                 onClick={() => {
                   setEditingRow(null);
                   setDialogOpen(true);
@@ -339,7 +265,7 @@ const WorkingTimesPanel = ({
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: ACCENT, '&:hover': { bgcolor: '#9d174d' } }}
+              sx={{ bgcolor: ACCENT_WT, '&:hover': { bgcolor: alpha(ACCENT_WT, 0.85) } }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -359,6 +285,17 @@ const WorkingTimesPanel = ({
               Delete
             </Button>
           )}
+          {selectedRow && (
+            <Button
+              size='small'
+              variant='outlined'
+              startIcon={<ClearIcon />}
+              sx={{ textTransform: 'none' }}
+              onClick={() => setSelectedId(null)}
+            >
+              Clear
+            </Button>
+          )}
           <TextField
             size='small'
             placeholder='Search…'
@@ -376,15 +313,6 @@ const WorkingTimesPanel = ({
             }}
           />
         </Box>
-        {selectedRow && (
-          <Typography variant='caption' color='text.secondary'>
-            Selected: <strong>{selectedRow.dayOfWeek}</strong> · {selectedRow.workLocationName}
-            &nbsp;·&nbsp;
-            <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-              Clear
-            </Link>
-          </Typography>
-        )}
       </Paper>
       <Paper
         elevation={1}
@@ -392,7 +320,7 @@ const WorkingTimesPanel = ({
           borderRadius: '0 0 10px 10px',
           overflow: 'hidden',
           border: '1px solid',
-          borderColor: alpha(ACCENT, 0.25),
+          borderColor: alpha(ACCENT_WT, 0.25),
           borderTop: 'none',
         }}
       >
@@ -416,7 +344,7 @@ const WorkingTimesPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<AccessTimeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT}
+        accent={ACCENT_WT}
         title='Working Time'
         subtitle='Configure working hours for a day and location'
         submitDisabled={!form.workLocationId}
@@ -505,13 +433,7 @@ const EMPTY_SHIFT = {
   endTime: '17:00',
 };
 
-const ShiftsPanel = ({
-  locations,
-  shifts,
-  defaultLocationId,
-  onBack,
-  onSave,
-}: ShiftsPanelProps) => {
+const ShiftsPanel = ({ locations, shifts, defaultLocationId, onSave }: ShiftsPanelProps) => {
   const { classes } = useStyles();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -588,8 +510,8 @@ const ShiftsPanel = ({
           label={String(v || '—')}
           size='small'
           sx={{
-            bgcolor: alpha(ACCENT, 0.1),
-            color: ACCENT,
+            bgcolor: alpha(ACCENT_SM, 0.1),
+            color: ACCENT_SM,
             fontWeight: 600,
             fontSize: '0.75rem',
             height: 20,
@@ -646,7 +568,7 @@ const ShiftsPanel = ({
         title='Shift Management'
         count={shifts.length}
         countLabel='shift'
-        onBack={onBack}
+        accent={ACCENT_SM}
       />
       <Paper
         variant='outlined'
@@ -668,7 +590,7 @@ const ShiftsPanel = ({
                 size='small'
                 variant='contained'
                 startIcon={<AddIcon />}
-                sx={{ bgcolor: ACCENT, '&:hover': { bgcolor: '#9d174d' } }}
+                sx={{ bgcolor: ACCENT_SM, '&:hover': { bgcolor: alpha(ACCENT_SM, 0.85) } }}
                 onClick={() => {
                   setEditingRow(null);
                   setDialogOpen(true);
@@ -682,7 +604,7 @@ const ShiftsPanel = ({
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: ACCENT, '&:hover': { bgcolor: '#9d174d' } }}
+              sx={{ bgcolor: ACCENT_SM, '&:hover': { bgcolor: alpha(ACCENT_SM, 0.85) } }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -702,6 +624,17 @@ const ShiftsPanel = ({
               Delete
             </Button>
           )}
+          {selectedRow && (
+            <Button
+              size='small'
+              variant='outlined'
+              startIcon={<ClearIcon />}
+              sx={{ textTransform: 'none' }}
+              onClick={() => setSelectedId(null)}
+            >
+              Clear
+            </Button>
+          )}
           <TextField
             size='small'
             placeholder='Search…'
@@ -719,15 +652,6 @@ const ShiftsPanel = ({
             }}
           />
         </Box>
-        {selectedRow && (
-          <Typography variant='caption' color='text.secondary'>
-            Selected: <strong>{selectedRow.shiftName}</strong> · {selectedRow.workLocationName}
-            &nbsp;·&nbsp;
-            <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-              Clear
-            </Link>
-          </Typography>
-        )}
       </Paper>
       <Paper
         elevation={1}
@@ -735,7 +659,7 @@ const ShiftsPanel = ({
           borderRadius: '0 0 10px 10px',
           overflow: 'hidden',
           border: '1px solid',
-          borderColor: alpha(ACCENT, 0.25),
+          borderColor: alpha(ACCENT_SM, 0.25),
           borderTop: 'none',
         }}
       >
@@ -759,7 +683,7 @@ const ShiftsPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<WatchLaterIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT}
+        accent={ACCENT_SM}
         title='Shift'
         subtitle='Define shift hours and assign to a work location'
         submitDisabled={!form.workLocationId || !form.shiftName.trim()}
@@ -847,7 +771,6 @@ const AssocProfilesPanel = ({
   locations,
   associatedProfiles,
   defaultLocationId,
-  onBack,
   onSave,
 }: AssocProfilesPanelProps) => {
   const { classes } = useStyles();
@@ -924,8 +847,8 @@ const AssocProfilesPanel = ({
           label={String(v || '—')}
           size='small'
           sx={{
-            bgcolor: alpha(ACCENT, 0.1),
-            color: ACCENT,
+            bgcolor: alpha(ACCENT_AP, 0.1),
+            color: ACCENT_AP,
             fontWeight: 600,
             fontSize: '0.75rem',
             height: 20,
@@ -967,7 +890,7 @@ const AssocProfilesPanel = ({
         title='Associated Consultant Profiles'
         count={associatedProfiles.length}
         countLabel='profile'
-        onBack={onBack}
+        accent={ACCENT_AP}
       />
       <Paper
         variant='outlined'
@@ -989,7 +912,7 @@ const AssocProfilesPanel = ({
                 size='small'
                 variant='contained'
                 startIcon={<AddIcon />}
-                sx={{ bgcolor: ACCENT, '&:hover': { bgcolor: '#9d174d' } }}
+                sx={{ bgcolor: ACCENT_AP, '&:hover': { bgcolor: alpha(ACCENT_AP, 0.85) } }}
                 onClick={() => {
                   setEditingRow(null);
                   setDialogOpen(true);
@@ -1003,7 +926,7 @@ const AssocProfilesPanel = ({
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: ACCENT, '&:hover': { bgcolor: '#9d174d' } }}
+              sx={{ bgcolor: ACCENT_AP, '&:hover': { bgcolor: alpha(ACCENT_AP, 0.85) } }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -1040,14 +963,6 @@ const AssocProfilesPanel = ({
             }}
           />
         </Box>
-        {selectedRow && (
-          <Typography variant='caption' color='text.secondary'>
-            Selected: <strong>{selectedRow.consultantName}</strong>&nbsp;·&nbsp;
-            <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-              Clear
-            </Link>
-          </Typography>
-        )}
       </Paper>
       <Paper
         elevation={1}
@@ -1055,7 +970,7 @@ const AssocProfilesPanel = ({
           borderRadius: '0 0 10px 10px',
           overflow: 'hidden',
           border: '1px solid',
-          borderColor: alpha(ACCENT, 0.25),
+          borderColor: alpha(ACCENT_AP, 0.25),
           borderTop: 'none',
         }}
       >
@@ -1079,7 +994,7 @@ const AssocProfilesPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<GroupIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT}
+        accent={ACCENT_AP}
         title='Associated Consultant Profile'
         subtitle='Link a consultant profile to a work location'
         submitDisabled={!form.workLocationId || !form.consultantName.trim()}
@@ -1162,68 +1077,6 @@ const LANGUAGES = [
   { value: 'es', label: 'Spanish' },
 ];
 
-const COUNTRIES = [
-  { code: 'AF', name: 'Afghanistan' },
-  { code: 'AL', name: 'Albania' },
-  { code: 'DZ', name: 'Algeria' },
-  { code: 'AR', name: 'Argentina' },
-  { code: 'AU', name: 'Australia' },
-  { code: 'AT', name: 'Austria' },
-  { code: 'BD', name: 'Bangladesh' },
-  { code: 'BE', name: 'Belgium' },
-  { code: 'BR', name: 'Brazil' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'CN', name: 'China' },
-  { code: 'CO', name: 'Colombia' },
-  { code: 'HR', name: 'Croatia' },
-  { code: 'CZ', name: 'Czech Republic' },
-  { code: 'DK', name: 'Denmark' },
-  { code: 'EG', name: 'Egypt' },
-  { code: 'FI', name: 'Finland' },
-  { code: 'FR', name: 'France' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'GH', name: 'Ghana' },
-  { code: 'GR', name: 'Greece' },
-  { code: 'HK', name: 'Hong Kong' },
-  { code: 'HU', name: 'Hungary' },
-  { code: 'IN', name: 'India' },
-  { code: 'ID', name: 'Indonesia' },
-  { code: 'IE', name: 'Ireland' },
-  { code: 'IL', name: 'Israel' },
-  { code: 'IT', name: 'Italy' },
-  { code: 'JP', name: 'Japan' },
-  { code: 'KE', name: 'Kenya' },
-  { code: 'KR', name: 'South Korea' },
-  { code: 'MY', name: 'Malaysia' },
-  { code: 'MX', name: 'Mexico' },
-  { code: 'MA', name: 'Morocco' },
-  { code: 'NL', name: 'Netherlands' },
-  { code: 'NZ', name: 'New Zealand' },
-  { code: 'NG', name: 'Nigeria' },
-  { code: 'NO', name: 'Norway' },
-  { code: 'PK', name: 'Pakistan' },
-  { code: 'PE', name: 'Peru' },
-  { code: 'PH', name: 'Philippines' },
-  { code: 'PL', name: 'Poland' },
-  { code: 'PT', name: 'Portugal' },
-  { code: 'RO', name: 'Romania' },
-  { code: 'RU', name: 'Russia' },
-  { code: 'SA', name: 'Saudi Arabia' },
-  { code: 'SG', name: 'Singapore' },
-  { code: 'ZA', name: 'South Africa' },
-  { code: 'ES', name: 'Spain' },
-  { code: 'SE', name: 'Sweden' },
-  { code: 'CH', name: 'Switzerland' },
-  { code: 'TW', name: 'Taiwan' },
-  { code: 'TH', name: 'Thailand' },
-  { code: 'TR', name: 'Turkey' },
-  { code: 'UA', name: 'Ukraine' },
-  { code: 'AE', name: 'United Arab Emirates' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'US', name: 'United States' },
-  { code: 'VN', name: 'Vietnam' },
-];
-
 type WLActivePanel = 'none' | 'workingTimes' | 'associatedProfiles' | 'shifts';
 
 const WorkLocations = () => {
@@ -1238,6 +1091,54 @@ const WorkLocations = () => {
   const [search, setSearch] = useState('');
   const [form, setForm] = useState(EMPTY_WL_FORM);
   const [activePanel, setActivePanel] = useState<WLActivePanel>('none');
+
+  // Location search state
+  const [countrySuggestions, setCountrySuggestions] = useState<NominatimResult[]>([]);
+  const [stateSuggestions, setStateSuggestions] = useState<NominatimResult[]>([]);
+  const [citySuggestions, setCitySuggestions] = useState<NominatimResult[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  // Debounced search for locations
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [searchAbortController, setSearchAbortController] = useState<AbortController | null>(null);
+
+  const handleLocationSearch = async (query: string, type: 'country' | 'state' | 'city') => {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+      setSearchTimeout(null);
+    }
+
+    // Cancel previous request
+    if (searchAbortController) {
+      searchAbortController.abort();
+    }
+
+    if (query.length < 2) {
+      if (type === 'country') setCountrySuggestions([]);
+      else if (type === 'state') setStateSuggestions([]);
+      else setCitySuggestions([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      const controller = new AbortController();
+      setSearchAbortController(controller);
+      setSearchLoading(true);
+
+      const results = await searchLocations(query, controller.signal);
+
+      if (type === 'country') {
+        setCountrySuggestions(results.slice(0, 10));
+      } else if (type === 'state') {
+        setStateSuggestions(results.slice(0, 5));
+      } else {
+        setCitySuggestions(results.slice(0, 5));
+      }
+      setSearchLoading(false);
+    }, 300);
+
+    setSearchTimeout(timeoutId);
+  };
 
   useEffect(() => {
     if (apiUC?.workLocations) setRows(apiUC.workLocations);
@@ -1442,7 +1343,7 @@ const WorkLocations = () => {
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: ACCENT,
+              bgcolor: ACCENT_WL,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -1461,64 +1362,46 @@ const WorkLocations = () => {
       </AccordionSummary>
 
       <AccordionDetails sx={{ p: 2 }}>
-        {/* Toolbar */}
         <Paper variant='outlined' className={classes.actionToolbar}>
           <Box className={classes.toolbarButtons} sx={{ flexWrap: 'wrap', gap: 0.75 }}>
-            {!panelActive &&
-              (!selectedRow ? (
-                <Tooltip title='Add a new work location'>
-                  <Button
-                    size='small'
-                    variant='contained'
-                    startIcon={<AddIcon />}
-                    onClick={() => {
-                      setEditingRow(null);
-                      setDialogOpen(true);
-                    }}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    New
-                  </Button>
-                </Tooltip>
-              ) : (
-                <>
-                  <Button
-                    size='small'
-                    variant='contained'
-                    startIcon={<EditIcon />}
-                    onClick={() => {
-                      setEditingRow(selectedRow);
-                      setDialogOpen(true);
-                    }}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    size='small'
-                    variant='outlined'
-                    color='error'
-                    startIcon={<DeleteIcon />}
-                    onClick={() => setDeleteOpen(true)}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    Delete
-                  </Button>
-                  <Divider
-                    orientation='vertical'
-                    flexItem
-                    className={classes.toolbarDivider}
-                    sx={{ mx: 0.5 }}
-                  />
-                </>
-              ))}
+            <Button
+              size='small'
+              startIcon={<LocationOnIcon />}
+              variant={!panelActive ? 'contained' : 'outlined'}
+              onClick={() => setActivePanel('none')}
+              sx={{
+                textTransform: 'none',
+                border: '1px solid',
+                borderColor: ACCENT_WL,
+                bgcolor: !panelActive ? ACCENT_WL : undefined,
+                color: !panelActive ? '#fff' : ACCENT_WL,
+                '&:hover': {
+                  bgcolor: !panelActive ? alpha(ACCENT_WL, 0.85) : alpha(ACCENT_WL, 0.08),
+                  borderColor: ACCENT_WL,
+                },
+              }}
+            >
+              Work Locations
+            </Button>
             <Button
               size='small'
               startIcon={<AccessTimeIcon />}
               variant={activePanel === 'workingTimes' ? 'contained' : 'outlined'}
-              color='primary'
               onClick={() => togglePanel('workingTimes')}
-              sx={{ textTransform: 'none' }}
+              sx={{
+                textTransform: 'none',
+                border: '1px solid',
+                borderColor: ACCENT_WT,
+                bgcolor: activePanel === 'workingTimes' ? ACCENT_WT : undefined,
+                color: activePanel === 'workingTimes' ? '#fff' : ACCENT_WT,
+                '&:hover': {
+                  bgcolor:
+                    activePanel === 'workingTimes'
+                      ? alpha(ACCENT_WT, 0.85)
+                      : alpha(ACCENT_WT, 0.08),
+                  borderColor: ACCENT_WT,
+                },
+              }}
             >
               Working Times
             </Button>
@@ -1526,9 +1409,21 @@ const WorkLocations = () => {
               size='small'
               startIcon={<GroupIcon />}
               variant={activePanel === 'associatedProfiles' ? 'contained' : 'outlined'}
-              color='primary'
               onClick={() => togglePanel('associatedProfiles')}
-              sx={{ textTransform: 'none' }}
+              sx={{
+                textTransform: 'none',
+                border: '1px solid',
+                borderColor: ACCENT_AP,
+                bgcolor: activePanel === 'associatedProfiles' ? ACCENT_AP : undefined,
+                color: activePanel === 'associatedProfiles' ? '#fff' : ACCENT_AP,
+                '&:hover': {
+                  bgcolor:
+                    activePanel === 'associatedProfiles'
+                      ? alpha(ACCENT_AP, 0.85)
+                      : alpha(ACCENT_AP, 0.08),
+                  borderColor: ACCENT_AP,
+                },
+              }}
             >
               Associated Consultant Profiles
             </Button>
@@ -1536,55 +1431,151 @@ const WorkLocations = () => {
               size='small'
               startIcon={<WatchLaterIcon />}
               variant={activePanel === 'shifts' ? 'contained' : 'outlined'}
-              color='primary'
               onClick={() => togglePanel('shifts')}
-              sx={{ textTransform: 'none' }}
+              sx={{
+                textTransform: 'none',
+                border: '1px solid',
+                borderColor: ACCENT_SM,
+                bgcolor: activePanel === 'shifts' ? ACCENT_SM : undefined,
+                color: activePanel === 'shifts' ? '#fff' : ACCENT_SM,
+                '&:hover': {
+                  bgcolor:
+                    activePanel === 'shifts' ? alpha(ACCENT_SM, 0.85) : alpha(ACCENT_SM, 0.08),
+                  borderColor: ACCENT_SM,
+                },
+              }}
             >
               Shift Management
             </Button>
-            {!panelActive && (
-              <TextField
-                size='small'
-                placeholder='Search…'
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className={classes.tableSearchField}
-                sx={{ ml: { xs: 0, sm: 'auto' } }}
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position='end'>
-                        <SearchIcon />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-            )}
           </Box>
-          {!panelActive && selectedRow && (
-            <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
-              Selected: <strong>{selectedRow.name}</strong>&nbsp;·&nbsp;
-              <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-                Clear
-              </Link>
-            </Typography>
-          )}
         </Paper>
 
-        {/* Main table */}
+        {/* Work Locations table */}
         {!panelActive && (
-          <Paper elevation={1} className={classes.tablePaper}>
-            <DataTable
-              columns={columns}
-              data={filtered}
-              rowKey='id'
-              searchable={false}
-              initialRowsPerPage={10}
-              onRowClick={(row) => setSelectedId(selectedId === row.id ? null : row.id)}
-              activeRowKey={selectedId ?? undefined}
+          <Box sx={{ mt: 2 }}>
+            <PanelHeader
+              icon={<LocationOnIcon sx={{ fontSize: '1.1rem' }} />}
+              title='Work Locations'
+              count={rows.length}
+              countLabel='location'
+              accent={ACCENT_WL}
             />
-          </Paper>
+            <Paper
+              variant='outlined'
+              sx={{
+                borderRadius: 0,
+                borderTop: 'none',
+                borderBottom: 'none',
+                px: 1.5,
+                py: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 0.5,
+              }}
+            >
+              <Box className={classes.toolbarButtons}>
+                {!selectedRow ? (
+                  <Tooltip title='Add a new work location'>
+                    <Button
+                      size='small'
+                      variant='contained'
+                      startIcon={<AddIcon />}
+                      sx={{
+                        bgcolor: ACCENT_WL,
+                        '&:hover': { bgcolor: alpha(ACCENT_WL, 0.85) },
+                      }}
+                      onClick={() => {
+                        setEditingRow(null);
+                        setDialogOpen(true);
+                      }}
+                    >
+                      New
+                    </Button>
+                  </Tooltip>
+                ) : (
+                  <>
+                    <Button
+                      size='small'
+                      variant='contained'
+                      startIcon={<EditIcon />}
+                      sx={{ bgcolor: ACCENT_WL, '&:hover': { bgcolor: alpha(ACCENT_WL, 0.85) } }}
+                      onClick={() => {
+                        setEditingRow(selectedRow);
+                        setDialogOpen(true);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size='small'
+                      variant='outlined'
+                      color='error'
+                      startIcon={<DeleteIcon />}
+                      onClick={() => setDeleteOpen(true)}
+                    >
+                      Delete
+                    </Button>
+                    <Box
+                      component='span'
+                      sx={{
+                        display: { xs: 'none', sm: 'block' },
+                        width: '1px',
+                        height: '20px',
+                        bgcolor: alpha(ACCENT_WL, 0.3),
+                        mx: 0.75,
+                        alignSelf: 'center',
+                      }}
+                    />
+                    <Button
+                      size='small'
+                      variant='outlined'
+                      startIcon={<ClearIcon />}
+                      sx={{ textTransform: 'none' }}
+                      onClick={() => setSelectedId(null)}
+                    >
+                      Clear
+                    </Button>
+                  </>
+                )}
+                <TextField
+                  size='small'
+                  placeholder='Search…'
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  sx={{ ml: { xs: 0, sm: 'auto' }, width: 210 }}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <SearchIcon sx={{ fontSize: '1rem' }} />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </Box>
+            </Paper>
+            <Paper
+              elevation={1}
+              sx={{
+                borderRadius: '0 0 10px 10px',
+                overflow: 'hidden',
+                border: '1px solid',
+                borderColor: alpha(ACCENT_WL, 0.25),
+                borderTop: 'none',
+              }}
+            >
+              <DataTable
+                columns={columns}
+                data={filtered}
+                rowKey='id'
+                searchable={false}
+                initialRowsPerPage={10}
+                onRowClick={(row) => setSelectedId(selectedId === row.id ? null : row.id)}
+                activeRowKey={selectedId ?? undefined}
+              />
+            </Paper>
+          </Box>
         )}
 
         {/* Sub-panels */}
@@ -1593,7 +1584,6 @@ const WorkLocations = () => {
             locations={rows}
             workingTimes={apiUC?.workingTimes ?? []}
             defaultLocationId={selectedId}
-            onBack={() => setActivePanel('none')}
             onSave={(wt) => save(rows, wt)}
           />
         )}
@@ -1602,7 +1592,6 @@ const WorkLocations = () => {
             locations={rows}
             associatedProfiles={apiUC?.associatedProfiles ?? []}
             defaultLocationId={selectedId}
-            onBack={() => setActivePanel('none')}
             onSave={(ap) => save(rows, apiUC?.workingTimes ?? [], apiUC?.shifts ?? [], ap)}
           />
         )}
@@ -1611,11 +1600,12 @@ const WorkLocations = () => {
             locations={rows}
             shifts={apiUC?.shifts ?? []}
             defaultLocationId={selectedId}
-            onBack={() => setActivePanel('none')}
             onSave={(sh) => save(rows, apiUC?.workingTimes ?? [], sh)}
           />
         )}
       </AccordionDetails>
+
+      {/* New / Edit dialog */}
 
       {/* New / Edit dialog */}
       <ConfigFormDialog
@@ -1627,7 +1617,7 @@ const WorkLocations = () => {
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<LocationOnIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT}
+        accent={ACCENT_WL}
         title='Work Location'
         subtitle='Define work location regional and time settings'
         submitDisabled={!form.name.trim()}
@@ -1650,36 +1640,85 @@ const WorkLocations = () => {
           value={form.description}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
         />
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <FormControl size='small' fullWidth required>
-            <InputLabel>Country</InputLabel>
-            <Select
-              label='Country'
-              value={form.country}
-              onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
-            >
-              {COUNTRIES.map((c) => (
-                <MenuItem key={c.code} value={c.name}>
-                  {c.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+        <Box sx={{ position: 'relative' }}>
           <TextField
             label='City'
             size='small'
             fullWidth
+            required
             value={form.city}
-            onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+            onChange={(e) => {
+              setForm((f) => ({ ...f, city: e.target.value }));
+              handleLocationSearch(e.target.value, 'city');
+            }}
+            placeholder='Type city name...'
+            InputProps={{
+              endAdornment: searchLoading ? <CircularProgress size={14} /> : null,
+            }}
+          />
+          {citySuggestions.length > 0 && (
+            <Paper
+              elevation={3}
+              sx={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                zIndex: 1000,
+                maxHeight: 200,
+                overflow: 'auto',
+                mt: 0.5,
+              }}
+            >
+              {citySuggestions.map((option) => (
+                <Box
+                  key={option.place_id}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 2,
+                    py: 1,
+                    cursor: 'pointer',
+                    '&:hover': { bgcolor: 'action.hover' },
+                  }}
+                  onClick={() => {
+                    setForm((f) => ({ ...f, city: option.display_name }));
+                    if (option.address?.state) {
+                      setForm((f) => ({ ...f, state: option.address?.state || '' }));
+                    }
+                    if (option.address?.country) {
+                      setForm((f) => ({ ...f, country: option.address?.country || '' }));
+                    }
+                    setCitySuggestions([]);
+                  }}
+                >
+                  <LocationOnIcon sx={{ fontSize: '1rem', color: ACCENT_WL }} />
+                  <Typography variant='body2'>{option.display_name}</Typography>
+                </Box>
+              ))}
+            </Paper>
+          )}
+        </Box>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TextField
+            label='State / Province'
+            size='small'
+            fullWidth
+            value={form.state}
+            onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))}
+            placeholder='Auto-filled from city'
+          />
+          <TextField
+            label='Country'
+            size='small'
+            fullWidth
+            required
+            value={form.country}
+            onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
+            placeholder='Auto-filled from city'
           />
         </Box>
-        <TextField
-          label='State / Province'
-          size='small'
-          fullWidth
-          value={form.state}
-          onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))}
-        />
         <Box sx={{ display: 'flex', gap: 2 }}>
           <FormControl size='small' fullWidth>
             <InputLabel>Date Format</InputLabel>

@@ -1,54 +1,21 @@
 import { Theme } from '@mui/material/styles';
 import { CSSObject } from 'tss-react';
 
-export const colorPalette = {
-  main: '#0369a1',
-  aup: '#2563eb',
-  cr: '#7c3aed',
-  wt: '#0891b2',
-};
-
 export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   container: {
     padding: theme.spacing(3),
     width: '100%',
-
     [theme.breakpoints.down('sm')]: {
       padding: theme.spacing(2),
     },
   },
 
-  // ── Accordion ───────────────────────────────────────
   sectionAccordion: {
     border: `1px solid ${theme.palette.divider}`,
     borderRadius: `${theme.spacing(1.5)} !important`,
     marginTop: theme.spacing(2.5),
     width: '100%',
-
-    '&::before': {
-      display: 'none',
-    },
-  },
-
-  sectionHeaderSummary: {
-    paddingRight: theme.spacing(2),
-  },
-
-  sectionHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: theme.spacing(1.5),
-  },
-
-  sectionHeaderIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: theme.spacing(1.5),
-    backgroundColor: colorPalette.main,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
+    '&::before': { display: 'none' },
   },
 
   sectionTitle: {
@@ -62,58 +29,68 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     marginTop: 2,
   },
 
-  accordionDetails: {
-    padding: theme.spacing(2),
-  },
-
-  // ── Toolbar ─────────────────────────────────────────
   actionToolbar: {
-    padding: theme.spacing(1, 1.5),
+    padding: `${theme.spacing(1)} ${theme.spacing(1.5)}`,
     marginBottom: theme.spacing(1.5),
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'column' as const,
     gap: theme.spacing(0.5),
   },
 
   toolbarButtons: {
     display: 'flex',
     alignItems: 'center',
-    flexWrap: 'wrap',
+    flexWrap: 'wrap' as const,
     gap: theme.spacing(0.75),
-
     [theme.breakpoints.down('sm')]: {
-      flexDirection: 'column',
+      flexDirection: 'column' as const,
       alignItems: 'stretch',
     },
   },
 
-  // ── Tab Buttons ────────────────────────────────────
-  tabButton: {
-    textTransform: 'none',
-    fontWeight: 600,
-    borderRadius: 8,
-    padding: '6px 12px',
-    transition: 'all 0.2s ease-in-out',
-    border: '1px solid transparent',
-
-    '&:hover': {
-      opacity: 0.9,
+  toolbarDivider: {
+    [theme.breakpoints.down('sm')]: {
+      display: 'none',
     },
+  },
 
+  tableSearchField: {
+    flexShrink: 0,
+    width: '160px',
+    '& .MuiOutlinedInput-root': {
+      height: '30px',
+      fontSize: '0.8rem',
+      backgroundColor: theme.palette.common.white,
+      borderRadius: '6px',
+    },
+    '& .MuiInputBase-input': {
+      padding: '4px 6px',
+      fontSize: '0.8rem',
+    },
+    '& .MuiInputBase-input::placeholder': {
+      opacity: 0.7,
+    },
+    '& .MuiInputAdornment-root .MuiSvgIcon-root': {
+      fontSize: '1.1rem',
+      color: theme.palette.text.secondary,
+    },
     [theme.breakpoints.down('sm')]: {
       width: '100%',
+      flexShrink: 1,
+    },
+    [theme.breakpoints.up('sm')]: {
+      flexGrow: 0,
     },
   },
 
-  tabButtonActive: {
-    color: theme.palette.common.white,
+  tablePaper: {
+    borderRadius: theme.spacing(1),
+    overflow: 'hidden',
   },
 
-  tabButtonInactive: {
-    backgroundColor: 'transparent',
-  },
-
-  tabButtonIcon: {
-    fontSize: '1rem',
+  selectionInfo: {
+    fontSize: '0.78rem',
+    color: theme.palette.text.secondary,
+    marginTop: 4,
   },
 });
