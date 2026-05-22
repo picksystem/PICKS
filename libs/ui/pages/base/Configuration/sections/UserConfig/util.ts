@@ -5,6 +5,7 @@ import {
   IConfigWorkLocationWorkingTime,
   IConfigWorkLocationShift,
   IConfigWorkLocationAssociatedProfile,
+  IConfigWorkLocationAssociation,
 } from '@serviceops/interfaces';
 
 export interface WorkingTimesPanelProps {
@@ -26,6 +27,13 @@ export interface AssocProfilesPanelProps {
   associatedProfiles: IConfigWorkLocationAssociatedProfile[];
   defaultLocationId: string | null;
   onSave: (profiles: IConfigWorkLocationAssociatedProfile[]) => void;
+}
+
+export interface WorkLocationAssociationsPanelProps {
+  locations: IConfigWorkLocation[];
+  associations: IConfigWorkLocationAssociation[];
+  defaultLocationId: string | null;
+  onSave: (associations: IConfigWorkLocationAssociation[]) => void;
 }
 
 export interface NominatimResult {
@@ -83,7 +91,10 @@ async function fetchFromPhoton(query: string, signal?: AbortSignal): Promise<Nom
   });
 }
 
-export async function searchLocations(query: string, signal?: AbortSignal): Promise<NominatimResult[]> {
+export async function searchLocations(
+  query: string,
+  signal?: AbortSignal,
+): Promise<NominatimResult[]> {
   const trimmed = query.trim();
   if (trimmed.length < 2) return [];
 

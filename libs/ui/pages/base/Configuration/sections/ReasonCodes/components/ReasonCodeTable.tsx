@@ -154,10 +154,10 @@ const ReasonCodeTable: React.FC<ReasonCodeTableProps> = ({ config, rows, onSave 
 
   return (
     <Accordion
-        defaultExpanded={config.expandedByDefault ?? false}
-        elevation={0}
-        className={classes.sectionAccordion}
-      >
+      defaultExpanded={config.expandedByDefault ?? false}
+      elevation={0}
+      className={classes.sectionAccordion}
+    >
       <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
         <Box
           sx={{

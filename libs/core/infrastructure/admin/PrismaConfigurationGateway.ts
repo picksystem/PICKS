@@ -176,6 +176,7 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
         workingTimes: data.userConfig?.workingTimes ?? [],
         shifts: data.userConfig?.shifts ?? [],
         associatedProfiles: data.userConfig?.associatedProfiles ?? [],
+        workLocationAssociations: data.userConfig?.workLocationAssociations ?? [],
       },
       reasonCodes: {
         priorityChangeReasonCodes: data.reasonCodes?.priorityChangeReasonCodes ?? [],

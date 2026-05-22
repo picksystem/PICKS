@@ -318,7 +318,8 @@ const AssocUserProfilePanel = ({
               placeholder='Search…'
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              sx={{ ml: { xs: 0, sm: 'auto' }, width: 210 }}
+              className={classes.tableSearchField}
+              sx={{ ml: { xs: 0, sm: 'auto' } }}
               slotProps={{
                 input: {
                   endAdornment: (
@@ -563,7 +564,8 @@ const WorkingTimesPanel = ({
               placeholder='Search…'
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              sx={{ ml: { xs: 0, sm: 'auto' }, width: 210 }}
+              className={classes.tableSearchField}
+              sx={{ ml: { xs: 0, sm: 'auto' } }}
               slotProps={{
                 input: {
                   endAdornment: (
@@ -814,7 +816,8 @@ const WorkingShiftPanel = ({
               placeholder='Search…'
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              sx={{ ml: { xs: 0, sm: 'auto' }, width: 210 }}
+              className={classes.tableSearchField}
+              sx={{ ml: { xs: 0, sm: 'auto' } }}
               slotProps={{
                 input: {
                   endAdornment: (
@@ -1109,7 +1112,8 @@ const TimesheetProjectsPanel = ({
               placeholder='Search…'
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              sx={{ ml: { xs: 0, sm: 'auto' }, width: 210 }}
+              className={classes.tableSearchField}
+              sx={{ ml: { xs: 0, sm: 'auto' } }}
               slotProps={{
                 input: {
                   endAdornment: (
@@ -1447,7 +1451,8 @@ const ExpenseProjectsPanel = ({
               placeholder='Search…'
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              sx={{ ml: { xs: 0, sm: 'auto' }, width: 210 }}
+              className={classes.tableSearchField}
+              sx={{ ml: { xs: 0, sm: 'auto' } }}
               slotProps={{
                 input: {
                   endAdornment: (
@@ -1738,7 +1743,8 @@ const AssocConsProfilesPanel = ({
             placeholder='Search…'
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            sx={{ ml: { xs: 0, sm: 'auto' }, width: 210 }}
+            className={classes.tableSearchField}
+            sx={{ ml: { xs: 0, sm: 'auto' } }}
             slotProps={{
               input: {
                 endAdornment: (
@@ -2099,7 +2105,8 @@ const DefineConsultantRolesSection = ({
                     placeholder='Search…'
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    sx={{ ml: { xs: 0, sm: 'auto' }, width: 210 }}
+                    className={classes.tableSearchField}
+                    sx={{ ml: { xs: 0, sm: 'auto' } }}
                     slotProps={{
                       input: {
                         endAdornment: (
@@ -2582,7 +2589,8 @@ const ConsultantProfiles = () => {
                     placeholder='Search…'
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    sx={{ ml: { xs: 0, sm: 'auto' }, width: 210 }}
+                    className={classes.tableSearchField}
+                    sx={{ ml: { xs: 0, sm: 'auto' } }}
                     slotProps={{
                       input: {
                         endAdornment: (

@@ -5,7 +5,6 @@ import {
   Paper,
   Button,
   Tooltip,
-  Link,
   TextField,
   Chip,
   DataTable,
@@ -20,7 +19,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Autocomplete,
   CircularProgress,
   alpha,
 } from '@mui/material';
@@ -34,11 +32,13 @@ import ClearIcon from '@mui/icons-material/Clear';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import GroupIcon from '@mui/icons-material/Group';
 import WatchLaterIcon from '@mui/icons-material/WatchLater';
+import LinkIcon from '@mui/icons-material/Link';
 import {
   IConfigWorkLocation,
   IConfigWorkLocationWorkingTime,
   IConfigWorkLocationShift,
   IConfigWorkLocationAssociatedProfile,
+  IConfigWorkLocationAssociation,
 } from '@serviceops/interfaces';
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
@@ -47,6 +47,7 @@ import {
   type WorkingTimesPanelProps,
   type ShiftsPanelProps,
   type AssocProfilesPanelProps,
+  type WorkLocationAssociationsPanelProps,
   searchLocations,
   NominatimResult,
 } from './util';
@@ -301,7 +302,8 @@ const WorkingTimesPanel = ({
             placeholder='Search…'
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            sx={{ ml: { xs: 0, sm: 'auto' }, width: 210 }}
+            className={classes.tableSearchField}
+            sx={{ ml: { xs: 0, sm: 'auto' } }}
             slotProps={{
               input: {
                 endAdornment: (
@@ -640,7 +642,8 @@ const ShiftsPanel = ({ locations, shifts, defaultLocationId, onSave }: ShiftsPan
             placeholder='Search…'
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            sx={{ ml: { xs: 0, sm: 'auto' }, width: 210 }}
+            className={classes.tableSearchField}
+            sx={{ ml: { xs: 0, sm: 'auto' } }}
             slotProps={{
               input: {
                 endAdornment: (
@@ -951,7 +954,8 @@ const AssocProfilesPanel = ({
             placeholder='Search…'
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            sx={{ ml: { xs: 0, sm: 'auto' }, width: 210 }}
+            className={classes.tableSearchField}
+            sx={{ ml: { xs: 0, sm: 'auto' } }}
             slotProps={{
               input: {
                 endAdornment: (
@@ -1052,6 +1056,357 @@ const AssocProfilesPanel = ({
   );
 };
 
+// ── Work Location Associations panel ─────────────────────────────────────────
+
+const EMPTY_ASSOC_FORM = {
+  workLocationId: '',
+  associatedLocationId: '',
+  description: '',
+};
+
+const WorkLocationAssociationsPanel = ({
+  locations,
+  associations,
+  defaultLocationId,
+  onSave,
+}: WorkLocationAssociationsPanelProps) => {
+  const { classes } = useStyles();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingRow, setEditingRow] = useState<IConfigWorkLocationAssociation | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [form, setForm] = useState(EMPTY_ASSOC_FORM);
+
+  // Associated location search state
+  const [associatedLocationSuggestions, setAssociatedLocationSuggestions] = useState<
+    NominatimResult[]
+  >([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (dialogOpen) {
+      setForm(
+        editingRow
+          ? {
+              workLocationId: editingRow.workLocationId,
+              associatedLocationId: editingRow.associatedLocationId,
+              description: editingRow.description,
+            }
+          : { ...EMPTY_ASSOC_FORM, workLocationId: defaultLocationId ?? '' },
+      );
+      setAssociatedLocationSuggestions([]);
+    }
+  }, [dialogOpen, editingRow]);
+
+  const selectedRow = associations.find((r) => r.id === selectedId) ?? null;
+  const filtered = search
+    ? associations.filter(
+        (r) =>
+          r.workLocationName.toLowerCase().includes(search.toLowerCase()) ||
+          r.associatedLocationName.toLowerCase().includes(search.toLowerCase()),
+      )
+    : associations;
+
+  const handleAssociatedLocationSearch = async (query: string) => {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+      setSearchTimeout(null);
+    }
+
+    if (query.length < 2) {
+      setAssociatedLocationSuggestions([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setSearchLoading(true);
+      const results = await searchLocations(query);
+      setAssociatedLocationSuggestions(results.slice(0, 5));
+      setSearchLoading(false);
+    }, 300);
+
+    setSearchTimeout(timeoutId);
+  };
+
+  const handleSubmit = () => {
+    if (!form.workLocationId || !form.associatedLocationId.trim()) return;
+    const loc = locations.find((l) => l.id === form.workLocationId);
+    const assocLoc = locations.find((l) => l.id === form.associatedLocationId);
+    if (editingRow) {
+      onSave(
+        associations.map((r) =>
+          r.id === editingRow.id
+            ? {
+                ...editingRow,
+                ...form,
+                workLocationName: loc?.name ?? editingRow.workLocationName,
+                associatedLocationName: assocLoc?.name ?? editingRow.associatedLocationName,
+              }
+            : r,
+        ),
+      );
+      setSelectedId(editingRow.id);
+    } else {
+      const n: IConfigWorkLocationAssociation = {
+        id: `wla_${Date.now()}`,
+        workLocationName: loc?.name ?? '',
+        associatedLocationName: assocLoc?.name ?? '',
+        ...form,
+      };
+      onSave([...associations, n]);
+      setSelectedId(n.id);
+    }
+    setDialogOpen(false);
+    setEditingRow(null);
+  };
+
+  const handleDelete = () => {
+    if (!selectedRow) return;
+    onSave(associations.filter((r) => r.id !== selectedRow.id));
+    setSelectedId(null);
+    setDeleteOpen(false);
+  };
+
+  const columns: Column<IConfigWorkLocationAssociation>[] = [
+    {
+      id: 'workLocationName',
+      label: 'Work Location',
+      minWidth: 150,
+      format: (v): React.ReactNode => (
+        <Chip
+          label={String(v || '—')}
+          size='small'
+          sx={{
+            bgcolor: alpha(ACCENT_WL, 0.1),
+            color: ACCENT_WL,
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            height: 20,
+          }}
+        />
+      ),
+    },
+    {
+      id: 'associatedLocationName',
+      label: 'Associated Location',
+      minWidth: 160,
+      format: (v): React.ReactNode => (
+        <Typography variant='body2' fontWeight={600} fontSize='0.82rem'>
+          {String(v || '—')}
+        </Typography>
+      ),
+    },
+    {
+      id: 'description',
+      label: 'Description',
+      minWidth: 180,
+      format: (v): React.ReactNode => (
+        <Typography variant='body2' color='text.secondary' fontSize='0.8rem' noWrap>
+          {String(v || '—')}
+        </Typography>
+      ),
+    },
+  ];
+
+  return (
+    <Box sx={{ mt: 2 }}>
+      <PanelHeader
+        icon={<LinkIcon sx={{ fontSize: '1.1rem' }} />}
+        title='Work Location Associations'
+        count={associations.length}
+        countLabel='association'
+        accent='#6366f1'
+      />
+      <Paper
+        variant='outlined'
+        sx={{
+          borderRadius: 0,
+          borderTop: 'none',
+          borderBottom: 'none',
+          px: 1.5,
+          py: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 0.5,
+        }}
+      >
+        <Box className={classes.toolbarButtons}>
+          {!selectedRow ? (
+            <Tooltip title='Add a work location association'>
+              <Button
+                size='small'
+                variant='contained'
+                startIcon={<AddIcon />}
+                sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: alpha('#6366f1', 0.85) } }}
+                onClick={() => {
+                  setEditingRow(null);
+                  setDialogOpen(true);
+                }}
+              >
+                New
+              </Button>
+            </Tooltip>
+          ) : (
+            <Button
+              size='small'
+              variant='contained'
+              startIcon={<EditIcon />}
+              sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: alpha('#6366f1', 0.85) } }}
+              onClick={() => {
+                setEditingRow(selectedRow);
+                setDialogOpen(true);
+              }}
+            >
+              Edit
+            </Button>
+          )}
+          {selectedRow && (
+            <Button
+              size='small'
+              variant='outlined'
+              color='error'
+              startIcon={<DeleteIcon />}
+              onClick={() => setDeleteOpen(true)}
+            >
+              Delete
+            </Button>
+          )}
+          {selectedRow && (
+            <Button
+              size='small'
+              variant='outlined'
+              startIcon={<ClearIcon />}
+              sx={{ textTransform: 'none' }}
+              onClick={() => setSelectedId(null)}
+            >
+              Clear
+            </Button>
+          )}
+          <TextField
+            size='small'
+            placeholder='Search…'
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className={classes.tableSearchField}
+            sx={{ ml: { xs: 0, sm: 'auto' } }}
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position='end'>
+                    <SearchIcon sx={{ fontSize: '1rem' }} />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+        </Box>
+      </Paper>
+      <Paper
+        elevation={1}
+        sx={{
+          borderRadius: '0 0 10px 10px',
+          overflow: 'hidden',
+          border: '1px solid',
+          borderColor: alpha('#6366f1', 0.25),
+          borderTop: 'none',
+        }}
+      >
+        <DataTable
+          columns={columns}
+          data={filtered}
+          rowKey='id'
+          searchable={false}
+          initialRowsPerPage={10}
+          onRowClick={(row) => setSelectedId(selectedId === row.id ? null : row.id)}
+          activeRowKey={selectedId ?? undefined}
+        />
+      </Paper>
+
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => {
+          setDialogOpen(false);
+          setEditingRow(null);
+        }}
+        onSubmit={handleSubmit}
+        isEdit={!!editingRow}
+        icon={<LinkIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent='#6366f1'
+        title='Work Location Association'
+        subtitle='Link a work location to another location'
+        submitDisabled={!form.workLocationId || !form.associatedLocationId.trim()}
+        maxWidth='sm'
+      >
+        {editingRow ? (
+          <TextField
+            label='Work Location'
+            size='small'
+            fullWidth
+            value={editingRow.workLocationName}
+            disabled
+          />
+        ) : (
+          <FormControl size='small' fullWidth required>
+            <InputLabel>Work Location</InputLabel>
+            <Select
+              label='Work Location'
+              value={form.workLocationId}
+              onChange={(e) => setForm((f) => ({ ...f, workLocationId: e.target.value }))}
+            >
+              {locations.map((l) => (
+                <MenuItem key={l.id} value={l.id}>
+                  {l.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+        <Box sx={{ position: 'relative' }}>
+          <FormControl size='small' fullWidth required>
+            <InputLabel>Associated Location</InputLabel>
+            <Select
+              label='Associated Location'
+              value={form.associatedLocationId}
+              onChange={(e) => setForm((f) => ({ ...f, associatedLocationId: e.target.value }))}
+              renderValue={(value) => {
+                const loc = locations.find((l) => l.id === value);
+                return loc?.name ?? value;
+              }}
+            >
+              {locations
+                .filter((l) => l.id !== form.workLocationId)
+                .map((l) => (
+                  <MenuItem key={l.id} value={l.id}>
+                    {l.name}
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
+        </Box>
+        <TextField
+          label='Description'
+          size='small'
+          fullWidth
+          multiline
+          minRows={2}
+          value={form.description}
+          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+        />
+      </ConfigFormDialog>
+
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        entityName='Work Location Association'
+        itemName={selectedRow?.associatedLocationName}
+      />
+    </Box>
+  );
+};
+
 // ── Work Locations section ─────────────────────────────────────────────────────
 
 const EMPTY_WL_FORM = {
@@ -1077,7 +1432,12 @@ const LANGUAGES = [
   { value: 'es', label: 'Spanish' },
 ];
 
-type WLActivePanel = 'none' | 'workingTimes' | 'associatedProfiles' | 'shifts';
+type WLActivePanel =
+  | 'none'
+  | 'workingTimes'
+  | 'associatedProfiles'
+  | 'shifts'
+  | 'workLocationAssociations';
 
 const WorkLocations = () => {
   const { classes } = useStyles();
@@ -1180,6 +1540,7 @@ const WorkLocations = () => {
     wt = apiUC?.workingTimes ?? [],
     sh = apiUC?.shifts ?? [],
     ap = apiUC?.associatedProfiles ?? [],
+    wla = apiUC?.workLocationAssociations ?? [],
   ) => {
     setRows(locs);
     saveSection('userConfig', {
@@ -1187,6 +1548,7 @@ const WorkLocations = () => {
       workingTimes: wt,
       shifts: sh,
       associatedProfiles: ap,
+      workLocationAssociations: wla,
     });
   };
 
@@ -1447,6 +1809,28 @@ const WorkLocations = () => {
             >
               Shift Management
             </Button>
+            <Button
+              size='small'
+              startIcon={<LinkIcon />}
+              variant={activePanel === 'workLocationAssociations' ? 'contained' : 'outlined'}
+              onClick={() => togglePanel('workLocationAssociations')}
+              sx={{
+                textTransform: 'none',
+                border: '1px solid',
+                borderColor: '#6366f1',
+                bgcolor: activePanel === 'workLocationAssociations' ? '#6366f1' : undefined,
+                color: activePanel === 'workLocationAssociations' ? '#fff' : '#6366f1',
+                '&:hover': {
+                  bgcolor:
+                    activePanel === 'workLocationAssociations'
+                      ? alpha('#6366f1', 0.85)
+                      : alpha('#6366f1', 0.08),
+                  borderColor: '#6366f1',
+                },
+              }}
+            >
+              Work Location Associations
+            </Button>
           </Box>
         </Paper>
 
@@ -1542,7 +1926,8 @@ const WorkLocations = () => {
                   placeholder='Search…'
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  sx={{ ml: { xs: 0, sm: 'auto' }, width: 210 }}
+                  className={classes.tableSearchField}
+                  sx={{ ml: { xs: 0, sm: 'auto' } }}
                   slotProps={{
                     input: {
                       endAdornment: (
@@ -1592,7 +1977,15 @@ const WorkLocations = () => {
             locations={rows}
             associatedProfiles={apiUC?.associatedProfiles ?? []}
             defaultLocationId={selectedId}
-            onSave={(ap) => save(rows, apiUC?.workingTimes ?? [], apiUC?.shifts ?? [], ap)}
+            onSave={(ap) =>
+              save(
+                rows,
+                apiUC?.workingTimes ?? [],
+                apiUC?.shifts ?? [],
+                ap,
+                apiUC?.workLocationAssociations ?? [],
+              )
+            }
           />
         )}
         {activePanel === 'shifts' && (
@@ -1600,7 +1993,31 @@ const WorkLocations = () => {
             locations={rows}
             shifts={apiUC?.shifts ?? []}
             defaultLocationId={selectedId}
-            onSave={(sh) => save(rows, apiUC?.workingTimes ?? [], sh)}
+            onSave={(sh) =>
+              save(
+                rows,
+                apiUC?.workingTimes ?? [],
+                sh,
+                apiUC?.associatedProfiles ?? [],
+                apiUC?.workLocationAssociations ?? [],
+              )
+            }
+          />
+        )}
+        {activePanel === 'workLocationAssociations' && (
+          <WorkLocationAssociationsPanel
+            locations={rows}
+            associations={apiUC?.workLocationAssociations ?? []}
+            defaultLocationId={selectedId}
+            onSave={(wla) =>
+              save(
+                rows,
+                apiUC?.workingTimes ?? [],
+                apiUC?.shifts ?? [],
+                apiUC?.associatedProfiles ?? [],
+                wla,
+              )
+            }
           />
         )}
       </AccordionDetails>
@@ -1653,7 +2070,23 @@ const WorkLocations = () => {
             }}
             placeholder='Type city name...'
             InputProps={{
-              endAdornment: searchLoading ? <CircularProgress size={14} /> : null,
+              endAdornment: searchLoading ? (
+                <CircularProgress size={14} />
+              ) : form.city ? (
+                <InputAdornment position='end'>
+                  <ClearIcon
+                    sx={{ fontSize: '1rem', cursor: 'pointer', color: 'text.secondary' }}
+                    onClick={() => {
+                      setForm((f) => ({ ...f, city: '', state: '', country: '' }));
+                      setCitySuggestions([]);
+                    }}
+                  />
+                </InputAdornment>
+              ) : (
+                <InputAdornment position='end'>
+                  <SearchIcon sx={{ fontSize: '1rem', color: 'text.secondary' }} />
+                </InputAdornment>
+              ),
             }}
           />
           {citySuggestions.length > 0 && (

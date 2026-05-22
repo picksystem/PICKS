@@ -776,11 +776,21 @@ export interface IConfigWorkLocationAssociatedProfile {
   consultantName: string;
 }
 
+export interface IConfigWorkLocationAssociation {
+  id: string;
+  workLocationId: string;
+  workLocationName: string;
+  associatedLocationId: string;
+  associatedLocationName: string;
+  description: string;
+}
+
 export interface IConfigUserConfig {
   workLocations: IConfigWorkLocation[];
   workingTimes: IConfigWorkLocationWorkingTime[];
   shifts: IConfigWorkLocationShift[];
   associatedProfiles: IConfigWorkLocationAssociatedProfile[];
+  workLocationAssociations: IConfigWorkLocationAssociation[];
 }
 
 // ── Templates section ─────────────────────────────────────────────────────────
@@ -1481,6 +1491,7 @@ export const DEFAULT_CONFIGURATION_DATA: IConfigurationData = {
     workingTimes: [],
     shifts: [],
     associatedProfiles: [],
+    workLocationAssociations: [],
   },
   reasonCodes: {
     priorityChangeReasonCodes: [],
