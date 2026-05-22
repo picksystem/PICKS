@@ -1,0 +1,124 @@
+import React from 'react';
+import { Box, Typography, Switch } from '@serviceops/component';
+import { Accordion, AccordionSummary, AccordionDetails, Divider } from '@mui/material';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { IConfigSLAAdminControls } from '@serviceops/interfaces';
+import { useStyles } from '../../styles';
+
+interface CalendarRulesSectionProps {
+  ctrl: IConfigSLAAdminControls;
+  onUpdate: <K extends keyof IConfigSLAAdminControls>(
+    key: K,
+    value: IConfigSLAAdminControls[K],
+  ) => void;
+}
+
+const ToggleRow = ({
+  label,
+  checked,
+  onChange,
+  disabled = false,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  disabled?: boolean;
+}) => (
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      py: 0.625,
+      opacity: disabled ? 0.42 : 1,
+    }}
+  >
+    <Typography sx={{ fontSize: '0.83rem', fontWeight: 500, color: 'text.primary', pr: 1 }}>
+      {label}
+    </Typography>
+    <Switch
+      size='small'
+      checked={checked}
+      disabled={disabled}
+      onChange={(e) => onChange(e.target.checked)}
+      color='primary'
+    />
+  </Box>
+);
+
+const RowDivider = () => <Divider sx={{ opacity: 0.45 }} />;
+
+const CalendarRulesSection = ({ ctrl, onUpdate }: CalendarRulesSectionProps) => {
+  const { classes } = useStyles();
+  const off = !ctrl.enabled;
+
+  return (
+    <Accordion className={classes.sectionAccordion} elevation={0}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: 1.5,
+              bgcolor: '#7c3aed',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <CalendarMonthIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+          </Box>
+          <Box>
+            <Typography className={classes.sectionTitle}>Calendar Rules</Typography>
+            <Typography className={classes.sectionSubtitle}>
+              Define which calendars and non-working periods the SLA clock respects
+            </Typography>
+          </Box>
+        </Box>
+      </AccordionSummary>
+      <AccordionDetails sx={{ p: 2 }}>
+        <Box
+          sx={{
+            borderRadius: 1.5,
+            overflow: 'hidden',
+            border: '1px solid',
+            borderColor: 'divider',
+            px: 1.5,
+            py: 0.5,
+          }}
+        >
+          {(
+            [
+              ['basedOnCallerCalendar', "Based on caller's working calendar"],
+              ['basedOnConsultantCalendar', "Based on consultant's working calendar"],
+              ['excludeCallerBankHolidays', "Exclude caller's bank holidays"],
+              ['excludeCallerLeaves', "Exclude caller's leaves"],
+              ['excludeConsultantBankHolidays', "Exclude consultant's bank holidays"],
+              ['excludeConsultantLeaves', "Exclude consultant's leaves"],
+              ['excludeSaturdaysAndSundays', 'Exclude Saturdays and Sundays'],
+              ['excludeFridaysAndSaturdays', 'Exclude Fridays and Saturdays'],
+              ['excludeFridaysOnly', 'Exclude Fridays only'],
+              ['excludeSaturdaysOnly', 'Exclude Saturdays only'],
+              ['excludeSundaysOnly', 'Exclude Sundays only'],
+            ] as [keyof IConfigSLAAdminControls, string][]
+          ).map(([key, label], i, arr) => (
+            <React.Fragment key={key}>
+              <ToggleRow
+                label={label}
+                checked={ctrl[key] as boolean}
+                disabled={off}
+                onChange={(v) => onUpdate(key, v)}
+              />
+              {i < arr.length - 1 && <RowDivider />}
+            </React.Fragment>
+          ))}
+        </Box>
+      </AccordionDetails>
+    </Accordion>
+  );
+};
+
+export { CalendarRulesSection };

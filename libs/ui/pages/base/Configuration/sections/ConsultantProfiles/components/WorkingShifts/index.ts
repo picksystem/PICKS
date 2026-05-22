@@ -1,0 +1,1 @@
+export { WorkingShiftsPanel } from './WorkingShiftsPanel';

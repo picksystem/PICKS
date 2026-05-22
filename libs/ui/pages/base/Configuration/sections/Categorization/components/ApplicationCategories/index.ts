@@ -1,0 +1,1 @@
+export { ApplicationCategoriesSection } from './ApplicationCategoriesSection';

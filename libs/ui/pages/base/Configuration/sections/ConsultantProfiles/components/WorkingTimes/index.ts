@@ -1,0 +1,1 @@
+export { WorkingTimesPanel } from './WorkingTimesPanel';
