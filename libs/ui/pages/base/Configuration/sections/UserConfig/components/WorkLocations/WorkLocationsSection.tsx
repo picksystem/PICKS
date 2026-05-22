@@ -60,10 +60,10 @@ import {
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
 
-const ACCENT_WL = '#be185d';
+const ACCENT_WL = '#0369a1';
 const ACCENT_WT = '#0369a1';
-const ACCENT_AP = '#059669';
-const ACCENT_SM = '#7c3aed';
+const ACCENT_AP = '#0369a1';
+const ACCENT_SM = '#0369a1';
 
 const DAY_OPTIONS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -260,7 +260,7 @@ const WorkingTimesPanel = ({
                 size='small'
                 variant='contained'
                 startIcon={<AddIcon />}
-                sx={{ bgcolor: ACCENT_WT, '&:hover': { bgcolor: alpha(ACCENT_WT, 0.85) } }}
+                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                 onClick={() => {
                   setEditingRow(null);
                   setDialogOpen(true);
@@ -274,7 +274,7 @@ const WorkingTimesPanel = ({
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: ACCENT_WT, '&:hover': { bgcolor: alpha(ACCENT_WT, 0.85) } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -284,22 +284,43 @@ const WorkingTimesPanel = ({
             </Button>
           )}
           {selectedRow && (
-            <Button
-              size='small'
-              variant='outlined'
-              color='error'
-              startIcon={<DeleteIcon />}
-              onClick={() => setDeleteOpen(true)}
-            >
-              Delete
-            </Button>
+            <>
+              <Button
+                size='small'
+                variant='outlined'
+                color='error'
+                startIcon={<DeleteIcon />}
+                onClick={() => setDeleteOpen(true)}
+              >
+                Delete
+              </Button>
+              <Box
+                component='span'
+                sx={{
+                  display: { xs: 'none', sm: 'block' },
+                  width: '1px',
+                  height: '20px',
+                  bgcolor: alpha('#2d5ebb', 0.3),
+                  mx: 0.75,
+                  alignSelf: 'center',
+                }}
+              />
+            </>
           )}
           {selectedRow && (
             <Button
               size='small'
               variant='outlined'
               startIcon={<ClearIcon />}
-              sx={{ textTransform: 'none' }}
+              sx={{
+                textTransform: 'none',
+                borderColor: '#2d5ebb',
+                color: '#2d5ebb',
+                '&:hover': {
+                  borderColor: '#2d5ebb',
+                  bgcolor: alpha('#2d5ebb', 0.08),
+                },
+              }}
               onClick={() => setSelectedId(null)}
             >
               Clear
@@ -600,7 +621,7 @@ const ShiftsPanel = ({ locations, shifts, defaultLocationId, onSave }: ShiftsPan
                 size='small'
                 variant='contained'
                 startIcon={<AddIcon />}
-                sx={{ bgcolor: ACCENT_SM, '&:hover': { bgcolor: alpha(ACCENT_SM, 0.85) } }}
+                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                 onClick={() => {
                   setEditingRow(null);
                   setDialogOpen(true);
@@ -614,7 +635,7 @@ const ShiftsPanel = ({ locations, shifts, defaultLocationId, onSave }: ShiftsPan
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: ACCENT_SM, '&:hover': { bgcolor: alpha(ACCENT_SM, 0.85) } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -624,22 +645,43 @@ const ShiftsPanel = ({ locations, shifts, defaultLocationId, onSave }: ShiftsPan
             </Button>
           )}
           {selectedRow && (
-            <Button
-              size='small'
-              variant='outlined'
-              color='error'
-              startIcon={<DeleteIcon />}
-              onClick={() => setDeleteOpen(true)}
-            >
-              Delete
-            </Button>
+            <>
+              <Button
+                size='small'
+                variant='outlined'
+                color='error'
+                startIcon={<DeleteIcon />}
+                onClick={() => setDeleteOpen(true)}
+              >
+                Delete
+              </Button>
+              <Box
+                component='span'
+                sx={{
+                  display: { xs: 'none', sm: 'block' },
+                  width: '1px',
+                  height: '20px',
+                  bgcolor: alpha('#2d5ebb', 0.3),
+                  mx: 0.75,
+                  alignSelf: 'center',
+                }}
+              />
+            </>
           )}
           {selectedRow && (
             <Button
               size='small'
               variant='outlined'
               startIcon={<ClearIcon />}
-              sx={{ textTransform: 'none' }}
+              sx={{
+                textTransform: 'none',
+                borderColor: '#2d5ebb',
+                color: '#2d5ebb',
+                '&:hover': {
+                  borderColor: '#2d5ebb',
+                  bgcolor: alpha('#2d5ebb', 0.08),
+                },
+              }}
               onClick={() => setSelectedId(null)}
             >
               Clear
@@ -923,7 +965,7 @@ const AssocProfilesPanel = ({
                 size='small'
                 variant='contained'
                 startIcon={<AddIcon />}
-                sx={{ bgcolor: ACCENT_AP, '&:hover': { bgcolor: alpha(ACCENT_AP, 0.85) } }}
+                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                 onClick={() => {
                   setEditingRow(null);
                   setDialogOpen(true);
@@ -937,7 +979,7 @@ const AssocProfilesPanel = ({
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: ACCENT_AP, '&:hover': { bgcolor: alpha(ACCENT_AP, 0.85) } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -1225,7 +1267,7 @@ const WorkLocationAssociationsPanel = ({
         title='Work Location Associations'
         count={associations.length}
         countLabel='association'
-        accent='#6366f1'
+        accent={ACCENT_WL}
       />
       <Paper
         variant='outlined'
@@ -1247,7 +1289,7 @@ const WorkLocationAssociationsPanel = ({
                 size='small'
                 variant='contained'
                 startIcon={<AddIcon />}
-                sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: alpha('#6366f1', 0.85) } }}
+                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                 onClick={() => {
                   setEditingRow(null);
                   setDialogOpen(true);
@@ -1261,7 +1303,7 @@ const WorkLocationAssociationsPanel = ({
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: alpha('#6366f1', 0.85) } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -1271,22 +1313,43 @@ const WorkLocationAssociationsPanel = ({
             </Button>
           )}
           {selectedRow && (
-            <Button
-              size='small'
-              variant='outlined'
-              color='error'
-              startIcon={<DeleteIcon />}
-              onClick={() => setDeleteOpen(true)}
-            >
-              Delete
-            </Button>
+            <>
+              <Button
+                size='small'
+                variant='outlined'
+                color='error'
+                startIcon={<DeleteIcon />}
+                onClick={() => setDeleteOpen(true)}
+              >
+                Delete
+              </Button>
+              <Box
+                component='span'
+                sx={{
+                  display: { xs: 'none', sm: 'block' },
+                  width: '1px',
+                  height: '20px',
+                  bgcolor: alpha('#2d5ebb', 0.3),
+                  mx: 0.75,
+                  alignSelf: 'center',
+                }}
+              />
+            </>
           )}
           {selectedRow && (
             <Button
               size='small'
               variant='outlined'
               startIcon={<ClearIcon />}
-              sx={{ textTransform: 'none' }}
+              sx={{
+                textTransform: 'none',
+                borderColor: '#2d5ebb',
+                color: '#2d5ebb',
+                '&:hover': {
+                  borderColor: '#2d5ebb',
+                  bgcolor: alpha('#2d5ebb', 0.08),
+                },
+              }}
               onClick={() => setSelectedId(null)}
             >
               Clear
@@ -1341,7 +1404,7 @@ const WorkLocationAssociationsPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<LinkIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent='#6366f1'
+        accent={ACCENT_WL}
         title='Work Location Association'
         subtitle='Link a work location to another location'
         submitDisabled={!form.workLocationId || !form.associatedLocationId.trim()}
@@ -1871,14 +1934,8 @@ export const WorkLocations = () => {
               onClick={() => setActivePanel('none')}
               sx={{
                 textTransform: 'none',
-                border: '1px solid',
-                borderColor: ACCENT_WL,
-                bgcolor: !panelActive ? ACCENT_WL : undefined,
-                color: !panelActive ? '#fff' : ACCENT_WL,
-                '&:hover': {
-                  bgcolor: !panelActive ? alpha(ACCENT_WL, 0.85) : alpha(ACCENT_WL, 0.08),
-                  borderColor: ACCENT_WL,
-                },
+                bgcolor: !panelActive ? '#2d5ebb' : undefined,
+                color: !panelActive ? '#fff' : '#2d5ebb',
               }}
             >
               Work Locations
@@ -1890,17 +1947,8 @@ export const WorkLocations = () => {
               onClick={() => togglePanel('workingTimes')}
               sx={{
                 textTransform: 'none',
-                border: '1px solid',
-                borderColor: ACCENT_WT,
-                bgcolor: activePanel === 'workingTimes' ? ACCENT_WT : undefined,
-                color: activePanel === 'workingTimes' ? '#fff' : ACCENT_WT,
-                '&:hover': {
-                  bgcolor:
-                    activePanel === 'workingTimes'
-                      ? alpha(ACCENT_WT, 0.85)
-                      : alpha(ACCENT_WT, 0.08),
-                  borderColor: ACCENT_WT,
-                },
+                bgcolor: activePanel === 'workingTimes' ? '#2d5ebb' : undefined,
+                color: activePanel === 'workingTimes' ? '#fff' : '#2d5ebb',
               }}
             >
               Working Times
@@ -1912,17 +1960,8 @@ export const WorkLocations = () => {
               onClick={() => togglePanel('associatedProfiles')}
               sx={{
                 textTransform: 'none',
-                border: '1px solid',
-                borderColor: ACCENT_AP,
-                bgcolor: activePanel === 'associatedProfiles' ? ACCENT_AP : undefined,
-                color: activePanel === 'associatedProfiles' ? '#fff' : ACCENT_AP,
-                '&:hover': {
-                  bgcolor:
-                    activePanel === 'associatedProfiles'
-                      ? alpha(ACCENT_AP, 0.85)
-                      : alpha(ACCENT_AP, 0.08),
-                  borderColor: ACCENT_AP,
-                },
+                bgcolor: activePanel === 'associatedProfiles' ? '#2d5ebb' : undefined,
+                color: activePanel === 'associatedProfiles' ? '#fff' : '#2d5ebb',
               }}
             >
               Associated Consultant Profiles
@@ -1934,15 +1973,8 @@ export const WorkLocations = () => {
               onClick={() => togglePanel('shifts')}
               sx={{
                 textTransform: 'none',
-                border: '1px solid',
-                borderColor: ACCENT_SM,
-                bgcolor: activePanel === 'shifts' ? ACCENT_SM : undefined,
-                color: activePanel === 'shifts' ? '#fff' : ACCENT_SM,
-                '&:hover': {
-                  bgcolor:
-                    activePanel === 'shifts' ? alpha(ACCENT_SM, 0.85) : alpha(ACCENT_SM, 0.08),
-                  borderColor: ACCENT_SM,
-                },
+                bgcolor: activePanel === 'shifts' ? '#2d5ebb' : undefined,
+                color: activePanel === 'shifts' ? '#fff' : '#2d5ebb',
               }}
             >
               Shift Management
@@ -1954,17 +1986,8 @@ export const WorkLocations = () => {
               onClick={() => togglePanel('workLocationAssociations')}
               sx={{
                 textTransform: 'none',
-                border: '1px solid',
-                borderColor: '#6366f1',
-                bgcolor: activePanel === 'workLocationAssociations' ? '#6366f1' : undefined,
-                color: activePanel === 'workLocationAssociations' ? '#fff' : '#6366f1',
-                '&:hover': {
-                  bgcolor:
-                    activePanel === 'workLocationAssociations'
-                      ? alpha('#6366f1', 0.85)
-                      : alpha('#6366f1', 0.08),
-                  borderColor: '#6366f1',
-                },
+                bgcolor: activePanel === 'workLocationAssociations' ? '#2d5ebb' : undefined,
+                color: activePanel === 'workLocationAssociations' ? '#fff' : '#2d5ebb',
               }}
             >
               Work Location Associations
@@ -2003,8 +2026,8 @@ export const WorkLocations = () => {
                       variant='contained'
                       startIcon={<AddIcon />}
                       sx={{
-                        bgcolor: ACCENT_WL,
-                        '&:hover': { bgcolor: alpha(ACCENT_WL, 0.85) },
+                        bgcolor: '#2d5ebb',
+                        '&:hover': { bgcolor: '#2d5ebb' },
                       }}
                       onClick={() => {
                         setEditingRow(null);
@@ -2020,7 +2043,7 @@ export const WorkLocations = () => {
                       size='small'
                       variant='contained'
                       startIcon={<EditIcon />}
-                      sx={{ bgcolor: ACCENT_WL, '&:hover': { bgcolor: alpha(ACCENT_WL, 0.85) } }}
+                      sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                       onClick={() => {
                         setEditingRow(selectedRow);
                         setDialogOpen(true);
@@ -2043,7 +2066,7 @@ export const WorkLocations = () => {
                         display: { xs: 'none', sm: 'block' },
                         width: '1px',
                         height: '20px',
-                        bgcolor: alpha(ACCENT_WL, 0.3),
+                        bgcolor: alpha('#2d5ebb', 0.3),
                         mx: 0.75,
                         alignSelf: 'center',
                       }}
@@ -2052,7 +2075,15 @@ export const WorkLocations = () => {
                       size='small'
                       variant='outlined'
                       startIcon={<ClearIcon />}
-                      sx={{ textTransform: 'none' }}
+                      sx={{
+                        textTransform: 'none',
+                        borderColor: '#2d5ebb',
+                        color: '#2d5ebb',
+                        '&:hover': {
+                          borderColor: '#2d5ebb',
+                          bgcolor: alpha('#2d5ebb', 0.08),
+                        },
+                      }}
                       onClick={() => setSelectedId(null)}
                     >
                       Clear

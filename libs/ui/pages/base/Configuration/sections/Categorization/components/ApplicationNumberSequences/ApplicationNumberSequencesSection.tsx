@@ -226,7 +226,7 @@ const ApplicationNumberSequencesSection = ({
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: '#0f766e',
+              bgcolor: '#2d5ebb',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -296,7 +296,7 @@ const ApplicationNumberSequencesSection = ({
                   sx={{
                     width: '1px',
                     height: '20px',
-                    bgcolor: alpha('#0f766e', 0.3),
+                    bgcolor: alpha('#2d5ebb', 0.3),
                     display: { xs: 'none', sm: 'block' },
                   }}
                 />
@@ -351,7 +351,7 @@ const ApplicationNumberSequencesSection = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<NumbersIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent='#0f766e'
+        accent='#2d5ebb'
         title='Number Sequence'
         subtitle='Manage number sequences per application and ticket type'
         submitDisabled={!form.numberSequenceCode.trim()}

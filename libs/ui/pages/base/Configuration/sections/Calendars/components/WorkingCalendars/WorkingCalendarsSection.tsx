@@ -1338,7 +1338,7 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
   const panelBtn = (
     panel: Exclude<WCActiveView, 'calendar'>,
     label: string,
-    accent: string,
+    _accent: string,
     Icon: React.ElementType,
   ) => (
     <Button
@@ -1348,14 +1348,8 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
       startIcon={<Icon />}
       sx={{
         textTransform: 'none',
-        border: '1px solid',
-        borderColor: accent,
-        color: activeView === panel ? '#fff' : accent,
-        bgcolor: activeView === panel ? accent : undefined,
-        '&:hover': {
-          bgcolor: activeView === panel ? alpha(accent, 0.85) : alpha(accent, 0.08),
-          borderColor: accent,
-        },
+        bgcolor: activeView === panel ? '#2d5ebb' : undefined,
+        color: activeView === panel ? '#fff' : '#2d5ebb',
       }}
     >
       {label}
@@ -1406,15 +1400,8 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
               startIcon={<CalendarTodayIcon />}
               sx={{
                 textTransform: 'none',
-                border: '1px solid',
-                borderColor: ACCENT_WC,
-                color: activeView === 'calendar' ? '#fff' : ACCENT_WC,
-                bgcolor: activeView === 'calendar' ? ACCENT_WC : undefined,
-                '&:hover': {
-                  bgcolor:
-                    activeView === 'calendar' ? alpha(ACCENT_WC, 0.85) : alpha(ACCENT_WC, 0.08),
-                  borderColor: ACCENT_WC,
-                },
+                bgcolor: activeView === 'calendar' ? '#2d5ebb' : undefined,
+                color: activeView === 'calendar' ? '#fff' : '#2d5ebb',
               }}
             >
               Working Calendars

@@ -220,8 +220,8 @@ const WorkingDayTemplateDialog = ({
                 px: 1.5,
                 py: 0.4,
                 borderRadius: 1,
-                bgcolor: alpha(ACCENT_WDT, 0.07),
-                border: `1px solid ${alpha(ACCENT_WDT, 0.2)}`,
+                bgcolor: alpha('#2d5ebb', 0.07),
+                border: `1px solid ${alpha('#2d5ebb', 0.2)}`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 0.75,
@@ -261,8 +261,8 @@ const WorkingDayTemplateDialog = ({
               gap: 1.5,
               p: 2,
               borderRadius: 2,
-              bgcolor: alpha(ACCENT_WDT, 0.04),
-              border: `1px solid ${alpha(ACCENT_WDT, 0.12)}`,
+              bgcolor: alpha('#2d5ebb', 0.04),
+              border: `1px solid ${alpha('#2d5ebb', 0.12)}`,
             }}
           >
             {[
@@ -327,10 +327,10 @@ const WorkingDayTemplateDialog = ({
             borderRadius: 2,
             minWidth: 140,
             background: `linear-gradient(135deg, #5b21b6, ${ACCENT_WDT})`,
-            boxShadow: `0 4px 14px ${alpha(ACCENT_WDT, 0.4)}`,
+            boxShadow: `0 4px 14px ${alpha('#2d5ebb', 0.4)}`,
             '&:hover': {
               background: `linear-gradient(135deg, #4c1d95, #6b21a8)`,
-              boxShadow: `0 6px 20px ${alpha(ACCENT_WDT, 0.5)}`,
+              boxShadow: `0 6px 20px ${alpha('#2d5ebb', 0.5)}`,
             },
             '&:disabled': { background: 'action.disabledBackground' },
           }}
@@ -496,7 +496,7 @@ const WorkingDayTemplatesSection = ({ data, onDataChange }: WorkingDayTemplatesS
                 width: 32,
                 height: 32,
                 borderRadius: 1.5,
-                bgcolor: ACCENT_WDT,
+                bgcolor: '#2d5ebb',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -529,8 +529,8 @@ const WorkingDayTemplatesSection = ({ data, onDataChange }: WorkingDayTemplatesS
                     }}
                     sx={{
                       textTransform: 'none',
-                      bgcolor: ACCENT_WDT,
-                      '&:hover': { bgcolor: alpha(ACCENT_WDT, 0.85) },
+                      bgcolor: '#2d5ebb',
+                      '&:hover': { bgcolor: alpha('#2d5ebb', 0.85) },
                     }}
                   >
                     New
@@ -548,8 +548,8 @@ const WorkingDayTemplatesSection = ({ data, onDataChange }: WorkingDayTemplatesS
                     }}
                     sx={{
                       textTransform: 'none',
-                      bgcolor: ACCENT_WDT,
-                      '&:hover': { bgcolor: alpha(ACCENT_WDT, 0.85) },
+                      bgcolor: '#2d5ebb',
+                      '&:hover': { bgcolor: alpha('#2d5ebb', 0.85) },
                     }}
                   >
                     Edit
@@ -570,7 +570,7 @@ const WorkingDayTemplatesSection = ({ data, onDataChange }: WorkingDayTemplatesS
                       display: { xs: 'none', sm: 'block' },
                       width: '1px',
                       height: '20px',
-                      bgcolor: alpha(ACCENT_WDT, 0.3),
+                      bgcolor: alpha('#2d5ebb', 0.3),
                       mx: 0.75,
                       alignSelf: 'center',
                     }}

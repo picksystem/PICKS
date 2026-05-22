@@ -261,8 +261,8 @@ export const PanelToolbar = ({
               startIcon={<AddIcon />}
               sx={{
                 textTransform: 'none',
-                bgcolor: accent,
-                '&:hover': { bgcolor: alpha(accent, 0.85) },
+                bgcolor: '#2d5ebb',
+                '&:hover': { bgcolor: '#2d5ebb' },
               }}
               onClick={onNew}
             >
@@ -276,8 +276,8 @@ export const PanelToolbar = ({
             startIcon={<EditIcon />}
             sx={{
               textTransform: 'none',
-              bgcolor: accent,
-              '&:hover': { bgcolor: alpha(accent, 0.85) },
+              bgcolor: '#2d5ebb',
+              '&:hover': { bgcolor: '#2d5ebb' },
             }}
             onClick={onEdit}
           >
@@ -302,7 +302,7 @@ export const PanelToolbar = ({
                 display: { xs: 'block', sm: 'none' },
                 width: '100%',
                 height: '1px',
-                bgcolor: alpha(accent, 0.3),
+                bgcolor: alpha('#2d5ebb', 0.3),
                 my: 0.5,
               }}
             />
@@ -312,7 +312,7 @@ export const PanelToolbar = ({
                 display: { xs: 'none', sm: 'block' },
                 width: '1px',
                 height: '20px',
-                bgcolor: alpha(accent, 0.3),
+                bgcolor: alpha('#2d5ebb', 0.3),
                 mx: 0.75,
                 alignSelf: 'center',
               }}
@@ -321,7 +321,15 @@ export const PanelToolbar = ({
               size='small'
               variant='outlined'
               startIcon={<ClearIcon />}
-              sx={{ textTransform: 'none' }}
+              sx={{
+                textTransform: 'none',
+                borderColor: '#2d5ebb',
+                color: '#2d5ebb',
+                '&:hover': {
+                  borderColor: '#2d5ebb',
+                  bgcolor: alpha('#2d5ebb', 0.08),
+                },
+              }}
               onClick={onClear}
             >
               Clear

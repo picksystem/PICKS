@@ -140,16 +140,8 @@ const ApprovalsSection = ({
                   onClick={() => setActiveView(key)}
                   sx={{
                     textTransform: 'none',
-                    borderColor: config.accent,
-                    bgcolor: activeView === key ? config.accent : undefined,
-                    color: activeView === key ? '#fff' : config.accent,
-                    '&:hover': {
-                      bgcolor:
-                        activeView === key
-                          ? alpha(config.accent, 0.85)
-                          : alpha(config.accent, 0.08),
-                      borderColor: config.accent,
-                    },
+                    bgcolor: activeView === key ? '#2d5ebb' : undefined,
+                    color: activeView === key ? '#fff' : '#2d5ebb',
                   }}
                 >
                   {config.title}

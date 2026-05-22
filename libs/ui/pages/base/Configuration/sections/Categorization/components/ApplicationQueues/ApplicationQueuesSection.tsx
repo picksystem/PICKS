@@ -54,10 +54,10 @@ import {
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
 import { NoPick } from '../shared/NoPick';
 
-const ACCENT_QAP = '#d97706';
+const ACCENT_QAP = '#0369a1';
 const ACCENT_QTT = '#0369a1';
-const ACCENT_QTS = '#0f766e';
-const ACCENT_QEX = '#7c3aed';
+const ACCENT_QTS = '#0369a1';
+const ACCENT_QEX = '#0369a1';
 
 const EMPTY_Q_FORM = {
   applicationId: '',
@@ -203,7 +203,7 @@ const QueueApprovalsPanel = ({
           label={String(v || '—')}
           size='small'
           sx={{
-            bgcolor: alpha(ACCENT_QAP, 0.1),
+            bgcolor: alpha('#2d5ebb', 0.1),
             color: ACCENT_QAP,
             fontWeight: 600,
             fontSize: '0.75rem',
@@ -224,7 +224,7 @@ const QueueApprovalsPanel = ({
             fontFamily: 'monospace',
             fontWeight: 700,
             fontSize: '0.75rem',
-            bgcolor: alpha(ACCENT_QAP, 0.08),
+            bgcolor: alpha('#2d5ebb', 0.08),
             color: ACCENT_QAP,
             height: 22,
             borderRadius: 1,
@@ -280,9 +280,9 @@ const QueueApprovalsPanel = ({
           gap: 1.5,
           px: 2,
           py: 1.25,
-          bgcolor: alpha(ACCENT_QAP, 0.08),
+          bgcolor: alpha('#2d5ebb', 0.08),
           border: '1px solid',
-          borderColor: alpha(ACCENT_QAP, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderRadius: '10px 10px 0 0',
           borderBottom: 'none',
         }}
@@ -315,7 +315,7 @@ const QueueApprovalsPanel = ({
                 size='small'
                 variant='contained'
                 startIcon={<AddIcon />}
-                sx={{ bgcolor: ACCENT_QAP, '&:hover': { bgcolor: '#b45309' } }}
+                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                 onClick={() => {
                   setEditingRow(null);
                   setDialogOpen(true);
@@ -329,7 +329,7 @@ const QueueApprovalsPanel = ({
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: ACCENT_QAP, '&:hover': { bgcolor: '#b45309' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -355,7 +355,7 @@ const QueueApprovalsPanel = ({
                 sx={{
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha(ACCENT_QAP, 0.3),
+                  bgcolor: alpha('#2d5ebb', 0.3),
                   display: { xs: 'none', sm: 'block' },
                 }}
               />
@@ -394,7 +394,7 @@ const QueueApprovalsPanel = ({
           borderRadius: '0 0 10px 10px',
           overflow: 'hidden',
           border: '1px solid',
-          borderColor: alpha(ACCENT_QAP, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderTop: 'none',
         }}
       >
@@ -417,7 +417,7 @@ const QueueApprovalsPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<ChecklistIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_QAP}
+        accent={'#2d5ebb'}
         title='Queue Approver'
         subtitle='Add or edit an approver for a queue'
         submitDisabled={!form.approverName.trim() || !form.queueId}
@@ -429,7 +429,7 @@ const QueueApprovalsPanel = ({
             label={editingRow.queueName}
             size='small'
             sx={{
-              bgcolor: alpha(ACCENT_QAP, 0.1),
+              bgcolor: alpha('#2d5ebb', 0.1),
               color: ACCENT_QAP,
               fontWeight: 600,
               alignSelf: 'flex-start',
@@ -545,9 +545,9 @@ const QueueTicketTypePanel = ({
           gap: 1.5,
           px: 2,
           py: 1.25,
-          bgcolor: alpha(ACCENT_QTT, 0.08),
+          bgcolor: alpha('#2d5ebb', 0.08),
           border: '1px solid',
-          borderColor: alpha(ACCENT_QTT, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderRadius: '10px 10px 0 0',
           borderBottom: 'none',
         }}
@@ -569,12 +569,12 @@ const QueueTicketTypePanel = ({
             borderRadius: '0 0 10px 10px',
             overflow: 'hidden',
             border: '1px solid',
-            borderColor: alpha(ACCENT_QTT, 0.25),
+            borderColor: alpha('#2d5ebb', 0.25),
             borderTop: 'none',
           }}
         >
           <Table size='small'>
-            <TableHead sx={{ bgcolor: alpha(ACCENT_QTT, 0.06) }}>
+            <TableHead sx={{ bgcolor: alpha('#2d5ebb', 0.06) }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: 700, fontSize: '0.78rem', py: 0.75 }}>
                   Ticket Type
@@ -616,7 +616,7 @@ const QueueTicketTypePanel = ({
                             width: 8,
                             height: 8,
                             borderRadius: '50%',
-                            bgcolor: row.enabled ? ACCENT_QTT : 'grey.400',
+                            bgcolor: row.enabled ? '#2d5ebb' : 'grey.400',
                             flexShrink: 0,
                           }}
                         />
@@ -754,7 +754,7 @@ const QueueTimesheetPanel = ({
           label={String(v || '—')}
           size='small'
           sx={{
-            bgcolor: alpha(ACCENT_QTS, 0.1),
+            bgcolor: alpha('#2d5ebb', 0.1),
             color: ACCENT_QTS,
             fontWeight: 600,
             fontSize: '0.75rem',
@@ -822,7 +822,7 @@ const QueueTimesheetPanel = ({
             fontFamily: 'monospace',
             fontWeight: 700,
             fontSize: '0.75rem',
-            bgcolor: alpha(ACCENT_QTS, 0.1),
+            bgcolor: alpha('#2d5ebb', 0.1),
             color: ACCENT_QTS,
             height: 22,
             borderRadius: 1,
@@ -841,9 +841,9 @@ const QueueTimesheetPanel = ({
           gap: 1.5,
           px: 2,
           py: 1.25,
-          bgcolor: alpha(ACCENT_QTS, 0.08),
+          bgcolor: alpha('#2d5ebb', 0.08),
           border: '1px solid',
-          borderColor: alpha(ACCENT_QTS, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderRadius: '10px 10px 0 0',
           borderBottom: 'none',
         }}
@@ -876,7 +876,7 @@ const QueueTimesheetPanel = ({
                 size='small'
                 variant='contained'
                 startIcon={<AddIcon />}
-                sx={{ bgcolor: ACCENT_QTS, '&:hover': { bgcolor: '#0f5e56' } }}
+                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                 onClick={() => {
                   setEditingRow(null);
                   setDialogOpen(true);
@@ -890,7 +890,7 @@ const QueueTimesheetPanel = ({
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: ACCENT_QTS, '&:hover': { bgcolor: '#0f5e56' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -916,7 +916,7 @@ const QueueTimesheetPanel = ({
                 sx={{
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha(ACCENT_QTS, 0.3),
+                  bgcolor: alpha('#2d5ebb', 0.3),
                   display: { xs: 'none', sm: 'block' },
                 }}
               />
@@ -955,7 +955,7 @@ const QueueTimesheetPanel = ({
           borderRadius: '0 0 10px 10px',
           overflow: 'hidden',
           border: '1px solid',
-          borderColor: alpha(ACCENT_QTS, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderTop: 'none',
         }}
       >
@@ -978,7 +978,7 @@ const QueueTimesheetPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<AccessTimeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_QTS}
+        accent={'#2d5ebb'}
         title='Timesheet Project'
         subtitle='Add or edit a queue-specific timesheet project'
         submitDisabled={!form.project.trim() || (!editingRow && !form.queueId)}
@@ -994,7 +994,7 @@ const QueueTimesheetPanel = ({
               label={editingRow.queueName}
               size='small'
               sx={{
-                bgcolor: alpha(ACCENT_QTS, 0.1),
+                bgcolor: alpha('#2d5ebb', 0.1),
                 color: ACCENT_QTS,
                 fontWeight: 600,
                 fontSize: '0.78rem',
@@ -1198,7 +1198,7 @@ const QueueExpensesPanel = ({
           label={String(v || '—')}
           size='small'
           sx={{
-            bgcolor: alpha(ACCENT_QEX, 0.1),
+            bgcolor: alpha('#2d5ebb', 0.1),
             color: ACCENT_QEX,
             fontWeight: 600,
             fontSize: '0.75rem',
@@ -1266,7 +1266,7 @@ const QueueExpensesPanel = ({
             fontFamily: 'monospace',
             fontWeight: 700,
             fontSize: '0.75rem',
-            bgcolor: alpha(ACCENT_QEX, 0.1),
+            bgcolor: alpha('#2d5ebb', 0.1),
             color: ACCENT_QEX,
             height: 22,
             borderRadius: 1,
@@ -1285,9 +1285,9 @@ const QueueExpensesPanel = ({
           gap: 1.5,
           px: 2,
           py: 1.25,
-          bgcolor: alpha(ACCENT_QEX, 0.08),
+          bgcolor: alpha('#2d5ebb', 0.08),
           border: '1px solid',
-          borderColor: alpha(ACCENT_QEX, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderRadius: '10px 10px 0 0',
           borderBottom: 'none',
         }}
@@ -1320,7 +1320,7 @@ const QueueExpensesPanel = ({
                 size='small'
                 variant='contained'
                 startIcon={<AddIcon />}
-                sx={{ bgcolor: ACCENT_QEX, '&:hover': { bgcolor: '#6d28d9' } }}
+                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                 onClick={() => {
                   setEditingRow(null);
                   setDialogOpen(true);
@@ -1334,7 +1334,7 @@ const QueueExpensesPanel = ({
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: ACCENT_QEX, '&:hover': { bgcolor: '#6d28d9' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -1360,7 +1360,7 @@ const QueueExpensesPanel = ({
                 sx={{
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha(ACCENT_QEX, 0.3),
+                  bgcolor: alpha('#2d5ebb', 0.3),
                   display: { xs: 'none', sm: 'block' },
                 }}
               />
@@ -1399,7 +1399,7 @@ const QueueExpensesPanel = ({
           borderRadius: '0 0 10px 10px',
           overflow: 'hidden',
           border: '1px solid',
-          borderColor: alpha(ACCENT_QEX, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderTop: 'none',
         }}
       >
@@ -1422,7 +1422,7 @@ const QueueExpensesPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<ReceiptLongIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_QEX}
+        accent={'#2d5ebb'}
         title='Expense Project'
         subtitle='Add or edit a queue-specific expense project'
         submitDisabled={!form.project.trim() || (!editingRow && !form.queueId)}
@@ -1438,7 +1438,7 @@ const QueueExpensesPanel = ({
               label={editingRow.queueName}
               size='small'
               sx={{
-                bgcolor: alpha(ACCENT_QEX, 0.1),
+                bgcolor: alpha('#2d5ebb', 0.1),
                 color: ACCENT_QEX,
                 fontWeight: 600,
                 fontSize: '0.78rem',
@@ -1747,12 +1747,12 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
               sx={{
                 textTransform: 'none',
                 border: '1px solid',
-                borderColor: '#d97706',
-                bgcolor: !panelActive ? '#d97706' : undefined,
-                color: !panelActive ? '#fff' : '#d97706',
+                borderColor: '#2d5ebb',
+                bgcolor: !panelActive ? '#2d5ebb' : undefined,
+                color: !panelActive ? '#fff' : '#2d5ebb',
                 '&:hover': {
-                  bgcolor: !panelActive ? alpha('#d97706', 0.85) : alpha('#d97706', 0.08),
-                  borderColor: '#d97706',
+                  bgcolor: !panelActive ? '#2d5ebb' : alpha('#2d5ebb', 0.08),
+                  borderColor: '#2d5ebb',
                 },
               }}
             >
@@ -1807,9 +1807,9 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
                 gap: 1.5,
                 px: 2,
                 py: 1.25,
-                bgcolor: alpha('#d97706', 0.08),
+                bgcolor: alpha('#2d5ebb', 0.08),
                 border: '1px solid',
-                borderColor: alpha('#d97706', 0.25),
+                borderColor: alpha('#2d5ebb', 0.25),
                 borderRadius: '10px 10px 0 0',
                 borderBottom: 'none',
               }}
@@ -1846,7 +1846,7 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
                       setEditingRow(null);
                       setDialogOpen(true);
                     }}
-                    sx={{ bgcolor: '#d97706', '&:hover': { bgcolor: alpha('#d97706', 0.85) } }}
+                    sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                   >
                     New
                   </Button>
@@ -1860,7 +1860,7 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
                         setEditingRow(selectedRow);
                         setDialogOpen(true);
                       }}
-                      sx={{ bgcolor: '#d97706', '&:hover': { bgcolor: alpha('#d97706', 0.85) } }}
+                      sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                     >
                       Edit
                     </Button>
@@ -1879,7 +1879,7 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
                         display: { xs: 'none', sm: 'block' },
                         width: '1px',
                         height: '20px',
-                        bgcolor: alpha('#d97706', 0.3),
+                        bgcolor: alpha('#2d5ebb', 0.3),
                         mx: 0.75,
                         alignSelf: 'center',
                       }}
@@ -1968,7 +1968,7 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<HeadsetMicIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent='#d97706'
+        accent='#2d5ebb'
         title='Application Queue'
         subtitle='Manage application queues and configure their routing settings'
         submitDisabled={!form.name.trim()}

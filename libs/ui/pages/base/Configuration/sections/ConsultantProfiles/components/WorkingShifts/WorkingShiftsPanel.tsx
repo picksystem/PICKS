@@ -23,7 +23,7 @@ import {
   ConfigDeleteDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 
-const ACCENT_WS = '#059669';
+const ACCENT_WS = '#2d5ebb';
 
 const EMPTY_WS = { consultantProfileId: '', consultantName: '', shiftName: '', description: '' };
 
@@ -118,9 +118,9 @@ const WorkingShiftsPanel = ({ data, onSave }: WorkingShiftsPanelProps) => {
             gap: 1.5,
             px: 2,
             py: 1.25,
-            bgcolor: alpha(ACCENT_WS, 0.08),
+            bgcolor: alpha('#2d5ebb', 0.08),
             border: '1px solid',
-            borderColor: alpha(ACCENT_WS, 0.25),
+            borderColor: alpha('#2d5ebb', 0.25),
             borderRadius: '10px 10px 0 0',
             borderBottom: 'none',
           }}
@@ -156,7 +156,7 @@ const WorkingShiftsPanel = ({ data, onSave }: WorkingShiftsPanelProps) => {
                   size='small'
                   variant='contained'
                   startIcon={<AddIcon />}
-                  sx={{ bgcolor: ACCENT_WS, '&:hover': { bgcolor: alpha(ACCENT_WS, 0.85) } }}
+                  sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                   onClick={() => {
                     setEditingRow(null);
                     setDialogOpen(true);
@@ -171,7 +171,7 @@ const WorkingShiftsPanel = ({ data, onSave }: WorkingShiftsPanelProps) => {
                   size='small'
                   variant='contained'
                   startIcon={<EditIcon />}
-                  sx={{ bgcolor: ACCENT_WS, '&:hover': { bgcolor: alpha(ACCENT_WS, 0.85) } }}
+                  sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                   onClick={() => {
                     setEditingRow(selectedRow);
                     setDialogOpen(true);
@@ -194,7 +194,7 @@ const WorkingShiftsPanel = ({ data, onSave }: WorkingShiftsPanelProps) => {
                     display: { xs: 'none', sm: 'block' },
                     width: '1px',
                     height: '20px',
-                    bgcolor: alpha(ACCENT_WS, 0.3),
+                    bgcolor: alpha('#2d5ebb', 0.3),
                     mx: 0.75,
                     alignSelf: 'center',
                   }}
@@ -236,7 +236,7 @@ const WorkingShiftsPanel = ({ data, onSave }: WorkingShiftsPanelProps) => {
             borderRadius: '0 0 10px 10px',
             overflow: 'hidden',
             border: '1px solid',
-            borderColor: alpha(ACCENT_WS, 0.25),
+            borderColor: alpha('#2d5ebb', 0.25),
             borderTop: 'none',
           }}
         >
@@ -261,7 +261,7 @@ const WorkingShiftsPanel = ({ data, onSave }: WorkingShiftsPanelProps) => {
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<UpdateIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_WS}
+        accent={'#2d5ebb'}
         title='Working Shift'
         submitDisabled={!form.shiftName.trim()}
         maxWidth='sm'

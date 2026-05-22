@@ -1,279 +1,60 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  Button,
-  TextField,
-  DataTable,
-  Column,
-} from '@serviceops/component';
-import { Accordion, AccordionSummary, AccordionDetails, alpha } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Box, Typography, Paper, Button } from '@serviceops/component';
+import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import AppsIcon from '@mui/icons-material/Apps';
 import QueueIcon from '@mui/icons-material/Queue';
 import PersonIcon from '@mui/icons-material/Person';
-import { IConfigTimesheetProjectEntry } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
 import {
   AssocPanel,
   fromAssocRows,
-  PanelHeader,
-  PanelTable,
-  PanelToolbar,
   toAssocRows,
 } from '@serviceops/pages/base/Configuration/shared/assocPanel';
+import { GenericCRUDPanel, RowData } from '../../../../shared/GenericTablePanel';
 import {
-  ConfigDeleteDialog,
-  ConfigFormDialog,
-} from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
-
-// ── Constants ──────────────────────────────────────────────────────────────────
-
-const ACCENT_MAIN = '#0369a1';
-const ACCENT_SL = '#059669';
-const ACCENT_APP = '#2563eb';
-const ACCENT_QUE = '#7c3aed';
-const ACCENT_RES = '#be185d';
+  TS_COLORS,
+  TS_FORM_LABELS,
+  TS_PROJECT_VIEWS,
+  timesheetProjectColumns,
+} from '../shared/timesheets.config';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type ActiveView = 'project' | 'serviceLine' | 'application' | 'queue' | 'resource';
 
-const EMPTY_PROJ_FORM = { name: '', description: '', projectType: '', transitionType: '' };
-
 // ── Timesheet Project Panel ────────────────────────────────────────────────────
 
 const TimesheetProjectPanel = () => {
   const { timesheets: apiTS, saveSection } = useConfiguration();
-
-  const [rows, setRows] = useState<IConfigTimesheetProjectEntry[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingRow, setEditingRow] = useState<IConfigTimesheetProjectEntry | null>(null);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const [form, setForm] = useState(EMPTY_PROJ_FORM);
+  const [rows, setRows] = useState<RowData>([]);
 
   useEffect(() => {
     if (apiTS?.timesheetProjects) setRows(apiTS.timesheetProjects);
   }, [apiTS]);
 
-  useEffect(() => {
-    if (!dialogOpen) return;
-    setForm(
-      editingRow
-        ? {
-            name: editingRow.name,
-            description: editingRow.description,
-            projectType: editingRow.projectType,
-            transitionType: editingRow.transitionType,
-          }
-        : EMPTY_PROJ_FORM,
-    );
-  }, [dialogOpen, editingRow]);
-
-  const selectedRow = rows.find((r) => r.id === selectedId) ?? null;
-  const filtered = search
-    ? rows.filter(
-        (r) =>
-          r.name.toLowerCase().includes(search.toLowerCase()) ||
-          r.description.toLowerCase().includes(search.toLowerCase()) ||
-          r.projectType.toLowerCase().includes(search.toLowerCase()) ||
-          r.transitionType.toLowerCase().includes(search.toLowerCase()),
-      )
-    : rows;
-
-  const save = (next: IConfigTimesheetProjectEntry[]) => {
+  const handleSave = (next: RowData) => {
     setRows(next);
-    saveSection('timesheets', {
-      conversionReasonCodes: apiTS?.conversionReasonCodes ?? [],
-      cancellationReasonCodes: apiTS?.cancellationReasonCodes ?? [],
-      timesheetProjects: next,
-      serviceLineEntries: apiTS?.serviceLineEntries ?? [],
-      applicationEntries: apiTS?.applicationEntries ?? [],
-      queueEntries: apiTS?.queueEntries ?? [],
-      resourceEntries: apiTS?.resourceEntries ?? [],
-      projectCategories: apiTS?.projectCategories ?? [],
-    });
+    saveSection('timesheets', { ...apiTS, timesheetProjects: next });
   };
 
-  const handleSubmit = () => {
-    if (!form.name.trim()) return;
-    if (editingRow) {
-      save(rows.map((r) => (r.id === editingRow.id ? { ...editingRow, ...form } : r)));
-      setSelectedId(editingRow.id);
-    } else {
-      const n: IConfigTimesheetProjectEntry = {
-        id: `tsp_${Date.now()}`,
-        ...form,
-        serviceLines: [],
-        applications: [],
-        queues: [],
-        resources: [],
-      };
-      save([...rows, n]);
-      setSelectedId(n.id);
-    }
-    setDialogOpen(false);
-    setEditingRow(null);
+  const config = {
+    title: 'Timesheet Projects',
+    accent: TS_COLORS.timesheet,
+    icon: <AccessTimeIcon fontSize='small' />,
+    panelTitle: 'Timesheet Projects',
+    columns: timesheetProjectColumns,
+    formConfig: TS_FORM_LABELS.project,
+    searchFields: ['name', 'description', 'projectType', 'transitionType'],
+    getSelectedLabel: (row: RowData) => String(row.name ?? ''),
+    getId: (row: RowData) => String(row.id ?? ''),
+    idPrefix: 'tsp',
   };
 
-  const handleDelete = () => {
-    if (!selectedRow) return;
-    save(rows.filter((r) => r.id !== selectedRow.id));
-    setSelectedId(null);
-    setDeleteOpen(false);
-  };
-
-  const columns: Column<IConfigTimesheetProjectEntry>[] = [
-    {
-      id: 'name',
-      label: 'Name',
-      minWidth: 200,
-      format: (v): React.ReactNode => (
-        <Typography variant='body2' fontWeight={700} fontSize='0.82rem'>
-          {String(v || '—')}
-        </Typography>
-      ),
-    },
-    {
-      id: 'description',
-      label: 'Description',
-      minWidth: 220,
-      format: (v): React.ReactNode => (
-        <Typography
-          variant='body2'
-          color='text.secondary'
-          fontSize='0.8rem'
-          noWrap
-          sx={{ maxWidth: 280 }}
-        >
-          {String(v || '—')}
-        </Typography>
-      ),
-    },
-    {
-      id: 'projectType',
-      label: 'Project Type',
-      minWidth: 140,
-      format: (v): React.ReactNode => (
-        <Typography variant='body2' fontSize='0.8rem'>
-          {String(v || '—')}
-        </Typography>
-      ),
-    },
-    {
-      id: 'transitionType',
-      label: 'Transition Type',
-      minWidth: 140,
-      format: (v): React.ReactNode => (
-        <Typography variant='body2' fontSize='0.8rem'>
-          {String(v || '—')}
-        </Typography>
-      ),
-    },
-  ];
-
-  return (
-    <Box sx={{ mt: 1.5 }}>
-      <PanelHeader
-        accent={ACCENT_MAIN}
-        icon={<AccessTimeIcon fontSize='small' />}
-        title='Timesheet Projects'
-      />
-      <PanelToolbar
-        accent={ACCENT_MAIN}
-        selectedLabel={selectedRow?.name ?? null}
-        onNew={() => {
-          setEditingRow(null);
-          setDialogOpen(true);
-        }}
-        onEdit={() => {
-          setEditingRow(selectedRow);
-          setDialogOpen(true);
-        }}
-        onDelete={() => setDeleteOpen(true)}
-        search={search}
-        onSearch={setSearch}
-        onClear={() => setSelectedId(null)}
-      />
-      <PanelTable accent={ACCENT_MAIN}>
-        <DataTable
-          columns={columns}
-          data={filtered}
-          rowKey='id'
-          searchable={false}
-          initialRowsPerPage={10}
-          onRowClick={(row) => setSelectedId((p) => (p === row.id ? null : row.id))}
-          activeRowKey={selectedId ?? undefined}
-        />
-      </PanelTable>
-
-      <ConfigFormDialog
-        open={dialogOpen}
-        onClose={() => {
-          setDialogOpen(false);
-          setEditingRow(null);
-        }}
-        onSubmit={handleSubmit}
-        isEdit={!!editingRow}
-        icon={<AccessTimeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_MAIN}
-        title='Timesheet Project'
-        subtitle='Define a timesheet project with its type and transition details'
-        submitDisabled={!form.name.trim()}
-        maxWidth='xs'
-      >
-        <TextField
-          label='Name'
-          size='small'
-          fullWidth
-          required
-          value={form.name}
-          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-          placeholder='e.g. Q2 Infrastructure, Client Portal Upgrade'
-        />
-        <TextField
-          label='Description'
-          size='small'
-          fullWidth
-          multiline
-          minRows={2}
-          value={form.description}
-          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-          placeholder='Brief description of this timesheet project'
-        />
-        <TextField
-          label='Project Type'
-          size='small'
-          fullWidth
-          value={form.projectType}
-          onChange={(e) => setForm((f) => ({ ...f, projectType: e.target.value }))}
-          placeholder='e.g. Internal, Billable, Non-Billable'
-        />
-        <TextField
-          label='Transition Type'
-          size='small'
-          fullWidth
-          value={form.transitionType}
-          onChange={(e) => setForm((f) => ({ ...f, transitionType: e.target.value }))}
-          placeholder='e.g. Standard, Emergency, Planned'
-        />
-      </ConfigFormDialog>
-
-      <ConfigDeleteDialog
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        onConfirm={handleDelete}
-        entityName='Timesheet Project'
-        itemName={selectedRow?.name}
-      />
-    </Box>
-  );
+  return <GenericCRUDPanel config={config} data={rows} onSave={handleSave} />;
 };
 
 // ── Timesheet Projects Section ─────────────────────────────────────────────────
@@ -283,16 +64,40 @@ const TimesheetProjectsSection = () => {
   const { timesheets: apiTS, saveSection } = useConfiguration();
   const [activeView, setActiveView] = useState<ActiveView>('project');
 
-  const tsBase = () => ({
-    conversionReasonCodes: apiTS?.conversionReasonCodes ?? [],
-    cancellationReasonCodes: apiTS?.cancellationReasonCodes ?? [],
-    timesheetProjects: apiTS?.timesheetProjects ?? [],
-    serviceLineEntries: apiTS?.serviceLineEntries ?? [],
-    applicationEntries: apiTS?.applicationEntries ?? [],
-    queueEntries: apiTS?.queueEntries ?? [],
-    resourceEntries: apiTS?.resourceEntries ?? [],
-    projectCategories: apiTS?.projectCategories ?? [],
-  });
+  const assocViews = [
+    {
+      key: 'serviceLine',
+      label: 'Add to Service Line',
+      Icon: AccountTreeIcon,
+      accent: TS_COLORS.timesheet,
+      prefix: 'tssl',
+      field: 'serviceLineEntries',
+    },
+    {
+      key: 'application',
+      label: 'Add to Application',
+      Icon: AppsIcon,
+      accent: TS_COLORS.timesheet,
+      prefix: 'tsapp',
+      field: 'applicationEntries',
+    },
+    {
+      key: 'queue',
+      label: 'Add to Queue',
+      Icon: QueueIcon,
+      accent: TS_COLORS.timesheet,
+      prefix: 'tsq',
+      field: 'queueEntries',
+    },
+    {
+      key: 'resource',
+      label: 'Add to Resource',
+      Icon: PersonIcon,
+      accent: TS_COLORS.timesheet,
+      prefix: 'tsres',
+      field: 'resourceEntries',
+    },
+  ];
 
   return (
     <Accordion defaultExpanded elevation={0} className={classes.sectionAccordion}>
@@ -303,7 +108,7 @@ const TimesheetProjectsSection = () => {
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: ACCENT_MAIN,
+              bgcolor: TS_COLORS.timesheet,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -331,179 +136,46 @@ const TimesheetProjectsSection = () => {
               gap: 1,
             }}
           >
-            <Button
-              size='small'
-              variant={activeView === 'project' ? 'contained' : 'outlined'}
-              onClick={() => setActiveView('project')}
-              startIcon={<AccessTimeIcon />}
-              sx={{
-                textTransform: 'none',
-                border: '1px solid',
-                borderColor: ACCENT_MAIN,
-                color: activeView === 'project' ? '#fff' : ACCENT_MAIN,
-                bgcolor: activeView === 'project' ? ACCENT_MAIN : undefined,
-                '&:hover': {
-                  bgcolor:
-                    activeView === 'project' ? alpha(ACCENT_MAIN, 0.85) : alpha(ACCENT_MAIN, 0.08),
-                  borderColor: ACCENT_MAIN,
-                },
-              }}
-            >
-              Timesheet Project
-            </Button>
-            <Button
-              size='small'
-              variant={activeView === 'serviceLine' ? 'contained' : 'outlined'}
-              onClick={() => setActiveView('serviceLine')}
-              startIcon={<AccountTreeIcon />}
-              sx={{
-                textTransform: 'none',
-                border: '1px solid',
-                borderColor: ACCENT_SL,
-                color: activeView === 'serviceLine' ? '#fff' : ACCENT_SL,
-                bgcolor: activeView === 'serviceLine' ? ACCENT_SL : undefined,
-                '&:hover': {
-                  bgcolor:
-                    activeView === 'serviceLine' ? alpha(ACCENT_SL, 0.85) : alpha(ACCENT_SL, 0.08),
-                  borderColor: ACCENT_SL,
-                },
-              }}
-            >
-              Add to Service Line
-            </Button>
-            <Button
-              size='small'
-              variant={activeView === 'application' ? 'contained' : 'outlined'}
-              onClick={() => setActiveView('application')}
-              startIcon={<AppsIcon />}
-              sx={{
-                textTransform: 'none',
-                border: '1px solid',
-                borderColor: ACCENT_APP,
-                color: activeView === 'application' ? '#fff' : ACCENT_APP,
-                bgcolor: activeView === 'application' ? ACCENT_APP : undefined,
-                '&:hover': {
-                  bgcolor:
-                    activeView === 'application'
-                      ? alpha(ACCENT_APP, 0.85)
-                      : alpha(ACCENT_APP, 0.08),
-                  borderColor: ACCENT_APP,
-                },
-              }}
-            >
-              Add to Application
-            </Button>
-            <Button
-              size='small'
-              variant={activeView === 'queue' ? 'contained' : 'outlined'}
-              onClick={() => setActiveView('queue')}
-              startIcon={<QueueIcon />}
-              sx={{
-                textTransform: 'none',
-                border: '1px solid',
-                borderColor: ACCENT_QUE,
-                color: activeView === 'queue' ? '#fff' : ACCENT_QUE,
-                bgcolor: activeView === 'queue' ? ACCENT_QUE : undefined,
-                '&:hover': {
-                  bgcolor:
-                    activeView === 'queue' ? alpha(ACCENT_QUE, 0.85) : alpha(ACCENT_QUE, 0.08),
-                  borderColor: ACCENT_QUE,
-                },
-              }}
-            >
-              Add to Queue
-            </Button>
-            <Button
-              size='small'
-              variant={activeView === 'resource' ? 'contained' : 'outlined'}
-              onClick={() => setActiveView('resource')}
-              startIcon={<PersonIcon />}
-              sx={{
-                textTransform: 'none',
-                border: '1px solid',
-                borderColor: ACCENT_RES,
-                color: activeView === 'resource' ? '#fff' : ACCENT_RES,
-                bgcolor: activeView === 'resource' ? ACCENT_RES : undefined,
-                '&:hover': {
-                  bgcolor:
-                    activeView === 'resource' ? alpha(ACCENT_RES, 0.85) : alpha(ACCENT_RES, 0.08),
-                  borderColor: ACCENT_RES,
-                },
-              }}
-            >
-              Add to Resource
-            </Button>
+            {TS_PROJECT_VIEWS.map((view) => (
+              <Button
+                key={view.key}
+                size='small'
+                variant={activeView === view.key ? 'contained' : 'outlined'}
+                onClick={() => setActiveView(view.key as ActiveView)}
+                startIcon={view.icon}
+                sx={{
+                  textTransform: 'none',
+                  bgcolor: activeView === view.key ? '#2d5ebb' : undefined,
+                  color: activeView === view.key ? '#fff' : '#2d5ebb',
+                }}
+              >
+                {view.label}
+              </Button>
+            ))}
           </Box>
         </Paper>
 
         {activeView === 'project' && <TimesheetProjectPanel />}
-        {activeView === 'serviceLine' && (
-          <AssocPanel
-            Icon={AccountTreeIcon}
-            accent={ACCENT_SL}
-            title='Service Line Associations'
-            entityName='Service Line Entry'
-            assocLabel='Service Line'
-            idPrefix='tssl'
-            rows={toAssocRows(apiTS?.serviceLineEntries ?? [], 'serviceLine')}
-            onSave={(next) =>
-              saveSection('timesheets', {
-                ...tsBase(),
-                serviceLineEntries: fromAssocRows(next, 'serviceLine'),
-              })
-            }
-          />
-        )}
-        {activeView === 'application' && (
-          <AssocPanel
-            Icon={AppsIcon}
-            accent={ACCENT_APP}
-            title='Application Associations'
-            entityName='Application Entry'
-            assocLabel='Application'
-            idPrefix='tsapp'
-            rows={toAssocRows(apiTS?.applicationEntries ?? [], 'application')}
-            onSave={(next) =>
-              saveSection('timesheets', {
-                ...tsBase(),
-                applicationEntries: fromAssocRows(next, 'application'),
-              })
-            }
-          />
-        )}
-        {activeView === 'queue' && (
-          <AssocPanel
-            Icon={QueueIcon}
-            accent={ACCENT_QUE}
-            title='Queue Associations'
-            entityName='Queue Entry'
-            assocLabel='Queue'
-            idPrefix='tsq'
-            rows={toAssocRows(apiTS?.queueEntries ?? [], 'queue')}
-            onSave={(next) =>
-              saveSection('timesheets', {
-                ...tsBase(),
-                queueEntries: fromAssocRows(next, 'queue'),
-              })
-            }
-          />
-        )}
-        {activeView === 'resource' && (
-          <AssocPanel
-            Icon={PersonIcon}
-            accent={ACCENT_RES}
-            title='Resource Associations'
-            entityName='Resource Entry'
-            assocLabel='Resource'
-            idPrefix='tsres'
-            rows={toAssocRows(apiTS?.resourceEntries ?? [], 'resource')}
-            onSave={(next) =>
-              saveSection('timesheets', {
-                ...tsBase(),
-                resourceEntries: fromAssocRows(next, 'resource'),
-              })
-            }
-          />
+        {assocViews.map(
+          ({ key, label, Icon, accent, prefix, field }) =>
+            activeView === key && (
+              <AssocPanel
+                key={key}
+                Icon={Icon}
+                accent={accent}
+                title={label}
+                entityName={label}
+                assocLabel={label.replace('Add to ', '')}
+                idPrefix={prefix}
+                rows={toAssocRows((apiTS as any)?.[field] ?? [], field.replace('Entries', ''))}
+                onSave={(next) =>
+                  saveSection('timesheets', {
+                    ...apiTS,
+                    [field]: fromAssocRows(next, field.replace('Entries', '')),
+                  } as any)
+                }
+              />
+            ),
         )}
       </AccordionDetails>
     </Accordion>

@@ -31,7 +31,7 @@ import {
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
 
-const ACCENT_BC = '#059669';
+const ACCENT_BC = '#2d5ebb';
 const EMPTY_CAT_FORM = { name: '', description: '', head: '' };
 
 interface BusinessCategoriesSectionProps {
@@ -158,7 +158,7 @@ const BusinessCategoriesSection = ({ data, onDataChange }: BusinessCategoriesSec
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: ACCENT_BC,
+              bgcolor: '#2d5ebb',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -222,7 +222,7 @@ const BusinessCategoriesSection = ({ data, onDataChange }: BusinessCategoriesSec
                   sx={{
                     width: '1px',
                     height: '20px',
-                    bgcolor: alpha(ACCENT_BC, 0.3),
+                    bgcolor: alpha('#2d5ebb', 0.3),
                     display: { xs: 'none', sm: 'block' },
                   }}
                 />

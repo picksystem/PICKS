@@ -212,7 +212,7 @@ const ApplicationSubCategoriesSection = ({ data, onDataChange }: ApplicationSubC
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: '#7c3aed',
+              bgcolor: '#2d5ebb',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -280,7 +280,7 @@ const ApplicationSubCategoriesSection = ({ data, onDataChange }: ApplicationSubC
                   sx={{
                     width: '1px',
                     height: '20px',
-                    bgcolor: alpha('#7c3aed', 0.3),
+                    bgcolor: alpha('#2d5ebb', 0.3),
                     display: { xs: 'none', sm: 'block' },
                   }}
                 />
@@ -335,7 +335,7 @@ const ApplicationSubCategoriesSection = ({ data, onDataChange }: ApplicationSubC
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<CategoryIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent='#7c3aed'
+        accent='#2d5ebb'
         title='Application Sub-Category'
         subtitle='Manage sub-categories assigned to application categories'
         submitDisabled={!form.subCategoryName.trim()}

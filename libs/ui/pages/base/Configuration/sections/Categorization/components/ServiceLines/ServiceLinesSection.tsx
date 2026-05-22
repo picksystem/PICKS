@@ -55,11 +55,11 @@ import { useStyles } from '../../styles';
 import { PanelToolbar, PanelTable } from '../shared';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
 
-const ACCENT_SL = '#0891b2';
-const ACCENT_TS = '#0891b2';
-const ACCENT_EX = '#7c3aed';
-const ACCENT_AP = '#059669';
-const ACCENT_TT = '#ea580c';
+const ACCENT_SL = '#2d5ebb';
+const ACCENT_TS = '#2d5ebb';
+const ACCENT_EX = '#2d5ebb';
+const ACCENT_AP = '#2d5ebb';
+const ACCENT_TT = '#2d5ebb';
 
 // Types for flat rows
 type FlatTsRow = IConfigTimesheetProject & { serviceLineId: string; serviceLineName: string };
@@ -271,7 +271,7 @@ const ServiceLinesSection = ({
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: ACCENT_SL,
+              bgcolor: '#2d5ebb',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -301,12 +301,12 @@ const ServiceLinesSection = ({
               sx={{
                 textTransform: 'none',
                 border: '1px solid',
-                borderColor: ACCENT_SL,
-                bgcolor: !panelActive ? ACCENT_SL : undefined,
-                color: !panelActive ? '#fff' : ACCENT_SL,
+                borderColor: '#2d5ebb',
+                bgcolor: !panelActive ? '#2d5ebb' : undefined,
+                color: !panelActive ? '#fff' : '#2d5ebb',
                 '&:hover': {
-                  bgcolor: !panelActive ? alpha(ACCENT_SL, 0.85) : alpha(ACCENT_SL, 0.08),
-                  borderColor: ACCENT_SL,
+                  bgcolor: !panelActive ? '#2d5ebb' : alpha('#2d5ebb', 0.08),
+                  borderColor: '#2d5ebb',
                 },
               }}
             >
@@ -362,14 +362,14 @@ const ServiceLinesSection = ({
                 gap: 1.5,
                 px: 2,
                 py: 1.25,
-                bgcolor: alpha(ACCENT_SL, 0.08),
+                bgcolor: alpha('#2d5ebb', 0.08),
                 border: '1px solid',
-                borderColor: alpha(ACCENT_SL, 0.25),
+                borderColor: alpha('#2d5ebb', 0.25),
                 borderRadius: '10px 10px 0 0',
                 borderBottom: 'none',
               }}
             >
-              <LinearScaleIcon sx={{ color: ACCENT_SL, fontSize: '1.1rem' }} />
+              <LinearScaleIcon sx={{ color: '#2d5ebb', fontSize: '1.1rem' }} />
               <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_SL }}>
                 Service Lines
               </Typography>
@@ -401,7 +401,7 @@ const ServiceLinesSection = ({
                       setEditingRow(null);
                       setDialogOpen(true);
                     }}
-                    sx={{ bgcolor: ACCENT_SL, '&:hover': { bgcolor: alpha(ACCENT_SL, 0.85) } }}
+                    sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                   >
                     New
                   </Button>
@@ -415,7 +415,7 @@ const ServiceLinesSection = ({
                         setEditingRow(selectedRow);
                         setDialogOpen(true);
                       }}
-                      sx={{ bgcolor: ACCENT_SL, '&:hover': { bgcolor: alpha(ACCENT_SL, 0.85) } }}
+                      sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                     >
                       Edit
                     </Button>
@@ -434,7 +434,7 @@ const ServiceLinesSection = ({
                         display: { xs: 'none', sm: 'block' },
                         width: '1px',
                         height: '20px',
-                        bgcolor: alpha(ACCENT_SL, 0.3),
+                        bgcolor: alpha('#2d5ebb', 0.3),
                         mx: 0.75,
                         alignSelf: 'center',
                       }}
@@ -753,7 +753,7 @@ const ServiceLineTimesheetPanel = ({
             fontFamily: 'monospace',
             fontWeight: 700,
             fontSize: '0.75rem',
-            bgcolor: alpha(ACCENT_TS, 0.1),
+            bgcolor: alpha('#2d5ebb', 0.1),
             color: ACCENT_TS,
             height: 22,
             borderRadius: 1,
@@ -772,9 +772,9 @@ const ServiceLineTimesheetPanel = ({
           gap: 1.5,
           px: 2,
           py: 1.25,
-          bgcolor: alpha(ACCENT_TS, 0.08),
+          bgcolor: alpha('#2d5ebb', 0.08),
           border: '1px solid',
-          borderColor: alpha(ACCENT_TS, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderRadius: '10px 10px 0 0',
           borderBottom: 'none',
         }}
@@ -799,7 +799,7 @@ const ServiceLineTimesheetPanel = ({
                 size='small'
                 variant='contained'
                 startIcon={<AddIcon />}
-                sx={{ bgcolor: ACCENT_TS, '&:hover': { bgcolor: '#0e7490' } }}
+                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                 onClick={() => {
                   setEditingRow(null);
                   setDialogOpen(true);
@@ -813,7 +813,7 @@ const ServiceLineTimesheetPanel = ({
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: ACCENT_TS, '&:hover': { bgcolor: '#0e7490' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -841,7 +841,7 @@ const ServiceLineTimesheetPanel = ({
                   display: { xs: 'none', sm: 'block' },
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha(ACCENT_TS, 0.3),
+                  bgcolor: alpha('#2d5ebb', 0.3),
                   mx: 0.75,
                   alignSelf: 'center',
                 }}
@@ -882,7 +882,7 @@ const ServiceLineTimesheetPanel = ({
           borderRadius: '0 0 10px 10px',
           overflow: 'hidden',
           border: '1px solid',
-          borderColor: alpha(ACCENT_TS, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderTop: 'none',
         }}
       >
@@ -922,7 +922,7 @@ const ServiceLineTimesheetPanel = ({
               label={editingRow.serviceLineName}
               size='small'
               sx={{
-                bgcolor: alpha(ACCENT_TS, 0.1),
+                bgcolor: alpha('#2d5ebb', 0.1),
                 color: ACCENT_TS,
                 fontWeight: 600,
                 fontSize: '0.78rem',
@@ -1194,7 +1194,7 @@ const ServiceLineExpensePanel = ({
             fontFamily: 'monospace',
             fontWeight: 700,
             fontSize: '0.75rem',
-            bgcolor: alpha(ACCENT_EX, 0.1),
+            bgcolor: alpha('#2d5ebb', 0.1),
             color: ACCENT_EX,
             height: 22,
             borderRadius: 1,
@@ -1213,9 +1213,9 @@ const ServiceLineExpensePanel = ({
           gap: 1.5,
           px: 2,
           py: 1.25,
-          bgcolor: alpha(ACCENT_EX, 0.08),
+          bgcolor: alpha('#2d5ebb', 0.08),
           border: '1px solid',
-          borderColor: alpha(ACCENT_EX, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderRadius: '10px 10px 0 0',
           borderBottom: 'none',
         }}
@@ -1240,7 +1240,7 @@ const ServiceLineExpensePanel = ({
                 size='small'
                 variant='contained'
                 startIcon={<AddIcon />}
-                sx={{ bgcolor: ACCENT_EX, '&:hover': { bgcolor: '#6d28d9' } }}
+                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                 onClick={() => {
                   setEditingRow(null);
                   setDialogOpen(true);
@@ -1254,7 +1254,7 @@ const ServiceLineExpensePanel = ({
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: ACCENT_EX, '&:hover': { bgcolor: '#6d28d9' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -1282,7 +1282,7 @@ const ServiceLineExpensePanel = ({
                   display: { xs: 'none', sm: 'block' },
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha(ACCENT_TS, 0.3),
+                  bgcolor: alpha('#2d5ebb', 0.3),
                   mx: 0.75,
                   alignSelf: 'center',
                 }}
@@ -1323,7 +1323,7 @@ const ServiceLineExpensePanel = ({
           borderRadius: '0 0 10px 10px',
           overflow: 'hidden',
           border: '1px solid',
-          borderColor: alpha(ACCENT_EX, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderTop: 'none',
         }}
       >
@@ -1363,7 +1363,7 @@ const ServiceLineExpensePanel = ({
               label={editingRow.serviceLineName}
               size='small'
               sx={{
-                bgcolor: alpha(ACCENT_EX, 0.1),
+                bgcolor: alpha('#2d5ebb', 0.1),
                 color: ACCENT_EX,
                 fontWeight: 600,
                 fontSize: '0.78rem',
@@ -1554,7 +1554,7 @@ const ServiceLineApprovalsPanel = ({
             fontFamily: 'monospace',
             fontWeight: 700,
             fontSize: '0.75rem',
-            bgcolor: alpha(ACCENT_AP, 0.1),
+            bgcolor: alpha('#2d5ebb', 0.1),
             color: ACCENT_AP,
             height: 22,
             borderRadius: 1,
@@ -1610,9 +1610,9 @@ const ServiceLineApprovalsPanel = ({
           gap: 1.5,
           px: 2,
           py: 1.25,
-          bgcolor: alpha(ACCENT_AP, 0.08),
+          bgcolor: alpha('#2d5ebb', 0.08),
           border: '1px solid',
-          borderColor: alpha(ACCENT_AP, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderRadius: '10px 10px 0 0',
           borderBottom: 'none',
         }}
@@ -1772,9 +1772,9 @@ const ServiceLineTicketTypePanel = ({
           gap: 1.5,
           px: 2,
           py: 1.25,
-          bgcolor: alpha(ACCENT_TT, 0.08),
+          bgcolor: alpha('#2d5ebb', 0.08),
           border: '1px solid',
-          borderColor: alpha(ACCENT_TT, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderRadius: '10px 10px 0 0',
           borderBottom: 'none',
         }}
@@ -1794,13 +1794,13 @@ const ServiceLineTicketTypePanel = ({
           borderRadius: '0 0 10px 10px',
           overflow: 'hidden',
           border: '1px solid',
-          borderColor: alpha(ACCENT_TT, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderTop: 'none',
         }}
       >
         <Table size='small'>
           <TableHead>
-            <TableRow sx={{ bgcolor: alpha(ACCENT_TT, 0.04) }}>
+            <TableRow sx={{ bgcolor: alpha('#2d5ebb', 0.04) }}>
               <TableCell
                 sx={{
                   fontWeight: 700,
@@ -1849,7 +1849,7 @@ const ServiceLineTicketTypePanel = ({
                           width: 8,
                           height: 8,
                           borderRadius: '50%',
-                          bgcolor: row.enabled ? ACCENT_TT : 'grey.400',
+                          bgcolor: row.enabled ? '#2d5ebb' : 'grey.400',
                           flexShrink: 0,
                         }}
                       />
@@ -1864,7 +1864,7 @@ const ServiceLineTicketTypePanel = ({
                       checked={row.enabled}
                       onChange={(e) => toggleEnabled(row.ticketTypeName, e.target.checked)}
                       sx={{
-                        '& .MuiSwitch-thumb': { bgcolor: row.enabled ? ACCENT_TT : undefined },
+                        '& .MuiSwitch-thumb': { bgcolor: row.enabled ? '#2d5ebb' : undefined },
                       }}
                     />
                   </TableCell>

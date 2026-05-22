@@ -34,7 +34,7 @@ import {
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const ACCENT_CAT = '#d97706';
+const ACCENT_CAT = '#2d5ebb';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -185,7 +185,7 @@ const ProjectCategorySection = () => {
             height: 20,
             fontSize: '0.68rem',
             fontWeight: 700,
-            bgcolor: alpha(ACCENT_CAT, 0.12),
+            bgcolor: alpha('#2d5ebb', 0.12),
             color: ACCENT_CAT,
           }}
         />
@@ -202,7 +202,7 @@ const ProjectCategorySection = () => {
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: ACCENT_CAT,
+              bgcolor: '#2d5ebb',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -235,8 +235,8 @@ const ProjectCategorySection = () => {
                   }}
                   sx={{
                     textTransform: 'none',
-                    bgcolor: ACCENT_CAT,
-                    '&:hover': { bgcolor: alpha(ACCENT_CAT, 0.85) },
+                    bgcolor: '#2d5ebb',
+                    '&:hover': { bgcolor: alpha('#2d5ebb', 0.85) },
                   }}
                 >
                   New
@@ -254,8 +254,8 @@ const ProjectCategorySection = () => {
                   }}
                   sx={{
                     textTransform: 'none',
-                    bgcolor: ACCENT_CAT,
-                    '&:hover': { bgcolor: alpha(ACCENT_CAT, 0.85) },
+                    bgcolor: '#2d5ebb',
+                    '&:hover': { bgcolor: alpha('#2d5ebb', 0.85) },
                   }}
                 >
                   Edit
@@ -276,7 +276,7 @@ const ProjectCategorySection = () => {
                     display: { xs: 'none', sm: 'block' },
                     width: '1px',
                     height: '20px',
-                    bgcolor: alpha(ACCENT_CAT, 0.3),
+                    bgcolor: alpha('#2d5ebb', 0.3),
                     mx: 0.75,
                     alignSelf: 'center',
                   }}
@@ -334,7 +334,7 @@ const ProjectCategorySection = () => {
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<CategoryIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_CAT}
+        accent='#2d5ebb'
         title='Project Category'
         subtitle='Define a project category with transition type and billability'
         submitDisabled={!form.name.trim()}

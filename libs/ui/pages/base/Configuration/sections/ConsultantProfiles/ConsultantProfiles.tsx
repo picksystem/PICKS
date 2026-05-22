@@ -32,14 +32,14 @@ import {
   ConsultantRolesSection,
 } from './components';
 
-const ACCENT_CP = '#d97706';
-const ACCENT_AUP = '#2563eb';
-const ACCENT_WT = '#0891b2';
-const ACCENT_WS = '#059669';
-const ACCENT_TP = '#0891b2';
-const ACCENT_EP = '#7c3aed';
-const ACCENT_CR = '#7c3aed';
-const ACCENT_ACP = '#059669';
+const ACCENT_CP = '#0369a1';
+const ACCENT_AUP = '#0369a1';
+const ACCENT_WT = '#0369a1';
+const ACCENT_WS = '#0369a1';
+const ACCENT_TP = '#0369a1';
+const ACCENT_EP = '#0369a1';
+const ACCENT_CR = '#0369a1';
+const ACCENT_ACP = '#0369a1';
 
 type ActivePanel =
   | 'none'
@@ -143,14 +143,8 @@ const ConsultantProfiles = () => {
                 onClick={() => setActivePanel('none')}
                 sx={{
                   textTransform: 'none',
-                  border: '1px solid',
-                  borderColor: ACCENT_CP,
-                  bgcolor: !panelActive ? ACCENT_CP : undefined,
-                  color: !panelActive ? '#fff' : ACCENT_CP,
-                  '&:hover': {
-                    bgcolor: !panelActive ? alpha(ACCENT_CP, 0.85) : alpha(ACCENT_CP, 0.08),
-                    borderColor: ACCENT_CP,
-                  },
+                  bgcolor: !panelActive ? '#2d5ebb' : undefined,
+                  color: !panelActive ? '#fff' : '#2d5ebb',
                 }}
               >
                 Consultant Profiles
@@ -163,17 +157,8 @@ const ConsultantProfiles = () => {
                 onClick={() => togglePanel('userProfile')}
                 sx={{
                   textTransform: 'none',
-                  border: '1px solid',
-                  borderColor: ACCENT_AUP,
-                  bgcolor: activePanel === 'userProfile' ? ACCENT_AUP : undefined,
-                  color: activePanel === 'userProfile' ? '#fff' : ACCENT_AUP,
-                  '&:hover': {
-                    bgcolor:
-                      activePanel === 'userProfile'
-                        ? alpha(ACCENT_AUP, 0.85)
-                        : alpha(ACCENT_AUP, 0.08),
-                    borderColor: ACCENT_AUP,
-                  },
+                  bgcolor: activePanel === 'userProfile' ? '#2d5ebb' : undefined,
+                  color: activePanel === 'userProfile' ? '#fff' : '#2d5ebb',
                 }}
               >
                 User Profiles
@@ -186,17 +171,8 @@ const ConsultantProfiles = () => {
                 onClick={() => togglePanel('workingTimes')}
                 sx={{
                   textTransform: 'none',
-                  border: '1px solid',
-                  borderColor: ACCENT_WT,
-                  bgcolor: activePanel === 'workingTimes' ? ACCENT_WT : undefined,
-                  color: activePanel === 'workingTimes' ? '#fff' : ACCENT_WT,
-                  '&:hover': {
-                    bgcolor:
-                      activePanel === 'workingTimes'
-                        ? alpha(ACCENT_WT, 0.85)
-                        : alpha(ACCENT_WT, 0.08),
-                    borderColor: ACCENT_WT,
-                  },
+                  bgcolor: activePanel === 'workingTimes' ? '#2d5ebb' : undefined,
+                  color: activePanel === 'workingTimes' ? '#fff' : '#2d5ebb',
                 }}
               >
                 Working Times
@@ -209,17 +185,8 @@ const ConsultantProfiles = () => {
                 onClick={() => togglePanel('workingShift')}
                 sx={{
                   textTransform: 'none',
-                  border: '1px solid',
-                  borderColor: ACCENT_WS,
-                  bgcolor: activePanel === 'workingShift' ? ACCENT_WS : undefined,
-                  color: activePanel === 'workingShift' ? '#fff' : ACCENT_WS,
-                  '&:hover': {
-                    bgcolor:
-                      activePanel === 'workingShift'
-                        ? alpha(ACCENT_WS, 0.85)
-                        : alpha(ACCENT_WS, 0.08),
-                    borderColor: ACCENT_WS,
-                  },
+                  bgcolor: activePanel === 'workingShift' ? '#2d5ebb' : undefined,
+                  color: activePanel === 'workingShift' ? '#fff' : '#2d5ebb',
                 }}
               >
                 Working Shifts
@@ -232,15 +199,8 @@ const ConsultantProfiles = () => {
                 onClick={() => togglePanel('timesheet')}
                 sx={{
                   textTransform: 'none',
-                  border: '1px solid',
-                  borderColor: ACCENT_TP,
-                  bgcolor: activePanel === 'timesheet' ? ACCENT_TP : undefined,
-                  color: activePanel === 'timesheet' ? '#fff' : ACCENT_TP,
-                  '&:hover': {
-                    bgcolor:
-                      activePanel === 'timesheet' ? alpha(ACCENT_TP, 0.85) : alpha(ACCENT_TP, 0.08),
-                    borderColor: ACCENT_TP,
-                  },
+                  bgcolor: activePanel === 'timesheet' ? '#2d5ebb' : undefined,
+                  color: activePanel === 'timesheet' ? '#fff' : '#2d5ebb',
                 }}
               >
                 Timesheet Projects
@@ -253,15 +213,8 @@ const ConsultantProfiles = () => {
                 onClick={() => togglePanel('expense')}
                 sx={{
                   textTransform: 'none',
-                  border: '1px solid',
-                  borderColor: ACCENT_EP,
-                  bgcolor: activePanel === 'expense' ? ACCENT_EP : undefined,
-                  color: activePanel === 'expense' ? '#fff' : ACCENT_EP,
-                  '&:hover': {
-                    bgcolor:
-                      activePanel === 'expense' ? alpha(ACCENT_EP, 0.85) : alpha(ACCENT_EP, 0.08),
-                    borderColor: ACCENT_EP,
-                  },
+                  bgcolor: activePanel === 'expense' ? '#2d5ebb' : undefined,
+                  color: activePanel === 'expense' ? '#fff' : '#2d5ebb',
                 }}
               >
                 Expense Projects
@@ -359,14 +312,8 @@ const ConsultantProfiles = () => {
                 onClick={() => setCrSubPanel('roles')}
                 sx={{
                   textTransform: 'none',
-                  border: '1px solid',
-                  borderColor: ACCENT_CR,
-                  bgcolor: crSubPanel === 'roles' ? ACCENT_CR : undefined,
-                  color: crSubPanel === 'roles' ? '#fff' : ACCENT_CR,
-                  '&:hover': {
-                    bgcolor: crSubPanel === 'roles' ? alpha(ACCENT_CR, 0.85) : alpha(ACCENT_CR, 0.08),
-                    borderColor: ACCENT_CR,
-                  },
+                  bgcolor: crSubPanel === 'roles' ? '#2d5ebb' : undefined,
+                  color: crSubPanel === 'roles' ? '#fff' : '#2d5ebb',
                 }}
               >
                 Consultant Roles
@@ -379,14 +326,8 @@ const ConsultantProfiles = () => {
                 onClick={() => setCrSubPanel('assocProfiles')}
                 sx={{
                   textTransform: 'none',
-                  border: '1px solid',
-                  borderColor: ACCENT_ACP,
-                  bgcolor: crSubPanel === 'assocProfiles' ? ACCENT_ACP : undefined,
-                  color: crSubPanel === 'assocProfiles' ? '#fff' : ACCENT_ACP,
-                  '&:hover': {
-                    bgcolor: crSubPanel === 'assocProfiles' ? alpha(ACCENT_ACP, 0.85) : alpha(ACCENT_ACP, 0.08),
-                    borderColor: ACCENT_ACP,
-                  },
+                  bgcolor: crSubPanel === 'assocProfiles' ? '#2d5ebb' : undefined,
+                  color: crSubPanel === 'assocProfiles' ? '#fff' : '#2d5ebb',
                 }}
               >
                 Associated Consultant Profiles

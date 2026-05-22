@@ -99,11 +99,11 @@ export const EMPTY_FORM: WorkingDayTemplateForm = {
   sundayHours: 0,
 };
 
-export const ACCENT_WDT = '#7e09b4';
+export const ACCENT_WDT = '#0369a1';
 export const ACCENT_HC = '#0369a1';
-export const ACCENT_BH = '#7c3aed';
-export const ACCENT_WC = '#0f766e';
-export const ACCENT_WT = '#0284c7';
-export const ACCENT_CT = '#7c3aed';
-export const ACCENT_WL = '#7c3aed';
-export const ACCENT_CC = '#d97706';
+export const ACCENT_BH = '#0369a1';
+export const ACCENT_WC = '#0369a1';
+export const ACCENT_WT = '#0369a1';
+export const ACCENT_CT = '#0369a1';
+export const ACCENT_WL = '#0369a1';
+export const ACCENT_CC = '#0369a1';

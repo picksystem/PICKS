@@ -23,7 +23,7 @@ import {
   ConfigDeleteDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 
-const ACCENT_AUP = '#2563eb';
+const ACCENT_AUP = '#2d5ebb';
 
 const EMPTY_AUP = {
   consultantProfileId: '',
@@ -121,9 +121,9 @@ const UserProfilesPanel = ({ data, onSave }: UserProfilesPanelProps) => {
             gap: 1.5,
             px: 2,
             py: 1.25,
-            bgcolor: alpha(ACCENT_AUP, 0.08),
+            bgcolor: alpha('#2d5ebb', 0.08),
             border: '1px solid',
-            borderColor: alpha(ACCENT_AUP, 0.25),
+            borderColor: alpha('#2d5ebb', 0.25),
             borderRadius: '10px 10px 0 0',
             borderBottom: 'none',
           }}
@@ -159,7 +159,7 @@ const UserProfilesPanel = ({ data, onSave }: UserProfilesPanelProps) => {
                   size='small'
                   variant='contained'
                   startIcon={<AddIcon />}
-                  sx={{ bgcolor: ACCENT_AUP, '&:hover': { bgcolor: alpha(ACCENT_AUP, 0.85) } }}
+                  sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                   onClick={() => {
                     setEditingRow(null);
                     setDialogOpen(true);
@@ -174,7 +174,7 @@ const UserProfilesPanel = ({ data, onSave }: UserProfilesPanelProps) => {
                   size='small'
                   variant='contained'
                   startIcon={<EditIcon />}
-                  sx={{ bgcolor: ACCENT_AUP, '&:hover': { bgcolor: alpha(ACCENT_AUP, 0.85) } }}
+                  sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                   onClick={() => {
                     setEditingRow(selectedRow);
                     setDialogOpen(true);
@@ -197,7 +197,7 @@ const UserProfilesPanel = ({ data, onSave }: UserProfilesPanelProps) => {
                     display: { xs: 'none', sm: 'block' },
                     width: '1px',
                     height: '20px',
-                    bgcolor: alpha(ACCENT_AUP, 0.3),
+                    bgcolor: alpha('#2d5ebb', 0.3),
                     mx: 0.75,
                     alignSelf: 'center',
                   }}
@@ -239,7 +239,7 @@ const UserProfilesPanel = ({ data, onSave }: UserProfilesPanelProps) => {
             borderRadius: '0 0 10px 10px',
             overflow: 'hidden',
             border: '1px solid',
-            borderColor: alpha(ACCENT_AUP, 0.25),
+            borderColor: alpha('#2d5ebb', 0.25),
             borderTop: 'none',
           }}
         >
@@ -264,7 +264,7 @@ const UserProfilesPanel = ({ data, onSave }: UserProfilesPanelProps) => {
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<PersonIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_AUP}
+        accent={'#2d5ebb'}
         title='Associated User Profile'
         submitDisabled={!form.userName.trim()}
         maxWidth='sm'

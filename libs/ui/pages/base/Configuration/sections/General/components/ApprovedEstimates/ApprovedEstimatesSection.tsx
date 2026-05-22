@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Paper,
   Button,
   Tooltip,
   TextField,
-  Link,
   Chip,
   DataTable,
   Column,
@@ -15,16 +13,19 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  InputAdornment,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
-  InputAdornment,
+  Paper,
+  alpha,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { IConfigGeneral, IConfigApprovedEstimateRow } from '@serviceops/interfaces';
@@ -257,7 +258,7 @@ const ApprovedEstimatesSection = ({
         <AccordionDetails sx={{ p: 2 }}>
           {/* ── Toolbar ── */}
           <Paper variant='outlined' className={classes.actionToolbar}>
-            <Box className={classes.toolbarButtons}>
+            <Box className={classes.toolbarButtons} sx={{ flexWrap: 'wrap', gap: 0.75 }}>
               {!selectedRow && (
                 <Tooltip title='Add a new approved estimate row'>
                   <span>
@@ -273,7 +274,12 @@ const ApprovedEstimatesSection = ({
                         activeTicketTypes.length > 0 &&
                         usedTicketTypeIds.length >= activeTicketTypes.length
                       }
-                      sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
+                      sx={{
+                        width: { xs: '100%', sm: 'auto' },
+                        textTransform: 'none',
+                        bgcolor: '#2d5ebb',
+                        '&:hover': { bgcolor: '#2d5ebb' },
+                      }}
                     >
                       New
                     </Button>
@@ -290,7 +296,11 @@ const ApprovedEstimatesSection = ({
                     setEditingRow(selectedRow);
                     setDialogOpen(true);
                   }}
-                  sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
+                  sx={{
+                    textTransform: 'none',
+                    bgcolor: '#2d5ebb',
+                    '&:hover': { bgcolor: '#2d5ebb' },
+                  }}
                 >
                   Edit
                 </Button>
@@ -303,10 +313,43 @@ const ApprovedEstimatesSection = ({
                   color='error'
                   startIcon={<DeleteIcon />}
                   onClick={() => setDeleteOpen(true)}
-                  sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
+                  sx={{ textTransform: 'none' }}
                 >
                   Delete
                 </Button>
+              )}
+
+              {selectedRow && (
+                <>
+                  <Box
+                    component='span'
+                    sx={{
+                      display: { xs: 'none', sm: 'block' },
+                      width: '1px',
+                      height: '20px',
+                      bgcolor: alpha('#2d5ebb', 0.3),
+                      mx: 0.75,
+                      alignSelf: 'center',
+                    }}
+                  />
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    startIcon={<ClearIcon />}
+                    sx={{
+                      textTransform: 'none',
+                      borderColor: '#2d5ebb',
+                      color: '#2d5ebb',
+                      '&:hover': {
+                        borderColor: '#2d5ebb',
+                        bgcolor: alpha('#2d5ebb', 0.08),
+                      },
+                    }}
+                    onClick={() => setSelectedRowId(null)}
+                  >
+                    Clear
+                  </Button>
+                </>
               )}
 
               <TextField
@@ -315,7 +358,7 @@ const ApprovedEstimatesSection = ({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className={classes.tableSearchField}
-                sx={{ ml: { xs: 0, sm: 'auto' } }}
+                sx={{ ml: 'auto' }}
                 slotProps={{
                   input: {
                     endAdornment: (
@@ -327,19 +370,6 @@ const ApprovedEstimatesSection = ({
                 }}
               />
             </Box>
-
-            {selectedRow && (
-              <Typography
-                variant='caption'
-                color='text.secondary'
-                className={classes.selectionInfo}
-              >
-                Selected: <strong>{selectedRow.ticketTypeName}</strong>&nbsp;·&nbsp;
-                <Link component='button' variant='caption' onClick={() => setSelectedRowId(null)}>
-                  Clear
-                </Link>
-              </Typography>
-            )}
           </Paper>
 
           {/* ── Table ── */}

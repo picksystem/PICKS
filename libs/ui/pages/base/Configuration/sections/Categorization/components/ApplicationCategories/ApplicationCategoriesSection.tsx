@@ -181,7 +181,7 @@ const ApplicationCategoriesSection = ({
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: '#0891b2',
+              bgcolor: '#2d5ebb',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -249,7 +249,7 @@ const ApplicationCategoriesSection = ({
                   sx={{
                     width: '1px',
                     height: '20px',
-                    bgcolor: alpha('#0891b2', 0.3),
+                    bgcolor: alpha('#2d5ebb', 0.3),
                     display: { xs: 'none', sm: 'block' },
                   }}
                 />
@@ -304,7 +304,7 @@ const ApplicationCategoriesSection = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<CategoryIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent='#0891b2'
+        accent='#2d5ebb'
         title='Application Category'
         subtitle='Manage categories assigned to applications'
         submitDisabled={!form.categoryName.trim()}

@@ -26,7 +26,7 @@ import {
   ConfigDeleteDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 
-const ACCENT_EP = '#7c3aed';
+const ACCENT_EP = '#2d5ebb';
 
 const EMPTY_EP_FORM = {
   consultantProfileId: '',
@@ -160,7 +160,7 @@ const ExpenseProjectsPanel = ({ data, onSave }: ExpenseProjectsPanelProps) => {
             fontFamily: 'monospace',
             fontWeight: 700,
             fontSize: '0.75rem',
-            bgcolor: alpha(ACCENT_EP, 0.1),
+            bgcolor: alpha('#2d5ebb', 0.1),
             color: ACCENT_EP,
             height: 22,
             borderRadius: 1,
@@ -180,9 +180,9 @@ const ExpenseProjectsPanel = ({ data, onSave }: ExpenseProjectsPanelProps) => {
             gap: 1.5,
             px: 2,
             py: 1.25,
-            bgcolor: alpha(ACCENT_EP, 0.08),
+            bgcolor: alpha('#2d5ebb', 0.08),
             border: '1px solid',
-            borderColor: alpha(ACCENT_EP, 0.25),
+            borderColor: alpha('#2d5ebb', 0.25),
             borderRadius: '10px 10px 0 0',
             borderBottom: 'none',
           }}
@@ -218,7 +218,7 @@ const ExpenseProjectsPanel = ({ data, onSave }: ExpenseProjectsPanelProps) => {
                   size='small'
                   variant='contained'
                   startIcon={<AddIcon />}
-                  sx={{ bgcolor: ACCENT_EP, '&:hover': { bgcolor: alpha(ACCENT_EP, 0.85) } }}
+                  sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                   onClick={() => {
                     setEditingRow(null);
                     setDialogOpen(true);
@@ -233,7 +233,7 @@ const ExpenseProjectsPanel = ({ data, onSave }: ExpenseProjectsPanelProps) => {
                   size='small'
                   variant='contained'
                   startIcon={<EditIcon />}
-                  sx={{ bgcolor: ACCENT_EP, '&:hover': { bgcolor: alpha(ACCENT_EP, 0.85) } }}
+                  sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                   onClick={() => {
                     setEditingRow(selectedRow);
                     setDialogOpen(true);
@@ -256,7 +256,7 @@ const ExpenseProjectsPanel = ({ data, onSave }: ExpenseProjectsPanelProps) => {
                     display: { xs: 'none', sm: 'block' },
                     width: '1px',
                     height: '20px',
-                    bgcolor: alpha(ACCENT_EP, 0.3),
+                    bgcolor: alpha('#2d5ebb', 0.3),
                     mx: 0.75,
                     alignSelf: 'center',
                   }}
@@ -298,7 +298,7 @@ const ExpenseProjectsPanel = ({ data, onSave }: ExpenseProjectsPanelProps) => {
             borderRadius: '0 0 10px 10px',
             overflow: 'hidden',
             border: '1px solid',
-            borderColor: alpha(ACCENT_EP, 0.25),
+            borderColor: alpha('#2d5ebb', 0.25),
             borderTop: 'none',
           }}
         >
@@ -323,7 +323,7 @@ const ExpenseProjectsPanel = ({ data, onSave }: ExpenseProjectsPanelProps) => {
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<AttachMoneyIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_EP}
+        accent={'#2d5ebb'}
         title='Expense Project'
         submitDisabled={!form.project.trim()}
         submitLabel={editingRow ? 'Save Changes' : 'Add Project'}

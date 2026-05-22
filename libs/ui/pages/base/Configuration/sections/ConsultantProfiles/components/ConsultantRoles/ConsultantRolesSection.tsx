@@ -23,8 +23,8 @@ import {
   ConfigDeleteDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 
-const ACCENT_CR = '#7c3aed';
-const ACCENT_ACP = '#059669';
+const ACCENT_CR = '#2d5ebb';
+const ACCENT_ACP = '#2d5ebb';
 
 const mkCell =
   (bold = false) =>
@@ -127,9 +127,9 @@ const AssociatedConsultantProfilesPanel = ({
           gap: 1.5,
           px: 2,
           py: 1.25,
-          bgcolor: alpha(ACCENT_ACP, 0.08),
+          bgcolor: alpha('#2d5ebb', 0.08),
           border: '1px solid',
-          borderColor: alpha(ACCENT_ACP, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderRadius: '10px 10px 0 0',
           borderBottom: 'none',
         }}
@@ -165,7 +165,7 @@ const AssociatedConsultantProfilesPanel = ({
                 size='small'
                 variant='contained'
                 startIcon={<AddIcon />}
-                sx={{ bgcolor: ACCENT_ACP, '&:hover': { bgcolor: alpha(ACCENT_ACP, 0.85) } }}
+                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                 onClick={() => {
                   setEditingRow(null);
                   setDialogOpen(true);
@@ -180,7 +180,7 @@ const AssociatedConsultantProfilesPanel = ({
                 size='small'
                 variant='contained'
                 startIcon={<EditIcon />}
-                sx={{ bgcolor: ACCENT_ACP, '&:hover': { bgcolor: alpha(ACCENT_ACP, 0.85) } }}
+                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                 onClick={() => {
                   setEditingRow(selectedRow);
                   setDialogOpen(true);
@@ -203,7 +203,7 @@ const AssociatedConsultantProfilesPanel = ({
                   display: { xs: 'none', sm: 'block' },
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha(ACCENT_ACP, 0.3),
+                  bgcolor: alpha('#2d5ebb', 0.3),
                   mx: 0.75,
                   alignSelf: 'center',
                 }}
@@ -245,7 +245,7 @@ const AssociatedConsultantProfilesPanel = ({
           borderRadius: '0 0 10px 10px',
           overflow: 'hidden',
           border: '1px solid',
-          borderColor: alpha(ACCENT_ACP, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderTop: 'none',
         }}
       >
@@ -269,7 +269,7 @@ const AssociatedConsultantProfilesPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<GroupIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_ACP}
+        accent={'#2d5ebb'}
         title='Associated Consultant Profile'
         submitDisabled={!form.application.trim() || !form.roleName.trim()}
         maxWidth='sm'
@@ -436,9 +436,9 @@ const ConsultantRolesSection = ({
             gap: 1.5,
             px: 2,
             py: 1.25,
-            bgcolor: alpha(ACCENT_CR, 0.08),
+            bgcolor: alpha('#2d5ebb', 0.08),
             border: '1px solid',
-            borderColor: alpha(ACCENT_CR, 0.25),
+            borderColor: alpha('#2d5ebb', 0.25),
             borderRadius: '10px 10px 0 0',
             borderBottom: 'none',
           }}
@@ -474,7 +474,7 @@ const ConsultantRolesSection = ({
                 size='small'
                 variant='contained'
                 startIcon={<AddIcon />}
-                sx={{ bgcolor: ACCENT_CR, '&:hover': { bgcolor: alpha(ACCENT_CR, 0.85) } }}
+                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                 onClick={() => {
                   setEditingRow(null);
                   setDialogOpen(true);
@@ -489,7 +489,7 @@ const ConsultantRolesSection = ({
                 size='small'
                 variant='contained'
                 startIcon={<EditIcon />}
-                sx={{ bgcolor: ACCENT_CR, '&:hover': { bgcolor: alpha(ACCENT_CR, 0.85) } }}
+                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                 onClick={() => {
                   setEditingRow(selectedRow);
                   setDialogOpen(true);
@@ -512,7 +512,7 @@ const ConsultantRolesSection = ({
                   display: { xs: 'none', sm: 'block' },
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha(ACCENT_CR, 0.3),
+                  bgcolor: alpha('#2d5ebb', 0.3),
                   mx: 0.75,
                   alignSelf: 'center',
                 }}
@@ -554,7 +554,7 @@ const ConsultantRolesSection = ({
           borderRadius: '0 0 10px 10px',
           overflow: 'hidden',
           border: '1px solid',
-          borderColor: alpha(ACCENT_CR, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderTop: 'none',
         }}
       >
@@ -578,7 +578,7 @@ const ConsultantRolesSection = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<GroupIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_CR}
+        accent={'#2d5ebb'}
         title='Consultant Role'
         submitDisabled={!form.roleName.trim()}
         submitLabel={editingRow ? 'Save Changes' : 'Add Role'}

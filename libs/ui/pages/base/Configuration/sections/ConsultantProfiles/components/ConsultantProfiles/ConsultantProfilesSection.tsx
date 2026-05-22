@@ -23,7 +23,7 @@ import {
   ConfigDeleteDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 
-const ACCENT_CP = '#d97706';
+const ACCENT_CP = '#2d5ebb';
 
 const EMPTY_CP = {
   consultantName: '',
@@ -134,9 +134,9 @@ const ConsultantProfilesSection = ({
             gap: 1.5,
             px: 2,
             py: 1.25,
-            bgcolor: alpha(ACCENT_CP, 0.08),
+            bgcolor: alpha('#2d5ebb', 0.08),
             border: '1px solid',
-            borderColor: alpha(ACCENT_CP, 0.25),
+            borderColor: alpha('#2d5ebb', 0.25),
             borderRadius: '10px 10px 0 0',
             borderBottom: 'none',
           }}
@@ -172,7 +172,7 @@ const ConsultantProfilesSection = ({
                   size='small'
                   variant='contained'
                   startIcon={<AddIcon />}
-                  sx={{ bgcolor: ACCENT_CP, '&:hover': { bgcolor: alpha(ACCENT_CP, 0.85) } }}
+                  sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                   onClick={() => {
                     setEditingProfile(null);
                     setEditOpen(true);
@@ -187,7 +187,7 @@ const ConsultantProfilesSection = ({
                   size='small'
                   variant='contained'
                   startIcon={<EditIcon />}
-                  sx={{ bgcolor: ACCENT_CP, '&:hover': { bgcolor: alpha(ACCENT_CP, 0.85) } }}
+                  sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                   onClick={() => {
                     setEditingProfile(selectedProfile);
                     setEditOpen(true);
@@ -210,7 +210,7 @@ const ConsultantProfilesSection = ({
                     display: { xs: 'none', sm: 'block' },
                     width: '1px',
                     height: '20px',
-                    bgcolor: alpha(ACCENT_CP, 0.3),
+                    bgcolor: alpha('#2d5ebb', 0.3),
                     mx: 0.75,
                     alignSelf: 'center',
                   }}
@@ -252,7 +252,7 @@ const ConsultantProfilesSection = ({
             borderRadius: '0 0 10px 10px',
             overflow: 'hidden',
             border: '1px solid',
-            borderColor: alpha(ACCENT_CP, 0.25),
+            borderColor: alpha('#2d5ebb', 0.25),
             borderTop: 'none',
           }}
         >
@@ -277,7 +277,7 @@ const ConsultantProfilesSection = ({
         onSubmit={handleSubmit}
         isEdit={!!editingProfile}
         icon={<BusinessCenterIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_CP}
+        accent={'#2d5ebb'}
         title='Consultant Profile'
         submitDisabled={!form.consultantName.trim()}
         maxWidth='sm'

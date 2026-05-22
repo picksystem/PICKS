@@ -18,7 +18,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Divider,
   alpha,
   Checkbox,
   Switch,
@@ -263,8 +262,8 @@ const TemplateTable: React.FC<TemplateTableProps> = ({ config, rows, onSave, sta
                   onClick={openCreateDialog}
                   sx={{
                     textTransform: 'none',
-                    bgcolor: config.accent,
-                    '&:hover': { bgcolor: alpha(config.accent, 0.85) },
+                    bgcolor: '#2d5ebb',
+                    '&:hover': { bgcolor: '#2d5ebb' },
                   }}
                 >
                   New
@@ -279,8 +278,8 @@ const TemplateTable: React.FC<TemplateTableProps> = ({ config, rows, onSave, sta
                   onClick={openEditDialog}
                   sx={{
                     textTransform: 'none',
-                    bgcolor: config.accent,
-                    '&:hover': { bgcolor: alpha(config.accent, 0.85) },
+                    bgcolor: '#2d5ebb',
+                    '&:hover': { bgcolor: '#2d5ebb' },
                   }}
                 >
                   Edit
@@ -297,11 +296,16 @@ const TemplateTable: React.FC<TemplateTableProps> = ({ config, rows, onSave, sta
                   Delete
                 </Button>
 
-                <Divider
-                  orientation='vertical'
-                  flexItem
-                  className={classes.toolbarDivider}
-                  sx={{ mx: 0.5 }}
+                <Box
+                  component='span'
+                  sx={{
+                    display: { xs: 'none', sm: 'block' },
+                    width: '1px',
+                    height: '20px',
+                    bgcolor: alpha('#2d5ebb', 0.3),
+                    mx: 0.75,
+                    alignSelf: 'center',
+                  }}
                 />
 
                 <Button
@@ -309,7 +313,15 @@ const TemplateTable: React.FC<TemplateTableProps> = ({ config, rows, onSave, sta
                   variant='outlined'
                   startIcon={<ClearIcon />}
                   onClick={() => setSelectedId(null)}
-                  sx={{ textTransform: 'none' }}
+                  sx={{
+                    textTransform: 'none',
+                    borderColor: '#2d5ebb',
+                    color: '#2d5ebb',
+                    '&:hover': {
+                      borderColor: '#2d5ebb',
+                      bgcolor: alpha('#2d5ebb', 0.08),
+                    },
+                  }}
                 >
                   Clear
                 </Button>

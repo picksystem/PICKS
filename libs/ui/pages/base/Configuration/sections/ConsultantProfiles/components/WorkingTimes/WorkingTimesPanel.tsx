@@ -23,7 +23,7 @@ import {
   ConfigDeleteDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 
-const ACCENT_WT = '#0891b2';
+const ACCENT_WT = '#2d5ebb';
 
 const EMPTY_WT = {
   consultantProfileId: '',
@@ -113,9 +113,9 @@ const WorkingTimesPanel = ({ data, onSave }: WorkingTimesPanelProps) => {
             gap: 1.5,
             px: 2,
             py: 1.25,
-            bgcolor: alpha(ACCENT_WT, 0.08),
+            bgcolor: alpha('#2d5ebb', 0.08),
             border: '1px solid',
-            borderColor: alpha(ACCENT_WT, 0.25),
+            borderColor: alpha('#2d5ebb', 0.25),
             borderRadius: '10px 10px 0 0',
             borderBottom: 'none',
           }}
@@ -151,7 +151,7 @@ const WorkingTimesPanel = ({ data, onSave }: WorkingTimesPanelProps) => {
                   size='small'
                   variant='contained'
                   startIcon={<AddIcon />}
-                  sx={{ bgcolor: ACCENT_WT, '&:hover': { bgcolor: alpha(ACCENT_WT, 0.85) } }}
+                  sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                   onClick={() => {
                     setEditingRow(null);
                     setDialogOpen(true);
@@ -166,7 +166,7 @@ const WorkingTimesPanel = ({ data, onSave }: WorkingTimesPanelProps) => {
                   size='small'
                   variant='contained'
                   startIcon={<EditIcon />}
-                  sx={{ bgcolor: ACCENT_WT, '&:hover': { bgcolor: alpha(ACCENT_WT, 0.85) } }}
+                  sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                   onClick={() => {
                     setEditingRow(selectedRow);
                     setDialogOpen(true);
@@ -189,7 +189,7 @@ const WorkingTimesPanel = ({ data, onSave }: WorkingTimesPanelProps) => {
                     display: { xs: 'none', sm: 'block' },
                     width: '1px',
                     height: '20px',
-                    bgcolor: alpha(ACCENT_WT, 0.3),
+                    bgcolor: alpha('#2d5ebb', 0.3),
                     mx: 0.75,
                     alignSelf: 'center',
                   }}
@@ -231,7 +231,7 @@ const WorkingTimesPanel = ({ data, onSave }: WorkingTimesPanelProps) => {
             borderRadius: '0 0 10px 10px',
             overflow: 'hidden',
             border: '1px solid',
-            borderColor: alpha(ACCENT_WT, 0.25),
+            borderColor: alpha('#2d5ebb', 0.25),
             borderTop: 'none',
           }}
         >
@@ -256,7 +256,7 @@ const WorkingTimesPanel = ({ data, onSave }: WorkingTimesPanelProps) => {
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<AccessTimeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_WT}
+        accent={'#2d5ebb'}
         title='Working Time'
         submitDisabled={!form.startTime}
         maxWidth='xs'

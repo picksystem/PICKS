@@ -5,9 +5,9 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 
 export const ACCENT_RECORDS = '#0369a1';
-export const ACCENT_AUP = '#2563eb';
-export const ACCENT_CR = '#7c3aed';
-export const ACCENT_WT = '#0891b2';
+export const ACCENT_AUP = '#0369a1';
+export const ACCENT_CR = '#0369a1';
+export const ACCENT_WT = '#0369a1';
 
 export type ActiveView = 'records' | 'userProfile' | 'consultantRoles' | 'workingTimes';
 

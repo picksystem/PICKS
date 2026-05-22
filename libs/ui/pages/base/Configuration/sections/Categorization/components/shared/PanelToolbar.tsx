@@ -51,7 +51,7 @@ export const PanelToolbar = ({
               size='small'
               variant='contained'
               startIcon={<AddIcon />}
-              sx={{ bgcolor: accent, '&:hover': { bgcolor: alpha(accent, 0.85) } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={onNew}
             >
               New
@@ -62,7 +62,7 @@ export const PanelToolbar = ({
             size='small'
             variant='contained'
             startIcon={<EditIcon />}
-            sx={{ bgcolor: accent, '&:hover': { bgcolor: alpha(accent, 0.85) } }}
+            sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
             onClick={onEdit}
           >
             Edit
@@ -87,12 +87,25 @@ export const PanelToolbar = ({
                 display: { xs: 'none', sm: 'block' },
                 width: '1px',
                 height: '20px',
-                bgcolor: alpha(accent, 0.3),
+                bgcolor: alpha('#2d5ebb', 0.3),
                 mx: 0.75,
                 alignSelf: 'center',
               }}
             />
-            <Button size='small' variant='outlined' startIcon={<ClearIcon />} onClick={onClear}>
+            <Button
+              size='small'
+              variant='outlined'
+              startIcon={<ClearIcon />}
+              onClick={onClear}
+              sx={{
+                borderColor: '#2d5ebb',
+                color: '#2d5ebb',
+                '&:hover': {
+                  borderColor: '#2d5ebb',
+                  bgcolor: alpha('#2d5ebb', 0.08),
+                },
+              }}
+            >
               Clear
             </Button>
           </>

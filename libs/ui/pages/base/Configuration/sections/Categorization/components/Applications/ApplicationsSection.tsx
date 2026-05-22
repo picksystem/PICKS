@@ -61,14 +61,14 @@ import { useStyles } from '../../styles';
 import { PanelHeader, NoPick } from '../shared';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
 
-const ACCENT_APP = '#7c3aed';
-const ACCENT_AAP = '#059669';
-const ACCENT_ATT = '#ea580c';
-const ACCENT_ASL = '#0284c7';
-const ACCENT_ABC = '#0f766e';
-const ACCENT_ATS = '#0891b2';
-const ACCENT_ASN = '#d97706';
-const ACCENT_AEX = '#7c3aed';
+const ACCENT_APP = '#2d5ebb';
+const ACCENT_AAP = '#2d5ebb';
+const ACCENT_ATT = '#2d5ebb';
+const ACCENT_ASL = '#2d5ebb';
+const ACCENT_ABC = '#2d5ebb';
+const ACCENT_ATS = '#2d5ebb';
+const ACCENT_ASN = '#2d5ebb';
+const ACCENT_AEX = '#2d5ebb';
 
 type FlatAppApRow = IConfigApproval & { applicationId: string; applicationName: string };
 type FlatAppSlRow = IConfigSupportLine & { applicationId: string; applicationName: string };
@@ -289,7 +289,7 @@ const ApplicationsSection = ({
             fontWeight: 600,
             fontSize: '0.72rem',
             height: 20,
-            bgcolor: v ? alpha(ACCENT_APP, 0.1) : alpha('#64748b', 0.08),
+            bgcolor: v ? alpha('#2d5ebb', 0.1) : alpha('#64748b', 0.08),
             color: v ? ACCENT_APP : 'text.secondary',
           }}
         />
@@ -336,7 +336,7 @@ const ApplicationsSection = ({
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: ACCENT_APP,
+              bgcolor: '#2d5ebb',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -365,12 +365,12 @@ const ApplicationsSection = ({
               sx={{
                 textTransform: 'none',
                 border: '1px solid',
-                borderColor: ACCENT_APP,
-                bgcolor: !panelActive ? ACCENT_APP : undefined,
-                color: !panelActive ? '#fff' : ACCENT_APP,
+                borderColor: '#2d5ebb',
+                bgcolor: !panelActive ? '#2d5ebb' : undefined,
+                color: !panelActive ? '#fff' : '#2d5ebb',
                 '&:hover': {
-                  bgcolor: !panelActive ? alpha(ACCENT_APP, 0.85) : alpha(ACCENT_APP, 0.08),
-                  borderColor: ACCENT_APP,
+                  bgcolor: !panelActive ? '#2d5ebb' : alpha('#2d5ebb', 0.08),
+                  borderColor: '#2d5ebb',
                 },
               }}
             >
@@ -452,14 +452,14 @@ const ApplicationsSection = ({
                 gap: 1.5,
                 px: 2,
                 py: 1.25,
-                bgcolor: alpha(ACCENT_APP, 0.08),
+                bgcolor: alpha('#2d5ebb', 0.08),
                 border: '1px solid',
-                borderColor: alpha(ACCENT_APP, 0.25),
+                borderColor: alpha('#2d5ebb', 0.25),
                 borderRadius: '10px 10px 0 0',
                 borderBottom: 'none',
               }}
             >
-              <AppsIcon sx={{ color: ACCENT_APP, fontSize: '1.1rem' }} />
+              <AppsIcon sx={{ color: '#2d5ebb', fontSize: '1.1rem' }} />
               <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_APP }}>
                 Applications
               </Typography>
@@ -482,7 +482,7 @@ const ApplicationsSection = ({
                       setEditingRow(null);
                       setDialogOpen(true);
                     }}
-                    sx={{ bgcolor: ACCENT_APP, '&:hover': { bgcolor: alpha(ACCENT_APP, 0.85) } }}
+                    sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                   >
                     New
                   </Button>
@@ -496,7 +496,7 @@ const ApplicationsSection = ({
                         setEditingRow(selectedRow);
                         setDialogOpen(true);
                       }}
-                      sx={{ bgcolor: ACCENT_APP, '&:hover': { bgcolor: alpha(ACCENT_APP, 0.85) } }}
+                      sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
                     >
                       Edit
                     </Button>
@@ -515,7 +515,7 @@ const ApplicationsSection = ({
                         display: { xs: 'none', sm: 'block' },
                         width: '1px',
                         height: '20px',
-                        bgcolor: alpha(ACCENT_APP, 0.3),
+                        bgcolor: alpha('#2d5ebb', 0.3),
                         mx: 0.75,
                         alignSelf: 'center',
                       }}
@@ -817,7 +817,7 @@ const AppApprovalsPanel = ({
           label={String(v || '—')}
           size='small'
           sx={{
-            bgcolor: alpha(ACCENT_AAP, 0.1),
+            bgcolor: alpha('#2d5ebb', 0.1),
             color: ACCENT_AAP,
             fontWeight: 600,
             fontSize: '0.75rem',
@@ -838,7 +838,7 @@ const AppApprovalsPanel = ({
             fontFamily: 'monospace',
             fontWeight: 700,
             fontSize: '0.75rem',
-            bgcolor: alpha(ACCENT_AAP, 0.08),
+            bgcolor: alpha('#2d5ebb', 0.08),
             color: ACCENT_AAP,
             height: 22,
             borderRadius: 1,
@@ -894,9 +894,9 @@ const AppApprovalsPanel = ({
           gap: 1.5,
           px: 2,
           py: 1.25,
-          bgcolor: alpha(ACCENT_AAP, 0.08),
+          bgcolor: alpha('#2d5ebb', 0.08),
           border: '1px solid',
-          borderColor: alpha(ACCENT_AAP, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderRadius: '10px 10px 0 0',
           borderBottom: 'none',
         }}
@@ -919,7 +919,7 @@ const AppApprovalsPanel = ({
               size='small'
               variant='contained'
               startIcon={<AddIcon />}
-              sx={{ bgcolor: ACCENT_AAP, '&:hover': { bgcolor: '#047857' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(null);
                 setDialogOpen(true);
@@ -932,7 +932,7 @@ const AppApprovalsPanel = ({
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: ACCENT_AAP, '&:hover': { bgcolor: '#047857' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -958,7 +958,7 @@ const AppApprovalsPanel = ({
                 sx={{
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha(ACCENT_AAP, 0.3),
+                  bgcolor: alpha('#2d5ebb', 0.3),
                   display: { xs: 'none', sm: 'block' },
                 }}
               />
@@ -997,7 +997,7 @@ const AppApprovalsPanel = ({
           borderRadius: '0 0 10px 10px',
           overflow: 'hidden',
           border: '1px solid',
-          borderColor: alpha(ACCENT_AAP, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderTop: 'none',
         }}
       >
@@ -1036,7 +1036,7 @@ const AppApprovalsPanel = ({
               label={editingRow.applicationName}
               size='small'
               sx={{
-                bgcolor: alpha(ACCENT_AAP, 0.1),
+                bgcolor: alpha('#2d5ebb', 0.1),
                 color: ACCENT_AAP,
                 fontWeight: 600,
                 fontSize: '0.78rem',
@@ -1168,7 +1168,7 @@ const AppTicketTypePanel = ({
             borderRadius: '0 0 10px 10px',
             overflow: 'hidden',
             border: '1px solid',
-            borderColor: alpha(ACCENT_ATT, 0.25),
+            borderColor: alpha('#2d5ebb', 0.25),
             borderTop: 'none',
           }}
         >
@@ -1176,9 +1176,9 @@ const AppTicketTypePanel = ({
             sx={{
               px: 2,
               py: 0.75,
-              bgcolor: alpha(ACCENT_ATT, 0.05),
+              bgcolor: alpha('#2d5ebb', 0.05),
               borderBottom: '1px solid',
-              borderColor: alpha(ACCENT_ATT, 0.12),
+              borderColor: alpha('#2d5ebb', 0.12),
             }}
           >
             <Typography variant='caption' color='text.secondary'>
@@ -1187,7 +1187,7 @@ const AppTicketTypePanel = ({
           </Box>
           <Table size='small'>
             <TableHead>
-              <TableRow sx={{ bgcolor: alpha(ACCENT_ATT, 0.04) }}>
+              <TableRow sx={{ bgcolor: alpha('#2d5ebb', 0.04) }}>
                 <TableCell
                   sx={{
                     fontWeight: 700,
@@ -1240,7 +1240,7 @@ const AppTicketTypePanel = ({
                             width: 8,
                             height: 8,
                             borderRadius: '50%',
-                            bgcolor: row.enabled ? ACCENT_ATT : 'grey.400',
+                            bgcolor: row.enabled ? '#2d5ebb' : 'grey.400',
                             flexShrink: 0,
                           }}
                         />
@@ -1255,7 +1255,7 @@ const AppTicketTypePanel = ({
                         checked={row.enabled}
                         onChange={(e) => toggleEnabled(row.ticketTypeName, e.target.checked)}
                         sx={{
-                          '& .MuiSwitch-thumb': { bgcolor: row.enabled ? ACCENT_ATT : undefined },
+                          '& .MuiSwitch-thumb': { bgcolor: row.enabled ? '#2d5ebb' : undefined },
                         }}
                       />
                     </TableCell>
@@ -1377,7 +1377,7 @@ const AppSupportLinesPanel = ({
           label={String(v || '—')}
           size='small'
           sx={{
-            bgcolor: alpha(ACCENT_ASL, 0.1),
+            bgcolor: alpha('#2d5ebb', 0.1),
             color: ACCENT_ASL,
             fontWeight: 600,
             fontSize: '0.75rem',
@@ -1434,9 +1434,9 @@ const AppSupportLinesPanel = ({
           gap: 1.5,
           px: 2,
           py: 1.25,
-          bgcolor: alpha(ACCENT_ASL, 0.08),
+          bgcolor: alpha('#2d5ebb', 0.08),
           border: '1px solid',
-          borderColor: alpha(ACCENT_ASL, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderRadius: '10px 10px 0 0',
           borderBottom: 'none',
         }}
@@ -1459,7 +1459,7 @@ const AppSupportLinesPanel = ({
               size='small'
               variant='contained'
               startIcon={<AddIcon />}
-              sx={{ bgcolor: ACCENT_ASL, '&:hover': { bgcolor: '#0369a1' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(null);
                 setDialogOpen(true);
@@ -1472,7 +1472,7 @@ const AppSupportLinesPanel = ({
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: ACCENT_ASL, '&:hover': { bgcolor: '#0369a1' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -1498,7 +1498,7 @@ const AppSupportLinesPanel = ({
                 sx={{
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha(ACCENT_ASL, 0.3),
+                  bgcolor: alpha('#2d5ebb', 0.3),
                   display: { xs: 'none', sm: 'block' },
                 }}
               />
@@ -1537,7 +1537,7 @@ const AppSupportLinesPanel = ({
           borderRadius: '0 0 10px 10px',
           overflow: 'hidden',
           border: '1px solid',
-          borderColor: alpha(ACCENT_ASL, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderTop: 'none',
         }}
       >
@@ -1576,7 +1576,7 @@ const AppSupportLinesPanel = ({
               label={editingRow.applicationName}
               size='small'
               sx={{
-                bgcolor: alpha(ACCENT_ASL, 0.1),
+                bgcolor: alpha('#2d5ebb', 0.1),
                 color: ACCENT_ASL,
                 fontWeight: 600,
                 fontSize: '0.78rem',
@@ -1751,7 +1751,7 @@ const AppBillingCodesPanel = ({
           label={String(v || '—')}
           size='small'
           sx={{
-            bgcolor: alpha(ACCENT_ABC, 0.1),
+            bgcolor: alpha('#2d5ebb', 0.1),
             color: ACCENT_ABC,
             fontWeight: 600,
             fontSize: '0.75rem',
@@ -1771,7 +1771,7 @@ const AppBillingCodesPanel = ({
           sx={{
             fontFamily: 'monospace',
             fontWeight: 700,
-            bgcolor: alpha(ACCENT_ABC, 0.08),
+            bgcolor: alpha('#2d5ebb', 0.08),
             color: ACCENT_ABC,
             fontSize: '0.78rem',
             height: 22,
@@ -1818,9 +1818,9 @@ const AppBillingCodesPanel = ({
           gap: 1.5,
           px: 2,
           py: 1.25,
-          bgcolor: alpha(ACCENT_ABC, 0.08),
+          bgcolor: alpha('#2d5ebb', 0.08),
           border: '1px solid',
-          borderColor: alpha(ACCENT_ABC, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderRadius: '10px 10px 0 0',
           borderBottom: 'none',
         }}
@@ -1843,7 +1843,7 @@ const AppBillingCodesPanel = ({
               size='small'
               variant='contained'
               startIcon={<AddIcon />}
-              sx={{ bgcolor: ACCENT_ABC, '&:hover': { bgcolor: '#0d6460' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(null);
                 setDialogOpen(true);
@@ -1856,7 +1856,7 @@ const AppBillingCodesPanel = ({
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: ACCENT_ABC, '&:hover': { bgcolor: '#0d6460' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -1882,7 +1882,7 @@ const AppBillingCodesPanel = ({
                 sx={{
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha(ACCENT_ABC, 0.3),
+                  bgcolor: alpha('#2d5ebb', 0.3),
                   display: { xs: 'none', sm: 'block' },
                 }}
               />
@@ -1921,7 +1921,7 @@ const AppBillingCodesPanel = ({
           borderRadius: '0 0 10px 10px',
           overflow: 'hidden',
           border: '1px solid',
-          borderColor: alpha(ACCENT_ABC, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderTop: 'none',
         }}
       >
@@ -1960,7 +1960,7 @@ const AppBillingCodesPanel = ({
               label={editingRow.applicationName}
               size='small'
               sx={{
-                bgcolor: alpha(ACCENT_ABC, 0.1),
+                bgcolor: alpha('#2d5ebb', 0.1),
                 color: ACCENT_ABC,
                 fontWeight: 600,
                 fontSize: '0.78rem',
@@ -2136,7 +2136,7 @@ const AppTimesheetPanel = ({
           label={String(v || '—')}
           size='small'
           sx={{
-            bgcolor: alpha(ACCENT_ATS, 0.1),
+            bgcolor: alpha('#2d5ebb', 0.1),
             color: ACCENT_ATS,
             fontWeight: 600,
             fontSize: '0.75rem',
@@ -2204,7 +2204,7 @@ const AppTimesheetPanel = ({
             fontFamily: 'monospace',
             fontWeight: 700,
             fontSize: '0.75rem',
-            bgcolor: alpha(ACCENT_ATS, 0.1),
+            bgcolor: alpha('#2d5ebb', 0.1),
             color: ACCENT_ATS,
             height: 22,
             borderRadius: 1,
@@ -2223,9 +2223,9 @@ const AppTimesheetPanel = ({
           gap: 1.5,
           px: 2,
           py: 1.25,
-          bgcolor: alpha(ACCENT_ATS, 0.08),
+          bgcolor: alpha('#2d5ebb', 0.08),
           border: '1px solid',
-          borderColor: alpha(ACCENT_ATS, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderRadius: '10px 10px 0 0',
           borderBottom: 'none',
         }}
@@ -2248,7 +2248,7 @@ const AppTimesheetPanel = ({
               size='small'
               variant='contained'
               startIcon={<AddIcon />}
-              sx={{ bgcolor: ACCENT_ATS, '&:hover': { bgcolor: '#0e7490' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(null);
                 setDialogOpen(true);
@@ -2261,7 +2261,7 @@ const AppTimesheetPanel = ({
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: ACCENT_ATS, '&:hover': { bgcolor: '#0e7490' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -2287,7 +2287,7 @@ const AppTimesheetPanel = ({
                 sx={{
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha(ACCENT_ATS, 0.3),
+                  bgcolor: alpha('#2d5ebb', 0.3),
                   display: { xs: 'none', sm: 'block' },
                 }}
               />
@@ -2326,7 +2326,7 @@ const AppTimesheetPanel = ({
           borderRadius: '0 0 10px 10px',
           overflow: 'hidden',
           border: '1px solid',
-          borderColor: alpha(ACCENT_ATS, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderTop: 'none',
         }}
       >
@@ -2365,7 +2365,7 @@ const AppTimesheetPanel = ({
               label={editingRow.applicationName}
               size='small'
               sx={{
-                bgcolor: alpha(ACCENT_ATS, 0.1),
+                bgcolor: alpha('#2d5ebb', 0.1),
                 color: ACCENT_ATS,
                 fontWeight: 600,
                 fontSize: '0.78rem',
@@ -2487,7 +2487,7 @@ const AppStickyNotePanel = ({
         sx={{
           borderRadius: '0 0 10px 10px',
           border: '1px solid',
-          borderColor: alpha(ACCENT_ASN, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderTop: 'none',
           p: 2,
           display: 'flex',
@@ -2510,7 +2510,7 @@ const AppStickyNotePanel = ({
           onChange={(e) => setNote(e.target.value)}
           sx={{
             '& .MuiOutlinedInput-root': {
-              bgcolor: alpha(ACCENT_ASN, 0.03),
+              bgcolor: alpha('#2d5ebb', 0.03),
               fontSize: '0.88rem',
               lineHeight: 1.6,
             },
@@ -2531,8 +2531,8 @@ const AppStickyNotePanel = ({
             sx={{
               textTransform: 'none',
               borderRadius: 2,
-              bgcolor: ACCENT_ASN,
-              '&:hover': { bgcolor: '#b45309' },
+              bgcolor: '#2d5ebb',
+              '&:hover': { bgcolor: '#2d5ebb' },
             }}
           >
             Save Note
@@ -2651,7 +2651,7 @@ const AppExpensePanel = ({
           label={String(v || '—')}
           size='small'
           sx={{
-            bgcolor: alpha(ACCENT_AEX, 0.1),
+            bgcolor: alpha('#2d5ebb', 0.1),
             color: ACCENT_AEX,
             fontWeight: 600,
             fontSize: '0.75rem',
@@ -2719,7 +2719,7 @@ const AppExpensePanel = ({
             fontFamily: 'monospace',
             fontWeight: 700,
             fontSize: '0.75rem',
-            bgcolor: alpha(ACCENT_AEX, 0.1),
+            bgcolor: alpha('#2d5ebb', 0.1),
             color: ACCENT_AEX,
             height: 22,
             borderRadius: 1,
@@ -2738,9 +2738,9 @@ const AppExpensePanel = ({
           gap: 1.5,
           px: 2,
           py: 1.25,
-          bgcolor: alpha(ACCENT_AEX, 0.08),
+          bgcolor: alpha('#2d5ebb', 0.08),
           border: '1px solid',
-          borderColor: alpha(ACCENT_AEX, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderRadius: '10px 10px 0 0',
           borderBottom: 'none',
         }}
@@ -2763,7 +2763,7 @@ const AppExpensePanel = ({
               size='small'
               variant='contained'
               startIcon={<AddIcon />}
-              sx={{ bgcolor: ACCENT_AEX, '&:hover': { bgcolor: '#6d28d9' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(null);
                 setDialogOpen(true);
@@ -2776,7 +2776,7 @@ const AppExpensePanel = ({
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: ACCENT_AEX, '&:hover': { bgcolor: '#6d28d9' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -2802,7 +2802,7 @@ const AppExpensePanel = ({
                 sx={{
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha(ACCENT_ATS, 0.3),
+                  bgcolor: alpha('#2d5ebb', 0.3),
                   display: { xs: 'none', sm: 'block' },
                 }}
               />
@@ -2841,7 +2841,7 @@ const AppExpensePanel = ({
           borderRadius: '0 0 10px 10px',
           overflow: 'hidden',
           border: '1px solid',
-          borderColor: alpha(ACCENT_AEX, 0.25),
+          borderColor: alpha('#2d5ebb', 0.25),
           borderTop: 'none',
         }}
       >
@@ -2880,7 +2880,7 @@ const AppExpensePanel = ({
               label={editingRow.applicationName}
               size='small'
               sx={{
-                bgcolor: alpha(ACCENT_AEX, 0.1),
+                bgcolor: alpha('#2d5ebb', 0.1),
                 color: ACCENT_AEX,
                 fontWeight: 600,
                 fontSize: '0.78rem',

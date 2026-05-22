@@ -14,7 +14,6 @@ import {
   AccordionSummary,
   AccordionDetails,
   InputAdornment,
-  Divider,
   alpha,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -205,9 +204,9 @@ const ReasonCodeTable: React.FC<ReasonCodeTableProps> = ({ config, rows, onSave 
                   onClick={openCreateDialog}
                   sx={{
                     textTransform: 'none',
-                    bgcolor: config.accent,
+                    bgcolor: '#2d5ebb',
                     '&:hover': {
-                      bgcolor: alpha(config.accent, 0.85),
+                      bgcolor: '#2d5ebb',
                     },
                   }}
                 >
@@ -223,9 +222,9 @@ const ReasonCodeTable: React.FC<ReasonCodeTableProps> = ({ config, rows, onSave 
                   onClick={openEditDialog}
                   sx={{
                     textTransform: 'none',
-                    bgcolor: config.accent,
+                    bgcolor: '#2d5ebb',
                     '&:hover': {
-                      bgcolor: alpha(config.accent, 0.85),
+                      bgcolor: '#2d5ebb',
                     },
                   }}
                 >
@@ -243,11 +242,16 @@ const ReasonCodeTable: React.FC<ReasonCodeTableProps> = ({ config, rows, onSave 
                   Delete
                 </Button>
 
-                <Divider
-                  orientation='vertical'
-                  flexItem
-                  className={classes.toolbarDivider}
-                  sx={{ mx: 0.5 }}
+                <Box
+                  component='span'
+                  sx={{
+                    display: { xs: 'none', sm: 'block' },
+                    width: '1px',
+                    height: '20px',
+                    bgcolor: alpha('#2d5ebb', 0.3),
+                    mx: 0.75,
+                    alignSelf: 'center',
+                  }}
                 />
 
                 <Button
@@ -255,7 +259,15 @@ const ReasonCodeTable: React.FC<ReasonCodeTableProps> = ({ config, rows, onSave 
                   variant='outlined'
                   startIcon={<ClearIcon />}
                   onClick={() => setSelectedId(null)}
-                  sx={{ textTransform: 'none' }}
+                  sx={{
+                    textTransform: 'none',
+                    borderColor: '#2d5ebb',
+                    color: '#2d5ebb',
+                    '&:hover': {
+                      borderColor: '#2d5ebb',
+                      bgcolor: alpha('#2d5ebb', 0.08),
+                    },
+                  }}
                 >
                   Clear
                 </Button>

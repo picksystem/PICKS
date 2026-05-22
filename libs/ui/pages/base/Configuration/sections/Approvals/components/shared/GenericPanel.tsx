@@ -166,9 +166,9 @@ export const GenericPanel = ({ config, data, onSave }: GenericPanelProps) => {
                   variant='contained'
                   startIcon={<AddIcon />}
                   sx={{
-                    bgcolor: config.accent,
+                    bgcolor: '#2d5ebb',
                     '&:hover': {
-                      bgcolor: alpha(config.accent, 0.85),
+                      bgcolor: '#2d5ebb',
                     },
                   }}
                   onClick={() => {
@@ -186,9 +186,9 @@ export const GenericPanel = ({ config, data, onSave }: GenericPanelProps) => {
                   variant='contained'
                   startIcon={<EditIcon />}
                   sx={{
-                    bgcolor: config.accent,
+                    bgcolor: '#2d5ebb',
                     '&:hover': {
-                      bgcolor: alpha(config.accent, 0.85),
+                      bgcolor: '#2d5ebb',
                     },
                   }}
                   onClick={() => {
@@ -209,11 +209,31 @@ export const GenericPanel = ({ config, data, onSave }: GenericPanelProps) => {
                   Delete
                 </Button>
 
+                <Box
+                  component='span'
+                  sx={{
+                    display: { xs: 'none', sm: 'block' },
+                    width: '1px',
+                    height: '20px',
+                    bgcolor: alpha('#2d5ebb', 0.3),
+                    mx: 0.75,
+                    alignSelf: 'center',
+                  }}
+                />
+
                 <Button
                   size='small'
                   variant='outlined'
                   startIcon={<ClearIcon />}
                   onClick={() => setSelectedId(null)}
+                  sx={{
+                    borderColor: '#2d5ebb',
+                    color: '#2d5ebb',
+                    '&:hover': {
+                      borderColor: '#2d5ebb',
+                      bgcolor: alpha('#2d5ebb', 0.08),
+                    },
+                  }}
                 >
                   Clear
                 </Button>
