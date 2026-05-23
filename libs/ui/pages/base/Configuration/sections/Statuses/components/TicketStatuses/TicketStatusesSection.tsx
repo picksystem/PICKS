@@ -8,7 +8,6 @@ import {
   TextField,
   Switch,
   Tooltip,
-  Link,
   DataTable,
   Column,
 } from '@serviceops/component';
@@ -27,6 +26,7 @@ import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import ClearIcon from '@mui/icons-material/Clear';
 import { IConfigStatusLevel } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
@@ -393,14 +393,14 @@ const TicketStatusesSection = ({ activeTicketTypeColumns }: TicketStatusesSectio
 
   return (
     <Accordion defaultExpanded className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: '#7c3aed',
+              bgcolor: '#0369a1',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -454,6 +454,15 @@ const TicketStatusesSection = ({ activeTicketTypeColumns }: TicketStatusesSectio
                 >
                   Delete
                 </Button>
+                <Button
+                  size='small'
+                  variant='outlined'
+                  startIcon={<ClearIcon />}
+                  onClick={() => setSelectedId(null)}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  Clear
+                </Button>
               </>
             )}
             <Divider orientation='vertical' flexItem className={classes.toolbarDivider} />
@@ -492,14 +501,6 @@ const TicketStatusesSection = ({ activeTicketTypeColumns }: TicketStatusesSectio
               }}
             />
           </Box>
-          {selectedId && (
-            <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
-              Selected: <strong>{selectedStatus?.displayName}</strong>&nbsp;·&nbsp;
-              <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-                Clear
-              </Link>
-            </Typography>
-          )}
         </Paper>
         <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
           <DataTable

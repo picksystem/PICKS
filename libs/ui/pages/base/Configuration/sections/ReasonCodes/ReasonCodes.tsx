@@ -5,6 +5,7 @@ import ReasonCodeTable from './components/ReasonCodeTable';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { ReasonCodeItem, ReasonCodeTableConfig } from './ReasonCodes.types';
 import { REASON_CODE_TABLES } from './ReasonCodes.config';
+import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection';
 
 const ReasonCodes: React.FC = () => {
   const { classes } = useStyles();
@@ -28,14 +29,16 @@ const ReasonCodes: React.FC = () => {
 
   return (
     <Box className={classes.container}>
-      {REASON_CODE_TABLES.map((config) => (
-        <ReasonCodeTable
-          key={config.id}
-          config={config}
-          rows={(reasonCodes?.[config.dataKey] as ReasonCodeItem[]) || []}
-          onSave={handleSave(config.dataKey)}
-        />
-      ))}
+      <ConfigurationSection loaderMessage='Loading Reason Codes Configuration...'>
+        {REASON_CODE_TABLES.map((config) => (
+          <ReasonCodeTable
+            key={config.id}
+            config={config}
+            rows={(reasonCodes?.[config.dataKey] as ReasonCodeItem[]) || []}
+            onSave={handleSave(config.dataKey)}
+          />
+        ))}
+      </ConfigurationSection>
     </Box>
   );
 };

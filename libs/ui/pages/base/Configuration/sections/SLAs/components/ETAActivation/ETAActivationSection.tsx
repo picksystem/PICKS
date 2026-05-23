@@ -5,7 +5,6 @@ import {
   Paper,
   Button,
   Tooltip,
-  Link,
   Chip,
   TextField,
   DataTable,
@@ -13,7 +12,7 @@ import {
   Switch,
 } from '@serviceops/component';
 import { Accordion, AccordionSummary, AccordionDetails, InputAdornment } from '@mui/material';
-import UpdateIcon from '@mui/icons-material/Update';
+import ScheduleIcon from '@mui/icons-material/Schedule';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -112,21 +111,21 @@ const ETAActivationSection = ({
 
   return (
     <Accordion className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: '#4f46e5',
+              bgcolor: '#0369a1',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
             }}
           >
-            <UpdateIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+            <ScheduleIcon sx={{ color: '#fff', fontSize: '1rem' }} />
           </Box>
           <Box>
             <Typography className={classes.sectionTitle}>ETA Activation</Typography>
@@ -206,14 +205,6 @@ const ETAActivationSection = ({
               }}
             />
           </Box>
-          {selectedRow && (
-            <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
-              Selected: <strong>{selectedRow.ticketTypeName}</strong>&nbsp;·&nbsp;
-              <Link component='button' variant='caption' onClick={() => setSelectedRowId(null)}>
-                Clear
-              </Link>
-            </Typography>
-          )}
         </Paper>
 
         <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>

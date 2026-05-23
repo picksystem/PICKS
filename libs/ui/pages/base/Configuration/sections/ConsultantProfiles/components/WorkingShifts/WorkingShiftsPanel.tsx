@@ -23,7 +23,7 @@ import {
   ConfigDeleteDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 
-const ACCENT_WS = '#2d5ebb';
+const ACCENT_w = '#0369a1';
 
 const EMPTY_WS = { consultantProfileId: '', consultantName: '', shiftName: '', description: '' };
 
@@ -125,10 +125,10 @@ const WorkingShiftsPanel = ({ data, onSave }: WorkingShiftsPanelProps) => {
             borderBottom: 'none',
           }}
         >
-          <Box sx={{ color: ACCENT_WS, display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ color: ACCENT_w, display: 'flex', alignItems: 'center' }}>
             <UpdateIcon sx={{ fontSize: '1.1rem' }} />
           </Box>
-          <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT_WS }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT_w }}>
             Working Shifts
           </Typography>
           <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
@@ -261,7 +261,7 @@ const WorkingShiftsPanel = ({ data, onSave }: WorkingShiftsPanelProps) => {
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<UpdateIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={'#2d5ebb'}
+        accent='#2d5ebb'
         title='Working Shift'
         submitDisabled={!form.shiftName.trim()}
         maxWidth='sm'

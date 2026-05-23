@@ -25,12 +25,13 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import BusinessIcon from '@mui/icons-material/Business';
 import GroupIcon from '@mui/icons-material/Group';
 import AddIcon from '@mui/icons-material/Add';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -1358,7 +1359,7 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
 
   return (
     <Accordion className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
@@ -1372,7 +1373,7 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
               flexShrink: 0,
             }}
           >
-            <CalendarTodayIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+            <EventAvailableIcon sx={{ color: '#fff', fontSize: '1rem' }} />
           </Box>
           <Box>
             <Typography className={classes.sectionTitle}>Working Calendars</Typography>

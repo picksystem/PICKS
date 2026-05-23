@@ -1,13 +1,12 @@
-import { Box, Loader } from '@serviceops/component';
+import { Box } from '@serviceops/component';
 import { useStyles } from './styles';
-import { useConfiguration } from '../../hooks/useConfiguration';
 import { useGetTicketTypeQuery } from '@serviceops/services';
 import { TicketStatusesSection } from './components/TicketStatuses/TicketStatusesSection';
 import { ReleaseCycleStatusesSection } from './components/ReleaseCycleStatuses/ReleaseCycleStatusesSection';
+import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection';
 
 const Statuses = () => {
   const { classes } = useStyles();
-  const { isLoading } = useConfiguration();
   const { data: ticketTypes = [] } = useGetTicketTypeQuery();
 
   const activeTicketTypeColumns =
@@ -24,18 +23,12 @@ const Statuses = () => {
           { key: 'task', label: 'Task' },
         ];
 
-  if (isLoading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-        <Loader />
-      </Box>
-    );
-  }
-
   return (
     <Box className={classes.container}>
-      <TicketStatusesSection activeTicketTypeColumns={activeTicketTypeColumns} />
-      <ReleaseCycleStatusesSection activeTicketTypeColumns={activeTicketTypeColumns} />
+      <ConfigurationSection loaderMessage='Loading Statuses Configuration...'>
+        <TicketStatusesSection activeTicketTypeColumns={activeTicketTypeColumns} />
+        <ReleaseCycleStatusesSection activeTicketTypeColumns={activeTicketTypeColumns} />
+      </ConfigurationSection>
     </Box>
   );
 };

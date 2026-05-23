@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Box, Typography, Paper, Button } from '@serviceops/component';
 import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ScheduleSendIcon from '@mui/icons-material/ScheduleSend';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import AppsIcon from '@mui/icons-material/Apps';
@@ -101,7 +102,7 @@ const TimesheetProjectsSection = () => {
 
   return (
     <Accordion defaultExpanded elevation={0} className={classes.sectionAccordion}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
@@ -115,7 +116,7 @@ const TimesheetProjectsSection = () => {
               flexShrink: 0,
             }}
           >
-            <AccessTimeIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+            <ScheduleSendIcon sx={{ color: '#fff', fontSize: '1rem' }} />
           </Box>
           <Box>
             <Typography className={classes.sectionTitle}>Timesheet Projects</Typography>

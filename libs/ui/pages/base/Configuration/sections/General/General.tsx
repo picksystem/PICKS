@@ -3,6 +3,7 @@ import { AdminControlsSection } from './components/AdminControls/AdminControlsSe
 import { ApprovedEstimatesSection } from './components/ApprovedEstimates/ApprovedEstimatesSection';
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
+import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection';
 import { useState, useEffect } from 'react';
 import { IConfigGeneral, IConfigApprovedEstimateRow } from '@serviceops/interfaces';
 
@@ -42,8 +43,10 @@ const General = () => {
 
   return (
     <Box className={classes.container}>
-      <AdminControlsSection form={form} update={update} />
-      <ApprovedEstimatesSection form={form} saveRows={saveRows} />
+      <ConfigurationSection loaderMessage='Loading Admin Control Configuration...'>
+        <AdminControlsSection form={form} update={update} />
+        <ApprovedEstimatesSection form={form} saveRows={saveRows} />
+      </ConfigurationSection>
     </Box>
   );
 };

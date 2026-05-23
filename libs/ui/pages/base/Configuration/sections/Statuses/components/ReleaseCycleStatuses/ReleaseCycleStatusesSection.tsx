@@ -8,7 +8,6 @@ import {
   TextField,
   Switch,
   Tooltip,
-  Link,
   DataTable,
   Column,
 } from '@serviceops/component';
@@ -457,14 +456,14 @@ const ReleaseCycleStatusesSection = ({
 
   return (
     <Accordion className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: '#0891b2',
+              bgcolor: '#0369a1',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -556,14 +555,6 @@ const ReleaseCycleStatusesSection = ({
               }}
             />
           </Box>
-          {relSelectedId && (
-            <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
-              Selected: <strong>{relSelectedStatus?.displayName}</strong>&nbsp;·&nbsp;
-              <Link component='button' variant='caption' onClick={() => setRelSelectedId(null)}>
-                Clear
-              </Link>
-            </Typography>
-          )}
         </Paper>
         <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
           <DataTable

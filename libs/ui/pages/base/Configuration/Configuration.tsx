@@ -34,42 +34,48 @@ import Timesheets from './sections/Timesheets';
 
 const BASE = '/app/admin/configuration';
 const INNER_NAV_WIDTH = 220;
+const colorAccent = '#2563eb';
 
 const NAV_ITEMS = [
-  { label: 'Admin Controls', path: `${BASE}/general`, Icon: SettingsIcon, accent: '#2563eb' },
+  { label: 'Admin Controls', path: `${BASE}/general`, Icon: SettingsIcon, accent: colorAccent },
   {
     label: 'Ticket Types',
     path: `${BASE}/ticket-types`,
     Icon: ConfirmationNumberIcon,
-    accent: '#7c3aed',
+    accent: colorAccent,
   },
-  { label: 'Priorities', path: `${BASE}/priorities`, Icon: PriorityHighIcon, accent: '#dc2626' },
-  { label: 'Statuses', path: `${BASE}/statuses`, Icon: RadioButtonCheckedIcon, accent: '#7c3aed' },
-  { label: 'SLAs', path: `${BASE}/slas`, Icon: TimerIcon, accent: '#0891b2' },
+  { label: 'Priorities', path: `${BASE}/priorities`, Icon: PriorityHighIcon, accent: colorAccent },
+  {
+    label: 'Statuses',
+    path: `${BASE}/statuses`,
+    Icon: RadioButtonCheckedIcon,
+    accent: colorAccent,
+  },
+  { label: 'SLAs', path: `${BASE}/slas`, Icon: TimerIcon, accent: colorAccent },
   {
     label: 'Categorization',
     path: `${BASE}/categorization`,
     Icon: AccountTreeIcon,
-    accent: '#059669',
+    accent: colorAccent,
   },
   {
     label: 'Consultant Profiles',
     path: `${BASE}/consultant-profiles`,
     Icon: BusinessCenterIcon,
-    accent: '#d97706',
+    accent: colorAccent,
   },
-  { label: 'Approvals', path: `${BASE}/approvals`, Icon: HowToRegIcon, accent: '#0369a1' },
+  { label: 'Approvals', path: `${BASE}/approvals`, Icon: HowToRegIcon, accent: colorAccent },
   {
     label: 'User Config',
     path: `${BASE}/user-config`,
     Icon: ManageAccountsIcon,
-    accent: '#be185d',
+    accent: colorAccent,
   },
-  { label: 'Templates', path: `${BASE}/templates`, Icon: FileCopyIcon, accent: '#4f46e5' },
-  { label: 'Reason Codes', path: `${BASE}/reason-codes`, Icon: CommentIcon, accent: '#0f766e' },
-  { label: 'Calendars', path: `${BASE}/calendars`, Icon: CalendarMonthIcon, accent: '#7e09b4' },
-  { label: 'Timesheets', path: `${BASE}/timesheets`, Icon: TuneIcon, accent: '#b4a309' },
-  { label: 'Expenses', path: `${BASE}/expenses`, Icon: ReceiptLongIcon, accent: '#16a34a' },
+  { label: 'Templates', path: `${BASE}/templates`, Icon: FileCopyIcon, accent: colorAccent },
+  { label: 'Reason Codes', path: `${BASE}/reason-codes`, Icon: CommentIcon, accent: colorAccent },
+  { label: 'Calendars', path: `${BASE}/calendars`, Icon: CalendarMonthIcon, accent: colorAccent },
+  { label: 'Timesheets', path: `${BASE}/timesheets`, Icon: TuneIcon, accent: colorAccent },
+  { label: 'Expenses', path: `${BASE}/expenses`, Icon: ReceiptLongIcon, accent: colorAccent },
 ];
 
 // ── Desktop inner nav list ─────────────────────────────────────────────────────

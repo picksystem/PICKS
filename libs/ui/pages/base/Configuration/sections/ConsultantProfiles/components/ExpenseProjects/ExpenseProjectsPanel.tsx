@@ -26,7 +26,7 @@ import {
   ConfigDeleteDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 
-const ACCENT_EP = '#2d5ebb';
+const ACCENT_w = '#0369a1';
 
 const EMPTY_EP_FORM = {
   consultantProfileId: '',
@@ -161,7 +161,7 @@ const ExpenseProjectsPanel = ({ data, onSave }: ExpenseProjectsPanelProps) => {
             fontWeight: 700,
             fontSize: '0.75rem',
             bgcolor: alpha('#2d5ebb', 0.1),
-            color: ACCENT_EP,
+            color: ACCENT_w,
             height: 22,
             borderRadius: 1,
           }}
@@ -187,10 +187,10 @@ const ExpenseProjectsPanel = ({ data, onSave }: ExpenseProjectsPanelProps) => {
             borderBottom: 'none',
           }}
         >
-          <Box sx={{ color: ACCENT_EP, display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ color: ACCENT_w, display: 'flex', alignItems: 'center' }}>
             <AttachMoneyIcon sx={{ fontSize: '1.1rem' }} />
           </Box>
-          <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT_EP }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT_w }}>
             Expense Projects
           </Typography>
           <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
@@ -323,7 +323,7 @@ const ExpenseProjectsPanel = ({ data, onSave }: ExpenseProjectsPanelProps) => {
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<AttachMoneyIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={'#2d5ebb'}
+        accent='#2d5ebb'
         title='Expense Project'
         submitDisabled={!form.project.trim()}
         submitLabel={editingRow ? 'Save Changes' : 'Add Project'}

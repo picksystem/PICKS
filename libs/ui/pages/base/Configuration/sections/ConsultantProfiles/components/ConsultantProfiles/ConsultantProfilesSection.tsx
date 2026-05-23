@@ -23,7 +23,7 @@ import {
   ConfigDeleteDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 
-const ACCENT_CP = '#2d5ebb';
+const ACCENT_w = '#0369a1';
 
 const EMPTY_CP = {
   consultantName: '',
@@ -141,10 +141,10 @@ const ConsultantProfilesSection = ({
             borderBottom: 'none',
           }}
         >
-          <Box sx={{ color: ACCENT_CP, display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ color: ACCENT_w, display: 'flex', alignItems: 'center' }}>
             <BusinessCenterIcon sx={{ fontSize: '1.1rem' }} />
           </Box>
-          <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT_CP }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT_w }}>
             Consultant Profiles
           </Typography>
           <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
@@ -277,7 +277,7 @@ const ConsultantProfilesSection = ({
         onSubmit={handleSubmit}
         isEdit={!!editingProfile}
         icon={<BusinessCenterIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={'#2d5ebb'}
+        accent='#2d5ebb'
         title='Consultant Profile'
         submitDisabled={!form.consultantName.trim()}
         maxWidth='sm'

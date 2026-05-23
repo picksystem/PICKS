@@ -417,7 +417,7 @@ const QueueApprovalsPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<ChecklistIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={'#2d5ebb'}
+        accent='#2d5ebb'
         title='Queue Approver'
         subtitle='Add or edit an approver for a queue'
         submitDisabled={!form.approverName.trim() || !form.queueId}
@@ -978,7 +978,7 @@ const QueueTimesheetPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<AccessTimeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={'#2d5ebb'}
+        accent='#2d5ebb'
         title='Timesheet Project'
         subtitle='Add or edit a queue-specific timesheet project'
         submitDisabled={!form.project.trim() || (!editingRow && !form.queueId)}
@@ -1422,7 +1422,7 @@ const QueueExpensesPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<ReceiptLongIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={'#2d5ebb'}
+        accent='#2d5ebb'
         title='Expense Project'
         subtitle='Add or edit a queue-specific expense project'
         submitDisabled={!form.project.trim() || (!editingRow && !form.queueId)}
@@ -1711,14 +1711,14 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
 
   return (
     <Accordion className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: '#d97706',
+              bgcolor: '#0369a1',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -1814,8 +1814,8 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
                 borderBottom: 'none',
               }}
             >
-              <HeadsetMicIcon sx={{ color: '#d97706', fontSize: '1.1rem' }} />
-              <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: '#d97706' }}>
+              <HeadsetMicIcon sx={{ color: '#0369a1', fontSize: '1.1rem' }} />
+              <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: '#0369a1' }}>
                 Application Queues
               </Typography>
               <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>

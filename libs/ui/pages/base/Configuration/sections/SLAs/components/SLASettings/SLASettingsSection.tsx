@@ -27,14 +27,14 @@ const SLASettingsSection = ({
 
   return (
     <Accordion defaultExpanded className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: '#0891b2',
+              bgcolor: '#0369a1',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

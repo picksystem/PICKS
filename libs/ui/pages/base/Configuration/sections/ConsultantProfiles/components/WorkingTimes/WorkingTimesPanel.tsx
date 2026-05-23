@@ -23,7 +23,7 @@ import {
   ConfigDeleteDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 
-const ACCENT_WT = '#2d5ebb';
+const ACCENT_w = '#0369a1';
 
 const EMPTY_WT = {
   consultantProfileId: '',
@@ -120,10 +120,10 @@ const WorkingTimesPanel = ({ data, onSave }: WorkingTimesPanelProps) => {
             borderBottom: 'none',
           }}
         >
-          <Box sx={{ color: ACCENT_WT, display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ color: ACCENT_w, display: 'flex', alignItems: 'center' }}>
             <AccessTimeIcon sx={{ fontSize: '1.1rem' }} />
           </Box>
-          <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT_WT }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT_w }}>
             Working Times
           </Typography>
           <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
@@ -256,7 +256,7 @@ const WorkingTimesPanel = ({ data, onSave }: WorkingTimesPanelProps) => {
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<AccessTimeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={'#2d5ebb'}
+        accent='#2d5ebb'
         title='Working Time'
         submitDisabled={!form.startTime}
         maxWidth='xs'

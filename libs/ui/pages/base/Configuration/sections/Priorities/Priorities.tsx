@@ -15,6 +15,7 @@ import TuneIcon from '@mui/icons-material/Tune';
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { useGetTicketTypeQuery } from '@serviceops/services';
+import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection';
 import {
   PrioritiesSection,
   ImpactSection,
@@ -40,37 +41,37 @@ const TICKET_TYPE_MATRIX_CONFIG: Record<
   incident: {
     label: 'Incident',
     pluralLabel: 'Incidents',
-    accentColor: '#7c3aed',
+    accentColor: '#0369a1',
     Icon: ReportProblemIcon,
   },
   service_request: {
     label: 'Service Request',
     pluralLabel: 'Service Requests',
-    accentColor: '#1d4ed8',
+    accentColor: '#0369a1',
     Icon: BuildIcon,
   },
   advisory_request: {
     label: 'Advisory Request',
     pluralLabel: 'Advisory Requests',
-    accentColor: '#0f766e',
+    accentColor: '#0369a1',
     Icon: LightbulbIcon,
   },
   change_request: {
     label: 'Change Request',
     pluralLabel: 'Change Requests',
-    accentColor: '#4527a0',
+    accentColor: '#0369a1',
     Icon: SwapHorizIcon,
   },
   problem_request: {
     label: 'Problem Request',
     pluralLabel: 'Problem Requests',
-    accentColor: '#bf360c',
+    accentColor: '#0369a1',
     Icon: BugReportIcon,
   },
   task: {
     label: 'Task',
     pluralLabel: 'Tasks',
-    accentColor: '#1b5e20',
+    accentColor: '#0369a1',
     Icon: TaskAltIcon,
   },
 };
@@ -252,7 +253,7 @@ const Section = ({
   const { classes } = useStyles();
   return (
     <Accordion defaultExpanded={defaultExpanded} className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
@@ -281,7 +282,7 @@ const Section = ({
 
 const Priorities = () => {
   const { classes } = useStyles();
-  const { priorities: apiPriorities, ticketTypeKeys, saveSection, isLoading } = useConfiguration();
+  const { priorities: apiPriorities, ticketTypeKeys, saveSection } = useConfiguration();
   const { data: ticketTypes = [] } = useGetTicketTypeQuery();
 
   const ticketTypeDisplayNames = Object.fromEntries(
@@ -361,201 +362,203 @@ const Priorities = () => {
     persistPriorities(priorities, impacts, urgencies, next);
   };
 
-  if (isLoading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-        <Typography>Loading...</Typography>
-      </Box>
-    );
-  }
-
   return (
     <Box className={classes.container}>
-      <Section
-        icon={<PriorityHighIcon sx={{ color: '#fff', fontSize: '1rem' }} />}
-        title='Priorities'
-        subtitle='Define priority levels and control which ticket types each priority applies to'
-        accentColor='#b91c1c'
-        defaultExpanded
-      >
-        <PrioritiesSection
-          priorities={priorities}
-          setPriorities={setPriorities}
-          onPersist={(next) => persistPriorities(next, impacts, urgencies, matrices)}
-          activeTicketTypeColumns={activeTicketTypeColumns}
-          DEFAULT_PRIORITIES={DEFAULT_PRIORITIES}
-          selectedPriorityId={selectedPriorityId}
-          setSelectedPriorityId={setSelectedPriorityId}
-          setSelectedPriority={setSelectedPriority}
-          confirmDeleteOpen={confirmDeleteOpen}
-          setConfirmDeleteOpen={setConfirmDeleteOpen}
-        />
-      </Section>
+      <ConfigurationSection loaderMessage='Loading Priorities Configuration...'>
+        <Section
+          icon={<PriorityHighIcon sx={{ color: '#fff', fontSize: '1rem' }} />}
+          title='Priorities'
+          subtitle='Define priority levels and control which ticket types each priority applies to'
+          accentColor='#0369a1'
+          defaultExpanded
+        >
+          <PrioritiesSection
+            priorities={priorities}
+            setPriorities={setPriorities}
+            onPersist={(next) => persistPriorities(next, impacts, urgencies, matrices)}
+            activeTicketTypeColumns={activeTicketTypeColumns}
+            DEFAULT_PRIORITIES={DEFAULT_PRIORITIES}
+            selectedPriorityId={selectedPriorityId}
+            setSelectedPriorityId={setSelectedPriorityId}
+            setSelectedPriority={setSelectedPriority}
+            confirmDeleteOpen={confirmDeleteOpen}
+            setConfirmDeleteOpen={setConfirmDeleteOpen}
+          />
+        </Section>
 
-      <Section
-        icon={<FlashOnIcon sx={{ color: '#fff', fontSize: '1rem' }} />}
-        title='Impact'
-        subtitle='Define impact levels — how broadly a ticket affects the business'
-        accentColor='#ea580c'
-      >
-        <ImpactSection
-          items={impacts}
-          onAdd={(data) => {
-            const id =
-              (data.displayName ?? '').toLowerCase().replace(/[^a-z0-9]/g, '_') ||
-              `impact_${Date.now()}`;
-            const newItem: ImpactLevel = {
-              id,
-              name: id,
-              displayName: data.displayName ?? id,
-              description: data.description ?? '',
-              bgColor: data.bgColor ?? '#2563eb',
-              sortOrder: impacts.length + 1,
-              isActive: true,
-              enabledFor:
-                data.enabledFor ??
-                Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
-            };
-            const next = [...impacts, newItem];
-            setImpacts(next);
-            persistPriorities(priorities, next, urgencies, matrices);
-          }}
-          onEdit={(id, data) => {
-            const next = impacts.map((i) => (i.id === id ? { ...i, ...data } : i));
-            setImpacts(next);
-            persistPriorities(priorities, next, urgencies, matrices);
-          }}
-          onDelete={(id) => {
-            const next = impacts.filter((i) => i.id !== id);
-            setImpacts(next);
-            persistPriorities(priorities, next, urgencies, matrices);
-          }}
-          onReset={(defaults) => {
-            const next = defaults as ImpactLevel[];
-            setImpacts(next);
-            persistPriorities(priorities, next, urgencies, matrices);
-          }}
-          onToggleActive={(id) => {
-            const next = impacts.map((i) => (i.id === id ? { ...i, isActive: !i.isActive } : i));
-            setImpacts(next);
-            persistPriorities(priorities, next, urgencies, matrices);
-          }}
-          onToggleEnabledFor={(id, ticketType) => {
-            const next = impacts.map((i) =>
-              i.id === id
-                ? { ...i, enabledFor: { ...i.enabledFor, [ticketType]: !i.enabledFor[ticketType] } }
-                : i,
-            );
-            setImpacts(next);
-            persistPriorities(priorities, next, urgencies, matrices);
-          }}
-          defaultItems={DEFAULT_IMPACTS}
-          activeTicketTypeColumns={activeTicketTypeColumns}
-        />
-      </Section>
+        <Section
+          icon={<FlashOnIcon sx={{ color: '#fff', fontSize: '1rem' }} />}
+          title='Impact'
+          subtitle='Define impact levels — how broadly a ticket affects the business'
+          accentColor='#0369a1'
+        >
+          <ImpactSection
+            items={impacts}
+            onAdd={(data) => {
+              const id =
+                (data.displayName ?? '').toLowerCase().replace(/[^a-z0-9]/g, '_') ||
+                `impact_${Date.now()}`;
+              const newItem: ImpactLevel = {
+                id,
+                name: id,
+                displayName: data.displayName ?? id,
+                description: data.description ?? '',
+                bgColor: data.bgColor ?? '#2563eb',
+                sortOrder: impacts.length + 1,
+                isActive: true,
+                enabledFor:
+                  data.enabledFor ??
+                  Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
+              };
+              const next = [...impacts, newItem];
+              setImpacts(next);
+              persistPriorities(priorities, next, urgencies, matrices);
+            }}
+            onEdit={(id, data) => {
+              const next = impacts.map((i) => (i.id === id ? { ...i, ...data } : i));
+              setImpacts(next);
+              persistPriorities(priorities, next, urgencies, matrices);
+            }}
+            onDelete={(id) => {
+              const next = impacts.filter((i) => i.id !== id);
+              setImpacts(next);
+              persistPriorities(priorities, next, urgencies, matrices);
+            }}
+            onReset={(defaults) => {
+              const next = defaults as ImpactLevel[];
+              setImpacts(next);
+              persistPriorities(priorities, next, urgencies, matrices);
+            }}
+            onToggleActive={(id) => {
+              const next = impacts.map((i) => (i.id === id ? { ...i, isActive: !i.isActive } : i));
+              setImpacts(next);
+              persistPriorities(priorities, next, urgencies, matrices);
+            }}
+            onToggleEnabledFor={(id, ticketType) => {
+              const next = impacts.map((i) =>
+                i.id === id
+                  ? {
+                      ...i,
+                      enabledFor: { ...i.enabledFor, [ticketType]: !i.enabledFor[ticketType] },
+                    }
+                  : i,
+              );
+              setImpacts(next);
+              persistPriorities(priorities, next, urgencies, matrices);
+            }}
+            defaultItems={DEFAULT_IMPACTS}
+            activeTicketTypeColumns={activeTicketTypeColumns}
+          />
+        </Section>
 
-      <Section
-        icon={<SpeedIcon sx={{ color: '#fff', fontSize: '1rem' }} />}
-        title='Urgency'
-        subtitle='Define urgency levels — how time-sensitive a ticket is'
-        accentColor='#ca8a04'
-      >
-        <UrgencySection
-          items={urgencies}
-          onAdd={(data) => {
-            const id =
-              (data.displayName ?? '').toLowerCase().replace(/[^a-z0-9]/g, '_') ||
-              `urgency_${Date.now()}`;
-            const newItem: UrgencyLevel = {
-              id,
-              name: id,
-              displayName: data.displayName ?? id,
-              description: data.description ?? '',
-              bgColor: data.bgColor ?? '#2563eb',
-              sortOrder: urgencies.length + 1,
-              isActive: true,
-              enabledFor:
-                data.enabledFor ??
-                Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
-            };
-            const next = [...urgencies, newItem];
-            setUrgencies(next);
-            persistPriorities(priorities, impacts, next, matrices);
-          }}
-          onEdit={(id, data) => {
-            const next = urgencies.map((u) => (u.id === id ? { ...u, ...data } : u));
-            setUrgencies(next);
-            persistPriorities(priorities, impacts, next, matrices);
-          }}
-          onDelete={(id) => {
-            const next = urgencies.filter((u) => u.id !== id);
-            setUrgencies(next);
-            persistPriorities(priorities, impacts, next, matrices);
-          }}
-          onReset={(defaults) => {
-            const next = defaults as UrgencyLevel[];
-            setUrgencies(next);
-            persistPriorities(priorities, impacts, next, matrices);
-          }}
-          onToggleActive={(id) => {
-            const next = urgencies.map((u) => (u.id === id ? { ...u, isActive: !u.isActive } : u));
-            setUrgencies(next);
-            persistPriorities(priorities, impacts, next, matrices);
-          }}
-          onToggleEnabledFor={(id, ticketType) => {
-            const next = urgencies.map((u) =>
-              u.id === id
-                ? { ...u, enabledFor: { ...u.enabledFor, [ticketType]: !u.enabledFor[ticketType] } }
-                : u,
-            );
-            setUrgencies(next);
-            persistPriorities(priorities, impacts, next, matrices);
-          }}
-          defaultItems={DEFAULT_URGENCIES}
-          activeTicketTypeColumns={activeTicketTypeColumns}
-        />
-      </Section>
+        <Section
+          icon={<SpeedIcon sx={{ color: '#fff', fontSize: '1rem' }} />}
+          title='Urgency'
+          subtitle='Define urgency levels — how time-sensitive a ticket is'
+          accentColor='#0369a1'
+        >
+          <UrgencySection
+            items={urgencies}
+            onAdd={(data) => {
+              const id =
+                (data.displayName ?? '').toLowerCase().replace(/[^a-z0-9]/g, '_') ||
+                `urgency_${Date.now()}`;
+              const newItem: UrgencyLevel = {
+                id,
+                name: id,
+                displayName: data.displayName ?? id,
+                description: data.description ?? '',
+                bgColor: data.bgColor ?? '#2563eb',
+                sortOrder: urgencies.length + 1,
+                isActive: true,
+                enabledFor:
+                  data.enabledFor ??
+                  Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
+              };
+              const next = [...urgencies, newItem];
+              setUrgencies(next);
+              persistPriorities(priorities, impacts, next, matrices);
+            }}
+            onEdit={(id, data) => {
+              const next = urgencies.map((u) => (u.id === id ? { ...u, ...data } : u));
+              setUrgencies(next);
+              persistPriorities(priorities, impacts, next, matrices);
+            }}
+            onDelete={(id) => {
+              const next = urgencies.filter((u) => u.id !== id);
+              setUrgencies(next);
+              persistPriorities(priorities, impacts, next, matrices);
+            }}
+            onReset={(defaults) => {
+              const next = defaults as UrgencyLevel[];
+              setUrgencies(next);
+              persistPriorities(priorities, impacts, next, matrices);
+            }}
+            onToggleActive={(id) => {
+              const next = urgencies.map((u) =>
+                u.id === id ? { ...u, isActive: !u.isActive } : u,
+              );
+              setUrgencies(next);
+              persistPriorities(priorities, impacts, next, matrices);
+            }}
+            onToggleEnabledFor={(id, ticketType) => {
+              const next = urgencies.map((u) =>
+                u.id === id
+                  ? {
+                      ...u,
+                      enabledFor: { ...u.enabledFor, [ticketType]: !u.enabledFor[ticketType] },
+                    }
+                  : u,
+              );
+              setUrgencies(next);
+              persistPriorities(priorities, impacts, next, matrices);
+            }}
+            defaultItems={DEFAULT_URGENCIES}
+            activeTicketTypeColumns={activeTicketTypeColumns}
+          />
+        </Section>
 
-      {activeTicketTypeColumns.map(({ key }) => {
-        const displayName =
-          ticketTypeDisplayNames[key] ?? TICKET_TYPE_MATRIX_CONFIG[key]?.label ?? key;
-        const cfg = TICKET_TYPE_MATRIX_CONFIG[key] ?? {
-          label: displayName,
-          pluralLabel: `${displayName}s`,
-          accentColor: '#6366f1',
-          Icon: TuneIcon,
-        };
-        const { Icon } = cfg;
-        return (
-          <Section
-            key={key}
-            icon={<Icon sx={{ color: '#fff', fontSize: '1rem' }} />}
-            title={`${displayName} Priorities based on Impact and Urgency`}
-            subtitle={`Configure how Impact × Urgency determines priority for ${cfg.pluralLabel}`}
-            accentColor={cfg.accentColor}
-          >
-            <TicketMatrixSection
-              label={cfg.pluralLabel}
+        {activeTicketTypeColumns.map(({ key }) => {
+          const displayName =
+            ticketTypeDisplayNames[key] ?? TICKET_TYPE_MATRIX_CONFIG[key]?.label ?? key;
+          const cfg = TICKET_TYPE_MATRIX_CONFIG[key] ?? {
+            label: displayName,
+            pluralLabel: `${displayName}s`,
+            accentColor: '#0369a1',
+            Icon: TuneIcon,
+          };
+          const { Icon } = cfg;
+          return (
+            <Section
+              key={key}
+              icon={<Icon sx={{ color: '#fff', fontSize: '1rem' }} />}
+              title={`${displayName} Priorities based on Impact and Urgency`}
+              subtitle={`Configure how Impact × Urgency determines priority for ${cfg.pluralLabel}`}
               accentColor={cfg.accentColor}
-              MatrixIcon={Icon}
-              priorities={priorities}
-              impacts={impacts}
-              urgencies={urgencies}
-              matrix={matrices[key] ?? DEFAULT_MATRIX}
-              onMatrixChange={(i, u, p) => updateMatrix(key, i, u, p)}
-              onMatrixReset={(newMatrix) => resetMatrixForType(key, newMatrix)}
-            />
-          </Section>
-        );
-      })}
+            >
+              <TicketMatrixSection
+                label={cfg.pluralLabel}
+                accentColor={cfg.accentColor}
+                MatrixIcon={Icon}
+                priorities={priorities}
+                impacts={impacts}
+                urgencies={urgencies}
+                matrix={matrices[key] ?? DEFAULT_MATRIX}
+                onMatrixChange={(i, u, p) => updateMatrix(key, i, u, p)}
+                onMatrixReset={(newMatrix) => resetMatrixForType(key, newMatrix)}
+              />
+            </Section>
+          );
+        })}
 
-      <ConfigDeleteDialog
-        open={confirmDeleteOpen}
-        onClose={() => setConfirmDeleteOpen(false)}
-        onConfirm={handleDeletePriority}
-        entityName='Priority'
-        itemName={selectedPriority?.name}
-      />
+        <ConfigDeleteDialog
+          open={confirmDeleteOpen}
+          onClose={() => setConfirmDeleteOpen(false)}
+          onConfirm={handleDeletePriority}
+          entityName='Priority'
+          itemName={selectedPriority?.name}
+        />
+      </ConfigurationSection>
     </Box>
   );
 };

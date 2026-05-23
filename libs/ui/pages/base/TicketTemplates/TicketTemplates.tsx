@@ -7,9 +7,6 @@ import {
   TextField,
   Paper,
   Button,
-  Checkbox,
-  FormControlLabel,
-  Divider,
   Tooltip,
   Link,
 } from '@serviceops/component';
@@ -29,6 +26,7 @@ import AppsIcon from '@mui/icons-material/Apps';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 import { Loader } from '../../../components';
 import { useStyles } from './styles';
@@ -100,9 +98,22 @@ const TicketTemplates = () => {
         className={classes.sectionAccordion}
         elevation={0}
       >
-        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <ConfirmationNumberIcon sx={{ color: 'primary.main', fontSize: '1.2rem' }} />
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: 1.5,
+                bgcolor: '#0369a1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <ConfirmationNumberIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+            </Box>
             <Box>
               <Typography className={classes.sectionTitle}>Ticket Type Configuration</Typography>
               <Typography className={classes.sectionSubtitle}>
@@ -115,7 +126,7 @@ const TicketTemplates = () => {
           {/* ── Action Toolbar ── */}
           <Paper variant='outlined' className={classes.actionToolbar}>
             <Box className={classes.toolbarButtons}>
-              {/* Add New — hidden when a row is selected */}
+              {/* Add New — shown only when no row is selected */}
               {!selectedRow && (
                 <Tooltip title='Add a new ticket type'>
                   <Button
@@ -157,62 +168,20 @@ const TicketTemplates = () => {
                 </Button>
               )}
 
-              <Divider
-                orientation='vertical'
-                flexItem
-                className={classes.toolbarDivider}
-                sx={{ mx: 0.5 }}
-              />
-
-              {/* Advanced Number Sequences checkbox */}
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={advancedSequences}
-                    onChange={(e) => setAdvancedSequences(e.target.checked)}
-                    size='small'
-                    color='primary'
-                  />
-                }
-                label={
-                  <Typography variant='body2' fontWeight={500} fontSize='0.82rem'>
-                    Use Advanced Number Sequences
-                  </Typography>
-                }
-                sx={{ mr: 0, width: { xs: '100%', sm: 'auto' } }}
-              />
-
-              <Divider
-                orientation='vertical'
-                flexItem
-                className={classes.toolbarDivider}
-                sx={{ mx: 0.5 }}
-              />
-
-              {/* Define Advanced Number Sequences */}
-              <Tooltip title='Configure advanced number sequences'>
+              {/* Clear — shown only when a row is selected */}
+              {selectedRow && (
                 <Button
                   size='small'
                   variant='outlined'
-                  color='secondary'
+                  startIcon={<ClearIcon />}
+                  onClick={() => setSelectedRow(null)}
                   sx={{ width: { xs: '100%', sm: 'auto' } }}
                 >
-                  Define Advanced Number Sequences
+                  Clear
                 </Button>
-              </Tooltip>
+              )}
 
-              <Tooltip title='Configure application-specific number sequences'>
-                <Button
-                  size='small'
-                  variant='outlined'
-                  color='secondary'
-                  sx={{ width: { xs: '100%', sm: 'auto' } }}
-                >
-                  Define Application Specific Number Sequences
-                </Button>
-              </Tooltip>
-
-              {/* Search */}
+              {/* Search — always visible */}
               <TextField
                 placeholder='Search...'
                 value={tableSearch}
@@ -262,7 +231,20 @@ const TicketTemplates = () => {
       <Accordion className={classes.sectionAccordion} elevation={0}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <CategoryIcon sx={{ color: 'primary.main', fontSize: '1.2rem' }} />
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: 1.5,
+                bgcolor: '#0369a1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <CategoryIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+            </Box>
             <Box>
               <Typography className={classes.sectionTitle}>Service Line Specific</Typography>
               <Typography className={classes.sectionSubtitle}>
@@ -299,7 +281,20 @@ const TicketTemplates = () => {
       <Accordion className={classes.sectionAccordion} elevation={0}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <AppsIcon sx={{ color: 'secondary.main', fontSize: '1.2rem' }} />
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: 1.5,
+                bgcolor: '#0369a1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <AppsIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+            </Box>
             <Box>
               <Typography className={classes.sectionTitle}>Application Specific</Typography>
               <Typography className={classes.sectionSubtitle}>

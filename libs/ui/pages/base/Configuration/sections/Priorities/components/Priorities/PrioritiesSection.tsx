@@ -7,7 +7,6 @@ import {
   TextField,
   Tooltip,
   Switch,
-  Link,
   DataTable,
   Column,
 } from '@serviceops/component';
@@ -16,6 +15,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ClearIcon from '@mui/icons-material/Clear';
 import { PriorityLevel } from '../../util';
 import { useStyles } from '../../styles';
 import PriorityFormDialog from '@serviceops/pages/base/Configuration/dialogs/PriorityFormDialog/PriorityFormDialog';
@@ -225,6 +225,15 @@ const PrioritiesSection = ({
               >
                 Delete
               </Button>
+              <Button
+                size='small'
+                variant='outlined'
+                startIcon={<ClearIcon />}
+                onClick={() => setSelectedPriorityId(null)}
+                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+              >
+                Clear
+              </Button>
             </>
           )}
 
@@ -286,22 +295,6 @@ const PrioritiesSection = ({
             }}
           />
         </Box>
-
-        {selectedPriorityId && (
-          <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
-            Selected: <strong>{selectedPriority?.name}</strong>&nbsp;·&nbsp;
-            <Link
-              component='button'
-              variant='caption'
-              onClick={() => {
-                setSelectedPriorityId(null);
-                setSelectedPriority(null);
-              }}
-            >
-              Clear
-            </Link>
-          </Typography>
-        )}
       </Paper>
 
       <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>

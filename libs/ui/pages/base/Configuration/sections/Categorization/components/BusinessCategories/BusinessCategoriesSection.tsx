@@ -31,7 +31,7 @@ import {
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
 
-const ACCENT_BC = '#2d5ebb';
+const ACCENT_w = '#0369a1';
 const EMPTY_CAT_FORM = { name: '', description: '', head: '' };
 
 interface BusinessCategoriesSectionProps {
@@ -151,14 +151,14 @@ const BusinessCategoriesSection = ({ data, onDataChange }: BusinessCategoriesSec
 
   return (
     <Accordion defaultExpanded className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: '#2d5ebb',
+              bgcolor: '#0369a1',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -188,6 +188,7 @@ const BusinessCategoriesSection = ({ data, onDataChange }: BusinessCategoriesSec
                     setEditingRow(null);
                     setDialogOpen(true);
                   }}
+                  sx={{ textTransform: 'none' }}
                 >
                   New
                 </Button>
@@ -201,6 +202,7 @@ const BusinessCategoriesSection = ({ data, onDataChange }: BusinessCategoriesSec
                   setEditingRow(selectedRow);
                   setDialogOpen(true);
                 }}
+                sx={{ textTransform: 'none' }}
               >
                 Edit
               </Button>
@@ -212,6 +214,7 @@ const BusinessCategoriesSection = ({ data, onDataChange }: BusinessCategoriesSec
                 color='error'
                 startIcon={<DeleteIcon />}
                 onClick={() => setDeleteOpen(true)}
+                sx={{ textTransform: 'none' }}
               >
                 Delete
               </Button>
@@ -231,6 +234,7 @@ const BusinessCategoriesSection = ({ data, onDataChange }: BusinessCategoriesSec
                   variant='outlined'
                   startIcon={<ClearIcon />}
                   onClick={() => setSelectedId(null)}
+                  sx={{ textTransform: 'none' }}
                 >
                   Clear
                 </Button>
@@ -277,7 +281,7 @@ const BusinessCategoriesSection = ({ data, onDataChange }: BusinessCategoriesSec
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<AccountTreeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_BC}
+        accent={ACCENT_w}
         title='Business Category'
         subtitle='Manage business category groups and their designated heads'
         submitDisabled={!form.name.trim()}

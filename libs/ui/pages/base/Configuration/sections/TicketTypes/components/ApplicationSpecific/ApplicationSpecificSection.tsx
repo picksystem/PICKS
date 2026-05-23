@@ -1,6 +1,6 @@
 import { Box, Typography } from '@serviceops/component';
 import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
-import AppsIcon from '@mui/icons-material/Apps';
+import WebAssetIcon from '@mui/icons-material/WebAsset';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useStyles } from '../../styles';
 
@@ -9,9 +9,22 @@ const ApplicationSpecificSection = () => {
 
   return (
     <Accordion className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <AppsIcon sx={{ color: 'secondary.main', fontSize: '1.2rem' }} />
+          <Box
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: 1.5,
+              bgcolor: '#0369a1',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <WebAssetIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+          </Box>
           <Box>
             <Typography className={classes.sectionTitle}>Application Specific</Typography>
             <Typography className={classes.sectionSubtitle}>

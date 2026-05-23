@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Box, Typography, Paper, Button } from '@serviceops/component';
 import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import CategoryIcon from '@mui/icons-material/Category';
 import { useStyles } from '../../styles';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
@@ -91,7 +92,7 @@ const ExpenseCategorySection = () => {
 
   return (
     <Accordion elevation={0} className={classes.sectionAccordion}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
@@ -105,7 +106,7 @@ const ExpenseCategorySection = () => {
               flexShrink: 0,
             }}
           >
-            <CategoryIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+            <LocalOfferIcon sx={{ color: '#fff', fontSize: '1rem' }} />
           </Box>
           <Box>
             <Typography className={classes.sectionTitle}>Expense Categories</Typography>

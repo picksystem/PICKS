@@ -4,13 +4,11 @@ import {
   Typography,
   Paper,
   Button,
-  Tooltip,
   TextField,
   DataTable,
   Column,
   Chip,
   Switch,
-  FormControlLabel,
 } from '@serviceops/component';
 import {
   Accordion,
@@ -33,7 +31,7 @@ import {
   ConfigFormDialog,
   ConfigDeleteDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
-import AppsIcon from '@mui/icons-material/Apps';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -46,6 +44,7 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import NoteAltIcon from '@mui/icons-material/NoteAlt';
 import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
 import CodeIcon from '@mui/icons-material/Code';
+import AppsIcon from '@mui/icons-material/Apps';
 import ClearIcon from '@mui/icons-material/Clear';
 import {
   IConfigApplication,
@@ -61,14 +60,7 @@ import { useStyles } from '../../styles';
 import { PanelHeader, NoPick } from '../shared';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
 
-const ACCENT_APP = '#2d5ebb';
-const ACCENT_AAP = '#2d5ebb';
-const ACCENT_ATT = '#2d5ebb';
-const ACCENT_ASL = '#2d5ebb';
-const ACCENT_ABC = '#2d5ebb';
-const ACCENT_ATS = '#2d5ebb';
-const ACCENT_ASN = '#2d5ebb';
-const ACCENT_AEX = '#2d5ebb';
+const ACCENT_w = '#0369a1';
 
 type FlatAppApRow = IConfigApproval & { applicationId: string; applicationName: string };
 type FlatAppSlRow = IConfigSupportLine & { applicationId: string; applicationName: string };
@@ -290,7 +282,7 @@ const ApplicationsSection = ({
             fontSize: '0.72rem',
             height: 20,
             bgcolor: v ? alpha('#2d5ebb', 0.1) : alpha('#64748b', 0.08),
-            color: v ? ACCENT_APP : 'text.secondary',
+            color: v ? ACCENT_w : 'text.secondary',
           }}
         />
       ),
@@ -329,21 +321,21 @@ const ApplicationsSection = ({
 
   return (
     <Accordion className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: '#2d5ebb',
+              bgcolor: '#0369a1',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
             }}
           >
-            <AppsIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+            <DashboardIcon sx={{ color: '#fff', fontSize: '1rem' }} />
           </Box>
           <Box>
             <Typography className={classes.sectionTitle}>Applications</Typography>
@@ -460,7 +452,7 @@ const ApplicationsSection = ({
               }}
             >
               <AppsIcon sx={{ color: '#2d5ebb', fontSize: '1.1rem' }} />
-              <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_APP }}>
+              <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_w }}>
                 Applications
               </Typography>
               <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
@@ -625,7 +617,7 @@ const ApplicationsSection = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<AppsIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_APP}
+        accent={ACCENT_w}
         title='Application'
         subtitle='Manage applications linked to service lines and configure their specific settings'
         submitDisabled={!form.name.trim()}
@@ -818,7 +810,7 @@ const AppApprovalsPanel = ({
           size='small'
           sx={{
             bgcolor: alpha('#2d5ebb', 0.1),
-            color: ACCENT_AAP,
+            color: ACCENT_w,
             fontWeight: 600,
             fontSize: '0.75rem',
             height: 20,
@@ -839,7 +831,7 @@ const AppApprovalsPanel = ({
             fontWeight: 700,
             fontSize: '0.75rem',
             bgcolor: alpha('#2d5ebb', 0.08),
-            color: ACCENT_AAP,
+            color: ACCENT_w,
             height: 22,
             borderRadius: 1,
           }}
@@ -901,8 +893,8 @@ const AppApprovalsPanel = ({
           borderBottom: 'none',
         }}
       >
-        <ChecklistIcon sx={{ color: ACCENT_AAP, fontSize: '1.1rem' }} />
-        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_AAP }}>
+        <ChecklistIcon sx={{ color: ACCENT_w, fontSize: '1.1rem' }} />
+        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_w }}>
           Application Approvals
         </Typography>
         <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
@@ -1020,7 +1012,7 @@ const AppApprovalsPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<ChecklistIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_AAP}
+        accent={ACCENT_w}
         title='Approver'
         subtitle='Add or edit an approver for an application'
         submitDisabled={!form.approverName.trim() || (!editingRow && !form.applicationId)}
@@ -1037,7 +1029,7 @@ const AppApprovalsPanel = ({
               size='small'
               sx={{
                 bgcolor: alpha('#2d5ebb', 0.1),
-                color: ACCENT_AAP,
+                color: ACCENT_w,
                 fontWeight: 600,
                 fontSize: '0.78rem',
               }}
@@ -1155,7 +1147,7 @@ const AppTicketTypePanel = ({
   return (
     <Box sx={{ mt: 2 }}>
       <PanelHeader
-        accent={ACCENT_ATT}
+        accent={ACCENT_w}
         icon={<ToggleOnIcon sx={{ fontSize: '1rem' }} />}
         title='Enable / Disable Application Specific Ticket Types'
       />
@@ -1378,7 +1370,7 @@ const AppSupportLinesPanel = ({
           size='small'
           sx={{
             bgcolor: alpha('#2d5ebb', 0.1),
-            color: ACCENT_ASL,
+            color: ACCENT_w,
             fontWeight: 600,
             fontSize: '0.75rem',
             height: 20,
@@ -1441,8 +1433,8 @@ const AppSupportLinesPanel = ({
           borderBottom: 'none',
         }}
       >
-        <HeadsetMicIcon sx={{ color: ACCENT_ASL, fontSize: '1.1rem' }} />
-        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_ASL }}>
+        <HeadsetMicIcon sx={{ color: ACCENT_w, fontSize: '1.1rem' }} />
+        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_w }}>
           Application Specific Support Lines / Queues
         </Typography>
         <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
@@ -1560,7 +1552,7 @@ const AppSupportLinesPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<HeadsetMicIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_ASL}
+        accent={ACCENT_w}
         title='Support Line / Queue'
         subtitle='Add or edit an application-specific support line or queue'
         submitDisabled={!form.name.trim() || (!editingRow && !form.applicationId)}
@@ -1577,7 +1569,7 @@ const AppSupportLinesPanel = ({
               size='small'
               sx={{
                 bgcolor: alpha('#2d5ebb', 0.1),
-                color: ACCENT_ASL,
+                color: ACCENT_w,
                 fontWeight: 600,
                 fontSize: '0.78rem',
               }}
@@ -1752,7 +1744,7 @@ const AppBillingCodesPanel = ({
           size='small'
           sx={{
             bgcolor: alpha('#2d5ebb', 0.1),
-            color: ACCENT_ABC,
+            color: ACCENT_w,
             fontWeight: 600,
             fontSize: '0.75rem',
             height: 20,
@@ -1772,7 +1764,7 @@ const AppBillingCodesPanel = ({
             fontFamily: 'monospace',
             fontWeight: 700,
             bgcolor: alpha('#2d5ebb', 0.08),
-            color: ACCENT_ABC,
+            color: ACCENT_w,
             fontSize: '0.78rem',
             height: 22,
             borderRadius: 1,
@@ -1825,8 +1817,8 @@ const AppBillingCodesPanel = ({
           borderBottom: 'none',
         }}
       >
-        <CodeIcon sx={{ color: ACCENT_ABC, fontSize: '1.1rem' }} />
-        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_ABC }}>
+        <CodeIcon sx={{ color: ACCENT_w, fontSize: '1.1rem' }} />
+        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_w }}>
           Application Specific Time Entry Billing Codes
         </Typography>
         <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
@@ -1944,7 +1936,7 @@ const AppBillingCodesPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<CodeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_ABC}
+        accent={ACCENT_w}
         title='Billing Code'
         subtitle='Add or edit an application-specific time entry billing code'
         submitDisabled={!form.code.trim() || (!editingRow && !form.applicationId)}
@@ -1961,7 +1953,7 @@ const AppBillingCodesPanel = ({
               size='small'
               sx={{
                 bgcolor: alpha('#2d5ebb', 0.1),
-                color: ACCENT_ABC,
+                color: ACCENT_w,
                 fontWeight: 600,
                 fontSize: '0.78rem',
               }}
@@ -2137,7 +2129,7 @@ const AppTimesheetPanel = ({
           size='small'
           sx={{
             bgcolor: alpha('#2d5ebb', 0.1),
-            color: ACCENT_ATS,
+            color: ACCENT_w,
             fontWeight: 600,
             fontSize: '0.75rem',
             height: 20,
@@ -2205,7 +2197,7 @@ const AppTimesheetPanel = ({
             fontWeight: 700,
             fontSize: '0.75rem',
             bgcolor: alpha('#2d5ebb', 0.1),
-            color: ACCENT_ATS,
+            color: ACCENT_w,
             height: 22,
             borderRadius: 1,
           }}
@@ -2230,8 +2222,8 @@ const AppTimesheetPanel = ({
           borderBottom: 'none',
         }}
       >
-        <AccessTimeIcon sx={{ color: ACCENT_ATS, fontSize: '1.1rem' }} />
-        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_ATS }}>
+        <AccessTimeIcon sx={{ color: ACCENT_w, fontSize: '1.1rem' }} />
+        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_w }}>
           Add Timesheet Projects
         </Typography>
         <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
@@ -2349,7 +2341,7 @@ const AppTimesheetPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<AccessTimeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_ATS}
+        accent={ACCENT_w}
         title='Timesheet Project'
         subtitle='Add or edit an application-specific timesheet project'
         submitDisabled={!form.project.trim() || (!editingRow && !form.applicationId)}
@@ -2366,7 +2358,7 @@ const AppTimesheetPanel = ({
               size='small'
               sx={{
                 bgcolor: alpha('#2d5ebb', 0.1),
-                color: ACCENT_ATS,
+                color: ACCENT_w,
                 fontWeight: 600,
                 fontSize: '0.78rem',
               }}
@@ -2478,7 +2470,7 @@ const AppStickyNotePanel = ({
   return (
     <Box sx={{ mt: 2 }}>
       <PanelHeader
-        accent={ACCENT_ASN}
+        accent={ACCENT_w}
         icon={<NoteAltIcon sx={{ fontSize: '1rem' }} />}
         title='Add Sticky Note'
       />
@@ -2652,7 +2644,7 @@ const AppExpensePanel = ({
           size='small'
           sx={{
             bgcolor: alpha('#2d5ebb', 0.1),
-            color: ACCENT_AEX,
+            color: ACCENT_w,
             fontWeight: 600,
             fontSize: '0.75rem',
             height: 20,
@@ -2720,7 +2712,7 @@ const AppExpensePanel = ({
             fontWeight: 700,
             fontSize: '0.75rem',
             bgcolor: alpha('#2d5ebb', 0.1),
-            color: ACCENT_AEX,
+            color: ACCENT_w,
             height: 22,
             borderRadius: 1,
           }}
@@ -2745,8 +2737,8 @@ const AppExpensePanel = ({
           borderBottom: 'none',
         }}
       >
-        <ReceiptLongIcon sx={{ color: ACCENT_AEX, fontSize: '1.1rem' }} />
-        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_AEX }}>
+        <ReceiptLongIcon sx={{ color: ACCENT_w, fontSize: '1.1rem' }} />
+        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_w }}>
           Add Expenses Projects
         </Typography>
         <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
@@ -2864,7 +2856,7 @@ const AppExpensePanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<ReceiptLongIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_AEX}
+        accent={ACCENT_w}
         title='Expense Project'
         subtitle='Add or edit an application-specific expense project'
         submitDisabled={!form.project.trim() || (!editingRow && !form.applicationId)}
@@ -2881,7 +2873,7 @@ const AppExpensePanel = ({
               size='small'
               sx={{
                 bgcolor: alpha('#2d5ebb', 0.1),
-                color: ACCENT_AEX,
+                color: ACCENT_w,
                 fontWeight: 600,
                 fontSize: '0.78rem',
               }}

@@ -26,7 +26,7 @@ import {
   ConfigDeleteDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 
-const ACCENT_TP = '#2d5ebb';
+const ACCENT_w = '#0369a1';
 
 const EMPTY_TP_FORM = {
   consultantProfileId: '',
@@ -93,7 +93,11 @@ const TimesheetProjectsPanel = ({ data, onSave }: TimesheetProjectsPanelProps) =
       onSave(updated);
       setSelectedId(editingRow.id);
     } else {
-      const n = { id: `tp_${Date.now()}`, ...form } as IConfigConsultantTimesheetProject;
+      const n = {
+        id: `tp_${Date.now()}`,
+        consultantName: '',
+        ...form,
+      } as IConfigConsultantTimesheetProject;
       onSave([...data, n]);
       setSelectedId(n.id);
     }
@@ -161,7 +165,7 @@ const TimesheetProjectsPanel = ({ data, onSave }: TimesheetProjectsPanelProps) =
             fontWeight: 700,
             fontSize: '0.75rem',
             bgcolor: alpha('#2d5ebb', 0.1),
-            color: ACCENT_TP,
+            color: ACCENT_w,
             height: 22,
             borderRadius: 1,
           }}
@@ -187,10 +191,10 @@ const TimesheetProjectsPanel = ({ data, onSave }: TimesheetProjectsPanelProps) =
             borderBottom: 'none',
           }}
         >
-          <Box sx={{ color: ACCENT_TP, display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ color: ACCENT_w, display: 'flex', alignItems: 'center' }}>
             <ReceiptLongIcon sx={{ fontSize: '1.1rem' }} />
           </Box>
-          <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT_TP }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT_w }}>
             Timesheet Projects
           </Typography>
           <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
@@ -323,7 +327,7 @@ const TimesheetProjectsPanel = ({ data, onSave }: TimesheetProjectsPanelProps) =
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<ReceiptLongIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={'#2d5ebb'}
+        accent='#2d5ebb'
         title='Timesheet Project'
         submitDisabled={!form.project.trim()}
         submitLabel={editingRow ? 'Save Changes' : 'Add Project'}

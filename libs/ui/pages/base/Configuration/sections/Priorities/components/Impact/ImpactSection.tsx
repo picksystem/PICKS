@@ -74,7 +74,7 @@ const SimpleLevelFormDialog = ({
         : {
             displayName: '',
             description: '',
-            bgColor: '#2563eb',
+            bgColor: '#0369a1',
             enabledFor: Object.fromEntries(ticketTypeColumns.map((t) => [t.key, true])),
           },
     );
@@ -399,16 +399,6 @@ const ImpactSection = ({
             }}
           />
         </Box>
-
-        {selectedId && (
-          <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
-            Selected: <strong>{items.find((i) => i.id === selectedId)?.displayName}</strong>
-            &nbsp;·&nbsp;
-            <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-              Clear
-            </Link>
-          </Typography>
-        )}
       </Paper>
       <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
         <DataTable

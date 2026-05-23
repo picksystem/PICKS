@@ -6,6 +6,7 @@ import { TicketTypeConfigSection } from './components/TicketTypeConfig/TicketTyp
 import { ServiceLineSpecificSection } from './components/ServiceLineSpecific/ServiceLineSpecificSection';
 import { ApplicationSpecificSection } from './components/ApplicationSpecific/ApplicationSpecificSection';
 import { useTicketTypes } from '../../hooks/useTicketTypes';
+import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection';
 
 const TicketTypes = () => {
   const { classes } = useStyles();
@@ -32,12 +33,14 @@ const TicketTypes = () => {
 
   return (
     <Box className={classes.container}>
-      <TicketTypeConfigSection
-        advancedDisplaySequences={advancedDisplaySequences}
-        setAdvancedDisplaySequences={setAdvancedDisplaySequences}
-      />
-      <ServiceLineSpecificSection />
-      <ApplicationSpecificSection />
+      <ConfigurationSection loaderMessage='Loading Ticket Types Configuration...'>
+        <TicketTypeConfigSection
+          advancedDisplaySequences={advancedDisplaySequences}
+          setAdvancedDisplaySequences={setAdvancedDisplaySequences}
+        />
+        <ServiceLineSpecificSection />
+        <ApplicationSpecificSection />
+      </ConfigurationSection>
     </Box>
   );
 };

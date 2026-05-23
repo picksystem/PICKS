@@ -23,8 +23,7 @@ import {
   ConfigDeleteDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 
-const ACCENT_CR = '#2d5ebb';
-const ACCENT_ACP = '#2d5ebb';
+const ACCENT_w = '#0369a1';
 
 const mkCell =
   (bold = false) =>
@@ -134,10 +133,10 @@ const AssociatedConsultantProfilesPanel = ({
           borderBottom: 'none',
         }}
       >
-        <Box sx={{ color: ACCENT_ACP, display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ color: ACCENT_w, display: 'flex', alignItems: 'center' }}>
           <GroupIcon sx={{ fontSize: '1.1rem' }} />
         </Box>
-        <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT_ACP }}>
+        <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT_w }}>
           Associated Consultant Profiles
         </Typography>
         <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
@@ -269,7 +268,7 @@ const AssociatedConsultantProfilesPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<GroupIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={'#2d5ebb'}
+        accent='#2d5ebb'
         title='Associated Consultant Profile'
         submitDisabled={!form.application.trim() || !form.roleName.trim()}
         maxWidth='sm'
@@ -429,188 +428,188 @@ const ConsultantRolesSection = ({
         />
       ) : (
         <Box>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1.5,
-            px: 2,
-            py: 1.25,
-            bgcolor: alpha('#2d5ebb', 0.08),
-            border: '1px solid',
-            borderColor: alpha('#2d5ebb', 0.25),
-            borderRadius: '10px 10px 0 0',
-            borderBottom: 'none',
-          }}
-        >
-        <Box sx={{ color: ACCENT_CR, display: 'flex', alignItems: 'center' }}>
-          <GroupIcon sx={{ fontSize: '1.1rem' }} />
-        </Box>
-        <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT_CR }}>
-          Consultant Roles
-        </Typography>
-        <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
-          {roles.length} role{roles.length !== 1 ? 's' : ''}
-        </Typography>
-      </Box>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              px: 2,
+              py: 1.25,
+              bgcolor: alpha('#2d5ebb', 0.08),
+              border: '1px solid',
+              borderColor: alpha('#2d5ebb', 0.25),
+              borderRadius: '10px 10px 0 0',
+              borderBottom: 'none',
+            }}
+          >
+            <Box sx={{ color: ACCENT_w, display: 'flex', alignItems: 'center' }}>
+              <GroupIcon sx={{ fontSize: '1.1rem' }} />
+            </Box>
+            <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT_w }}>
+              Consultant Roles
+            </Typography>
+            <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
+              {roles.length} role{roles.length !== 1 ? 's' : ''}
+            </Typography>
+          </Box>
 
-      <Paper
-        variant='outlined'
-        sx={{
-          borderRadius: 0,
-          borderTop: 'none',
-          borderBottom: 'none',
-          px: 1.5,
-          py: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 0.5,
-        }}
-      >
-        <Box className={classes.toolbarButtons}>
-          {!selectedRow ? (
-            <Tooltip title='Add a new consultant role'>
-              <Button
+          <Paper
+            variant='outlined'
+            sx={{
+              borderRadius: 0,
+              borderTop: 'none',
+              borderBottom: 'none',
+              px: 1.5,
+              py: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 0.5,
+            }}
+          >
+            <Box className={classes.toolbarButtons}>
+              {!selectedRow ? (
+                <Tooltip title='Add a new consultant role'>
+                  <Button
+                    size='small'
+                    variant='contained'
+                    startIcon={<AddIcon />}
+                    sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
+                    onClick={() => {
+                      setEditingRow(null);
+                      setDialogOpen(true);
+                    }}
+                  >
+                    New
+                  </Button>
+                </Tooltip>
+              ) : (
+                <>
+                  <Button
+                    size='small'
+                    variant='contained'
+                    startIcon={<EditIcon />}
+                    sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
+                    onClick={() => {
+                      setEditingRow(selectedRow);
+                      setDialogOpen(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    color='error'
+                    startIcon={<DeleteIcon />}
+                    onClick={() => setDeleteOpen(true)}
+                  >
+                    Delete
+                  </Button>
+                  <Box
+                    component='span'
+                    sx={{
+                      display: { xs: 'none', sm: 'block' },
+                      width: '1px',
+                      height: '20px',
+                      bgcolor: alpha('#2d5ebb', 0.3),
+                      mx: 0.75,
+                      alignSelf: 'center',
+                    }}
+                  />
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    startIcon={<ClearIcon />}
+                    sx={{ textTransform: 'none' }}
+                    onClick={() => setSelectedId(null)}
+                  >
+                    Clear
+                  </Button>
+                </>
+              )}
+              <TextField
                 size='small'
-                variant='contained'
-                startIcon={<AddIcon />}
-                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
-                onClick={() => {
-                  setEditingRow(null);
-                  setDialogOpen(true);
-                }}
-              >
-                New
-              </Button>
-            </Tooltip>
-          ) : (
-            <>
-              <Button
-                size='small'
-                variant='contained'
-                startIcon={<EditIcon />}
-                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
-                onClick={() => {
-                  setEditingRow(selectedRow);
-                  setDialogOpen(true);
-                }}
-              >
-                Edit
-              </Button>
-              <Button
-                size='small'
-                variant='outlined'
-                color='error'
-                startIcon={<DeleteIcon />}
-                onClick={() => setDeleteOpen(true)}
-              >
-                Delete
-              </Button>
-              <Box
-                component='span'
-                sx={{
-                  display: { xs: 'none', sm: 'block' },
-                  width: '1px',
-                  height: '20px',
-                  bgcolor: alpha('#2d5ebb', 0.3),
-                  mx: 0.75,
-                  alignSelf: 'center',
+                placeholder='Search…'
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className={classes.tableSearchField}
+                sx={{ ml: { xs: 0, sm: 'auto' } }}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <SearchIcon sx={{ fontSize: '1rem' }} />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
-              <Button
-                size='small'
-                variant='outlined'
-                startIcon={<ClearIcon />}
-                sx={{ textTransform: 'none' }}
-                onClick={() => setSelectedId(null)}
-              >
-                Clear
-              </Button>
-            </>
-          )}
-          <TextField
-            size='small'
-            placeholder='Search…'
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className={classes.tableSearchField}
-            sx={{ ml: { xs: 0, sm: 'auto' } }}
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position='end'>
-                    <SearchIcon sx={{ fontSize: '1rem' }} />
-                  </InputAdornment>
-                ),
-              },
+            </Box>
+          </Paper>
+
+          <Paper
+            elevation={1}
+            sx={{
+              borderRadius: '0 0 10px 10px',
+              overflow: 'hidden',
+              border: '1px solid',
+              borderColor: alpha('#2d5ebb', 0.25),
+              borderTop: 'none',
             }}
+          >
+            <DataTable
+              columns={columns}
+              data={filtered}
+              rowKey='id'
+              searchable={false}
+              initialRowsPerPage={10}
+              onRowClick={(row) => setSelectedId(selectedId === row.id ? null : row.id)}
+              activeRowKey={selectedId ?? undefined}
+            />
+          </Paper>
+
+          <ConfigFormDialog
+            open={dialogOpen}
+            onClose={() => {
+              setDialogOpen(false);
+              setEditingRow(null);
+            }}
+            onSubmit={handleSubmit}
+            isEdit={!!editingRow}
+            icon={<GroupIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+            accent='#2d5ebb'
+            title='Consultant Role'
+            submitDisabled={!form.roleName.trim()}
+            submitLabel={editingRow ? 'Save Changes' : 'Add Role'}
+            maxWidth='sm'
+          >
+            <TextField
+              label='Role Name'
+              size='small'
+              fullWidth
+              required
+              value={form.roleName}
+              onChange={(e) => setForm((f) => ({ ...f, roleName: e.target.value }))}
+            />
+            <TextField
+              label='Description'
+              size='small'
+              fullWidth
+              multiline
+              minRows={2}
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+            />
+          </ConfigFormDialog>
+
+          <ConfigDeleteDialog
+            open={deleteOpen}
+            onClose={() => setDeleteOpen(false)}
+            onConfirm={handleDelete}
+            entityName='Consultant Role'
+            itemName={selectedRow?.roleName}
           />
         </Box>
-      </Paper>
-
-      <Paper
-        elevation={1}
-        sx={{
-          borderRadius: '0 0 10px 10px',
-          overflow: 'hidden',
-          border: '1px solid',
-          borderColor: alpha('#2d5ebb', 0.25),
-          borderTop: 'none',
-        }}
-      >
-        <DataTable
-          columns={columns}
-          data={filtered}
-          rowKey='id'
-          searchable={false}
-          initialRowsPerPage={10}
-          onRowClick={(row) => setSelectedId(selectedId === row.id ? null : row.id)}
-          activeRowKey={selectedId ?? undefined}
-        />
-      </Paper>
-
-      <ConfigFormDialog
-        open={dialogOpen}
-        onClose={() => {
-          setDialogOpen(false);
-          setEditingRow(null);
-        }}
-        onSubmit={handleSubmit}
-        isEdit={!!editingRow}
-        icon={<GroupIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={'#2d5ebb'}
-        title='Consultant Role'
-        submitDisabled={!form.roleName.trim()}
-        submitLabel={editingRow ? 'Save Changes' : 'Add Role'}
-        maxWidth='sm'
-      >
-        <TextField
-          label='Role Name'
-          size='small'
-          fullWidth
-          required
-          value={form.roleName}
-          onChange={(e) => setForm((f) => ({ ...f, roleName: e.target.value }))}
-        />
-        <TextField
-          label='Description'
-          size='small'
-          fullWidth
-          multiline
-          minRows={2}
-          value={form.description}
-          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-        />
-      </ConfigFormDialog>
-
-      <ConfigDeleteDialog
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        onConfirm={handleDelete}
-        entityName='Consultant Role'
-        itemName={selectedRow?.roleName}
-      />
-      </Box>
       )}
     </>
   );

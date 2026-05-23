@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Loader } from '@serviceops/component';
+import { Box } from '@serviceops/component';
 import { useStyles } from './styles';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
 import { useGetTicketTypeQuery } from '@serviceops/services';
@@ -19,6 +19,7 @@ import { ETAdminControlsSection } from './components/ETAdminControls/ETAdminCont
 import { ETAActivationSection } from './components/ETAActivation/ETAActivationSection';
 import { TimeLogAdminControlsSection } from './components/TimeLogAdminControls/TimeLogAdminControlsSection';
 import { TimeLogsActivationSection } from './components/TimeLogsActivation/TimeLogsActivationSection';
+import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection';
 
 const DEFAULT_CONTROLS: IConfigSLAAdminControls = {
   enabled: false,
@@ -91,7 +92,7 @@ const DEFAULT_DUEDATE_VALUES: Record<
 
 const SLAs = () => {
   const { classes } = useStyles();
-  const { slas: apiSlas, saveSection, isLoading } = useConfiguration();
+  const { slas: apiSlas, saveSection } = useConfiguration();
   const { data: ticketTypesData } = useGetTicketTypeQuery();
 
   const activeTicketTypes: ITicketType[] =
@@ -511,89 +512,83 @@ const SLAs = () => {
     setSelectedTimeLogActRowId(null);
   };
 
-  if (isLoading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-        <Loader />
-      </Box>
-    );
-  }
-
   return (
     <Box className={classes.container}>
-      <SLASettingsSection
-        ctrl={ctrl}
-        onUpdate={update}
-        activeTicketTypes={activeTicketTypes}
-        toggleTicketTypeActivation={toggleTicketTypeActivation}
-      />
-      <CalendarRulesSection ctrl={ctrl} onUpdate={update} />
-      <ResponseAckSLASection
-        displayRows={displayAckRows}
-        selectedRowId={selectedAckRowId}
-        setSelectedRowId={setSelectedAckRowId}
-        editingRow={editingAckRow}
-        setEditingRow={setEditingAckRow}
-        onSubmit={handleAckSubmit}
-        onDelete={handleAckDelete}
-        onLoadDefaults={handleAckLoadDefaults}
-        onToggleActivation={toggleRowActivation}
-        activeTicketTypes={activeTicketTypes}
-        usedTicketTypeIds={usedAckIds}
-      />
-      <ResolutionSLASection
-        displayRows={displayResRows}
-        selectedRowId={selectedResRowId}
-        setSelectedRowId={setSelectedResRowId}
-        editingRow={editingResRow}
-        setEditingRow={setEditingResRow}
-        onSubmit={handleResSubmit}
-        onDelete={handleResDelete}
-        onLoadDefaults={handleResLoadDefaults}
-        onToggleActivation={toggleResRowActivation}
-        activeTicketTypes={activeTicketTypes}
-        usedTicketTypeIds={usedResIds}
-      />
-      <DueDateAdminControlsSection ctrl={ctrl} onUpdate={update} />
-      <DueDatesSection
-        displayRows={displayDueDateRows}
-        selectedRowId={selectedDueDateRowId}
-        setSelectedRowId={setSelectedDueDateRowId}
-        editingRow={editingDueDateRow}
-        setEditingRow={setEditingDueDateRow}
-        onSubmit={handleDueDateSubmit}
-        onDelete={handleDueDateDelete}
-        onLoadDefaults={handleDueDateLoadDefaults}
-        onToggleActivation={toggleDueDateRowActivation}
-        activeTicketTypes={activeTicketTypes}
-        usedTicketTypeIds={usedDueDateIds}
-      />
-      <ETAdminControlsSection ctrl={ctrl} onUpdate={update} />
-      <ETAActivationSection
-        displayRows={displayEtaActRows}
-        selectedRowId={selectedEtaActRowId}
-        setSelectedRowId={setSelectedEtaActRowId}
-        editingRow={editingEtaActRow}
-        setEditingRow={setEditingEtaActRow}
-        onSubmit={handleEtaActSubmit}
-        onDelete={handleEtaActDelete}
-        onToggleActivation={toggleEtaActRowActivation}
-        activeTicketTypes={activeTicketTypes}
-        usedTicketTypeIds={usedEtaActIds}
-      />
-      <TimeLogAdminControlsSection ctrl={ctrl} onUpdate={update} />
-      <TimeLogsActivationSection
-        displayRows={displayTimeLogActRows}
-        selectedRowId={selectedTimeLogActRowId}
-        setSelectedRowId={setSelectedTimeLogActRowId}
-        editingRow={editingTimeLogActRow}
-        setEditingRow={setEditingTimeLogActRow}
-        onSubmit={handleTimeLogActSubmit}
-        onDelete={handleTimeLogActDelete}
-        onToggleActivation={toggleTimeLogActRowActivation}
-        activeTicketTypes={activeTicketTypes}
-        usedTicketTypeIds={usedTimeLogActIds}
-      />
+      <ConfigurationSection loaderMessage='Loading SLAs Configuration...'>
+        <SLASettingsSection
+          ctrl={ctrl}
+          onUpdate={update}
+          activeTicketTypes={activeTicketTypes}
+          toggleTicketTypeActivation={toggleTicketTypeActivation}
+        />
+        <CalendarRulesSection ctrl={ctrl} onUpdate={update} />
+        <ResponseAckSLASection
+          displayRows={displayAckRows}
+          selectedRowId={selectedAckRowId}
+          setSelectedRowId={setSelectedAckRowId}
+          editingRow={editingAckRow}
+          setEditingRow={setEditingAckRow}
+          onSubmit={handleAckSubmit}
+          onDelete={handleAckDelete}
+          onLoadDefaults={handleAckLoadDefaults}
+          onToggleActivation={toggleRowActivation}
+          activeTicketTypes={activeTicketTypes}
+          usedTicketTypeIds={usedAckIds}
+        />
+        <ResolutionSLASection
+          displayRows={displayResRows}
+          selectedRowId={selectedResRowId}
+          setSelectedRowId={setSelectedResRowId}
+          editingRow={editingResRow}
+          setEditingRow={setEditingResRow}
+          onSubmit={handleResSubmit}
+          onDelete={handleResDelete}
+          onLoadDefaults={handleResLoadDefaults}
+          onToggleActivation={toggleResRowActivation}
+          activeTicketTypes={activeTicketTypes}
+          usedTicketTypeIds={usedResIds}
+        />
+        <DueDateAdminControlsSection ctrl={ctrl} onUpdate={update} />
+        <DueDatesSection
+          displayRows={displayDueDateRows}
+          selectedRowId={selectedDueDateRowId}
+          setSelectedRowId={setSelectedDueDateRowId}
+          editingRow={editingDueDateRow}
+          setEditingRow={setEditingDueDateRow}
+          onSubmit={handleDueDateSubmit}
+          onDelete={handleDueDateDelete}
+          onLoadDefaults={handleDueDateLoadDefaults}
+          onToggleActivation={toggleDueDateRowActivation}
+          activeTicketTypes={activeTicketTypes}
+          usedTicketTypeIds={usedDueDateIds}
+        />
+        <ETAdminControlsSection ctrl={ctrl} onUpdate={update} />
+        <ETAActivationSection
+          displayRows={displayEtaActRows}
+          selectedRowId={selectedEtaActRowId}
+          setSelectedRowId={setSelectedEtaActRowId}
+          editingRow={editingEtaActRow}
+          setEditingRow={setEditingEtaActRow}
+          onSubmit={handleEtaActSubmit}
+          onDelete={handleEtaActDelete}
+          onToggleActivation={toggleEtaActRowActivation}
+          activeTicketTypes={activeTicketTypes}
+          usedTicketTypeIds={usedEtaActIds}
+        />
+        <TimeLogAdminControlsSection ctrl={ctrl} onUpdate={update} />
+        <TimeLogsActivationSection
+          displayRows={displayTimeLogActRows}
+          selectedRowId={selectedTimeLogActRowId}
+          setSelectedRowId={setSelectedTimeLogActRowId}
+          editingRow={editingTimeLogActRow}
+          setEditingRow={setEditingTimeLogActRow}
+          onSubmit={handleTimeLogActSubmit}
+          onDelete={handleTimeLogActDelete}
+          onToggleActivation={toggleTimeLogActRowActivation}
+          activeTicketTypes={activeTicketTypes}
+          usedTicketTypeIds={usedTimeLogActIds}
+        />
+      </ConfigurationSection>
     </Box>
   );
 };

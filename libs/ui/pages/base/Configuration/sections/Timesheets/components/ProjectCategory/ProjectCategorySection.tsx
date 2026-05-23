@@ -24,6 +24,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 import CategoryIcon from '@mui/icons-material/Category';
+import WorkspacesIcon from '@mui/icons-material/Workspaces';
 import { IConfigTimesheetProjectCategory } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
@@ -34,7 +35,7 @@ import {
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const ACCENT_CAT = '#2d5ebb';
+const ACCENT_w = '#0369a1';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -186,7 +187,7 @@ const ProjectCategorySection = () => {
             fontSize: '0.68rem',
             fontWeight: 700,
             bgcolor: alpha('#2d5ebb', 0.12),
-            color: ACCENT_CAT,
+            color: ACCENT_w,
           }}
         />
       ),
@@ -195,21 +196,21 @@ const ProjectCategorySection = () => {
 
   return (
     <Accordion className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: '#2d5ebb',
+              bgcolor: '#0369a1',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
             }}
           >
-            <CategoryIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+            <WorkspacesIcon sx={{ color: '#fff', fontSize: '1rem' }} />
           </Box>
           <Box>
             <Typography className={classes.sectionTitle}>Project Category</Typography>

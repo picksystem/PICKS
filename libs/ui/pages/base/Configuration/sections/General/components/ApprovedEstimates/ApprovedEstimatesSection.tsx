@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -8,6 +8,7 @@ import {
   Chip,
   DataTable,
   Column,
+  AccessTimeIcon,
 } from '@serviceops/component';
 import {
   Accordion,
@@ -27,7 +28,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import ApprovalIcon from '@mui/icons-material/Approval';
 import { IConfigGeneral, IConfigApprovedEstimateRow } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
@@ -228,21 +229,21 @@ const ApprovedEstimatesSection = ({
   return (
     <>
       <Accordion className={classes.sectionAccordion} elevation={0}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Box
               sx={{
                 width: 32,
                 height: 32,
                 borderRadius: 1.5,
-                bgcolor: '#0891b2',
+                bgcolor: '#0369a1',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
               }}
             >
-              <AccessTimeIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+              <ApprovalIcon sx={{ color: '#fff', fontSize: '1rem' }} />
             </Box>
             <Box>
               <Typography className={classes.sectionTitle}>

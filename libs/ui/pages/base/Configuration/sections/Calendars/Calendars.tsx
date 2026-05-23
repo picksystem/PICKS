@@ -5,12 +5,15 @@ import {
   HolidayCalendarsSection,
   WorkingCalendarsSection,
 } from './components';
+import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection';
 
 const Calendars = () => (
   <Box sx={{ p: 3, width: '100%' }}>
-    <WorkingDayTemplatesSection />
-    <HolidayCalendarsSection />
-    <WorkingCalendarsSection />
+    <ConfigurationSection loaderMessage='Loading Calendars Configuration...'>
+      <WorkingDayTemplatesSection />
+      <HolidayCalendarsSection />
+      <WorkingCalendarsSection />
+    </ConfigurationSection>
   </Box>
 );
 

@@ -7,7 +7,6 @@ import {
   Button,
   Switch,
   Tooltip,
-  Link,
   Divider,
   FormControlLabel,
 } from '@serviceops/component';
@@ -17,6 +16,7 @@ import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 import SortIcon from '@mui/icons-material/Sort';
 import TicketTypeTable from '@serviceops/pages/base/Configuration/components/TicketTypeTable/TicketTypeTable';
@@ -76,9 +76,22 @@ const TicketTypeConfigSection = ({
         className={classes.sectionAccordion}
         elevation={0}
       >
-        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <ConfirmationNumberIcon sx={{ color: 'primary.main', fontSize: '1.2rem' }} />
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: 1.5,
+                bgcolor: '#0369a1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <ConfirmationNumberIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+            </Box>
             <Box>
               <Typography className={classes.sectionTitle}>Ticket Type Configuration</Typography>
               <Typography className={classes.sectionSubtitle}>
@@ -98,7 +111,7 @@ const TicketTypeConfigSection = ({
                     variant='contained'
                     startIcon={<AddIcon />}
                     onClick={openAddDialog}
-                    sx={{ width: { xs: '100%', sm: 'auto' } }}
+                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
                   >
                     Add New Ticket Type
                   </Button>
@@ -111,7 +124,7 @@ const TicketTypeConfigSection = ({
                   variant='contained'
                   startIcon={<EditIcon />}
                   onClick={openEditSelected}
-                  sx={{ width: { xs: '100%', sm: 'auto' } }}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
                 >
                   Edit
                 </Button>
@@ -124,9 +137,21 @@ const TicketTypeConfigSection = ({
                   color='error'
                   startIcon={<DeleteIcon />}
                   onClick={() => setConfirmDeleteOpen(true)}
-                  sx={{ width: { xs: '100%', sm: 'auto' } }}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
                 >
                   Delete
+                </Button>
+              )}
+
+              {selectedRow && (
+                <Button
+                  size='small'
+                  variant='outlined'
+                  startIcon={<ClearIcon />}
+                  onClick={() => setSelectedRow(null)}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  Clear
                 </Button>
               )}
 
@@ -214,20 +239,6 @@ const TicketTypeConfigSection = ({
                 }}
               />
             </Box>
-
-            {selectedRow && (
-              <Typography
-                variant='caption'
-                color='text.secondary'
-                className={classes.selectionInfo}
-              >
-                Selected: <strong>{selectedRow.displayName || selectedRow.name}</strong>
-                &nbsp;·&nbsp;
-                <Link component='button' variant='caption' onClick={() => setSelectedRow(null)}>
-                  Clear
-                </Link>
-              </Typography>
-            )}
           </Paper>
 
           <Paper elevation={1} className={classes.tablePaper}>

@@ -227,7 +227,7 @@ const TemplateTable: React.FC<TemplateTableProps> = ({ config, rows, onSave, sta
       elevation={0}
       className={classes.sectionAccordion}
     >
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{

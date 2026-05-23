@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Switch } from '@serviceops/component';
 import { Accordion, AccordionSummary, AccordionDetails, Divider } from '@mui/material';
-import EventIcon from '@mui/icons-material/Event';
+import TodayIcon from '@mui/icons-material/Today';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { IConfigSLAAdminControls } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
@@ -56,21 +56,21 @@ const DueDateAdminControlsSection = ({ ctrl, onUpdate }: DueDateAdminControlsSec
 
   return (
     <Accordion className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: '#ca8a04',
+              bgcolor: '#0369a1',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
             }}
           >
-            <EventIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+            <TodayIcon sx={{ color: '#fff', fontSize: '1rem' }} />
           </Box>
           <Box>
             <Typography className={classes.sectionTitle}>Due Date Admin Controls</Typography>

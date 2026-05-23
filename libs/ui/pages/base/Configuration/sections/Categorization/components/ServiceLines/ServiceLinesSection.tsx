@@ -55,11 +55,7 @@ import { useStyles } from '../../styles';
 import { PanelToolbar, PanelTable } from '../shared';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
 
-const ACCENT_SL = '#2d5ebb';
-const ACCENT_TS = '#2d5ebb';
-const ACCENT_EX = '#2d5ebb';
-const ACCENT_AP = '#2d5ebb';
-const ACCENT_TT = '#2d5ebb';
+const ACCENT_w = '#0369a1';
 
 // Types for flat rows
 type FlatTsRow = IConfigTimesheetProject & { serviceLineId: string; serviceLineName: string };
@@ -264,14 +260,14 @@ const ServiceLinesSection = ({
 
   return (
     <Accordion className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: '#2d5ebb',
+              bgcolor: '#0369a1',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -370,7 +366,7 @@ const ServiceLinesSection = ({
               }}
             >
               <LinearScaleIcon sx={{ color: '#2d5ebb', fontSize: '1.1rem' }} />
-              <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_SL }}>
+              <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_w }}>
                 Service Lines
               </Typography>
               <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
@@ -524,7 +520,7 @@ const ServiceLinesSection = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<LinearScaleIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_SL}
+        accent={ACCENT_w}
         title='Service Line'
         subtitle='Define service lines and associate them with business categories'
         submitDisabled={!form.name.trim()}
@@ -754,7 +750,7 @@ const ServiceLineTimesheetPanel = ({
             fontWeight: 700,
             fontSize: '0.75rem',
             bgcolor: alpha('#2d5ebb', 0.1),
-            color: ACCENT_TS,
+            color: ACCENT_w,
             height: 22,
             borderRadius: 1,
           }}
@@ -779,8 +775,8 @@ const ServiceLineTimesheetPanel = ({
           borderBottom: 'none',
         }}
       >
-        <AccessTimeIcon sx={{ color: ACCENT_TS, fontSize: '1.1rem' }} />
-        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_TS }}>
+        <AccessTimeIcon sx={{ color: ACCENT_w, fontSize: '1.1rem' }} />
+        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_w }}>
           Add Timesheet Projects
         </Typography>
         <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
@@ -906,7 +902,7 @@ const ServiceLineTimesheetPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<AccessTimeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_TS}
+        accent={ACCENT_w}
         title='Timesheet Project'
         subtitle='Add or edit a timesheet project for a service line'
         submitDisabled={!form.project.trim() || (!editingRow && !form.serviceLineId)}
@@ -923,7 +919,7 @@ const ServiceLineTimesheetPanel = ({
               size='small'
               sx={{
                 bgcolor: alpha('#2d5ebb', 0.1),
-                color: ACCENT_TS,
+                color: ACCENT_w,
                 fontWeight: 600,
                 fontSize: '0.78rem',
               }}
@@ -1195,7 +1191,7 @@ const ServiceLineExpensePanel = ({
             fontWeight: 700,
             fontSize: '0.75rem',
             bgcolor: alpha('#2d5ebb', 0.1),
-            color: ACCENT_EX,
+            color: ACCENT_w,
             height: 22,
             borderRadius: 1,
           }}
@@ -1220,8 +1216,8 @@ const ServiceLineExpensePanel = ({
           borderBottom: 'none',
         }}
       >
-        <ReceiptLongIcon sx={{ color: ACCENT_EX, fontSize: '1.1rem' }} />
-        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_EX }}>
+        <ReceiptLongIcon sx={{ color: ACCENT_w, fontSize: '1.1rem' }} />
+        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_w }}>
           Add Expenses Projects
         </Typography>
         <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
@@ -1347,7 +1343,7 @@ const ServiceLineExpensePanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<ReceiptLongIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_EX}
+        accent={ACCENT_w}
         title='Expense Project'
         subtitle='Add or edit an expense project for a service line'
         submitDisabled={!form.project.trim() || (!editingRow && !form.serviceLineId)}
@@ -1364,7 +1360,7 @@ const ServiceLineExpensePanel = ({
               size='small'
               sx={{
                 bgcolor: alpha('#2d5ebb', 0.1),
-                color: ACCENT_EX,
+                color: ACCENT_w,
                 fontWeight: 600,
                 fontSize: '0.78rem',
               }}
@@ -1555,7 +1551,7 @@ const ServiceLineApprovalsPanel = ({
             fontWeight: 700,
             fontSize: '0.75rem',
             bgcolor: alpha('#2d5ebb', 0.1),
-            color: ACCENT_AP,
+            color: ACCENT_w,
             height: 22,
             borderRadius: 1,
           }}
@@ -1617,8 +1613,8 @@ const ServiceLineApprovalsPanel = ({
           borderBottom: 'none',
         }}
       >
-        <ChecklistIcon sx={{ color: ACCENT_AP, fontSize: '1.1rem' }} />
-        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_AP }}>
+        <ChecklistIcon sx={{ color: ACCENT_w, fontSize: '1.1rem' }} />
+        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_w }}>
           Add Approvals
         </Typography>
         <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
@@ -1627,7 +1623,7 @@ const ServiceLineApprovalsPanel = ({
       </Box>
 
       <PanelToolbar
-        accent={ACCENT_AP}
+        accent={ACCENT_w}
         selectedLabel={selectedRow?.approverName ?? null}
         onNew={() => {
           setEditingRow(null);
@@ -1642,7 +1638,7 @@ const ServiceLineApprovalsPanel = ({
         onSearch={setSearch}
         onClear={() => setSelectedId(null)}
       />
-      <PanelTable accent={ACCENT_AP}>
+      <PanelTable accent={ACCENT_w}>
         <DataTable
           columns={columns}
           data={filtered}
@@ -1663,7 +1659,7 @@ const ServiceLineApprovalsPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<ChecklistIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_AP}
+        accent={ACCENT_w}
         title='Approver'
         subtitle='Add or edit an approver in the service line approval chain'
         submitDisabled={!form.approverName.trim()}
@@ -1779,8 +1775,8 @@ const ServiceLineTicketTypePanel = ({
           borderBottom: 'none',
         }}
       >
-        <ToggleOnIcon sx={{ color: ACCENT_TT, fontSize: '1.1rem' }} />
-        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_TT }}>
+        <ToggleOnIcon sx={{ color: ACCENT_w, fontSize: '1.1rem' }} />
+        <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_w }}>
           Enable / Disable Ticket Types
         </Typography>
         <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>

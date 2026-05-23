@@ -10,18 +10,21 @@ import {
   ApplicationSubCategoriesSection,
   ApplicationNumberSequencesSection,
 } from './components';
+import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection';
 
 const Categorization = () => {
   const { classes } = useStyles();
   return (
     <Box className={classes.container}>
-      <BusinessCategoriesSection />
-      <ServiceLinesSection />
-      <ApplicationsSection />
-      <ApplicationQueuesSection />
-      <ApplicationCategoriesSection />
-      <ApplicationSubCategoriesSection />
-      <ApplicationNumberSequencesSection />
+      <ConfigurationSection loaderMessage='Loading Categorization Configuration...'>
+        <BusinessCategoriesSection />
+        <ServiceLinesSection />
+        <ApplicationsSection />
+        <ApplicationQueuesSection />
+        <ApplicationCategoriesSection />
+        <ApplicationSubCategoriesSection />
+        <ApplicationNumberSequencesSection />
+      </ConfigurationSection>
     </Box>
   );
 };

@@ -23,7 +23,7 @@ import {
   ConfigDeleteDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 
-const ACCENT_AUP = '#2d5ebb';
+const ACCENT_w = '#0369a1';
 
 const EMPTY_AUP = {
   consultantProfileId: '',
@@ -128,10 +128,10 @@ const UserProfilesPanel = ({ data, onSave }: UserProfilesPanelProps) => {
             borderBottom: 'none',
           }}
         >
-          <Box sx={{ color: ACCENT_AUP, display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ color: ACCENT_w, display: 'flex', alignItems: 'center' }}>
             <PersonIcon sx={{ fontSize: '1.1rem' }} />
           </Box>
-          <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT_AUP }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT_w }}>
             Associated User Profiles
           </Typography>
           <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
@@ -264,7 +264,7 @@ const UserProfilesPanel = ({ data, onSave }: UserProfilesPanelProps) => {
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<PersonIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={'#2d5ebb'}
+        accent='#2d5ebb'
         title='Associated User Profile'
         submitDisabled={!form.userName.trim()}
         maxWidth='sm'

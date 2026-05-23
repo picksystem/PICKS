@@ -8,7 +8,6 @@ import {
   TextField,
   Tooltip,
   Switch,
-  Link,
   DataTable,
   Column,
 } from '@serviceops/component';
@@ -399,16 +398,6 @@ const UrgencySection = ({
             }}
           />
         </Box>
-
-        {selectedId && (
-          <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
-            Selected: <strong>{items.find((i) => i.id === selectedId)?.displayName}</strong>
-            &nbsp;·&nbsp;
-            <Link component='button' variant='caption' onClick={() => setSelectedId(null)}>
-              Clear
-            </Link>
-          </Typography>
-        )}
       </Paper>
       <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
         <DataTable

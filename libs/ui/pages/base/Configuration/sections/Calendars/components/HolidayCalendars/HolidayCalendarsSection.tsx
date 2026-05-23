@@ -26,7 +26,6 @@ type HCActiveView = 'holiday' | 'bankHolidays';
 
 const HolidayCalendarPanel = ({
   holidayRows,
-  bankHolidays,
   onSave,
 }: {
   holidayRows: IConfigHolidayCalendar[];
@@ -158,8 +157,8 @@ const HolidayCalendarsSection = ({
   };
 
   return (
-    <Accordion defaultExpanded className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+    <Accordion className={classes.sectionAccordion} elevation={0}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{

@@ -1,1 +1,1 @@
-export { WorkLocations } from './WorkLocationsSection';
+export { WorkLocationsSection } from './WorkLocationsPanel';

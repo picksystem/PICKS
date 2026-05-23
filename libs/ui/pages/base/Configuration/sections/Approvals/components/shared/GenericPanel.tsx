@@ -166,6 +166,7 @@ export const GenericPanel = ({ config, data, onSave }: GenericPanelProps) => {
                   variant='contained'
                   startIcon={<AddIcon />}
                   sx={{
+                    textTransform: 'none',
                     bgcolor: '#2d5ebb',
                     '&:hover': {
                       bgcolor: '#2d5ebb',
@@ -186,6 +187,7 @@ export const GenericPanel = ({ config, data, onSave }: GenericPanelProps) => {
                   variant='contained'
                   startIcon={<EditIcon />}
                   sx={{
+                    textTransform: 'none',
                     bgcolor: '#2d5ebb',
                     '&:hover': {
                       bgcolor: '#2d5ebb',
@@ -205,6 +207,7 @@ export const GenericPanel = ({ config, data, onSave }: GenericPanelProps) => {
                   color='error'
                   startIcon={<DeleteIcon />}
                   onClick={() => setDeleteOpen(true)}
+                  sx={{ textTransform: 'none' }}
                 >
                   Delete
                 </Button>
@@ -227,6 +230,7 @@ export const GenericPanel = ({ config, data, onSave }: GenericPanelProps) => {
                   startIcon={<ClearIcon />}
                   onClick={() => setSelectedId(null)}
                   sx={{
+                    textTransform: 'none',
                     borderColor: '#2d5ebb',
                     color: '#2d5ebb',
                     '&:hover': {

@@ -51,7 +51,7 @@ export const PanelToolbar = ({
               size='small'
               variant='contained'
               startIcon={<AddIcon />}
-              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
+              sx={{ textTransform: 'none', bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
               onClick={onNew}
             >
               New
@@ -62,7 +62,7 @@ export const PanelToolbar = ({
             size='small'
             variant='contained'
             startIcon={<EditIcon />}
-            sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
+            sx={{ textTransform: 'none', bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
             onClick={onEdit}
           >
             Edit
@@ -75,6 +75,7 @@ export const PanelToolbar = ({
             color='error'
             startIcon={<DeleteIcon />}
             onClick={onDelete}
+            sx={{ textTransform: 'none' }}
           >
             Delete
           </Button>
@@ -98,6 +99,7 @@ export const PanelToolbar = ({
               startIcon={<ClearIcon />}
               onClick={onClear}
               sx={{
+                textTransform: 'none',
                 borderColor: '#2d5ebb',
                 color: '#2d5ebb',
                 '&:hover': {

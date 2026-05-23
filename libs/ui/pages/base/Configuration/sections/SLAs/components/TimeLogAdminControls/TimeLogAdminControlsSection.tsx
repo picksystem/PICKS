@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Switch } from '@serviceops/component';
 import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
-import HistoryIcon from '@mui/icons-material/History';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { IConfigSLAAdminControls } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
@@ -19,21 +19,21 @@ const TimeLogAdminControlsSection = ({ ctrl, onUpdate }: TimeLogAdminControlsSec
 
   return (
     <Accordion className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: '#ea580c',
+              bgcolor: '#0369a1',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
             }}
           >
-            <HistoryIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+            <HourglassEmptyIcon sx={{ color: '#fff', fontSize: '1rem' }} />
           </Box>
           <Box>
             <Typography className={classes.sectionTitle}>Time Log Admin Controls</Typography>

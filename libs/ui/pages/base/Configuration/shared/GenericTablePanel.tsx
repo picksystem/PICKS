@@ -91,11 +91,12 @@ export const GenericCRUDPanel = ({
     const requiredField = config.formConfig.fields.find((f) => f.required);
     if (requiredField && !form[requiredField.name]?.trim()) return;
     const rowData = { ...form };
+    const newId = `${config.idPrefix}_${Date.now()}`;
     const next = editingRow
       ? rows.map((r) =>
           config.getId(r) === config.getId(editingRow) ? { ...editingRow, ...rowData } : r,
         )
-      : [...rows, { ...rowData, [config.idPrefix]: `${config.idPrefix}_${Date.now()}` }];
+      : [...rows, { ...rowData, id: newId, [config.idPrefix]: newId }];
     onSave(next);
     setSelectedId(editingRow ? config.getId(editingRow) : config.getId(next[next.length - 1]));
     setDialogOpen(false);
@@ -181,7 +182,10 @@ export const GenericCRUDPanel = ({
                 variant='contained'
                 startIcon={<EditIcon />}
                 sx={btnSx}
-                onClick={() => setEditingRow(selectedRow)}
+                onClick={() => {
+                  setEditingRow(selectedRow);
+                  setDialogOpen(true);
+                }}
               >
                 Edit
               </Button>
@@ -269,7 +273,7 @@ export const GenericCRUDPanel = ({
         }}
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
-        icon={config.icon}
+        icon={<Box sx={{ color: '#fff' }}>{config.icon}</Box>}
         accent={config.accent}
         title={config.formConfig.title}
         subtitle={config.formConfig.subtitle}

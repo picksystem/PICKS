@@ -5,7 +5,6 @@ import {
   Paper,
   Button,
   Tooltip,
-  Link,
   DataTable,
   Column,
   Checkbox,
@@ -18,7 +17,6 @@ import TuneIcon from '@mui/icons-material/Tune';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import SearchIcon from '@mui/icons-material/Search';
 import { PriorityLevel, ImpactLevel, UrgencyLevel, MatrixMap, MatrixRow } from '../../util';
 import { useStyles } from '../../styles';
 
@@ -342,16 +340,6 @@ const TicketMatrixSection = ({
             </Button>
           </Tooltip>
         </Box>
-
-        {selectedRowId && (
-          <Typography variant='caption' color='text.secondary' className={classes.selectionInfo}>
-            Selected: <strong>{selectedImpact?.displayName}</strong> ×{' '}
-            <strong>{selectedUrgency?.displayName}</strong>&nbsp;·&nbsp;
-            <Link component='button' variant='caption' onClick={() => setSelectedRowId(null)}>
-              Clear
-            </Link>
-          </Typography>
-        )}
       </Paper>
 
       {useSimple ? (

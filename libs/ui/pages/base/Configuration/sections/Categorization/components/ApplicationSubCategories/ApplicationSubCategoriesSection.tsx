@@ -25,6 +25,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ClearIcon from '@mui/icons-material/Clear';
+import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRight';
 import CategoryIcon from '@mui/icons-material/Category';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { IConfigApplicationSubCategory } from '@serviceops/interfaces';
@@ -49,7 +50,10 @@ interface ApplicationSubCategoriesSectionProps {
   onDataChange?: (data: IConfigApplicationSubCategory[]) => void;
 }
 
-const ApplicationSubCategoriesSection = ({ data, onDataChange }: ApplicationSubCategoriesSectionProps) => {
+const ApplicationSubCategoriesSection = ({
+  data,
+  onDataChange,
+}: ApplicationSubCategoriesSectionProps) => {
   const { classes } = useStyles();
   const { categorization: apiCat, saveSection } = useConfiguration();
 
@@ -205,21 +209,21 @@ const ApplicationSubCategoriesSection = ({ data, onDataChange }: ApplicationSubC
 
   return (
     <Accordion className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ pr: 2 }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              bgcolor: '#2d5ebb',
+              bgcolor: '#0369a1',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
             }}
           >
-            <CategoryIcon sx={{ color: '#fff', fontSize: '1rem' }} />
+            <SubdirectoryArrowRightIcon sx={{ color: '#fff', fontSize: '1rem' }} />
           </Box>
           <Box>
             <Typography className={classes.sectionTitle}>Application Sub-Categories</Typography>
