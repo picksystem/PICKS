@@ -131,9 +131,6 @@ const WorkingShiftsPanel = ({ data, onSave }: WorkingShiftsPanelProps) => {
           <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: ACCENT_w }}>
             Working Shifts
           </Typography>
-          <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
-            {data.length} shift{data.length !== 1 ? 's' : ''}
-          </Typography>
         </Box>
 
         <Paper
@@ -143,7 +140,7 @@ const WorkingShiftsPanel = ({ data, onSave }: WorkingShiftsPanelProps) => {
             borderTop: 'none',
             borderBottom: 'none',
             px: 1.5,
-            py: 1,
+            py: 0.75,
             display: 'flex',
             flexDirection: 'column',
             gap: 0.5,
@@ -151,27 +148,53 @@ const WorkingShiftsPanel = ({ data, onSave }: WorkingShiftsPanelProps) => {
         >
           <Box className={classes.toolbarButtons}>
             {!selectedRow ? (
-              <Tooltip title='Add new working shift'>
-                <Button
+              <>
+                <Tooltip title='Add a new Working Shift'>
+                  <Button
+                    size='small'
+                    variant='contained'
+                    startIcon={<AddIcon />}
+                    sx={{
+                      bgcolor: '#2d5ebb',
+                      '&:hover': { bgcolor: '#2d5ebb' },
+                      textTransform: 'none',
+                    }}
+                    onClick={() => {
+                      setEditingRow(null);
+                      setDialogOpen(true);
+                    }}
+                  >
+                    New
+                  </Button>
+                </Tooltip>
+                <TextField
                   size='small'
-                  variant='contained'
-                  startIcon={<AddIcon />}
-                  sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
-                  onClick={() => {
-                    setEditingRow(null);
-                    setDialogOpen(true);
+                  placeholder='Search…'
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className={classes.tableSearchField}
+                  sx={{ ml: { xs: 0, sm: 'auto' } }}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <SearchIcon sx={{ fontSize: '1rem' }} />
+                        </InputAdornment>
+                      ),
+                    },
                   }}
-                >
-                  New
-                </Button>
-              </Tooltip>
+                />
+              </>
             ) : (
               <>
                 <Button
-                  size='small'
                   variant='contained'
                   startIcon={<EditIcon />}
-                  sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
+                  sx={{
+                    bgcolor: '#2d5ebb',
+                    '&:hover': { bgcolor: '#2d5ebb' },
+                    textTransform: 'none',
+                  }}
                   onClick={() => {
                     setEditingRow(selectedRow);
                     setDialogOpen(true);
@@ -180,10 +203,10 @@ const WorkingShiftsPanel = ({ data, onSave }: WorkingShiftsPanelProps) => {
                   Edit
                 </Button>
                 <Button
-                  size='small'
                   variant='outlined'
                   color='error'
                   startIcon={<DeleteIcon />}
+                  sx={{ textTransform: 'none' }}
                   onClick={() => setDeleteOpen(true)}
                 >
                   Delete
@@ -194,39 +217,16 @@ const WorkingShiftsPanel = ({ data, onSave }: WorkingShiftsPanelProps) => {
                     display: { xs: 'none', sm: 'block' },
                     width: '1px',
                     height: '20px',
-                    bgcolor: alpha('#2d5ebb', 0.3),
+                    bgcolor: 'divider',
                     mx: 0.75,
                     alignSelf: 'center',
                   }}
                 />
-                <Button
-                  size='small'
-                  variant='outlined'
-                  startIcon={<ClearIcon />}
-                  sx={{ textTransform: 'none' }}
-                  onClick={() => setSelectedId(null)}
-                >
+                <Button variant='outlined' startIcon={<ClearIcon />} sx={{ textTransform: 'none' }}>
                   Clear
                 </Button>
               </>
             )}
-            <TextField
-              size='small'
-              placeholder='Search…'
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={classes.tableSearchField}
-              sx={{ ml: { xs: 0, sm: 'auto' } }}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position='end'>
-                      <SearchIcon sx={{ fontSize: '1rem' }} />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
           </Box>
         </Paper>
 

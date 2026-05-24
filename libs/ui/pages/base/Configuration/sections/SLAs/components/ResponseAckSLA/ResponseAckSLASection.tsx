@@ -150,9 +150,9 @@ const ResponseAckSLASection = ({
       <AccordionDetails sx={{ p: 2 }}>
         <Paper variant='outlined' className={classes.actionToolbar}>
           <Box className={classes.toolbarButtons}>
-            {!selectedRow && (
-              <Tooltip title='Add a new response / acknowledgement SLA row'>
-                <span>
+            {!selectedRow ? (
+              <>
+                <Tooltip title='Add a new Response Acknowledgement SLA'>
                   <Button
                     size='small'
                     variant='contained'
@@ -169,80 +169,61 @@ const ResponseAckSLASection = ({
                   >
                     New
                   </Button>
-                </span>
-              </Tooltip>
+                </Tooltip>
+                <TextField
+                  size='small'
+                  placeholder='Search...'
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className={classes.tableSearchField}
+                  sx={{ ml: { xs: 0, sm: 'auto' } }}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <SearchIcon fontSize='small' />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </>
+            ) : (
+              <>
+                <Button
+                  size='small'
+                  variant='contained'
+                  startIcon={<EditIcon />}
+                  onClick={() => {
+                    setEditingRow(selectedRow);
+                    setDialogOpen(true);
+                  }}
+                  sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
+                >
+                  Edit
+                </Button>
+                <Button
+                  size='small'
+                  variant='outlined'
+                  color='error'
+                  startIcon={<DeleteIcon />}
+                  onClick={() => setDeleteOpen(true)}
+                  sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
+                >
+                  Delete
+                </Button>
+                <Box component='span' sx={{ display: { xs: 'none', sm: 'block' }, width: '1px', height: '20px', bgcolor: 'divider', mx: 0.75, alignSelf: 'center' }} />
+                <Button
+                  size='small'
+                  variant='outlined'
+                  startIcon={<ClearIcon />}
+                  onClick={() => setSelectedRowId(null)}
+                  sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
+                >
+                  Clear
+                </Button>
+              </>
             )}
-
-            {selectedRow && (
-              <Button
-                size='small'
-                variant='contained'
-                startIcon={<EditIcon />}
-                onClick={() => {
-                  setEditingRow(selectedRow);
-                  setDialogOpen(true);
-                }}
-                sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
-              >
-                Edit
-              </Button>
-            )}
-
-            {selectedRow && (
-              <Button
-                size='small'
-                variant='outlined'
-                color='error'
-                startIcon={<DeleteIcon />}
-                onClick={() => setDeleteOpen(true)}
-                sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
-              >
-                Delete
-              </Button>
-            )}
-
-            {selectedRow && (
-              <Button
-                size='small'
-                variant='outlined'
-                startIcon={<ClearIcon />}
-                onClick={() => setSelectedRowId(null)}
-                sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
-              >
-                Clear
-              </Button>
-            )}
-
-            <Tooltip title='Reset all rows to system default values'>
-              <Button
-                size='small'
-                variant='outlined'
-                color='secondary'
-                startIcon={<RestoreIcon />}
-                onClick={onLoadDefaults}
-                sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
-              >
-                Load System Defaults
-              </Button>
-            </Tooltip>
-
-            <TextField
-              size='small'
-              placeholder='Search...'
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={classes.tableSearchField}
-              sx={{ ml: { xs: 0, sm: 'auto' } }}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position='end'>
-                      <SearchIcon fontSize='small' />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
           </Box>
         </Paper>
 

@@ -291,9 +291,6 @@ const QueueApprovalsPanel = ({
         <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_QAP }}>
           Queue Approvals
         </Typography>
-        <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
-          {allRows.length} approver{allRows.length !== 1 ? 's' : ''}
-        </Typography>
       </Box>
       <Paper
         variant='outlined'
@@ -302,7 +299,7 @@ const QueueApprovalsPanel = ({
           borderTop: 'none',
           borderBottom: 'none',
           px: 1.5,
-          py: 1,
+          py: 0.75,
           display: 'flex',
           flexDirection: 'column',
           gap: 0.5,
@@ -310,53 +307,80 @@ const QueueApprovalsPanel = ({
       >
         <Box className={classes.toolbarButtons}>
           {!selectedRow ? (
-            <Tooltip title='Add approver'>
+            <>
+              <Tooltip title='Add a new Queue'>
+                <Button
+                  size='small'
+                  variant='contained'
+                  startIcon={<AddIcon />}
+                  sx={{
+                    bgcolor: '#2d5ebb',
+                    '&:hover': { bgcolor: '#2d5ebb' },
+                    textTransform: 'none',
+                  }}
+                  onClick={() => {
+                    setEditingRow(null);
+                    setDialogOpen(true);
+                  }}
+                >
+                  New
+                </Button>
+              </Tooltip>
+              <TextField
+                size='small'
+                placeholder='Search…'
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className={classes.tableSearchField}
+                sx={{ ml: { xs: 0, sm: 'auto' } }}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <SearchIcon sx={{ fontSize: '1rem' }} />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </>
+          ) : (
+            <>
               <Button
                 size='small'
                 variant='contained'
-                startIcon={<AddIcon />}
-                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
+                startIcon={<EditIcon />}
+                sx={{
+                  bgcolor: '#2d5ebb',
+                  '&:hover': { bgcolor: '#2d5ebb' },
+                  textTransform: 'none',
+                }}
                 onClick={() => {
-                  setEditingRow(null);
+                  setEditingRow(selectedRow);
                   setDialogOpen(true);
                 }}
               >
-                New
+                Edit
               </Button>
-            </Tooltip>
-          ) : (
-            <Button
-              size='small'
-              variant='contained'
-              startIcon={<EditIcon />}
-              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
-              onClick={() => {
-                setEditingRow(selectedRow);
-                setDialogOpen(true);
-              }}
-            >
-              Edit
-            </Button>
-          )}
-          {selectedRow && (
-            <Button
-              size='small'
-              variant='outlined'
-              color='error'
-              startIcon={<DeleteIcon />}
-              onClick={() => setDeleteOpen(true)}
-            >
-              Delete
-            </Button>
-          )}
-          {selectedRow && (
-            <>
+              <Button
+                size='small'
+                variant='outlined'
+                color='error'
+                startIcon={<DeleteIcon />}
+                onClick={() => setDeleteOpen(true)}
+                sx={{ textTransform: 'none' }}
+              >
+                Delete
+              </Button>
               <Box
+                component='span'
                 sx={{
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha('#2d5ebb', 0.3),
+                  bgcolor: 'divider',
                   display: { xs: 'none', sm: 'block' },
+                  mx: 0.75,
+                  alignSelf: 'center',
                 }}
               />
               <Button
@@ -364,28 +388,12 @@ const QueueApprovalsPanel = ({
                 variant='outlined'
                 startIcon={<ClearIcon />}
                 onClick={() => setSelectedId(null)}
+                sx={{ textTransform: 'none' }}
               >
                 Clear
               </Button>
             </>
           )}
-          <TextField
-            size='small'
-            placeholder='Search…'
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className={classes.tableSearchField}
-            sx={{ ml: { xs: 0, sm: 'auto' } }}
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position='end'>
-                    <SearchIcon sx={{ fontSize: '1rem' }} />
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
         </Box>
       </Paper>
       <Paper
@@ -555,9 +563,6 @@ const QueueTicketTypePanel = ({
         <ToggleOnIcon sx={{ color: ACCENT_QTT, fontSize: '1.1rem' }} />
         <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_QTT }}>
           Enable / Disable Ticket Types
-        </Typography>
-        <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
-          {rows.filter((r) => r.enabled).length}/{rows.length} enabled
         </Typography>
       </Box>
       {!selectedQueue ? (
@@ -852,9 +857,6 @@ const QueueTimesheetPanel = ({
         <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_QTS }}>
           Add Timesheet Projects
         </Typography>
-        <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
-          {allRows.length} project{allRows.length !== 1 ? 's' : ''}
-        </Typography>
       </Box>
       <Paper
         variant='outlined'
@@ -863,7 +865,7 @@ const QueueTimesheetPanel = ({
           borderTop: 'none',
           borderBottom: 'none',
           px: 1.5,
-          py: 1,
+          py: 0.75,
           display: 'flex',
           flexDirection: 'column',
           gap: 0.5,
@@ -871,53 +873,81 @@ const QueueTimesheetPanel = ({
       >
         <Box className={classes.toolbarButtons}>
           {!selectedRow ? (
-            <Tooltip title='Add timesheet project'>
+            <>
+              <Tooltip title='Add a new Timesheet Project'>
+                <Button
+                  size='small'
+                  variant='contained'
+                  startIcon={<AddIcon />}
+                  sx={{
+                    bgcolor: '#2d5ebb',
+                    '&:hover': { bgcolor: '#2d5ebb' },
+                    textTransform: 'none',
+                  }}
+                  onClick={() => {
+                    setEditingRow(null);
+                    setDialogOpen(true);
+                  }}
+                >
+                  New
+                </Button>
+              </Tooltip>
+
+              <TextField
+                size='small'
+                placeholder='Search…'
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className={classes.tableSearchField}
+                sx={{ ml: { xs: 0, sm: 'auto' } }}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <SearchIcon sx={{ fontSize: '1rem' }} />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </>
+          ) : (
+            <>
               <Button
                 size='small'
                 variant='contained'
-                startIcon={<AddIcon />}
-                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
+                startIcon={<EditIcon />}
+                sx={{
+                  bgcolor: '#2d5ebb',
+                  '&:hover': { bgcolor: '#2d5ebb' },
+                  textTransform: 'none',
+                }}
                 onClick={() => {
-                  setEditingRow(null);
+                  setEditingRow(selectedRow);
                   setDialogOpen(true);
                 }}
               >
-                New
+                Edit
               </Button>
-            </Tooltip>
-          ) : (
-            <Button
-              size='small'
-              variant='contained'
-              startIcon={<EditIcon />}
-              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
-              onClick={() => {
-                setEditingRow(selectedRow);
-                setDialogOpen(true);
-              }}
-            >
-              Edit
-            </Button>
-          )}
-          {selectedRow && (
-            <Button
-              size='small'
-              variant='outlined'
-              color='error'
-              startIcon={<DeleteIcon />}
-              onClick={() => setDeleteOpen(true)}
-            >
-              Delete
-            </Button>
-          )}
-          {selectedRow && (
-            <>
+              <Button
+                size='small'
+                variant='outlined'
+                color='error'
+                startIcon={<DeleteIcon />}
+                onClick={() => setDeleteOpen(true)}
+                sx={{ textTransform: 'none' }}
+              >
+                Delete
+              </Button>
               <Box
+                component='span'
                 sx={{
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha('#2d5ebb', 0.3),
+                  bgcolor: 'divider',
                   display: { xs: 'none', sm: 'block' },
+                  mx: 0.75,
+                  alignSelf: 'center',
                 }}
               />
               <Button
@@ -925,28 +955,12 @@ const QueueTimesheetPanel = ({
                 variant='outlined'
                 startIcon={<ClearIcon />}
                 onClick={() => setSelectedId(null)}
+                sx={{ textTransform: 'none' }}
               >
                 Clear
               </Button>
             </>
           )}
-          <TextField
-            size='small'
-            placeholder='Search…'
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className={classes.tableSearchField}
-            sx={{ ml: { xs: 0, sm: 'auto' } }}
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position='end'>
-                    <SearchIcon sx={{ fontSize: '1rem' }} />
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
         </Box>
       </Paper>
       <Paper
@@ -1296,9 +1310,6 @@ const QueueExpensesPanel = ({
         <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_QEX }}>
           Add Expenses Projects
         </Typography>
-        <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
-          {allRows.length} project{allRows.length !== 1 ? 's' : ''}
-        </Typography>
       </Box>
       <Paper
         variant='outlined'
@@ -1307,7 +1318,7 @@ const QueueExpensesPanel = ({
           borderTop: 'none',
           borderBottom: 'none',
           px: 1.5,
-          py: 1,
+          py: 0.75,
           display: 'flex',
           flexDirection: 'column',
           gap: 0.5,
@@ -1315,53 +1326,81 @@ const QueueExpensesPanel = ({
       >
         <Box className={classes.toolbarButtons}>
           {!selectedRow ? (
-            <Tooltip title='Add expense project'>
+            <>
+              <Tooltip title='Add a new Expense Project'>
+                <Button
+                  size='small'
+                  variant='contained'
+                  startIcon={<AddIcon />}
+                  sx={{
+                    bgcolor: '#2d5ebb',
+                    '&:hover': { bgcolor: '#2d5ebb' },
+                    textTransform: 'none',
+                  }}
+                  onClick={() => {
+                    setEditingRow(null);
+                    setDialogOpen(true);
+                  }}
+                >
+                  New
+                </Button>
+              </Tooltip>
+
+              <TextField
+                size='small'
+                placeholder='Search…'
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className={classes.tableSearchField}
+                sx={{ ml: { xs: 0, sm: 'auto' } }}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <SearchIcon sx={{ fontSize: '1rem' }} />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </>
+          ) : (
+            <>
               <Button
                 size='small'
                 variant='contained'
-                startIcon={<AddIcon />}
-                sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
+                startIcon={<EditIcon />}
+                sx={{
+                  bgcolor: '#2d5ebb',
+                  '&:hover': { bgcolor: '#2d5ebb' },
+                  textTransform: 'none',
+                }}
                 onClick={() => {
-                  setEditingRow(null);
+                  setEditingRow(selectedRow);
                   setDialogOpen(true);
                 }}
               >
-                New
+                Edit
               </Button>
-            </Tooltip>
-          ) : (
-            <Button
-              size='small'
-              variant='contained'
-              startIcon={<EditIcon />}
-              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
-              onClick={() => {
-                setEditingRow(selectedRow);
-                setDialogOpen(true);
-              }}
-            >
-              Edit
-            </Button>
-          )}
-          {selectedRow && (
-            <Button
-              size='small'
-              variant='outlined'
-              color='error'
-              startIcon={<DeleteIcon />}
-              onClick={() => setDeleteOpen(true)}
-            >
-              Delete
-            </Button>
-          )}
-          {selectedRow && (
-            <>
+              <Button
+                size='small'
+                variant='outlined'
+                color='error'
+                startIcon={<DeleteIcon />}
+                onClick={() => setDeleteOpen(true)}
+                sx={{ textTransform: 'none' }}
+              >
+                Delete
+              </Button>
               <Box
+                component='span'
                 sx={{
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha('#2d5ebb', 0.3),
+                  bgcolor: 'divider',
                   display: { xs: 'none', sm: 'block' },
+                  mx: 0.75,
+                  alignSelf: 'center',
                 }}
               />
               <Button
@@ -1369,28 +1408,12 @@ const QueueExpensesPanel = ({
                 variant='outlined'
                 startIcon={<ClearIcon />}
                 onClick={() => setSelectedId(null)}
+                sx={{ textTransform: 'none' }}
               >
                 Clear
               </Button>
             </>
           )}
-          <TextField
-            size='small'
-            placeholder='Search…'
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className={classes.tableSearchField}
-            sx={{ ml: { xs: 0, sm: 'auto' } }}
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position='end'>
-                    <SearchIcon sx={{ fontSize: '1rem' }} />
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
         </Box>
       </Paper>
       <Paper
@@ -1765,6 +1788,7 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
               variant={activePanel === 'approvals' ? 'contained' : 'outlined'}
               color='primary'
               onClick={() => togglePanel('approvals')}
+              sx={{ textTransform: 'none' }}
             >
               Add Approvals
             </Button>
@@ -1774,6 +1798,7 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
               variant={activePanel === 'ticketTypes' ? 'contained' : 'outlined'}
               color='primary'
               onClick={() => togglePanel('ticketTypes')}
+              sx={{ textTransform: 'none' }}
             >
               Enable / Disable Ticket Types
             </Button>
@@ -1783,6 +1808,7 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
               variant={activePanel === 'timesheet' ? 'contained' : 'outlined'}
               color='primary'
               onClick={() => togglePanel('timesheet')}
+              sx={{ textTransform: 'none' }}
             >
               Add Timesheet Projects
             </Button>
@@ -1792,6 +1818,7 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
               variant={activePanel === 'expenses' ? 'contained' : 'outlined'}
               color='primary'
               onClick={() => togglePanel('expenses')}
+              sx={{ textTransform: 'none' }}
             >
               Add Expenses Projects
             </Button>
@@ -1818,9 +1845,6 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
               <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: '#0369a1' }}>
                 Application Queues
               </Typography>
-              <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
-                {rows.length} queue{rows.length !== 1 ? 's' : ''}
-              </Typography>
             </Box>
 
             <Paper
@@ -1838,18 +1862,42 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
             >
               <Box className={classes.toolbarButtons}>
                 {!selectedRow ? (
-                  <Button
-                    size='small'
-                    variant='contained'
-                    startIcon={<AddIcon />}
-                    onClick={() => {
-                      setEditingRow(null);
-                      setDialogOpen(true);
-                    }}
-                    sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
-                  >
-                    New
-                  </Button>
+                  <>
+                    <Button
+                      size='small'
+                      variant='contained'
+                      startIcon={<AddIcon />}
+                      onClick={() => {
+                        setEditingRow(null);
+                        setDialogOpen(true);
+                      }}
+                      sx={{
+                        bgcolor: '#2d5ebb',
+                        '&:hover': { bgcolor: '#2d5ebb' },
+                        textTransform: 'none',
+                      }}
+                    >
+                      New
+                    </Button>
+
+                    <TextField
+                      size='small'
+                      placeholder='Search…'
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className={classes.tableSearchField}
+                      sx={{ ml: { xs: 0, sm: 'auto' } }}
+                      slotProps={{
+                        input: {
+                          endAdornment: (
+                            <InputAdornment position='end'>
+                              <SearchIcon sx={{ fontSize: '1rem' }} />
+                            </InputAdornment>
+                          ),
+                        },
+                      }}
+                    />
+                  </>
                 ) : (
                   <>
                     <Button
@@ -1860,7 +1908,11 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
                         setEditingRow(selectedRow);
                         setDialogOpen(true);
                       }}
-                      sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
+                      sx={{
+                        bgcolor: '#2d5ebb',
+                        '&:hover': { bgcolor: '#2d5ebb' },
+                        textTransform: 'none',
+                      }}
                     >
                       Edit
                     </Button>
@@ -1870,6 +1922,7 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
                       color='error'
                       startIcon={<DeleteIcon />}
                       onClick={() => setDeleteOpen(true)}
+                      sx={{ textTransform: 'none' }}
                     >
                       Delete
                     </Button>
@@ -1879,7 +1932,7 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
                         display: { xs: 'none', sm: 'block' },
                         width: '1px',
                         height: '20px',
-                        bgcolor: alpha('#2d5ebb', 0.3),
+                        bgcolor: 'divider',
                         mx: 0.75,
                         alignSelf: 'center',
                       }}
@@ -1889,28 +1942,12 @@ const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueuesSecti
                       variant='outlined'
                       startIcon={<ClearIcon />}
                       onClick={() => setSelectedId(null)}
+                      sx={{ textTransform: 'none' }}
                     >
                       Clear
                     </Button>
                   </>
                 )}
-                <TextField
-                  size='small'
-                  placeholder='Search…'
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className={classes.tableSearchField}
-                  sx={{ ml: { xs: 0, sm: 'auto' } }}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position='end'>
-                          <SearchIcon sx={{ fontSize: '1rem' }} />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
               </Box>
             </Paper>
 

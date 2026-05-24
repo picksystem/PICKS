@@ -110,11 +110,12 @@ export const GenericCRUDPanel = ({
     setDeleteOpen(false);
   };
 
-  const btnSx = { bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } };
+  const btnSx = { bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' }, textTransform: 'none' };
   const outlinedBtnSx = {
     borderColor: '#2d5ebb',
     color: '#2d5ebb',
     '&:hover': { borderColor: '#2d5ebb', bgcolor: alpha('#2d5ebb', 0.08) },
+    textTransform: 'none',
   };
 
   return (
@@ -140,11 +141,6 @@ export const GenericCRUDPanel = ({
         <Box sx={{ fontWeight: 700, fontSize: '0.9rem', color: config.accent }}>
           {config.panelTitle}
         </Box>
-        <Box sx={{ ml: 'auto' }}>
-          <Box component='span' sx={{ fontSize: '0.78rem', color: 'text.secondary' }}>
-            {rows.length} items
-          </Box>
-        </Box>
       </Box>
 
       {/* Toolbar */}
@@ -155,7 +151,7 @@ export const GenericCRUDPanel = ({
           borderTop: 'none',
           borderBottom: 'none',
           px: 1.5,
-          py: 1,
+          py: 0.75,
           display: 'flex',
           flexDirection: 'column',
           gap: 0.5,
@@ -163,18 +159,38 @@ export const GenericCRUDPanel = ({
       >
         <Box className={classes.toolbarButtons}>
           {!selectedRow ? (
-            <Button
-              size='small'
-              variant='contained'
-              startIcon={<AddIcon />}
-              sx={btnSx}
-              onClick={() => {
-                setEditingRow(null);
-                setDialogOpen(true);
-              }}
-            >
-              New
-            </Button>
+            <>
+              <Button
+                size='small'
+                variant='contained'
+                startIcon={<AddIcon />}
+                sx={btnSx}
+                onClick={() => {
+                  setEditingRow(null);
+                  setDialogOpen(true);
+                }}
+              >
+                New
+              </Button>
+
+              <TextField
+                size='small'
+                placeholder='Search...'
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className={classes.tableSearchField}
+                sx={{ ml: 'auto' }}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <Box component='span' sx={{ display: 'flex', alignItems: 'center' }}>
+                        <SearchIcon sx={{ fontSize: '1rem', color: 'text.secondary' }} />
+                      </Box>
+                    ),
+                  },
+                }}
+              />
+            </>
           ) : (
             <>
               <Button
@@ -195,6 +211,7 @@ export const GenericCRUDPanel = ({
                 color='error'
                 startIcon={<DeleteIcon />}
                 onClick={() => setDeleteOpen(true)}
+                sx={{ textTransform: 'none' }}
               >
                 Delete
               </Button>
@@ -204,7 +221,7 @@ export const GenericCRUDPanel = ({
                   display: { xs: 'none', sm: 'block' },
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha('#2d5ebb', 0.3),
+                  bgcolor: 'divider',
                   mx: 0.75,
                   alignSelf: 'center',
                 }}
@@ -220,23 +237,6 @@ export const GenericCRUDPanel = ({
               </Button>
             </>
           )}
-          <TextField
-            size='small'
-            placeholder='Search...'
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className={classes.tableSearchField}
-            sx={{ ml: 'auto' }}
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <Box component='span' sx={{ display: 'flex', alignItems: 'center' }}>
-                    <SearchIcon sx={{ fontSize: '1rem', color: 'text.secondary' }} />
-                  </Box>
-                ),
-              },
-            }}
-          />
         </Box>
       </Paper>
 

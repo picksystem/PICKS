@@ -225,24 +225,43 @@ const ProjectCategorySection = () => {
         <Paper variant='outlined' className={classes.actionToolbar}>
           <Box className={classes.toolbarButtons}>
             {!selectedRow ? (
-              <Tooltip title='Add a new project category'>
-                <Button
+              <>
+                <Tooltip title='Add a new Project Category'>
+                  <Button
+                    size='small'
+                    variant='contained'
+                    startIcon={<AddIcon />}
+                    onClick={() => {
+                      setEditingRow(null);
+                      setDialogOpen(true);
+                    }}
+                    sx={{
+                      textTransform: 'none',
+                      bgcolor: '#2d5ebb',
+                      '&:hover': { bgcolor: alpha('#2d5ebb', 0.85) },
+                    }}
+                  >
+                    New
+                  </Button>
+                </Tooltip>
+                <TextField
                   size='small'
-                  variant='contained'
-                  startIcon={<AddIcon />}
-                  onClick={() => {
-                    setEditingRow(null);
-                    setDialogOpen(true);
+                  placeholder='Search…'
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className={classes.tableSearchField}
+                  sx={{ ml: { xs: 0, sm: 'auto' } }}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <SearchIcon fontSize='small' />
+                        </InputAdornment>
+                      ),
+                    },
                   }}
-                  sx={{
-                    textTransform: 'none',
-                    bgcolor: '#2d5ebb',
-                    '&:hover': { bgcolor: alpha('#2d5ebb', 0.85) },
-                  }}
-                >
-                  New
-                </Button>
-              </Tooltip>
+                />
+              </>
             ) : (
               <>
                 <Button
@@ -277,7 +296,7 @@ const ProjectCategorySection = () => {
                     display: { xs: 'none', sm: 'block' },
                     width: '1px',
                     height: '20px',
-                    bgcolor: alpha('#2d5ebb', 0.3),
+                    bgcolor: 'divider',
                     mx: 0.75,
                     alignSelf: 'center',
                   }}
@@ -293,23 +312,6 @@ const ProjectCategorySection = () => {
                 </Button>
               </>
             )}
-            <TextField
-              size='small'
-              placeholder='Search…'
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={classes.tableSearchField}
-              sx={{ ml: { xs: 0, sm: 'auto' } }}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position='end'>
-                      <SearchIcon fontSize='small' />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
           </Box>
         </Paper>
 

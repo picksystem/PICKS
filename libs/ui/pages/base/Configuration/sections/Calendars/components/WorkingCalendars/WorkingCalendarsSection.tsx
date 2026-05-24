@@ -9,6 +9,7 @@ import {
   Switch,
   DataTable,
   Column,
+  Tooltip,
 } from '@serviceops/component';
 import {
   Accordion,
@@ -333,19 +334,21 @@ const WorkingTimePanel = ({
               )}
             </Box>
           ))}
-          <Button
-            size='small'
-            startIcon={<AddIcon />}
-            onClick={() =>
-              setWtForm((f) => ({
-                ...f,
-                timeBlocks: [...f.timeBlocks, { startTime: '12:00', endTime: '13:00' }],
-              }))
-            }
-            sx={{ mt: 0.5 }}
-          >
-            Add Time Block
-          </Button>
+          <Tooltip title='Add a new Time Block'>
+            <Button
+              size='small'
+              startIcon={<AddIcon />}
+              onClick={() =>
+                setWtForm((f) => ({
+                  ...f,
+                  timeBlocks: [...f.timeBlocks, { startTime: '12:00', endTime: '13:00' }],
+                }))
+              }
+              sx={{ mt: 0.5 }}
+            >
+              Add Time Block
+            </Button>
+          </Tooltip>
         </Box>
         <FormControlLabel
           control={

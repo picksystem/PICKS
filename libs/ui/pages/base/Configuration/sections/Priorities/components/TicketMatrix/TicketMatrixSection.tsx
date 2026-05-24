@@ -17,6 +17,7 @@ import TuneIcon from '@mui/icons-material/Tune';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ClearIcon from '@mui/icons-material/Clear';
 import { PriorityLevel, ImpactLevel, UrgencyLevel, MatrixMap, MatrixRow } from '../../util';
 import { useStyles } from '../../styles';
 
@@ -242,103 +243,126 @@ const TicketMatrixSection = ({
       <Paper variant='outlined' className={classes.actionToolbar}>
         <Box className={classes.toolbarButtons} sx={{ flexWrap: 'wrap' }}>
           {!selectedRowId ? (
-            <Tooltip title='Add a new combination'>
-              <Button
-                size='small'
-                variant='contained'
-                startIcon={<AddIcon />}
-                onClick={openAddDialog}
-                sx={{ textTransform: 'none' }}
-              >
-                New
-              </Button>
-            </Tooltip>
-          ) : (
-            <Tooltip title='Edit the selected combination'>
-              <Button
-                size='small'
-                variant='contained'
-                startIcon={<EditIcon />}
-                onClick={openEditDialog}
-                sx={{ textTransform: 'none' }}
-              >
-                Edit
-              </Button>
-            </Tooltip>
-          )}
+            <>
+              <Tooltip title='Add a new Combination'>
+                <Button
+                  size='small'
+                  variant='contained'
+                  startIcon={<AddIcon />}
+                  onClick={openAddDialog}
+                  sx={{ textTransform: 'none' }}
+                >
+                  New
+                </Button>
+              </Tooltip>
 
-          <Tooltip title={selectedRowId ? 'Clear priority for selected row' : 'Select a row first'}>
-            <span>
+              <Divider orientation='vertical' flexItem className={classes.toolbarDivider} />
+
+              <FormControlLabel
+                labelPlacement='end'
+                control={
+                  <Checkbox
+                    size='small'
+                    checked={useSimple}
+                    onChange={(e) => setUseSimple(e.target.checked)}
+                    color='primary'
+                  />
+                }
+                label={
+                  <Typography variant='body2' fontWeight={500} fontSize='0.8rem'>
+                    Use Simple Priorities
+                  </Typography>
+                }
+                sx={{ mr: 0, ml: 0, gap: 0.25 }}
+              />
+
+              <Divider orientation='vertical' flexItem className={classes.toolbarDivider} />
+
+              <Tooltip title='Impact and Urgency levels are configured in the sections above'>
+                <Button
+                  size='small'
+                  variant='text'
+                  startIcon={<TuneIcon />}
+                  onClick={() => setDefineInfoOpen(true)}
+                  sx={{ textTransform: 'none', fontSize: '0.78rem', color: 'text.secondary' }}
+                >
+                  Define Impact and Urgency values
+                </Button>
+              </Tooltip>
+
+              <Tooltip title='Auto-fill all active Impact × Urgency combinations'>
+                <Button
+                  size='small'
+                  variant='outlined'
+                  onClick={handleGenerateCombinations}
+                  sx={{ textTransform: 'none', fontSize: '0.78rem' }}
+                >
+                  Generate Impact and Urgency combinations
+                </Button>
+              </Tooltip>
+
+              <Tooltip title='Reset this matrix to system defaults'>
+                <Button
+                  size='small'
+                  variant='outlined'
+                  color='warning'
+                  onClick={() => onMatrixReset(DEFAULT_MATRIX)}
+                  sx={{ textTransform: 'none', fontSize: '0.78rem' }}
+                >
+                  Load system default values
+                </Button>
+              </Tooltip>
+            </>
+          ) : (
+            <>
+              <Tooltip title='Edit the selected combination'>
+                <Button
+                  size='small'
+                  variant='contained'
+                  startIcon={<EditIcon />}
+                  onClick={openEditDialog}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Edit
+                </Button>
+              </Tooltip>
+
+              <Tooltip title='Clear priority for selected row'>
+                <Button
+                  size='small'
+                  variant='outlined'
+                  color='error'
+                  startIcon={<DeleteIcon />}
+                  onClick={handleDeleteRow}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Delete
+                </Button>
+              </Tooltip>
+
+              <Box
+                component='span'
+                sx={{
+                  display: { xs: 'none', sm: 'block' },
+                  width: '1px',
+                  height: '20px',
+                  bgcolor: 'divider',
+                  mx: 0.75,
+                  alignSelf: 'center',
+                }}
+              />
+
               <Button
                 size='small'
                 variant='outlined'
-                color='error'
-                startIcon={<DeleteIcon />}
-                onClick={handleDeleteRow}
-                disabled={!selectedRowId}
+                startIcon={<ClearIcon />}
+                onClick={() => setSelectedRowId(null)}
                 sx={{ textTransform: 'none' }}
               >
-                Delete
+                Clear
               </Button>
-            </span>
-          </Tooltip>
-
-          <Divider orientation='vertical' flexItem className={classes.toolbarDivider} />
-
-          <FormControlLabel
-            labelPlacement='end'
-            control={
-              <Checkbox
-                size='small'
-                checked={useSimple}
-                onChange={(e) => setUseSimple(e.target.checked)}
-                color='primary'
-              />
-            }
-            label={
-              <Typography variant='body2' fontWeight={500} fontSize='0.8rem'>
-                Use Simple Priorities
-              </Typography>
-            }
-            sx={{ mr: 0, ml: 0, gap: 0.25 }}
-          />
-
-          <Divider orientation='vertical' flexItem className={classes.toolbarDivider} />
-
-          <Tooltip title='Impact and Urgency levels are configured in the sections above'>
-            <Button
-              size='small'
-              variant='text'
-              startIcon={<TuneIcon />}
-              onClick={() => setDefineInfoOpen(true)}
-              sx={{ textTransform: 'none', fontSize: '0.78rem', color: 'text.secondary' }}
-            >
-              Define Impact and Urgency values
-            </Button>
-          </Tooltip>
-
-          <Tooltip title='Auto-fill all active Impact × Urgency combinations'>
-            <Button
-              size='small'
-              variant='outlined'
-              onClick={handleGenerateCombinations}
-              sx={{ textTransform: 'none', fontSize: '0.78rem' }}
-            >
-              Generate Impact and Urgency combinations
-            </Button>
-          </Tooltip>
-
-          <Tooltip title='Reset this matrix to system defaults'>
-            <Button
-              size='small'
-              variant='outlined'
-              color='warning'
-              onClick={() => onMatrixReset(DEFAULT_MATRIX)}
-              sx={{ textTransform: 'none', fontSize: '0.78rem' }}
-            >
-              Load system default values
-            </Button>
-          </Tooltip>
+            </>
+          )}
         </Box>
       </Paper>
 

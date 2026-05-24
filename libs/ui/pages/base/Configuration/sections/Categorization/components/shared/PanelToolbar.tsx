@@ -38,7 +38,7 @@ export const PanelToolbar = ({
         borderTop: 'none',
         borderBottom: 'none',
         px: 1.5,
-        py: 1,
+        py: 0.75,
         display: 'flex',
         flexDirection: 'column',
         gap: 0.5,
@@ -46,7 +46,7 @@ export const PanelToolbar = ({
     >
       <Box className={classes.toolbarButtons}>
         {!selectedLabel ? (
-          <Tooltip title='Add new row'>
+          <Tooltip title='New'>
             <Button
               size='small'
               variant='contained'
@@ -88,7 +88,7 @@ export const PanelToolbar = ({
                 display: { xs: 'none', sm: 'block' },
                 width: '1px',
                 height: '20px',
-                bgcolor: alpha('#2d5ebb', 0.3),
+                bgcolor: 'divider',
                 mx: 0.75,
                 alignSelf: 'center',
               }}

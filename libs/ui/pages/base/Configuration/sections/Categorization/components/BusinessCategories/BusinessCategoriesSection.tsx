@@ -179,54 +179,72 @@ const BusinessCategoriesSection = ({ data, onDataChange }: BusinessCategoriesSec
         <Paper variant='outlined' className={classes.actionToolbar}>
           <Box className={classes.toolbarButtons}>
             {!selectedRow ? (
-              <Tooltip title='Add a new business category'>
+              <>
+                <Tooltip title='Add a new Business Category'>
+                  <Button
+                    size='small'
+                    variant='contained'
+                    startIcon={<AddIcon />}
+                    onClick={() => {
+                      setEditingRow(null);
+                      setDialogOpen(true);
+                    }}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    New
+                  </Button>
+                </Tooltip>
+                <TextField
+                  size='small'
+                  placeholder='Search…'
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className={classes.tableSearchField}
+                  sx={{ ml: { xs: 0, sm: 'auto' } }}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <SearchIcon sx={{ fontSize: '1rem' }} />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </>
+            ) : (
+              <>
                 <Button
                   size='small'
                   variant='contained'
-                  startIcon={<AddIcon />}
+                  startIcon={<EditIcon />}
                   onClick={() => {
-                    setEditingRow(null);
+                    setEditingRow(selectedRow);
                     setDialogOpen(true);
                   }}
                   sx={{ textTransform: 'none' }}
                 >
-                  New
+                  Edit
                 </Button>
-              </Tooltip>
-            ) : (
-              <Button
-                size='small'
-                variant='contained'
-                startIcon={<EditIcon />}
-                onClick={() => {
-                  setEditingRow(selectedRow);
-                  setDialogOpen(true);
-                }}
-                sx={{ textTransform: 'none' }}
-              >
-                Edit
-              </Button>
-            )}
-            {selectedRow && (
-              <Button
-                size='small'
-                variant='outlined'
-                color='error'
-                startIcon={<DeleteIcon />}
-                onClick={() => setDeleteOpen(true)}
-                sx={{ textTransform: 'none' }}
-              >
-                Delete
-              </Button>
-            )}
-            {selectedRow && (
-              <>
+                <Button
+                  size='small'
+                  variant='outlined'
+                  color='error'
+                  startIcon={<DeleteIcon />}
+                  onClick={() => setDeleteOpen(true)}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Delete
+                </Button>
                 <Box
+                  component='span'
                   sx={{
+                    display: { xs: 'none', sm: 'block' },
                     width: '1px',
                     height: '20px',
-                    bgcolor: alpha('#2d5ebb', 0.3),
-                    display: { xs: 'none', sm: 'block' },
+                    bgcolor: 'divider',
+                    mx: 0.75,
+                    alignSelf: 'center',
                   }}
                 />
                 <Button
@@ -240,23 +258,6 @@ const BusinessCategoriesSection = ({ data, onDataChange }: BusinessCategoriesSec
                 </Button>
               </>
             )}
-            <TextField
-              size='small'
-              placeholder='Search…'
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={classes.tableSearchField}
-              sx={{ ml: { xs: 0, sm: 'auto' } }}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position='end'>
-                      <SearchIcon sx={{ fontSize: '1rem' }} />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
           </Box>
         </Paper>
         <Paper elevation={1} className={classes.tablePaper}>

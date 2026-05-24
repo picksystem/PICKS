@@ -190,21 +190,38 @@ const PrioritiesSection = ({
     <>
       <Paper variant='outlined' className={classes.actionToolbar}>
         <Box className={classes.toolbarButtons}>
-          {!selectedPriorityId && (
-            <Tooltip title='Add a new priority level'>
-              <Button
+          {!selectedPriorityId ? (
+            <>
+              <Tooltip title='Add a new Priority'>
+                <Button
+                  size='small'
+                  variant='contained'
+                  startIcon={<AddIcon />}
+                  onClick={handleOpenAdd}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  Add New Priority
+                </Button>
+              </Tooltip>
+              <TextField
                 size='small'
-                variant='contained'
-                startIcon={<AddIcon />}
-                onClick={handleOpenAdd}
-                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-              >
-                Add New Priority
-              </Button>
-            </Tooltip>
-          )}
-
-          {selectedPriorityId && (
+                placeholder='Search...'
+                value={tableSearch}
+                onChange={(e) => setTableSearch(e.target.value)}
+                className={classes.tableSearchField}
+                sx={{ ml: { xs: 0, sm: 'auto' } }}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <SearchIcon />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </>
+          ) : (
             <>
               <Button
                 size='small'
@@ -225,6 +242,7 @@ const PrioritiesSection = ({
               >
                 Delete
               </Button>
+              <Box component='span' sx={{ display: { xs: 'none', sm: 'block' }, width: '1px', height: '20px', bgcolor: 'divider', mx: 0.75, alignSelf: 'center' }} />
               <Button
                 size='small'
                 variant='outlined'
@@ -236,64 +254,6 @@ const PrioritiesSection = ({
               </Button>
             </>
           )}
-
-          <Divider orientation='vertical' flexItem className={classes.toolbarDivider} />
-
-          <FormControlLabel
-            labelPlacement='start'
-            control={
-              <Switch
-                size='small'
-                checked={loadSystemDefaults}
-                onChange={(e) => handleLoadDefaults(e.target.checked)}
-                color='warning'
-              />
-            }
-            label={
-              <Typography variant='body2' fontWeight={500} fontSize='0.8rem'>
-                Load system default values
-              </Typography>
-            }
-            sx={{ mr: 0, ml: 0, gap: 0.75, width: { xs: '100%', sm: 'auto' } }}
-          />
-
-          <Divider orientation='vertical' flexItem className={classes.toolbarDivider} />
-
-          <FormControlLabel
-            labelPlacement='start'
-            control={
-              <Switch
-                size='small'
-                checked={useImpactUrgency}
-                onChange={(e) => setUseImpactUrgency(e.target.checked)}
-                color='primary'
-              />
-            }
-            label={
-              <Typography variant='body2' fontWeight={500} fontSize='0.8rem'>
-                Use Impact and Urgency based Priorities
-              </Typography>
-            }
-            sx={{ mr: 0, ml: 0, gap: 0.75, width: { xs: '100%', sm: 'auto' } }}
-          />
-
-          <TextField
-            size='small'
-            placeholder='Search...'
-            value={tableSearch}
-            onChange={(e) => setTableSearch(e.target.value)}
-            className={classes.tableSearchField}
-            sx={{ ml: { xs: 0, sm: 'auto' } }}
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position='end'>
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
         </Box>
       </Paper>
 

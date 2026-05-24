@@ -17,6 +17,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 import { IConfigActivationRow, ITicketType } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
@@ -138,9 +139,9 @@ const ETAActivationSection = ({
       <AccordionDetails sx={{ p: 2 }}>
         <Paper variant='outlined' className={classes.actionToolbar}>
           <Box className={classes.toolbarButtons}>
-            {!selectedRow && (
-              <Tooltip title='Add a new ETA activation row'>
-                <span>
+            {!selectedRow ? (
+              <>
+                <Tooltip title='Add a new ETA Activation'>
                   <Button
                     size='small'
                     variant='contained'
@@ -157,53 +158,61 @@ const ETAActivationSection = ({
                   >
                     New
                   </Button>
-                </span>
-              </Tooltip>
+                </Tooltip>
+                <TextField
+                  size='small'
+                  placeholder='Search...'
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className={classes.tableSearchField}
+                  sx={{ ml: { xs: 0, sm: 'auto' } }}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <SearchIcon fontSize='small' />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </>
+            ) : (
+              <>
+                <Button
+                  size='small'
+                  variant='contained'
+                  startIcon={<EditIcon />}
+                  onClick={() => {
+                    setEditingRow(selectedRow);
+                    setDialogOpen(true);
+                  }}
+                  sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
+                >
+                  Edit
+                </Button>
+                <Button
+                  size='small'
+                  variant='outlined'
+                  color='error'
+                  startIcon={<DeleteIcon />}
+                  onClick={() => setDeleteOpen(true)}
+                  sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
+                >
+                  Delete
+                </Button>
+                <Box component='span' sx={{ display: { xs: 'none', sm: 'block' }, width: '1px', height: '20px', bgcolor: 'divider', mx: 0.75, alignSelf: 'center' }} />
+                <Button
+                  size='small'
+                  variant='outlined'
+                  startIcon={<ClearIcon />}
+                  onClick={() => setSelectedRowId(null)}
+                  sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
+                >
+                  Clear
+                </Button>
+              </>
             )}
-            {selectedRow && (
-              <Button
-                size='small'
-                variant='contained'
-                startIcon={<EditIcon />}
-                onClick={() => {
-                  setEditingRow(selectedRow);
-                  setDialogOpen(true);
-                }}
-                sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
-              >
-                Edit
-              </Button>
-            )}
-            {selectedRow && (
-              <Button
-                size='small'
-                variant='outlined'
-                color='error'
-                startIcon={<DeleteIcon />}
-                onClick={() => setDeleteOpen(true)}
-                sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
-              >
-                Delete
-              </Button>
-            )}
-
-            <TextField
-              size='small'
-              placeholder='Search...'
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={classes.tableSearchField}
-              sx={{ ml: { xs: 0, sm: 'auto' } }}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position='end'>
-                      <SearchIcon fontSize='small' />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
           </Box>
         </Paper>
 

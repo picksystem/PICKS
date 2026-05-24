@@ -196,23 +196,42 @@ const ReasonCodeTable: React.FC<ReasonCodeTableProps> = ({ config, rows, onSave 
         <Paper variant='outlined' className={classes.actionToolbar}>
           <Box className={classes.toolbarButtons}>
             {!selectedRow ? (
-              <Tooltip title={`Add a new ${config.title.toLowerCase()}`}>
-                <Button
-                  size='small'
-                  variant='contained'
-                  startIcon={<AddIcon />}
-                  onClick={openCreateDialog}
-                  sx={{
-                    textTransform: 'none',
-                    bgcolor: '#2d5ebb',
-                    '&:hover': {
+              <>
+                <Tooltip title='Add a new Reason Code'>
+                  <Button
+                    size='small'
+                    variant='contained'
+                    startIcon={<AddIcon />}
+                    onClick={openCreateDialog}
+                    sx={{
+                      textTransform: 'none',
                       bgcolor: '#2d5ebb',
+                      '&:hover': {
+                        bgcolor: '#2d5ebb',
+                      },
+                    }}
+                  >
+                    New
+                  </Button>
+                </Tooltip>
+                <TextField
+                  size='small'
+                  placeholder='Search...'
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className={classes.tableSearchField}
+                  sx={{ ml: { xs: 0, sm: 'auto' } }}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <SearchIcon fontSize='small' />
+                        </InputAdornment>
+                      ),
                     },
                   }}
-                >
-                  New
-                </Button>
-              </Tooltip>
+                />
+              </>
             ) : (
               <>
                 <Button
@@ -230,7 +249,6 @@ const ReasonCodeTable: React.FC<ReasonCodeTableProps> = ({ config, rows, onSave 
                 >
                   Edit
                 </Button>
-
                 <Button
                   size='small'
                   variant='outlined'
@@ -241,19 +259,17 @@ const ReasonCodeTable: React.FC<ReasonCodeTableProps> = ({ config, rows, onSave 
                 >
                   Delete
                 </Button>
-
                 <Box
                   component='span'
                   sx={{
                     display: { xs: 'none', sm: 'block' },
                     width: '1px',
                     height: '20px',
-                    bgcolor: alpha('#2d5ebb', 0.3),
+                    bgcolor: 'divider',
                     mx: 0.75,
                     alignSelf: 'center',
                   }}
                 />
-
                 <Button
                   size='small'
                   variant='outlined'
@@ -273,24 +289,6 @@ const ReasonCodeTable: React.FC<ReasonCodeTableProps> = ({ config, rows, onSave 
                 </Button>
               </>
             )}
-
-            <TextField
-              size='small'
-              placeholder='Search...'
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={classes.tableSearchField}
-              sx={{ ml: { xs: 0, sm: 'auto' } }}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position='end'>
-                      <SearchIcon fontSize='small' />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
           </Box>
         </Paper>
 

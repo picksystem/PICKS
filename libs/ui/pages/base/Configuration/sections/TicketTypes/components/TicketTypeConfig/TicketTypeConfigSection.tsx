@@ -104,140 +104,140 @@ const TicketTypeConfigSection = ({
           {/* ── Action Toolbar ── */}
           <Paper variant='outlined' className={classes.actionToolbar}>
             <Box className={classes.toolbarButtons}>
-              {!selectedRow && (
-                <Tooltip title='Add a new ticket type'>
+              {!selectedRow ? (
+                <>
+                  <Tooltip title='Add a new Ticket Type'>
+                    <Button
+                      size='small'
+                      variant='contained'
+                      startIcon={<AddIcon />}
+                      onClick={openAddDialog}
+                      sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                    >
+                      Add New Ticket Type
+                    </Button>
+                  </Tooltip>
+                  <Tooltip title='Set the display order of ticket types on the Create Ticket page'>
+                    <Button
+                      size='small'
+                      variant='outlined'
+                      color='primary'
+                      startIcon={<SortIcon />}
+                      onClick={() => setDisplaySequenceOpen(true)}
+                      sx={{ width: { xs: '100%', sm: 'auto' } }}
+                    >
+                      Display Sequence
+                    </Button>
+                  </Tooltip>
+                  <Divider
+                    orientation='vertical'
+                    flexItem
+                    className={classes.toolbarDivider}
+                    sx={{ mx: 0.5 }}
+                  />
+                  <FormControlLabel
+                    labelPlacement='start'
+                    control={
+                      <Switch
+                        checked={advancedDisplaySequences}
+                        onChange={(e) => setAdvancedDisplaySequences(e.target.checked)}
+                        size='small'
+                        color='primary'
+                      />
+                    }
+                    label={
+                      <Typography variant='body2' fontWeight={500} fontSize='0.82rem'>
+                        Use Advanced Number Display Sequences
+                      </Typography>
+                    }
+                    sx={{ mr: 0, ml: 0, gap: 1, width: { xs: '100%', sm: 'auto' } }}
+                  />
+                  <Divider
+                    orientation='vertical'
+                    flexItem
+                    className={classes.toolbarDivider}
+                    sx={{ mx: 0.5 }}
+                  />
+                  <Tooltip title='Configure advanced number sequences'>
+                    <Button
+                      size='small'
+                      variant='outlined'
+                      color='secondary'
+                      sx={{ width: { xs: '100%', sm: 'auto' } }}
+                    >
+                      Define Advanced Number Display Sequences
+                    </Button>
+                  </Tooltip>
+                  <Tooltip title='Configure application-specific number sequences'>
+                    <Button
+                      size='small'
+                      variant='outlined'
+                      color='secondary'
+                      sx={{ width: { xs: '100%', sm: 'auto' } }}
+                    >
+                      Define Application Specific Number Display Sequences
+                    </Button>
+                  </Tooltip>
+                  <TextField
+                    placeholder='Search...'
+                    value={tableSearch}
+                    onChange={(e) => setTableSearch(e.target.value)}
+                    className={classes.tableSearchField}
+                    sx={{ ml: { xs: 0, sm: 'auto' } }}
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position='end'>
+                            <SearchIcon />
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                </>
+              ) : (
+                <>
                   <Button
                     size='small'
                     variant='contained'
-                    startIcon={<AddIcon />}
-                    onClick={openAddDialog}
+                    startIcon={<EditIcon />}
+                    onClick={openEditSelected}
                     sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
                   >
-                    Add New Ticket Type
+                    Edit
                   </Button>
-                </Tooltip>
-              )}
-
-              {selectedRow && (
-                <Button
-                  size='small'
-                  variant='contained'
-                  startIcon={<EditIcon />}
-                  onClick={openEditSelected}
-                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-                >
-                  Edit
-                </Button>
-              )}
-
-              {selectedRow && (
-                <Button
-                  size='small'
-                  variant='outlined'
-                  color='error'
-                  startIcon={<DeleteIcon />}
-                  onClick={() => setConfirmDeleteOpen(true)}
-                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-                >
-                  Delete
-                </Button>
-              )}
-
-              {selectedRow && (
-                <Button
-                  size='small'
-                  variant='outlined'
-                  startIcon={<ClearIcon />}
-                  onClick={() => setSelectedRow(null)}
-                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-                >
-                  Clear
-                </Button>
-              )}
-
-              <Tooltip title='Set the display order of ticket types on the Create Ticket page'>
-                <Button
-                  size='small'
-                  variant='outlined'
-                  color='primary'
-                  startIcon={<SortIcon />}
-                  onClick={() => setDisplaySequenceOpen(true)}
-                  sx={{ width: { xs: '100%', sm: 'auto' } }}
-                >
-                  Display Sequence
-                </Button>
-              </Tooltip>
-
-              <Divider
-                orientation='vertical'
-                flexItem
-                className={classes.toolbarDivider}
-                sx={{ mx: 0.5 }}
-              />
-
-              <FormControlLabel
-                labelPlacement='start'
-                control={
-                  <Switch
-                    checked={advancedDisplaySequences}
-                    onChange={(e) => setAdvancedDisplaySequences(e.target.checked)}
+                  <Button
                     size='small'
-                    color='primary'
+                    variant='outlined'
+                    color='error'
+                    startIcon={<DeleteIcon />}
+                    onClick={() => setConfirmDeleteOpen(true)}
+                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    Delete
+                  </Button>
+                  <Box
+                    component='span'
+                    sx={{
+                      display: { xs: 'none', sm: 'block' },
+                      width: '1px',
+                      height: '20px',
+                      bgcolor: 'divider',
+                      mx: 0.75,
+                      alignSelf: 'center',
+                    }}
                   />
-                }
-                label={
-                  <Typography variant='body2' fontWeight={500} fontSize='0.82rem'>
-                    Use Advanced Number Display Sequences
-                  </Typography>
-                }
-                sx={{ mr: 0, ml: 0, gap: 1, width: { xs: '100%', sm: 'auto' } }}
-              />
-
-              <Divider
-                orientation='vertical'
-                flexItem
-                className={classes.toolbarDivider}
-                sx={{ mx: 0.5 }}
-              />
-
-              <Tooltip title='Configure advanced number sequences'>
-                <Button
-                  size='small'
-                  variant='outlined'
-                  color='secondary'
-                  sx={{ width: { xs: '100%', sm: 'auto' } }}
-                >
-                  Define Advanced Number Display Sequences
-                </Button>
-              </Tooltip>
-
-              <Tooltip title='Configure application-specific number sequences'>
-                <Button
-                  size='small'
-                  variant='outlined'
-                  color='secondary'
-                  sx={{ width: { xs: '100%', sm: 'auto' } }}
-                >
-                  Define Application Specific Number Display Sequences
-                </Button>
-              </Tooltip>
-
-              <TextField
-                placeholder='Search...'
-                value={tableSearch}
-                onChange={(e) => setTableSearch(e.target.value)}
-                className={classes.tableSearchField}
-                sx={{ ml: { xs: 0, sm: 'auto' } }}
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position='end'>
-                        <SearchIcon />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    startIcon={<ClearIcon />}
+                    onClick={() => setSelectedRow(null)}
+                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    Clear
+                  </Button>
+                </>
+              )}
             </Box>
           </Paper>
 

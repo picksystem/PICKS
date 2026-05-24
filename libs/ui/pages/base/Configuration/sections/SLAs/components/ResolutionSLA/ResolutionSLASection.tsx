@@ -17,6 +17,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ClearIcon from '@mui/icons-material/Clear';
 import RestoreIcon from '@mui/icons-material/Restore';
 import SearchIcon from '@mui/icons-material/Search';
 import { IConfigResponseAckSLARow, ITicketType } from '@serviceops/interfaces';
@@ -147,87 +148,104 @@ const ResolutionSLASection = ({
       <AccordionDetails sx={{ p: 2 }}>
         <Paper variant='outlined' className={classes.actionToolbar} sx={{ mt: 2 }}>
           <Box className={classes.toolbarButtons}>
-            {!selectedRow && (
-              <Tooltip title='Add a new resolution SLA row'>
-                <span>
+            {!selectedRow ? (
+              <>
+                <Tooltip title='Add a new Resolution SLA'>
+                  <span>
+                    <Button
+                      size='small'
+                      variant='contained'
+                      startIcon={<AddIcon />}
+                      onClick={() => {
+                        setEditingRow(null);
+                        setDialogOpen(true);
+                      }}
+                      disabled={
+                        activeTicketTypes.length > 0 &&
+                        usedTicketTypeIds.length >= activeTicketTypes.length
+                      }
+                      sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
+                    >
+                      New
+                    </Button>
+                  </span>
+                </Tooltip>
+                <Tooltip title='Reset all rows to system default values'>
                   <Button
                     size='small'
-                    variant='contained'
-                    startIcon={<AddIcon />}
-                    onClick={() => {
-                      setEditingRow(null);
-                      setDialogOpen(true);
-                    }}
-                    disabled={
-                      activeTicketTypes.length > 0 &&
-                      usedTicketTypeIds.length >= activeTicketTypes.length
-                    }
+                    variant='outlined'
+                    color='secondary'
+                    startIcon={<RestoreIcon />}
+                    onClick={onLoadDefaults}
                     sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
                   >
-                    New
+                    Load System Defaults
                   </Button>
-                </span>
-              </Tooltip>
+                </Tooltip>
+                <TextField
+                  size='small'
+                  placeholder='Search...'
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className={classes.tableSearchField}
+                  sx={{ ml: { xs: 0, sm: 'auto' } }}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <SearchIcon fontSize='small' />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </>
+            ) : (
+              <>
+                <Button
+                  size='small'
+                  variant='contained'
+                  startIcon={<EditIcon />}
+                  onClick={() => {
+                    setEditingRow(selectedRow);
+                    setDialogOpen(true);
+                  }}
+                  sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
+                >
+                  Edit
+                </Button>
+                <Button
+                  size='small'
+                  variant='outlined'
+                  color='error'
+                  startIcon={<DeleteIcon />}
+                  onClick={() => setDeleteOpen(true)}
+                  sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
+                >
+                  Delete
+                </Button>
+                <Box
+                  component='span'
+                  sx={{
+                    display: { xs: 'none', sm: 'block' },
+                    width: '1px',
+                    height: '20px',
+                    bgcolor: 'divider',
+                    mx: 0.75,
+                    alignSelf: 'center',
+                  }}
+                />
+                <Button
+                  size='small'
+                  variant='outlined'
+                  startIcon={<ClearIcon />}
+                  onClick={() => setSelectedRowId(null)}
+                  sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
+                >
+                  Clear
+                </Button>
+              </>
             )}
-
-            {selectedRow && (
-              <Button
-                size='small'
-                variant='contained'
-                startIcon={<EditIcon />}
-                onClick={() => {
-                  setEditingRow(selectedRow);
-                  setDialogOpen(true);
-                }}
-                sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
-              >
-                Edit
-              </Button>
-            )}
-
-            {selectedRow && (
-              <Button
-                size='small'
-                variant='outlined'
-                color='error'
-                startIcon={<DeleteIcon />}
-                onClick={() => setDeleteOpen(true)}
-                sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
-              >
-                Delete
-              </Button>
-            )}
-
-            <Tooltip title='Reset all rows to system default values'>
-              <Button
-                size='small'
-                variant='outlined'
-                color='secondary'
-                startIcon={<RestoreIcon />}
-                onClick={onLoadDefaults}
-                sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
-              >
-                Load System Defaults
-              </Button>
-            </Tooltip>
-
-            <TextField
-              size='small'
-              placeholder='Search...'
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={classes.tableSearchField}
-              sx={{ ml: { xs: 0, sm: 'auto' } }}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position='end'>
-                      <SearchIcon fontSize='small' />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
           </Box>
         </Paper>
 

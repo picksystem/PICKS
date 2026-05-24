@@ -26,6 +26,7 @@ import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import ClearIcon from '@mui/icons-material/Clear';
 import { IConfigStatusLevel } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
@@ -483,20 +484,38 @@ const ReleaseCycleStatusesSection = ({
       <AccordionDetails sx={{ p: 2 }}>
         <Paper variant='outlined' className={classes.actionToolbar}>
           <Box className={classes.toolbarButtons}>
-            {!relSelectedId && (
-              <Tooltip title='Add a new release cycle status'>
-                <Button
+            {!relSelectedId ? (
+              <>
+                <Tooltip title='Add a new Release Cycle Status'>
+                  <Button
+                    size='small'
+                    variant='contained'
+                    startIcon={<AddIcon />}
+                    onClick={handleRelOpenAdd}
+                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    New
+                  </Button>
+                </Tooltip>
+                <TextField
                   size='small'
-                  variant='contained'
-                  startIcon={<AddIcon />}
-                  onClick={handleRelOpenAdd}
-                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-                >
-                  New
-                </Button>
-              </Tooltip>
-            )}
-            {relSelectedId && (
+                  placeholder='Search...'
+                  value={relSearch}
+                  onChange={(e) => setRelSearch(e.target.value)}
+                  className={classes.tableSearchField}
+                  sx={{ ml: { xs: 0, sm: 'auto' } }}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <SearchIcon />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </>
+            ) : (
               <>
                 <Button
                   size='small'
@@ -517,43 +536,18 @@ const ReleaseCycleStatusesSection = ({
                 >
                   Delete
                 </Button>
+                <Box component='span' sx={{ display: { xs: 'none', sm: 'block' }, width: '1px', height: '20px', bgcolor: 'divider', mx: 0.75, alignSelf: 'center' }} />
+                <Button
+                  size='small'
+                  variant='outlined'
+                  startIcon={<ClearIcon />}
+                  onClick={() => setRelSelectedId(null)}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  Clear
+                </Button>
               </>
             )}
-            <Divider orientation='vertical' flexItem className={classes.toolbarDivider} />
-            <FormControlLabel
-              labelPlacement='start'
-              control={
-                <Switch
-                  size='small'
-                  checked={relLoadDefaults}
-                  onChange={(e) => handleRelLoadDefaults(e.target.checked)}
-                  color='warning'
-                />
-              }
-              label={
-                <Typography variant='body2' fontWeight={500} fontSize='0.8rem'>
-                  Load system default values
-                </Typography>
-              }
-              sx={{ mr: 0, ml: 0, gap: 0.75, width: { xs: '100%', sm: 'auto' } }}
-            />
-            <TextField
-              size='small'
-              placeholder='Search...'
-              value={relSearch}
-              onChange={(e) => setRelSearch(e.target.value)}
-              className={classes.tableSearchField}
-              sx={{ ml: { xs: 0, sm: 'auto' } }}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position='end'>
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
           </Box>
         </Paper>
         <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>

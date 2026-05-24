@@ -17,6 +17,7 @@ import SpeedIcon from '@mui/icons-material/Speed';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ClearIcon from '@mui/icons-material/Clear';
 import { SimpleLevel } from '../../util';
 import { useStyles } from '../../styles';
 import {
@@ -322,21 +323,38 @@ const UrgencySection = ({
     <>
       <Paper variant='outlined' className={classes.actionToolbar}>
         <Box className={classes.toolbarButtons}>
-          {!selectedId && (
-            <Tooltip title='Add a new urgency'>
-              <Button
+          {!selectedId ? (
+            <>
+              <Tooltip title='Add a new Urgency'>
+                <Button
+                  size='small'
+                  variant='contained'
+                  startIcon={<AddIcon />}
+                  onClick={handleOpenAdd}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  Add New Urgency
+                </Button>
+              </Tooltip>
+              <TextField
                 size='small'
-                variant='contained'
-                startIcon={<AddIcon />}
-                onClick={handleOpenAdd}
-                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-              >
-                Add New Urgency
-              </Button>
-            </Tooltip>
-          )}
-
-          {selectedId && (
+                placeholder='Search...'
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className={classes.tableSearchField}
+                sx={{ ml: { xs: 0, sm: 'auto' } }}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <SearchIcon />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </>
+          ) : (
             <>
               <Button
                 size='small'
@@ -357,46 +375,18 @@ const UrgencySection = ({
               >
                 Delete
               </Button>
+              <Box component='span' sx={{ display: { xs: 'none', sm: 'block' }, width: '1px', height: '20px', bgcolor: 'divider', mx: 0.75, alignSelf: 'center' }} />
+              <Button
+                size='small'
+                variant='outlined'
+                startIcon={<ClearIcon />}
+                onClick={() => setSelectedId(null)}
+                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+              >
+                Clear
+              </Button>
             </>
           )}
-
-          <Divider orientation='vertical' flexItem className={classes.toolbarDivider} />
-
-          <FormControlLabel
-            labelPlacement='start'
-            control={
-              <Switch
-                size='small'
-                checked={loadDefaults}
-                onChange={(e) => handleLoadDefaults(e.target.checked)}
-                color='warning'
-              />
-            }
-            label={
-              <Typography variant='body2' fontWeight={500} fontSize='0.8rem'>
-                Load system default values
-              </Typography>
-            }
-            sx={{ mr: 0, ml: 0, gap: 0.75, width: { xs: '100%', sm: 'auto' } }}
-          />
-
-          <TextField
-            size='small'
-            placeholder='Search...'
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className={classes.tableSearchField}
-            sx={{ ml: { xs: 0, sm: 'auto' } }}
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position='end'>
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
         </Box>
       </Paper>
       <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>

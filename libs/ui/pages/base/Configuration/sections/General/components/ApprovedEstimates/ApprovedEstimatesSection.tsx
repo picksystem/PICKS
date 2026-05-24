@@ -260,75 +260,86 @@ const ApprovedEstimatesSection = ({
           {/* ── Toolbar ── */}
           <Paper variant='outlined' className={classes.actionToolbar}>
             <Box className={classes.toolbarButtons} sx={{ flexWrap: 'wrap', gap: 0.75 }}>
-              {!selectedRow && (
-                <Tooltip title='Add a new approved estimate row'>
-                  <span>
-                    <Button
-                      size='small'
-                      variant='contained'
-                      startIcon={<AddIcon />}
-                      onClick={() => {
-                        setEditingRow(null);
-                        setDialogOpen(true);
-                      }}
-                      disabled={
-                        activeTicketTypes.length > 0 &&
-                        usedTicketTypeIds.length >= activeTicketTypes.length
-                      }
-                      sx={{
-                        width: { xs: '100%', sm: 'auto' },
-                        textTransform: 'none',
-                        bgcolor: '#2d5ebb',
-                        '&:hover': { bgcolor: '#2d5ebb' },
-                      }}
-                    >
-                      New
-                    </Button>
-                  </span>
-                </Tooltip>
-              )}
-
-              {selectedRow && (
-                <Button
-                  size='small'
-                  variant='contained'
-                  startIcon={<EditIcon />}
-                  onClick={() => {
-                    setEditingRow(selectedRow);
-                    setDialogOpen(true);
-                  }}
-                  sx={{
-                    textTransform: 'none',
-                    bgcolor: '#2d5ebb',
-                    '&:hover': { bgcolor: '#2d5ebb' },
-                  }}
-                >
-                  Edit
-                </Button>
-              )}
-
-              {selectedRow && (
-                <Button
-                  size='small'
-                  variant='outlined'
-                  color='error'
-                  startIcon={<DeleteIcon />}
-                  onClick={() => setDeleteOpen(true)}
-                  sx={{ textTransform: 'none' }}
-                >
-                  Delete
-                </Button>
-              )}
-
-              {selectedRow && (
+              {!selectedRow ? (
                 <>
+                  <Tooltip title='Add a new Approved Estimate'>
+                    <span>
+                      <Button
+                        size='small'
+                        variant='contained'
+                        startIcon={<AddIcon />}
+                        onClick={() => {
+                          setEditingRow(null);
+                          setDialogOpen(true);
+                        }}
+                        disabled={
+                          activeTicketTypes.length > 0 &&
+                          usedTicketTypeIds.length >= activeTicketTypes.length
+                        }
+                        sx={{
+                          width: { xs: '100%', sm: 'auto' },
+                          textTransform: 'none',
+                          bgcolor: '#2d5ebb',
+                          '&:hover': { bgcolor: '#2d5ebb' },
+                        }}
+                      >
+                        New
+                      </Button>
+                    </span>
+                  </Tooltip>
+                  <TextField
+                    size='small'
+                    placeholder='Search...'
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className={classes.tableSearchField}
+                    sx={{ ml: 'auto' }}
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position='end'>
+                            <SearchIcon fontSize='small' />
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                </>
+              ) : (
+                <>
+                  <Button
+                    size='small'
+                    variant='contained'
+                    startIcon={<EditIcon />}
+                    onClick={() => {
+                      setEditingRow(selectedRow);
+                      setDialogOpen(true);
+                    }}
+                    sx={{
+                      textTransform: 'none',
+                      bgcolor: '#2d5ebb',
+                      '&:hover': { bgcolor: '#2d5ebb' },
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    color='error'
+                    startIcon={<DeleteIcon />}
+                    onClick={() => setDeleteOpen(true)}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    Delete
+                  </Button>
                   <Box
                     component='span'
                     sx={{
                       display: { xs: 'none', sm: 'block' },
                       width: '1px',
                       height: '20px',
-                      bgcolor: alpha('#2d5ebb', 0.3),
+                      bgcolor: 'divider',
                       mx: 0.75,
                       alignSelf: 'center',
                     }}
@@ -352,24 +363,6 @@ const ApprovedEstimatesSection = ({
                   </Button>
                 </>
               )}
-
-              <TextField
-                size='small'
-                placeholder='Search...'
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className={classes.tableSearchField}
-                sx={{ ml: 'auto' }}
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position='end'>
-                        <SearchIcon fontSize='small' />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
             </Box>
           </Paper>
 

@@ -518,24 +518,43 @@ const WorkingDayTemplatesSection = ({ data, onDataChange }: WorkingDayTemplatesS
           <Paper variant='outlined' className={classes.actionToolbar}>
             <Box className={classes.toolbarButtons}>
               {!selectedRow ? (
-                <Tooltip title='Add new working day template'>
-                  <Button
+                <>
+                  <Tooltip title='Add a new Working Day Template'>
+                    <Button
+                      size='small'
+                      variant='contained'
+                      startIcon={<AddIcon />}
+                      onClick={() => {
+                        setEditingRow(null);
+                        setDialogOpen(true);
+                      }}
+                      sx={{
+                        textTransform: 'none',
+                        bgcolor: '#2d5ebb',
+                        '&:hover': { bgcolor: alpha('#2d5ebb', 0.85) },
+                      }}
+                    >
+                      New
+                    </Button>
+                  </Tooltip>
+                  <TextField
                     size='small'
-                    variant='contained'
-                    startIcon={<AddIcon />}
-                    onClick={() => {
-                      setEditingRow(null);
-                      setDialogOpen(true);
+                    placeholder='Search…'
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className={classes.tableSearchField}
+                    sx={{ ml: { xs: 0, sm: 'auto' } }}
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position='end'>
+                            <SearchIcon fontSize='small' />
+                          </InputAdornment>
+                        ),
+                      },
                     }}
-                    sx={{
-                      textTransform: 'none',
-                      bgcolor: '#2d5ebb',
-                      '&:hover': { bgcolor: alpha('#2d5ebb', 0.85) },
-                    }}
-                  >
-                    New
-                  </Button>
-                </Tooltip>
+                  />
+                </>
               ) : (
                 <>
                   <Button
@@ -570,7 +589,7 @@ const WorkingDayTemplatesSection = ({ data, onDataChange }: WorkingDayTemplatesS
                       display: { xs: 'none', sm: 'block' },
                       width: '1px',
                       height: '20px',
-                      bgcolor: alpha('#2d5ebb', 0.3),
+                      bgcolor: 'divider',
                       mx: 0.75,
                       alignSelf: 'center',
                     }}
@@ -586,24 +605,6 @@ const WorkingDayTemplatesSection = ({ data, onDataChange }: WorkingDayTemplatesS
                   </Button>
                 </>
               )}
-
-              <TextField
-                size='small'
-                placeholder='Search…'
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className={classes.tableSearchField}
-                sx={{ ml: { xs: 0, sm: 'auto' } }}
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position='end'>
-                        <SearchIcon fontSize='small' />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
             </Box>
           </Paper>
 

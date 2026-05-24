@@ -30,7 +30,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   actionToolbar: {
-    padding: `${theme.spacing(1)} ${theme.spacing(1.5)}`,
+    padding: '8px 12px',
     marginBottom: theme.spacing(1.5),
     display: 'flex',
     flexDirection: 'column' as const,

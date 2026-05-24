@@ -246,7 +246,7 @@ export const PanelToolbar = ({
         borderTop: 'none',
         borderBottom: 'none',
         px: 1.5,
-        py: 1,
+        py: 0.75,
         display: 'flex',
         flexDirection: 'column',
         gap: 0.5,
@@ -302,7 +302,7 @@ export const PanelToolbar = ({
                 display: { xs: 'block', sm: 'none' },
                 width: '100%',
                 height: '1px',
-                bgcolor: alpha('#2d5ebb', 0.3),
+                bgcolor: 'divider',
                 my: 0.5,
               }}
             />
@@ -312,7 +312,7 @@ export const PanelToolbar = ({
                 display: { xs: 'none', sm: 'block' },
                 width: '1px',
                 height: '20px',
-                bgcolor: alpha('#2d5ebb', 0.3),
+                bgcolor: 'divider',
                 mx: 0.75,
                 alignSelf: 'center',
               }}

@@ -9,6 +9,7 @@ import {
   Column,
   Chip,
   Switch,
+  Tooltip,
 } from '@serviceops/component';
 import {
   Accordion,
@@ -375,6 +376,7 @@ const ApplicationsSection = ({
               variant={activePanel === 'approvals' ? 'contained' : 'outlined'}
               color='primary'
               onClick={() => togglePanel('approvals')}
+              sx={{ textTransform: 'none' }}
             >
               Approvals
             </Button>
@@ -384,6 +386,7 @@ const ApplicationsSection = ({
               variant={activePanel === 'ticketTypes' ? 'contained' : 'outlined'}
               color='primary'
               onClick={() => togglePanel('ticketTypes')}
+              sx={{ textTransform: 'none' }}
             >
               Enable / Disable Ticket Types
             </Button>
@@ -393,6 +396,7 @@ const ApplicationsSection = ({
               variant={activePanel === 'supportLines' ? 'contained' : 'outlined'}
               color='primary'
               onClick={() => togglePanel('supportLines')}
+              sx={{ textTransform: 'none' }}
             >
               Support Lines / Queues
             </Button>
@@ -402,6 +406,7 @@ const ApplicationsSection = ({
               variant={activePanel === 'billingCodes' ? 'contained' : 'outlined'}
               color='primary'
               onClick={() => togglePanel('billingCodes')}
+              sx={{ textTransform: 'none' }}
             >
               Billing Codes
             </Button>
@@ -411,6 +416,7 @@ const ApplicationsSection = ({
               variant={activePanel === 'timesheet' ? 'contained' : 'outlined'}
               color='primary'
               onClick={() => togglePanel('timesheet')}
+              sx={{ textTransform: 'none' }}
             >
               Add Timesheet Projects
             </Button>
@@ -420,6 +426,7 @@ const ApplicationsSection = ({
               variant={activePanel === 'stickyNote' ? 'contained' : 'outlined'}
               color='primary'
               onClick={() => togglePanel('stickyNote')}
+              sx={{ textTransform: 'none' }}
             >
               Add Sticky Note
             </Button>
@@ -429,6 +436,7 @@ const ApplicationsSection = ({
               variant={activePanel === 'expenses' ? 'contained' : 'outlined'}
               color='primary'
               onClick={() => togglePanel('expenses')}
+              sx={{ textTransform: 'none' }}
             >
               Add Expenses Projects
             </Button>
@@ -455,29 +463,51 @@ const ApplicationsSection = ({
               <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_w }}>
                 Applications
               </Typography>
-              <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
-                {rows.length} application{rows.length !== 1 ? 's' : ''}
-              </Typography>
             </Box>
 
             <Paper
               variant='outlined'
-              sx={{ borderRadius: 0, borderTop: 'none', borderBottom: 'none', px: 1.5, py: 1 }}
+              sx={{ borderRadius: 0, borderTop: 'none', borderBottom: 'none', px: 1.5, py: 0.75 }}
             >
               <Box className={classes.toolbarButtons}>
                 {!selectedRow ? (
-                  <Button
-                    size='small'
-                    variant='contained'
-                    startIcon={<AddIcon />}
-                    onClick={() => {
-                      setEditingRow(null);
-                      setDialogOpen(true);
-                    }}
-                    sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
-                  >
-                    New
-                  </Button>
+                  <>
+                    <Tooltip title='Add a new Application'>
+                      <Button
+                        size='small'
+                        variant='contained'
+                        startIcon={<AddIcon />}
+                        onClick={() => {
+                          setEditingRow(null);
+                          setDialogOpen(true);
+                        }}
+                        sx={{
+                          bgcolor: '#2d5ebb',
+                          '&:hover': { bgcolor: '#2d5ebb' },
+                          textTransform: 'none',
+                        }}
+                      >
+                        New
+                      </Button>
+                    </Tooltip>
+                    <TextField
+                      size='small'
+                      placeholder='Search…'
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className={classes.tableSearchField}
+                      sx={{ ml: { xs: 0, sm: 'auto' } }}
+                      slotProps={{
+                        input: {
+                          endAdornment: (
+                            <InputAdornment position='end'>
+                              <SearchIcon sx={{ fontSize: '1rem' }} />
+                            </InputAdornment>
+                          ),
+                        },
+                      }}
+                    />
+                  </>
                 ) : (
                   <>
                     <Button
@@ -488,7 +518,11 @@ const ApplicationsSection = ({
                         setEditingRow(selectedRow);
                         setDialogOpen(true);
                       }}
-                      sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
+                      sx={{
+                        bgcolor: '#2d5ebb',
+                        '&:hover': { bgcolor: '#2d5ebb' },
+                        textTransform: 'none',
+                      }}
                     >
                       Edit
                     </Button>
@@ -498,6 +532,7 @@ const ApplicationsSection = ({
                       color='error'
                       startIcon={<DeleteIcon />}
                       onClick={() => setDeleteOpen(true)}
+                      sx={{ textTransform: 'none' }}
                     >
                       Delete
                     </Button>
@@ -507,7 +542,7 @@ const ApplicationsSection = ({
                         display: { xs: 'none', sm: 'block' },
                         width: '1px',
                         height: '20px',
-                        bgcolor: alpha('#2d5ebb', 0.3),
+                        bgcolor: 'divider',
                         mx: 0.75,
                         alignSelf: 'center',
                       }}
@@ -517,28 +552,12 @@ const ApplicationsSection = ({
                       variant='outlined'
                       startIcon={<ClearIcon />}
                       onClick={() => setSelectedId(null)}
+                      sx={{ textTransform: 'none' }}
                     >
                       Clear
                     </Button>
                   </>
                 )}
-                <TextField
-                  size='small'
-                  placeholder='Search…'
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className={classes.tableSearchField}
-                  sx={{ ml: { xs: 0, sm: 'auto' } }}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position='end'>
-                          <SearchIcon sx={{ fontSize: '1rem' }} />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
               </Box>
             </Paper>
 
@@ -897,61 +916,85 @@ const AppApprovalsPanel = ({
         <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_w }}>
           Application Approvals
         </Typography>
-        <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
-          {allRows.length} approver{allRows.length !== 1 ? 's' : ''}
-        </Typography>
       </Box>
       <Paper
         variant='outlined'
-        sx={{ borderRadius: 0, borderTop: 'none', borderBottom: 'none', px: 1.5, py: 1 }}
+        sx={{ borderRadius: 0, borderTop: 'none', borderBottom: 'none', px: 1.5, py: 0.75 }}
       >
         <Box className={classes.toolbarButtons}>
           {!selectedRow ? (
-            <Button
-              size='small'
-              variant='contained'
-              startIcon={<AddIcon />}
-              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
-              onClick={() => {
-                setEditingRow(null);
-                setDialogOpen(true);
-              }}
-            >
-              New
-            </Button>
-          ) : (
-            <Button
-              size='small'
-              variant='contained'
-              startIcon={<EditIcon />}
-              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
-              onClick={() => {
-                setEditingRow(selectedRow);
-                setDialogOpen(true);
-              }}
-            >
-              Edit
-            </Button>
-          )}
-          {selectedRow && (
-            <Button
-              size='small'
-              variant='outlined'
-              color='error'
-              startIcon={<DeleteIcon />}
-              onClick={() => setDeleteOpen(true)}
-            >
-              Delete
-            </Button>
-          )}
-          {selectedRow && (
             <>
-              <Box
+              <Button
+                size='small'
+                variant='contained'
+                startIcon={<AddIcon />}
                 sx={{
+                  bgcolor: '#2d5ebb',
+                  '&:hover': { bgcolor: '#2d5ebb' },
+                  textTransform: 'none',
+                }}
+                onClick={() => {
+                  setEditingRow(null);
+                  setDialogOpen(true);
+                }}
+              >
+                New
+              </Button>
+              <TextField
+                size='small'
+                placeholder='Search…'
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className={classes.tableSearchField}
+                sx={{ ml: { xs: 0, sm: 'auto' } }}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <SearchIcon sx={{ fontSize: '1rem' }} />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </>
+          ) : (
+            <>
+              <Button
+                size='small'
+                variant='contained'
+                startIcon={<EditIcon />}
+                sx={{
+                  bgcolor: '#2d5ebb',
+                  '&:hover': { bgcolor: '#2d5ebb' },
+                  textTransform: 'none',
+                }}
+                onClick={() => {
+                  setEditingRow(selectedRow);
+                  setDialogOpen(true);
+                }}
+              >
+                Edit
+              </Button>
+              <Button
+                size='small'
+                variant='outlined'
+                color='error'
+                startIcon={<DeleteIcon />}
+                onClick={() => setDeleteOpen(true)}
+                sx={{ textTransform: 'none' }}
+              >
+                Delete
+              </Button>
+              <Box
+                component='span'
+                sx={{
+                  display: { xs: 'none', sm: 'block' },
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha('#2d5ebb', 0.3),
-                  display: { xs: 'none', sm: 'block' },
+                  bgcolor: 'divider',
+                  mx: 0.75,
+                  alignSelf: 'center',
                 }}
               />
               <Button
@@ -959,28 +1002,12 @@ const AppApprovalsPanel = ({
                 variant='outlined'
                 startIcon={<ClearIcon />}
                 onClick={() => setSelectedId(null)}
+                sx={{ textTransform: 'none' }}
               >
                 Clear
               </Button>
             </>
           )}
-          <TextField
-            size='small'
-            placeholder='Search…'
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className={classes.tableSearchField}
-            sx={{ ml: { xs: 0, sm: 'auto' } }}
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position='end'>
-                    <SearchIcon sx={{ fontSize: '1rem' }} />
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
         </Box>
       </Paper>
       <Paper
@@ -1172,11 +1199,7 @@ const AppTicketTypePanel = ({
               borderBottom: '1px solid',
               borderColor: alpha('#2d5ebb', 0.12),
             }}
-          >
-            <Typography variant='caption' color='text.secondary'>
-              {enabledCount} of {rows.length} ticket types enabled
-            </Typography>
-          </Box>
+          />
           <Table size='small'>
             <TableHead>
               <TableRow sx={{ bgcolor: alpha('#2d5ebb', 0.04) }}>
@@ -1437,34 +1460,37 @@ const AppSupportLinesPanel = ({
         <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_w }}>
           Application Specific Support Lines / Queues
         </Typography>
-        <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
-          {allRows.length} support line{allRows.length !== 1 ? 's' : ''}
-        </Typography>
       </Box>
       <Paper
         variant='outlined'
-        sx={{ borderRadius: 0, borderTop: 'none', borderBottom: 'none', px: 1.5, py: 1 }}
+        sx={{ borderRadius: 0, borderTop: 'none', borderBottom: 'none', px: 1.5, py: 0.75 }}
       >
         <Box className={classes.toolbarButtons}>
           {!selectedRow ? (
-            <Button
-              size='small'
-              variant='contained'
-              startIcon={<AddIcon />}
-              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
-              onClick={() => {
-                setEditingRow(null);
-                setDialogOpen(true);
-              }}
-            >
-              New
-            </Button>
+            <Tooltip title='Add a new Support Line / Queue'>
+              <Button
+                size='small'
+                variant='contained'
+                startIcon={<AddIcon />}
+                sx={{
+                  bgcolor: '#2d5ebb',
+                  '&:hover': { bgcolor: '#2d5ebb' },
+                  textTransform: 'none',
+                }}
+                onClick={() => {
+                  setEditingRow(null);
+                  setDialogOpen(true);
+                }}
+              >
+                New
+              </Button>
+            </Tooltip>
           ) : (
             <Button
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' }, textTransform: 'none' }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -1480,6 +1506,7 @@ const AppSupportLinesPanel = ({
               color='error'
               startIcon={<DeleteIcon />}
               onClick={() => setDeleteOpen(true)}
+              sx={{ textTransform: 'none' }}
             >
               Delete
             </Button>
@@ -1487,11 +1514,14 @@ const AppSupportLinesPanel = ({
           {selectedRow && (
             <>
               <Box
+                component='span'
                 sx={{
+                  display: { xs: 'none', sm: 'block' },
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha('#2d5ebb', 0.3),
-                  display: { xs: 'none', sm: 'block' },
+                  bgcolor: 'divider',
+                  mx: 0.75,
+                  alignSelf: 'center',
                 }}
               />
               <Button
@@ -1499,6 +1529,7 @@ const AppSupportLinesPanel = ({
                 variant='outlined'
                 startIcon={<ClearIcon />}
                 onClick={() => setSelectedId(null)}
+                sx={{ textTransform: 'none' }}
               >
                 Clear
               </Button>
@@ -1821,34 +1852,37 @@ const AppBillingCodesPanel = ({
         <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_w }}>
           Application Specific Time Entry Billing Codes
         </Typography>
-        <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
-          {allRows.length} code{allRows.length !== 1 ? 's' : ''}
-        </Typography>
       </Box>
       <Paper
         variant='outlined'
-        sx={{ borderRadius: 0, borderTop: 'none', borderBottom: 'none', px: 1.5, py: 1 }}
+        sx={{ borderRadius: 0, borderTop: 'none', borderBottom: 'none', px: 1.5, py: 0.75 }}
       >
         <Box className={classes.toolbarButtons}>
           {!selectedRow ? (
-            <Button
-              size='small'
-              variant='contained'
-              startIcon={<AddIcon />}
-              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
-              onClick={() => {
-                setEditingRow(null);
-                setDialogOpen(true);
-              }}
-            >
-              New
-            </Button>
+            <Tooltip title='Add a new Billing Code'>
+              <Button
+                size='small'
+                variant='contained'
+                startIcon={<AddIcon />}
+                sx={{
+                  bgcolor: '#2d5ebb',
+                  '&:hover': { bgcolor: '#2d5ebb' },
+                  textTransform: 'none',
+                }}
+                onClick={() => {
+                  setEditingRow(null);
+                  setDialogOpen(true);
+                }}
+              >
+                New
+              </Button>
+            </Tooltip>
           ) : (
             <Button
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' }, textTransform: 'none' }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -1864,6 +1898,7 @@ const AppBillingCodesPanel = ({
               color='error'
               startIcon={<DeleteIcon />}
               onClick={() => setDeleteOpen(true)}
+              sx={{ textTransform: 'none' }}
             >
               Delete
             </Button>
@@ -1871,11 +1906,14 @@ const AppBillingCodesPanel = ({
           {selectedRow && (
             <>
               <Box
+                component='span'
                 sx={{
+                  display: { xs: 'none', sm: 'block' },
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha('#2d5ebb', 0.3),
-                  display: { xs: 'none', sm: 'block' },
+                  bgcolor: 'divider',
+                  mx: 0.75,
+                  alignSelf: 'center',
                 }}
               />
               <Button
@@ -1883,6 +1921,7 @@ const AppBillingCodesPanel = ({
                 variant='outlined'
                 startIcon={<ClearIcon />}
                 onClick={() => setSelectedId(null)}
+                sx={{ textTransform: 'none' }}
               >
                 Clear
               </Button>
@@ -2226,34 +2265,37 @@ const AppTimesheetPanel = ({
         <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_w }}>
           Add Timesheet Projects
         </Typography>
-        <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
-          {allRows.length} project{allRows.length !== 1 ? 's' : ''}
-        </Typography>
       </Box>
       <Paper
         variant='outlined'
-        sx={{ borderRadius: 0, borderTop: 'none', borderBottom: 'none', px: 1.5, py: 1 }}
+        sx={{ borderRadius: 0, borderTop: 'none', borderBottom: 'none', px: 1.5, py: 0.75 }}
       >
         <Box className={classes.toolbarButtons}>
           {!selectedRow ? (
-            <Button
-              size='small'
-              variant='contained'
-              startIcon={<AddIcon />}
-              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
-              onClick={() => {
-                setEditingRow(null);
-                setDialogOpen(true);
-              }}
-            >
-              New
-            </Button>
+            <Tooltip title='Add a new Timesheet Project'>
+              <Button
+                size='small'
+                variant='contained'
+                startIcon={<AddIcon />}
+                sx={{
+                  bgcolor: '#2d5ebb',
+                  '&:hover': { bgcolor: '#2d5ebb' },
+                  textTransform: 'none',
+                }}
+                onClick={() => {
+                  setEditingRow(null);
+                  setDialogOpen(true);
+                }}
+              >
+                New
+              </Button>
+            </Tooltip>
           ) : (
             <Button
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' }, textTransform: 'none' }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -2269,6 +2311,7 @@ const AppTimesheetPanel = ({
               color='error'
               startIcon={<DeleteIcon />}
               onClick={() => setDeleteOpen(true)}
+              sx={{ textTransform: 'none' }}
             >
               Delete
             </Button>
@@ -2276,11 +2319,14 @@ const AppTimesheetPanel = ({
           {selectedRow && (
             <>
               <Box
+                component='span'
                 sx={{
+                  display: { xs: 'none', sm: 'block' },
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha('#2d5ebb', 0.3),
-                  display: { xs: 'none', sm: 'block' },
+                  bgcolor: 'divider',
+                  mx: 0.75,
+                  alignSelf: 'center',
                 }}
               />
               <Button
@@ -2288,6 +2334,7 @@ const AppTimesheetPanel = ({
                 variant='outlined'
                 startIcon={<ClearIcon />}
                 onClick={() => setSelectedId(null)}
+                sx={{ textTransform: 'none' }}
               >
                 Clear
               </Button>
@@ -2741,34 +2788,37 @@ const AppExpensePanel = ({
         <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: ACCENT_w }}>
           Add Expenses Projects
         </Typography>
-        <Typography variant='caption' color='text.secondary' sx={{ ml: 'auto' }}>
-          {allRows.length} project{allRows.length !== 1 ? 's' : ''}
-        </Typography>
       </Box>
       <Paper
         variant='outlined'
-        sx={{ borderRadius: 0, borderTop: 'none', borderBottom: 'none', px: 1.5, py: 1 }}
+        sx={{ borderRadius: 0, borderTop: 'none', borderBottom: 'none', px: 1.5, py: 0.75 }}
       >
         <Box className={classes.toolbarButtons}>
           {!selectedRow ? (
-            <Button
-              size='small'
-              variant='contained'
-              startIcon={<AddIcon />}
-              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
-              onClick={() => {
-                setEditingRow(null);
-                setDialogOpen(true);
-              }}
-            >
-              New
-            </Button>
+            <Tooltip title='Add a new Expense Project'>
+              <Button
+                size='small'
+                variant='contained'
+                startIcon={<AddIcon />}
+                sx={{
+                  bgcolor: '#2d5ebb',
+                  '&:hover': { bgcolor: '#2d5ebb' },
+                  textTransform: 'none',
+                }}
+                onClick={() => {
+                  setEditingRow(null);
+                  setDialogOpen(true);
+                }}
+              >
+                New
+              </Button>
+            </Tooltip>
           ) : (
             <Button
               size='small'
               variant='contained'
               startIcon={<EditIcon />}
-              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
+              sx={{ bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' }, textTransform: 'none' }}
               onClick={() => {
                 setEditingRow(selectedRow);
                 setDialogOpen(true);
@@ -2784,6 +2834,7 @@ const AppExpensePanel = ({
               color='error'
               startIcon={<DeleteIcon />}
               onClick={() => setDeleteOpen(true)}
+              sx={{ textTransform: 'none' }}
             >
               Delete
             </Button>
@@ -2791,11 +2842,14 @@ const AppExpensePanel = ({
           {selectedRow && (
             <>
               <Box
+                component='span'
                 sx={{
+                  display: { xs: 'none', sm: 'block' },
                   width: '1px',
                   height: '20px',
-                  bgcolor: alpha('#2d5ebb', 0.3),
-                  display: { xs: 'none', sm: 'block' },
+                  bgcolor: 'divider',
+                  mx: 0.75,
+                  alignSelf: 'center',
                 }}
               />
               <Button
@@ -2803,6 +2857,7 @@ const AppExpensePanel = ({
                 variant='outlined'
                 startIcon={<ClearIcon />}
                 onClick={() => setSelectedId(null)}
+                sx={{ textTransform: 'none' }}
               >
                 Clear
               </Button>

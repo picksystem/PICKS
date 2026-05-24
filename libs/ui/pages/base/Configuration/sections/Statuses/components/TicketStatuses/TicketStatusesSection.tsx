@@ -420,20 +420,38 @@ const TicketStatusesSection = ({ activeTicketTypeColumns }: TicketStatusesSectio
       <AccordionDetails sx={{ p: 2 }}>
         <Paper variant='outlined' className={classes.actionToolbar}>
           <Box className={classes.toolbarButtons}>
-            {!selectedId && (
-              <Tooltip title='Add a new ticket status'>
-                <Button
+            {!selectedId ? (
+              <>
+                <Tooltip title='Add a new Ticket Status'>
+                  <Button
+                    size='small'
+                    variant='contained'
+                    startIcon={<AddIcon />}
+                    onClick={handleOpenAdd}
+                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    New
+                  </Button>
+                </Tooltip>
+                <TextField
                   size='small'
-                  variant='contained'
-                  startIcon={<AddIcon />}
-                  onClick={handleOpenAdd}
-                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-                >
-                  New
-                </Button>
-              </Tooltip>
-            )}
-            {selectedId && (
+                  placeholder='Search...'
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className={classes.tableSearchField}
+                  sx={{ ml: { xs: 0, sm: 'auto' } }}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <SearchIcon />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </>
+            ) : (
               <>
                 <Button
                   size='small'
@@ -454,6 +472,7 @@ const TicketStatusesSection = ({ activeTicketTypeColumns }: TicketStatusesSectio
                 >
                   Delete
                 </Button>
+                <Box component='span' sx={{ display: { xs: 'none', sm: 'block' }, width: '1px', height: '20px', bgcolor: 'divider', mx: 0.75, alignSelf: 'center' }} />
                 <Button
                   size='small'
                   variant='outlined'
@@ -465,41 +484,6 @@ const TicketStatusesSection = ({ activeTicketTypeColumns }: TicketStatusesSectio
                 </Button>
               </>
             )}
-            <Divider orientation='vertical' flexItem className={classes.toolbarDivider} />
-            <FormControlLabel
-              labelPlacement='start'
-              control={
-                <Switch
-                  size='small'
-                  checked={loadDefaults}
-                  onChange={(e) => handleLoadDefaults(e.target.checked)}
-                  color='warning'
-                />
-              }
-              label={
-                <Typography variant='body2' fontWeight={500} fontSize='0.8rem'>
-                  Load system default values
-                </Typography>
-              }
-              sx={{ mr: 0, ml: 0, gap: 0.75, width: { xs: '100%', sm: 'auto' } }}
-            />
-            <TextField
-              size='small'
-              placeholder='Search...'
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={classes.tableSearchField}
-              sx={{ ml: { xs: 0, sm: 'auto' } }}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position='end'>
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
           </Box>
         </Paper>
         <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>

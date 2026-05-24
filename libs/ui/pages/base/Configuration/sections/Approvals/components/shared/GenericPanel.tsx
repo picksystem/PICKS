@@ -46,9 +46,6 @@ export const PanelHeader = ({ icon, title, count, accent }: PanelHeaderProps) =>
   >
     <Box sx={{ color: accent }}>{icon}</Box>
     <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: accent }}>{title}</Typography>
-    <Typography variant='caption' sx={{ ml: 'auto' }}>
-      {count} items
-    </Typography>
   </Box>
 );
 
@@ -155,31 +152,51 @@ export const GenericPanel = ({ config, data, onSave }: GenericPanelProps) => {
             borderTop: 'none',
             borderBottom: 'none',
             px: 1.5,
-            py: 1,
+            py: 0.75,
           }}
         >
           <Box className={classes.toolbarButtons}>
             {!selectedRow ? (
-              <Tooltip title={`Add ${config.entity}`}>
-                <Button
-                  size='small'
-                  variant='contained'
-                  startIcon={<AddIcon />}
-                  sx={{
-                    textTransform: 'none',
-                    bgcolor: '#2d5ebb',
-                    '&:hover': {
+              <>
+                <Tooltip title='Add a new Approval'>
+                  <Button
+                    size='small'
+                    variant='contained'
+                    startIcon={<AddIcon />}
+                    sx={{
+                      textTransform: 'none',
                       bgcolor: '#2d5ebb',
+                      '&:hover': {
+                        bgcolor: '#2d5ebb',
+                      },
+                    }}
+                    onClick={() => {
+                      setEditingRow(null);
+                      setDialogOpen(true);
+                    }}
+                  >
+                    New
+                  </Button>
+                </Tooltip>
+
+                <TextField
+                  size='small'
+                  placeholder='Search...'
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className={classes.tableSearchField}
+                  sx={{ ml: 'auto' }}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <SearchIcon sx={{ fontSize: '1rem' }} />
+                        </InputAdornment>
+                      ),
                     },
                   }}
-                  onClick={() => {
-                    setEditingRow(null);
-                    setDialogOpen(true);
-                  }}
-                >
-                  New
-                </Button>
-              </Tooltip>
+                />
+              </>
             ) : (
               <>
                 <Button
@@ -218,7 +235,7 @@ export const GenericPanel = ({ config, data, onSave }: GenericPanelProps) => {
                     display: { xs: 'none', sm: 'block' },
                     width: '1px',
                     height: '20px',
-                    bgcolor: alpha('#2d5ebb', 0.3),
+                    bgcolor: 'divider',
                     mx: 0.75,
                     alignSelf: 'center',
                   }}
@@ -243,24 +260,6 @@ export const GenericPanel = ({ config, data, onSave }: GenericPanelProps) => {
                 </Button>
               </>
             )}
-
-            <TextField
-              size='small'
-              placeholder='Search...'
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={classes.tableSearchField}
-              sx={{ ml: 'auto' }}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position='end'>
-                      <SearchIcon sx={{ fontSize: '1rem' }} />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
           </Box>
         </Paper>
 
