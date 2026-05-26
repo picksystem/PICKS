@@ -10,7 +10,7 @@ import {
   DataTable,
   Column,
 } from '@serviceops/component';
-import { InputAdornment, FormControlLabel, Divider } from '@mui/material';
+import { InputAdornment } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -137,21 +137,9 @@ const PrioritiesSection = ({
       label: 'Urgency Values',
       minWidth: 130,
       format: (_v, row): React.ReactNode => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box
-            sx={{
-              width: 10,
-              height: 10,
-              borderRadius: '50%',
-              bgcolor: row.bgColor,
-              flexShrink: 0,
-              border: '1px solid rgba(0,0,0,0.12)',
-            }}
-          />
-          <Typography variant='body2' fontWeight={600} fontSize='0.82rem'>
-            {row.name}
-          </Typography>
-        </Box>
+        <Typography variant='body2' fontWeight={700} fontSize='0.82rem'>
+          {row.name}
+        </Typography>
       ),
     },
     {
@@ -242,7 +230,17 @@ const PrioritiesSection = ({
               >
                 Delete
               </Button>
-              <Box component='span' sx={{ display: { xs: 'none', sm: 'block' }, width: '1px', height: '20px', bgcolor: 'divider', mx: 0.75, alignSelf: 'center' }} />
+              <Box
+                component='span'
+                sx={{
+                  display: { xs: 'none', sm: 'block' },
+                  width: '1px',
+                  height: '20px',
+                  bgcolor: 'divider',
+                  mx: 0.75,
+                  alignSelf: 'center',
+                }}
+              />
               <Button
                 size='small'
                 variant='outlined'

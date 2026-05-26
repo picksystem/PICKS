@@ -4,15 +4,13 @@ import {
   Typography,
   Paper,
   Button,
-  Chip,
   TextField,
   Tooltip,
   Switch,
-  Link,
   DataTable,
   Column,
 } from '@serviceops/component';
-import { InputAdornment, FormControlLabel, Divider, alpha } from '@mui/material';
+import { InputAdornment, FormControlLabel } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import AddIcon from '@mui/icons-material/Add';
@@ -25,19 +23,6 @@ import {
   ConfigFormDialog,
   ConfigDeleteDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
-
-const PRESET_COLORS = [
-  '#b91c1c',
-  '#ea580c',
-  '#ca8a04',
-  '#2563eb',
-  '#0f766e',
-  '#7c3aed',
-  '#db2777',
-  '#15803d',
-  '#1d4ed8',
-  '#374151',
-];
 
 interface SimpleLevelFormDialogProps {
   open: boolean;
@@ -69,13 +54,11 @@ const SimpleLevelFormDialog = ({
         ? {
             displayName: editing.displayName,
             description: editing.description,
-            bgColor: editing.bgColor,
             enabledFor: { ...editing.enabledFor },
           }
         : {
             displayName: '',
             description: '',
-            bgColor: '#0369a1',
             enabledFor: Object.fromEntries(ticketTypeColumns.map((t) => [t.key, true])),
           },
     );
@@ -110,49 +93,6 @@ const SimpleLevelFormDialog = ({
         multiline
         rows={2}
       />
-      <Box>
-        <Typography
-          variant='caption'
-          fontWeight={700}
-          color='text.secondary'
-          sx={{ mb: 0.75, display: 'block' }}
-        >
-          Badge Color
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
-          {PRESET_COLORS.map((c) => (
-            <Box
-              key={c}
-              onClick={() => setForm((f) => ({ ...f, bgColor: c }))}
-              sx={{
-                width: 22,
-                height: 22,
-                borderRadius: '50%',
-                bgcolor: c,
-                cursor: 'pointer',
-                border: form.bgColor === c ? '2.5px solid #1976d2' : '2px solid transparent',
-                boxShadow: form.bgColor === c ? `0 0 0 2px ${alpha('#1976d2', 0.3)}` : 'none',
-                transition: 'all 0.15s',
-                '&:hover': { transform: 'scale(1.18)' },
-              }}
-            />
-          ))}
-          <TextField
-            size='small'
-            value={form.bgColor ?? ''}
-            onChange={(e) => setForm((f) => ({ ...f, bgColor: e.target.value }))}
-            inputProps={{ style: { fontFamily: 'monospace', fontSize: '0.75rem', width: 72 } }}
-            sx={{ ml: 0.5 }}
-          />
-          {form.bgColor && (
-            <Chip
-              label={form.displayName || 'Preview'}
-              size='small'
-              sx={{ bgcolor: form.bgColor, color: '#fff', fontWeight: 700, fontSize: '0.72rem' }}
-            />
-          )}
-        </Box>
-      </Box>
       <Box>
         <Typography
           variant='caption'
@@ -265,21 +205,9 @@ const ImpactSection = ({
       label: 'Impact Values',
       minWidth: 120,
       format: (_v, row): React.ReactNode => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box
-            sx={{
-              width: 10,
-              height: 10,
-              borderRadius: '50%',
-              bgcolor: row.bgColor,
-              flexShrink: 0,
-              border: '1px solid rgba(0,0,0,0.12)',
-            }}
-          />
-          <Typography variant='body2' fontWeight={600} fontSize='0.82rem'>
-            {row.displayName}
-          </Typography>
-        </Box>
+        <Typography variant='body2' fontWeight={700} fontSize='0.82rem'>
+          {row.displayName}
+        </Typography>
       ),
     },
     {
@@ -376,7 +304,17 @@ const ImpactSection = ({
               >
                 Delete
               </Button>
-              <Box component='span' sx={{ display: { xs: 'none', sm: 'block' }, width: '1px', height: '20px', bgcolor: 'divider', mx: 0.75, alignSelf: 'center' }} />
+              <Box
+                component='span'
+                sx={{
+                  display: { xs: 'none', sm: 'block' },
+                  width: '1px',
+                  height: '20px',
+                  bgcolor: 'divider',
+                  mx: 0.75,
+                  alignSelf: 'center',
+                }}
+              />
               <Button
                 size='small'
                 variant='outlined'

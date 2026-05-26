@@ -1,1 +1,1 @@
-export { TicketMatrixSection, ColorDot } from './TicketMatrixSection';
+export { TicketMatrixSection } from './TicketMatrixSection';

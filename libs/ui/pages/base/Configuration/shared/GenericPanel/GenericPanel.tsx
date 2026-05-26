@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { ReactNode, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Typography,
@@ -22,7 +22,25 @@ import {
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 import { useStyles } from './styles';
 import { GenericAccordion } from '../GenericAccordion/GenericAccordion';
-import { TableConfig, TableField } from '../../sections/Approvals/components/shared/types';
+
+export interface TableField {
+  name: string;
+  label: string;
+  required?: boolean;
+  bold?: boolean;
+  minWidth?: number;
+  defaultValue?: string | number | boolean;
+  type?: 'text' | 'date' | 'number' | 'toggle';
+}
+
+export interface TableConfig {
+  title: string;
+  subtitle: string;
+  accent: string;
+  icon: ReactNode;
+  entity: string;
+  fields: TableField[];
+}
 
 interface PanelHeaderProps {
   icon: React.ReactNode;

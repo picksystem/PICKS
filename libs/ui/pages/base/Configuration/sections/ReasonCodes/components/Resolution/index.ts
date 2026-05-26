@@ -1,0 +1,1 @@
+export { ResolutionSection } from './ResolutionSection';

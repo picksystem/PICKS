@@ -1,1 +1,0 @@
-export { WorkingTimesPanel } from './WorkingTimesPanel';

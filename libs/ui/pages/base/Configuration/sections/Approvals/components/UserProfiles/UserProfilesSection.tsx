@@ -1,7 +1,7 @@
 import { IConfigApprovalAssocUserProfile } from '@serviceops/interfaces';
-import { UserProfilesSectionProps } from './UserProfilesSection.types';
-import { TABLE_CONFIG } from './UserProfilesSection.config';
 import { GenericPanel } from '../../../Categorization/components/shared';
+import { UserProfilesSectionProps } from './UserProfilesSection.types';
+import { TABLE_CONFIG } from '../ApprovalsSection.config';
 
 export const UserProfilesSection = ({ data, onDataChange }: UserProfilesSectionProps) => {
   const handleSave = (next: IConfigApprovalAssocUserProfile[]) => {

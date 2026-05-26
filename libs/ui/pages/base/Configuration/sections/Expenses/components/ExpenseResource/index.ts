@@ -1,0 +1,1 @@
+export { ExpenseResourceSection } from './ExpenseResourceSection';

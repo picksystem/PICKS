@@ -22,7 +22,7 @@ import {
   IConfigApprovalRecord,
   IConfigApprovalWorkingTime,
 } from '@serviceops/interfaces';
-import { TABLE_CONFIG } from './ApprovalRecords/ApprovalRecordsSection.config';
+import { TABLE_CONFIG } from './ApprovalsSection.config';
 
 const ApprovalsSection = ({
   records: externalRecords,

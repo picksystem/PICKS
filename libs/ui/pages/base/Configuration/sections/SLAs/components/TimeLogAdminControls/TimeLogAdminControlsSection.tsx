@@ -18,7 +18,11 @@ const TimeLogAdminControlsSection = ({ ctrl, onUpdate }: TimeLogAdminControlsSec
   const { classes } = useStyles();
 
   return (
-    <Accordion className={classes.sectionAccordion} elevation={0}>
+    <Accordion
+      className={classes.sectionAccordion}
+      elevation={0}
+      sx={{ border: '1px solid rgba(0, 0, 0, 0.12)', borderRadius: '12px !important' }}
+    >
       <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box

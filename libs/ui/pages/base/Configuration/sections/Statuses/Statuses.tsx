@@ -1,9 +1,8 @@
 import { Box } from '@serviceops/component';
 import { useStyles } from './styles';
-import { useGetTicketTypeQuery } from '@serviceops/services';
-import { TicketStatusesSection } from './components/TicketStatuses/TicketStatusesSection';
-import { ReleaseCycleStatusesSection } from './components/ReleaseCycleStatuses/ReleaseCycleStatusesSection';
 import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
+import { TicketStatusesSection, ReleaseCycleStatusesSection } from './components';
+import { useGetTicketTypeQuery } from '@serviceops/services';
 
 const Statuses = () => {
   const { classes } = useStyles();

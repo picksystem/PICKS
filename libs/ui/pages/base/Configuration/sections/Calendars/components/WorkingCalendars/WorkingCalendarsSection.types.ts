@@ -1,3 +1,10 @@
+import { IConfigWorkingCalendar } from '@serviceops/interfaces';
+
+export interface WorkingCalendarsSectionProps {
+  data?: IConfigWorkingCalendar[];
+  onDataChange?: (data: IConfigWorkingCalendar[]) => void;
+}
+
 export const DAYS_OF_WEEK = [
   'Monday',
   'Tuesday',

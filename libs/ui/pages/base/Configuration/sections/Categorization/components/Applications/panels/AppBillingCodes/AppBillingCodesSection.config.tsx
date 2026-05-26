@@ -1,5 +1,5 @@
 import CodeIcon from '@mui/icons-material/Code';
-import type { TableConfig } from '@serviceops/pages/base/Configuration/sections/Approvals/components/shared/types';
+import type { TableConfig } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
 
 export const APP_BILLING_CODES_CONFIG: TableConfig = {
   title: 'Billing Codes',

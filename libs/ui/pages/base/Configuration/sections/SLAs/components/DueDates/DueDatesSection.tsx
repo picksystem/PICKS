@@ -1,279 +1,66 @@
-import { useState } from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  Button,
-  Tooltip,
-  Chip,
-  TextField,
-  DataTable,
-  Column,
-  Switch,
-} from '@serviceops/component';
-import { Accordion, AccordionSummary, AccordionDetails, InputAdornment } from '@mui/material';
-import DateRangeIcon from '@mui/icons-material/DateRange';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ClearIcon from '@mui/icons-material/Clear';
-import RestoreIcon from '@mui/icons-material/Restore';
-import SearchIcon from '@mui/icons-material/Search';
-import { IConfigResponseAckSLARow, ITicketType } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
-import DueDateFormDialog from '@serviceops/pages/base/Configuration/dialogs/DueDateFormDialog/DueDateFormDialog';
-import { ConfigDeleteDialog } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
+import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import {
+  DUE_DATES_CONFIG,
+  ticketTypeChipCell,
+  activationCell,
+  priorityCell,
+} from '../shared/SLAsPanelConfig';
+import type { IConfigResponseAckSLARow, ITicketType } from '@serviceops/interfaces';
 
 interface DueDatesSectionProps {
   displayRows: IConfigResponseAckSLARow[];
-  selectedRowId: string | null;
-  setSelectedRowId: (id: string | null) => void;
-  editingRow: IConfigResponseAckSLARow | null;
-  setEditingRow: (row: IConfigResponseAckSLARow | null) => void;
-  onSubmit: (row: IConfigResponseAckSLARow) => void;
-  onDelete: () => void;
-  onLoadDefaults: () => void;
-  onToggleActivation: (ticketTypeId: number, value: boolean) => void;
   activeTicketTypes: ITicketType[];
-  usedTicketTypeIds: number[];
+  onDataChange: (rows: IConfigResponseAckSLARow[]) => void;
 }
-
-const CHIP_COLORS = ['#7c3aed', '#1d4ed8', '#0f766e', '#1b5e20', '#c2410c', '#0891b2', '#b45309'];
 
 const DueDatesSection = ({
   displayRows,
-  selectedRowId,
-  setSelectedRowId,
-  editingRow,
-  setEditingRow,
-  onSubmit,
-  onDelete,
-  onLoadDefaults,
-  onToggleActivation,
   activeTicketTypes,
-  usedTicketTypeIds,
+  onDataChange,
 }: DueDatesSectionProps) => {
   const { classes } = useStyles();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [search, setSearch] = useState('');
 
-  const selectedRow = displayRows.find((r) => r.id === selectedRowId) ?? null;
-
-  const filteredRows = search
-    ? displayRows.filter((r) => r.ticketTypeName.toLowerCase().includes(search.toLowerCase()))
-    : displayRows;
-
-  const chipCell = (row: IConfigResponseAckSLARow) => {
-    const color =
-      CHIP_COLORS[
-        activeTicketTypes.findIndex((t) => t.id === row.ticketTypeId) % CHIP_COLORS.length
-      ];
-    return (
-      <Chip
-        label={row.ticketTypeName}
-        size='small'
-        sx={{
-          bgcolor: color,
-          color: '#fff',
-          fontWeight: 700,
-          fontSize: '0.72rem',
-          height: 22,
-          borderRadius: 1.5,
-        }}
-      />
-    );
-  };
-
-  const pCell = (v: unknown) => (
-    <Typography sx={{ fontSize: '0.82rem', fontFamily: 'monospace', fontWeight: 700 }}>
-      {String(v)}
-    </Typography>
-  );
-
-  const columns: Column<IConfigResponseAckSLARow>[] = [
-    { id: 'ticketTypeName', label: 'SLAs', minWidth: 140, format: (_v, row) => chipCell(row) },
+  const columns = [
+    {
+      id: 'ticketTypeName',
+      label: 'SLAs',
+      minWidth: 140,
+      format: (_v: unknown, row: { ticketTypeId: number; ticketTypeName: string }) =>
+        ticketTypeChipCell(row, activeTicketTypes),
+    },
     {
       id: 'activation',
       label: 'Activation',
       minWidth: 90,
-      align: 'center',
-      format: (_v, row) => (
-        <Switch
-          size='small'
-          checked={row.activation}
-          color='success'
-          onChange={(e) => {
-            e.stopPropagation();
-            onToggleActivation(row.ticketTypeId, e.target.checked);
-          }}
-          onClick={(e) => e.stopPropagation()}
-        />
-      ),
+      align: 'center' as const,
+      format: (_v: unknown, row: { ticketTypeId: number; activation: boolean }) =>
+        activationCell(row, (ticketTypeId: number, value: boolean) => {
+          onDataChange(
+            displayRows.map((r) =>
+              r.ticketTypeId === ticketTypeId ? { ...r, activation: value } : r,
+            ),
+          );
+        }),
     },
-    { id: 'p1', label: 'P1', minWidth: 55, format: pCell },
-    { id: 'p2', label: 'P2', minWidth: 55, format: pCell },
-    { id: 'p3', label: 'P3', minWidth: 55, format: pCell },
-    { id: 'p4', label: 'P4', minWidth: 55, format: pCell },
-    { id: 'p5', label: 'P5', minWidth: 55, format: pCell },
+    { id: 'p1', label: 'P1', minWidth: 55, format: priorityCell },
+    { id: 'p2', label: 'P2', minWidth: 55, format: priorityCell },
+    { id: 'p3', label: 'P3', minWidth: 55, format: priorityCell },
+    { id: 'p4', label: 'P4', minWidth: 55, format: priorityCell },
+    { id: 'p5', label: 'P5', minWidth: 55, format: priorityCell },
   ];
 
   return (
-    <Accordion className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: 1.5,
-              bgcolor: '#0369a1',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <DateRangeIcon sx={{ color: '#fff', fontSize: '1rem' }} />
-          </Box>
-          <Box>
-            <Typography className={classes.sectionTitle}>Due Dates</Typography>
-            <Typography className={classes.sectionSubtitle}>
-              Control due date visibility and alerting on tickets
-            </Typography>
-          </Box>
-        </Box>
-      </AccordionSummary>
-      <AccordionDetails sx={{ p: 2 }}>
-        <Paper variant='outlined' className={classes.actionToolbar}>
-          <Box className={classes.toolbarButtons}>
-            {!selectedRow ? (
-              <>
-                <Tooltip title='Add a new Due Date'>
-                  <Button
-                    size='small'
-                    variant='contained'
-                    startIcon={<AddIcon />}
-                    onClick={() => {
-                      setEditingRow(null);
-                      setDialogOpen(true);
-                    }}
-                    disabled={
-                      activeTicketTypes.length > 0 &&
-                      usedTicketTypeIds.length >= activeTicketTypes.length
-                    }
-                    sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
-                  >
-                    New
-                  </Button>
-                </Tooltip>
-                <TextField
-                  size='small'
-                  placeholder='Search...'
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className={classes.tableSearchField}
-                  sx={{ ml: { xs: 0, sm: 'auto' } }}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position='end'>
-                          <SearchIcon fontSize='small' />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
-              </>
-            ) : (
-              <>
-                <Button
-                  size='small'
-                  variant='contained'
-                  startIcon={<EditIcon />}
-                  onClick={() => {
-                    setEditingRow(selectedRow);
-                    setDialogOpen(true);
-                  }}
-                  sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
-                >
-                  Edit
-                </Button>
-                <Button
-                  size='small'
-                  variant='outlined'
-                  color='error'
-                  startIcon={<DeleteIcon />}
-                  onClick={() => setDeleteOpen(true)}
-                  sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
-                >
-                  Delete
-                </Button>
-                <Box
-                  component='span'
-                  sx={{
-                    display: { xs: 'none', sm: 'block' },
-                    width: '1px',
-                    height: '20px',
-                    bgcolor: 'divider',
-                    mx: 0.75,
-                    alignSelf: 'center',
-                  }}
-                />
-                <Button
-                  size='small'
-                  variant='outlined'
-                  startIcon={<ClearIcon />}
-                  onClick={() => setSelectedRowId(null)}
-                  sx={{ width: { xs: '100%', sm: 'auto' }, textTransform: 'none' }}
-                >
-                  Clear
-                </Button>
-              </>
-            )}
-          </Box>
-        </Paper>
-
-        <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <DataTable
-            columns={columns}
-            data={filteredRows}
-            rowKey='id'
-            searchable={false}
-            initialRowsPerPage={10}
-            onRowClick={(row) => setSelectedRowId(row.id === selectedRowId ? null : row.id)}
-            activeRowKey={selectedRowId ?? undefined}
-          />
-        </Paper>
-      </AccordionDetails>
-
-      <DueDateFormDialog
-        open={dialogOpen}
-        editingRow={editingRow}
-        ticketTypes={activeTicketTypes}
-        usedTicketTypeIds={usedTicketTypeIds}
-        onClose={() => {
-          setDialogOpen(false);
-          setEditingRow(null);
-        }}
-        onSubmit={(row) => {
-          onSubmit(row);
-          setDialogOpen(false);
-        }}
+    <div className={classes.sectionAccordion}>
+      <GenericPanel
+        config={DUE_DATES_CONFIG}
+        data={displayRows}
+        onSave={onDataChange}
+        customColumns={columns as any}
+        variant='plain'
+        defaultExpanded={false}
       />
-
-      <ConfigDeleteDialog
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        onConfirm={() => {
-          onDelete();
-          setDeleteOpen(false);
-        }}
-        entityName='Due Date SLA Row'
-        itemName={selectedRow?.ticketTypeName}
-      />
-    </Accordion>
+    </div>
   );
 };
 

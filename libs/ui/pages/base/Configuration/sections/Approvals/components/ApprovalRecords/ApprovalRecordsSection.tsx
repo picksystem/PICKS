@@ -1,7 +1,7 @@
 import { IConfigApprovalRecord } from '@serviceops/interfaces';
 import { ApprovalRecordsSectionProps } from './ApprovalRecordsSection.types';
-import { TABLE_CONFIG } from './ApprovalRecordsSection.config';
 import { GenericPanel } from '../../../Categorization/components/shared';
+import { TABLE_CONFIG } from '../ApprovalsSection.config';
 export const ApprovalRecordsSection = ({ data, onDataChange }: ApprovalRecordsSectionProps) => {
   const handleSave = (next: IConfigApprovalRecord[]) => {
     onDataChange?.(next);

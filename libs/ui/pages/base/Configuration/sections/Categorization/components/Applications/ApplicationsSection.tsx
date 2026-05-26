@@ -27,6 +27,7 @@ import { CATEG_ACCENT, TABLE_CONFIG } from '../shared';
 import { ApplicationActiveView } from './ApplicationsSection.types';
 import { useStyles } from '../../styles';
 import { GenericAccordion } from '@serviceops/pages/base/Configuration/shared/GenericAccordion/GenericAccordion';
+import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
 
 export interface ApplicationsSectionProps {
   data?: IConfigApplication[];
@@ -79,14 +80,17 @@ const VIEW_BUTTONS: { key: ApplicationActiveView; label: string; icon: React.Rea
 
 export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionProps) => {
   const { classes } = useStyles();
+  const { categorization: apiCat } = useConfiguration();
   const [activeView, setActiveView] = useState<ApplicationActiveView>('applications');
   const [rows, setRows] = useState<IConfigApplication[]>([]);
 
   useEffect(() => {
     if (data !== undefined) {
       setRows(data);
+    } else if (apiCat?.applications) {
+      setRows(apiCat.applications);
     }
-  }, [data]);
+  }, [data, apiCat]);
 
   const handleSave = (next: IConfigApplication[]) => {
     setRows(next);

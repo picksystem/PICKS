@@ -180,22 +180,6 @@ export const SERVICE_LINE_EXPENSES_CONFIG: TableConfig = {
   ],
 };
 
-// Application Panels
-export const APP_APPROVALS_CONFIG: TableConfig = {
-  title: 'Application Approvals',
-  subtitle: 'Configure approvers for applications',
-  accent: CATEG_ACCENT,
-  icon: <HowToRegIcon sx={{ fontSize: '1.1rem' }} />,
-  entity: 'Application Approver',
-  fields: [
-    { name: 'applicationName', label: 'Application', required: true, bold: true },
-    { name: 'approverName', label: 'Approver Name', required: true, bold: true },
-    { name: 'approverRole', label: 'Approver Role' },
-    { name: 'approvalOrder', label: 'Approval Order', type: 'number' },
-    { name: 'isRequired', label: 'Required', type: 'toggle', defaultValue: false },
-  ],
-};
-
 export const APP_TIMESHEET_CONFIG: TableConfig = {
   title: 'Add Timesheet Projects',
   subtitle: 'Configure timesheet projects per application',

@@ -1,1 +1,0 @@
-export { ConsultantProfilesSection } from './ConsultantProfilesSection';

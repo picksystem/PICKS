@@ -21,19 +21,6 @@ import ClearIcon from '@mui/icons-material/Clear';
 import { PriorityLevel, ImpactLevel, UrgencyLevel, MatrixMap, MatrixRow } from '../../util';
 import { useStyles } from '../../styles';
 
-const ColorDot = ({ color }: { color: string }) => (
-  <Box
-    sx={{
-      width: 12,
-      height: 12,
-      borderRadius: '50%',
-      bgcolor: color,
-      flexShrink: 0,
-      border: '1px solid rgba(0,0,0,0.12)',
-    }}
-  />
-);
-
 const DEFAULT_MATRIX: MatrixMap = {
   high: { high: 'critical', medium: 'high', low: 'medium' },
   medium: { high: 'high', medium: 'medium', low: 'low' },
@@ -154,12 +141,9 @@ const TicketMatrixSection = ({
       format: (_v, row): React.ReactNode => {
         const impact = impacts.find((i) => i.id === row.impactId);
         return (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <ColorDot color={impact?.bgColor ?? '#999'} />
-            <Typography variant='body2' fontWeight={600} fontSize='0.82rem'>
-              {impact?.displayName ?? row.impactId}
-            </Typography>
-          </Box>
+          <Typography variant='body2' fontWeight={700} fontSize='0.82rem'>
+            {impact?.displayName ?? row.impactId}
+          </Typography>
         );
       },
     },
@@ -170,12 +154,9 @@ const TicketMatrixSection = ({
       format: (_v, row): React.ReactNode => {
         const urgency = urgencies.find((u) => u.id === row.urgencyId);
         return (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <ColorDot color={urgency?.bgColor ?? '#999'} />
-            <Typography variant='body2' fontWeight={600} fontSize='0.82rem'>
-              {urgency?.displayName ?? row.urgencyId}
-            </Typography>
-          </Box>
+          <Typography variant='body2' fontWeight={700} fontSize='0.82rem'>
+            {urgency?.displayName ?? row.urgencyId}
+          </Typography>
         );
       },
     },
@@ -196,17 +177,8 @@ const TicketMatrixSection = ({
               }}
               onClick={(e) => e.stopPropagation()}
               sx={{
-                fontSize: '0.75rem',
+                fontSize: '0.78rem',
                 fontWeight: 700,
-                color: row.priorityId ? (priority?.color ?? '#fff') : 'text.secondary',
-                bgcolor: row.priorityId ? (priority?.bgColor ?? 'grey.300') : 'transparent',
-                borderRadius: 1.5,
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: row.priorityId ? 'transparent' : undefined,
-                },
-                '& .MuiSelect-icon': {
-                  color: row.priorityId ? '#fff' : 'text.secondary',
-                },
               }}
             >
               <MenuItem value=''>
@@ -216,12 +188,9 @@ const TicketMatrixSection = ({
               </MenuItem>
               {priorities.map((p) => (
                 <MenuItem key={p.id} value={p.id}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <ColorDot color={p.bgColor} />
-                    <Typography fontSize='0.78rem' fontWeight={600}>
-                      {p.name}
-                    </Typography>
-                  </Box>
+                  <Typography fontSize='0.78rem' fontWeight={700}>
+                    {p.name}
+                  </Typography>
                 </MenuItem>
               ))}
             </Select>
@@ -381,12 +350,9 @@ const TicketMatrixSection = ({
             >
               {priorities.map((p) => (
                 <MenuItem key={p.id} value={p.id}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <ColorDot color={p.bgColor} />
-                    <Typography fontSize='0.82rem' fontWeight={600}>
-                      {p.name}
-                    </Typography>
-                  </Box>
+                  <Typography fontSize='0.82rem' fontWeight={700}>
+                    {p.name}
+                  </Typography>
                 </MenuItem>
               ))}
             </Select>
@@ -427,10 +393,9 @@ const TicketMatrixSection = ({
           >
             {activeImpacts.map((i) => (
               <MenuItem key={i.id} value={i.id}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <ColorDot color={i.bgColor} />
+                <Typography fontSize='0.82rem' fontWeight={700}>
                   {i.displayName}
-                </Box>
+                </Typography>
               </MenuItem>
             ))}
           </Select>
@@ -444,10 +409,9 @@ const TicketMatrixSection = ({
           >
             {activeUrgencies.map((u) => (
               <MenuItem key={u.id} value={u.id}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <ColorDot color={u.bgColor} />
+                <Typography fontSize='0.82rem' fontWeight={700}>
                   {u.displayName}
-                </Box>
+                </Typography>
               </MenuItem>
             ))}
           </Select>
@@ -461,10 +425,9 @@ const TicketMatrixSection = ({
           >
             {priorities.map((p) => (
               <MenuItem key={p.id} value={p.id}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <ColorDot color={p.bgColor} />
+                <Typography fontSize='0.82rem' fontWeight={700}>
                   {p.name}
-                </Box>
+                </Typography>
               </MenuItem>
             ))}
           </Select>
@@ -493,12 +456,9 @@ const TicketMatrixSection = ({
           >
             Impact
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <ColorDot color={impacts.find((i) => i.id === editForm.impactId)?.bgColor ?? '#999'} />
-            <Typography variant='body2' fontWeight={600}>
-              {impacts.find((i) => i.id === editForm.impactId)?.displayName ?? editForm.impactId}
-            </Typography>
-          </Box>
+          <Typography variant='body2' fontWeight={700}>
+            {impacts.find((i) => i.id === editForm.impactId)?.displayName ?? editForm.impactId}
+          </Typography>
         </Box>
         <Box>
           <Typography
@@ -510,15 +470,9 @@ const TicketMatrixSection = ({
           >
             Urgency
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <ColorDot
-              color={urgencies.find((u) => u.id === editForm.urgencyId)?.bgColor ?? '#999'}
-            />
-            <Typography variant='body2' fontWeight={600}>
-              {urgencies.find((u) => u.id === editForm.urgencyId)?.displayName ??
-                editForm.urgencyId}
-            </Typography>
-          </Box>
+          <Typography variant='body2' fontWeight={700}>
+            {urgencies.find((u) => u.id === editForm.urgencyId)?.displayName ?? editForm.urgencyId}
+          </Typography>
         </Box>
         <FormControl size='small' fullWidth>
           <InputLabel>Priority</InputLabel>
@@ -534,10 +488,9 @@ const TicketMatrixSection = ({
             </MenuItem>
             {priorities.map((p) => (
               <MenuItem key={p.id} value={p.id}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <ColorDot color={p.bgColor} />
+                <Typography fontSize='0.82rem' fontWeight={700}>
                   {p.name}
-                </Box>
+                </Typography>
               </MenuItem>
             ))}
           </Select>
@@ -567,4 +520,4 @@ const TicketMatrixSection = ({
   );
 };
 
-export { TicketMatrixSection, ColorDot };
+export { TicketMatrixSection };

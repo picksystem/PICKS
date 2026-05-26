@@ -1,39 +1,175 @@
 import CategoryIcon from '@mui/icons-material/Category';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import LayersIcon from '@mui/icons-material/Layers';
+import AppsIcon from '@mui/icons-material/Apps';
+import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
+import PersonIcon from '@mui/icons-material/Person';
 import { Column } from '@serviceops/component';
 import {
   mkCell,
   mkChip,
   mkDescCell,
 } from '@serviceops/pages/base/Configuration/utils/cellRenderers';
+import { TableConfig } from './expenses.config.types';
+
 import type {
   IConfigExpenseProjectEntry,
   IConfigExpenseCategoryEntry,
   IConfigExpenseCategorySubCategory,
+  IConfigExpenseProjectSubCategory,
+  IConfigExpenseServiceLineEntry,
+  IConfigExpenseApplicationEntry,
+  IConfigExpenseQueueEntry,
+  IConfigExpenseResourceEntry,
 } from '@serviceops/interfaces';
-
-// ── Colors ─────────────────────────────────────────────────────────────────────
-
-export const EXP_COLORS = {
-  category: '#0369a1',
-  itemization: '#0891b2',
-} as const;
 
 // ── View Toggle Buttons ────────────────────────────────────────────────────────
 
 export const EXP_PROJECT_VIEWS = [
   { key: 'project', label: 'Expense Project', icon: <ReceiptLongIcon /> },
-  { key: 'serviceLine', label: 'Add to Service Line', icon: <AccountTreeIcon /> },
-  { key: 'application', label: 'Add to Application', icon: <AccountTreeIcon /> },
-  { key: 'queue', label: 'Add to Queue', icon: <AccountTreeIcon /> },
-  { key: 'resource', label: 'Add to Resource', icon: <AccountTreeIcon /> },
+  { key: 'serviceLine', label: 'Add to Service Line', icon: <LayersIcon /> },
+  { key: 'application', label: 'Add to Application', icon: <AppsIcon /> },
+  { key: 'queue', label: 'Add to Queue', icon: <HeadsetMicIcon /> },
+  { key: 'resource', label: 'Add to Resource', icon: <PersonIcon /> },
 ] as const;
 
 export const EXP_CATEGORY_VIEWS = [
   { key: 'category', label: 'Expense Category', icon: <CategoryIcon /> },
   { key: 'subCategory', label: 'Sub-Category', icon: <AccountTreeIcon /> },
 ] as const;
+
+// ── Table Configs ─────────────────────────────────────────────────────────────
+
+export const EXP_PROJECT_CONFIG: TableConfig = {
+  title: 'Expense Projects',
+  subtitle: 'Define expense projects with their group, type, billability and associations',
+  accent: '#0369a1',
+  icon: <ReceiptLongIcon sx={{ fontSize: '1.1rem' }} />,
+  entity: 'Expense Project',
+  fields: [
+    { name: 'project', label: 'Project', required: true, bold: true },
+    { name: 'name', label: 'Name', required: true, bold: true },
+    { name: 'description', label: 'Description' },
+    { name: 'expensesGroup', label: 'Expenses Group' },
+    { name: 'expensesType', label: 'Expenses Type' },
+    { name: 'billable', label: 'Billable' },
+    { name: 'itemization', label: 'Itemization' },
+  ],
+};
+
+export const EXP_PROJECT_SUBCATEGORY_CONFIG: TableConfig = {
+  title: 'Expense Project Sub-Categories',
+  subtitle: 'Define sub-categories for expense projects',
+  accent: '#0369a1',
+  icon: <AccountTreeIcon sx={{ fontSize: '1.1rem' }} />,
+  entity: 'Sub-Category',
+  fields: [
+    { name: 'project', label: 'Project', required: true, bold: true },
+    { name: 'subCategory', label: 'Sub-Category', required: true, bold: true },
+    { name: 'description', label: 'Description' },
+    { name: 'expensesGroup', label: 'Expenses Group' },
+    { name: 'expensesType', label: 'Expenses Type' },
+    { name: 'billable', label: 'Billable' },
+  ],
+};
+
+export const EXP_SERVICE_LINE_CONFIG: TableConfig = {
+  title: 'Expense Service Line Entries',
+  subtitle: 'Configure expense projects assigned to service lines',
+  accent: '#0369a1',
+  icon: <LayersIcon sx={{ fontSize: '1.1rem' }} />,
+  entity: 'Service Line Entry',
+  fields: [
+    { name: 'project', label: 'Project', required: true, bold: true },
+    { name: 'serviceLine', label: 'Service Line', required: true, bold: true },
+    { name: 'fromDate', label: 'From Date', type: 'date' },
+    { name: 'toDate', label: 'To Date', type: 'date' },
+    { name: 'activate', label: 'Activate', type: 'toggle', defaultValue: true },
+    { name: 'maxAmountPerDay', label: 'Max Amount/Day', type: 'number', defaultValue: 0 },
+  ],
+};
+
+export const EXP_APPLICATION_CONFIG: TableConfig = {
+  title: 'Expense Application Entries',
+  subtitle: 'Configure expense projects assigned to applications',
+  accent: '#0369a1',
+  icon: <AppsIcon sx={{ fontSize: '1.1rem' }} />,
+  entity: 'Application Entry',
+  fields: [
+    { name: 'project', label: 'Project', required: true, bold: true },
+    { name: 'application', label: 'Application', required: true, bold: true },
+    { name: 'fromDate', label: 'From Date', type: 'date' },
+    { name: 'toDate', label: 'To Date', type: 'date' },
+    { name: 'activate', label: 'Activate', type: 'toggle', defaultValue: true },
+    { name: 'maxAmountPerDay', label: 'Max Amount/Day', type: 'number', defaultValue: 0 },
+  ],
+};
+
+export const EXP_QUEUE_CONFIG: TableConfig = {
+  title: 'Expense Queue Entries',
+  subtitle: 'Configure expense projects assigned to queues',
+  accent: '#0369a1',
+  icon: <HeadsetMicIcon sx={{ fontSize: '1.1rem' }} />,
+  entity: 'Queue Entry',
+  fields: [
+    { name: 'project', label: 'Project', required: true, bold: true },
+    { name: 'queue', label: 'Queue', required: true, bold: true },
+    { name: 'fromDate', label: 'From Date', type: 'date' },
+    { name: 'toDate', label: 'To Date', type: 'date' },
+    { name: 'activate', label: 'Activate', type: 'toggle', defaultValue: true },
+    { name: 'maxAmountPerDay', label: 'Max Amount/Day', type: 'number', defaultValue: 0 },
+  ],
+};
+
+export const EXP_RESOURCE_CONFIG: TableConfig = {
+  title: 'Expense Resource Entries',
+  subtitle: 'Configure expense projects assigned to resources',
+  accent: '#0369a1',
+  icon: <PersonIcon sx={{ fontSize: '1.1rem' }} />,
+  entity: 'Resource Entry',
+  fields: [
+    { name: 'project', label: 'Project', required: true, bold: true },
+    { name: 'resource', label: 'Resource', required: true, bold: true },
+    { name: 'fromDate', label: 'From Date', type: 'date' },
+    { name: 'toDate', label: 'To Date', type: 'date' },
+    { name: 'activate', label: 'Activate', type: 'toggle', defaultValue: true },
+    { name: 'maxAmountPerDay', label: 'Max Amount/Day', type: 'number', defaultValue: 0 },
+  ],
+};
+
+export const EXP_CATEGORY_CONFIG: TableConfig = {
+  title: 'Expense Categories',
+  subtitle: 'Define expense categories with their group, type and billability',
+  accent: '#0369a1',
+  icon: <CategoryIcon sx={{ fontSize: '1.1rem' }} />,
+  entity: 'Expense Category',
+  fields: [
+    { name: 'project', label: 'Project', required: true, bold: true },
+    { name: 'name', label: 'Name', required: true, bold: true },
+    { name: 'description', label: 'Description' },
+    { name: 'expensesGroup', label: 'Expenses Group' },
+    { name: 'expensesType', label: 'Expenses Type' },
+    { name: 'billable', label: 'Billable' },
+    { name: 'itemization', label: 'Itemization' },
+  ],
+};
+
+export const EXP_CATEGORY_SUBCATEGORY_CONFIG: TableConfig = {
+  title: 'Expense Category Sub-Categories',
+  subtitle: 'Define sub-categories for expense categories',
+  accent: '#0369a1',
+  icon: <AccountTreeIcon sx={{ fontSize: '1.1rem' }} />,
+  entity: 'Sub-Category',
+  fields: [
+    { name: 'category', label: 'Category', required: true, bold: true },
+    { name: 'subCategory', label: 'Sub-Category', required: true, bold: true },
+    { name: 'description', label: 'Description' },
+    { name: 'expensesGroup', label: 'Expenses Group' },
+    { name: 'expensesType', label: 'Expenses Type' },
+    { name: 'billable', label: 'Billable' },
+  ],
+};
 
 // ── Column Definitions ─────────────────────────────────────────────────────────
 
@@ -43,13 +179,22 @@ export const expenseProjectColumns: Column<IConfigExpenseProjectEntry>[] = [
   { id: 'description', label: 'Description', minWidth: 200, format: mkDescCell },
   { id: 'expensesGroup', label: 'Expenses Group', minWidth: 140, format: mkCell() },
   { id: 'expensesType', label: 'Expenses Type', minWidth: 130, format: mkCell() },
-  { id: 'billable', label: 'Billable', minWidth: 110, format: mkChip(EXP_COLORS.category) },
+  { id: 'billable', label: 'Billable', minWidth: 110, format: mkChip('#0369a1') },
   {
     id: 'itemization',
     label: 'Itemization',
     minWidth: 110,
-    format: mkChip(EXP_COLORS.itemization),
+    format: mkChip('#0369a1'),
   },
+];
+
+export const expenseProjectSubCategoryColumns: Column<IConfigExpenseProjectSubCategory>[] = [
+  { id: 'project', label: 'Project', minWidth: 150, format: mkCell(true) },
+  { id: 'subCategory', label: 'Sub-Category', minWidth: 150, format: mkCell(true) },
+  { id: 'description', label: 'Description', minWidth: 200, format: mkDescCell },
+  { id: 'expensesGroup', label: 'Expenses Group', minWidth: 140, format: mkCell() },
+  { id: 'expensesType', label: 'Expenses Type', minWidth: 140, format: mkCell() },
+  { id: 'billable', label: 'Billable', minWidth: 110, format: mkChip('#0369a1') },
 ];
 
 export const expenseCategoryColumns: Column<IConfigExpenseCategoryEntry>[] = [
@@ -58,12 +203,12 @@ export const expenseCategoryColumns: Column<IConfigExpenseCategoryEntry>[] = [
   { id: 'description', label: 'Description', minWidth: 200, format: mkDescCell },
   { id: 'expensesGroup', label: 'Expenses Group', minWidth: 140, format: mkCell() },
   { id: 'expensesType', label: 'Expenses Type', minWidth: 130, format: mkCell() },
-  { id: 'billable', label: 'Billable', minWidth: 110, format: mkChip(EXP_COLORS.category) },
+  { id: 'billable', label: 'Billable', minWidth: 110, format: mkChip('#0369a1') },
   {
     id: 'itemization',
     label: 'Itemization',
     minWidth: 110,
-    format: mkChip(EXP_COLORS.itemization),
+    format: mkChip('#0369a1'),
   },
 ];
 
@@ -73,74 +218,41 @@ export const expenseSubCategoryColumns: Column<IConfigExpenseCategorySubCategory
   { id: 'description', label: 'Description', minWidth: 200, format: mkDescCell },
   { id: 'expensesGroup', label: 'Expenses Group', minWidth: 140, format: mkCell() },
   { id: 'expensesType', label: 'Expenses Type', minWidth: 140, format: mkCell() },
-  { id: 'billable', label: 'Billable', minWidth: 110, format: mkChip(EXP_COLORS.category) },
+  { id: 'billable', label: 'Billable', minWidth: 110, format: mkChip('#0369a1') },
 ];
 
-// ── Form Config ────────────────────────────────────────────────────────────────
+export const expenseServiceLineColumns: Column<IConfigExpenseServiceLineEntry>[] = [
+  { id: 'project', label: 'Project', minWidth: 140, format: mkCell(true) },
+  { id: 'serviceLine', label: 'Service Line', minWidth: 160, format: mkCell(true) },
+  { id: 'fromDate', label: 'From Date', minWidth: 110, format: mkCell() },
+  { id: 'toDate', label: 'To Date', minWidth: 110, format: mkCell() },
+  { id: 'activate', label: 'Active', minWidth: 80, format: mkChip('#0369a1') },
+  { id: 'maxAmountPerDay', label: 'Max Amount/Day', minWidth: 130, format: mkCell() },
+];
 
-export const EXP_FORM_LABELS = {
-  project: {
-    title: 'Expense Project',
-    subtitle: 'Define an expense project with its group, type and billability',
-    entity: 'Expense Project',
-    fields: [
-      { name: 'project', label: 'Project', required: true, placeholder: 'e.g. Q2 Infrastructure' },
-      {
-        name: 'name',
-        label: 'Name',
-        required: true,
-        placeholder: 'e.g. Field Operations, IT Upgrade',
-      },
-      {
-        name: 'description',
-        label: 'Description',
-        placeholder: 'Brief description of this expense project',
-      },
-      { name: 'expensesGroup', label: 'Expenses Group', placeholder: 'e.g. Operations, Admin' },
-      { name: 'expensesType', label: 'Expenses Type', placeholder: 'e.g. Direct, Indirect' },
-      { name: 'billable', label: 'Billable', placeholder: 'e.g. Billable, Non-Billable' },
-      { name: 'itemization', label: 'Itemization', placeholder: 'e.g. Required, Optional' },
-    ],
-  },
-  category: {
-    title: 'Expense Category',
-    subtitle: 'Define an expense category with its group, type and billability',
-    entity: 'Expense Category',
-    fields: [
-      { name: 'project', label: 'Project', required: true, placeholder: 'e.g. Q2 Infrastructure' },
-      { name: 'name', label: 'Name', required: true, placeholder: 'e.g. Travel, Supplies' },
-      {
-        name: 'description',
-        label: 'Description',
-        placeholder: 'Brief description of this expense category',
-      },
-      { name: 'expensesGroup', label: 'Expenses Group', placeholder: 'e.g. Operations, Admin' },
-      { name: 'expensesType', label: 'Expenses Type', placeholder: 'e.g. Direct, Indirect' },
-      { name: 'billable', label: 'Billable', placeholder: 'e.g. Billable, Non-Billable' },
-      { name: 'itemization', label: 'Itemization', placeholder: 'e.g. Required, Optional' },
-    ],
-  },
-  subCategory: {
-    title: 'Expense Category Sub-Category',
-    subtitle: 'Define a sub-category for an expense category',
-    entity: 'Expense Category Sub-Category',
-    fields: [
-      {
-        name: 'category',
-        label: 'Category',
-        required: true,
-        placeholder: 'e.g. Travel, Equipment',
-      },
-      {
-        name: 'subCategory',
-        label: 'Sub-Category',
-        required: true,
-        placeholder: 'e.g. Flights, Laptops',
-      },
-      { name: 'description', label: 'Description', placeholder: 'Brief description' },
-      { name: 'expensesGroup', label: 'Expenses Group', placeholder: 'e.g. Operations' },
-      { name: 'expensesType', label: 'Expenses Type', placeholder: 'e.g. Direct, Indirect' },
-      { name: 'billable', label: 'Billable', placeholder: 'e.g. Billable, Non-Billable' },
-    ],
-  },
-} as const;
+export const expenseApplicationColumns: Column<IConfigExpenseApplicationEntry>[] = [
+  { id: 'project', label: 'Project', minWidth: 140, format: mkCell(true) },
+  { id: 'application', label: 'Application', minWidth: 160, format: mkCell(true) },
+  { id: 'fromDate', label: 'From Date', minWidth: 110, format: mkCell() },
+  { id: 'toDate', label: 'To Date', minWidth: 110, format: mkCell() },
+  { id: 'activate', label: 'Active', minWidth: 80, format: mkChip('#0369a1') },
+  { id: 'maxAmountPerDay', label: 'Max Amount/Day', minWidth: 130, format: mkCell() },
+];
+
+export const expenseQueueColumns: Column<IConfigExpenseQueueEntry>[] = [
+  { id: 'project', label: 'Project', minWidth: 140, format: mkCell(true) },
+  { id: 'queue', label: 'Queue', minWidth: 160, format: mkCell(true) },
+  { id: 'fromDate', label: 'From Date', minWidth: 110, format: mkCell() },
+  { id: 'toDate', label: 'To Date', minWidth: 110, format: mkCell() },
+  { id: 'activate', label: 'Active', minWidth: 80, format: mkChip('#0369a1') },
+  { id: 'maxAmountPerDay', label: 'Max Amount/Day', minWidth: 130, format: mkCell() },
+];
+
+export const expenseResourceColumns: Column<IConfigExpenseResourceEntry>[] = [
+  { id: 'project', label: 'Project', minWidth: 140, format: mkCell(true) },
+  { id: 'resource', label: 'Resource', minWidth: 160, format: mkCell(true) },
+  { id: 'fromDate', label: 'From Date', minWidth: 110, format: mkCell() },
+  { id: 'toDate', label: 'To Date', minWidth: 110, format: mkCell() },
+  { id: 'activate', label: 'Active', minWidth: 80, format: mkChip('#0369a1') },
+  { id: 'maxAmountPerDay', label: 'Max Amount/Day', minWidth: 130, format: mkCell() },
+];

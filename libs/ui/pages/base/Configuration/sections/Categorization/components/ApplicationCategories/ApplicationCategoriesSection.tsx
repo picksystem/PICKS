@@ -7,11 +7,7 @@ import {
   CATEG_TABLE_CONFIG,
   applicationCategoryColumns,
 } from '../shared/CategorizationPanelConfig';
-
-interface ApplicationCategoriesSectionProps {
-  data?: IConfigApplicationCategory[];
-  onDataChange?: (data: IConfigApplicationCategory[]) => void;
-}
+import { ApplicationCategoriesSectionProps } from './ApplicationCategoriesSection.types';
 
 const ApplicationCategoriesSection = ({
   data,

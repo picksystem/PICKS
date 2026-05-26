@@ -2,7 +2,6 @@ import { Theme } from '@mui/material/styles';
 import { CSSObject } from 'tss-react';
 
 export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
-  // ── Page container ──────────────────────────────────────────────────────
   container: {
     padding: theme.spacing(3),
     width: '100%',
@@ -11,7 +10,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     },
   },
 
-  // ── Section accordions ──────────────────────────────────────────────────
   sectionAccordion: {
     marginTop: theme.spacing(2.5),
     width: '100%',
@@ -29,24 +27,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     marginTop: 2,
   },
 
-  sectionBody: {
-    padding: theme.spacing(2),
-    borderTop: `1px solid ${theme.palette.divider}`,
-    color: theme.palette.text.secondary,
-    fontSize: '0.875rem',
-    lineHeight: 1.7,
-  },
-
-  sectionEmptyBox: {
-    marginTop: theme.spacing(2),
-    padding: theme.spacing(2),
-    backgroundColor: theme.palette.grey[50],
-    borderRadius: theme.spacing(1.5),
-    border: `1px dashed ${theme.palette.divider}`,
-    textAlign: 'center' as const,
-  },
-
-  // ── Action toolbar ──────────────────────────────────────────────────────
   actionToolbar: {
     padding: '8px 12px',
     marginBottom: theme.spacing(1.5),
@@ -64,17 +44,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
       flexDirection: 'column' as const,
       alignItems: 'stretch',
     },
-  },
-
-  toolbarDivider: {
-    [theme.breakpoints.down('sm')]: {
-      display: 'none',
-    },
-  },
-
-  selectionInfo: {
-    paddingTop: theme.spacing(0.5),
-    paddingLeft: theme.spacing(0.5),
   },
 
   tableSearchField: {

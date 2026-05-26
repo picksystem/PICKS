@@ -105,28 +105,6 @@ const SLAs = () => {
   const [etaActRows, setEtaActRows] = useState<IConfigActivationRow[]>([]);
   const [timeLogActRows, setTimeLogActRows] = useState<IConfigActivationRow[]>([]);
 
-  // Response/Ack state
-  const [selectedAckRowId, setSelectedAckRowId] = useState<string | null>(null);
-  const [editingAckRow, setEditingAckRow] = useState<IConfigResponseAckSLARow | null>(null);
-
-  // Resolution state
-  const [selectedResRowId, setSelectedResRowId] = useState<string | null>(null);
-  const [editingResRow, setEditingResRow] = useState<IConfigResponseAckSLARow | null>(null);
-
-  // Due Date state
-  const [selectedDueDateRowId, setSelectedDueDateRowId] = useState<string | null>(null);
-  const [editingDueDateRow, setEditingDueDateRow] = useState<IConfigResponseAckSLARow | null>(null);
-
-  // ETA Activation state
-  const [selectedEtaActRowId, setSelectedEtaActRowId] = useState<string | null>(null);
-  const [editingEtaActRow, setEditingEtaActRow] = useState<IConfigActivationRow | null>(null);
-
-  // Time Log Activation state
-  const [selectedTimeLogActRowId, setSelectedTimeLogActRowId] = useState<string | null>(null);
-  const [editingTimeLogActRow, setEditingTimeLogActRow] = useState<IConfigActivationRow | null>(
-    null,
-  );
-
   useEffect(() => {
     if (apiSlas?.adminControls) setCtrl(apiSlas.adminControls);
     if (apiSlas?.responseAckRows) setAckRows(apiSlas.responseAckRows);
@@ -242,74 +220,10 @@ const SLAs = () => {
     };
   });
 
-  // Used IDs
-  const usedAckIds = ackRows.map((r) => r.ticketTypeId);
-  const usedResIds = resRows.map((r) => r.ticketTypeId);
-  const usedDueDateIds = dueDateRows.map((r) => r.ticketTypeId);
-  const usedEtaActIds = etaActRows.map((r) => r.ticketTypeId);
-  const usedTimeLogActIds = timeLogActRows.map((r) => r.ticketTypeId);
-
-  // Save handlers
+  // Save handlers for GenericPanel onSave callbacks
   const saveAckRows = (rows: IConfigResponseAckSLARow[]) => {
     setAckRows(rows);
     persistSlas(ctrl, rows, resRows, dueDateRows, etaActRows, timeLogActRows);
-  };
-
-  const handleAckSubmit = (row: IConfigResponseAckSLARow) => {
-    const existing = ackRows.findIndex((r) => r.ticketTypeId === row.ticketTypeId);
-    const next =
-      existing >= 0
-        ? ackRows.map((r) => (r.ticketTypeId === row.ticketTypeId ? row : r))
-        : [...ackRows, row];
-    saveAckRows(next);
-    setEditingAckRow(null);
-    setSelectedAckRowId(row.id);
-  };
-
-  const toggleRowActivation = (ticketTypeId: number, value: boolean) => {
-    const tt = activeTicketTypes.find((t) => t.id === ticketTypeId);
-    const def = DEFAULT_ACK_VALUES[tt?.type ?? ''] ?? FALLBACK_DEFAULTS;
-    const existing = ackRows.find((r) => r.ticketTypeId === ticketTypeId);
-    const updated: IConfigResponseAckSLARow = existing
-      ? { ...existing, activation: value }
-      : {
-          id: `rack_${tt?.type ?? ticketTypeId}`,
-          ticketTypeId,
-          ticketTypeName: tt?.displayName ?? tt?.name ?? '',
-          activation: value,
-          p1: def.p1,
-          p2: def.p2,
-          p3: def.p3,
-          p4: def.p4,
-          p5: def.p5,
-        };
-    const next = existing
-      ? ackRows.map((r) => (r.ticketTypeId === ticketTypeId ? updated : r))
-      : [...ackRows, updated];
-    saveAckRows(next);
-  };
-
-  const handleAckDelete = () => {
-    if (!selectedAckRowId) return;
-    const row = displayAckRows.find((r) => r.id === selectedAckRowId);
-    if (!row) return;
-    const next = ackRows.filter((r) => r.ticketTypeId !== row.ticketTypeId);
-    saveAckRows(next);
-    setSelectedAckRowId(null);
-  };
-
-  const handleAckLoadDefaults = () => {
-    const defaultRows: IConfigResponseAckSLARow[] = activeTicketTypes.map((tt) => {
-      const def = DEFAULT_ACK_VALUES[tt.type] ?? FALLBACK_DEFAULTS;
-      return {
-        id: `rack_${tt.type}`,
-        ticketTypeId: tt.id,
-        ticketTypeName: tt.displayName || tt.name,
-        ...def,
-      };
-    });
-    saveAckRows(defaultRows);
-    setSelectedAckRowId(null);
   };
 
   const saveResRows = (rows: IConfigResponseAckSLARow[]) => {
@@ -317,115 +231,9 @@ const SLAs = () => {
     persistSlas(ctrl, ackRows, rows, dueDateRows, etaActRows, timeLogActRows);
   };
 
-  const handleResSubmit = (row: IConfigResponseAckSLARow) => {
-    const existing = resRows.findIndex((r) => r.ticketTypeId === row.ticketTypeId);
-    const next =
-      existing >= 0
-        ? resRows.map((r) => (r.ticketTypeId === row.ticketTypeId ? row : r))
-        : [...resRows, row];
-    saveResRows(next);
-    setEditingResRow(null);
-    setSelectedResRowId(row.id);
-  };
-
-  const toggleResRowActivation = (ticketTypeId: number, value: boolean) => {
-    const tt = activeTicketTypes.find((t) => t.id === ticketTypeId);
-    const def = DEFAULT_RES_VALUES[tt?.type ?? ''] ?? FALLBACK_RES;
-    const existing = resRows.find((r) => r.ticketTypeId === ticketTypeId);
-    const updated: IConfigResponseAckSLARow = existing
-      ? { ...existing, activation: value }
-      : {
-          id: `rres_${tt?.type ?? ticketTypeId}`,
-          ticketTypeId,
-          ticketTypeName: tt?.displayName ?? tt?.name ?? '',
-          ...def,
-          activation: value,
-        };
-    const next = existing
-      ? resRows.map((r) => (r.ticketTypeId === ticketTypeId ? updated : r))
-      : [...resRows, updated];
-    saveResRows(next);
-  };
-
-  const handleResDelete = () => {
-    if (!selectedResRowId) return;
-    const row = displayResRows.find((r) => r.id === selectedResRowId);
-    if (!row) return;
-    const next = resRows.filter((r) => r.ticketTypeId !== row.ticketTypeId);
-    saveResRows(next);
-    setSelectedResRowId(null);
-  };
-
-  const handleResLoadDefaults = () => {
-    const defaultRows: IConfigResponseAckSLARow[] = activeTicketTypes.map((tt) => {
-      const def = DEFAULT_RES_VALUES[tt.type] ?? FALLBACK_RES;
-      return {
-        id: `rres_${tt.type}`,
-        ticketTypeId: tt.id,
-        ticketTypeName: tt.displayName || tt.name,
-        ...def,
-      };
-    });
-    saveResRows(defaultRows);
-    setSelectedResRowId(null);
-  };
-
   const saveDueDateRows = (rows: IConfigResponseAckSLARow[]) => {
     setDueDateRows(rows);
     persistSlas(ctrl, ackRows, resRows, rows, etaActRows, timeLogActRows);
-  };
-
-  const handleDueDateSubmit = (row: IConfigResponseAckSLARow) => {
-    const existing = dueDateRows.findIndex((r) => r.ticketTypeId === row.ticketTypeId);
-    const next =
-      existing >= 0
-        ? dueDateRows.map((r) => (r.ticketTypeId === row.ticketTypeId ? row : r))
-        : [...dueDateRows, row];
-    saveDueDateRows(next);
-    setEditingDueDateRow(null);
-    setSelectedDueDateRowId(row.id);
-  };
-
-  const toggleDueDateRowActivation = (ticketTypeId: number, value: boolean) => {
-    const tt = activeTicketTypes.find((t) => t.id === ticketTypeId);
-    const def = DEFAULT_DUEDATE_VALUES[tt?.type ?? ''] ?? FALLBACK_DUEDATE;
-    const existing = dueDateRows.find((r) => r.ticketTypeId === ticketTypeId);
-    const updated: IConfigResponseAckSLARow = existing
-      ? { ...existing, activation: value }
-      : {
-          id: `rdd_${tt?.type ?? ticketTypeId}`,
-          ticketTypeId,
-          ticketTypeName: tt?.displayName ?? tt?.name ?? '',
-          ...def,
-          activation: value,
-        };
-    const next = existing
-      ? dueDateRows.map((r) => (r.ticketTypeId === ticketTypeId ? updated : r))
-      : [...dueDateRows, updated];
-    saveDueDateRows(next);
-  };
-
-  const handleDueDateDelete = () => {
-    if (!selectedDueDateRowId) return;
-    const row = displayDueDateRows.find((r) => r.id === selectedDueDateRowId);
-    if (!row) return;
-    const next = dueDateRows.filter((r) => r.ticketTypeId !== row.ticketTypeId);
-    saveDueDateRows(next);
-    setSelectedDueDateRowId(null);
-  };
-
-  const handleDueDateLoadDefaults = () => {
-    const defaultRows: IConfigResponseAckSLARow[] = activeTicketTypes.map((tt) => {
-      const def = DEFAULT_DUEDATE_VALUES[tt.type] ?? FALLBACK_DUEDATE;
-      return {
-        id: `rdd_${tt.type}`,
-        ticketTypeId: tt.id,
-        ticketTypeName: tt.displayName || tt.name,
-        ...def,
-      };
-    });
-    saveDueDateRows(defaultRows);
-    setSelectedDueDateRowId(null);
   };
 
   const saveEtaActRows = (rows: IConfigActivationRow[]) => {
@@ -433,83 +241,9 @@ const SLAs = () => {
     persistSlas(ctrl, ackRows, resRows, dueDateRows, rows, timeLogActRows);
   };
 
-  const handleEtaActSubmit = (row: IConfigActivationRow) => {
-    const existing = etaActRows.findIndex((r) => r.ticketTypeId === row.ticketTypeId);
-    const next =
-      existing >= 0
-        ? etaActRows.map((r) => (r.ticketTypeId === row.ticketTypeId ? row : r))
-        : [...etaActRows, row];
-    saveEtaActRows(next);
-    setEditingEtaActRow(null);
-    setSelectedEtaActRowId(row.id);
-  };
-
-  const toggleEtaActRowActivation = (ticketTypeId: number, value: boolean) => {
-    const tt = activeTicketTypes.find((t) => t.id === ticketTypeId);
-    const existing = etaActRows.find((r) => r.ticketTypeId === ticketTypeId);
-    const updated: IConfigActivationRow = existing
-      ? { ...existing, activation: value }
-      : {
-          id: `eta_${tt?.type ?? ticketTypeId}`,
-          ticketTypeId,
-          ticketTypeName: tt?.displayName ?? tt?.name ?? '',
-          activation: value,
-        };
-    const next = existing
-      ? etaActRows.map((r) => (r.ticketTypeId === ticketTypeId ? updated : r))
-      : [...etaActRows, updated];
-    saveEtaActRows(next);
-  };
-
-  const handleEtaActDelete = () => {
-    if (!selectedEtaActRowId) return;
-    const row = displayEtaActRows.find((r) => r.id === selectedEtaActRowId);
-    if (!row) return;
-    const next = etaActRows.filter((r) => r.ticketTypeId !== row.ticketTypeId);
-    saveEtaActRows(next);
-    setSelectedEtaActRowId(null);
-  };
-
   const saveTimeLogActRows = (rows: IConfigActivationRow[]) => {
     setTimeLogActRows(rows);
     persistSlas(ctrl, ackRows, resRows, dueDateRows, etaActRows, rows);
-  };
-
-  const handleTimeLogActSubmit = (row: IConfigActivationRow) => {
-    const existing = timeLogActRows.findIndex((r) => r.ticketTypeId === row.ticketTypeId);
-    const next =
-      existing >= 0
-        ? timeLogActRows.map((r) => (r.ticketTypeId === row.ticketTypeId ? row : r))
-        : [...timeLogActRows, row];
-    saveTimeLogActRows(next);
-    setEditingTimeLogActRow(null);
-    setSelectedTimeLogActRowId(row.id);
-  };
-
-  const toggleTimeLogActRowActivation = (ticketTypeId: number, value: boolean) => {
-    const tt = activeTicketTypes.find((t) => t.id === ticketTypeId);
-    const existing = timeLogActRows.find((r) => r.ticketTypeId === ticketTypeId);
-    const updated: IConfigActivationRow = existing
-      ? { ...existing, activation: value }
-      : {
-          id: `tlog_${tt?.type ?? ticketTypeId}`,
-          ticketTypeId,
-          ticketTypeName: tt?.displayName ?? tt?.name ?? '',
-          activation: value,
-        };
-    const next = existing
-      ? timeLogActRows.map((r) => (r.ticketTypeId === ticketTypeId ? updated : r))
-      : [...timeLogActRows, updated];
-    saveTimeLogActRows(next);
-  };
-
-  const handleTimeLogActDelete = () => {
-    if (!selectedTimeLogActRowId) return;
-    const row = displayTimeLogActRows.find((r) => r.id === selectedTimeLogActRowId);
-    if (!row) return;
-    const next = timeLogActRows.filter((r) => r.ticketTypeId !== row.ticketTypeId);
-    saveTimeLogActRows(next);
-    setSelectedTimeLogActRowId(null);
   };
 
   return (
@@ -524,69 +258,31 @@ const SLAs = () => {
         <CalendarRulesSection ctrl={ctrl} onUpdate={update} />
         <ResponseAckSLASection
           displayRows={displayAckRows}
-          selectedRowId={selectedAckRowId}
-          setSelectedRowId={setSelectedAckRowId}
-          editingRow={editingAckRow}
-          setEditingRow={setEditingAckRow}
-          onSubmit={handleAckSubmit}
-          onDelete={handleAckDelete}
-          onLoadDefaults={handleAckLoadDefaults}
-          onToggleActivation={toggleRowActivation}
           activeTicketTypes={activeTicketTypes}
-          usedTicketTypeIds={usedAckIds}
+          onDataChange={saveAckRows}
         />
         <ResolutionSLASection
           displayRows={displayResRows}
-          selectedRowId={selectedResRowId}
-          setSelectedRowId={setSelectedResRowId}
-          editingRow={editingResRow}
-          setEditingRow={setEditingResRow}
-          onSubmit={handleResSubmit}
-          onDelete={handleResDelete}
-          onLoadDefaults={handleResLoadDefaults}
-          onToggleActivation={toggleResRowActivation}
           activeTicketTypes={activeTicketTypes}
-          usedTicketTypeIds={usedResIds}
+          onDataChange={saveResRows}
         />
         <DueDateAdminControlsSection ctrl={ctrl} onUpdate={update} />
         <DueDatesSection
           displayRows={displayDueDateRows}
-          selectedRowId={selectedDueDateRowId}
-          setSelectedRowId={setSelectedDueDateRowId}
-          editingRow={editingDueDateRow}
-          setEditingRow={setEditingDueDateRow}
-          onSubmit={handleDueDateSubmit}
-          onDelete={handleDueDateDelete}
-          onLoadDefaults={handleDueDateLoadDefaults}
-          onToggleActivation={toggleDueDateRowActivation}
           activeTicketTypes={activeTicketTypes}
-          usedTicketTypeIds={usedDueDateIds}
+          onDataChange={saveDueDateRows}
         />
         <ETAdminControlsSection ctrl={ctrl} onUpdate={update} />
         <ETAActivationSection
           displayRows={displayEtaActRows}
-          selectedRowId={selectedEtaActRowId}
-          setSelectedRowId={setSelectedEtaActRowId}
-          editingRow={editingEtaActRow}
-          setEditingRow={setEditingEtaActRow}
-          onSubmit={handleEtaActSubmit}
-          onDelete={handleEtaActDelete}
-          onToggleActivation={toggleEtaActRowActivation}
           activeTicketTypes={activeTicketTypes}
-          usedTicketTypeIds={usedEtaActIds}
+          onDataChange={saveEtaActRows}
         />
         <TimeLogAdminControlsSection ctrl={ctrl} onUpdate={update} />
         <TimeLogsActivationSection
           displayRows={displayTimeLogActRows}
-          selectedRowId={selectedTimeLogActRowId}
-          setSelectedRowId={setSelectedTimeLogActRowId}
-          editingRow={editingTimeLogActRow}
-          setEditingRow={setEditingTimeLogActRow}
-          onSubmit={handleTimeLogActSubmit}
-          onDelete={handleTimeLogActDelete}
-          onToggleActivation={toggleTimeLogActRowActivation}
           activeTicketTypes={activeTicketTypes}
-          usedTicketTypeIds={usedTimeLogActIds}
+          onDataChange={saveTimeLogActRows}
         />
       </ConfigurationSection>
     </Box>

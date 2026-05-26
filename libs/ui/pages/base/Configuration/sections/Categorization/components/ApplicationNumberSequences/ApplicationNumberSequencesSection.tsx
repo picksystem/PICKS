@@ -7,11 +7,7 @@ import {
   CATEG_TABLE_CONFIG,
   applicationNumberSequenceColumns,
 } from '../shared/CategorizationPanelConfig';
-
-interface ApplicationNumberSequencesSectionProps {
-  data?: IConfigApplicationNumberSequence[];
-  onDataChange?: (data: IConfigApplicationNumberSequence[]) => void;
-}
+import { ApplicationNumberSequencesSectionProps } from './ApplicationNumberSequencesSection.types';
 
 const ApplicationNumberSequencesSection = ({
   data,

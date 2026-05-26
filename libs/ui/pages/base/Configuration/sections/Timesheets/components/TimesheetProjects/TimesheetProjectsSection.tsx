@@ -1,115 +1,230 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, Paper, Button } from '@serviceops/component';
-import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ScheduleSendIcon from '@mui/icons-material/ScheduleSend';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import {
+  IConfigTimesheetProjectEntry,
+  IConfigTimesheetServiceLineEntry,
+  IConfigTimesheetApplicationEntry,
+  IConfigTimesheetQueueEntry,
+  IConfigTimesheetResourceEntry,
+} from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
-import { GenericCRUDPanel, RowData } from '../../../../shared/GenericTablePanel/GenericTablePanel';
+import { GenericToolbar } from '@serviceops/pages/base/Configuration/shared/GenericToolbar/GenericToolbar';
+import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { GenericAccordion } from '@serviceops/pages/base/Configuration/shared/GenericAccordion/GenericAccordion';
 import {
-  TS_COLORS,
-  TS_FORM_LABELS,
-  TS_PROJECT_VIEWS,
+  TS_ACCENT,
+  TIMESHEET_PROJECT_MAIN_CONFIG,
+  SERVICE_LINE_CONFIG,
+  APPLICATION_CONFIG,
+  QUEUE_CONFIG,
+  RESOURCE_CONFIG,
   timesheetProjectColumns,
-} from '../shared/timesheets.config';
+  serviceLineColumns,
+  applicationColumns,
+  queueColumns,
+  resourceColumns,
+} from '../shared';
+import { TSActiveView } from './TimesheetProjectsSection.types';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import LayersIcon from '@mui/icons-material/Layers';
+import AppsIcon from '@mui/icons-material/Apps';
+import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
+import PersonIcon from '@mui/icons-material/Person';
 
-type ActiveView = 'project';
+const VIEW_BUTTONS: { key: TSActiveView; label: string; icon: React.ReactNode }[] = [
+  {
+    key: 'project',
+    label: 'Timesheet Projects',
+    icon: <AccessTimeIcon sx={{ fontSize: '1rem' }} />,
+  },
+  {
+    key: 'serviceLine',
+    label: 'Add to Service Line',
+    icon: <LayersIcon sx={{ fontSize: '1rem' }} />,
+  },
+  {
+    key: 'application',
+    label: 'Add to Application',
+    icon: <AppsIcon sx={{ fontSize: '1rem' }} />,
+  },
+  {
+    key: 'queue',
+    label: 'Add to Queue',
+    icon: <HeadsetMicIcon sx={{ fontSize: '1rem' }} />,
+  },
+  {
+    key: 'resource',
+    label: 'Add to Resource',
+    icon: <PersonIcon sx={{ fontSize: '1rem' }} />,
+  },
+];
 
-const TimesheetProjectPanel = () => {
+interface TimesheetProjectsSectionProps {
+  data?: IConfigTimesheetProjectEntry[];
+  onDataChange?: (data: IConfigTimesheetProjectEntry[]) => void;
+}
+
+export const TimesheetProjectsSection = ({ data, onDataChange }: TimesheetProjectsSectionProps) => {
+  const { classes } = useStyles();
   const { timesheets: apiTS, saveSection } = useConfiguration();
-  const [rows, setRows] = useState<RowData>([]);
+  const [activeView, setActiveView] = useState<TSActiveView>('project');
+  const [rows, setRows] = useState<IConfigTimesheetProjectEntry[]>([]);
+  const [serviceLineRows, setServiceLineRows] = useState<IConfigTimesheetServiceLineEntry[]>([]);
+  const [applicationRows, setApplicationRows] = useState<IConfigTimesheetApplicationEntry[]>([]);
+  const [queueRows, setQueueRows] = useState<IConfigTimesheetQueueEntry[]>([]);
+  const [resourceRows, setResourceRows] = useState<IConfigTimesheetResourceEntry[]>([]);
 
   useEffect(() => {
-    if (apiTS?.timesheetProjects) setRows(apiTS.timesheetProjects);
+    if (data !== undefined) {
+      setRows(data);
+    } else if (apiTS?.timesheetProjects) {
+      setRows(apiTS.timesheetProjects);
+    }
+  }, [data, apiTS]);
+
+  useEffect(() => {
+    if (apiTS?.serviceLineEntries) setServiceLineRows(apiTS.serviceLineEntries);
+    if (apiTS?.applicationEntries) setApplicationRows(apiTS.applicationEntries);
+    if (apiTS?.queueEntries) setQueueRows(apiTS.queueEntries);
+    if (apiTS?.resourceEntries) setResourceRows(apiTS.resourceEntries);
   }, [apiTS]);
 
-  const handleSave = (next: RowData) => {
+  const handleSave = (next: IConfigTimesheetProjectEntry[]) => {
     setRows(next);
-    saveSection('timesheets', { ...apiTS, timesheetProjects: next });
+    if (onDataChange) {
+      onDataChange(next);
+    } else {
+      saveSection('timesheets', {
+        conversionReasonCodes: apiTS?.conversionReasonCodes ?? [],
+        cancellationReasonCodes: apiTS?.cancellationReasonCodes ?? [],
+        timesheetProjects: next,
+        serviceLineEntries: serviceLineRows,
+        applicationEntries: applicationRows,
+        queueEntries: queueRows,
+        resourceEntries: resourceRows,
+        projectCategories: apiTS?.projectCategories ?? [],
+      });
+    }
   };
 
-  const config = {
-    title: 'Timesheet Projects',
-    accent: TS_COLORS.timesheet,
-    icon: <AccessTimeIcon fontSize='small' />,
-    panelTitle: 'Timesheet Projects',
-    columns: timesheetProjectColumns,
-    formConfig: TS_FORM_LABELS.project,
-    searchFields: ['name', 'description', 'projectType', 'transitionType'],
-    getSelectedLabel: (row: RowData) => String(row.name ?? ''),
-    getId: (row: RowData) => String(row.id ?? ''),
-    idPrefix: 'tsp',
+  const handleSaveServiceLine = (next: IConfigTimesheetServiceLineEntry[]) => {
+    setServiceLineRows(next);
+    saveSection('timesheets', {
+      conversionReasonCodes: apiTS?.conversionReasonCodes ?? [],
+      cancellationReasonCodes: apiTS?.cancellationReasonCodes ?? [],
+      timesheetProjects: rows,
+      serviceLineEntries: next,
+      applicationEntries: applicationRows,
+      queueEntries: queueRows,
+      resourceEntries: resourceRows,
+      projectCategories: apiTS?.projectCategories ?? [],
+    });
   };
 
-  return <GenericCRUDPanel config={config} data={rows} onSave={handleSave} />;
-};
+  const handleSaveApplication = (next: IConfigTimesheetApplicationEntry[]) => {
+    setApplicationRows(next);
+    saveSection('timesheets', {
+      conversionReasonCodes: apiTS?.conversionReasonCodes ?? [],
+      cancellationReasonCodes: apiTS?.cancellationReasonCodes ?? [],
+      timesheetProjects: rows,
+      serviceLineEntries: serviceLineRows,
+      applicationEntries: next,
+      queueEntries: queueRows,
+      resourceEntries: resourceRows,
+      projectCategories: apiTS?.projectCategories ?? [],
+    });
+  };
 
-// ── Timesheet Projects Section ─────────────────────────────────────────────────
+  const handleSaveQueue = (next: IConfigTimesheetQueueEntry[]) => {
+    setQueueRows(next);
+    saveSection('timesheets', {
+      conversionReasonCodes: apiTS?.conversionReasonCodes ?? [],
+      cancellationReasonCodes: apiTS?.cancellationReasonCodes ?? [],
+      timesheetProjects: rows,
+      serviceLineEntries: serviceLineRows,
+      applicationEntries: applicationRows,
+      queueEntries: next,
+      resourceEntries: resourceRows,
+      projectCategories: apiTS?.projectCategories ?? [],
+    });
+  };
 
-const TimesheetProjectsSection = () => {
-  const { classes } = useStyles();
-  const [activeView] = useState<ActiveView>('project');
+  const handleSaveResource = (next: IConfigTimesheetResourceEntry[]) => {
+    setResourceRows(next);
+    saveSection('timesheets', {
+      conversionReasonCodes: apiTS?.conversionReasonCodes ?? [],
+      cancellationReasonCodes: apiTS?.cancellationReasonCodes ?? [],
+      timesheetProjects: rows,
+      serviceLineEntries: serviceLineRows,
+      applicationEntries: applicationRows,
+      queueEntries: queueRows,
+      resourceEntries: next,
+      projectCategories: apiTS?.projectCategories ?? [],
+    });
+  };
 
   return (
-    <Accordion defaultExpanded elevation={0} className={classes.sectionAccordion}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: 1.5,
-              bgcolor: TS_COLORS.timesheet,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <ScheduleSendIcon sx={{ color: '#fff', fontSize: '1rem' }} />
-          </Box>
-          <Box>
-            <Typography className={classes.sectionTitle}>Timesheet Projects</Typography>
-            <Typography className={classes.sectionSubtitle}>
-              Define and manage timesheet project entries with their types and associations
-            </Typography>
-          </Box>
-        </Box>
-      </AccordionSummary>
-
-      <AccordionDetails sx={{ p: 2 }}>
-        <Paper variant='outlined' sx={{ p: 1.5, mb: 2 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              flexWrap: 'wrap',
-              gap: 1,
-            }}
-          >
-            {TS_PROJECT_VIEWS.map((view) => (
-              <Button
-                key={view.key}
-                size='small'
-                variant={activeView === view.key ? 'contained' : 'outlined'}
-                startIcon={view.icon}
-                sx={{
-                  textTransform: 'none',
-                  bgcolor: activeView === view.key ? '#2d5ebb' : undefined,
-                  color: activeView === view.key ? '#fff' : '#2d5ebb',
-                }}
-              >
-                {view.label}
-              </Button>
-            ))}
-          </Box>
-        </Paper>
-
-        {activeView === 'project' && <TimesheetProjectPanel />}
-      </AccordionDetails>
-    </Accordion>
+    <GenericAccordion
+      title='Timesheet Projects'
+      subtitle='Define timesheet project entries with their types and transition details'
+      icon={<AccessTimeIcon sx={{ fontSize: '1rem' }} />}
+      accent={TS_ACCENT}
+      className={classes.sectionAccordion}
+    >
+      <GenericToolbar
+        buttons={VIEW_BUTTONS.map((btn) => ({
+          key: btn.key,
+          label: btn.label,
+          icon: btn.icon,
+          isActive: activeView === btn.key,
+          onClick: () => setActiveView(btn.key as TSActiveView),
+        }))}
+      />
+      {activeView === 'project' && (
+        <GenericPanel
+          config={TIMESHEET_PROJECT_MAIN_CONFIG}
+          data={rows}
+          onSave={handleSave}
+          customColumns={timesheetProjectColumns as any}
+          variant='standard'
+        />
+      )}
+      {activeView === 'serviceLine' && (
+        <GenericPanel
+          config={SERVICE_LINE_CONFIG}
+          data={serviceLineRows}
+          onSave={handleSaveServiceLine}
+          customColumns={serviceLineColumns as any}
+          variant='standard'
+        />
+      )}
+      {activeView === 'application' && (
+        <GenericPanel
+          config={APPLICATION_CONFIG}
+          data={applicationRows}
+          onSave={handleSaveApplication}
+          customColumns={applicationColumns as any}
+          variant='standard'
+        />
+      )}
+      {activeView === 'queue' && (
+        <GenericPanel
+          config={QUEUE_CONFIG}
+          data={queueRows}
+          onSave={handleSaveQueue}
+          customColumns={queueColumns as any}
+          variant='standard'
+        />
+      )}
+      {activeView === 'resource' && (
+        <GenericPanel
+          config={RESOURCE_CONFIG}
+          data={resourceRows}
+          onSave={handleSaveResource}
+          customColumns={resourceColumns as any}
+          variant='standard'
+        />
+      )}
+    </GenericAccordion>
   );
 };
-
-export { TimesheetProjectsSection };
