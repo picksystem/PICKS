@@ -51,7 +51,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   // ── Action toolbar ──────────────────────────────────────────────────────
   actionToolbar: {
     padding: '8px 12px',
-    marginBottom: theme.spacing(1.5),
     display: 'flex',
     flexDirection: 'column' as const,
     gap: theme.spacing(0.5),
@@ -63,8 +62,9 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     flexWrap: 'wrap' as const,
     gap: theme.spacing(0.75),
     [theme.breakpoints.down('sm')]: {
-      flexDirection: 'column' as const,
-      alignItems: 'stretch',
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between',
+      alignItems: 'center',
     },
   },
 
@@ -109,7 +109,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   tablePaper: {
-    borderRadius: theme.spacing(1),
     overflow: 'hidden',
   },
 

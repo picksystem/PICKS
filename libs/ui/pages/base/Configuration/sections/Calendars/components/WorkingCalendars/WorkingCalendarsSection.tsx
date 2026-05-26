@@ -1,30 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { Box, Button, DataTable, Typography } from '@serviceops/component';
 import {
-  Box,
-  Typography,
-  Paper,
-  Button,
-  TextField,
-  Chip,
-  Switch,
-  DataTable,
-  Column,
-  Tooltip,
-} from '@serviceops/component';
-import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
+  TextField,
+  Switch,
   FormControlLabel,
-  alpha,
   IconButton,
   Dialog,
   DialogContent,
   DialogActions,
+  Chip,
+  alpha,
 } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -34,7 +23,6 @@ import GroupIcon from '@mui/icons-material/Group';
 import AddIcon from '@mui/icons-material/Add';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import DeleteIcon from '@mui/icons-material/Delete';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -52,47 +40,24 @@ import {
   ConfigDeleteDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
-import { ACCENT_WC, ACCENT_WT, ACCENT_CT, ACCENT_WL, ACCENT_CC, ACCENT_BH } from '../shared';
-import { PanelHeader, PanelTable, PanelToolbar } from '../../../Categorization/components/shared';
-import { ActiveChip } from '@serviceops/pages/base/Configuration/shared/assocPanel';
-
-const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-const EMPTY_WT_FORM = {
-  calendarName: '',
-  dayOfWeek: '',
-  timeBlocks: [{ startTime: '09:00', endTime: '17:00' }],
-  isWorkingDay: true,
-};
-const EMPTY_CT_FORM = {
-  calendarName: '',
-  date: '',
-  day: '',
-  startTime: '09:00',
-  endTime: '17:00',
-  isWorkingDay: false,
-  note: '',
-};
-const EMPTY_WL_FORM = { calendarName: '', workLocation: '', effectiveFrom: '', effectiveTo: '' };
-const EMPTY_CO_FORM = {
-  calendarName: '',
-  consultantName: '',
-  role: '',
-  application: '',
-  effectiveFrom: '',
-  effectiveTo: '',
-};
-const EMPTY_WC_FORM = { name: '', holidayCalendar: '', workingDayTemplate: '' };
-
-type WCActiveView = 'calendar' | 'workingTimes' | 'composedTimes' | 'workLocations' | 'consultants';
-
-const dayFromDate = (iso: string): string => {
-  if (!iso) return '';
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-US', { weekday: 'long' });
-};
-
-// ── Working Time Panel ─────────────────────────────────────────────────────────
+import { GenericAccordion } from '@serviceops/pages/base/Configuration/shared/GenericAccordion/GenericAccordion';
+import { GenericToolbar } from '@serviceops/pages/base/Configuration/shared/GenericToolbar/GenericToolbar';
+import { ACCENT } from '../shared';
+import {
+  ActiveChip,
+  PanelHeader,
+  PanelTable,
+  PanelToolbar,
+} from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import {
+  dayFromDate,
+  DAYS_OF_WEEK,
+  EMPTY_CO_FORM,
+  EMPTY_CT_FORM,
+  EMPTY_WL_FORM,
+  EMPTY_WT_FORM,
+  WCActiveView,
+} from './WorkingCalendarsSection.types';
 
 const WorkingTimePanel = ({
   calendarRow,
@@ -102,7 +67,6 @@ const WorkingTimePanel = ({
   calendarRow: IConfigWorkingCalendar | null;
   allTimes: IConfigWorkingCalendarTime[];
   onSave: (next: IConfigWorkingCalendarTime[]) => void;
-  onBack?: () => void;
 }) => {
   const rows = calendarRow ? allTimes.filter((t) => t.calendarName === calendarRow.name) : allTimes;
 
@@ -162,12 +126,12 @@ const WorkingTimePanel = ({
     setDeleteOpen(false);
   };
 
-  const wtCols: Column<IConfigWorkingCalendarTime>[] = [
+  const wtCols = [
     {
       id: 'dayOfWeek',
       label: 'Day of Week',
       minWidth: 130,
-      format: (v): React.ReactNode => (
+      format: (v: unknown) => (
         <Typography variant='body2' fontWeight={700} fontSize='0.82rem'>
           {String(v || '—')}
         </Typography>
@@ -177,30 +141,18 @@ const WorkingTimePanel = ({
       id: 'timeBlocks',
       label: 'Working Hours',
       minWidth: 250,
-      format: (v): React.ReactNode => {
+      format: (v: unknown) => {
         const blocks = Array.isArray(v) ? v : [];
-        if (blocks.length === 0)
-          return (
-            <Typography variant='body2' color='text.disabled'>
-              —
-            </Typography>
-          );
-        return (
+        return blocks.length === 0 ? (
+          <Typography variant='body2' color='text.disabled'>
+            —
+          </Typography>
+        ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
             {blocks.map((block: { startTime: string; endTime: string }, idx: number) => (
-              <Chip
-                key={idx}
-                label={`${block.startTime} – ${block.endTime}`}
-                size='small'
-                sx={{
-                  fontWeight: 700,
-                  fontSize: '0.72rem',
-                  height: 22,
-                  borderRadius: '6px',
-                  bgcolor: alpha(ACCENT_WT, 0.1),
-                  color: ACCENT_WT,
-                }}
-              />
+              <Typography key={idx} variant='body2' fontSize='0.8rem'>
+                {block.startTime} – {block.endTime}
+              </Typography>
             ))}
           </Box>
         );
@@ -212,19 +164,15 @@ const WorkingTimePanel = ({
   return (
     <Box sx={{ mt: 1.5 }}>
       <PanelHeader
-        accent={ACCENT_WT}
+        accent={ACCENT}
         icon={<AccessTimeIcon fontSize='small' />}
         title={
           calendarRow ? `Working Times — ${calendarRow.name}` : 'Working Times (All Calendars)'
         }
       />
       <PanelToolbar
-        accent={ACCENT_WT}
-        selectedLabel={
-          selectedRow
-            ? `${selectedRow.dayOfWeek} (${(selectedRow.timeBlocks || []).map((b) => `${b.startTime}–${b.endTime}`).join(', ')})`
-            : null
-        }
+        accent={ACCENT}
+        selectedLabel={selectedRow ? `${selectedRow.dayOfWeek}` : null}
         onNew={() => {
           setEditingRow(null);
           setDialogOpen(true);
@@ -238,7 +186,7 @@ const WorkingTimePanel = ({
         onSearch={setSearch}
         onClear={() => setSelectedId(null)}
       />
-      <PanelTable accent={ACCENT_WT}>
+      <PanelTable accent={ACCENT}>
         <DataTable
           columns={wtCols}
           data={filtered}
@@ -259,7 +207,7 @@ const WorkingTimePanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<AccessTimeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_WT}
+        accent={ACCENT}
         title='Working Time'
         submitDisabled={!wtForm.calendarName.trim()}
         maxWidth='sm'
@@ -288,7 +236,7 @@ const WorkingTimePanel = ({
         </FormControl>
         <Box>
           <Typography variant='body2' fontWeight={600} sx={{ mb: 1 }}>
-            Working Hours (add multiple blocks for breaks)
+            Working Hours
           </Typography>
           {wtForm.timeBlocks.map((block, idx) => (
             <Box key={idx} sx={{ display: 'flex', gap: 1, mb: 1 }}>
@@ -334,21 +282,19 @@ const WorkingTimePanel = ({
               )}
             </Box>
           ))}
-          <Tooltip title='Add a new Time Block'>
-            <Button
-              size='small'
-              startIcon={<AddIcon />}
-              onClick={() =>
-                setWtForm((f) => ({
-                  ...f,
-                  timeBlocks: [...f.timeBlocks, { startTime: '12:00', endTime: '13:00' }],
-                }))
-              }
-              sx={{ mt: 0.5 }}
-            >
-              Add Time Block
-            </Button>
-          </Tooltip>
+          <Button
+            size='small'
+            startIcon={<AddIcon />}
+            onClick={() =>
+              setWtForm((f) => ({
+                ...f,
+                timeBlocks: [...f.timeBlocks, { startTime: '12:00', endTime: '13:00' }],
+              }))
+            }
+            sx={{ mt: 0.5 }}
+          >
+            Add Time Block
+          </Button>
         </Box>
         <FormControlLabel
           control={
@@ -371,11 +317,7 @@ const WorkingTimePanel = ({
         onClose={() => setDeleteOpen(false)}
         onConfirm={handleDelete}
         entityName='Working Time'
-        itemName={
-          selectedRow
-            ? `${selectedRow.dayOfWeek} (${(selectedRow.timeBlocks || []).map((b) => `${b.startTime}–${b.endTime}`).join(', ')})`
-            : undefined
-        }
+        itemName={selectedRow?.dayOfWeek}
       />
     </Box>
   );
@@ -391,7 +333,6 @@ const ComposedTimesPanel = ({
   calendarRow: IConfigWorkingCalendar | null;
   allComposed: IConfigComposedWorkingTime[];
   onSave: (next: IConfigComposedWorkingTime[]) => void;
-  onBack?: () => void;
 }) => {
   const rows = calendarRow
     ? allComposed.filter((c) => c.calendarName === calendarRow.name)
@@ -407,10 +348,7 @@ const ComposedTimesPanel = ({
   const selectedRow = rows.find((r) => r.id === selectedId) ?? null;
   const filtered = search
     ? rows.filter(
-        (r) =>
-          r.date.includes(search) ||
-          r.day.toLowerCase().includes(search.toLowerCase()) ||
-          r.note.toLowerCase().includes(search.toLowerCase()),
+        (r) => r.date.includes(search) || r.day.toLowerCase().includes(search.toLowerCase()),
       )
     : rows;
 
@@ -459,12 +397,12 @@ const ComposedTimesPanel = ({
     setDeleteOpen(false);
   };
 
-  const ctCols: Column<IConfigComposedWorkingTime>[] = [
+  const ctCols = [
     {
       id: 'date',
       label: 'Date',
       minWidth: 120,
-      format: (v): React.ReactNode => (
+      format: (v: unknown) => (
         <Typography variant='body2' fontWeight={600} fontSize='0.82rem'>
           {String(v || '—')}
         </Typography>
@@ -474,7 +412,7 @@ const ComposedTimesPanel = ({
       id: 'day',
       label: 'Day',
       minWidth: 110,
-      format: (v): React.ReactNode => (
+      format: (v: unknown) => (
         <Typography variant='body2' fontSize='0.8rem' color='text.secondary'>
           {String(v || '—')}
         </Typography>
@@ -484,38 +422,20 @@ const ComposedTimesPanel = ({
       id: 'startTime',
       label: 'Start Time',
       minWidth: 100,
-      format: (v): React.ReactNode => (
-        <Chip
-          label={String(v || '—')}
-          size='small'
-          sx={{
-            fontWeight: 700,
-            fontSize: '0.72rem',
-            height: 22,
-            borderRadius: '6px',
-            bgcolor: alpha(ACCENT_CT, 0.1),
-            color: ACCENT_CT,
-          }}
-        />
+      format: (v: unknown) => (
+        <Typography variant='body2' fontSize='0.8rem'>
+          {String(v || '—')}
+        </Typography>
       ),
     },
     {
       id: 'endTime',
       label: 'End Time',
       minWidth: 100,
-      format: (v): React.ReactNode => (
-        <Chip
-          label={String(v || '—')}
-          size='small'
-          sx={{
-            fontWeight: 700,
-            fontSize: '0.72rem',
-            height: 22,
-            borderRadius: '6px',
-            bgcolor: alpha('#dc2626', 0.1),
-            color: '#dc2626',
-          }}
-        />
+      format: (v: unknown) => (
+        <Typography variant='body2' fontSize='0.8rem'>
+          {String(v || '—')}
+        </Typography>
       ),
     },
     { id: 'isWorkingDay', label: 'Working Day', minWidth: 110, format: ActiveChip },
@@ -523,7 +443,7 @@ const ComposedTimesPanel = ({
       id: 'note',
       label: 'Note',
       minWidth: 180,
-      format: (v): React.ReactNode => (
+      format: (v: unknown) => (
         <Typography variant='body2' fontSize='0.8rem' noWrap sx={{ maxWidth: 220 }}>
           {String(v || '—')}
         </Typography>
@@ -534,7 +454,7 @@ const ComposedTimesPanel = ({
   return (
     <Box sx={{ mt: 1.5 }}>
       <PanelHeader
-        accent={ACCENT_CT}
+        accent={ACCENT}
         icon={<EventNoteIcon fontSize='small' />}
         title={
           calendarRow
@@ -543,12 +463,8 @@ const ComposedTimesPanel = ({
         }
       />
       <PanelToolbar
-        accent={ACCENT_CT}
-        selectedLabel={
-          selectedRow
-            ? `${selectedRow.date}  (${selectedRow.startTime}–${selectedRow.endTime})`
-            : null
-        }
+        accent={ACCENT}
+        selectedLabel={selectedRow ? `${selectedRow.date}` : null}
         onNew={() => {
           setEditingRow(null);
           setDialogOpen(true);
@@ -562,7 +478,7 @@ const ComposedTimesPanel = ({
         onSearch={setSearch}
         onClear={() => setSelectedId(null)}
       />
-      <PanelTable accent={ACCENT_CT}>
+      <PanelTable accent={ACCENT}>
         <DataTable
           columns={ctCols}
           data={filtered}
@@ -583,7 +499,7 @@ const ComposedTimesPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<EventNoteIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_CT}
+        accent={ACCENT}
         title='Composed Working Time'
         submitDisabled={!ctForm.calendarName.trim() || !ctForm.date.trim()}
         maxWidth='sm'
@@ -644,7 +560,7 @@ const ComposedTimesPanel = ({
           fullWidth
           value={ctForm.note}
           onChange={(e) => setCtForm((f) => ({ ...f, note: e.target.value }))}
-          placeholder='e.g. Special arrangement for this day'
+          placeholder='e.g. Special arrangement'
         />
       </ConfigFormDialog>
 
@@ -669,7 +585,6 @@ const WorkLocationsPanel = ({
   calendarRow: IConfigWorkingCalendar | null;
   allLocations: IConfigCalendarWorkLocation[];
   onSave: (next: IConfigCalendarWorkLocation[]) => void;
-  onBack?: () => void;
 }) => {
   const rows = calendarRow
     ? allLocations.filter((l) => l.calendarName === calendarRow.name)
@@ -724,12 +639,12 @@ const WorkLocationsPanel = ({
     setDeleteOpen(false);
   };
 
-  const wlCols: Column<IConfigCalendarWorkLocation>[] = [
+  const wlCols = [
     {
       id: 'workLocation',
       label: 'Work Location',
       minWidth: 200,
-      format: (v): React.ReactNode => (
+      format: (v: unknown) => (
         <Typography variant='body2' fontWeight={700} fontSize='0.82rem'>
           {String(v || '—')}
         </Typography>
@@ -739,7 +654,7 @@ const WorkLocationsPanel = ({
       id: 'effectiveFrom',
       label: 'Effective From',
       minWidth: 130,
-      format: (v): React.ReactNode => (
+      format: (v: unknown) => (
         <Typography variant='body2' fontSize='0.8rem'>
           {String(v || '—')}
         </Typography>
@@ -749,7 +664,7 @@ const WorkLocationsPanel = ({
       id: 'effectiveTo',
       label: 'Effective To',
       minWidth: 130,
-      format: (v): React.ReactNode => (
+      format: (v: unknown) => (
         <Typography variant='body2' fontSize='0.8rem'>
           {String(v || '—')}
         </Typography>
@@ -760,14 +675,14 @@ const WorkLocationsPanel = ({
   return (
     <Box sx={{ mt: 1.5 }}>
       <PanelHeader
-        accent={ACCENT_WL}
+        accent={ACCENT}
         icon={<BusinessIcon fontSize='small' />}
         title={
           calendarRow ? `Work Locations — ${calendarRow.name}` : 'Work Locations (All Calendars)'
         }
       />
       <PanelToolbar
-        accent={ACCENT_WL}
+        accent={ACCENT}
         selectedLabel={selectedRow?.workLocation ?? null}
         onNew={() => {
           setEditingRow(null);
@@ -782,7 +697,7 @@ const WorkLocationsPanel = ({
         onSearch={setSearch}
         onClear={() => setSelectedId(null)}
       />
-      <PanelTable accent={ACCENT_WL}>
+      <PanelTable accent={ACCENT}>
         <DataTable
           columns={wlCols}
           data={filtered}
@@ -803,7 +718,7 @@ const WorkLocationsPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<BusinessIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_WL}
+        accent={ACCENT}
         title='Work Location Association'
         submitDisabled={!wlForm.calendarName.trim() || !wlForm.workLocation.trim()}
       >
@@ -871,12 +786,10 @@ const ConsultantsPanel = ({
   calendarRow,
   allConsultants,
   onSave,
-  onBack,
 }: {
   calendarRow: IConfigWorkingCalendar | null;
   allConsultants: IConfigCalendarConsultant[];
   onSave: (next: IConfigCalendarConsultant[]) => void;
-  onBack?: () => void;
 }) => {
   const rows = calendarRow
     ? allConsultants.filter((c) => c.calendarName === calendarRow.name)
@@ -894,8 +807,7 @@ const ConsultantsPanel = ({
     ? rows.filter(
         (r) =>
           r.consultantName.toLowerCase().includes(search.toLowerCase()) ||
-          r.role.toLowerCase().includes(search.toLowerCase()) ||
-          r.application.toLowerCase().includes(search.toLowerCase()),
+          r.role.toLowerCase().includes(search.toLowerCase()),
       )
     : rows;
 
@@ -938,12 +850,12 @@ const ConsultantsPanel = ({
     setDeleteOpen(false);
   };
 
-  const coCols: Column<IConfigCalendarConsultant>[] = [
+  const coCols = [
     {
       id: 'consultantName',
       label: 'Consultant Name',
       minWidth: 180,
-      format: (v): React.ReactNode => (
+      format: (v: unknown) => (
         <Typography variant='body2' fontWeight={700} fontSize='0.82rem'>
           {String(v || '—')}
         </Typography>
@@ -953,7 +865,7 @@ const ConsultantsPanel = ({
       id: 'role',
       label: 'Role',
       minWidth: 140,
-      format: (v): React.ReactNode => (
+      format: (v: unknown) => (
         <Typography variant='body2' fontSize='0.8rem'>
           {String(v || '—')}
         </Typography>
@@ -963,7 +875,7 @@ const ConsultantsPanel = ({
       id: 'application',
       label: 'Application',
       minWidth: 160,
-      format: (v): React.ReactNode => (
+      format: (v: unknown) => (
         <Typography variant='body2' fontSize='0.8rem'>
           {String(v || '—')}
         </Typography>
@@ -973,7 +885,7 @@ const ConsultantsPanel = ({
       id: 'effectiveFrom',
       label: 'Effective From',
       minWidth: 130,
-      format: (v): React.ReactNode => (
+      format: (v: unknown) => (
         <Typography variant='body2' fontSize='0.8rem'>
           {String(v || '—')}
         </Typography>
@@ -983,7 +895,7 @@ const ConsultantsPanel = ({
       id: 'effectiveTo',
       label: 'Effective To',
       minWidth: 130,
-      format: (v): React.ReactNode => (
+      format: (v: unknown) => (
         <Typography variant='body2' fontSize='0.8rem'>
           {String(v || '—')}
         </Typography>
@@ -994,7 +906,7 @@ const ConsultantsPanel = ({
   return (
     <Box sx={{ mt: 1.5 }}>
       <PanelHeader
-        accent={ACCENT_CC}
+        accent={ACCENT}
         icon={<GroupIcon fontSize='small' />}
         title={
           calendarRow
@@ -1003,7 +915,7 @@ const ConsultantsPanel = ({
         }
       />
       <PanelToolbar
-        accent={ACCENT_CC}
+        accent={ACCENT}
         selectedLabel={selectedRow?.consultantName ?? null}
         onNew={() => {
           setEditingRow(null);
@@ -1018,7 +930,7 @@ const ConsultantsPanel = ({
         onSearch={setSearch}
         onClear={() => setSelectedId(null)}
       />
-      <PanelTable accent={ACCENT_CC}>
+      <PanelTable accent={ACCENT}>
         <DataTable
           columns={coCols}
           data={filtered}
@@ -1039,7 +951,7 @@ const ConsultantsPanel = ({
         onSubmit={handleSubmit}
         isEdit={!!editingRow}
         icon={<GroupIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent={ACCENT_CC}
+        accent={ACCENT}
         title='Consultant Association'
         submitDisabled={!coForm.calendarName.trim() || !coForm.consultantName.trim()}
       >
@@ -1141,17 +1053,14 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
   const [editingRow, setEditingRow] = useState<IConfigWorkingCalendar | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [wcForm, setWcForm] = useState({ ...EMPTY_WC_FORM });
+  const [wcForm, setWcForm] = useState({ name: '', holidayCalendar: '', workingDayTemplate: '' });
   const [copyDialogOpen, setCopyDialogOpen] = useState(false);
   const [copyName, setCopyName] = useState('');
   const [activeView, setActiveView] = useState<WCActiveView>('calendar');
 
   useEffect(() => {
-    if (data !== undefined) {
-      setRows(data);
-    } else if (apiCAL?.workingCalendars) {
-      setRows(apiCAL.workingCalendars);
-    }
+    if (data !== undefined) setRows(data);
+    else if (apiCAL?.workingCalendars) setRows(apiCAL.workingCalendars);
   }, [data, apiCAL]);
 
   useEffect(() => {
@@ -1162,14 +1071,6 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
   }, [apiCAL]);
 
   const selectedRow = rows.find((r) => r.id === selectedId) ?? null;
-  const filtered = search
-    ? rows.filter(
-        (r) =>
-          r.name.toLowerCase().includes(search.toLowerCase()) ||
-          r.holidayCalendar.toLowerCase().includes(search.toLowerCase()) ||
-          r.workingDayTemplate.toLowerCase().includes(search.toLowerCase()),
-      )
-    : rows;
 
   const save = (
     updates: Partial<{
@@ -1211,7 +1112,7 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
             holidayCalendar: editingRow.holidayCalendar,
             workingDayTemplate: editingRow.workingDayTemplate,
           }
-        : { ...EMPTY_WC_FORM },
+        : { name: '', holidayCalendar: '', workingDayTemplate: '' },
     );
   }, [dialogOpen, editingRow]);
 
@@ -1249,10 +1150,9 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
 
   const handleCopy = () => {
     if (!selectedRow || !copyName.trim()) return;
-    const newId = `wc_${Date.now()}`;
     const ts = Date.now();
     save({
-      workingCalendars: [...rows, { ...selectedRow, id: newId, name: copyName.trim() }],
+      workingCalendars: [...rows, { ...selectedRow, id: `wc_${ts}`, name: copyName.trim() }],
       workingCalendarTimes: [
         ...wcTimes,
         ...wcTimes
@@ -1285,12 +1185,12 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
   const holidayCalendarNames = (apiCAL?.holidayCalendars ?? []).map((h) => h.name);
   const workingDayTemplateNames = (apiCAL?.workingDayTemplates ?? []).map((w) => w.name);
 
-  const wcCols: Column<IConfigWorkingCalendar>[] = [
+  const wcCols = [
     {
       id: 'name',
       label: 'Calendar Name',
       minWidth: 180,
-      format: (v): React.ReactNode => (
+      format: (v: unknown) => (
         <Typography variant='body2' fontWeight={700} fontSize='0.82rem'>
           {String(v || '—')}
         </Typography>
@@ -1300,7 +1200,7 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
       id: 'holidayCalendar',
       label: 'Holiday Calendar',
       minWidth: 180,
-      format: (v): React.ReactNode => (
+      format: (v: unknown) => (
         <Chip
           label={String(v || '—')}
           size='small'
@@ -1309,8 +1209,8 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
             fontSize: '0.72rem',
             height: 22,
             borderRadius: '6px',
-            bgcolor: v ? alpha(ACCENT_BH, 0.1) : 'grey.100',
-            color: v ? ACCENT_BH : 'text.disabled',
+            bgcolor: v ? alpha(ACCENT, 0.1) : 'grey.100',
+            color: v ? ACCENT : 'text.disabled',
           }}
         />
       ),
@@ -1319,7 +1219,7 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
       id: 'workingDayTemplate',
       label: 'Working Day Template',
       minWidth: 180,
-      format: (v): React.ReactNode => (
+      format: (v: unknown) => (
         <Chip
           label={String(v || '—')}
           size='small'
@@ -1328,8 +1228,8 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
             fontSize: '0.72rem',
             height: 22,
             borderRadius: '6px',
-            bgcolor: v ? alpha(ACCENT_WC, 0.1) : 'grey.100',
-            color: v ? ACCENT_WC : 'text.disabled',
+            bgcolor: v ? alpha(ACCENT, 0.1) : 'grey.100',
+            color: v ? ACCENT : 'text.disabled',
           }}
         />
       ),
@@ -1339,248 +1239,214 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
   const togglePanel = (panel: Exclude<WCActiveView, 'calendar'>) =>
     setActiveView((p) => (p === panel ? 'calendar' : panel));
 
-  const panelBtn = (
-    panel: Exclude<WCActiveView, 'calendar'>,
-    label: string,
-    _accent: string,
-    Icon: React.ElementType,
-  ) => (
-    <Button
-      size='small'
-      variant={activeView === panel ? 'contained' : 'outlined'}
-      onClick={() => togglePanel(panel)}
-      startIcon={<Icon />}
-      sx={{
-        textTransform: 'none',
-        bgcolor: activeView === panel ? '#2d5ebb' : undefined,
-        color: activeView === panel ? '#fff' : '#2d5ebb',
-      }}
-    >
-      {label}
-    </Button>
-  );
-
   return (
-    <Accordion className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: 1.5,
-              bgcolor: ACCENT_WC,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <EventAvailableIcon sx={{ color: '#fff', fontSize: '1rem' }} />
-          </Box>
-          <Box>
-            <Typography className={classes.sectionTitle}>Working Calendars</Typography>
-            <Typography className={classes.sectionSubtitle}>
-              Define working calendars with associated working times and consultants
-            </Typography>
-          </Box>
-        </Box>
-      </AccordionSummary>
+    <GenericAccordion
+      title='Working Calendars'
+      subtitle='Define working calendars with associated working times and consultants'
+      icon={<EventAvailableIcon sx={{ fontSize: '1rem' }} />}
+      accent={ACCENT}
+      className={classes.sectionAccordion}
+      defaultExpanded={false}
+    >
+      <GenericToolbar
+        buttons={[
+          {
+            key: 'calendar',
+            label: 'Working Calendars',
+            icon: <CalendarTodayIcon />,
+            isActive: activeView === 'calendar',
+            onClick: () => setActiveView('calendar'),
+          },
+          {
+            key: 'workingTimes',
+            label: 'Working Times',
+            icon: <AccessTimeIcon />,
+            isActive: activeView === 'workingTimes',
+            onClick: () => togglePanel('workingTimes'),
+          },
+          {
+            key: 'composedTimes',
+            label: 'Composed Times',
+            icon: <EventNoteIcon />,
+            isActive: activeView === 'composedTimes',
+            onClick: () => togglePanel('composedTimes'),
+          },
+          {
+            key: 'workLocations',
+            label: 'Work Locations',
+            icon: <BusinessIcon />,
+            isActive: activeView === 'workLocations',
+            onClick: () => togglePanel('workLocations'),
+          },
+          {
+            key: 'consultants',
+            label: 'Consultants',
+            icon: <GroupIcon />,
+            isActive: activeView === 'consultants',
+            onClick: () => togglePanel('consultants'),
+          },
+        ]}
+      />
 
-      <AccordionDetails sx={{ p: 2 }}>
-        <Paper variant='outlined' sx={{ p: 1.5, mb: 2 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              flexWrap: 'wrap',
-              gap: 1,
+      {activeView === 'calendar' && (
+        <Box sx={{ mt: 1.5 }}>
+          <PanelHeader
+            accent={ACCENT}
+            icon={<CalendarTodayIcon fontSize='small' />}
+            title='Working Calendars'
+          />
+          <PanelToolbar
+            accent={ACCENT}
+            selectedLabel={selectedRow?.name ?? null}
+            onNew={() => {
+              setEditingRow(null);
+              setDialogOpen(true);
             }}
+            onEdit={() => {
+              setEditingRow(selectedRow);
+              setDialogOpen(true);
+            }}
+            onDelete={() => setDeleteOpen(true)}
+            search={search}
+            onSearch={setSearch}
+            onClear={() => setSelectedId(null)}
+          />
+          <PanelTable accent={ACCENT}>
+            <DataTable
+              columns={wcCols}
+              data={rows}
+              rowKey='id'
+              searchable={false}
+              initialRowsPerPage={10}
+              onRowClick={(row) => setSelectedId((p) => (p === row.id ? null : row.id))}
+              activeRowKey={selectedId ?? undefined}
+            />
+          </PanelTable>
+
+          <ConfigFormDialog
+            open={dialogOpen}
+            onClose={() => {
+              setDialogOpen(false);
+              setEditingRow(null);
+            }}
+            onSubmit={handleSubmit}
+            isEdit={!!editingRow}
+            icon={<CalendarTodayIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+            accent={ACCENT}
+            title='Working Calendar'
+            subtitle='Define a working calendar with holiday calendar and working day template'
+            submitDisabled={!wcForm.name.trim()}
+            maxWidth='sm'
           >
-            <Button
+            <TextField
+              label='Calendar Name'
               size='small'
-              variant={activeView === 'calendar' ? 'contained' : 'outlined'}
-              onClick={() => setActiveView('calendar')}
-              startIcon={<CalendarTodayIcon />}
-              sx={{
-                textTransform: 'none',
-                bgcolor: activeView === 'calendar' ? '#2d5ebb' : undefined,
-                color: activeView === 'calendar' ? '#fff' : '#2d5ebb',
-              }}
-            >
-              Working Calendars
-            </Button>
-            {panelBtn('workingTimes', 'Working Times', ACCENT_WT, AccessTimeIcon)}
-            {panelBtn('composedTimes', 'Composed Times', ACCENT_CT, EventNoteIcon)}
-            {panelBtn('workLocations', 'Work Locations', ACCENT_WL, BusinessIcon)}
-            {panelBtn('consultants', 'Consultants', ACCENT_CC, GroupIcon)}
-          </Box>
-        </Paper>
-
-        {activeView === 'calendar' && (
-          <Box sx={{ mt: 1.5 }}>
-            <PanelHeader
-              accent={ACCENT_WC}
-              icon={<CalendarTodayIcon fontSize='small' />}
-              title='Working Calendars'
+              fullWidth
+              required
+              value={wcForm.name}
+              onChange={(e) => setWcForm((f) => ({ ...f, name: e.target.value }))}
+              placeholder='e.g. UK Standard 2025'
             />
-            <PanelToolbar
-              accent={ACCENT_WC}
-              selectedLabel={selectedRow?.name ?? null}
-              onNew={() => {
-                setEditingRow(null);
-                setDialogOpen(true);
-              }}
-              onEdit={() => {
-                setEditingRow(selectedRow);
-                setDialogOpen(true);
-              }}
-              onDelete={() => setDeleteOpen(true)}
-              search={search}
-              onSearch={setSearch}
-              onClear={() => setSelectedId(null)}
-            />
-            <PanelTable accent={ACCENT_WC}>
-              <DataTable
-                columns={wcCols}
-                data={filtered}
-                rowKey='id'
-                searchable={false}
-                initialRowsPerPage={10}
-                onRowClick={(row) => setSelectedId((p) => (p === row.id ? null : row.id))}
-                activeRowKey={selectedId ?? undefined}
-              />
-            </PanelTable>
+            <FormControl size='small' fullWidth>
+              <InputLabel>Holiday Calendar</InputLabel>
+              <Select
+                value={wcForm.holidayCalendar}
+                label='Holiday Calendar'
+                onChange={(e) => setWcForm((f) => ({ ...f, holidayCalendar: e.target.value }))}
+              >
+                <MenuItem value=''>— None —</MenuItem>
+                {holidayCalendarNames.map((n) => (
+                  <MenuItem key={n} value={n}>
+                    {n}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl size='small' fullWidth>
+              <InputLabel>Working Day Template</InputLabel>
+              <Select
+                value={wcForm.workingDayTemplate}
+                label='Working Day Template'
+                onChange={(e) => setWcForm((f) => ({ ...f, workingDayTemplate: e.target.value }))}
+              >
+                <MenuItem value=''>— None —</MenuItem>
+                {workingDayTemplateNames.map((n) => (
+                  <MenuItem key={n} value={n}>
+                    {n}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </ConfigFormDialog>
 
-            <ConfigFormDialog
-              open={dialogOpen}
-              onClose={() => {
-                setDialogOpen(false);
-                setEditingRow(null);
-              }}
-              onSubmit={handleSubmit}
-              isEdit={!!editingRow}
-              icon={<CalendarTodayIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-              accent={ACCENT_WC}
-              title='Working Calendar'
-              subtitle='Define a working calendar with holiday calendar and working day template'
-              submitDisabled={!wcForm.name.trim()}
-              maxWidth='sm'
-            >
+          <ConfigDeleteDialog
+            open={deleteOpen}
+            onClose={() => setDeleteOpen(false)}
+            onConfirm={handleDelete}
+            entityName='Working Calendar'
+            itemName={selectedRow?.name}
+          />
+
+          <Dialog open={copyDialogOpen} onClose={() => setCopyDialogOpen(false)} maxWidth='xs'>
+            <DialogContent>
+              <Typography variant='body2' sx={{ mb: 1.5 }}>
+                Copy calendar as:
+              </Typography>
               <TextField
-                label='Calendar Name'
                 size='small'
                 fullWidth
-                required
-                value={wcForm.name}
-                onChange={(e) => setWcForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder='e.g. UK Standard 2025'
+                value={copyName}
+                onChange={(e) => setCopyName(e.target.value)}
+                placeholder='New calendar name'
+                autoFocus
               />
-              <FormControl size='small' fullWidth>
-                <InputLabel>Holiday Calendar</InputLabel>
-                <Select
-                  value={wcForm.holidayCalendar}
-                  label='Holiday Calendar'
-                  onChange={(e) => setWcForm((f) => ({ ...f, holidayCalendar: e.target.value }))}
-                >
-                  <MenuItem value=''>— None —</MenuItem>
-                  {holidayCalendarNames.map((n) => (
-                    <MenuItem key={n} value={n}>
-                      {n}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl size='small' fullWidth>
-                <InputLabel>Working Day Template</InputLabel>
-                <Select
-                  value={wcForm.workingDayTemplate}
-                  label='Working Day Template'
-                  onChange={(e) => setWcForm((f) => ({ ...f, workingDayTemplate: e.target.value }))}
-                >
-                  <MenuItem value=''>— None —</MenuItem>
-                  {workingDayTemplateNames.map((n) => (
-                    <MenuItem key={n} value={n}>
-                      {n}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </ConfigFormDialog>
+            </DialogContent>
+            <DialogActions>
+              <Button size='small' onClick={() => setCopyDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                size='small'
+                variant='contained'
+                onClick={handleCopy}
+                disabled={!copyName.trim()}
+              >
+                Copy
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </Box>
+      )}
 
-            <ConfigDeleteDialog
-              open={deleteOpen}
-              onClose={() => setDeleteOpen(false)}
-              onConfirm={handleDelete}
-              entityName='Working Calendar'
-              itemName={selectedRow?.name}
-            />
-
-            <Dialog open={copyDialogOpen} onClose={() => setCopyDialogOpen(false)} maxWidth='xs'>
-              <DialogContent>
-                <Typography variant='body2' sx={{ mb: 1.5 }}>
-                  Copy calendar as:
-                </Typography>
-                <TextField
-                  size='small'
-                  fullWidth
-                  value={copyName}
-                  onChange={(e) => setCopyName(e.target.value)}
-                  placeholder='New calendar name'
-                  autoFocus
-                />
-              </DialogContent>
-              <DialogActions>
-                <Button size='small' onClick={() => setCopyDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  size='small'
-                  variant='contained'
-                  onClick={handleCopy}
-                  disabled={!copyName.trim()}
-                >
-                  Copy
-                </Button>
-              </DialogActions>
-            </Dialog>
-          </Box>
-        )}
-
-        {activeView === 'workingTimes' && (
-          <WorkingTimePanel
-            calendarRow={selectedRow}
-            allTimes={wcTimes}
-            onSave={(next) => save({ workingCalendarTimes: next })}
-            onBack={() => setActiveView('calendar')}
-          />
-        )}
-        {activeView === 'composedTimes' && (
-          <ComposedTimesPanel
-            calendarRow={selectedRow}
-            allComposed={composedTimes}
-            onSave={(next) => save({ composedWorkingTimes: next })}
-            onBack={() => setActiveView('calendar')}
-          />
-        )}
-        {activeView === 'workLocations' && (
-          <WorkLocationsPanel
-            calendarRow={selectedRow}
-            allLocations={workLocations}
-            onSave={(next) => save({ calendarWorkLocations: next })}
-            onBack={() => setActiveView('calendar')}
-          />
-        )}
-        {activeView === 'consultants' && (
-          <ConsultantsPanel
-            calendarRow={selectedRow}
-            allConsultants={consultants}
-            onSave={(next) => save({ calendarConsultants: next })}
-            onBack={() => setActiveView('calendar')}
-          />
-        )}
-      </AccordionDetails>
-    </Accordion>
+      {activeView === 'workingTimes' && (
+        <WorkingTimePanel
+          calendarRow={selectedRow}
+          allTimes={wcTimes}
+          onSave={(next) => save({ workingCalendarTimes: next })}
+        />
+      )}
+      {activeView === 'composedTimes' && (
+        <ComposedTimesPanel
+          calendarRow={selectedRow}
+          allComposed={composedTimes}
+          onSave={(next) => save({ composedWorkingTimes: next })}
+        />
+      )}
+      {activeView === 'workLocations' && (
+        <WorkLocationsPanel
+          calendarRow={selectedRow}
+          allLocations={workLocations}
+          onSave={(next) => save({ calendarWorkLocations: next })}
+        />
+      )}
+      {activeView === 'consultants' && (
+        <ConsultantsPanel
+          calendarRow={selectedRow}
+          allConsultants={consultants}
+          onSave={(next) => save({ calendarConsultants: next })}
+        />
+      )}
+    </GenericAccordion>
   );
 };
 

@@ -9,7 +9,7 @@ import {
 import {
   GenericCRUDPanel,
   RowData,
-} from '@serviceops/pages/base/Configuration/shared/GenericTablePanel';
+} from '@serviceops/pages/base/Configuration/shared/GenericTablePanel/GenericTablePanel';
 import { UC_COLORS } from '../shared/userConfig.config';
 import type { IConfigWorkLocationShift } from '@serviceops/interfaces';
 

@@ -1,11 +1,7 @@
-import React from 'react';
 import { IConfigApprovalConsultantRole } from '@serviceops/interfaces';
-import { GenericPanel, TABLE_CONFIG } from '../shared';
-
-interface ConsultantRolesSectionProps {
-  data?: IConfigApprovalConsultantRole[];
-  onDataChange?: (data: IConfigApprovalConsultantRole[]) => void;
-}
+import { ConsultantRolesSectionProps } from './ConsultantRolesSection.types';
+import { TABLE_CONFIG } from './ConsultantRolesSection.config';
+import { GenericPanel } from '../../../Categorization/components/shared';
 
 export const ConsultantRolesSection = ({ data, onDataChange }: ConsultantRolesSectionProps) => {
   const handleSave = (next: IConfigApprovalConsultantRole[]) => {

@@ -12,7 +12,7 @@ import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/use
 import {
   GenericCRUDPanel,
   RowData,
-} from '@serviceops/pages/base/Configuration/shared/GenericTablePanel';
+} from '@serviceops/pages/base/Configuration/shared/GenericTablePanel/GenericTablePanel';
 import { UC_COLORS, UC_FORM_LABELS, workLocationColumns } from '../shared/userConfig.config';
 import { WorkingTimesPanel } from './WorkingTimesPanel';
 import { AssocProfilesPanel } from './AssocProfilesPanel';

@@ -1,12 +1,7 @@
-import React from 'react';
 import { IConfigApprovalWorkingTime } from '@serviceops/interfaces';
-import { TABLE_CONFIG, GenericPanel } from '../shared';
-
-interface ApprovalWorkingTimesSectionProps {
-  data?: IConfigApprovalWorkingTime[];
-  onDataChange?: (data: IConfigApprovalWorkingTime[]) => void;
-}
-
+import { ApprovalWorkingTimesSectionProps } from './ApprovalWorkingTimesSection.types';
+import { TABLE_CONFIG } from './ApprovalWorkingTimesSection.config';
+import { GenericPanel } from '../../../Categorization/components/shared';
 export const ApprovalWorkingTimesSection = ({
   data,
   onDataChange,

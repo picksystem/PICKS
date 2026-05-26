@@ -11,8 +11,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   sectionAccordion: {
-    border: `1px solid ${theme.palette.divider}`,
-    borderRadius: `${theme.spacing(1.5)} !important`,
     marginTop: theme.spacing(2.5),
     width: '100%',
     '&::before': { display: 'none' },
@@ -31,7 +29,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   actionToolbar: {
     padding: '8px 12px',
-    marginBottom: theme.spacing(1.5),
     display: 'flex',
     flexDirection: 'column' as const,
     gap: theme.spacing(0.5),
@@ -42,16 +39,30 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     alignItems: 'center',
     flexWrap: 'wrap' as const,
     gap: theme.spacing(0.75),
-    [theme.breakpoints.down('sm')]: {
-      flexDirection: 'column' as const,
-      alignItems: 'stretch',
+    '& > button': {
+      width: '100%',
+    },
+    '& > span': {
+      display: 'none',
+    },
+    [theme.breakpoints.up('sm')]: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      '& > button': {
+        width: 'auto',
+      },
+      '& > span': {
+        display: 'block',
+      },
     },
   },
 
   toolbarDivider: {
-    [theme.breakpoints.down('sm')]: {
-      display: 'none',
-    },
+    width: '1px',
+    height: '20px',
+    bgcolor: 'divider',
+    mx: 0.75,
+    alignSelf: 'center',
   },
 
   tableSearchField: {
@@ -85,6 +96,8 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   tablePaper: {
     overflow: 'hidden',
+    border: '1px solid rgba(0, 0, 0, 0.12)',
+    borderTop: 'none',
   },
 
   selectionInfo: {

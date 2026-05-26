@@ -2,7 +2,7 @@ import { Box } from '@serviceops/component';
 import { TimesheetProjectsSection } from './components/TimesheetProjects';
 import { ProjectCategorySection } from './components/ProjectCategory';
 import { useStyles } from './styles';
-import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection';
+import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
 
 const Timesheets = () => {
   const { classes } = useStyles();

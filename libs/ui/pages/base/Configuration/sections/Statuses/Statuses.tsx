@@ -3,7 +3,7 @@ import { useStyles } from './styles';
 import { useGetTicketTypeQuery } from '@serviceops/services';
 import { TicketStatusesSection } from './components/TicketStatuses/TicketStatusesSection';
 import { ReleaseCycleStatusesSection } from './components/ReleaseCycleStatuses/ReleaseCycleStatusesSection';
-import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection';
+import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
 
 const Statuses = () => {
   const { classes } = useStyles();

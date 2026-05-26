@@ -19,7 +19,7 @@ import { ETAdminControlsSection } from './components/ETAdminControls/ETAdminCont
 import { ETAActivationSection } from './components/ETAActivation/ETAActivationSection';
 import { TimeLogAdminControlsSection } from './components/TimeLogAdminControls/TimeLogAdminControlsSection';
 import { TimeLogsActivationSection } from './components/TimeLogsActivation/TimeLogsActivationSection';
-import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection';
+import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
 
 const DEFAULT_CONTROLS: IConfigSLAAdminControls = {
   enabled: false,

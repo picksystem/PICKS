@@ -5,7 +5,7 @@ import ReasonCodeTable from './components/ReasonCodeTable';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { ReasonCodeItem, ReasonCodeTableConfig } from './ReasonCodes.types';
 import { REASON_CODE_TABLES } from './ReasonCodes.config';
-import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection';
+import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
 
 const ReasonCodes: React.FC = () => {
   const { classes } = useStyles();

@@ -11,8 +11,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   sectionAccordion: {
-    border: `1px solid ${theme.palette.divider}`,
-    borderRadius: `${theme.spacing(1.5)} !important`,
     marginTop: theme.spacing(2.5),
     width: '100%',
     '&::before': { display: 'none' },
@@ -86,5 +84,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   tablePaper: {
     borderRadius: theme.spacing(1),
     overflow: 'hidden',
+    border: `1px solid ${theme.palette.divider}`,
   },
 });

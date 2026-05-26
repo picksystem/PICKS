@@ -16,13 +16,9 @@ import {
 import {
   GenericCRUDPanel,
   RowData,
-} from '@serviceops/pages/base/Configuration/shared/GenericTablePanel';
-
-// ── Types ─────────────────────────────────────────────────────────────────────
+} from '@serviceops/pages/base/Configuration/shared/GenericTablePanel/GenericTablePanel';
 
 type ActiveExpenseView = 'category' | 'subCategory';
-
-// ── Panels ───────────────────────────────────────────────────────────────────
 
 const ExpenseCategoryPanel = () => {
   const { expenses: apiEXP, saveSection } = useConfiguration();

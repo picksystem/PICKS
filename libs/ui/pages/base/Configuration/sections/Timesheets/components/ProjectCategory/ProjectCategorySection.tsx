@@ -33,11 +33,7 @@ import {
   ConfigFormDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 
-// ── Constants ──────────────────────────────────────────────────────────────────
-
 const ACCENT_w = '#0369a1';
-
-// ── Types ─────────────────────────────────────────────────────────────────────
 
 const EMPTY_CAT_FORM = {
   project: '',
@@ -46,8 +42,6 @@ const EMPTY_CAT_FORM = {
   transitionType: '',
   billability: '',
 };
-
-// ── Project Category ───────────────────────────────────────────────────────────
 
 const ProjectCategorySection = () => {
   const { classes } = useStyles();

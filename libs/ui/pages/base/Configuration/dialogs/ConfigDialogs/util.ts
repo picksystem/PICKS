@@ -5,7 +5,7 @@ export // ── ConfigFormDialog ───────────────�
 
 interface ConfigFormDialogProps {
   open: boolean;
-  onClose: () => void;
+  onClose: (event?: object, reason?: string) => void;
   onSubmit: () => void;
   isEdit: boolean;
   /** Icon node rendered in the header (use sx={{ color: '#fff', fontSize: '1.1rem' }}) */

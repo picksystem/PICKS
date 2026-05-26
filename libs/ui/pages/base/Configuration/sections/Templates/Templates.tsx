@@ -6,7 +6,7 @@ import { useStyles } from '../../styles';
 import TemplateTable from './components/TemplateTable';
 import { TEMPLATE_TABLES } from './Templates.config';
 import { TemplateItem } from './Templates.types';
-import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection';
+import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
 
 const Templates: React.FC = () => {
   const { classes } = useStyles();

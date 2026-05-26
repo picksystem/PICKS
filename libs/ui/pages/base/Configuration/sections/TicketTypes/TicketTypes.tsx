@@ -6,7 +6,7 @@ import { TicketTypeConfigSection } from './components/TicketTypeConfig/TicketTyp
 import { ServiceLineSpecificSection } from './components/ServiceLineSpecific/ServiceLineSpecificSection';
 import { ApplicationSpecificSection } from './components/ApplicationSpecific/ApplicationSpecificSection';
 import { useTicketTypes } from '../../hooks/useTicketTypes';
-import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection';
+import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
 
 const TicketTypes = () => {
   const { classes } = useStyles();

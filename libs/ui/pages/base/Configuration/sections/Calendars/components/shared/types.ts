@@ -19,6 +19,14 @@ export type DayKey =
   | 'saturdayHours'
   | 'sundayHours';
 
+const mondayHours = '#2563eb';
+const tuesdayHours = '#0891b2';
+const wednesdayHours = '#059669';
+const thursdayHours = '#7c3aed';
+const fridayHours = '#4f46e5';
+const saturdayHours = '#ea580c';
+const sundayHours = '#dc2626';
+
 export interface DayMeta {
   key: DayKey;
   label: string;
@@ -34,7 +42,7 @@ export const DAY_META: DayMeta[] = [
     label: 'Monday',
     short: 'MON',
     letter: 'M',
-    color: '#2563eb',
+    color: mondayHours,
     weekend: false,
   },
   {
@@ -42,7 +50,7 @@ export const DAY_META: DayMeta[] = [
     label: 'Tuesday',
     short: 'TUE',
     letter: 'T',
-    color: '#0891b2',
+    color: tuesdayHours,
     weekend: false,
   },
   {
@@ -50,7 +58,7 @@ export const DAY_META: DayMeta[] = [
     label: 'Wednesday',
     short: 'WED',
     letter: 'W',
-    color: '#059669',
+    color: wednesdayHours,
     weekend: false,
   },
   {
@@ -58,7 +66,7 @@ export const DAY_META: DayMeta[] = [
     label: 'Thursday',
     short: 'THU',
     letter: 'T',
-    color: '#7c3aed',
+    color: thursdayHours,
     weekend: false,
   },
   {
@@ -66,7 +74,7 @@ export const DAY_META: DayMeta[] = [
     label: 'Friday',
     short: 'FRI',
     letter: 'F',
-    color: '#4f46e5',
+    color: fridayHours,
     weekend: false,
   },
   {
@@ -74,7 +82,7 @@ export const DAY_META: DayMeta[] = [
     label: 'Saturday',
     short: 'SAT',
     letter: 'S',
-    color: '#ea580c',
+    color: saturdayHours,
     weekend: true,
   },
   {
@@ -82,7 +90,7 @@ export const DAY_META: DayMeta[] = [
     label: 'Sunday',
     short: 'SUN',
     letter: 'S',
-    color: '#dc2626',
+    color: sundayHours,
     weekend: true,
   },
 ];
@@ -98,12 +106,3 @@ export const EMPTY_FORM: WorkingDayTemplateForm = {
   saturdayHours: 0,
   sundayHours: 0,
 };
-
-export const ACCENT_WDT = '#0369a1';
-export const ACCENT_HC = '#0369a1';
-export const ACCENT_BH = '#0369a1';
-export const ACCENT_WC = '#0369a1';
-export const ACCENT_WT = '#0369a1';
-export const ACCENT_CT = '#0369a1';
-export const ACCENT_WL = '#0369a1';
-export const ACCENT_CC = '#0369a1';

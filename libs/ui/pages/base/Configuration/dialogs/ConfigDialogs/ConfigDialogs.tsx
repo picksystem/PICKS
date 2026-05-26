@@ -23,7 +23,7 @@ export const ConfigFormDialog = ({
 }: ConfigFormDialogProps) => {
   const resolvedTitle = isEdit ? (editTitle ?? `Edit ${title}`) : (newTitle ?? `New ${title}`);
   const resolvedSubtitle = isEdit ? (editSubtitle ?? subtitle ?? '') : (subtitle ?? '');
-  const resolvedSubmitLabel = submitLabel ?? (isEdit ? 'Save Changes' : 'Add');
+  const resolvedSubmitLabel = submitLabel ?? (isEdit ? 'Save' : 'Submit');
 
   return (
     <Dialog
@@ -33,7 +33,6 @@ export const ConfigFormDialog = ({
       fullWidth
       PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}
     >
-      {/* Gradient header banner */}
       <Box
         sx={{
           px: 3,
@@ -57,7 +56,9 @@ export const ConfigFormDialog = ({
             flexShrink: 0,
           }}
         >
-          {icon}
+          <Box sx={{ color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {icon}
+          </Box>
         </Box>
         <Box>
           <Typography sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff', lineHeight: 1.2 }}>
@@ -80,7 +81,8 @@ export const ConfigFormDialog = ({
       <DialogActions sx={{ px: 3, py: 2, gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}>
         <Button
           onClick={onClose}
-          sx={{ textTransform: 'none', borderRadius: 2, width: { xs: '100%', sm: 'auto' } }}
+          variant='outlined'
+          sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
         >
           Cancel
         </Button>
@@ -88,14 +90,7 @@ export const ConfigFormDialog = ({
           variant='contained'
           onClick={onSubmit}
           disabled={submitDisabled}
-          sx={{
-            textTransform: 'none',
-            borderRadius: 2,
-            bgcolor: accent,
-            '&:hover': { bgcolor: darken(accent, 0.15) },
-            minWidth: 120,
-            width: { xs: '100%', sm: 'auto' },
-          }}
+          sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
         >
           {resolvedSubmitLabel}
         </Button>
@@ -104,21 +99,13 @@ export const ConfigFormDialog = ({
   );
 };
 
-// ── ConfigDeleteDialog ─────────────────────────────────────────────────────────
-// Shared delete-confirmation dialog. Matches the Templates page delete dialog
-// design: red icon header, "cannot be undone" caption, Cancel + Delete actions.
-
 export interface ConfigDeleteDialogProps {
   open: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  /** Entity noun shown in the header, e.g. "Priority Level" */
   entityName: string;
-  /** Specific item name bolded in the message body */
   itemName?: string;
-  /** Fully custom message body (overrides the default) */
   message?: React.ReactNode;
-  /** Override the delete button label (defaults to "Delete {entityName}") */
   confirmLabel?: string;
 }
 
@@ -154,7 +141,7 @@ export const ConfigDeleteDialog = ({
       </Box>
       <Box>
         <Typography fontWeight={700} fontSize='0.95rem'>
-          Delete {entityName}
+          Delete
         </Typography>
         <Typography variant='caption' color='text.secondary'>
           This action cannot be undone
@@ -179,7 +166,8 @@ export const ConfigDeleteDialog = ({
     <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}>
       <Button
         onClick={onClose}
-        sx={{ textTransform: 'none', borderRadius: 2, width: { xs: '100%', sm: 'auto' } }}
+        variant='outlined'
+        sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
       >
         Cancel
       </Button>
@@ -187,9 +175,9 @@ export const ConfigDeleteDialog = ({
         variant='contained'
         color='error'
         onClick={onConfirm}
-        sx={{ textTransform: 'none', borderRadius: 2, width: { xs: '100%', sm: 'auto' } }}
+        sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
       >
-        {confirmLabel ?? `Delete ${entityName}`}
+        Delete
       </Button>
     </DialogActions>
   </Dialog>

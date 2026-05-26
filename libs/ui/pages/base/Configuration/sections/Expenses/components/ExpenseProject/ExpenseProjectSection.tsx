@@ -3,17 +3,8 @@ import { Box, Typography, Paper, Button } from '@serviceops/component';
 import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import AppsIcon from '@mui/icons-material/Apps';
-import QueueIcon from '@mui/icons-material/Queue';
-import PersonIcon from '@mui/icons-material/Person';
 import { useStyles } from '../../styles';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
-import {
-  AssocPanel,
-  fromAssocRows,
-  toAssocRows,
-} from '@serviceops/pages/base/Configuration/shared/assocPanel';
 import {
   EXP_COLORS,
   EXP_FORM_LABELS,
@@ -23,13 +14,9 @@ import {
 import {
   GenericCRUDPanel,
   RowData,
-} from '@serviceops/pages/base/Configuration/shared/GenericTablePanel';
+} from '@serviceops/pages/base/Configuration/shared/GenericTablePanel/GenericTablePanel';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-type ActiveProjectView = 'project' | 'serviceLine' | 'application' | 'queue' | 'resource';
-
-// ── Expense Project Panel ───────────────────────────────────────────────────
+type ActiveProjectView = 'project';
 
 const ExpenseProjectPanel = () => {
   const { expenses: apiEXP, saveSection } = useConfiguration();
@@ -60,47 +47,9 @@ const ExpenseProjectPanel = () => {
   return <GenericCRUDPanel config={config} data={rows} onSave={handleSave} />;
 };
 
-// ── Expense Project Section ──────────────────────────────────────────────────
-
 const ExpenseProjectSection = () => {
   const { classes } = useStyles();
-  const { expenses: apiEXP, saveSection } = useConfiguration();
-  const [activeView, setActiveView] = useState<ActiveProjectView>('project');
-
-  const assocViews = [
-    {
-      key: 'serviceLine',
-      label: 'Add to Service Line',
-      Icon: AccountTreeIcon,
-      accent: EXP_COLORS.category,
-      prefix: 'expsl',
-      field: 'serviceLineEntries',
-    },
-    {
-      key: 'application',
-      label: 'Add to Application',
-      Icon: AppsIcon,
-      accent: EXP_COLORS.category,
-      prefix: 'expapp',
-      field: 'applicationEntries',
-    },
-    {
-      key: 'queue',
-      label: 'Add to Queue',
-      Icon: QueueIcon,
-      accent: EXP_COLORS.category,
-      prefix: 'expq',
-      field: 'queueEntries',
-    },
-    {
-      key: 'resource',
-      label: 'Add to Resource',
-      Icon: PersonIcon,
-      accent: EXP_COLORS.category,
-      prefix: 'expres',
-      field: 'resourceEntries',
-    },
-  ];
+  const [activeView] = useState<ActiveProjectView>('project');
 
   return (
     <Accordion defaultExpanded elevation={0} className={classes.sectionAccordion}>
@@ -144,7 +93,6 @@ const ExpenseProjectSection = () => {
                 key={view.key}
                 size='small'
                 variant={activeView === view.key ? 'contained' : 'outlined'}
-                onClick={() => setActiveView(view.key as ActiveProjectView)}
                 startIcon={view.icon}
                 sx={{
                   textTransform: 'none',
@@ -159,27 +107,6 @@ const ExpenseProjectSection = () => {
         </Paper>
 
         {activeView === 'project' && <ExpenseProjectPanel />}
-        {assocViews.map(
-          ({ key, label, Icon, accent, prefix, field }) =>
-            activeView === key && (
-              <AssocPanel
-                key={key}
-                Icon={Icon}
-                accent={accent}
-                title={label}
-                entityName={label}
-                assocLabel={label.replace('Add to ', '')}
-                idPrefix={prefix}
-                rows={toAssocRows((apiEXP as any)?.[field] ?? [], field.replace('Entries', ''))}
-                onSave={(next) =>
-                  saveSection('expenses', {
-                    ...apiEXP,
-                    [field]: fromAssocRows(next, field.replace('Entries', '')),
-                  } as any)
-                }
-              />
-            ),
-        )}
       </AccordionDetails>
     </Accordion>
   );

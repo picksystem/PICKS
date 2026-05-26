@@ -22,7 +22,7 @@ import {
 } from '@serviceops/interfaces';
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
-import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection';
+import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
 import {
   ConsultantProfilesSection,
   UserProfilesPanel,

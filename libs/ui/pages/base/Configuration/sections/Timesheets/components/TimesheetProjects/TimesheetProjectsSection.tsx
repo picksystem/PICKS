@@ -4,18 +4,9 @@ import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ScheduleSendIcon from '@mui/icons-material/ScheduleSend';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import AppsIcon from '@mui/icons-material/Apps';
-import QueueIcon from '@mui/icons-material/Queue';
-import PersonIcon from '@mui/icons-material/Person';
 import { useStyles } from '../../styles';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
-import {
-  AssocPanel,
-  fromAssocRows,
-  toAssocRows,
-} from '@serviceops/pages/base/Configuration/shared/assocPanel';
-import { GenericCRUDPanel, RowData } from '../../../../shared/GenericTablePanel';
+import { GenericCRUDPanel, RowData } from '../../../../shared/GenericTablePanel/GenericTablePanel';
 import {
   TS_COLORS,
   TS_FORM_LABELS,
@@ -23,11 +14,7 @@ import {
   timesheetProjectColumns,
 } from '../shared/timesheets.config';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-type ActiveView = 'project' | 'serviceLine' | 'application' | 'queue' | 'resource';
-
-// ── Timesheet Project Panel ────────────────────────────────────────────────────
+type ActiveView = 'project';
 
 const TimesheetProjectPanel = () => {
   const { timesheets: apiTS, saveSection } = useConfiguration();
@@ -62,43 +49,7 @@ const TimesheetProjectPanel = () => {
 
 const TimesheetProjectsSection = () => {
   const { classes } = useStyles();
-  const { timesheets: apiTS, saveSection } = useConfiguration();
-  const [activeView, setActiveView] = useState<ActiveView>('project');
-
-  const assocViews = [
-    {
-      key: 'serviceLine',
-      label: 'Add to Service Line',
-      Icon: AccountTreeIcon,
-      accent: TS_COLORS.timesheet,
-      prefix: 'tssl',
-      field: 'serviceLineEntries',
-    },
-    {
-      key: 'application',
-      label: 'Add to Application',
-      Icon: AppsIcon,
-      accent: TS_COLORS.timesheet,
-      prefix: 'tsapp',
-      field: 'applicationEntries',
-    },
-    {
-      key: 'queue',
-      label: 'Add to Queue',
-      Icon: QueueIcon,
-      accent: TS_COLORS.timesheet,
-      prefix: 'tsq',
-      field: 'queueEntries',
-    },
-    {
-      key: 'resource',
-      label: 'Add to Resource',
-      Icon: PersonIcon,
-      accent: TS_COLORS.timesheet,
-      prefix: 'tsres',
-      field: 'resourceEntries',
-    },
-  ];
+  const [activeView] = useState<ActiveView>('project');
 
   return (
     <Accordion defaultExpanded elevation={0} className={classes.sectionAccordion}>
@@ -142,7 +93,6 @@ const TimesheetProjectsSection = () => {
                 key={view.key}
                 size='small'
                 variant={activeView === view.key ? 'contained' : 'outlined'}
-                onClick={() => setActiveView(view.key as ActiveView)}
                 startIcon={view.icon}
                 sx={{
                   textTransform: 'none',
@@ -157,27 +107,6 @@ const TimesheetProjectsSection = () => {
         </Paper>
 
         {activeView === 'project' && <TimesheetProjectPanel />}
-        {assocViews.map(
-          ({ key, label, Icon, accent, prefix, field }) =>
-            activeView === key && (
-              <AssocPanel
-                key={key}
-                Icon={Icon}
-                accent={accent}
-                title={label}
-                entityName={label}
-                assocLabel={label.replace('Add to ', '')}
-                idPrefix={prefix}
-                rows={toAssocRows((apiTS as any)?.[field] ?? [], field.replace('Entries', ''))}
-                onSave={(next) =>
-                  saveSection('timesheets', {
-                    ...apiTS,
-                    [field]: fromAssocRows(next, field.replace('Entries', '')),
-                  } as any)
-                }
-              />
-            ),
-        )}
       </AccordionDetails>
     </Accordion>
   );

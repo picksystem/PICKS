@@ -1,5 +1,10 @@
 export * from './types';
-export { PanelHeader } from './PanelHeader';
-export { PanelToolbar } from './PanelToolbar';
-export { PanelTable, NoPick } from './PanelTable';
-export { ApplicationPicker } from './ApplicationPicker';
+export * from './CategorizationPanelConfig';
+export {
+  PanelHeader,
+  PanelTable,
+  PanelToolbar,
+  ActiveChip,
+  GenericPanel,
+} from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+export { GenericTogglePanel } from '@serviceops/pages/base/Configuration/shared/GenericTogglePanel/GenericTogglePanel';
