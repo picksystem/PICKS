@@ -1,43 +1,19 @@
-import { useState } from 'react';
-import { Box, Alert } from '@serviceops/component';
-import { Loader } from '../../../../../components';
+import { Box } from '@serviceops/component';
 import { useStyles } from './styles';
-import { TicketTypeConfigSection } from './components/TicketTypeConfig/TicketTypeConfigSection';
-import { ServiceLineSpecificSection } from './components/ServiceLineSpecific/ServiceLineSpecificSection';
-import { ApplicationSpecificSection } from './components/ApplicationSpecific/ApplicationSpecificSection';
-import { useTicketTypes } from '../../hooks/useTicketTypes';
-import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
+import {
+  TicketTypeConfigSection,
+  ServiceLineSpecificSection,
+  ApplicationSpecificSection,
+} from './components';
+import { ConfigurationSection } from '../../shared/ConfigurationSection/ConfigurationSection';
 
 const TicketTypes = () => {
   const { classes } = useStyles();
-  const { isLoading, error } = useTicketTypes();
-  const [advancedDisplaySequences, setAdvancedDisplaySequences] = useState(false);
-
-  if (isLoading) {
-    return (
-      <Box className={classes.container}>
-        <Loader />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box className={classes.container}>
-        <Alert severity='error' sx={{ mt: 2 }}>
-          Failed to load ticket types. Please refresh the page.
-        </Alert>
-      </Box>
-    );
-  }
 
   return (
     <Box className={classes.container}>
       <ConfigurationSection loaderMessage='Loading Ticket Types Configuration...'>
-        <TicketTypeConfigSection
-          advancedDisplaySequences={advancedDisplaySequences}
-          setAdvancedDisplaySequences={setAdvancedDisplaySequences}
-        />
+        <TicketTypeConfigSection />
         <ServiceLineSpecificSection />
         <ApplicationSpecificSection />
       </ConfigurationSection>

@@ -1,365 +1,166 @@
-import { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  Button,
-  TextField,
-  Tooltip,
-  Switch,
-  DataTable,
-  Column,
-} from '@serviceops/component';
-import { InputAdornment, FormControlLabel } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import { useState, useCallback } from 'react';
+import { Box, Typography } from '@serviceops/component';
+import { FormControlLabel, Switch } from '@mui/material';
 import SpeedIcon from '@mui/icons-material/Speed';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ClearIcon from '@mui/icons-material/Clear';
 import { SimpleLevel } from '../../util';
 import { useStyles } from '../../styles';
+import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
 import {
   ConfigFormDialog,
   ConfigDeleteDialog,
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
-
-interface SimpleLevelFormDialogProps {
-  open: boolean;
-  noun: string;
-  accent: string;
-  icon: React.ReactNode;
-  editing: SimpleLevel | null;
-  onClose: () => void;
-  onSave: (data: Partial<SimpleLevel>) => void;
-  ticketTypeColumns: { key: string; label: string }[];
-}
-
-const SimpleLevelFormDialog = ({
-  open,
-  noun,
-  accent,
-  icon,
-  editing,
-  onClose,
-  onSave,
-  ticketTypeColumns,
-}: SimpleLevelFormDialogProps) => {
-  const [form, setForm] = useState<Partial<SimpleLevel>>({});
-
-  useEffect(() => {
-    if (!open) return;
-    setForm(
-      editing
-        ? {
-            displayName: editing.displayName,
-            description: editing.description,
-            enabledFor: { ...editing.enabledFor },
-          }
-        : {
-            displayName: '',
-            description: '',
-            enabledFor: Object.fromEntries(ticketTypeColumns.map((t) => [t.key, true])),
-          },
-    );
-  }, [open, editing, ticketTypeColumns]);
-
-  return (
-    <ConfigFormDialog
-      open={open}
-      onClose={onClose}
-      onSubmit={() => onSave(form)}
-      isEdit={!!editing}
-      icon={icon}
-      accent={accent}
-      title={noun}
-      submitDisabled={!form.displayName}
-      submitLabel={editing ? 'Save Changes' : `Add ${noun}`}
-      maxWidth='sm'
-    >
-      <TextField
-        label={`${noun} Display Name`}
-        size='small'
-        value={form.displayName ?? ''}
-        onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
-        helperText='e.g. 1 - High, 2 - Medium, 3 - Low'
-        required
-      />
-      <TextField
-        label='Description'
-        size='small'
-        value={form.description ?? ''}
-        onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-        multiline
-        rows={2}
-      />
-      <Box>
-        <Typography
-          variant='caption'
-          fontWeight={700}
-          color='text.secondary'
-          sx={{ mb: 1, display: 'block' }}
-        >
-          Enable for Ticket Types
-        </Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-          {ticketTypeColumns.map((t) => (
-            <FormControlLabel
-              key={t.key}
-              labelPlacement='end'
-              control={
-                <Switch
-                  size='small'
-                  checked={form.enabledFor?.[t.key] ?? true}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      enabledFor: { ...(f.enabledFor ?? {}), [t.key]: e.target.checked },
-                    }))
-                  }
-                  color='success'
-                />
-              }
-              label={<Typography sx={{ fontSize: '0.8rem' }}>{t.label}</Typography>}
-              sx={{ mr: 2 }}
-            />
-          ))}
-        </Box>
-      </Box>
-    </ConfigFormDialog>
-  );
-};
 
 interface UrgencySectionProps {
   items: SimpleLevel[];
   onAdd: (data: Partial<SimpleLevel>) => void;
   onEdit: (id: string, data: Partial<SimpleLevel>) => void;
   onDelete: (id: string) => void;
-  onReset: (defaults: SimpleLevel[]) => void;
-  onToggleActive?: (id: string) => void;
   onToggleEnabledFor: (id: string, ticketType: string) => void;
-  defaultItems: SimpleLevel[];
   activeTicketTypeColumns: { key: string; label: string }[];
 }
+
+const URGENCY_CONFIG = {
+  title: 'Urgency',
+  subtitle: 'Define urgency levels — how time-sensitive a ticket is',
+  accent: '#0369a1',
+  icon: <SpeedIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
+  entity: 'Urgency Level',
+  fields: [
+    { name: 'displayName', label: 'Display Name', required: true, bold: true },
+    { name: 'description', label: 'Description' },
+    { name: 'isActive', label: 'Active', type: 'toggle' as const, defaultValue: true },
+  ],
+};
 
 const UrgencySection = ({
   items,
   onAdd,
   onEdit,
   onDelete,
-  onReset,
   onToggleEnabledFor,
-  defaultItems,
   activeTicketTypeColumns,
 }: UrgencySectionProps) => {
   const { classes } = useStyles();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [loadDefaults, setLoadDefaults] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<SimpleLevel | null>(null);
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [form, setForm] = useState<Partial<SimpleLevel>>({});
 
-  const selectedItem = items.find((i) => i.id === selectedId) ?? null;
+  const handleSave = useCallback(
+    (data: SimpleLevel[]) => {
+      if (editingItem) {
+        onEdit(editingItem.id, data.find((i) => i.id === editingItem.id) ?? data[data.length - 1]);
+      } else {
+        onAdd(data[data.length - 1]);
+      }
+    },
+    [editingItem, onAdd, onEdit],
+  );
 
-  const handleOpenAdd = () => {
-    setEditingItem(null);
-    setDialogOpen(true);
-  };
-
-  const handleOpenEdit = () => {
-    if (selectedItem) {
-      setEditingItem(selectedItem);
-      setDialogOpen(true);
+  const handleConfirmDelete = useCallback(() => {
+    if (deleteId) {
+      onDelete(deleteId);
     }
-  };
+    setDeleteOpen(false);
+    setDeleteId(null);
+  }, [deleteId, onDelete]);
 
-  const handleSave = (data: Partial<SimpleLevel>) => {
-    if (editingItem) {
-      onEdit(editingItem.id, data);
-    } else {
-      onAdd(data);
-    }
-    setDialogOpen(false);
-  };
-
-  const handleDelete = () => {
-    if (selectedId) {
-      onDelete(selectedId);
-      setSelectedId(null);
-    }
-    setConfirmDeleteOpen(false);
-  };
-
-  const handleLoadDefaults = (checked: boolean) => {
-    setLoadDefaults(checked);
-    if (checked) {
-      onReset(defaultItems);
-      setSelectedId(null);
-    }
-  };
-
-  const columns: Column<SimpleLevel>[] = [
+  const customColumns = [
     {
       id: 'displayName',
       label: 'Urgency Values',
       minWidth: 120,
-      format: (_v, row): React.ReactNode => (
-        <Typography variant='body2' fontWeight={700} fontSize='0.82rem'>
-          {row.displayName}
-        </Typography>
+      format: (_v: unknown, row: SimpleLevel): React.ReactNode => (
+        <span style={{ fontWeight: 700, fontSize: '0.82rem' }}>{row.displayName}</span>
       ),
     },
     {
       id: 'description',
       label: 'Description',
-      minWidth: 220,
-      format: (v): React.ReactNode => (
-        <Typography variant='body2' color='text.secondary' fontSize='0.78rem'>
-          {String(v || '—')}
-        </Typography>
+      minWidth: 300,
+      format: (v: unknown): React.ReactNode => (
+        <span style={{ color: 'text.secondary', fontSize: '0.78rem' }}>{String(v || '—')}</span>
       ),
     },
-    ...activeTicketTypeColumns.map(
-      (t): Column<SimpleLevel> => ({
-        id: 'enabledFor' as keyof SimpleLevel,
-        label: t.label,
-        minWidth: 100,
-        align: 'center',
-        format: (_v, row): React.ReactNode => (
-          <Switch
-            size='small'
-            checked={row.enabledFor[t.key] ?? false}
-            onChange={(e) => {
-              e.stopPropagation();
-              onToggleEnabledFor(row.id, t.key);
-            }}
-            onClick={(e) => e.stopPropagation()}
-            color='success'
-          />
-        ),
-      }),
-    ),
+    ...activeTicketTypeColumns.map((t) => ({
+      id: `enabledFor_${t.key}`,
+      label: t.label,
+      minWidth: 100,
+      align: 'center' as const,
+      format: (_v: unknown, row: SimpleLevel): React.ReactNode => (
+        <Switch
+          size='small'
+          checked={row.enabledFor[t.key] ?? false}
+          onChange={(e) => {
+            e.stopPropagation();
+            onToggleEnabledFor(row.id, t.key);
+          }}
+          onClick={(e) => e.stopPropagation()}
+          color='success'
+        />
+      ),
+    })),
   ];
 
-  const filteredItems = search
-    ? items.filter((i) =>
-        [i.displayName, i.description].some((v) => v?.toLowerCase().includes(search.toLowerCase())),
-      )
-    : items;
-
   return (
-    <>
-      <Paper variant='outlined' className={classes.actionToolbar}>
-        <Box className={classes.toolbarButtons}>
-          {!selectedId ? (
-            <>
-              <Tooltip title='Add a new Urgency'>
-                <Button
-                  size='small'
-                  variant='contained'
-                  startIcon={<AddIcon />}
-                  onClick={handleOpenAdd}
-                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-                >
-                  Add New Urgency
-                </Button>
-              </Tooltip>
-              <TextField
-                size='small'
-                placeholder='Search...'
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className={classes.tableSearchField}
-                sx={{ ml: { xs: 0, sm: 'auto' } }}
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position='end'>
-                        <SearchIcon />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-            </>
-          ) : (
-            <>
-              <Button
-                size='small'
-                variant='contained'
-                startIcon={<EditIcon />}
-                onClick={handleOpenEdit}
-                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-              >
-                Edit
-              </Button>
-              <Button
-                size='small'
-                variant='outlined'
-                color='error'
-                startIcon={<DeleteIcon />}
-                onClick={() => setConfirmDeleteOpen(true)}
-                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-              >
-                Delete
-              </Button>
-              <Box
-                component='span'
-                sx={{
-                  display: { xs: 'none', sm: 'block' },
-                  width: '1px',
-                  height: '20px',
-                  bgcolor: 'divider',
-                  mx: 0.75,
-                  alignSelf: 'center',
-                }}
-              />
-              <Button
-                size='small'
-                variant='outlined'
-                startIcon={<ClearIcon />}
-                onClick={() => setSelectedId(null)}
-                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-              >
-                Clear
-              </Button>
-            </>
-          )}
-        </Box>
-      </Paper>
-      <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        <DataTable
-          columns={columns}
-          data={filteredItems}
-          rowKey='id'
-          searchable={false}
-          initialRowsPerPage={10}
-          onRowClick={(row) => setSelectedId((prev) => (prev === row.id ? null : row.id))}
-          activeRowKey={selectedId ?? undefined}
-        />
-      </Paper>
-
-      <SimpleLevelFormDialog
-        open={dialogOpen}
-        noun='Urgency'
-        accent='#ca8a04'
-        icon={<SpeedIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        editing={editingItem}
-        onClose={() => setDialogOpen(false)}
-        onSave={handleSave}
-        ticketTypeColumns={activeTicketTypeColumns}
+    <div className={classes.sectionAccordion}>
+      <GenericPanel
+        config={URGENCY_CONFIG}
+        data={items as unknown as Record<string, unknown>[]}
+        onSave={handleSave as (data: unknown[]) => void}
+        variant='plain'
+        customColumns={customColumns as never}
+        defaultExpanded={false}
       />
+
+      <ConfigFormDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        onSubmit={() => {
+          if (editingItem) {
+            onEdit(editingItem.id, form);
+          } else {
+            onAdd(form);
+          }
+          setDialogOpen(false);
+        }}
+        isEdit={!!editingItem}
+        icon={<SpeedIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent='#ca8a04'
+        title='Urgency Level'
+        submitDisabled={!form.displayName}
+        submitLabel={editingItem ? 'Save Changes' : 'Add Urgency Level'}
+        maxWidth='sm'
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+          <Typography variant='body2' color='text.secondary'>
+            {editingItem
+              ? 'Edit the urgency level details below.'
+              : 'Configure the new urgency level.'}
+          </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={form.isActive ?? true}
+                onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
+                color='success'
+              />
+            }
+            label={<Typography sx={{ fontSize: '0.85rem' }}>Active</Typography>}
+          />
+        </Box>
+      </ConfigFormDialog>
 
       <ConfigDeleteDialog
-        open={confirmDeleteOpen}
-        onClose={() => setConfirmDeleteOpen(false)}
-        onConfirm={handleDelete}
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleConfirmDelete}
         entityName='Urgency'
-        itemName={items.find((i) => i.id === selectedId)?.displayName}
+        itemName={items.find((i) => i.id === deleteId)?.displayName}
       />
-    </>
+    </div>
   );
 };
 
-export { UrgencySection, SimpleLevelFormDialog };
+export { UrgencySection };

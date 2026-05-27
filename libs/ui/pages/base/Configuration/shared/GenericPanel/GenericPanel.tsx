@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useMemo, useState } from 'react';
+import React, { ReactNode, useEffect, useMemo, useState, useCallback, memo } from 'react';
 import {
   Box,
   Typography,
@@ -22,6 +22,7 @@ import {
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 import { useStyles } from './styles';
 import { GenericAccordion } from '../GenericAccordion/GenericAccordion';
+import { useDebounce } from '@serviceops/hooks';
 
 export interface TableField {
   name: string;
@@ -48,7 +49,7 @@ interface PanelHeaderProps {
   accent: string;
 }
 
-export const PanelHeader = ({ icon, title, accent }: PanelHeaderProps) => (
+export const PanelHeader = memo(({ icon, title, accent }: PanelHeaderProps) => (
   <Box
     sx={{
       display: 'flex',
@@ -68,11 +69,13 @@ export const PanelHeader = ({ icon, title, accent }: PanelHeaderProps) => (
     </Box>
     <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: accent }}>{title}</Typography>
   </Box>
-);
+));
+
+PanelHeader.displayName = 'PanelHeader';
 
 // ── ActiveChip ─────────────────────────────────────────────────────────────────
 
-export const ActiveChip = (v: unknown): React.ReactNode => {
+export const ActiveChip = memo((v: unknown): React.ReactNode => {
   const on = Boolean(v);
   return (
     <Chip
@@ -87,24 +90,30 @@ export const ActiveChip = (v: unknown): React.ReactNode => {
       }}
     />
   );
-};
+});
+
+ActiveChip.displayName = 'ActiveChip';
 
 // ── PanelTable ─────────────────────────────────────────────────────────────────
 
-export const PanelTable = ({ accent, children }: { accent: string; children: React.ReactNode }) => (
-  <Paper
-    elevation={1}
-    sx={{
-      borderRadius: '0 0 10px 10px',
-      overflow: 'hidden',
-      border: '1px solid',
-      borderColor: alpha(accent, 0.25),
-      borderTop: 'none',
-    }}
-  >
-    {children}
-  </Paper>
+export const PanelTable = memo(
+  ({ accent, children }: { accent: string; children: React.ReactNode }) => (
+    <Paper
+      elevation={1}
+      sx={{
+        borderRadius: '0 0 10px 10px',
+        overflow: 'hidden',
+        border: '1px solid',
+        borderColor: alpha(accent, 0.25),
+        borderTop: 'none',
+      }}
+    >
+      {children}
+    </Paper>
+  ),
 );
+
+PanelTable.displayName = 'PanelTable';
 
 // ── PanelToolbar ───────────────────────────────────────────────────────────────
 
@@ -119,119 +128,124 @@ export interface PanelToolbarProps {
   onClear: () => void;
 }
 
-export const PanelToolbar = ({
-  selectedLabel,
-  onNew,
-  onEdit,
-  onDelete,
-  search,
-  onSearch,
-  onClear,
-}: PanelToolbarProps) => {
-  const { classes } = useStyles();
-  const hasSelection = selectedLabel !== null;
+export const PanelToolbar = memo(
+  ({ selectedLabel, onNew, onEdit, onDelete, search, onSearch, onClear }: PanelToolbarProps) => {
+    const { classes } = useStyles();
+    const hasSelection = selectedLabel !== null;
 
-  return (
-    <Paper
-      variant='outlined'
-      sx={{
-        borderRadius: 0,
-        borderTop: 'none',
-        borderBottom: 'none',
-        px: 1,
-        py: 0.75,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 0.5,
-      }}
-    >
-      <Box className={classes.toolbarButtons}>
-        {!hasSelection ? (
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-            <Box className={classes.newButtonContainer}>
-              <Tooltip title='Add new row'>
-                <Button
+    // Debounce search to prevent excessive filtering
+    const [localSearch, setLocalSearch] = useState(search);
+    const debouncedSearch = useDebounce(localSearch, 300);
+
+    // Sync debounced value to parent
+    useEffect(() => {
+      onSearch(debouncedSearch);
+    }, [debouncedSearch, onSearch]);
+
+    return (
+      <Paper
+        variant='outlined'
+        sx={{
+          borderRadius: 0,
+          borderTop: 'none',
+          borderBottom: 'none',
+          px: 1,
+          py: 0.75,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 0.5,
+        }}
+      >
+        <Box className={classes.toolbarButtons}>
+          {!hasSelection ? (
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+              <Box className={classes.newButtonContainer}>
+                <Tooltip title='Add new row'>
+                  <Button
+                    size='small'
+                    variant='contained'
+                    startIcon={<AddIcon />}
+                    sx={{
+                      textTransform: 'none',
+                      bgcolor: '#2d5ebb',
+                      '&:hover': { bgcolor: '#2d5ebb' },
+                    }}
+                    onClick={onNew}
+                  >
+                    New
+                  </Button>
+                </Tooltip>
+              </Box>
+              <Box className={classes.searchFieldContainer}>
+                <TextField
                   size='small'
-                  variant='contained'
-                  startIcon={<AddIcon />}
-                  sx={{
-                    textTransform: 'none',
-                    bgcolor: '#2d5ebb',
-                    '&:hover': { bgcolor: '#2d5ebb' },
+                  placeholder='Search…'
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+                  className={classes.tableSearchField}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <SearchIcon sx={{ fontSize: '1rem' }} />
+                        </InputAdornment>
+                      ),
+                    },
                   }}
-                  onClick={onNew}
-                >
-                  New
-                </Button>
-              </Tooltip>
+                />
+              </Box>
             </Box>
-            <Box className={classes.searchFieldContainer}>
-              <TextField
+          ) : (
+            <>
+              <Button
                 size='small'
-                placeholder='Search…'
-                value={search}
-                onChange={(e) => onSearch(e.target.value)}
-                className={classes.tableSearchField}
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position='end'>
-                        <SearchIcon sx={{ fontSize: '1rem' }} />
-                      </InputAdornment>
-                    ),
+                variant='contained'
+                startIcon={<EditIcon />}
+                sx={{
+                  textTransform: 'none',
+                  bgcolor: '#2d5ebb',
+                  '&:hover': { bgcolor: '#2d5ebb' },
+                }}
+                onClick={onEdit}
+              >
+                Edit
+              </Button>
+              <Button
+                size='small'
+                variant='outlined'
+                color='error'
+                startIcon={<DeleteIcon />}
+                sx={{ textTransform: 'none' }}
+                onClick={onDelete}
+              >
+                Delete
+              </Button>
+              <Button
+                size='small'
+                variant='outlined'
+                startIcon={<ClearIcon />}
+                sx={{
+                  textTransform: 'none',
+                  borderColor: '#2d5ebb',
+                  color: '#2d5ebb',
+                  '&:hover': {
+                    borderColor: '#2d5ebb',
+                    bgcolor: alpha('#2d5ebb', 0.08),
                   },
                 }}
-              />
-            </Box>
-          </Box>
-        ) : (
-          <>
-            <Button
-              size='small'
-              variant='contained'
-              startIcon={<EditIcon />}
-              sx={{
-                textTransform: 'none',
-                bgcolor: '#2d5ebb',
-                '&:hover': { bgcolor: '#2d5ebb' },
-              }}
-              onClick={onEdit}
-            >
-              Edit
-            </Button>
-            <Button
-              size='small'
-              variant='outlined'
-              color='error'
-              startIcon={<DeleteIcon />}
-              sx={{ textTransform: 'none' }}
-              onClick={onDelete}
-            >
-              Delete
-            </Button>
-            <Button
-              size='small'
-              variant='outlined'
-              startIcon={<ClearIcon />}
-              sx={{
-                textTransform: 'none',
-                borderColor: '#2d5ebb',
-                color: '#2d5ebb',
-                '&:hover': {
-                  borderColor: '#2d5ebb',
-                  bgcolor: alpha('#2d5ebb', 0.08),
-                },
-              }}
-              onClick={onClear}
-            >
-              Clear
-            </Button>
-          </>
-        )}
-      </Box>
-    </Paper>
-  );
-};
+                onClick={onClear}
+              >
+                Clear
+              </Button>
+            </>
+          )}
+        </Box>
+      </Paper>
+    );
+  },
+);
+
+PanelToolbar.displayName = 'PanelToolbar';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type GenericData = Record<string, any>;
@@ -308,257 +322,272 @@ interface PanelContentProps {
   onClearClick: () => void;
 }
 
-const PanelContent = ({
-  config,
-  selectedId,
-  search,
-  onSearchChange,
-  onNewClick,
-  onEditClick,
-  onDeleteClick,
-  onClearClick,
-}: PanelContentProps) => {
-  const { classes } = useStyles();
-  const hasSelection = selectedId !== null;
+const PanelContent = memo(
+  ({
+    config,
+    selectedId,
+    search,
+    onSearchChange,
+    onNewClick,
+    onEditClick,
+    onDeleteClick,
+    onClearClick,
+  }: PanelContentProps) => {
+    const { classes } = useStyles();
+    const hasSelection = selectedId !== null;
 
-  return (
-    <Paper variant='outlined' className={classes.actionToolbar}>
-      <Box className={classes.toolbarButtons}>
-        {!hasSelection ? (
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              justifyContent: 'space-between',
-              gap: 1,
-              width: '100%',
-            }}
-          >
-            <Box className={classes.newButtonContainer}>
-              <Tooltip title={`Add a new ${config.entity}`}>
-                <Button
-                  size='small'
-                  variant='contained'
-                  startIcon={<AddIcon />}
-                  onClick={onNewClick}
-                  sx={{
-                    textTransform: 'none',
-                    bgcolor: '#2d5ebb',
-                    width: '100%',
-                    '&:hover': { bgcolor: '#2d5ebb' },
-                  }}
-                >
-                  New
-                </Button>
-              </Tooltip>
-            </Box>
-            <Box className={classes.searchFieldContainer}>
-              <TextField
-                size='small'
-                placeholder='Search...'
-                value={search}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className={classes.tableSearchField}
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position='end'>
-                        <SearchIcon fontSize='small' />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-            </Box>
-          </Box>
-        ) : (
-          <>
-            <Button
-              size='small'
-              variant='contained'
-              startIcon={<EditIcon />}
-              onClick={onEditClick}
-              sx={{ textTransform: 'none', bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
-            >
-              Edit
-            </Button>
-            <Button
-              size='small'
-              variant='outlined'
-              color='error'
-              startIcon={<DeleteIcon />}
-              onClick={onDeleteClick}
-              sx={{ textTransform: 'none' }}
-            >
-              Delete
-            </Button>
-            <Button
-              size='small'
-              variant='outlined'
-              startIcon={<ClearIcon />}
-              onClick={onClearClick}
+    return (
+      <Paper variant='outlined' className={classes.actionToolbar}>
+        <Box className={classes.toolbarButtons}>
+          {!hasSelection ? (
+            <Box
               sx={{
-                textTransform: 'none',
-                borderColor: '#2d5ebb',
-                color: '#2d5ebb',
-                '&:hover': { borderColor: '#2d5ebb', bgcolor: alpha('#2d5ebb', 0.08) },
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                justifyContent: 'space-between',
+                gap: 1,
+                width: '100%',
               }}
             >
-              Clear
-            </Button>
-          </>
-        )}
-      </Box>
-    </Paper>
-  );
-};
+              <Box className={classes.newButtonContainer}>
+                <Tooltip title={`Add a new ${config.entity}`}>
+                  <Button
+                    size='small'
+                    variant='contained'
+                    startIcon={<AddIcon />}
+                    onClick={onNewClick}
+                    sx={{
+                      textTransform: 'none',
+                      bgcolor: '#2d5ebb',
+                      width: '100%',
+                      '&:hover': { bgcolor: '#2d5ebb' },
+                    }}
+                  >
+                    New
+                  </Button>
+                </Tooltip>
+              </Box>
+              <Box className={classes.searchFieldContainer}>
+                <TextField
+                  size='small'
+                  placeholder='Search...'
+                  value={search}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  className={classes.tableSearchField}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <SearchIcon fontSize='small' />
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </Box>
+            </Box>
+          ) : (
+            <>
+              <Button
+                size='small'
+                variant='contained'
+                startIcon={<EditIcon />}
+                onClick={onEditClick}
+                sx={{
+                  textTransform: 'none',
+                  bgcolor: '#2d5ebb',
+                  '&:hover': { bgcolor: '#2d5ebb' },
+                }}
+              >
+                Edit
+              </Button>
+              <Button
+                size='small'
+                variant='outlined'
+                color='error'
+                startIcon={<DeleteIcon />}
+                onClick={onDeleteClick}
+                sx={{ textTransform: 'none' }}
+              >
+                Delete
+              </Button>
+              <Button
+                size='small'
+                variant='outlined'
+                startIcon={<ClearIcon />}
+                onClick={onClearClick}
+                sx={{
+                  textTransform: 'none',
+                  borderColor: '#2d5ebb',
+                  color: '#2d5ebb',
+                  '&:hover': { borderColor: '#2d5ebb', bgcolor: alpha('#2d5ebb', 0.08) },
+                }}
+              >
+                Clear
+              </Button>
+            </>
+          )}
+        </Box>
+      </Paper>
+    );
+  },
+);
+
+PanelContent.displayName = 'PanelContent';
 
 // ── Standard Variant (like Approvals section) ─────────────────────────────────
 
-const StandardPanel = ({
-  config,
-  columns,
-  filtered,
-  selectedId,
-  search,
-  onSearchChange,
-  onRowClick,
-  onNewClick,
-  onEditClick,
-  onDeleteClick,
-  onClearClick,
-}: {
-  config: TableConfig;
-  columns: Column<GenericData>[];
-  filtered: GenericData[];
-  selectedId: string | null;
-  search: string;
-  onSearchChange: (v: string) => void;
-  onRowClick: (row: GenericData) => void;
-  onNewClick: () => void;
-  onEditClick: () => void;
-  onDeleteClick: () => void;
-  onClearClick: () => void;
-}) => {
-  return (
-    <Box sx={{ mt: 1.5 }}>
-      <PanelHeader icon={config.icon} title={config.title} accent={config.accent} />
+const StandardPanel = memo(
+  ({
+    config,
+    columns,
+    filtered,
+    selectedId,
+    search,
+    onSearchChange,
+    onRowClick,
+    onNewClick,
+    onEditClick,
+    onDeleteClick,
+    onClearClick,
+  }: {
+    config: TableConfig;
+    columns: Column<GenericData>[];
+    filtered: GenericData[];
+    selectedId: string | null;
+    search: string;
+    onSearchChange: (v: string) => void;
+    onRowClick: (row: GenericData) => void;
+    onNewClick: () => void;
+    onEditClick: () => void;
+    onDeleteClick: () => void;
+    onClearClick: () => void;
+  }) => {
+    return (
+      <Box sx={{ mt: 1.5 }}>
+        <PanelHeader icon={config.icon} title={config.title} accent={config.accent} />
 
-      <PanelContent
-        config={config}
-        columns={columns}
-        filtered={filtered}
-        selectedId={selectedId}
-        search={search}
-        onSearchChange={onSearchChange}
-        onRowClick={onRowClick}
-        onNewClick={onNewClick}
-        onEditClick={onEditClick}
-        onDeleteClick={onDeleteClick}
-        onClearClick={onClearClick}
-      />
-
-      <Paper
-        elevation={1}
-        sx={{
-          borderRadius: '0 0 10px 10px',
-          overflow: 'hidden',
-          border: '1px solid',
-          borderColor: alpha(config.accent, 0.25),
-          borderTop: 'none',
-        }}
-      >
-        <DataTable<GenericData>
+        <PanelContent
+          config={config}
           columns={columns}
-          data={filtered}
-          rowKey='id'
-          searchable={false}
-          initialRowsPerPage={10}
-          activeRowKey={selectedId ?? undefined}
+          filtered={filtered}
+          selectedId={selectedId}
+          search={search}
+          onSearchChange={onSearchChange}
           onRowClick={onRowClick}
+          onNewClick={onNewClick}
+          onEditClick={onEditClick}
+          onDeleteClick={onDeleteClick}
+          onClearClick={onClearClick}
         />
-      </Paper>
-    </Box>
-  );
-};
+
+        <Paper
+          elevation={1}
+          sx={{
+            borderRadius: '0 0 10px 10px',
+            overflow: 'hidden',
+            border: '1px solid',
+            borderColor: alpha(config.accent, 0.25),
+            borderTop: 'none',
+          }}
+        >
+          <DataTable<GenericData>
+            columns={columns}
+            data={filtered}
+            rowKey='id'
+            searchable={false}
+            initialRowsPerPage={10}
+            activeRowKey={selectedId ?? undefined}
+            onRowClick={onRowClick}
+          />
+        </Paper>
+      </Box>
+    );
+  },
+);
+StandardPanel.displayName = 'StandardPanel';
 
 // ── Plain Variant (like ReasonCodes section) ──────────────────────────────────
 
-const PlainPanel = ({
-  config,
-  columns,
-  filtered,
-  selectedId,
-  search,
-  onSearchChange,
-  onRowClick,
-  onNewClick,
-  onEditClick,
-  onDeleteClick,
-  onClearClick,
-  defaultExpanded = true,
-}: {
-  config: TableConfig;
-  columns: Column<GenericData>[];
-  filtered: GenericData[];
-  selectedId: string | null;
-  search: string;
-  onSearchChange: (v: string) => void;
-  onRowClick: (row: GenericData) => void;
-  onNewClick: () => void;
-  onEditClick: () => void;
-  onDeleteClick: () => void;
-  onClearClick: () => void;
-  defaultExpanded?: boolean;
-}) => {
-  const { classes } = useStyles();
+const PlainPanel = memo(
+  ({
+    config,
+    columns,
+    filtered,
+    selectedId,
+    search,
+    onSearchChange,
+    onRowClick,
+    onNewClick,
+    onEditClick,
+    onDeleteClick,
+    onClearClick,
+    defaultExpanded = true,
+  }: {
+    config: TableConfig;
+    columns: Column<GenericData>[];
+    filtered: GenericData[];
+    selectedId: string | null;
+    search: string;
+    onSearchChange: (v: string) => void;
+    onRowClick: (row: GenericData) => void;
+    onNewClick: () => void;
+    onEditClick: () => void;
+    onDeleteClick: () => void;
+    onClearClick: () => void;
+    defaultExpanded?: boolean;
+  }) => {
+    const { classes } = useStyles();
 
-  return (
-    <GenericAccordion
-      title={config.title}
-      subtitle={config.subtitle}
-      icon={config.icon}
-      accent={config.accent}
-      defaultExpanded={defaultExpanded}
-      className={classes.sectionAccordion}
-    >
-      <PanelContent
-        config={config}
-        columns={columns}
-        filtered={filtered}
-        selectedId={selectedId}
-        search={search}
-        onSearchChange={onSearchChange}
-        onRowClick={onRowClick}
-        onNewClick={onNewClick}
-        onEditClick={onEditClick}
-        onDeleteClick={onDeleteClick}
-        onClearClick={onClearClick}
-      />
-
-      <Paper
-        elevation={1}
-        sx={{
-          borderRadius: '0 0 10px 10px',
-          overflow: 'hidden',
-          border: '1px solid',
-          borderColor: alpha(config.accent, 0.25),
-          borderTop: 'none',
-        }}
+    return (
+      <GenericAccordion
+        title={config.title}
+        subtitle={config.subtitle}
+        icon={config.icon}
+        accent={config.accent}
+        defaultExpanded={defaultExpanded}
+        className={classes.sectionAccordion}
       >
-        <DataTable<GenericData>
+        <PanelContent
+          config={config}
           columns={columns}
-          data={filtered}
-          rowKey='id'
-          searchable={false}
-          initialRowsPerPage={10}
-          activeRowKey={selectedId ?? undefined}
+          filtered={filtered}
+          selectedId={selectedId}
+          search={search}
+          onSearchChange={onSearchChange}
           onRowClick={onRowClick}
+          onNewClick={onNewClick}
+          onEditClick={onEditClick}
+          onDeleteClick={onDeleteClick}
+          onClearClick={onClearClick}
         />
-      </Paper>
-    </GenericAccordion>
-  );
-};
+
+        <Paper
+          elevation={1}
+          sx={{
+            borderRadius: '0 0 10px 10px',
+            overflow: 'hidden',
+            border: '1px solid',
+            borderColor: alpha(config.accent, 0.25),
+            borderTop: 'none',
+          }}
+        >
+          <DataTable<GenericData>
+            columns={columns}
+            data={filtered}
+            rowKey='id'
+            searchable={false}
+            initialRowsPerPage={10}
+            activeRowKey={selectedId ?? undefined}
+            onRowClick={onRowClick}
+          />
+        </Paper>
+      </GenericAccordion>
+    );
+  },
+);
+
+PlainPanel.displayName = 'PlainPanel';
 
 // ── Main GenericPanel ──────────────────────────────────────────────────────────
 
@@ -588,6 +617,7 @@ export const GenericPanel = ({
     });
   }, [data]);
 
+  // Initialize form when dialog opens
   useEffect(() => {
     if (!dialogOpen) {
       return;
@@ -615,49 +645,51 @@ export const GenericPanel = ({
     [config.fields, customColumns],
   );
 
+  // Use debounce for search to prevent excessive filtering
+  const debouncedSearch = useDebounce(search, 300);
+
   const filtered = useMemo(() => {
-    if (!search) return data;
-    return data.filter((row) => JSON.stringify(row).toLowerCase().includes(search.toLowerCase()));
-  }, [search, data]);
+    if (!debouncedSearch) return data;
+    const lower = debouncedSearch.toLowerCase();
+    return data.filter((row) => JSON.stringify(row).toLowerCase().includes(lower));
+  }, [debouncedSearch, data]);
 
-  const handleRowClick = (row: GenericData) => {
+  const handleRowClick = useCallback((row: GenericData) => {
     setSelectedId((prev) => (prev === row.id ? null : row.id));
-  };
+  }, []);
 
-  const handleNewClick = () => {
+  const handleNewClick = useCallback(() => {
     setEditingRow(null);
     setForm(createEmptyForm(config.fields));
     setIsNewDialog(true);
     setDialogOpen(true);
-  };
+  }, [config.fields]);
 
-  const handleEditClick = () => {
+  const handleEditClick = useCallback(() => {
     if (selectedId !== null && selectedRow) {
       setEditingRow(selectedRow);
       setIsNewDialog(false);
       setDialogOpen(true);
     }
-  };
+  }, [selectedId, selectedRow]);
 
-  const handleDeleteClick = () => {
+  const handleDeleteClick = useCallback(() => {
     if (selectedId !== null) {
       setDeleteOpen(true);
     }
-  };
+  }, [selectedId]);
 
-  const handleClearClick = () => {
-    // First close the dialog, then reset all state in a deferred manner
+  const handleClearClick = useCallback(() => {
     setDialogOpen(false);
-    // Use setTimeout to ensure dialog closes before resetting other state
     setTimeout(() => {
       setEditingRow(null);
       setIsNewDialog(false);
       setSelectedId(null);
       setForm(createEmptyForm(config.fields));
     }, 0);
-  };
+  }, [config.fields]);
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     const newId = `${Date.now()}`;
     const updated = editingRow
       ? data.map((r) => (r.id === editingRow.id ? { ...editingRow, ...form } : r))
@@ -671,31 +703,72 @@ export const GenericPanel = ({
       setIsNewDialog(false);
       setForm(createEmptyForm(config.fields));
     }, 0);
-  };
+  }, [editingRow, data, form, onSave, config.fields]);
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     onSave(data.filter((r) => r.id !== selectedId));
     setDeleteOpen(false);
     setTimeout(() => {
       setSelectedId(null);
       setEditingRow(null);
     }, 0);
-  };
+  }, [selectedId, data, onSave]);
 
-  const panelProps = {
-    config,
-    columns: columns as Column<GenericData>[],
-    filtered: filtered as GenericData[],
-    selectedId,
-    search,
-    onSearchChange: setSearch,
-    onRowClick: handleRowClick,
-    onNewClick: handleNewClick,
-    onEditClick: handleEditClick,
-    onDeleteClick: handleDeleteClick,
-    onClearClick: handleClearClick,
-    defaultExpanded,
-  };
+  const panelProps = useMemo(
+    () => ({
+      config,
+      columns: columns as Column<GenericData>[],
+      filtered: filtered as GenericData[],
+      selectedId,
+      search,
+      onSearchChange: setSearch,
+      onRowClick: handleRowClick,
+      onNewClick: handleNewClick,
+      onEditClick: handleEditClick,
+      onDeleteClick: handleDeleteClick,
+      onClearClick: handleClearClick,
+      defaultExpanded,
+    }),
+    [
+      config,
+      columns,
+      filtered,
+      selectedId,
+      search,
+      handleRowClick,
+      handleNewClick,
+      handleEditClick,
+      handleDeleteClick,
+      handleClearClick,
+      defaultExpanded,
+    ],
+  );
+
+  // Memoized dialog close handler
+  const handleDialogClose = useCallback(
+    (_event: unknown, reason?: string) => {
+      if (reason === undefined) {
+        setDialogOpen(false);
+        setTimeout(() => {
+          setEditingRow(null);
+          setIsNewDialog(false);
+          setSelectedId(null);
+          setForm(createEmptyForm(config.fields));
+        }, 0);
+      }
+    },
+    [config.fields],
+  );
+
+  // Memoized toggle change handler
+  const handleToggleChange = useCallback((fieldName: string, checked: boolean) => {
+    setForm((prev) => ({ ...prev, [fieldName]: checked }));
+  }, []);
+
+  // Memoized text field change handler
+  const handleTextFieldChange = useCallback((fieldName: string, value: string) => {
+    setForm((prev) => ({ ...prev, [fieldName]: value }));
+  }, []);
 
   return (
     <>
@@ -703,19 +776,7 @@ export const GenericPanel = ({
 
       <ConfigFormDialog
         open={dialogOpen}
-        onClose={(event, reason) => {
-          // Only close from Cancel button click (reason is undefined for buttons)
-          // Ignore backdrop clicks and escape key
-          if (reason === undefined) {
-            setDialogOpen(false);
-            setTimeout(() => {
-              setEditingRow(null);
-              setIsNewDialog(false);
-              setSelectedId(null);
-              setForm(createEmptyForm(config.fields));
-            }, 0);
-          }
-        }}
+        onClose={handleDialogClose}
         onSubmit={handleSubmit}
         isEdit={!isNewDialog}
         icon={config.icon}
@@ -735,12 +796,7 @@ export const GenericPanel = ({
                   control={
                     <Switch
                       checked={form[field.name] === 'true' || form[field.name] === true}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          [field.name]: e.target.checked,
-                        }))
-                      }
+                      onChange={(e) => handleToggleChange(field.name, e.target.checked)}
                     />
                   }
                   label={<Typography sx={{ fontSize: '0.85rem' }}>{field.label}</Typography>}
@@ -758,12 +814,7 @@ export const GenericPanel = ({
                 required={field.required}
                 type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
                 value={textValue}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    [field.name]: e.target.value,
-                  }))
-                }
+                onChange={(e) => handleTextFieldChange(field.name, e.target.value)}
               />
             );
           })}
@@ -780,3 +831,6 @@ export const GenericPanel = ({
     </>
   );
 };
+
+// Display names for memo debugging
+GenericPanel.displayName = 'GenericPanel';

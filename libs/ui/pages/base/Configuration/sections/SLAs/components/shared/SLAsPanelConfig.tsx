@@ -1,7 +1,7 @@
 import AvTimerIcon from '@mui/icons-material/AvTimer';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import DateRangeIcon from '@mui/icons-material/DateRange';
-import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import { Typography, Switch } from '@serviceops/component';
 import { TableConfig } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
@@ -93,7 +93,7 @@ export const RESOLUTION_SLA_CONFIG: TableConfig = {
   title: 'Resolution SLA (in hours)',
   subtitle: 'Track resolution time targets per ticket type and priority level',
   accent: SLA_ACCENT,
-  icon: <TaskAltIcon sx={{ fontSize: '1.1rem' }} />,
+  icon: <AssignmentTurnedInIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Resolution SLA',
   fields: [
     { name: 'ticketTypeName', label: 'Ticket Type', required: true, bold: true },

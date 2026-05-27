@@ -17,7 +17,7 @@ root.render(
       <DynamicThemeProvider>
         <CssBaseline />
         <NotificationModal />
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <CollapseProvider>
             <Suspense fallback={<Loader />}>
               <App />

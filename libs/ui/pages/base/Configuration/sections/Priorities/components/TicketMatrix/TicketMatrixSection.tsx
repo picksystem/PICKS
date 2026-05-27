@@ -13,6 +13,7 @@ import {
 } from '@serviceops/component';
 import { FormControl, Select, MenuItem, InputLabel } from '@mui/material';
 import { ConfigFormDialog } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
+import { GenericAccordion } from '@serviceops/pages/base/Configuration/shared/GenericAccordion/GenericAccordion';
 import TuneIcon from '@mui/icons-material/Tune';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -200,15 +201,15 @@ const TicketMatrixSection = ({
     },
   ];
 
-  const selectedImpact = selectedRowId
-    ? impacts.find((i) => i.id === selectedRowId.split('_')[0])
-    : null;
-  const selectedUrgency = selectedRowId
-    ? urgencies.find((u) => u.id === selectedRowId.split('_')[1])
-    : null;
-
   return (
-    <>
+    <GenericAccordion
+      title={`${label} Matrix`}
+      subtitle='Configure priority mappings for this ticket type'
+      icon={<MatrixIcon sx={{ fontSize: '1rem' }} />}
+      accent={accentColor}
+      defaultExpanded={false}
+      className={classes.sectionAccordion}
+    >
       <Paper variant='outlined' className={classes.actionToolbar}>
         <Box className={classes.toolbarButtons} sx={{ flexWrap: 'wrap' }}>
           {!selectedRowId ? (
@@ -516,7 +517,7 @@ const TicketMatrixSection = ({
           this combination matrix.
         </Typography>
       </ConfigFormDialog>
-    </>
+    </GenericAccordion>
   );
 };
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import {
   Box,
   Typography,
@@ -12,7 +13,6 @@ import {
 } from '@serviceops/component';
 import { Accordion, AccordionSummary, AccordionDetails, InputAdornment } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -24,17 +24,11 @@ import TicketTypeFormDialog from '@serviceops/pages/base/Configuration/dialogs/T
 import { ConfigDeleteDialog } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 import SequenceDialog from '@serviceops/pages/base/Configuration/dialogs/SequenceDialog/SequenceDialog';
 import { useStyles } from '../../styles';
-import { useTicketTypes } from '@serviceops/pages/base/Configuration/hooks/useTicketTypes';
+import { useTicketTypeConfig } from './hooks';
 
-interface TicketTypeConfigSectionProps {
-  advancedDisplaySequences: boolean;
-  setAdvancedDisplaySequences: (value: boolean) => void;
-}
+const ACCENT = '#0369a1';
 
-const TicketTypeConfigSection = ({
-  advancedDisplaySequences,
-  setAdvancedDisplaySequences,
-}: TicketTypeConfigSectionProps) => {
+const TicketTypeConfigSection = () => {
   const { classes } = useStyles();
   const [tableSearch, setTableSearch] = useState('');
   const [accordionOpen, setAccordionOpen] = useState(true);
@@ -55,7 +49,9 @@ const TicketTypeConfigSection = ({
     handleToggleActive,
     iconMap,
     tagMap,
-  } = useTicketTypes();
+    advancedDisplaySequences,
+    setAdvancedDisplaySequences,
+  } = useTicketTypeConfig();
 
   const filteredTicketTypes = tableSearch
     ? (ticketTypes || []).filter((row) =>
@@ -76,14 +72,14 @@ const TicketTypeConfigSection = ({
         className={classes.sectionAccordion}
         elevation={0}
       >
-        <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: ACCENT }} />} sx={{ pr: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Box
               sx={{
                 width: 32,
                 height: 32,
                 borderRadius: 1.5,
-                bgcolor: '#0369a1',
+                bgcolor: ACCENT,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -101,7 +97,6 @@ const TicketTypeConfigSection = ({
           </Box>
         </AccordionSummary>
         <AccordionDetails sx={{ p: 2 }}>
-          {/* ── Action Toolbar ── */}
           <Paper variant='outlined' className={classes.actionToolbar}>
             <Box className={classes.toolbarButtons}>
               {!selectedRow ? (
@@ -252,7 +247,6 @@ const TicketTypeConfigSection = ({
         </AccordionDetails>
       </Accordion>
 
-      {/* Display Sequence Dialog */}
       <SequenceDialog
         open={sequenceOpen}
         ticketTypes={ticketTypes || []}
@@ -260,7 +254,6 @@ const TicketTypeConfigSection = ({
         onSave={() => setDisplaySequenceOpen(false)}
       />
 
-      {/* Form Dialog */}
       <TicketTypeFormDialog
         open={dialogOpen}
         editingItem={editingItem}
@@ -271,7 +264,6 @@ const TicketTypeConfigSection = ({
         onSubmit={handleSubmit}
       />
 
-      {/* Delete Confirmation Dialog */}
       <ConfigDeleteDialog
         open={confirmDeleteOpen}
         onClose={() => setConfirmDeleteOpen(false)}

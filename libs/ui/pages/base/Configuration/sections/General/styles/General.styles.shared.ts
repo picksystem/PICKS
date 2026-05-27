@@ -13,6 +13,9 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   sectionAccordion: {
     marginTop: theme.spacing(2.5),
     width: '100%',
+    boxShadow: 'none',
+    border: '1px solid rgba(0, 0, 0, 0.12)',
+    borderRadius: '12px !important',
     '&::before': { display: 'none' },
   },
 

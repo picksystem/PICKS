@@ -37,3 +37,21 @@ export const mkChip =
       }}
     />
   );
+
+// Format function for active/inactive chip - treats v as the value directly
+export const mkActiveChip = (v: unknown): React.ReactNode => {
+  const on = Boolean(v);
+  return (
+    <Chip
+      label={on ? 'Active' : 'Inactive'}
+      size='small'
+      sx={{
+        height: 20,
+        fontSize: '0.68rem',
+        fontWeight: 700,
+        bgcolor: on ? alpha('#059669', 0.12) : alpha('#9ca3af', 0.12),
+        color: on ? '#059669' : '#6b7280',
+      }}
+    />
+  );
+};

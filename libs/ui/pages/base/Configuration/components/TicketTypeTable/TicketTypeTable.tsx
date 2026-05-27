@@ -123,7 +123,7 @@ const TicketTypeTable = ({
       ),
     },
     {
-      id: 'prefix' as keyof ITicketType,
+      id: 'formatPreview',
       label: 'Format Preview',
       minWidth: 140,
       format: (_v, row): React.ReactNode => {
@@ -146,7 +146,7 @@ const TicketTypeTable = ({
       },
     },
     {
-      id: 'displayName',
+      id: 'creationPageText',
       label: 'Creation page display text',
       minWidth: 150,
       format: (v): React.ReactNode => (

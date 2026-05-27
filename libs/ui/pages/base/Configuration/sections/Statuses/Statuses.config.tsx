@@ -116,7 +116,7 @@ export const ticketStatusColumns = (
   },
   ...activeTicketTypeColumns.map(
     (t): Column<IConfigStatusLevel> => ({
-      id: 'enabledFor' as keyof IConfigStatusLevel,
+      id: `enabledFor_${t.key}` as keyof IConfigStatusLevel,
       label: t.label,
       minWidth: 90,
       align: 'center',
@@ -167,7 +167,7 @@ export const releaseStatusColumns = (
   },
   ...activeTicketTypeColumns.map(
     (t): Column<IConfigStatusLevel> => ({
-      id: 'enabledFor' as keyof IConfigStatusLevel,
+      id: `enabledFor_${t.key}` as keyof IConfigStatusLevel,
       label: t.label,
       minWidth: 90,
       align: 'center',

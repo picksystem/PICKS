@@ -18,7 +18,7 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { useCollapse, useDevice } from '@serviceops/hooks';
 
 import General from './sections/General';
-import TicketTypes from './sections/TicketTypes/TicketTypes';
+import TicketTypes from './sections/TicketTypes';
 import Priorities from './sections/Priorities/Priorities';
 import Statuses from './sections/Statuses/Statuses';
 import Categorization from './sections/Categorization/Categorization';

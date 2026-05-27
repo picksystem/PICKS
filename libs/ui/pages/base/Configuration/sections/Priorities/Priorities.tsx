@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography } from '@serviceops/component';
-import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
-import FlashOnIcon from '@mui/icons-material/FlashOn';
-import SpeedIcon from '@mui/icons-material/Speed';
+import { Box } from '@serviceops/component';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import BuildIcon from '@mui/icons-material/Build';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
@@ -235,51 +230,6 @@ const DEFAULT_MATRIX: MatrixMap = {
   low: { high: 'medium', medium: 'low', low: 'planning' },
 };
 
-const Section = ({
-  icon,
-  title,
-  subtitle,
-  accentColor,
-  defaultExpanded = false,
-  children,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-  accentColor: string;
-  defaultExpanded?: boolean;
-  children: React.ReactNode;
-}) => {
-  const { classes } = useStyles();
-  return (
-    <Accordion defaultExpanded={defaultExpanded} className={classes.sectionAccordion} elevation={0}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#2d5ebb' }} />} sx={{ pr: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: 1.5,
-              bgcolor: accentColor,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            {icon}
-          </Box>
-          <Box>
-            <Typography className={classes.sectionTitle}>{title}</Typography>
-            <Typography className={classes.sectionSubtitle}>{subtitle}</Typography>
-          </Box>
-        </Box>
-      </AccordionSummary>
-      <AccordionDetails sx={{ p: 2 }}>{children}</AccordionDetails>
-    </Accordion>
-  );
-};
-
 const Priorities = () => {
   const { classes } = useStyles();
   const { priorities: apiPriorities, ticketTypeKeys, saveSection } = useConfiguration();
@@ -365,158 +315,111 @@ const Priorities = () => {
   return (
     <Box className={classes.container}>
       <ConfigurationSection loaderMessage='Loading Priorities Configuration...'>
-        <Section
-          icon={<PriorityHighIcon sx={{ color: '#fff', fontSize: '1rem' }} />}
-          title='Priorities'
-          subtitle='Define priority levels and control which ticket types each priority applies to'
-          accentColor='#0369a1'
-          defaultExpanded
-        >
-          <PrioritiesSection
-            priorities={priorities}
-            setPriorities={setPriorities}
-            onPersist={(next) => persistPriorities(next, impacts, urgencies, matrices)}
-            activeTicketTypeColumns={activeTicketTypeColumns}
-            DEFAULT_PRIORITIES={DEFAULT_PRIORITIES}
-            selectedPriorityId={selectedPriorityId}
-            setSelectedPriorityId={setSelectedPriorityId}
-            setSelectedPriority={setSelectedPriority}
-            confirmDeleteOpen={confirmDeleteOpen}
-            setConfirmDeleteOpen={setConfirmDeleteOpen}
-          />
-        </Section>
+        <PrioritiesSection
+          priorities={priorities}
+          setPriorities={setPriorities}
+          onPersist={(next) => persistPriorities(next, impacts, urgencies, matrices)}
+          activeTicketTypeColumns={activeTicketTypeColumns}
+          selectedPriorityId={selectedPriorityId}
+          setSelectedPriorityId={setSelectedPriorityId}
+          setSelectedPriority={setSelectedPriority}
+          confirmDeleteOpen={confirmDeleteOpen}
+          setConfirmDeleteOpen={setConfirmDeleteOpen}
+        />
 
-        <Section
-          icon={<FlashOnIcon sx={{ color: '#fff', fontSize: '1rem' }} />}
-          title='Impact'
-          subtitle='Define impact levels — how broadly a ticket affects the business'
-          accentColor='#0369a1'
-        >
-          <ImpactSection
-            items={impacts}
-            onAdd={(data) => {
-              const id =
-                (data.displayName ?? '').toLowerCase().replace(/[^a-z0-9]/g, '_') ||
-                `impact_${Date.now()}`;
-              const newItem: ImpactLevel = {
-                id,
-                name: id,
-                displayName: data.displayName ?? id,
-                description: data.description ?? '',
-                bgColor: data.bgColor ?? '#2563eb',
-                sortOrder: impacts.length + 1,
-                isActive: true,
-                enabledFor:
-                  data.enabledFor ??
-                  Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
-              };
-              const next = [...impacts, newItem];
-              setImpacts(next);
-              persistPriorities(priorities, next, urgencies, matrices);
-            }}
-            onEdit={(id, data) => {
-              const next = impacts.map((i) => (i.id === id ? { ...i, ...data } : i));
-              setImpacts(next);
-              persistPriorities(priorities, next, urgencies, matrices);
-            }}
-            onDelete={(id) => {
-              const next = impacts.filter((i) => i.id !== id);
-              setImpacts(next);
-              persistPriorities(priorities, next, urgencies, matrices);
-            }}
-            onReset={(defaults) => {
-              const next = defaults as ImpactLevel[];
-              setImpacts(next);
-              persistPriorities(priorities, next, urgencies, matrices);
-            }}
-            onToggleActive={(id) => {
-              const next = impacts.map((i) => (i.id === id ? { ...i, isActive: !i.isActive } : i));
-              setImpacts(next);
-              persistPriorities(priorities, next, urgencies, matrices);
-            }}
-            onToggleEnabledFor={(id, ticketType) => {
-              const next = impacts.map((i) =>
-                i.id === id
-                  ? {
-                      ...i,
-                      enabledFor: { ...i.enabledFor, [ticketType]: !i.enabledFor[ticketType] },
-                    }
-                  : i,
-              );
-              setImpacts(next);
-              persistPriorities(priorities, next, urgencies, matrices);
-            }}
-            defaultItems={DEFAULT_IMPACTS}
-            activeTicketTypeColumns={activeTicketTypeColumns}
-          />
-        </Section>
+        <ImpactSection
+          items={impacts}
+          onAdd={(data) => {
+            const id =
+              (data.displayName ?? '').toLowerCase().replace(/[^a-z0-9]/g, '_') ||
+              `impact_${Date.now()}`;
+            const newItem: ImpactLevel = {
+              id,
+              name: id,
+              displayName: data.displayName ?? id,
+              description: data.description ?? '',
+              bgColor: data.bgColor ?? '#2563eb',
+              sortOrder: impacts.length + 1,
+              isActive: true,
+              enabledFor:
+                data.enabledFor ??
+                Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
+            };
+            const next = [...impacts, newItem];
+            setImpacts(next);
+            persistPriorities(priorities, next, urgencies, matrices);
+          }}
+          onEdit={(id, data) => {
+            const next = impacts.map((i) => (i.id === id ? { ...i, ...data } : i));
+            setImpacts(next);
+            persistPriorities(priorities, next, urgencies, matrices);
+          }}
+          onDelete={(id) => {
+            const next = impacts.filter((i) => i.id !== id);
+            setImpacts(next);
+            persistPriorities(priorities, next, urgencies, matrices);
+          }}
+          onToggleEnabledFor={(id, ticketType) => {
+            const next = impacts.map((i) =>
+              i.id === id
+                ? {
+                    ...i,
+                    enabledFor: { ...i.enabledFor, [ticketType]: !i.enabledFor[ticketType] },
+                  }
+                : i,
+            );
+            setImpacts(next);
+            persistPriorities(priorities, next, urgencies, matrices);
+          }}
+          activeTicketTypeColumns={activeTicketTypeColumns}
+        />
 
-        <Section
-          icon={<SpeedIcon sx={{ color: '#fff', fontSize: '1rem' }} />}
-          title='Urgency'
-          subtitle='Define urgency levels — how time-sensitive a ticket is'
-          accentColor='#0369a1'
-        >
-          <UrgencySection
-            items={urgencies}
-            onAdd={(data) => {
-              const id =
-                (data.displayName ?? '').toLowerCase().replace(/[^a-z0-9]/g, '_') ||
-                `urgency_${Date.now()}`;
-              const newItem: UrgencyLevel = {
-                id,
-                name: id,
-                displayName: data.displayName ?? id,
-                description: data.description ?? '',
-                bgColor: data.bgColor ?? '#2563eb',
-                sortOrder: urgencies.length + 1,
-                isActive: true,
-                enabledFor:
-                  data.enabledFor ??
-                  Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
-              };
-              const next = [...urgencies, newItem];
-              setUrgencies(next);
-              persistPriorities(priorities, impacts, next, matrices);
-            }}
-            onEdit={(id, data) => {
-              const next = urgencies.map((u) => (u.id === id ? { ...u, ...data } : u));
-              setUrgencies(next);
-              persistPriorities(priorities, impacts, next, matrices);
-            }}
-            onDelete={(id) => {
-              const next = urgencies.filter((u) => u.id !== id);
-              setUrgencies(next);
-              persistPriorities(priorities, impacts, next, matrices);
-            }}
-            onReset={(defaults) => {
-              const next = defaults as UrgencyLevel[];
-              setUrgencies(next);
-              persistPriorities(priorities, impacts, next, matrices);
-            }}
-            onToggleActive={(id) => {
-              const next = urgencies.map((u) =>
-                u.id === id ? { ...u, isActive: !u.isActive } : u,
-              );
-              setUrgencies(next);
-              persistPriorities(priorities, impacts, next, matrices);
-            }}
-            onToggleEnabledFor={(id, ticketType) => {
-              const next = urgencies.map((u) =>
-                u.id === id
-                  ? {
-                      ...u,
-                      enabledFor: { ...u.enabledFor, [ticketType]: !u.enabledFor[ticketType] },
-                    }
-                  : u,
-              );
-              setUrgencies(next);
-              persistPriorities(priorities, impacts, next, matrices);
-            }}
-            defaultItems={DEFAULT_URGENCIES}
-            activeTicketTypeColumns={activeTicketTypeColumns}
-          />
-        </Section>
+        <UrgencySection
+          items={urgencies}
+          onAdd={(data) => {
+            const id =
+              (data.displayName ?? '').toLowerCase().replace(/[^a-z0-9]/g, '_') ||
+              `urgency_${Date.now()}`;
+            const newItem: UrgencyLevel = {
+              id,
+              name: id,
+              displayName: data.displayName ?? id,
+              description: data.description ?? '',
+              bgColor: data.bgColor ?? '#2563eb',
+              sortOrder: urgencies.length + 1,
+              isActive: true,
+              enabledFor:
+                data.enabledFor ??
+                Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
+            };
+            const next = [...urgencies, newItem];
+            setUrgencies(next);
+            persistPriorities(priorities, impacts, next, matrices);
+          }}
+          onEdit={(id, data) => {
+            const next = urgencies.map((u) => (u.id === id ? { ...u, ...data } : u));
+            setUrgencies(next);
+            persistPriorities(priorities, impacts, next, matrices);
+          }}
+          onDelete={(id) => {
+            const next = urgencies.filter((u) => u.id !== id);
+            setUrgencies(next);
+            persistPriorities(priorities, impacts, next, matrices);
+          }}
+          onToggleEnabledFor={(id, ticketType) => {
+            const next = urgencies.map((u) =>
+              u.id === id
+                ? {
+                    ...u,
+                    enabledFor: { ...u.enabledFor, [ticketType]: !u.enabledFor[ticketType] },
+                  }
+                : u,
+            );
+            setUrgencies(next);
+            persistPriorities(priorities, impacts, next, matrices);
+          }}
+          activeTicketTypeColumns={activeTicketTypeColumns}
+        />
 
         {activeTicketTypeColumns.map(({ key }) => {
           const displayName =
@@ -529,25 +432,18 @@ const Priorities = () => {
           };
           const { Icon } = cfg;
           return (
-            <Section
+            <TicketMatrixSection
               key={key}
-              icon={<Icon sx={{ color: '#fff', fontSize: '1rem' }} />}
-              title={`${displayName} Priorities based on Impact and Urgency`}
-              subtitle={`Configure how Impact × Urgency determines priority for ${cfg.pluralLabel}`}
+              label={cfg.pluralLabel}
               accentColor={cfg.accentColor}
-            >
-              <TicketMatrixSection
-                label={cfg.pluralLabel}
-                accentColor={cfg.accentColor}
-                MatrixIcon={Icon}
-                priorities={priorities}
-                impacts={impacts}
-                urgencies={urgencies}
-                matrix={matrices[key] ?? DEFAULT_MATRIX}
-                onMatrixChange={(i, u, p) => updateMatrix(key, i, u, p)}
-                onMatrixReset={(newMatrix) => resetMatrixForType(key, newMatrix)}
-              />
-            </Section>
+              MatrixIcon={Icon}
+              priorities={priorities}
+              impacts={impacts}
+              urgencies={urgencies}
+              matrix={matrices[key] ?? DEFAULT_MATRIX}
+              onMatrixChange={(i, u, p) => updateMatrix(key, i, u, p)}
+              onMatrixReset={(newMatrix) => resetMatrixForType(key, newMatrix)}
+            />
           );
         })}
 

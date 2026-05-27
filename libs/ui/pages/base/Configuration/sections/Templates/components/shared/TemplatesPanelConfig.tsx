@@ -2,11 +2,12 @@ import { Column } from '@serviceops/component';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import CommentIcon from '@mui/icons-material/Comment';
 import NoteIcon from '@mui/icons-material/Note';
-import { mkCell, mkDescCell } from '@serviceops/pages/base/Configuration/utils/cellRenderers';
 import {
-  ActiveChip,
-  type TableConfig,
-} from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+  mkCell,
+  mkDescCell,
+  mkActiveChip,
+} from '@serviceops/pages/base/Configuration/utils/cellRenderers';
+import { type TableConfig } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
 import type {
   IConfigTicketUpdateTemplate,
   IConfigCommentTemplate,
@@ -18,7 +19,7 @@ import type {
 export const ticketUpdateColumns: Column<IConfigTicketUpdateTemplate>[] = [
   { id: 'name', label: 'Name', minWidth: 160, format: mkCell(true) },
   { id: 'description', label: 'Description', minWidth: 180, format: mkDescCell },
-  { id: 'active', label: 'Active', minWidth: 80, format: ActiveChip },
+  { id: 'active', label: 'Active', minWidth: 80, format: mkActiveChip },
   { id: 'ticketStatus', label: 'Ticket Status', minWidth: 130, format: mkCell() },
   { id: 'internalNote', label: 'Internal Note', minWidth: 100, format: mkCell() },
   { id: 'notifyAssigneesOnly', label: 'Notify Assignees', minWidth: 110, format: mkCell() },
@@ -29,7 +30,7 @@ export const ticketUpdateColumns: Column<IConfigTicketUpdateTemplate>[] = [
 export const commentColumns: Column<IConfigCommentTemplate>[] = [
   { id: 'name', label: 'Name', minWidth: 160, format: mkCell(true) },
   { id: 'description', label: 'Description', minWidth: 180, format: mkDescCell },
-  { id: 'active', label: 'Active', minWidth: 80, format: ActiveChip },
+  { id: 'active', label: 'Active', minWidth: 80, format: mkActiveChip },
   { id: 'ticketStatus', label: 'Ticket Status', minWidth: 130, format: mkCell() },
   { id: 'subjectLine', label: 'Subject Line', minWidth: 170, format: mkCell() },
   { id: 'commentDescription', label: 'Comment', minWidth: 160, format: mkCell() },
@@ -42,7 +43,7 @@ export const commentColumns: Column<IConfigCommentTemplate>[] = [
 export const internalNoteColumns: Column<IConfigInternalNoteTemplate>[] = [
   { id: 'name', label: 'Name', minWidth: 160, format: mkCell(true) },
   { id: 'description', label: 'Description', minWidth: 180, format: mkDescCell },
-  { id: 'active', label: 'Active', minWidth: 80, format: ActiveChip },
+  { id: 'active', label: 'Active', minWidth: 80, format: mkActiveChip },
   { id: 'ticketStatus', label: 'Ticket Status', minWidth: 130, format: mkCell() },
   { id: 'subjectLine', label: 'Subject Line', minWidth: 170, format: mkCell() },
   { id: 'commentDescription', label: 'Comment', minWidth: 160, format: mkCell() },

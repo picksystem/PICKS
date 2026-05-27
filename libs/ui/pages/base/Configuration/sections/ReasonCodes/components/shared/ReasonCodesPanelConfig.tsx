@@ -4,7 +4,7 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import { mkCell, mkDescCell } from '@serviceops/pages/base/Configuration/utils/cellRenderers';
 import type { TableConfig } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
 import type {
@@ -114,7 +114,7 @@ export const CONVERSION_CONFIG: TableConfig = {
   title: 'Conversion Reason Code',
   subtitle: 'Define reason codes for converting tickets between types',
   accent: '#0369a1',
-  icon: <SwapHorizIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
+  icon: <AutoFixHighIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Conversion Reason Code',
   fields: [
     { name: 'name', label: 'Conversion Reason Code Name', required: true, bold: true },
