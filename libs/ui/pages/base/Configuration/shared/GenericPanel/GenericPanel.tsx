@@ -9,6 +9,7 @@ import {
   DataTable,
   Column,
   Chip,
+  Loader,
 } from '@serviceops/component';
 import { alpha, InputAdornment, FormControlLabel, Switch } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -22,7 +23,7 @@ import {
 } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 import { useStyles } from './styles';
 import { GenericAccordion } from '../GenericAccordion/GenericAccordion';
-import { useDebounce } from '@serviceops/hooks';
+import { useDebounce, useNotification } from '@serviceops/hooks';
 
 export interface TableField {
   name: string;
@@ -261,6 +262,9 @@ interface GenericPanelProps {
   customColumns?: Column<Record<string, unknown>>[];
   variant?: GenericPanelVariant;
   defaultExpanded?: boolean;
+  isLoading?: boolean;
+  loaderMessage?: string;
+  enableSuccessMessage?: boolean;
 }
 
 const createColumns = (fields: TableField[]): Column<Record<string, unknown>>[] =>
@@ -598,7 +602,11 @@ export const GenericPanel = ({
   customColumns,
   variant = 'standard',
   defaultExpanded = true,
+  isLoading = false,
+  loaderMessage = 'Loading...',
+  enableSuccessMessage,
 }: GenericPanelProps) => {
+  const { success, error: showError } = useNotification();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -689,30 +697,62 @@ export const GenericPanel = ({
     }, 0);
   }, [config.fields]);
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     const newId = `${Date.now()}`;
     const updated = editingRow
       ? data.map((r) => (r.id === editingRow.id ? { ...editingRow, ...form } : r))
       : [...data, { id: newId, ...form }];
 
-    onSave(updated);
-    setDialogOpen(false);
-    setTimeout(() => {
-      setEditingRow(null);
-      setSelectedId(null);
-      setIsNewDialog(false);
-      setForm(createEmptyForm(config.fields));
-    }, 0);
-  }, [editingRow, data, form, onSave, config.fields]);
+    try {
+      await onSave(updated);
+      if (enableSuccessMessage) {
+        const message = editingRow
+          ? `${config.entity} updated successfully`
+          : `${config.entity} added successfully`;
+        success(message);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save. Please try again.';
+      showError(errorMessage);
+    } finally {
+      setDialogOpen(false);
+      setTimeout(() => {
+        setEditingRow(null);
+        setSelectedId(null);
+        setIsNewDialog(false);
+        setForm(createEmptyForm(config.fields));
+      }, 0);
+    }
+  }, [
+    editingRow,
+    data,
+    form,
+    onSave,
+    config.fields,
+    enableSuccessMessage,
+    success,
+    showError,
+    config.entity,
+  ]);
 
-  const handleDelete = useCallback(() => {
-    onSave(data.filter((r) => r.id !== selectedId));
-    setDeleteOpen(false);
-    setTimeout(() => {
-      setSelectedId(null);
-      setEditingRow(null);
-    }, 0);
-  }, [selectedId, data, onSave]);
+  const handleDelete = useCallback(async () => {
+    try {
+      await onSave(data.filter((r) => r.id !== selectedId));
+      if (enableSuccessMessage) {
+        success(`${config.entity} deleted successfully`);
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to delete. Please try again.';
+      showError(errorMessage);
+    } finally {
+      setDeleteOpen(false);
+      setTimeout(() => {
+        setSelectedId(null);
+        setEditingRow(null);
+      }, 0);
+    }
+  }, [selectedId, data, onSave, enableSuccessMessage, success, showError, config.entity]);
 
   const panelProps = useMemo(
     () => ({
@@ -772,7 +812,13 @@ export const GenericPanel = ({
 
   return (
     <>
-      {variant === 'plain' ? <PlainPanel {...panelProps} /> : <StandardPanel {...panelProps} />}
+      {isLoading ? (
+        <Loader text={loaderMessage} />
+      ) : variant === 'plain' ? (
+        <PlainPanel {...panelProps} />
+      ) : (
+        <StandardPanel {...panelProps} />
+      )}
 
       <ConfigFormDialog
         open={dialogOpen}

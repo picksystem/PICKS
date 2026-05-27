@@ -35,6 +35,7 @@ const TicketStatusesSection = ({ activeTicketTypeColumns }: TicketStatusesSectio
         onSave={handleSave}
         customColumns={ticketStatusColumns(activeTicketTypeColumns) as any}
         variant='plain'
+        enableSuccessMessage
       />
     </div>
   );

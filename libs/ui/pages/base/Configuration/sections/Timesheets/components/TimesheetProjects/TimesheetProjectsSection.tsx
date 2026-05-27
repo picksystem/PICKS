@@ -89,12 +89,12 @@ export const TimesheetProjectsSection = ({ data, onDataChange }: TimesheetProjec
     if (apiTS?.resourceEntries) setResourceRows(apiTS.resourceEntries);
   }, [apiTS]);
 
-  const handleSave = (next: IConfigTimesheetProjectEntry[]) => {
+  const handleSave = async (next: IConfigTimesheetProjectEntry[]) => {
     setRows(next);
     if (onDataChange) {
       onDataChange(next);
     } else {
-      saveSection('timesheets', {
+      await saveSection('timesheets', {
         conversionReasonCodes: apiTS?.conversionReasonCodes ?? [],
         cancellationReasonCodes: apiTS?.cancellationReasonCodes ?? [],
         timesheetProjects: next,
@@ -107,9 +107,9 @@ export const TimesheetProjectsSection = ({ data, onDataChange }: TimesheetProjec
     }
   };
 
-  const handleSaveServiceLine = (next: IConfigTimesheetServiceLineEntry[]) => {
+  const handleSaveServiceLine = async (next: IConfigTimesheetServiceLineEntry[]) => {
     setServiceLineRows(next);
-    saveSection('timesheets', {
+    await saveSection('timesheets', {
       conversionReasonCodes: apiTS?.conversionReasonCodes ?? [],
       cancellationReasonCodes: apiTS?.cancellationReasonCodes ?? [],
       timesheetProjects: rows,
@@ -121,9 +121,9 @@ export const TimesheetProjectsSection = ({ data, onDataChange }: TimesheetProjec
     });
   };
 
-  const handleSaveApplication = (next: IConfigTimesheetApplicationEntry[]) => {
+  const handleSaveApplication = async (next: IConfigTimesheetApplicationEntry[]) => {
     setApplicationRows(next);
-    saveSection('timesheets', {
+    await saveSection('timesheets', {
       conversionReasonCodes: apiTS?.conversionReasonCodes ?? [],
       cancellationReasonCodes: apiTS?.cancellationReasonCodes ?? [],
       timesheetProjects: rows,
@@ -135,9 +135,9 @@ export const TimesheetProjectsSection = ({ data, onDataChange }: TimesheetProjec
     });
   };
 
-  const handleSaveQueue = (next: IConfigTimesheetQueueEntry[]) => {
+  const handleSaveQueue = async (next: IConfigTimesheetQueueEntry[]) => {
     setQueueRows(next);
-    saveSection('timesheets', {
+    await saveSection('timesheets', {
       conversionReasonCodes: apiTS?.conversionReasonCodes ?? [],
       cancellationReasonCodes: apiTS?.cancellationReasonCodes ?? [],
       timesheetProjects: rows,
@@ -149,9 +149,9 @@ export const TimesheetProjectsSection = ({ data, onDataChange }: TimesheetProjec
     });
   };
 
-  const handleSaveResource = (next: IConfigTimesheetResourceEntry[]) => {
+  const handleSaveResource = async (next: IConfigTimesheetResourceEntry[]) => {
     setResourceRows(next);
-    saveSection('timesheets', {
+    await saveSection('timesheets', {
       conversionReasonCodes: apiTS?.conversionReasonCodes ?? [],
       cancellationReasonCodes: apiTS?.cancellationReasonCodes ?? [],
       timesheetProjects: rows,
@@ -187,6 +187,7 @@ export const TimesheetProjectsSection = ({ data, onDataChange }: TimesheetProjec
           onSave={handleSave}
           customColumns={timesheetProjectColumns as any}
           variant='standard'
+          enableSuccessMessage
         />
       )}
       {activeView === 'serviceLine' && (
@@ -196,6 +197,7 @@ export const TimesheetProjectsSection = ({ data, onDataChange }: TimesheetProjec
           onSave={handleSaveServiceLine}
           customColumns={serviceLineColumns as any}
           variant='standard'
+          enableSuccessMessage
         />
       )}
       {activeView === 'application' && (
@@ -205,6 +207,7 @@ export const TimesheetProjectsSection = ({ data, onDataChange }: TimesheetProjec
           onSave={handleSaveApplication}
           customColumns={applicationColumns as any}
           variant='standard'
+          enableSuccessMessage
         />
       )}
       {activeView === 'queue' && (
@@ -214,6 +217,7 @@ export const TimesheetProjectsSection = ({ data, onDataChange }: TimesheetProjec
           onSave={handleSaveQueue}
           customColumns={queueColumns as any}
           variant='standard'
+          enableSuccessMessage
         />
       )}
       {activeView === 'resource' && (
@@ -223,6 +227,7 @@ export const TimesheetProjectsSection = ({ data, onDataChange }: TimesheetProjec
           onSave={handleSaveResource}
           customColumns={resourceColumns as any}
           variant='standard'
+          enableSuccessMessage
         />
       )}
     </GenericAccordion>

@@ -93,6 +93,7 @@ const PrioritiesSection = ({
             ),
           },
         ]}
+        enableSuccessMessage
       />
       <PriorityFormDialog
         open={dialogOpen}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNotification } from '@serviceops/hooks';
 import {
   Box,
   Typography,
@@ -52,6 +53,7 @@ const TicketMatrixSection = ({
   onMatrixReset,
 }: TicketMatrixSectionProps) => {
   const { classes } = useStyles();
+  const { success } = useNotification();
   const [useSimple, setUseSimple] = useState(false);
   const [simplePriority, setSimplePriority] = useState(priorities[0]?.id ?? '');
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
@@ -82,6 +84,7 @@ const TicketMatrixSection = ({
       delete next[impactId][urgencyId];
     }
     onMatrixReset(next);
+    success(`${label} priority combination deleted successfully`);
     setSelectedRowId(null);
   };
 
@@ -112,6 +115,7 @@ const TicketMatrixSection = ({
   const handleAddRow = () => {
     if (addForm.impactId && addForm.urgencyId && addForm.priorityId) {
       onMatrixChange(addForm.impactId, addForm.urgencyId, addForm.priorityId);
+      success(`${label} priority combination added successfully`);
       setAddDialogOpen(false);
     }
   };
@@ -130,6 +134,7 @@ const TicketMatrixSection = ({
   const handleEditRow = () => {
     if (editForm.impactId && editForm.urgencyId) {
       onMatrixChange(editForm.impactId, editForm.urgencyId, editForm.priorityId);
+      success(`${label} priority combination updated successfully`);
       setEditDialogOpen(false);
     }
   };

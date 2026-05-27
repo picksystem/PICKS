@@ -12,9 +12,9 @@ const ExpenseProjectSection = () => {
     if (apiEXP?.expenseProjects) setRows(apiEXP.expenseProjects);
   }, [apiEXP]);
 
-  const handleSave = (next: IConfigExpenseProjectEntry[]) => {
+  const handleSave = async (next: IConfigExpenseProjectEntry[]) => {
     setRows(next);
-    saveSection('expenses', { ...apiEXP, expenseProjects: next });
+    await saveSection('expenses', { ...apiEXP, expenseProjects: next });
   };
 
   return (
@@ -24,6 +24,7 @@ const ExpenseProjectSection = () => {
       onSave={handleSave as (data: unknown[]) => void}
       customColumns={expenseProjectColumns as unknown as never}
       variant='standard'
+      enableSuccessMessage
     />
   );
 };

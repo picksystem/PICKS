@@ -24,9 +24,9 @@ const ReleaseCycleStatusesSection = ({
     }
   }, [apiReleaseStatuses]);
 
-  const handleSave = (next: IConfigStatusLevel[]) => {
+  const handleSave = async (next: IConfigStatusLevel[]) => {
     setRows(next);
-    saveSection('releaseStatuses', { items: next });
+    await saveSection('releaseStatuses', { items: next });
   };
 
   return (
@@ -38,6 +38,7 @@ const ReleaseCycleStatusesSection = ({
         customColumns={releaseStatusColumns(activeTicketTypeColumns) as any}
         variant='plain'
         defaultExpanded={false}
+        enableSuccessMessage
       />
     </div>
   );

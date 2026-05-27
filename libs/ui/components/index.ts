@@ -1,5 +1,6 @@
 export * from './Accordion';
 export * from './Alert';
+export * from './AppError';
 export * from './AutoGrid';
 export * from './Button';
 export * from './ButtonMenu';

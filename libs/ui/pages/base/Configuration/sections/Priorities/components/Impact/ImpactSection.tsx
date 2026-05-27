@@ -4,6 +4,7 @@ import { FormControlLabel, Switch } from '@mui/material';
 import WhatshotIcon from '@mui/icons-material/Whatshot';
 import { SimpleLevel } from '../../util';
 import { useStyles } from '../../styles';
+import { useNotification } from '@serviceops/hooks';
 import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
 import {
   ConfigFormDialog,
@@ -17,6 +18,7 @@ interface ImpactSectionProps {
   onDelete: (id: string) => void;
   onToggleEnabledFor: (id: string, ticketType: string) => void;
   activeTicketTypeColumns: { key: string; label: string }[];
+  isLoading?: boolean;
 }
 
 const IMPACT_CONFIG = {
@@ -39,8 +41,10 @@ const ImpactSection = ({
   onDelete,
   onToggleEnabledFor,
   activeTicketTypeColumns,
+  isLoading,
 }: ImpactSectionProps) => {
   const { classes } = useStyles();
+  const { success, error: showError } = useNotification();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<SimpleLevel | null>(null);
@@ -48,23 +52,39 @@ const ImpactSection = ({
   const [form, setForm] = useState<Partial<SimpleLevel>>({});
 
   const handleSave = useCallback(
-    (data: SimpleLevel[]) => {
-      if (editingItem) {
-        onEdit(editingItem.id, data.find((i) => i.id === editingItem.id) ?? data[data.length - 1]);
-      } else {
-        onAdd(data[data.length - 1]);
+    async (data: SimpleLevel[]) => {
+      try {
+        if (editingItem) {
+          await onEdit(
+            editingItem.id,
+            data.find((i) => i.id === editingItem.id) ?? data[data.length - 1],
+          );
+          success('Impact level updated successfully');
+        } else {
+          await onAdd(data[data.length - 1]);
+          success('Impact level added successfully');
+        }
+      } catch (err) {
+        showError('Failed to save impact level. Please try again.');
+        throw err;
       }
     },
-    [editingItem, onAdd, onEdit],
+    [editingItem, onAdd, onEdit, success, showError],
   );
 
-  const handleConfirmDelete = useCallback(() => {
-    if (deleteId) {
-      onDelete(deleteId);
+  const handleConfirmDelete = useCallback(async () => {
+    try {
+      if (deleteId) {
+        await onDelete(deleteId);
+        success('Impact level deleted successfully');
+      }
+    } catch (err) {
+      showError('Failed to delete impact level. Please try again.');
+    } finally {
+      setDeleteOpen(false);
+      setDeleteId(null);
     }
-    setDeleteOpen(false);
-    setDeleteId(null);
-  }, [deleteId, onDelete]);
+  }, [deleteId, onDelete, success, showError]);
 
   const customColumns = [
     {
@@ -115,18 +135,28 @@ const ImpactSection = ({
         variant='plain'
         customColumns={customColumns as never}
         defaultExpanded={false}
+        isLoading={isLoading}
+        loaderMessage='Loading Impact levels...'
+        enableSuccessMessage
       />
 
       <ConfigFormDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
-        onSubmit={() => {
-          if (editingItem) {
-            onEdit(editingItem.id, form);
-          } else {
-            onAdd(form);
+        onSubmit={async () => {
+          try {
+            if (editingItem) {
+              await onEdit(editingItem.id, form);
+              success('Impact level updated successfully');
+            } else {
+              await onAdd(form);
+              success('Impact level added successfully');
+            }
+          } catch (err) {
+            showError('Failed to save impact level. Please try again.');
+          } finally {
+            setDialogOpen(false);
           }
-          setDialogOpen(false);
         }}
         isEdit={!!editingItem}
         icon={<WhatshotIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}

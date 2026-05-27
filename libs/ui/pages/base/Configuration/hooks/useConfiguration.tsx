@@ -4,6 +4,7 @@ import {
   useUpdateConfigurationSectionMutation,
   useUpdateConfigurationMutation,
 } from '@serviceops/services';
+import { useNotification } from '@serviceops/hooks';
 import {
   IConfigurationData,
   IConfigPriorities,
@@ -44,6 +45,7 @@ export const useConfiguration = () => {
   const { data: config, isLoading, error } = useGetConfigurationQuery();
   const [patchSection, { isLoading: isPatchLoading }] = useUpdateConfigurationSectionMutation();
   const [putAll, { isLoading: isPutLoading }] = useUpdateConfigurationMutation();
+  const { success, error: showError } = useNotification();
 
   const data: IConfigurationData = config?.data ?? DEFAULT_CONFIGURATION_DATA;
 
@@ -51,12 +53,40 @@ export const useConfiguration = () => {
   const ticketTypeKeys: string[] = Object.keys(data.priorities.matrices);
 
   const saveSection = useCallback(
-    <K extends keyof IConfigurationData>(section: K, value: IConfigurationData[K]) =>
-      patchSection({ section, value }),
-    [patchSection],
+    async <K extends keyof IConfigurationData>(section: K, value: IConfigurationData[K]) => {
+      try {
+        await patchSection({ section, value }).unwrap();
+        success(`${section} saved successfully`);
+      } catch (err: unknown) {
+        const errorObj = err as { data?: { message?: string }; message?: string };
+        const errorMessage =
+          errorObj?.data?.message ||
+          errorObj?.message ||
+          'Failed to save changes. Please try again.';
+        showError(errorMessage);
+        throw err;
+      }
+    },
+    [patchSection, success, showError],
   );
 
-  const saveAll = useCallback((fullData: IConfigurationData) => putAll(fullData), [putAll]);
+  const saveAll = useCallback(
+    async (fullData: IConfigurationData) => {
+      try {
+        await putAll(fullData).unwrap();
+        success('Configuration saved successfully');
+      } catch (err: unknown) {
+        const errorObj = err as { data?: { message?: string }; message?: string };
+        const errorMessage =
+          errorObj?.data?.message ||
+          errorObj?.message ||
+          'Failed to save configuration. Please try again.';
+        showError(errorMessage);
+        throw err;
+      }
+    },
+    [putAll, success, showError],
+  );
 
   return {
     config,

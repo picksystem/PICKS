@@ -232,7 +232,7 @@ const DEFAULT_MATRIX: MatrixMap = {
 
 const Priorities = () => {
   const { classes } = useStyles();
-  const { priorities: apiPriorities, ticketTypeKeys, saveSection } = useConfiguration();
+  const { priorities: apiPriorities, ticketTypeKeys, saveSection, isLoading } = useConfiguration();
   const { data: ticketTypes = [] } = useGetTicketTypeQuery();
 
   const ticketTypeDisplayNames = Object.fromEntries(
@@ -372,6 +372,7 @@ const Priorities = () => {
             persistPriorities(priorities, next, urgencies, matrices);
           }}
           activeTicketTypeColumns={activeTicketTypeColumns}
+          isLoading={isLoading}
         />
 
         <UrgencySection
@@ -419,6 +420,7 @@ const Priorities = () => {
             persistPriorities(priorities, impacts, next, matrices);
           }}
           activeTicketTypeColumns={activeTicketTypeColumns}
+          isLoading={isLoading}
         />
 
         {activeTicketTypeColumns.map(({ key }) => {
