@@ -4,7 +4,10 @@ import {
   IConfigApprovalConsultantRole,
   IConfigApprovalWorkingTime,
 } from '@serviceops/interfaces';
-import { ReactNode } from 'react';
+import type {
+  TableField,
+  TableConfig,
+} from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
 
 export interface ApprovalsSectionProps {
   records?: IConfigApprovalRecord[];
@@ -28,24 +31,7 @@ export interface AccorionData {
 
 export type ActiveView = 'records' | 'userProfile' | 'consultantRoles' | 'workingTimes';
 
-export interface TableField {
-  name: string;
-  label: string;
-  required?: boolean;
-  bold?: boolean;
-  minWidth?: number;
-  defaultValue?: string | number | boolean;
-  type?: 'text' | 'date' | 'number' | 'toggle';
-}
-
-export interface TableConfig {
-  title: string;
-  subtitle: string;
-  accent: string;
-  icon: ReactNode;
-  entity: string;
-  fields: TableField[];
-}
+export { TableField, TableConfig };
 
 export const AccentColor = '#0369a1';
 

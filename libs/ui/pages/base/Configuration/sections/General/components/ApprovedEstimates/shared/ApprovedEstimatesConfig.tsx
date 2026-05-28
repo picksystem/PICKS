@@ -9,11 +9,13 @@ export const APPROVED_ESTIMATES_ACCENT = '#0369a1';
 
 export const approvedEstimateColumns = (): Column<IConfigApprovedEstimateRow>[] => [
   {
-    id: 'ticketTypeName',
+    id: 'ticketTypeId',
     label: 'Ticket Type',
     minWidth: 140,
     format: (_v, row) => (
-      <Typography sx={{ fontSize: '0.82rem', fontWeight: 700 }}>{row.ticketTypeName}</Typography>
+      <Typography sx={{ fontSize: '0.82rem', fontWeight: 700 }}>
+        {row.ticketTypeName || '—'}
+      </Typography>
     ),
   },
   {
@@ -65,7 +67,12 @@ export const APPROVED_ESTIMATES_CONFIG: TableConfig = {
   icon: <AccessTimeIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Approved Estimate',
   fields: [
-    { name: 'ticketTypeName', label: 'Ticket Type', required: true, bold: true },
+    {
+      name: 'ticketTypeId',
+      label: 'Ticket Type',
+      required: true,
+      type: 'ticketTypeSearch' as const,
+    },
     { name: 'serviceLine', label: 'Service Line' },
     { name: 'application', label: 'Application' },
     { name: 'queue', label: 'Queue' },

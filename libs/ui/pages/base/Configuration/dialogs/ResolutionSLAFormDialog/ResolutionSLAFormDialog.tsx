@@ -93,7 +93,7 @@ const ResolutionSLAFormDialog = ({
       title='Resolution SLA Row'
       subtitle='Set resolution time targets (in hours) per priority level'
       submitDisabled={!form.ticketTypeId}
-      submitLabel={isEditing ? 'Save Changes' : 'Add Row'}
+      submitLabel={isEditing ? 'Save' : 'Submit'}
       maxWidth='sm'
     >
       {isEditing ? (

@@ -325,6 +325,18 @@ const Priorities = () => {
           setSelectedPriority={setSelectedPriority}
           confirmDeleteOpen={confirmDeleteOpen}
           setConfirmDeleteOpen={setConfirmDeleteOpen}
+          onToggleEnabledFor={(id, ticketType) => {
+            const next = priorities.map((p) =>
+              p.id === id
+                ? {
+                    ...p,
+                    enabledFor: { ...p.enabledFor, [ticketType]: !p.enabledFor[ticketType] },
+                  }
+                : p,
+            );
+            setPriorities(next);
+            persistPriorities(next, impacts, urgencies, matrices);
+          }}
         />
 
         <ImpactSection

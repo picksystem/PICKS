@@ -4,7 +4,6 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import ToggleOnIcon from '@mui/icons-material/ToggleOn';
 import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
 import CodeIcon from '@mui/icons-material/Code';
-import HowToRegIcon from '@mui/icons-material/HowToReg';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
 import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRight';
@@ -305,7 +304,12 @@ export const CATEG_TABLE_CONFIG: Record<CategSubView, TableConfig> = {
     entity: 'Number Sequence',
     fields: [
       { name: 'applicationName', label: 'Application', required: true, bold: true },
-      { name: 'ticketTypeName', label: 'Ticket Type', required: true },
+      {
+        name: 'ticketTypeId',
+        label: 'Ticket Type',
+        required: true,
+        type: 'ticketTypeSearch' as const,
+      },
       { name: 'numberSequenceCode', label: 'Number Sequence Code', required: true },
       { name: 'numericCharLength', label: 'Numeric Char Length' },
       { name: 'numberSequenceFormat', label: 'Number Sequence Format' },

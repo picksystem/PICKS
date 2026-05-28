@@ -387,7 +387,7 @@ const TicketMatrixSection = ({
         accent={accentColor}
         title='Combination'
         submitDisabled={!addForm.impactId || !addForm.urgencyId || !addForm.priorityId}
-        submitLabel='Add'
+        submitLabel='Submit'
         maxWidth='xs'
       >
         <FormControl size='small' fullWidth>
@@ -449,7 +449,7 @@ const TicketMatrixSection = ({
         accent={accentColor}
         title='Combination'
         submitDisabled={false}
-        submitLabel='Save Changes'
+        submitLabel='Save'
         maxWidth='xs'
       >
         <Box>

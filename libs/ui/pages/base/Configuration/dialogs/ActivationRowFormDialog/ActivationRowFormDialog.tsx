@@ -71,7 +71,7 @@ const ActivationRowFormDialog = ({
       title={title}
       subtitle='Configure ticket type activation for this feature'
       submitDisabled={!ticketTypeId}
-      submitLabel={isEditing ? 'Save Changes' : 'Add Row'}
+      submitLabel={isEditing ? 'Save' : 'Submit'}
       maxWidth='xs'
     >
       {isEditing ? (

@@ -56,7 +56,7 @@ export const useConfiguration = () => {
     async <K extends keyof IConfigurationData>(section: K, value: IConfigurationData[K]) => {
       try {
         await patchSection({ section, value }).unwrap();
-        success(`${section} saved successfully`);
+        // Success message handled by individual section handlers
       } catch (err: unknown) {
         const errorObj = err as { data?: { message?: string }; message?: string };
         const errorMessage =
@@ -67,14 +67,14 @@ export const useConfiguration = () => {
         throw err;
       }
     },
-    [patchSection, success, showError],
+    [patchSection, showError],
   );
 
   const saveAll = useCallback(
     async (fullData: IConfigurationData) => {
       try {
         await putAll(fullData).unwrap();
-        success('Configuration saved successfully');
+        // Success message handled by individual section handlers
       } catch (err: unknown) {
         const errorObj = err as { data?: { message?: string }; message?: string };
         const errorMessage =
@@ -85,7 +85,7 @@ export const useConfiguration = () => {
         throw err;
       }
     },
-    [putAll, success, showError],
+    [putAll, showError],
   );
 
   return {

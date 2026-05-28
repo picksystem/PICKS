@@ -53,8 +53,8 @@ export const TABLE_CONFIG: Record<ActiveView, TableConfig> = {
     icon: <AccessTimeIcon sx={{ fontSize: '1.1rem' }} />,
     entity: 'Working Time',
     fields: [
-      { name: 'startTime', label: 'Start Time', defaultValue: '09:00', bold: true },
-      { name: 'endTime', label: 'End Time', defaultValue: '17:00' },
+      { name: 'startTime', label: 'Start Time', defaultValue: '09:00', type: 'time', bold: true },
+      { name: 'endTime', label: 'End Time', defaultValue: '17:00', type: 'time' },
       { name: 'timezone', label: 'Timezone' },
     ],
   },

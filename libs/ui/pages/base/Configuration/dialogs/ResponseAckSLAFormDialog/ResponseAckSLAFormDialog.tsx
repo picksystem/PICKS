@@ -93,7 +93,7 @@ const ResponseAckSLAFormDialog = ({
       title='Response / Acknowledgement SLA Row'
       subtitle='Set response time targets (in minutes) per priority level'
       submitDisabled={!form.ticketTypeId}
-      submitLabel={isEditing ? 'Save Changes' : 'Add Row'}
+      submitLabel={isEditing ? 'Save' : 'Submit'}
       maxWidth='sm'
     >
       {isEditing ? (

@@ -4,10 +4,10 @@ import { ApprovedEstimatesSection } from './components/ApprovedEstimates/Approve
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
 import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { IConfigGeneral, IConfigApprovedEstimateRow, ITicketType } from '@serviceops/interfaces';
-import { useGetTicketTypeQuery } from '@serviceops/services';
+import { useState, useEffect, useCallback } from 'react';
+import { IConfigGeneral, IConfigApprovedEstimateRow } from '@serviceops/interfaces';
 import { useDebounce } from '@serviceops/hooks';
+import { useGetTicketTypeQuery } from '@serviceops/services';
 
 const DEFAULT_GENERAL: IConfigGeneral = {
   systemName: '',
@@ -24,13 +24,7 @@ const DEFAULT_GENERAL: IConfigGeneral = {
 const General = () => {
   const { classes } = useStyles();
   const { general: apiGeneral, saveSection } = useConfiguration();
-  const { data: ticketTypesData } = useGetTicketTypeQuery();
-
-  const activeTicketTypes = useMemo<ITicketType[]>(() => {
-    return ticketTypesData && ticketTypesData.length > 0
-      ? ticketTypesData.filter((t) => t.isActive)
-      : [];
-  }, [ticketTypesData]);
+  const { data: ticketTypes } = useGetTicketTypeQuery();
 
   const [form, setForm] = useState<IConfigGeneral>(DEFAULT_GENERAL);
 
@@ -41,21 +35,40 @@ const General = () => {
     if (apiGeneral) setForm({ ...DEFAULT_GENERAL, ...apiGeneral });
   }, [apiGeneral]);
 
-  const update = useCallback(
-    <K extends keyof IConfigGeneral>(key: K, value: IConfigGeneral[K]) => {
-      setForm((prev) => ({ ...prev, [key]: value }));
-    },
-    [],
-  );
-
-  // Only save to API when debounced form changes
-  useEffect(() => {
-    saveSection('general', debouncedForm);
-  }, [debouncedForm, saveSection]);
-
-  const handleDataChange = useCallback((rows: IConfigApprovedEstimateRow[]) => {
-    setForm((prev) => ({ ...prev, approvedEstimateRows: rows }));
+  const update = useCallback(<K extends keyof IConfigGeneral>(key: K, value: IConfigGeneral[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
   }, []);
+
+  // Only save other fields via debounce (not approvedEstimateRows which is saved immediately)
+  useEffect(() => {
+    // This debounced effect can be used for other general fields if needed
+  }, [debouncedForm]);
+
+  const handleDataChange = useCallback(
+    (rows: IConfigApprovedEstimateRow[]) => {
+      // Transform rows to ensure ticketTypeName is set correctly
+      const transformedRows = rows.map((row) => {
+        // If ticketTypeId is present but ticketTypeName is not, look it up
+        if (row.ticketTypeId && !row.ticketTypeName) {
+          const tt = ticketTypes?.find((t) => t.type === String(row.ticketTypeId));
+          return {
+            ...row,
+            ticketTypeName: tt?.displayName || tt?.name || String(row.ticketTypeId),
+          };
+        }
+        return row;
+      });
+
+      // Update local form state
+      setForm((prev) => {
+        const newForm = { ...prev, approvedEstimateRows: transformedRows };
+        // Save to API immediately
+        saveSection('general', newForm);
+        return newForm;
+      });
+    },
+    [ticketTypes, saveSection],
+  );
 
   const displayRows: IConfigApprovedEstimateRow[] = form.approvedEstimateRows ?? [];
 
@@ -63,11 +76,7 @@ const General = () => {
     <Box className={classes.container}>
       <ConfigurationSection loaderMessage='Loading Admin Control Configuration...'>
         <AdminControlsSection form={form} update={update} />
-        <ApprovedEstimatesSection
-          displayRows={displayRows}
-          activeTicketTypes={activeTicketTypes}
-          onDataChange={handleDataChange}
-        />
+        <ApprovedEstimatesSection displayRows={displayRows} onDataChange={handleDataChange} />
       </ConfigurationSection>
     </Box>
   );

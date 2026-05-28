@@ -737,7 +737,7 @@ export interface IConfigSLAs {
 
 export interface IConfigWorkLocation {
   id: string;
-  name: string;
+  workLocation: string;
   description: string;
   country: string;
   state: string;

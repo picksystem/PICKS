@@ -222,28 +222,63 @@ const SLAs = () => {
 
   // Save handlers for GenericPanel onSave callbacks
   const saveAckRows = (rows: IConfigResponseAckSLARow[]) => {
-    setAckRows(rows);
-    persistSlas(ctrl, rows, resRows, dueDateRows, etaActRows, timeLogActRows);
+    const transformedRows = rows.map((row) => {
+      if (row.ticketTypeId && !row.ticketTypeName) {
+        const tt = ticketTypesData?.find((t) => t.id === row.ticketTypeId);
+        return { ...row, ticketTypeName: tt?.displayName || tt?.name || String(row.ticketTypeId) };
+      }
+      return row;
+    });
+    setAckRows(transformedRows);
+    persistSlas(ctrl, transformedRows, resRows, dueDateRows, etaActRows, timeLogActRows);
   };
 
   const saveResRows = (rows: IConfigResponseAckSLARow[]) => {
-    setResRows(rows);
-    persistSlas(ctrl, ackRows, rows, dueDateRows, etaActRows, timeLogActRows);
+    const transformedRows = rows.map((row) => {
+      if (row.ticketTypeId && !row.ticketTypeName) {
+        const tt = ticketTypesData?.find((t) => t.id === row.ticketTypeId);
+        return { ...row, ticketTypeName: tt?.displayName || tt?.name || String(row.ticketTypeId) };
+      }
+      return row;
+    });
+    setResRows(transformedRows);
+    persistSlas(ctrl, ackRows, transformedRows, dueDateRows, etaActRows, timeLogActRows);
   };
 
   const saveDueDateRows = (rows: IConfigResponseAckSLARow[]) => {
-    setDueDateRows(rows);
-    persistSlas(ctrl, ackRows, resRows, rows, etaActRows, timeLogActRows);
+    const transformedRows = rows.map((row) => {
+      if (row.ticketTypeId && !row.ticketTypeName) {
+        const tt = ticketTypesData?.find((t) => t.id === row.ticketTypeId);
+        return { ...row, ticketTypeName: tt?.displayName || tt?.name || String(row.ticketTypeId) };
+      }
+      return row;
+    });
+    setDueDateRows(transformedRows);
+    persistSlas(ctrl, ackRows, resRows, transformedRows, etaActRows, timeLogActRows);
   };
 
   const saveEtaActRows = (rows: IConfigActivationRow[]) => {
-    setEtaActRows(rows);
-    persistSlas(ctrl, ackRows, resRows, dueDateRows, rows, timeLogActRows);
+    const transformedRows = rows.map((row) => {
+      if (row.ticketTypeId && !row.ticketTypeName) {
+        const tt = ticketTypesData?.find((t) => t.id === row.ticketTypeId);
+        return { ...row, ticketTypeName: tt?.displayName || tt?.name || String(row.ticketTypeId) };
+      }
+      return row;
+    });
+    setEtaActRows(transformedRows);
+    persistSlas(ctrl, ackRows, resRows, dueDateRows, transformedRows, timeLogActRows);
   };
 
   const saveTimeLogActRows = (rows: IConfigActivationRow[]) => {
-    setTimeLogActRows(rows);
-    persistSlas(ctrl, ackRows, resRows, dueDateRows, etaActRows, rows);
+    const transformedRows = rows.map((row) => {
+      if (row.ticketTypeId && !row.ticketTypeName) {
+        const tt = ticketTypesData?.find((t) => t.id === row.ticketTypeId);
+        return { ...row, ticketTypeName: tt?.displayName || tt?.name || String(row.ticketTypeId) };
+      }
+      return row;
+    });
+    setTimeLogActRows(transformedRows);
+    persistSlas(ctrl, ackRows, resRows, dueDateRows, etaActRows, transformedRows);
   };
 
   return (

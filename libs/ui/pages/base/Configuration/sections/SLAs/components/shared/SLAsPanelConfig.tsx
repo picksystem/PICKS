@@ -52,7 +52,13 @@ export const TIME_LOGS_ACTIVATION_CONFIG: TableConfig = {
   icon: <AvTimerIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Time Log Activation',
   fields: [
-    { name: 'ticketTypeName', label: 'Ticket Type', required: true, bold: true },
+    {
+      name: 'ticketTypeId',
+      label: 'Ticket Type',
+      required: true,
+      bold: true,
+      type: 'ticketTypeSearch' as const,
+    },
     { name: 'activation', label: 'Activation', type: 'toggle' as const, defaultValue: true },
   ],
 };
@@ -65,7 +71,13 @@ export const ETA_ACTIVATION_CONFIG: TableConfig = {
   icon: <ScheduleIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'ETA Activation',
   fields: [
-    { name: 'ticketTypeName', label: 'Ticket Type', required: true, bold: true },
+    {
+      name: 'ticketTypeId',
+      label: 'Ticket Type',
+      required: true,
+      bold: true,
+      type: 'ticketTypeSearch' as const,
+    },
     { name: 'activation', label: 'Activation', type: 'toggle' as const, defaultValue: true },
   ],
 };
@@ -78,7 +90,13 @@ export const DUE_DATES_CONFIG: TableConfig = {
   icon: <DateRangeIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Due Date',
   fields: [
-    { name: 'ticketTypeName', label: 'Ticket Type', required: true, bold: true },
+    {
+      name: 'ticketTypeId',
+      label: 'Ticket Type',
+      required: true,
+      bold: true,
+      type: 'ticketTypeSearch' as const,
+    },
     { name: 'activation', label: 'Activation', type: 'toggle' as const, defaultValue: true },
     { name: 'p1', label: 'P1' },
     { name: 'p2', label: 'P2' },
@@ -96,7 +114,13 @@ export const RESOLUTION_SLA_CONFIG: TableConfig = {
   icon: <AssignmentTurnedInIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Resolution SLA',
   fields: [
-    { name: 'ticketTypeName', label: 'Ticket Type', required: true, bold: true },
+    {
+      name: 'ticketTypeId',
+      label: 'Ticket Type',
+      required: true,
+      bold: true,
+      type: 'ticketTypeSearch' as const,
+    },
     { name: 'activation', label: 'Activation', type: 'toggle' as const, defaultValue: true },
     { name: 'p1', label: 'P1' },
     { name: 'p2', label: 'P2' },
@@ -114,7 +138,13 @@ export const RESPONSE_ACK_SLA_CONFIG: TableConfig = {
   icon: <MarkEmailReadIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Response / Ack SLA',
   fields: [
-    { name: 'ticketTypeName', label: 'Ticket Type', required: true, bold: true },
+    {
+      name: 'ticketTypeId',
+      label: 'Ticket Type',
+      required: true,
+      bold: true,
+      type: 'ticketTypeSearch' as const,
+    },
     { name: 'activation', label: 'Activation', type: 'toggle' as const, defaultValue: true },
     { name: 'p1', label: 'P1' },
     { name: 'p2', label: 'P2' },

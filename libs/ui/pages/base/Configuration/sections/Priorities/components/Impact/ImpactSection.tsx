@@ -137,7 +137,6 @@ const ImpactSection = ({
         defaultExpanded={false}
         isLoading={isLoading}
         loaderMessage='Loading Impact levels...'
-        enableSuccessMessage
       />
 
       <ConfigFormDialog
@@ -163,7 +162,7 @@ const ImpactSection = ({
         accent='#b91c1c'
         title='Impact Level'
         submitDisabled={!form.displayName}
-        submitLabel={editingItem ? 'Save Changes' : 'Add Impact Level'}
+        submitLabel={editingItem ? 'Save' : 'Submit'}
         maxWidth='sm'
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>

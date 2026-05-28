@@ -93,7 +93,7 @@ const DueDateFormDialog = ({
       title='Due Date SLA Row'
       subtitle='Set due date targets (in hours) per priority level'
       submitDisabled={!form.ticketTypeId}
-      submitLabel={isEditing ? 'Save Changes' : 'Add Row'}
+      submitLabel={isEditing ? 'Save' : 'Submit'}
       maxWidth='sm'
     >
       {isEditing ? (

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { IConfigApplicationNumberSequence } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
+import { useGetTicketTypeQuery } from '@serviceops/services';
 import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
 import {
   CATEG_TABLE_CONFIG,
@@ -15,6 +16,7 @@ const ApplicationNumberSequencesSection = ({
 }: ApplicationNumberSequencesSectionProps) => {
   const { classes } = useStyles();
   const { categorization: apiCat, saveSection } = useConfiguration();
+  const { data: ticketTypes } = useGetTicketTypeQuery();
 
   const [rows, setRows] = useState<IConfigApplicationNumberSequence[]>([]);
 
@@ -27,9 +29,21 @@ const ApplicationNumberSequencesSection = ({
   }, [data, apiCat]);
 
   const handleSave = (next: IConfigApplicationNumberSequence[]) => {
-    setRows(next);
+    // Transform rows to ensure ticketTypeName is set correctly
+    const transformedRows = next.map((row) => {
+      if (row.ticketTypeId && !row.ticketTypeName) {
+        const tt = ticketTypes?.find((t) => t.id === row.ticketTypeId);
+        return {
+          ...row,
+          ticketTypeName: tt?.displayName || tt?.name || String(row.ticketTypeId),
+        };
+      }
+      return row;
+    });
+
+    setRows(transformedRows);
     if (onDataChange) {
-      onDataChange(next);
+      onDataChange(transformedRows);
     } else {
       saveSection('categorization', {
         businessCategories: apiCat?.businessCategories ?? [],
@@ -38,7 +52,7 @@ const ApplicationNumberSequencesSection = ({
         queues: apiCat?.queues ?? [],
         applicationCategories: apiCat?.applicationCategories ?? [],
         applicationSubCategories: apiCat?.applicationSubCategories ?? [],
-        applicationNumberSequences: next,
+        applicationNumberSequences: transformedRows,
       });
     }
   };

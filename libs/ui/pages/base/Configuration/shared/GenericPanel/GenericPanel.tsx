@@ -12,6 +12,7 @@ import {
   Loader,
 } from '@serviceops/component';
 import { alpha, InputAdornment, FormControlLabel, Switch } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -24,6 +25,10 @@ import {
 import { useStyles } from './styles';
 import { GenericAccordion } from '../GenericAccordion/GenericAccordion';
 import { useDebounce, useNotification } from '@serviceops/hooks';
+import { TicketTypeSearchField } from './components/TicketTypeSearchField/TicketTypeSearchField';
+import { WorkLocationSearchField } from './components/WorkLocationSearchField/WorkLocationSearchField';
+import { DatePickerField } from './components/DatePickerField/DatePickerField';
+import { TimePickerField } from './components/TimePickerField/TimePickerField';
 
 export interface TableField {
   name: string;
@@ -32,7 +37,14 @@ export interface TableField {
   bold?: boolean;
   minWidth?: number;
   defaultValue?: string | number | boolean;
-  type?: 'text' | 'date' | 'number' | 'toggle';
+  type?: 'text' | 'date' | 'time' | 'number' | 'toggle' | 'ticketTypeSearch' | 'workLocationSearch';
+  /** For workLocationSearch type - fields to auto-fill when location is selected */
+  autoFillFields?: {
+    city?: string;
+    state?: string;
+    country?: string;
+    timezone?: string;
+  };
 }
 
 export interface TableConfig {
@@ -698,6 +710,32 @@ export const GenericPanel = ({
   }, [config.fields]);
 
   const handleSubmit = useCallback(async () => {
+    // Check if form has any actual values to save
+    const hasAnyValue = Object.values(form).some(
+      (v) => v !== undefined && v !== '' && v !== false && v !== null,
+    );
+
+    // If editing, check if anything actually changed
+    const hasChanges = editingRow
+      ? config.fields.some((field) => {
+          const original = editingRow[field.name];
+          const current = form[field.name];
+          return original !== current;
+        })
+      : hasAnyValue;
+
+    // If no changes and no values, just close without saving
+    if (!hasChanges) {
+      setDialogOpen(false);
+      setTimeout(() => {
+        setEditingRow(null);
+        setSelectedId(null);
+        setIsNewDialog(false);
+        setForm(createEmptyForm(config.fields));
+      }, 0);
+      return;
+    }
+
     const newId = `${Date.now()}`;
     const updated = editingRow
       ? data.map((r) => (r.id === editingRow.id ? { ...editingRow, ...form } : r))
@@ -827,44 +865,124 @@ export const GenericPanel = ({
         isEdit={!isNewDialog}
         icon={config.icon}
         accent={config.accent}
-        title={editingRow ? `Edit ${config.entity}` : `New ${config.entity}`}
+        title={config.entity}
         subtitle={config.subtitle}
         submitDisabled={false}
         submitLabel={editingRow ? 'Save' : 'Submit'}
         maxWidth='sm'
       >
-        <Box sx={{ display: dialogOpen ? 'flex' : 'none', flexDirection: 'column', gap: 2.5 }}>
-          {config.fields.map((field) => {
-            if (field.type === 'toggle') {
+        <LocalizationProvider>
+          <Box sx={{ display: dialogOpen ? 'flex' : 'none', flexDirection: 'column', gap: 2.5 }}>
+            {config.fields.map((field) => {
+              if (field.type === 'toggle') {
+                return (
+                  <FormControlLabel
+                    key={field.name}
+                    control={
+                      <Switch
+                        checked={form[field.name] === 'true' || form[field.name] === true}
+                        onChange={(e) => handleToggleChange(field.name, e.target.checked)}
+                      />
+                    }
+                    label={<Typography sx={{ fontSize: '0.85rem' }}>{field.label}</Typography>}
+                  />
+                );
+              }
+              if (field.type === 'ticketTypeSearch') {
+                const currentValue = (form[field.name] ?? '') as string;
+                return (
+                  <TicketTypeSearchField
+                    key={field.name}
+                    label={field.label}
+                    value={currentValue}
+                    onChange={(value) => handleTextFieldChange(field.name, value)}
+                    required={field.required}
+                  />
+                );
+              }
+              if (field.type === 'workLocationSearch') {
+                const currentValue = (form[field.name] ?? '') as string;
+                return (
+                  <WorkLocationSearchField
+                    key={field.name}
+                    label={field.label}
+                    value={currentValue}
+                    onChange={(value) => handleTextFieldChange(field.name, value)}
+                    onLocationSelect={
+                      field.autoFillFields
+                        ? (location) => {
+                            if (field.autoFillFields?.city) {
+                              setForm((prev) => ({
+                                ...prev,
+                                [field.autoFillFields!.city!]: location.city,
+                              }));
+                            }
+                            if (field.autoFillFields?.state) {
+                              setForm((prev) => ({
+                                ...prev,
+                                [field.autoFillFields!.state!]: location.state,
+                              }));
+                            }
+                            if (field.autoFillFields?.country) {
+                              setForm((prev) => ({
+                                ...prev,
+                                [field.autoFillFields!.country!]: location.country,
+                              }));
+                            }
+                            if (field.autoFillFields?.timezone) {
+                              setForm((prev) => ({
+                                ...prev,
+                                [field.autoFillFields!.timezone!]: location.timezone,
+                              }));
+                            }
+                          }
+                        : undefined
+                    }
+                    required={field.required}
+                  />
+                );
+              }
+              if (field.type === 'date') {
+                const currentValue = (form[field.name] ?? '') as string;
+                return (
+                  <DatePickerField
+                    key={field.name}
+                    label={field.label}
+                    value={currentValue}
+                    onChange={(value) => handleTextFieldChange(field.name, value)}
+                    required={field.required}
+                  />
+                );
+              }
+              if (field.type === 'time') {
+                const currentValue = (form[field.name] ?? '') as string;
+                return (
+                  <TimePickerField
+                    key={field.name}
+                    label={field.label}
+                    value={currentValue}
+                    onChange={(value) => handleTextFieldChange(field.name, value)}
+                    required={field.required}
+                  />
+                );
+              }
+              const textValue: string =
+                typeof form[field.name] === 'boolean' ? '' : String(form[field.name] ?? '');
               return (
-                <FormControlLabel
+                <TextField
                   key={field.name}
-                  control={
-                    <Switch
-                      checked={form[field.name] === 'true' || form[field.name] === true}
-                      onChange={(e) => handleToggleChange(field.name, e.target.checked)}
-                    />
-                  }
-                  label={<Typography sx={{ fontSize: '0.85rem' }}>{field.label}</Typography>}
+                  label={field.label}
+                  size='small'
+                  fullWidth
+                  required={field.required}
+                  type={field.type === 'number' ? 'number' : 'text'}
+                  value={textValue}
+                  onChange={(e) => handleTextFieldChange(field.name, e.target.value)}
                 />
               );
-            }
-            const textValue: string =
-              typeof form[field.name] === 'boolean' ? '' : String(form[field.name] ?? '');
-            return (
-              <TextField
-                key={field.name}
-                label={field.label}
-                size='small'
-                fullWidth
-                required={field.required}
-                type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
-                value={textValue}
-                onChange={(e) => handleTextFieldChange(field.name, e.target.value)}
-              />
-            );
-          })}
-        </Box>
+            })}
+          </Box>
+        </LocalizationProvider>
       </ConfigFormDialog>
 
       <ConfigDeleteDialog

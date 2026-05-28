@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import LinearScaleIcon from '@mui/icons-material/LinearScale';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
+import type { TableField, TableConfig } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
 
 export const CATEG_ACCENT = '#0369a1';
 
@@ -14,24 +15,7 @@ export type CategorizationActiveView =
   | 'applicationSubCategory'
   | 'applicationNumberSequence';
 
-export interface TableField {
-  name: string;
-  label: string;
-  required?: boolean;
-  bold?: boolean;
-  minWidth?: number;
-  defaultValue?: string | number | boolean;
-  type?: 'text' | 'date' | 'number' | 'toggle';
-}
-
-export interface TableConfig {
-  title: string;
-  subtitle: string;
-  accent: string;
-  icon: ReactNode;
-  entity: string;
-  fields: TableField[];
-}
+export { TableField, TableConfig };
 
 export interface AccordionData {
   name: string;

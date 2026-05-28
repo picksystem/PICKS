@@ -560,7 +560,7 @@ const TicketTypeFormDialog = ({
           }}
           disabled={formik.isSubmitting}
         >
-          {formik.isSubmitting ? 'Saving...' : isEditing ? 'Save Changes' : 'Add Ticket Type'}
+          {formik.isSubmitting ? 'Saving...' : isEditing ? 'Save' : 'Submit'}
         </Button>
         <Button
           onClick={handleClose}

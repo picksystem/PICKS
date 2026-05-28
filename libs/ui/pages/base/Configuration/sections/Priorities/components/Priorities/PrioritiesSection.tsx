@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { Switch } from '@mui/material';
 import { PriorityLevel } from '../../util';
 import { useStyles } from '../../styles';
 import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
@@ -15,6 +16,7 @@ interface PrioritiesSectionProps {
   setSelectedPriority: (priority: PriorityLevel | null) => void;
   confirmDeleteOpen: boolean;
   setConfirmDeleteOpen: (open: boolean) => void;
+  onToggleEnabledFor: (id: string, ticketType: string) => void;
 }
 
 const PrioritiesSection = ({
@@ -25,6 +27,7 @@ const PrioritiesSection = ({
   setSelectedPriorityId,
   setSelectedPriority,
   setConfirmDeleteOpen,
+  onToggleEnabledFor,
 }: PrioritiesSectionProps) => {
   const { classes } = useStyles();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -66,6 +69,43 @@ const PrioritiesSection = ({
     [editingPriority, priorities, activeTicketTypeColumns, handleSave],
   );
 
+  const customColumns = [
+    {
+      id: 'name',
+      label: 'Priority Name',
+      minWidth: 130,
+      format: (_v: unknown, row: Record<string, unknown>): React.ReactNode => (
+        <span style={{ fontWeight: 700, fontSize: '0.82rem' }}>{String(row.name)}</span>
+      ),
+    },
+    {
+      id: 'description',
+      label: 'Description',
+      minWidth: 300,
+      format: (v: unknown): React.ReactNode => (
+        <span style={{ color: 'text.secondary', fontSize: '0.78rem' }}>{String(v || '—')}</span>
+      ),
+    },
+    ...activeTicketTypeColumns.map((t) => ({
+      id: `enabledFor_${t.key}`,
+      label: t.label,
+      minWidth: 100,
+      align: 'center' as const,
+      format: (_v: unknown, row: PriorityLevel): React.ReactNode => (
+        <Switch
+          size='small'
+          checked={row.enabledFor[t.key] ?? false}
+          onChange={(e) => {
+            e.stopPropagation();
+            onToggleEnabledFor(row.id, t.key);
+          }}
+          onClick={(e) => e.stopPropagation()}
+          color='success'
+        />
+      ),
+    })),
+  ];
+
   return (
     <div className={classes.sectionAccordion}>
       <GenericPanel
@@ -73,27 +113,7 @@ const PrioritiesSection = ({
         data={priorities}
         onSave={handleSave}
         variant='plain'
-        customColumns={[
-          {
-            id: 'name',
-            label: 'Priority Name',
-            minWidth: 130,
-            format: (_v: unknown, row: Record<string, unknown>): React.ReactNode => (
-              <span style={{ fontWeight: 700, fontSize: '0.82rem' }}>{String(row.name)}</span>
-            ),
-          },
-          {
-            id: 'description',
-            label: 'Description',
-            minWidth: 300,
-            format: (v: unknown): React.ReactNode => (
-              <span style={{ color: 'text.secondary', fontSize: '0.78rem' }}>
-                {String(v || '—')}
-              </span>
-            ),
-          },
-        ]}
-        enableSuccessMessage
+        customColumns={customColumns as never}
       />
       <PriorityFormDialog
         open={dialogOpen}

@@ -1,4 +1,3 @@
-import { ReactNode } from 'react';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import PersonIcon from '@mui/icons-material/Person';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -6,6 +5,7 @@ import UpdateIcon from '@mui/icons-material/Update';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
+import type { TableConfig } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
 
 export type CPActiveView =
   | 'profiles'
@@ -15,25 +15,6 @@ export type CPActiveView =
   | 'timesheetProjects'
   | 'expenseProjects'
   | 'consultantRoles';
-
-export interface TableField {
-  name: string;
-  label: string;
-  required?: boolean;
-  bold?: boolean;
-  minWidth?: number;
-  defaultValue?: string | number | boolean;
-  type?: 'text' | 'date' | 'number' | 'toggle';
-}
-
-export interface TableConfig {
-  title: string;
-  subtitle: string;
-  accent: string;
-  icon: ReactNode;
-  entity: string;
-  fields: TableField[];
-}
 
 export const CP_ACCENT = '#0369a1';
 
@@ -76,8 +57,8 @@ export const WORKING_TIMES_CONFIG: TableConfig = {
   entity: 'Working Time',
   fields: [
     { name: 'consultantName', label: 'Consultant Name' },
-    { name: 'startTime', label: 'Start Time', defaultValue: '09:00', bold: true },
-    { name: 'endTime', label: 'End Time', defaultValue: '17:00' },
+    { name: 'startTime', label: 'Start Time', defaultValue: '09:00', type: 'time', bold: true },
+    { name: 'endTime', label: 'End Time', defaultValue: '17:00', type: 'time' },
     { name: 'timezone', label: 'Timezone' },
   ],
 };

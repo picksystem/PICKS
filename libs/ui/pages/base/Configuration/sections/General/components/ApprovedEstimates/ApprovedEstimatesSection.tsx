@@ -3,11 +3,10 @@ import {
   APPROVED_ESTIMATES_CONFIG,
   approvedEstimateColumns,
 } from './shared/ApprovedEstimatesConfig';
-import { IConfigApprovedEstimateRow, ITicketType } from '@serviceops/interfaces';
+import { IConfigApprovedEstimateRow } from '@serviceops/interfaces';
 
 interface ApprovedEstimatesSectionProps {
   displayRows: IConfigApprovedEstimateRow[];
-  activeTicketTypes: ITicketType[];
   onDataChange: (rows: IConfigApprovedEstimateRow[]) => void;
 }
 
@@ -20,6 +19,7 @@ const ApprovedEstimatesSection = ({ displayRows, onDataChange }: ApprovedEstimat
       customColumns={approvedEstimateColumns() as unknown as never}
       variant='plain'
       defaultExpanded={false}
+      enableSuccessMessage
     />
   );
 };

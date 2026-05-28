@@ -1,4 +1,3 @@
-import { ReactNode } from 'react';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import BeachAccessIcon from '@mui/icons-material/BeachAccess';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
@@ -17,33 +16,18 @@ import type {
   IConfigCalendarWorkLocation,
   IConfigCalendarConsultant,
 } from '@serviceops/interfaces';
+import type {
+  TableField,
+  TableConfig,
+} from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
 
 // ── Colors ─────────────────────────────────────────────────────────────────────
 
 export const ACCENT = '#0369a1';
 
-// ── Table Config Types ─────────────────────────────────────────────────────────
-
-export interface TableField {
-  name: string;
-  label: string;
-  required?: boolean;
-  bold?: boolean;
-  minWidth?: number;
-  defaultValue?: string | number | boolean;
-  type?: 'text' | 'date' | 'number' | 'toggle';
-}
-
-export interface TableConfig {
-  title: string;
-  subtitle: string;
-  accent: string;
-  icon: ReactNode;
-  entity: string;
-  fields: TableField[];
-}
-
 export type CalendarActiveView = 'holidayCalendar' | 'bankHoliday' | 'workingCalendar';
+
+export type { TableField, TableConfig };
 
 // ── Table Config Mappings ───────────────────────────────────────────────────────
 
@@ -113,8 +97,8 @@ export const COMPOSED_TIMES_TABLE_CONFIG: TableConfig = {
     { name: 'calendarName', label: 'Calendar Name', required: true, bold: true },
     { name: 'date', label: 'Date', type: 'date' },
     { name: 'day', label: 'Day' },
-    { name: 'startTime', label: 'Start Time' },
-    { name: 'endTime', label: 'End Time' },
+    { name: 'startTime', label: 'Start Time', type: 'time' },
+    { name: 'endTime', label: 'End Time', type: 'time' },
     { name: 'isWorkingDay', label: 'Is Working Day', type: 'toggle', defaultValue: false },
     { name: 'note', label: 'Note' },
   ],
@@ -128,7 +112,7 @@ export const WORK_LOCATIONS_TABLE_CONFIG: TableConfig = {
   entity: 'Work Location',
   fields: [
     { name: 'calendarName', label: 'Calendar Name', required: true, bold: true },
-    { name: 'workLocation', label: 'Work Location', required: true },
+    { name: 'workLocation', label: 'Work Location', required: true, type: 'workLocationSearch' },
     { name: 'effectiveFrom', label: 'Effective From', type: 'date' },
     { name: 'effectiveTo', label: 'Effective To', type: 'date' },
   ],

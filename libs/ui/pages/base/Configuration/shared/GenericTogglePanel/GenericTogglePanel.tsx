@@ -1,10 +1,12 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Box, Typography, Paper, Switch, TextField, alpha, InputAdornment } from '@mui/material';
 import { DataTable, Column } from '@serviceops/component';
-import { PanelHeader } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import {
+  PanelHeader,
+  TableConfig,
+} from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
 import SearchIcon from '@mui/icons-material/Search';
 import type { IConfigServiceLineTicketType } from '@serviceops/interfaces';
-import { TableConfig } from '../../sections/Approvals/components/ApprovalsSection.types';
 
 interface ToggleRow {
   ticketTypeKey: string;

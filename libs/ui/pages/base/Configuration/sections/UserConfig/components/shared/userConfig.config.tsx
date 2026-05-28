@@ -17,8 +17,11 @@ import type { TableConfig } from '@serviceops/pages/base/Configuration/shared/Ge
 // ── Column Definitions ─────────────────────────────────────────────────────────
 
 export const workLocationColumns: Column<IConfigWorkLocation>[] = [
-  { id: 'name', label: 'Work Location Name', minWidth: 180, format: mkCell(true) },
+  { id: 'workLocation', label: 'Work Location', minWidth: 180, format: mkCell(true) },
   { id: 'description', label: 'Description', minWidth: 220, format: mkDescCell },
+  { id: 'city', label: 'City', minWidth: 120, format: mkCell() },
+  { id: 'state', label: 'State', minWidth: 120, format: mkCell() },
+  { id: 'country', label: 'Country', minWidth: 120, format: mkCell() },
   { id: 'timezone', label: 'Timezone', minWidth: 150, format: mkCell() },
 ];
 
@@ -58,11 +61,22 @@ export const WORK_LOCATION_CONFIG: TableConfig = {
   icon: <LocationOnIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Work Location',
   fields: [
-    { name: 'name', label: 'Work Location Name', required: true, bold: true },
+    {
+      name: 'workLocation',
+      label: 'Work Location',
+      required: true,
+      type: 'workLocationSearch',
+      autoFillFields: {
+        city: 'city',
+        state: 'state',
+        country: 'country',
+        timezone: 'timezone',
+      },
+    },
     { name: 'description', label: 'Description' },
-    { name: 'country', label: 'Country' },
-    { name: 'state', label: 'State' },
     { name: 'city', label: 'City' },
+    { name: 'state', label: 'State' },
+    { name: 'country', label: 'Country' },
     { name: 'timezone', label: 'Timezone' },
   ],
 };
@@ -74,10 +88,16 @@ export const WORKING_TIME_CONFIG: TableConfig = {
   icon: <AccessTimeIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Working Time',
   fields: [
-    { name: 'workLocationName', label: 'Work Location', required: true, bold: true },
+    {
+      name: 'workLocationName',
+      label: 'Work Location',
+      required: true,
+      bold: true,
+      type: 'workLocationSearch',
+    },
     { name: 'dayOfWeek', label: 'Day of Week', required: true, bold: true },
-    { name: 'startTime', label: 'Start Time', required: true },
-    { name: 'endTime', label: 'End Time', required: true },
+    { name: 'startTime', label: 'Start Time', required: true, type: 'time' },
+    { name: 'endTime', label: 'End Time', required: true, type: 'time' },
   ],
 };
 
@@ -88,7 +108,13 @@ export const ASSOCIATED_PROFILE_CONFIG: TableConfig = {
   icon: <GroupIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Associated Consultant Profile',
   fields: [
-    { name: 'workLocationName', label: 'Work Location', required: true, bold: true },
+    {
+      name: 'workLocationName',
+      label: 'Work Location',
+      required: true,
+      bold: true,
+      type: 'workLocationSearch',
+    },
     { name: 'consultantName', label: 'Consultant Name', required: true },
     { name: 'consultantProfileId', label: 'Consultant Profile ID' },
   ],
@@ -101,11 +127,17 @@ export const SHIFT_CONFIG: TableConfig = {
   icon: <WatchLaterIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Shift',
   fields: [
-    { name: 'workLocationName', label: 'Work Location', required: true, bold: true },
+    {
+      name: 'workLocationName',
+      label: 'Work Location',
+      required: true,
+      bold: true,
+      type: 'workLocationSearch',
+    },
     { name: 'shiftName', label: 'Shift Name', required: true, bold: true },
     { name: 'description', label: 'Description' },
-    { name: 'startTime', label: 'Start Time', required: true },
-    { name: 'endTime', label: 'End Time', required: true },
+    { name: 'startTime', label: 'Start Time', required: true, type: 'time' },
+    { name: 'endTime', label: 'End Time', required: true, type: 'time' },
   ],
 };
 
@@ -116,8 +148,20 @@ export const ASSOCIATION_CONFIG: TableConfig = {
   icon: <LinkIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Work Location Association',
   fields: [
-    { name: 'workLocationName', label: 'Work Location', required: true, bold: true },
-    { name: 'associatedLocationName', label: 'Associated Location', required: true, bold: true },
+    {
+      name: 'workLocationName',
+      label: 'Work Location',
+      required: true,
+      bold: true,
+      type: 'workLocationSearch',
+    },
+    {
+      name: 'associatedLocationName',
+      label: 'Associated Location',
+      required: true,
+      bold: true,
+      type: 'workLocationSearch',
+    },
     { name: 'description', label: 'Description' },
   ],
 };

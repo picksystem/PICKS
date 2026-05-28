@@ -1,22 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, TextField, Switch, Chip } from '@serviceops/component';
-import { FormControlLabel, alpha } from '@mui/material';
+import { Box, Typography, TextField, Switch } from '@serviceops/component';
+import { FormControlLabel } from '@mui/material';
 import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
 import { PriorityLevel } from '@serviceops/pages/base/Configuration/sections/Priorities/util';
 import { ConfigFormDialog } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
-
-const PRESET_COLORS = [
-  '#b91c1c',
-  '#ea580c',
-  '#ca8a04',
-  '#2563eb',
-  '#0f766e',
-  '#7c3aed',
-  '#db2777',
-  '#15803d',
-  '#1d4ed8',
-  '#374151',
-];
 
 interface PriorityFormDialogProps {
   open: boolean;
@@ -52,7 +39,7 @@ const PriorityFormDialog = ({
             enabledFor: Object.fromEntries(ticketTypeColumns.map((t) => [t.key, true])),
           },
     );
-  }, [open, editing]);
+  }, [open, editing, ticketTypeColumns]);
 
   return (
     <ConfigFormDialog
@@ -64,7 +51,7 @@ const PriorityFormDialog = ({
       accent='#b91c1c'
       title='Priority'
       submitDisabled={!form.name}
-      submitLabel={editing ? 'Save Changes' : 'Add Priority'}
+      submitLabel={editing ? 'Save' : 'Submit'}
       maxWidth='sm'
     >
       <TextField
@@ -84,50 +71,6 @@ const PriorityFormDialog = ({
         multiline
         rows={2}
       />
-
-      <Box>
-        <Typography
-          variant='caption'
-          fontWeight={700}
-          color='text.secondary'
-          sx={{ mb: 0.75, display: 'block' }}
-        >
-          Badge Color
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
-          {PRESET_COLORS.map((c) => (
-            <Box
-              key={c}
-              onClick={() => setForm((f) => ({ ...f, bgColor: c }))}
-              sx={{
-                width: 22,
-                height: 22,
-                borderRadius: '50%',
-                bgcolor: c,
-                cursor: 'pointer',
-                border: form.bgColor === c ? '2.5px solid #1976d2' : '2px solid transparent',
-                boxShadow: form.bgColor === c ? `0 0 0 2px ${alpha('#1976d2', 0.3)}` : 'none',
-                transition: 'all 0.15s',
-                '&:hover': { transform: 'scale(1.18)' },
-              }}
-            />
-          ))}
-          <TextField
-            size='small'
-            value={form.bgColor ?? ''}
-            onChange={(e) => setForm((f) => ({ ...f, bgColor: e.target.value }))}
-            inputProps={{ style: { fontFamily: 'monospace', fontSize: '0.75rem', width: 72 } }}
-            sx={{ ml: 0.5 }}
-          />
-          {form.bgColor && (
-            <Chip
-              label={form.name || 'Preview'}
-              size='small'
-              sx={{ bgcolor: form.bgColor, color: '#fff', fontWeight: 700, fontSize: '0.72rem' }}
-            />
-          )}
-        </Box>
-      </Box>
 
       <Box>
         <Typography

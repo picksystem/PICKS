@@ -134,7 +134,6 @@ const UrgencySection = ({
         defaultExpanded={false}
         isLoading={isLoading}
         loaderMessage='Loading Urgency levels...'
-        enableSuccessMessage
       />
 
       <ConfigFormDialog
@@ -160,7 +159,7 @@ const UrgencySection = ({
         accent='#ca8a04'
         title='Urgency Level'
         submitDisabled={!form.displayName}
-        submitLabel={editingItem ? 'Save Changes' : 'Add Urgency Level'}
+        submitLabel={editingItem ? 'Save' : 'Submit'}
         maxWidth='sm'
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
