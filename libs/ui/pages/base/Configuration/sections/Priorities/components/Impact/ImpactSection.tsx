@@ -59,10 +59,8 @@ const ImpactSection = ({
             editingItem.id,
             data.find((i) => i.id === editingItem.id) ?? data[data.length - 1],
           );
-          success('Impact level updated successfully');
         } else {
           await onAdd(data[data.length - 1]);
-          success('Impact level added successfully');
         }
       } catch (err) {
         showError('Failed to save impact level. Please try again.');
@@ -76,7 +74,7 @@ const ImpactSection = ({
     try {
       if (deleteId) {
         await onDelete(deleteId);
-        success('Impact level deleted successfully');
+        success('Impact deleted successfully');
       }
     } catch (err) {
       showError('Failed to delete impact level. Please try again.');
@@ -146,10 +144,10 @@ const ImpactSection = ({
           try {
             if (editingItem) {
               await onEdit(editingItem.id, form);
-              success('Impact level updated successfully');
+              success('Impact updated successfully');
             } else {
               await onAdd(form);
-              success('Impact level added successfully');
+              success('Impact added successfully');
             }
           } catch (err) {
             showError('Failed to save impact level. Please try again.');

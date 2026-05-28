@@ -56,7 +56,7 @@ export const useConfiguration = () => {
     async <K extends keyof IConfigurationData>(section: K, value: IConfigurationData[K]) => {
       try {
         await patchSection({ section, value }).unwrap();
-        // Success message handled by individual section handlers
+        // Success message is handled by the section's GenericPanel
       } catch (err: unknown) {
         const errorObj = err as { data?: { message?: string }; message?: string };
         const errorMessage =
@@ -74,7 +74,7 @@ export const useConfiguration = () => {
     async (fullData: IConfigurationData) => {
       try {
         await putAll(fullData).unwrap();
-        // Success message handled by individual section handlers
+        // Success message is handled by the section
       } catch (err: unknown) {
         const errorObj = err as { data?: { message?: string }; message?: string };
         const errorMessage =

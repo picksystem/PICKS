@@ -17,11 +17,13 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { SequenceDialogProps } from './util';
 import { ITicketType } from '@serviceops/interfaces';
 import { useReorderTicketTypesMutation } from '@serviceops/services';
+import { useNotification } from '@serviceops/hooks';
 import { getTypeColor } from '../../utils/ticketTypeIcons';
 
 const SequenceDialog = ({ open, ticketTypes, onClose, onSave }: SequenceDialogProps) => {
   const [ordered, setOrdered] = useState<ITicketType[]>([]);
   const [reorderTicketTypes, { isLoading }] = useReorderTicketTypesMutation();
+  const { success } = useNotification();
 
   useEffect(() => {
     if (!open) return;
@@ -50,6 +52,7 @@ const SequenceDialog = ({ open, ticketTypes, onClose, onSave }: SequenceDialogPr
   const handleSave = async () => {
     const orders = ordered.map((t, i) => ({ id: t.id, displayOrder: i + 1 }));
     await reorderTicketTypes(orders).unwrap();
+    success('Display sequence updated successfully');
     onSave();
     onClose();
   };

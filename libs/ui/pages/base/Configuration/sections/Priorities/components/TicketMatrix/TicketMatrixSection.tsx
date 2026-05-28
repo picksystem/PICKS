@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNotification } from '@serviceops/hooks';
 import {
   Box,
   Typography,
@@ -22,6 +21,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ClearIcon from '@mui/icons-material/Clear';
 import { PriorityLevel, ImpactLevel, UrgencyLevel, MatrixMap, MatrixRow } from '../../util';
 import { useStyles } from '../../styles';
+import { useNotification } from '@serviceops/hooks';
 
 const DEFAULT_MATRIX: MatrixMap = {
   high: { high: 'critical', medium: 'high', low: 'medium' },
@@ -84,7 +84,7 @@ const TicketMatrixSection = ({
       delete next[impactId][urgencyId];
     }
     onMatrixReset(next);
-    success(`${label} priority combination deleted successfully`);
+    success('Combination deleted successfully');
     setSelectedRowId(null);
   };
 
@@ -101,6 +101,7 @@ const TicketMatrixSection = ({
       });
     });
     onMatrixReset(next);
+    success('Impact and Urgency combinations generated successfully');
   };
 
   const openAddDialog = () => {
@@ -115,7 +116,7 @@ const TicketMatrixSection = ({
   const handleAddRow = () => {
     if (addForm.impactId && addForm.urgencyId && addForm.priorityId) {
       onMatrixChange(addForm.impactId, addForm.urgencyId, addForm.priorityId);
-      success(`${label} priority combination added successfully`);
+      success('Combination added successfully');
       setAddDialogOpen(false);
     }
   };
@@ -134,7 +135,7 @@ const TicketMatrixSection = ({
   const handleEditRow = () => {
     if (editForm.impactId && editForm.urgencyId) {
       onMatrixChange(editForm.impactId, editForm.urgencyId, editForm.priorityId);
-      success(`${label} priority combination updated successfully`);
+      success('Combination updated successfully');
       setEditDialogOpen(false);
     }
   };

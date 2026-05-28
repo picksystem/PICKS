@@ -37,7 +37,7 @@ export const parseRichText = (text: string): RichTextValue => {
 
   while (remaining.length > 0) {
     const boldMatch = remaining.match(/^\*\*(.+?)\*\*/);
-    const italicMatch = remaining.match(/^\*\*(.+?)\*/);
+    const italicMatch = remaining.match(/^\*(.+?)\*/);
     const underlineMatch = remaining.match(/^__(.+?)__/);
 
     if (boldMatch) {
@@ -211,10 +211,12 @@ const RichTextEditor = ({
   };
 
   const handleSave = () => {
-    if (editorRef.current && onChange) {
+    if (editorRef.current) {
       const html = editorRef.current.innerHTML;
       const segments = parseHtmlToSegments(html);
-      onChange({ segments });
+      if (onChange) {
+        onChange({ segments });
+      }
     }
   };
 
@@ -390,6 +392,7 @@ const RichTextEditor = ({
           onMouseUp={checkActiveFormats}
           className={classes.editor}
           data-placeholder={placeholder}
+          sx={{ direction: 'ltr', textAlign: 'left' }}
         />
       </Box>
 

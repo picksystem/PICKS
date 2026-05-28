@@ -616,7 +616,7 @@ export const GenericPanel = ({
   defaultExpanded = true,
   isLoading = false,
   loaderMessage = 'Loading...',
-  enableSuccessMessage,
+  enableSuccessMessage = true,
 }: GenericPanelProps) => {
   const { success, error: showError } = useNotification();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -712,11 +712,17 @@ export const GenericPanel = ({
   const handleSubmit = useCallback(async () => {
     // Check if form has any actual values to save
     const hasAnyValue = Object.values(form).some(
-      (v) => v !== undefined && v !== '' && v !== false && v !== null,
+      (v) =>
+        v !== undefined &&
+        v !== '' &&
+        v !== false &&
+        v !== null &&
+        (Array.isArray(v) ? v.length > 0 : true),
     );
 
-    // If editing, check if anything actually changed
-    const hasChanges = editingRow
+    // For editing: check if anything actually changed
+    // For new: only save if there's at least one value
+    const shouldSave = editingRow
       ? config.fields.some((field) => {
           const original = editingRow[field.name];
           const current = form[field.name];
@@ -725,7 +731,7 @@ export const GenericPanel = ({
       : hasAnyValue;
 
     // If no changes and no values, just close without saving
-    if (!hasChanges) {
+    if (!shouldSave) {
       setDialogOpen(false);
       setTimeout(() => {
         setEditingRow(null);
@@ -745,8 +751,8 @@ export const GenericPanel = ({
       await onSave(updated);
       if (enableSuccessMessage) {
         const message = editingRow
-          ? `${config.entity} updated successfully`
-          : `${config.entity} added successfully`;
+          ? `${config.title} updated successfully`
+          : `${config.title} added successfully`;
         success(message);
       }
     } catch (err) {
@@ -767,17 +773,17 @@ export const GenericPanel = ({
     form,
     onSave,
     config.fields,
+    config.title,
     enableSuccessMessage,
     success,
     showError,
-    config.entity,
   ]);
 
   const handleDelete = useCallback(async () => {
     try {
       await onSave(data.filter((r) => r.id !== selectedId));
       if (enableSuccessMessage) {
-        success(`${config.entity} deleted successfully`);
+        success(`${config.title} deleted successfully`);
       }
     } catch (err) {
       const errorMessage =
@@ -790,7 +796,7 @@ export const GenericPanel = ({
         setEditingRow(null);
       }, 0);
     }
-  }, [selectedId, data, onSave, enableSuccessMessage, success, showError, config.entity]);
+  }, [selectedId, data, onSave, config.title, enableSuccessMessage, success, showError]);
 
   const panelProps = useMemo(
     () => ({
@@ -872,7 +878,7 @@ export const GenericPanel = ({
         maxWidth='sm'
       >
         <LocalizationProvider>
-          <Box sx={{ display: dialogOpen ? 'flex' : 'none', flexDirection: 'column', gap: 2.5 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             {config.fields.map((field) => {
               if (field.type === 'toggle') {
                 return (

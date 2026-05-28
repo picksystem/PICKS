@@ -11,6 +11,9 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     wordBreak: 'break-word',
     overflowWrap: 'break-word',
     color: 'text.primary',
+    direction: 'ltr',
+    unicodeBidi: 'plaintext',
+    textAlign: 'left',
     '&:empty::before': {
       content: 'attr(data-placeholder)',
       color: 'text.disabled',

@@ -39,6 +39,7 @@ const WorkingDayTemplatesSection = ({ data, onDataChange }: WorkingDayTemplatesS
         onSave={handleSave}
         customColumns={workingDayTemplateColumns as any}
         variant='plain'
+        enableSuccessMessage
       />
     </div>
   );

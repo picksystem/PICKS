@@ -9,6 +9,7 @@ import {
 } from '@serviceops/component';
 import { FormControl, InputLabel } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import { useNotification } from '@serviceops/hooks';
 import { ActivationRowFormDialogProps } from './util';
 import { ConfigFormDialog } from '../ConfigDialogs/ConfigDialogs';
 
@@ -22,6 +23,7 @@ const ActivationRowFormDialog = ({
   onClose,
   onSubmit,
 }: ActivationRowFormDialogProps) => {
+  const { success } = useNotification();
   const [ticketTypeId, setTicketTypeId] = useState(0);
   const [ticketTypeName, setTicketTypeName] = useState('');
   const [activation, setActivation] = useState(true);
@@ -56,6 +58,7 @@ const ActivationRowFormDialog = ({
       ticketTypeName,
       activation,
     });
+    success(`${title} saved successfully`);
   };
 
   const isEditing = editingRow !== null;

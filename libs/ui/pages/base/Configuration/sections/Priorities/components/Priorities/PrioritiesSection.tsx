@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { Switch } from '@mui/material';
 import { PriorityLevel } from '../../util';
 import { useStyles } from '../../styles';
+import { useNotification } from '@serviceops/hooks';
 import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
 import PriorityFormDialog from '@serviceops/pages/base/Configuration/dialogs/PriorityFormDialog/PriorityFormDialog';
 import { PRIORITY_TABLE_CONFIG } from '../shared/PrioritiesPanelConfig';

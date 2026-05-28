@@ -22,6 +22,7 @@ export const DatePickerField = ({
   helperText,
 }: DatePickerFieldProps) => {
   const [dateValue, setDateValue] = useState<Dayjs | null>(null);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (value) {
@@ -46,6 +47,9 @@ export const DatePickerField = ({
       <DatePicker
         value={dateValue}
         onChange={handleDateChange}
+        open={open}
+        onOpen={() => setOpen(true)}
+        onClose={() => setOpen(false)}
         slotProps={{
           textField: {
             label,
@@ -54,6 +58,7 @@ export const DatePickerField = ({
             helperText,
             size: 'small',
             fullWidth: true,
+            onClick: () => setOpen(true),
           },
         }}
       />

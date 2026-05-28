@@ -18,6 +18,7 @@ import {
   TicketMatrixSection,
 } from './components';
 import { ConfigDeleteDialog } from '../../dialogs/ConfigDialogs/ConfigDialogs';
+import { useNotification } from '@serviceops/hooks';
 import { PriorityLevel, ImpactLevel, UrgencyLevel, MatrixMap } from './util';
 
 const TICKET_TYPE_COLUMNS = [
@@ -232,6 +233,7 @@ const DEFAULT_MATRIX: MatrixMap = {
 
 const Priorities = () => {
   const { classes } = useStyles();
+  const { success } = useNotification();
   const { priorities: apiPriorities, ticketTypeKeys, saveSection, isLoading } = useConfiguration();
   const { data: ticketTypes = [] } = useGetTicketTypeQuery();
 
@@ -283,6 +285,7 @@ const Priorities = () => {
       const next = priorities.filter((p) => p.id !== selectedPriorityId);
       setPriorities(next);
       persistPriorities(next, impacts, urgencies, matrices);
+      success('Priority deleted successfully');
       setSelectedPriorityId(null);
       setSelectedPriority(null);
     }

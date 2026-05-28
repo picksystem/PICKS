@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Switch } from '@serviceops/component';
 import { FormControlLabel } from '@mui/material';
-import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
+import { PriorityHigh } from '@mui/icons-material';
+import { useNotification } from '@serviceops/hooks';
 import { PriorityLevel } from '@serviceops/pages/base/Configuration/sections/Priorities/util';
 import { ConfigFormDialog } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 
@@ -20,6 +21,7 @@ const PriorityFormDialog = ({
   onSave,
   ticketTypeColumns,
 }: PriorityFormDialogProps) => {
+  const { success } = useNotification();
   const [form, setForm] = useState<Partial<PriorityLevel>>({});
 
   useEffect(() => {
@@ -41,13 +43,18 @@ const PriorityFormDialog = ({
     );
   }, [open, editing, ticketTypeColumns]);
 
+  const handleSubmit = () => {
+    onSave(form);
+    success(editing ? 'Priority updated successfully' : 'Priority added successfully');
+  };
+
   return (
     <ConfigFormDialog
       open={open}
       onClose={onClose}
-      onSubmit={() => onSave(form)}
+      onSubmit={handleSubmit}
       isEdit={!!editing}
-      icon={<PriorityHighIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+      icon={<PriorityHigh sx={{ color: '#fff', fontSize: '1.1rem' }} />}
       accent='#b91c1c'
       title='Priority'
       submitDisabled={!form.name}

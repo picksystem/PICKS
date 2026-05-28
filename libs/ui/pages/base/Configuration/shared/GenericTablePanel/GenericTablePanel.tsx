@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Box, Paper, Button, TextField, DataTable, Column } from '@serviceops/component';
 import { alpha } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -7,6 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import { useStyles } from '../../sections/Timesheets/styles';
+import { useNotification } from '@serviceops/hooks';
 import {
   ConfigFormDialog,
   ConfigDeleteDialog,
@@ -50,6 +51,7 @@ export const GenericCRUDPanel = ({
   onSave: (data: any[]) => void;
 }) => {
   const { classes } = useStyles();
+  const { success } = useNotification();
 
   const [rows, setRows] = useState(data);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -98,6 +100,11 @@ export const GenericCRUDPanel = ({
         )
       : [...rows, { ...rowData, id: newId, [config.idPrefix]: newId }];
     onSave(next);
+    success(
+      editingRow
+        ? `${config.formConfig.title} updated successfully`
+        : `${config.formConfig.title} added successfully`,
+    );
     setSelectedId(editingRow ? config.getId(editingRow) : config.getId(next[next.length - 1]));
     setDialogOpen(false);
     setEditingRow(null);
@@ -106,6 +113,7 @@ export const GenericCRUDPanel = ({
   const handleDelete = () => {
     if (!selectedRow) return;
     onSave(rows.filter((r) => config.getId(r) !== config.getId(selectedRow)));
+    success(`${config.formConfig.entity} deleted successfully`);
     setSelectedId(null);
     setDeleteOpen(false);
   };

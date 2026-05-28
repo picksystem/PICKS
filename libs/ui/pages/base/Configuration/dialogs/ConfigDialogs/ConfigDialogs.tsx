@@ -31,6 +31,8 @@ export const ConfigFormDialog = ({
       onClose={onClose}
       maxWidth={maxWidth}
       fullWidth
+      disableEscapeKeyDown
+      TransitionProps={{ unmountOnExit: true }}
       PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}
     >
       <Box
@@ -56,7 +58,9 @@ export const ConfigFormDialog = ({
             flexShrink: 0,
           }}
         >
-          <Box sx={{ color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Box
+            sx={{ color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
             {icon}
           </Box>
         </Box>
@@ -123,6 +127,8 @@ export const ConfigDeleteDialog = ({
     onClose={onClose}
     maxWidth='xs'
     fullWidth
+    disableEscapeKeyDown
+    TransitionProps={{ unmountOnExit: true }}
     PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}
   >
     <Box sx={{ px: 2.5, pt: 2.5, pb: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>

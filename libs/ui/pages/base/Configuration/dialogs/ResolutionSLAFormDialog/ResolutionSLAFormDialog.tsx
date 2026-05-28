@@ -10,6 +10,7 @@ import {
 } from '@serviceops/component';
 import { FormControl, InputLabel } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import { useNotification } from '@serviceops/hooks';
 import { ResolutionSLAFormDialogProps } from './util';
 import { ConfigFormDialog } from '../ConfigDialogs/ConfigDialogs';
 
@@ -32,6 +33,7 @@ const ResolutionSLAFormDialog = ({
   onClose,
   onSubmit,
 }: ResolutionSLAFormDialogProps) => {
+  const { success } = useNotification();
   const [form, setForm] = useState(EMPTY_FORM);
 
   useEffect(() => {
@@ -78,6 +80,7 @@ const ResolutionSLAFormDialog = ({
       p4: form.p4,
       p5: form.p5,
     });
+    success('Resolution SLA saved successfully');
   };
 
   const isEditing = editingRow !== null;

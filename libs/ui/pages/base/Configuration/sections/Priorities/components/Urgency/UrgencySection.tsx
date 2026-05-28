@@ -59,24 +59,22 @@ const UrgencySection = ({
             editingItem.id,
             data.find((i) => i.id === editingItem.id) ?? data[data.length - 1],
           );
-          success('Urgency level updated successfully');
         } else {
           await onAdd(data[data.length - 1]);
-          success('Urgency level added successfully');
         }
       } catch (err) {
         showError('Failed to save urgency level. Please try again.');
         throw err;
       }
     },
-    [editingItem, onAdd, onEdit, success, showError],
+    [editingItem, onAdd, onEdit, showError],
   );
 
   const handleConfirmDelete = useCallback(async () => {
     try {
       if (deleteId) {
         await onDelete(deleteId);
-        success('Urgency level deleted successfully');
+        success('Urgency deleted successfully');
       }
     } catch (err) {
       showError('Failed to delete urgency level. Please try again.');
@@ -143,10 +141,10 @@ const UrgencySection = ({
           try {
             if (editingItem) {
               await onEdit(editingItem.id, form);
-              success('Urgency level updated successfully');
+              success('Urgency updated successfully');
             } else {
               await onAdd(form);
-              success('Urgency level added successfully');
+              success('Urgency added successfully');
             }
           } catch (err) {
             showError('Failed to save urgency level. Please try again.');

@@ -25,6 +25,7 @@ export const TimePickerField = ({
   helperText,
 }: TimePickerFieldProps) => {
   const [timeValue, setTimeValue] = useState<Dayjs | null>(null);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (value) {
@@ -49,6 +50,9 @@ export const TimePickerField = ({
       <TimePicker
         value={timeValue}
         onChange={handleTimeChange}
+        open={open}
+        onOpen={() => setOpen(true)}
+        onClose={() => setOpen(false)}
         slotProps={{
           textField: {
             label,
@@ -57,6 +61,7 @@ export const TimePickerField = ({
             helperText,
             size: 'small',
             fullWidth: true,
+            onClick: () => setOpen(true),
           },
         }}
       />

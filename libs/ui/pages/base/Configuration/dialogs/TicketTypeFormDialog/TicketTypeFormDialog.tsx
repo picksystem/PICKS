@@ -35,7 +35,7 @@ import {
   getTagOption,
 } from '../../utils/ticketTypeIcons';
 import { useStyles } from '../../styles';
-import { useFieldError } from '@serviceops/hooks';
+import { useFieldError, useNotification } from '@serviceops/hooks';
 
 function generateTicketId(name: string): string {
   return name
@@ -61,6 +61,7 @@ const TicketTypeFormDialog = ({
   const isEditing = editingItem !== null;
   const { classes } = useStyles();
   const reqError = useFieldError();
+  const { success } = useNotification();
 
   const getInitialIcon = () => {
     if (editingItem)
@@ -103,6 +104,7 @@ const TicketTypeFormDialog = ({
           iconKey: values.iconKey,
           tag: values.tag,
         });
+        success(isEditing ? 'Ticket Type updated successfully' : 'Ticket Type added successfully');
         resetForm();
       } finally {
         setSubmitting(false);
