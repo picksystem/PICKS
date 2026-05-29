@@ -7,5 +7,13 @@ export const ApprovalRecordsSection = ({ data, onDataChange }: ApprovalRecordsSe
     onDataChange?.(next);
   };
 
-  return <GenericPanel config={TABLE_CONFIG.records} data={data || []} onSave={handleSave} />;
+  return (
+    <GenericPanel
+      config={TABLE_CONFIG.records}
+      data={data || []}
+      onSave={handleSave}
+      variant='standard'
+      enableSuccessMessage
+    />
+  );
 };

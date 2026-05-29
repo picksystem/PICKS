@@ -10,5 +10,13 @@ export const ApprovalWorkingTimesSection = ({
     onDataChange?.(next);
   };
 
-  return <GenericPanel config={TABLE_CONFIG.workingTimes} data={data || []} onSave={handleSave} />;
+  return (
+    <GenericPanel
+      config={TABLE_CONFIG.workingTimes}
+      data={data || []}
+      onSave={handleSave}
+      variant='standard'
+      enableSuccessMessage
+    />
+  );
 };

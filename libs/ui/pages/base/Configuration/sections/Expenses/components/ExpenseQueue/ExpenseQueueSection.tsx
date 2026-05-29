@@ -24,6 +24,7 @@ const ExpenseQueueSection = () => {
       onSave={handleSave as (data: unknown[]) => void}
       customColumns={expenseQueueColumns as unknown as never}
       variant='standard'
+      enableSuccessMessage
     />
   );
 };

@@ -21,6 +21,13 @@ const ResolutionSLASection = ({
 }: ResolutionSLASectionProps) => {
   const { classes } = useStyles();
 
+  // Create a read-only config for the panel (no New button)
+  const readonlyConfig = {
+    ...RESOLUTION_SLA_CONFIG,
+    title: 'Resolution SLA (in hours)',
+    subtitle: 'Track resolution time targets per ticket type and priority level',
+  };
+
   const columns = [
     {
       id: 'ticketTypeName',
@@ -53,12 +60,13 @@ const ResolutionSLASection = ({
   return (
     <div className={classes.sectionAccordion}>
       <GenericPanel
-        config={RESOLUTION_SLA_CONFIG}
+        config={readonlyConfig}
         data={displayRows}
         onSave={onDataChange}
         customColumns={columns as any}
         variant='plain'
         defaultExpanded={false}
+        enableNewButton={false}
       />
     </div>
   );

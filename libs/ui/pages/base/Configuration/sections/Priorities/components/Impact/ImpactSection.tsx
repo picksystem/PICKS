@@ -50,31 +50,57 @@ const ImpactSection = ({
   const [editingItem, setEditingItem] = useState<SimpleLevel | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<SimpleLevel>>({});
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
-  const handleSave = useCallback(
-    async (data: SimpleLevel[]) => {
-      try {
-        if (editingItem) {
-          await onEdit(
-            editingItem.id,
-            data.find((i) => i.id === editingItem.id) ?? data[data.length - 1],
-          );
-        } else {
-          await onAdd(data[data.length - 1]);
-        }
-      } catch (err) {
-        showError('Failed to save impact level. Please try again.');
-        throw err;
+  const handleNewClick = useCallback(() => {
+    setEditingItem(null);
+    setForm({ isActive: true });
+    setDialogOpen(true);
+  }, []);
+
+  const handleEditClick = useCallback(() => {
+    const selected = items.find((i) => i.id === selectedRowId);
+    if (selected) {
+      setEditingItem(selected);
+      setForm({
+        displayName: selected.displayName,
+        description: selected.description,
+        isActive: selected.isActive,
+      });
+      setDialogOpen(true);
+    }
+  }, [items, selectedRowId]);
+
+  const handleDeleteClick = useCallback(() => {
+    setDeleteId(selectedRowId);
+    setDeleteOpen(true);
+  }, [selectedRowId]);
+
+  const handleSubmit = useCallback(async () => {
+    try {
+      if (editingItem) {
+        await onEdit(editingItem.id, form);
+        success('Impact updated successfully');
+      } else {
+        await onAdd(form);
+        success('Impact added successfully');
       }
-    },
-    [editingItem, onAdd, onEdit, success, showError],
-  );
+    } catch (err) {
+      showError('Failed to save impact level. Please try again.');
+      throw err;
+    } finally {
+      setDialogOpen(false);
+      setEditingItem(null);
+      setForm({});
+    }
+  }, [editingItem, form, onEdit, onAdd, success, showError]);
 
   const handleConfirmDelete = useCallback(async () => {
     try {
       if (deleteId) {
         await onDelete(deleteId);
         success('Impact deleted successfully');
+        setSelectedRowId(null);
       }
     } catch (err) {
       showError('Failed to delete impact level. Please try again.');
@@ -83,6 +109,10 @@ const ImpactSection = ({
       setDeleteId(null);
     }
   }, [deleteId, onDelete, success, showError]);
+
+  const handleRowSelect = useCallback((id: string | null) => {
+    setSelectedRowId(id);
+  }, []);
 
   const customColumns = [
     {
@@ -97,12 +127,9 @@ const ImpactSection = ({
       id: 'description',
       label: 'Description',
       minWidth: 300,
-      format: (...args: any) => {
-        const v = args[0];
-        return (
-          <span style={{ color: 'text.secondary', fontSize: '0.78rem' }}>{String(v || '—')}</span>
-        );
-      },
+      format: (v: unknown): React.ReactNode => (
+        <span style={{ color: 'text.secondary', fontSize: '0.78rem' }}>{String(v || '—')}</span>
+      ),
     },
     ...activeTicketTypeColumns.map((t) => ({
       id: `enabledFor_${t.key}`,
@@ -129,32 +156,42 @@ const ImpactSection = ({
       <GenericPanel
         config={IMPACT_CONFIG}
         data={items as unknown as Record<string, unknown>[]}
-        onSave={handleSave as (data: unknown[]) => void}
+        onSave={() => {}}
         variant='plain'
         customColumns={customColumns as never}
         defaultExpanded={false}
         isLoading={isLoading}
         loaderMessage='Loading Impact levels...'
+        enableNewButton={false}
+        enableEditButton={false}
+        enableDeleteButton={false}
+        selectedRowId={selectedRowId}
+        onRowSelect={handleRowSelect}
       />
+
+      {/* Custom toolbar for selected row */}
+      {selectedRowId && (
+        <div className={classes.selectedRowToolbar}>
+          <button className={classes.editButton} onClick={handleEditClick}>
+            Edit
+          </button>
+          <button className={classes.deleteButton} onClick={handleDeleteClick}>
+            Delete
+          </button>
+          <button className={classes.clearButton} onClick={() => setSelectedRowId(null)}>
+            Clear
+          </button>
+        </div>
+      )}
 
       <ConfigFormDialog
         open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        onSubmit={async () => {
-          try {
-            if (editingItem) {
-              await onEdit(editingItem.id, form);
-              success('Impact updated successfully');
-            } else {
-              await onAdd(form);
-              success('Impact added successfully');
-            }
-          } catch (err) {
-            showError('Failed to save impact level. Please try again.');
-          } finally {
-            setDialogOpen(false);
-          }
+        onClose={() => {
+          setDialogOpen(false);
+          setEditingItem(null);
+          setForm({});
         }}
+        onSubmit={handleSubmit}
         isEdit={!!editingItem}
         icon={<WhatshotIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
         accent='#b91c1c'
@@ -184,7 +221,10 @@ const ImpactSection = ({
 
       <ConfigDeleteDialog
         open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
+        onClose={() => {
+          setDeleteOpen(false);
+          setDeleteId(null);
+        }}
         onConfirm={handleConfirmDelete}
         entityName='Impact'
         itemName={items.find((i) => i.id === deleteId)?.displayName}

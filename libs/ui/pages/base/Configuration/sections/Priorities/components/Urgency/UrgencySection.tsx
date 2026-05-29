@@ -50,31 +50,57 @@ const UrgencySection = ({
   const [editingItem, setEditingItem] = useState<SimpleLevel | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<SimpleLevel>>({});
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
-  const handleSave = useCallback(
-    async (data: SimpleLevel[]) => {
-      try {
-        if (editingItem) {
-          await onEdit(
-            editingItem.id,
-            data.find((i) => i.id === editingItem.id) ?? data[data.length - 1],
-          );
-        } else {
-          await onAdd(data[data.length - 1]);
-        }
-      } catch (err) {
-        showError('Failed to save urgency level. Please try again.');
-        throw err;
+  const handleNewClick = useCallback(() => {
+    setEditingItem(null);
+    setForm({ isActive: true });
+    setDialogOpen(true);
+  }, []);
+
+  const handleEditClick = useCallback(() => {
+    const selected = items.find((i) => i.id === selectedRowId);
+    if (selected) {
+      setEditingItem(selected);
+      setForm({
+        displayName: selected.displayName,
+        description: selected.description,
+        isActive: selected.isActive,
+      });
+      setDialogOpen(true);
+    }
+  }, [items, selectedRowId]);
+
+  const handleDeleteClick = useCallback(() => {
+    setDeleteId(selectedRowId);
+    setDeleteOpen(true);
+  }, [selectedRowId]);
+
+  const handleSubmit = useCallback(async () => {
+    try {
+      if (editingItem) {
+        await onEdit(editingItem.id, form);
+        success('Urgency updated successfully');
+      } else {
+        await onAdd(form);
+        success('Urgency added successfully');
       }
-    },
-    [editingItem, onAdd, onEdit, showError],
-  );
+    } catch (err) {
+      showError('Failed to save urgency level. Please try again.');
+      throw err;
+    } finally {
+      setDialogOpen(false);
+      setEditingItem(null);
+      setForm({});
+    }
+  }, [editingItem, form, onEdit, onAdd, success, showError]);
 
   const handleConfirmDelete = useCallback(async () => {
     try {
       if (deleteId) {
         await onDelete(deleteId);
         success('Urgency deleted successfully');
+        setSelectedRowId(null);
       }
     } catch (err) {
       showError('Failed to delete urgency level. Please try again.');
@@ -83,6 +109,10 @@ const UrgencySection = ({
       setDeleteId(null);
     }
   }, [deleteId, onDelete, success, showError]);
+
+  const handleRowSelect = useCallback((id: string | null) => {
+    setSelectedRowId(id);
+  }, []);
 
   const customColumns = [
     {
@@ -126,32 +156,42 @@ const UrgencySection = ({
       <GenericPanel
         config={URGENCY_CONFIG}
         data={items as unknown as Record<string, unknown>[]}
-        onSave={handleSave as (data: unknown[]) => void}
+        onSave={() => {}}
         variant='plain'
         customColumns={customColumns as never}
         defaultExpanded={false}
         isLoading={isLoading}
         loaderMessage='Loading Urgency levels...'
+        enableNewButton={false}
+        enableEditButton={false}
+        enableDeleteButton={false}
+        selectedRowId={selectedRowId}
+        onRowSelect={handleRowSelect}
       />
+
+      {/* Custom toolbar for selected row */}
+      {selectedRowId && (
+        <div className={classes.selectedRowToolbar}>
+          <button className={classes.editButton} onClick={handleEditClick}>
+            Edit
+          </button>
+          <button className={classes.deleteButton} onClick={handleDeleteClick}>
+            Delete
+          </button>
+          <button className={classes.clearButton} onClick={() => setSelectedRowId(null)}>
+            Clear
+          </button>
+        </div>
+      )}
 
       <ConfigFormDialog
         open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        onSubmit={async () => {
-          try {
-            if (editingItem) {
-              await onEdit(editingItem.id, form);
-              success('Urgency updated successfully');
-            } else {
-              await onAdd(form);
-              success('Urgency added successfully');
-            }
-          } catch (err) {
-            showError('Failed to save urgency level. Please try again.');
-          } finally {
-            setDialogOpen(false);
-          }
+        onClose={() => {
+          setDialogOpen(false);
+          setEditingItem(null);
+          setForm({});
         }}
+        onSubmit={handleSubmit}
         isEdit={!!editingItem}
         icon={<SpeedIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
         accent='#ca8a04'
@@ -181,7 +221,10 @@ const UrgencySection = ({
 
       <ConfigDeleteDialog
         open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
+        onClose={() => {
+          setDeleteOpen(false);
+          setDeleteId(null);
+        }}
         onConfirm={handleConfirmDelete}
         entityName='Urgency'
         itemName={items.find((i) => i.id === deleteId)?.displayName}

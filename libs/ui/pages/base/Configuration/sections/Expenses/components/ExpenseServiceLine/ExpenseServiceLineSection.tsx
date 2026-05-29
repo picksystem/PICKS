@@ -24,6 +24,7 @@ const ExpenseServiceLineSection = () => {
       onSave={handleSave as (data: unknown[]) => void}
       customColumns={expenseServiceLineColumns as unknown as never}
       variant='standard'
+      enableSuccessMessage
     />
   );
 };

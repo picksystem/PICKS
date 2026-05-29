@@ -1,4 +1,5 @@
 import { Theme } from '@mui/material/styles';
+import { alpha } from '@mui/material';
 import { CSSObject } from 'tss-react';
 
 export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
@@ -78,6 +79,62 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     },
     [theme.breakpoints.up('sm')]: {
       flexGrow: 0,
+    },
+  },
+
+  selectedRowToolbar: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1),
+    padding: `${theme.spacing(1)} ${theme.spacing(1.5)}`,
+    backgroundColor: alpha(theme.palette.primary.main, 0.04),
+    borderLeft: `3px solid ${theme.palette.primary.main}`,
+    marginBottom: theme.spacing(1),
+    borderRadius: '0 6px 6px 0',
+  },
+
+  editButton: {
+    padding: `${theme.spacing(0.5)} ${theme.spacing(1.5)}`,
+    backgroundColor: '#2d5ebb',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '0.8rem',
+    fontWeight: 500,
+    textTransform: 'none' as const,
+    '&:hover': {
+      backgroundColor: '#2d5ebb',
+    },
+  },
+
+  deleteButton: {
+    padding: `${theme.spacing(0.5)} ${theme.spacing(1.5)}`,
+    backgroundColor: 'transparent',
+    color: theme.palette.error.main,
+    border: `1px solid ${theme.palette.error.main}`,
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '0.8rem',
+    fontWeight: 500,
+    textTransform: 'none' as const,
+    '&:hover': {
+      backgroundColor: alpha(theme.palette.error.main, 0.08),
+    },
+  },
+
+  clearButton: {
+    padding: `${theme.spacing(0.5)} ${theme.spacing(1.5)}`,
+    backgroundColor: 'transparent',
+    color: '#2d5ebb',
+    border: '1px solid #2d5ebb',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '0.8rem',
+    fontWeight: 500,
+    textTransform: 'none' as const,
+    '&:hover': {
+      backgroundColor: alpha('#2d5ebb', 0.08),
     },
   },
 });

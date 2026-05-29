@@ -29,6 +29,7 @@ import { TicketTypeSearchField } from './components/TicketTypeSearchField/Ticket
 import { WorkLocationSearchField } from './components/WorkLocationSearchField/WorkLocationSearchField';
 import { DatePickerField } from './components/DatePickerField/DatePickerField';
 import { TimePickerField } from './components/TimePickerField/TimePickerField';
+import { DurationPickerField } from './components/DurationPickerField/DurationPickerField';
 
 export interface TableField {
   name: string;
@@ -37,7 +38,15 @@ export interface TableField {
   bold?: boolean;
   minWidth?: number;
   defaultValue?: string | number | boolean;
-  type?: 'text' | 'date' | 'time' | 'number' | 'toggle' | 'ticketTypeSearch' | 'workLocationSearch';
+  type?:
+    | 'text'
+    | 'date'
+    | 'time'
+    | 'duration'
+    | 'number'
+    | 'toggle'
+    | 'ticketTypeSearch'
+    | 'workLocationSearch';
   /** For workLocationSearch type - fields to auto-fill when location is selected */
   autoFillFields?: {
     city?: string;
@@ -277,6 +286,16 @@ interface GenericPanelProps {
   isLoading?: boolean;
   loaderMessage?: string;
   enableSuccessMessage?: boolean;
+  /** Set to false to hide the New button (for read-only/view-only panels) */
+  enableNewButton?: boolean;
+  /** Set to false to hide the Edit button */
+  enableEditButton?: boolean;
+  /** Set to false to hide the Delete button */
+  enableDeleteButton?: boolean;
+  /** Optional controlled selected row ID */
+  selectedRowId?: string | null;
+  /** Optional callback when a row is selected (works with selectedRowId) */
+  onRowSelect?: (id: string | null) => void;
 }
 
 const createColumns = (fields: TableField[]): Column<Record<string, unknown>>[] =>
@@ -336,6 +355,9 @@ interface PanelContentProps {
   onEditClick: () => void;
   onDeleteClick: () => void;
   onClearClick: () => void;
+  enableNewButton?: boolean;
+  enableEditButton?: boolean;
+  enableDeleteButton?: boolean;
 }
 
 const PanelContent = memo(
@@ -348,6 +370,9 @@ const PanelContent = memo(
     onEditClick,
     onDeleteClick,
     onClearClick,
+    enableNewButton = true,
+    enableEditButton = true,
+    enableDeleteButton = true,
   }: PanelContentProps) => {
     const { classes } = useStyles();
     const hasSelection = selectedId !== null;
@@ -365,24 +390,26 @@ const PanelContent = memo(
                 width: '100%',
               }}
             >
-              <Box className={classes.newButtonContainer}>
-                <Tooltip title={`Add a new ${config.entity}`}>
-                  <Button
-                    size='small'
-                    variant='contained'
-                    startIcon={<AddIcon />}
-                    onClick={onNewClick}
-                    sx={{
-                      textTransform: 'none',
-                      bgcolor: '#2d5ebb',
-                      width: '100%',
-                      '&:hover': { bgcolor: '#2d5ebb' },
-                    }}
-                  >
-                    New
-                  </Button>
-                </Tooltip>
-              </Box>
+              {enableNewButton && (
+                <Box className={classes.newButtonContainer}>
+                  <Tooltip title={`Add a new ${config.entity}`}>
+                    <Button
+                      size='small'
+                      variant='contained'
+                      startIcon={<AddIcon />}
+                      onClick={onNewClick}
+                      sx={{
+                        textTransform: 'none',
+                        bgcolor: '#2d5ebb',
+                        width: '100%',
+                        '&:hover': { bgcolor: '#2d5ebb' },
+                      }}
+                    >
+                      New
+                    </Button>
+                  </Tooltip>
+                </Box>
+              )}
               <Box className={classes.searchFieldContainer}>
                 <TextField
                   size='small'
@@ -404,29 +431,33 @@ const PanelContent = memo(
             </Box>
           ) : (
             <>
-              <Button
-                size='small'
-                variant='contained'
-                startIcon={<EditIcon />}
-                onClick={onEditClick}
-                sx={{
-                  textTransform: 'none',
-                  bgcolor: '#2d5ebb',
-                  '&:hover': { bgcolor: '#2d5ebb' },
-                }}
-              >
-                Edit
-              </Button>
-              <Button
-                size='small'
-                variant='outlined'
-                color='error'
-                startIcon={<DeleteIcon />}
-                onClick={onDeleteClick}
-                sx={{ textTransform: 'none' }}
-              >
-                Delete
-              </Button>
+              {enableEditButton && (
+                <Button
+                  size='small'
+                  variant='contained'
+                  startIcon={<EditIcon />}
+                  onClick={onEditClick}
+                  sx={{
+                    textTransform: 'none',
+                    bgcolor: '#2d5ebb',
+                    '&:hover': { bgcolor: '#2d5ebb' },
+                  }}
+                >
+                  Edit
+                </Button>
+              )}
+              {enableDeleteButton && (
+                <Button
+                  size='small'
+                  variant='outlined'
+                  color='error'
+                  startIcon={<DeleteIcon />}
+                  onClick={onDeleteClick}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Delete
+                </Button>
+              )}
               <Button
                 size='small'
                 variant='outlined'
@@ -466,6 +497,9 @@ const StandardPanel = memo(
     onEditClick,
     onDeleteClick,
     onClearClick,
+    enableNewButton = true,
+    enableEditButton = true,
+    enableDeleteButton = true,
   }: {
     config: TableConfig;
     columns: Column<GenericData>[];
@@ -478,6 +512,9 @@ const StandardPanel = memo(
     onEditClick: () => void;
     onDeleteClick: () => void;
     onClearClick: () => void;
+    enableNewButton?: boolean;
+    enableEditButton?: boolean;
+    enableDeleteButton?: boolean;
   }) => {
     return (
       <Box sx={{ mt: 1.5 }}>
@@ -495,6 +532,9 @@ const StandardPanel = memo(
           onEditClick={onEditClick}
           onDeleteClick={onDeleteClick}
           onClearClick={onClearClick}
+          enableNewButton={enableNewButton}
+          enableEditButton={enableEditButton}
+          enableDeleteButton={enableDeleteButton}
         />
 
         <Paper
@@ -539,6 +579,9 @@ const PlainPanel = memo(
     onDeleteClick,
     onClearClick,
     defaultExpanded = true,
+    enableNewButton = true,
+    enableEditButton = true,
+    enableDeleteButton = true,
   }: {
     config: TableConfig;
     columns: Column<GenericData>[];
@@ -552,6 +595,9 @@ const PlainPanel = memo(
     onDeleteClick: () => void;
     onClearClick: () => void;
     defaultExpanded?: boolean;
+    enableNewButton?: boolean;
+    enableEditButton?: boolean;
+    enableDeleteButton?: boolean;
   }) => {
     const { classes } = useStyles();
 
@@ -576,6 +622,9 @@ const PlainPanel = memo(
           onEditClick={onEditClick}
           onDeleteClick={onDeleteClick}
           onClearClick={onClearClick}
+          enableNewButton={enableNewButton}
+          enableEditButton={enableEditButton}
+          enableDeleteButton={enableDeleteButton}
         />
 
         <Paper
@@ -617,9 +666,13 @@ export const GenericPanel = ({
   isLoading = false,
   loaderMessage = 'Loading...',
   enableSuccessMessage = true,
+  enableNewButton = true,
+  enableEditButton = true,
+  enableDeleteButton = true,
+  selectedRowId,
+  onRowSelect,
 }: GenericPanelProps) => {
   const { success, error: showError } = useNotification();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editingRow, setEditingRow] = useState<GenericData | null>(null);
@@ -627,15 +680,28 @@ export const GenericPanel = ({
   const [search, setSearch] = useState('');
   const [form, setForm] = useState<FormData>(createEmptyForm(config.fields));
 
-  const selectedRow = useMemo(() => data.find((r) => r.id === selectedId), [data, selectedId]);
+  // Use controlled selection if provided, otherwise use internal state
+  const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
+  const isControlled = selectedRowId !== undefined;
+  const activeSelection = isControlled ? selectedRowId : internalSelectedId;
+  const activeSetSelection = isControlled
+    ? (id: string | null) => onRowSelect?.(id)
+    : setInternalSelectedId;
 
-  // Reset selection when data changes
+  const selectedRow = useMemo(
+    () => data.find((r) => r.id === activeSelection),
+    [data, activeSelection],
+  );
+
+  // Reset internal selection when data changes (only for uncontrolled mode)
   useEffect(() => {
-    setSelectedId((prev) => {
-      if (prev && !data.find((r) => r.id === prev)) return null;
-      return prev;
-    });
-  }, [data]);
+    if (!isControlled) {
+      setInternalSelectedId((prev) => {
+        if (prev && !data.find((r) => r.id === prev)) return null;
+        return prev;
+      });
+    }
+  }, [data, isControlled]);
 
   // Initialize form when dialog opens
   useEffect(() => {
@@ -674,9 +740,12 @@ export const GenericPanel = ({
     return data.filter((row) => JSON.stringify(row).toLowerCase().includes(lower));
   }, [debouncedSearch, data]);
 
-  const handleRowClick = useCallback((row: GenericData) => {
-    setSelectedId((prev) => (prev === row.id ? null : row.id));
-  }, []);
+  const handleRowClick = useCallback(
+    (row: GenericData) => {
+      activeSetSelection(activeSelection === row.id ? null : row.id);
+    },
+    [activeSelection, activeSetSelection],
+  );
 
   const handleNewClick = useCallback(() => {
     setEditingRow(null);
@@ -686,28 +755,28 @@ export const GenericPanel = ({
   }, [config.fields]);
 
   const handleEditClick = useCallback(() => {
-    if (selectedId !== null && selectedRow) {
+    if (activeSelection !== null && selectedRow) {
       setEditingRow(selectedRow);
       setIsNewDialog(false);
       setDialogOpen(true);
     }
-  }, [selectedId, selectedRow]);
+  }, [activeSelection, selectedRow]);
 
   const handleDeleteClick = useCallback(() => {
-    if (selectedId !== null) {
+    if (activeSelection !== null) {
       setDeleteOpen(true);
     }
-  }, [selectedId]);
+  }, [activeSelection]);
 
   const handleClearClick = useCallback(() => {
     setDialogOpen(false);
     setTimeout(() => {
       setEditingRow(null);
       setIsNewDialog(false);
-      setSelectedId(null);
+      activeSetSelection(null);
       setForm(createEmptyForm(config.fields));
     }, 0);
-  }, [config.fields]);
+  }, [config.fields, activeSetSelection]);
 
   const handleSubmit = useCallback(async () => {
     // Check if form has any actual values to save
@@ -735,7 +804,7 @@ export const GenericPanel = ({
       setDialogOpen(false);
       setTimeout(() => {
         setEditingRow(null);
-        setSelectedId(null);
+        activeSetSelection(null);
         setIsNewDialog(false);
         setForm(createEmptyForm(config.fields));
       }, 0);
@@ -762,7 +831,7 @@ export const GenericPanel = ({
       setDialogOpen(false);
       setTimeout(() => {
         setEditingRow(null);
-        setSelectedId(null);
+        activeSetSelection(null);
         setIsNewDialog(false);
         setForm(createEmptyForm(config.fields));
       }, 0);
@@ -777,11 +846,12 @@ export const GenericPanel = ({
     enableSuccessMessage,
     success,
     showError,
+    activeSetSelection,
   ]);
 
   const handleDelete = useCallback(async () => {
     try {
-      await onSave(data.filter((r) => r.id !== selectedId));
+      await onSave(data.filter((r) => r.id !== activeSelection));
       if (enableSuccessMessage) {
         success(`${config.title} deleted successfully`);
       }
@@ -792,18 +862,27 @@ export const GenericPanel = ({
     } finally {
       setDeleteOpen(false);
       setTimeout(() => {
-        setSelectedId(null);
+        activeSetSelection(null);
         setEditingRow(null);
       }, 0);
     }
-  }, [selectedId, data, onSave, config.title, enableSuccessMessage, success, showError]);
+  }, [
+    activeSelection,
+    data,
+    onSave,
+    config.title,
+    enableSuccessMessage,
+    success,
+    showError,
+    activeSetSelection,
+  ]);
 
   const panelProps = useMemo(
     () => ({
       config,
       columns: columns as Column<GenericData>[],
       filtered: filtered as GenericData[],
-      selectedId,
+      selectedId: activeSelection,
       search,
       onSearchChange: setSearch,
       onRowClick: handleRowClick,
@@ -812,12 +891,15 @@ export const GenericPanel = ({
       onDeleteClick: handleDeleteClick,
       onClearClick: handleClearClick,
       defaultExpanded,
+      enableNewButton,
+      enableEditButton,
+      enableDeleteButton,
     }),
     [
       config,
       columns,
       filtered,
-      selectedId,
+      activeSelection,
       search,
       handleRowClick,
       handleNewClick,
@@ -825,6 +907,9 @@ export const GenericPanel = ({
       handleDeleteClick,
       handleClearClick,
       defaultExpanded,
+      enableNewButton,
+      enableEditButton,
+      enableDeleteButton,
     ],
   );
 
@@ -836,12 +921,12 @@ export const GenericPanel = ({
         setTimeout(() => {
           setEditingRow(null);
           setIsNewDialog(false);
-          setSelectedId(null);
+          activeSetSelection(null);
           setForm(createEmptyForm(config.fields));
         }, 0);
       }
     },
-    [config.fields],
+    [config.fields, activeSetSelection],
   );
 
   // Memoized toggle change handler
@@ -964,6 +1049,18 @@ export const GenericPanel = ({
                 const currentValue = (form[field.name] ?? '') as string;
                 return (
                   <TimePickerField
+                    key={field.name}
+                    label={field.label}
+                    value={currentValue}
+                    onChange={(value) => handleTextFieldChange(field.name, value)}
+                    required={field.required}
+                  />
+                );
+              }
+              if (field.type === 'duration') {
+                const currentValue = (form[field.name] ?? '') as string;
+                return (
+                  <DurationPickerField
                     key={field.name}
                     label={field.label}
                     value={currentValue}

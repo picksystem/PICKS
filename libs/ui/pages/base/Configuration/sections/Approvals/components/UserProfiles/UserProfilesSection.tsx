@@ -8,5 +8,13 @@ export const UserProfilesSection = ({ data, onDataChange }: UserProfilesSectionP
     onDataChange?.(next);
   };
 
-  return <GenericPanel config={TABLE_CONFIG.userProfile} data={data || []} onSave={handleSave} />;
+  return (
+    <GenericPanel
+      config={TABLE_CONFIG.userProfile}
+      data={data || []}
+      onSave={handleSave}
+      variant='standard'
+      enableSuccessMessage
+    />
+  );
 };

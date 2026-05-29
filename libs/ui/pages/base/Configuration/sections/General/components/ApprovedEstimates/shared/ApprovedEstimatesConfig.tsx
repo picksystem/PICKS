@@ -76,6 +76,6 @@ export const APPROVED_ESTIMATES_CONFIG: TableConfig = {
     { name: 'serviceLine', label: 'Service Line' },
     { name: 'application', label: 'Application' },
     { name: 'queue', label: 'Queue' },
-    { name: 'hours', label: 'Default Hours', type: 'number' as const },
+    { name: 'hours', label: 'Default Hours', type: 'duration' as const },
   ],
 };

@@ -24,6 +24,7 @@ const ExpenseApplicationSection = () => {
       onSave={handleSave as (data: unknown[]) => void}
       customColumns={expenseApplicationColumns as unknown as never}
       variant='standard'
+      enableSuccessMessage
     />
   );
 };

@@ -21,6 +21,13 @@ const ResponseAckSLASection = ({
 }: ResponseAckSLASectionProps) => {
   const { classes } = useStyles();
 
+  // Create a read-only config for the panel (no New button)
+  const readonlyConfig = {
+    ...RESPONSE_ACK_SLA_CONFIG,
+    title: 'Response / Acknowledgement SLA (in minutes)',
+    subtitle: 'Configure response time targets and breach alerting for initial acknowledgement',
+  };
+
   const columns = [
     {
       id: 'ticketTypeName',
@@ -53,12 +60,13 @@ const ResponseAckSLASection = ({
   return (
     <div className={classes.sectionAccordion}>
       <GenericPanel
-        config={RESPONSE_ACK_SLA_CONFIG}
+        config={readonlyConfig}
         data={displayRows}
         onSave={onDataChange}
         customColumns={columns as any}
         variant='plain'
         defaultExpanded={false}
+        enableNewButton={false}
       />
     </div>
   );

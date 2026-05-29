@@ -24,6 +24,7 @@ const ExpenseCategorySection = () => {
       onSave={handleSave as (data: unknown[]) => void}
       customColumns={expenseCategoryColumns as unknown as never}
       variant='standard'
+      enableSuccessMessage
     />
   );
 };

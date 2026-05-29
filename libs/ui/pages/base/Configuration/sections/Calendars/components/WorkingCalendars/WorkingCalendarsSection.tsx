@@ -71,6 +71,10 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
         composedWorkingTimes: composedTimes,
         calendarWorkLocations: workLocations,
         calendarConsultants: consultants,
+        periodTypes: apiCAL?.periodTypes ?? [],
+        timesheetPeriods: apiCAL?.timesheetPeriods ?? [],
+        workingShifts: apiCAL?.workingShifts ?? [],
+        shiftConsultants: apiCAL?.shiftConsultants ?? [],
       });
     }
   };
@@ -86,6 +90,10 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
       composedWorkingTimes: composedTimes,
       calendarWorkLocations: workLocations,
       calendarConsultants: consultants,
+      periodTypes: apiCAL?.periodTypes ?? [],
+      timesheetPeriods: apiCAL?.timesheetPeriods ?? [],
+      workingShifts: apiCAL?.workingShifts ?? [],
+      shiftConsultants: apiCAL?.shiftConsultants ?? [],
     });
   };
 
@@ -100,6 +108,10 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
       composedWorkingTimes: next,
       calendarWorkLocations: workLocations,
       calendarConsultants: consultants,
+      periodTypes: apiCAL?.periodTypes ?? [],
+      timesheetPeriods: apiCAL?.timesheetPeriods ?? [],
+      workingShifts: apiCAL?.workingShifts ?? [],
+      shiftConsultants: apiCAL?.shiftConsultants ?? [],
     });
   };
 
@@ -114,6 +126,10 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
       composedWorkingTimes: composedTimes,
       calendarWorkLocations: next,
       calendarConsultants: consultants,
+      periodTypes: apiCAL?.periodTypes ?? [],
+      timesheetPeriods: apiCAL?.timesheetPeriods ?? [],
+      workingShifts: apiCAL?.workingShifts ?? [],
+      shiftConsultants: apiCAL?.shiftConsultants ?? [],
     });
   };
 
@@ -128,6 +144,10 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
       composedWorkingTimes: composedTimes,
       calendarWorkLocations: workLocations,
       calendarConsultants: next,
+      periodTypes: apiCAL?.periodTypes ?? [],
+      timesheetPeriods: apiCAL?.timesheetPeriods ?? [],
+      workingShifts: apiCAL?.workingShifts ?? [],
+      shiftConsultants: apiCAL?.shiftConsultants ?? [],
     });
   };
 
@@ -154,6 +174,8 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
           data={rowsFinal as unknown as Record<string, unknown>[]}
           onSave={handleSave as (data: unknown[]) => void}
           customColumns={workingCalendarColumns as unknown as never}
+          variant='standard'
+          enableSuccessMessage
         />
       )}
       {activeView === 'workingTimes' && (
@@ -162,6 +184,8 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
           data={wcTimes as unknown as Record<string, unknown>[]}
           onSave={handleSaveWcTimes as (data: unknown[]) => void}
           customColumns={workingTimesColumns as unknown as never}
+          variant='standard'
+          enableSuccessMessage
         />
       )}
       {activeView === 'composedTimes' && (
@@ -170,6 +194,8 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
           data={composedTimes as unknown as Record<string, unknown>[]}
           onSave={handleSaveComposedTimes as (data: unknown[]) => void}
           customColumns={composedTimesColumns as unknown as never}
+          variant='standard'
+          enableSuccessMessage
         />
       )}
       {activeView === 'workLocations' && (
@@ -178,6 +204,8 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
           data={workLocations as unknown as Record<string, unknown>[]}
           onSave={handleSaveWorkLocations as (data: unknown[]) => void}
           customColumns={workLocationsColumns as unknown as never}
+          variant='standard'
+          enableSuccessMessage
         />
       )}
       {activeView === 'consultants' && (
@@ -186,6 +214,8 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
           data={consultants as unknown as Record<string, unknown>[]}
           onSave={handleSaveConsultants as (data: unknown[]) => void}
           customColumns={consultantsColumns as unknown as never}
+          variant='standard'
+          enableSuccessMessage
         />
       )}
     </GenericAccordion>

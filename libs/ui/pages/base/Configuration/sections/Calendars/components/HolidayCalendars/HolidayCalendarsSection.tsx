@@ -58,6 +58,10 @@ const HolidayCalendarsSection = ({
         composedWorkingTimes: apiCAL?.composedWorkingTimes ?? [],
         calendarWorkLocations: apiCAL?.calendarWorkLocations ?? [],
         calendarConsultants: apiCAL?.calendarConsultants ?? [],
+        periodTypes: apiCAL?.periodTypes ?? [],
+        timesheetPeriods: apiCAL?.timesheetPeriods ?? [],
+        workingShifts: apiCAL?.workingShifts ?? [],
+        shiftConsultants: apiCAL?.shiftConsultants ?? [],
       });
     }
   };
@@ -76,6 +80,10 @@ const HolidayCalendarsSection = ({
         composedWorkingTimes: apiCAL?.composedWorkingTimes ?? [],
         calendarWorkLocations: apiCAL?.calendarWorkLocations ?? [],
         calendarConsultants: apiCAL?.calendarConsultants ?? [],
+        periodTypes: apiCAL?.periodTypes ?? [],
+        timesheetPeriods: apiCAL?.timesheetPeriods ?? [],
+        workingShifts: apiCAL?.workingShifts ?? [],
+        shiftConsultants: apiCAL?.shiftConsultants ?? [],
       });
     }
   };
@@ -103,6 +111,8 @@ const HolidayCalendarsSection = ({
           data={holidayRowsFinal}
           onSave={handleSave}
           customColumns={holidayCalendarColumns as any}
+          variant='standard'
+          enableSuccessMessage
         />
       )}
       {activeView === 'bankHolidays' && (
@@ -111,6 +121,8 @@ const HolidayCalendarsSection = ({
           data={bankHolidaysFinal}
           onSave={handleSaveBankHolidays}
           customColumns={bankHolidayColumns as any}
+          variant='standard'
+          enableSuccessMessage
         />
       )}
     </GenericAccordion>

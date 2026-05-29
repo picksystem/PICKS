@@ -4,6 +4,7 @@ import { PriorityLevel } from '../../util';
 import { useStyles } from '../../styles';
 import { useNotification } from '@serviceops/hooks';
 import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { ConfigDeleteDialog } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 import PriorityFormDialog from '@serviceops/pages/base/Configuration/dialogs/PriorityFormDialog/PriorityFormDialog';
 import { PRIORITY_TABLE_CONFIG } from '../shared/PrioritiesPanelConfig';
 
@@ -25,14 +26,17 @@ const PrioritiesSection = ({
   setPriorities,
   onPersist,
   activeTicketTypeColumns,
+  selectedPriorityId,
   setSelectedPriorityId,
   setSelectedPriority,
   setConfirmDeleteOpen,
   onToggleEnabledFor,
 }: PrioritiesSectionProps) => {
   const { classes } = useStyles();
+  const { success, error: showError } = useNotification();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPriority, setEditingPriority] = useState<PriorityLevel | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const handleSave = useCallback(
     (data: PriorityLevel[]) => {
@@ -69,6 +73,46 @@ const PrioritiesSection = ({
     },
     [editingPriority, priorities, activeTicketTypeColumns, handleSave],
   );
+
+  const handleNewClick = useCallback(() => {
+    setEditingPriority(null);
+    setDialogOpen(true);
+  }, []);
+
+  const handleEditClick = useCallback(() => {
+    const selected = priorities.find((p) => p.id === selectedPriorityId);
+    if (selected) {
+      setEditingPriority(selected);
+      setDialogOpen(true);
+    }
+  }, [priorities, selectedPriorityId]);
+
+  const handleDeleteClick = useCallback(() => {
+    setDeleteOpen(true);
+  }, []);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!selectedPriorityId) return;
+    try {
+      const next = priorities.filter((p) => p.id !== selectedPriorityId);
+      handleSave(next);
+      success('Priority deleted successfully');
+      setSelectedPriorityId(null);
+      setSelectedPriority(null);
+    } catch (err) {
+      showError('Failed to delete priority. Please try again.');
+    } finally {
+      setDeleteOpen(false);
+    }
+  }, [
+    selectedPriorityId,
+    priorities,
+    handleSave,
+    success,
+    showError,
+    setSelectedPriorityId,
+    setSelectedPriority,
+  ]);
 
   const customColumns = [
     {
@@ -107,21 +151,74 @@ const PrioritiesSection = ({
     })),
   ];
 
+  // Use GenericPanel without dialog for table display only, with custom toolbar
+  const handleTableSave = useCallback(
+    (data: PriorityLevel[]) => {
+      // This is called for delete operations from GenericPanel
+      setPriorities(data);
+      onPersist(data);
+    },
+    [setPriorities, onPersist],
+  );
+
+  const selectedPriority = priorities.find((p) => p.id === selectedPriorityId) ?? null;
+
   return (
     <div className={classes.sectionAccordion}>
       <GenericPanel
         config={PRIORITY_TABLE_CONFIG}
         data={priorities}
-        onSave={handleSave}
+        onSave={handleTableSave}
         variant='plain'
         customColumns={customColumns as never}
+        enableNewButton={false}
+        enableEditButton={false}
+        enableDeleteButton={false}
+        selectedRowId={selectedPriorityId}
+        onRowSelect={(id) => {
+          setSelectedPriorityId(id);
+          setSelectedPriority(priorities.find((p) => p.id === id) ?? null);
+        }}
       />
+
+      {/* Custom toolbar for selected row */}
+      {selectedPriority && (
+        <div className={classes.selectedRowToolbar}>
+          <button className={classes.editButton} onClick={handleEditClick}>
+            Edit
+          </button>
+          <button className={classes.deleteButton} onClick={handleDeleteClick}>
+            Delete
+          </button>
+          <button
+            className={classes.clearButton}
+            onClick={() => {
+              setSelectedPriorityId(null);
+              setSelectedPriority(null);
+            }}
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
       <PriorityFormDialog
         open={dialogOpen}
         editing={editingPriority}
-        onClose={() => setDialogOpen(false)}
+        onClose={() => {
+          setDialogOpen(false);
+          setEditingPriority(null);
+        }}
         onSave={handleSavePriority}
         ticketTypeColumns={activeTicketTypeColumns}
+      />
+
+      <ConfigDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleConfirmDelete}
+        entityName='Priority'
+        itemName={selectedPriority?.name ?? ''}
       />
     </div>
   );

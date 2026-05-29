@@ -27,6 +27,10 @@ const WorkingDayTemplatesSection = ({ data, onDataChange }: WorkingDayTemplatesS
         composedWorkingTimes: apiCAL?.composedWorkingTimes ?? [],
         calendarWorkLocations: apiCAL?.calendarWorkLocations ?? [],
         calendarConsultants: apiCAL?.calendarConsultants ?? [],
+        periodTypes: apiCAL?.periodTypes ?? [],
+        timesheetPeriods: apiCAL?.timesheetPeriods ?? [],
+        workingShifts: apiCAL?.workingShifts ?? [],
+        shiftConsultants: apiCAL?.shiftConsultants ?? [],
       });
     }
   };

@@ -66,14 +66,22 @@ const TicketMatrixSection = ({
   const activeImpacts = impacts.filter((i) => i.isActive);
   const activeUrgencies = urgencies.filter((u) => u.isActive);
 
-  const allRows: MatrixRow[] = activeImpacts.flatMap((impact) =>
-    activeUrgencies.map((urgency) => ({
-      id: `${impact.id}_${urgency.id}`,
-      impactId: impact.id,
-      urgencyId: urgency.id,
-      priorityId: matrix[impact.id]?.[urgency.id] ?? '',
-    })),
+  // Deduplicate by using a Map with unique keys
+  const rowMap = new Map<string, MatrixRow>();
+  activeImpacts.forEach((impact) =>
+    activeUrgencies.forEach((urgency) => {
+      const id = `${impact.id}_${urgency.id}`;
+      if (!rowMap.has(id)) {
+        rowMap.set(id, {
+          id,
+          impactId: impact.id,
+          urgencyId: urgency.id,
+          priorityId: matrix[impact.id]?.[urgency.id] ?? '',
+        });
+      }
+    }),
   );
+  const allRows: MatrixRow[] = Array.from(rowMap.values());
 
   const handleDeleteRow = () => {
     if (!selectedRowId) return;

@@ -606,6 +606,41 @@ export interface IConfigCalendarConsultant {
   effectiveTo: string;
 }
 
+export type TimesheetFrequency = 'weekly' | 'biweekly' | 'monthly';
+
+export interface IConfigPeriodType {
+  id: string;
+  name: string;
+  description: string;
+  timesheetFrequency: TimesheetFrequency;
+  autoSplitWeek: boolean;
+  weekStartsOn: string;
+}
+
+export interface IConfigTimesheetPeriod {
+  id: string;
+  periodTypeId: string;
+  periodTypeName: string;
+  startDate: string;
+  endDate: string;
+  name: string;
+}
+
+export interface IConfigWorkingShift {
+  id: string;
+  shiftName: string;
+  description: string;
+  workingTimeTemplate: string;
+}
+
+export interface IConfigShiftConsultant {
+  id: string;
+  shiftName: string;
+  consultantName: string;
+  role: string;
+  application: string;
+}
+
 export interface IConfigCalendars {
   workingDayTemplates: IConfigWorkingDayTemplate[];
   holidayCalendars: IConfigHolidayCalendar[];
@@ -615,6 +650,10 @@ export interface IConfigCalendars {
   composedWorkingTimes: IConfigComposedWorkingTime[];
   calendarWorkLocations: IConfigCalendarWorkLocation[];
   calendarConsultants: IConfigCalendarConsultant[];
+  periodTypes: IConfigPeriodType[];
+  timesheetPeriods: IConfigTimesheetPeriod[];
+  workingShifts: IConfigWorkingShift[];
+  shiftConsultants: IConfigShiftConsultant[];
 }
 
 export interface IConfigReasonCodes {
@@ -1530,5 +1569,9 @@ export const DEFAULT_CONFIGURATION_DATA: IConfigurationData = {
     composedWorkingTimes: [],
     calendarWorkLocations: [],
     calendarConsultants: [],
+    periodTypes: [],
+    timesheetPeriods: [],
+    workingShifts: [],
+    shiftConsultants: [],
   },
 };

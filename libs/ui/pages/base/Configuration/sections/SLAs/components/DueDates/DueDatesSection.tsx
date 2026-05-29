@@ -21,6 +21,13 @@ const DueDatesSection = ({
 }: DueDatesSectionProps) => {
   const { classes } = useStyles();
 
+  // Create a read-only config for the panel (no New button)
+  const readonlyConfig = {
+    ...DUE_DATES_CONFIG,
+    title: 'Due Dates',
+    subtitle: 'Control due date visibility and alerting on tickets',
+  };
+
   const columns = [
     {
       id: 'ticketTypeName',
@@ -53,12 +60,13 @@ const DueDatesSection = ({
   return (
     <div className={classes.sectionAccordion}>
       <GenericPanel
-        config={DUE_DATES_CONFIG}
+        config={readonlyConfig}
         data={displayRows}
         onSave={onDataChange}
         customColumns={columns as any}
         variant='plain'
         defaultExpanded={false}
+        enableNewButton={false}
       />
     </div>
   );

@@ -195,9 +195,15 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
         composedWorkingTimes: data.calendars?.composedWorkingTimes ?? [],
         calendarWorkLocations: data.calendars?.calendarWorkLocations ?? [],
         calendarConsultants: data.calendars?.calendarConsultants ?? [],
+        periodTypes: data.calendars?.periodTypes ?? [],
+        timesheetPeriods: data.calendars?.timesheetPeriods ?? [],
+        workingShifts: data.calendars?.workingShifts ?? [],
+        shiftConsultants: data.calendars?.shiftConsultants ?? [],
       },
       timesheets: {
-        conversionReasonCodes: ((data.timesheets?.conversionReasonCodes ?? []) as IConfigTimesheetConversionCode[]).map((r) => ({
+        conversionReasonCodes: (
+          (data.timesheets?.conversionReasonCodes ?? []) as IConfigTimesheetConversionCode[]
+        ).map((r) => ({
           ...r,
           serviceLines: r.serviceLines ?? [],
           applications: r.applications ?? [],
@@ -251,7 +257,15 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
     updatedBy?: number,
   ): Promise<IConfiguration> {
     const current = await this.get();
-    const merged: IConfigurationData = { ...current.data, [section]: value };
+    // Deep merge nested section data so that partial updates don't lose existing nested fields
+    const currentSection = current.data[section];
+    const mergedSection =
+      typeof currentSection === 'object' &&
+      currentSection !== null &&
+      !Array.isArray(currentSection)
+        ? { ...currentSection, ...(value as object) }
+        : value;
+    const merged: IConfigurationData = { ...current.data, [section]: mergedSection };
     return this.upsert(merged, updatedBy);
   }
 }

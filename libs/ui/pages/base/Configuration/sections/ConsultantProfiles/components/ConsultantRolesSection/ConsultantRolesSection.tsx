@@ -53,6 +53,7 @@ export const ConsultantRolesSection = ({
           data={rolesData || []}
           onSave={(next) => onRolesChange?.(next as IConfigConsultantRole[])}
           variant='standard'
+          enableSuccessMessage
         />
       )}
 
@@ -62,6 +63,7 @@ export const ConsultantRolesSection = ({
           data={assocProfilesData || []}
           onSave={(next) => onAssocProfilesChange?.(next as IConfigAssociatedConsultantProfile[])}
           variant='standard'
+          enableSuccessMessage
         />
       )}
     </>

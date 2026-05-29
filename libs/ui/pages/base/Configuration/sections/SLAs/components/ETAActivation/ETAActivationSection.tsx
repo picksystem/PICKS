@@ -20,6 +20,13 @@ const ETAActivationSection = ({
 }: ETAActivationSectionProps) => {
   const { classes } = useStyles();
 
+  // Create a read-only config for the panel (no New button)
+  const readonlyConfig = {
+    ...ETA_ACTIVATION_CONFIG,
+    title: 'ETA Activation',
+    subtitle: 'Control ETA visibility and notification behaviour on tickets',
+  };
+
   const columns = [
     {
       id: 'ticketTypeName',
@@ -47,12 +54,13 @@ const ETAActivationSection = ({
   return (
     <div className={classes.sectionAccordion}>
       <GenericPanel
-        config={ETA_ACTIVATION_CONFIG}
+        config={readonlyConfig}
         data={displayRows}
         onSave={onDataChange}
         customColumns={columns as any}
         variant='plain'
         defaultExpanded={false}
+        enableNewButton={false}
       />
     </div>
   );

@@ -20,6 +20,13 @@ const TimeLogsActivationSection = ({
 }: TimeLogsActivationSectionProps) => {
   const { classes } = useStyles();
 
+  // Create a read-only config for the panel (no New button)
+  const readonlyConfig = {
+    ...TIME_LOGS_ACTIVATION_CONFIG,
+    title: 'Time Logs Activation',
+    subtitle: 'Activate time logging on tickets and control caller visibility',
+  };
+
   const columns = [
     {
       id: 'ticketTypeName',
@@ -47,12 +54,13 @@ const TimeLogsActivationSection = ({
   return (
     <div className={classes.sectionAccordion}>
       <GenericPanel
-        config={TIME_LOGS_ACTIVATION_CONFIG}
+        config={readonlyConfig}
         data={displayRows}
         onSave={onDataChange}
         customColumns={columns as any}
         variant='plain'
         defaultExpanded={false}
+        enableNewButton={false}
       />
     </div>
   );

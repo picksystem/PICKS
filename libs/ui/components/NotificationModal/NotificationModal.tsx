@@ -11,31 +11,35 @@ import { useStyles } from './styles';
 
 const severityConfig: Record<
   NotificationSeverity,
-  { icon: React.ElementType; gradient: string; glow: string; label: string }
+  { icon: React.ElementType; gradient: string; glow: string; label: string; accent: string }
 > = {
   success: {
     icon: CheckCircleIcon,
-    gradient: 'linear-gradient(135deg, #065f46 0%, #059669 100%)',
-    glow: 'rgba(5, 150, 105, 0.5)',
+    gradient: 'linear-gradient(135deg, #0d5f54 0%, #14b8a6 100%)',
+    glow: 'rgba(20, 184, 166, 0.5)',
     label: 'Success',
+    accent: '#14b8a6',
   },
   error: {
     icon: ErrorIcon,
-    gradient: 'linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%)',
-    glow: 'rgba(220, 38, 38, 0.5)',
+    gradient: 'linear-gradient(135deg, #7f1d1d 0%, #ef4444 100%)',
+    glow: 'rgba(239, 68, 68, 0.5)',
     label: 'Error',
+    accent: '#ef4444',
   },
   warning: {
     icon: WarningIcon,
-    gradient: 'linear-gradient(135deg, #78350f 0%, #d97706 100%)',
-    glow: 'rgba(217, 119, 6, 0.5)',
+    gradient: 'linear-gradient(135deg, #78350f 0%, #f59e0b 100%)',
+    glow: 'rgba(245, 158, 11, 0.5)',
     label: 'Warning',
+    accent: '#f59e0b',
   },
   info: {
     icon: InfoIcon,
-    gradient: 'linear-gradient(135deg, #0c4a6e 0%, #0284c7 100%)',
-    glow: 'rgba(2, 132, 199, 0.5)',
+    gradient: 'linear-gradient(135deg, #0c4a6e 0%, #3b82f6 100%)',
+    glow: 'rgba(59, 130, 246, 0.5)',
     label: 'Information',
+    accent: '#3b82f6',
   },
 };
 
@@ -52,7 +56,7 @@ const NotificationModal = () => {
     return () => clearTimeout(timer);
   }, [open, autoHideDuration, dispatch]);
 
-  const { icon: Icon, gradient, glow, label } = severityConfig[severity];
+  const { icon: Icon, gradient, glow, label, accent } = severityConfig[severity];
 
   return (
     <MUIModal
@@ -71,12 +75,13 @@ const NotificationModal = () => {
             boxShadow: `0 24px 64px ${glow}, 0 8px 24px rgba(0,0,0,0.28)`,
           }}
         >
-          <Box className={classes.iconPill}>
-            <Icon className={classes.icon} />
+          <Box className={classes.accentBar} style={{ background: accent }} />
+          <Box className={classes.iconPill} style={{ background: `rgba(255,255,255,0.9)` }}>
+            <Icon className={classes.icon} style={{ color: accent }} />
           </Box>
           <Box className={classes.textBlock}>
-            <Typography className={classes.label}>{label}</Typography>
-            <Typography className={classes.message}>{message}</Typography>
+            <Typography className={classes.label} style={{ color: '#fff' }}>{label}</Typography>
+            <Typography className={classes.message} style={{ color: 'rgba(255,255,255,0.9)' }}>{message}</Typography>
           </Box>
           <IconButton
             className={classes.closeBtn}

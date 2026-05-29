@@ -5,6 +5,8 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PeopleIcon from '@mui/icons-material/People';
+import EventRepeatIcon from '@mui/icons-material/EventRepeat';
+import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import { Column } from '@serviceops/component';
 import { mkCell, mkDescCell } from '@serviceops/pages/base/Configuration/utils/cellRenderers';
 import type {
@@ -185,4 +187,159 @@ export const consultantsColumns: Column<IConfigCalendarConsultant>[] = [
   { id: 'application', label: 'Application', minWidth: 150, format: mkCell() },
   { id: 'effectiveFrom', label: 'Effective From', minWidth: 130, format: mkCell() },
   { id: 'effectiveTo', label: 'Effective To', minWidth: 130, format: mkCell() },
+];
+
+// ── Period Types Table Configs ─────────────────────────────────────────────────
+
+import { ToolbarButton } from '@serviceops/pages/base/Configuration/shared/GenericToolbar/GenericToolbar';
+
+interface SectionConfig {
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  accent: string;
+  toolbarButtons: ToolbarButton[];
+}
+
+export const SECTION_TOOLBAR_CONFIG: Record<string, SectionConfig> = {
+  periodTypes: {
+    title: 'Period Types',
+    subtitle: 'Define timesheet period types and manage timesheet periods',
+    accent: ACCENT,
+    icon: <EventRepeatIcon sx={{ fontSize: '1rem' }} />,
+    toolbarButtons: [
+      {
+        key: 'periodTypes',
+        label: 'Period Types',
+        icon: <EventRepeatIcon />,
+        isActive: false,
+        onClick: () => {},
+      },
+      {
+        key: 'timesheetPeriods',
+        label: 'Timesheet Periods',
+        icon: <PlaylistAddIcon />,
+        isActive: false,
+        onClick: () => {},
+      },
+    ],
+  },
+  workingShiftManagement: {
+    title: 'Working Shift Management',
+    subtitle: 'Define working shifts and associate consultants',
+    accent: ACCENT,
+    icon: <WorkIcon sx={{ fontSize: '1rem' }} />,
+    toolbarButtons: [
+      {
+        key: 'workingShifts',
+        label: 'Working Shifts',
+        icon: <WorkIcon />,
+        isActive: false,
+        onClick: () => {},
+      },
+      {
+        key: 'consultants',
+        label: 'Associated Consultants',
+        icon: <PeopleAltIcon />,
+        isActive: false,
+        onClick: () => {},
+      },
+    ],
+  },
+};
+
+export const PERIOD_TYPES_TABLE_CONFIG: TableConfig = {
+  title: 'Period Types',
+  subtitle: 'Define timesheet period types and their frequency',
+  accent: ACCENT,
+  icon: <EventRepeatIcon sx={{ fontSize: '1.1rem' }} />,
+  entity: 'Period Type',
+  fields: [
+    { name: 'name', label: 'Period Type', required: true, bold: true },
+    { name: 'description', label: 'Description' },
+    {
+      name: 'timesheetFrequency',
+      label: 'Timesheet Frequency',
+      type: 'text',
+    },
+    {
+      name: 'autoSplitWeek',
+      label: 'Auto Split Week',
+      type: 'toggle',
+      defaultValue: false,
+    },
+    { name: 'weekStartsOn', label: 'Day Week Starts On' },
+  ],
+};
+
+export const TIMESHEET_PERIODS_TABLE_CONFIG: TableConfig = {
+  title: 'Timesheet Periods',
+  subtitle: 'View generated timesheet periods',
+  accent: ACCENT,
+  icon: <EventNoteIcon sx={{ fontSize: '1.1rem' }} />,
+  entity: 'Timesheet Period',
+  fields: [
+    { name: 'startDate', label: 'Start Date', type: 'date' },
+    { name: 'name', label: 'Name' },
+    { name: 'endDate', label: 'End Date', type: 'date' },
+  ],
+};
+
+export const periodTypesColumns: Column<Record<string, unknown>>[] = [
+  { id: 'name', label: 'Period Type', minWidth: 180, format: mkCell(true) },
+  { id: 'description', label: 'Description', minWidth: 220, format: mkDescCell },
+  { id: 'timesheetFrequency', label: 'Timesheet Frequency', minWidth: 160, format: mkCell() },
+  { id: 'autoSplitWeek', label: 'Auto Split Week', minWidth: 130, format: mkCell() },
+  { id: 'weekStartsOn', label: 'Day Week Starts On', minWidth: 150, format: mkCell() },
+];
+
+export const timesheetPeriodsColumns: Column<Record<string, unknown>>[] = [
+  { id: 'startDate', label: 'Start Date', minWidth: 130, format: mkCell() },
+  { id: 'name', label: 'Name', minWidth: 180, format: mkCell(true) },
+  { id: 'endDate', label: 'End Date', minWidth: 130, format: mkCell() },
+];
+
+// ── Working Shift Management Table Configs ────────────────────────────────────
+
+import WorkIcon from '@mui/icons-material/Work';
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+
+export const WORKING_SHIFTS_TABLE_CONFIG: TableConfig = {
+  title: 'Working Shifts',
+  subtitle: 'Define and manage working shift definitions',
+  accent: ACCENT,
+  icon: <WorkIcon sx={{ fontSize: '1.1rem' }} />,
+  entity: 'Working Shift',
+  fields: [
+    { name: 'shiftName', label: 'Shift Name', required: true, bold: true },
+    { name: 'description', label: 'Description' },
+    { name: 'workingTimeTemplate', label: 'Working Time Template' },
+  ],
+};
+
+export const SHIFT_CONSULTANTS_TABLE_CONFIG: TableConfig = {
+  title: 'Associated Consultants',
+  subtitle: 'Configure consultants per shift',
+  accent: ACCENT,
+  icon: <PeopleAltIcon sx={{ fontSize: '1.1rem' }} />,
+  entity: 'Shift Consultant',
+  fields: [
+    { name: 'shiftName', label: 'Shift Name', required: true, bold: true },
+    { name: 'consultantName', label: 'Consultant Name', required: true },
+    { name: 'role', label: 'Role' },
+    { name: 'application', label: 'Application' },
+  ],
+};
+
+export const workingShiftsColumns: Column<Record<string, unknown>>[] = [
+  { id: 'shiftName', label: 'Shift Name', minWidth: 180, format: mkCell(true) },
+  { id: 'description', label: 'Description', minWidth: 260, format: mkDescCell },
+  { id: 'workingTimeTemplate', label: 'Working Time Template', minWidth: 200, format: mkCell() },
+];
+
+export const shiftConsultantsColumns: Column<Record<string, unknown>>[] = [
+  { id: 'shiftName', label: 'Shift Name', minWidth: 180, format: mkCell(true) },
+  { id: 'consultantName', label: 'Consultant Name', minWidth: 180, format: mkCell() },
+  { id: 'role', label: 'Role', minWidth: 130, format: mkCell() },
+  { id: 'application', label: 'Application', minWidth: 150, format: mkCell() },
 ];

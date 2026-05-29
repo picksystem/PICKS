@@ -80,7 +80,7 @@ const VIEW_BUTTONS: { key: ApplicationActiveView; label: string; icon: React.Rea
 
 export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionProps) => {
   const { classes } = useStyles();
-  const { categorization: apiCat } = useConfiguration();
+  const { categorization: apiCat, saveSection } = useConfiguration();
   const [activeView, setActiveView] = useState<ApplicationActiveView>('applications');
   const [rows, setRows] = useState<IConfigApplication[]>([]);
 
@@ -96,6 +96,16 @@ export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionP
     setRows(next);
     if (onDataChange) {
       onDataChange(next);
+    } else {
+      saveSection('categorization', {
+        businessCategories: apiCat?.businessCategories ?? [],
+        serviceLines: apiCat?.serviceLines ?? [],
+        applications: next,
+        queues: apiCat?.queues ?? [],
+        applicationCategories: apiCat?.applicationCategories ?? [],
+        applicationSubCategories: apiCat?.applicationSubCategories ?? [],
+        applicationNumberSequences: apiCat?.applicationNumberSequences ?? [],
+      });
     }
   };
 
@@ -205,7 +215,13 @@ export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionP
         }))}
       />
       {activeView === 'applications' && (
-        <GenericPanel config={TABLE_CONFIG.application} data={rows} onSave={handleSave} />
+        <GenericPanel
+          config={TABLE_CONFIG.application}
+          data={rows}
+          onSave={handleSave}
+          variant='standard'
+          enableSuccessMessage
+        />
       )}
       {activeView === 'approvals' && (
         <AppApprovalsSection

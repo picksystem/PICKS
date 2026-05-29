@@ -9,6 +9,12 @@ export const ConsultantRolesSection = ({ data, onDataChange }: ConsultantRolesSe
   };
 
   return (
-    <GenericPanel config={TABLE_CONFIG.consultantRoles} data={data || []} onSave={handleSave} />
+    <GenericPanel
+      config={TABLE_CONFIG.consultantRoles}
+      data={data || []}
+      onSave={handleSave}
+      variant='standard'
+      enableSuccessMessage
+    />
   );
 };
