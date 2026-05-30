@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { IConfigHolidayCalendar, IConfigBankHoliday } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
-import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
-import { GenericAccordion } from '@serviceops/pages/base/Configuration/shared/GenericAccordion/GenericAccordion';
-import { GenericToolbar } from '@serviceops/pages/base/Configuration/shared/GenericToolbar/GenericToolbar';
+import { useConfiguration } from '@serviceops/confighooks';
+import { GenericAccordion } from '@serviceops/genericaccordion';
+import { GenericToolbar } from '@serviceops/generictoolbar';
 import { TABLE_CONFIG, holidayCalendarColumns, bankHolidayColumns } from '../shared';
 import { HCActiveView, HolidayCalendarsSectionProps } from './HolidayCalendarsSection.types';
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { GenericPanel } from '@serviceops/genericpanel';
 import { HOLIDAY_CALENDAR_SECTION_CONFIG } from './HolidayCalendarsSection.config';
 
 const HolidayCalendarsSection = ({

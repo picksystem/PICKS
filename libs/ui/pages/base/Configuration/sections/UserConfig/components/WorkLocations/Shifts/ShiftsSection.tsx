@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { IConfigWorkLocationShift } from '@serviceops/interfaces';
-import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { useConfiguration } from '@serviceops/confighooks';
+import { GenericPanel } from '@serviceops/genericpanel';
 import { SHIFT_CONFIG, shiftColumns } from '../../shared/userConfig.config';
 
 interface ShiftsSectionProps {

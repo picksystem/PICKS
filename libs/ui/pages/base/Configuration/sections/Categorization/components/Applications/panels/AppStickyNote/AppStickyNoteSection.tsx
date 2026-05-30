@@ -1,7 +1,7 @@
 import {
   RichTextEditor,
   parseRichText,
-} from '@serviceops/pages/base/Configuration/shared/RichTextEditor/RichTextEditor';
+} from '@serviceops/richtexteditor';
 import { APP_STICKY_NOTE_CONFIG } from './AppStickyNoteSection.config';
 import { AppStickyNoteSectionProps } from './AppStickyNoteSection.types';
 

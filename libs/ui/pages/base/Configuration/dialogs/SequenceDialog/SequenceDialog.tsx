@@ -10,15 +10,17 @@ import {
   Chip,
   Tooltip,
 } from '@serviceops/component';
-import { Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress } from '@mui/material';
+import { Dialog, DialogContent, DialogActions } from '@mui/material';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { SequenceDialogProps } from './util';
 import { ITicketType } from '@serviceops/interfaces';
 import { useReorderTicketTypesMutation } from '@serviceops/services';
 import { useNotification } from '@serviceops/hooks';
 import { getTypeColor } from '../../utils/ticketTypeIcons';
+
+const ACCENT = '#0369a1';
 
 const SequenceDialog = ({ open, ticketTypes, onClose, onSave }: SequenceDialogProps) => {
   const [ordered, setOrdered] = useState<ITicketType[]>([]);
@@ -58,16 +60,53 @@ const SequenceDialog = ({ open, ticketTypes, onClose, onSave }: SequenceDialogPr
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth='sm' fullWidth>
-      <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <DragIndicatorIcon sx={{ color: 'primary.main' }} />
-          Ticket Type Display Sequence
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth='sm'
+      fullWidth
+      disableEscapeKeyDown
+      TransitionProps={{ unmountOnExit: true }}
+      PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}
+    >
+      <Box
+        sx={{
+          px: 3,
+          py: 2.5,
+          background: `linear-gradient(135deg, ${ACCENT} 0%, ${ACCENT} 100%)`,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.75,
+        }}
+      >
+        <Box
+          sx={{
+            width: 38,
+            height: 38,
+            borderRadius: 1.5,
+            bgcolor: 'rgba(255,255,255,0.18)',
+            border: '1.5px solid rgba(255,255,255,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <Box
+            sx={{ color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <DragIndicatorIcon />
+          </Box>
         </Box>
-        <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 400, mt: 0.5 }}>
-          Use the arrows to reorder how ticket types appear on the Create Ticket page.
-        </Typography>
-      </DialogTitle>
+        <Box>
+          <Typography sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff', lineHeight: 1.2 }}>
+            Ticket Type Display Sequence
+          </Typography>
+          <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}>
+            Use the arrows to reorder how ticket types appear on the Create Ticket page.
+          </Typography>
+        </Box>
+      </Box>
 
       <DialogContent dividers sx={{ p: 0 }}>
         <List disablePadding>
@@ -153,24 +192,18 @@ const SequenceDialog = ({ open, ticketTypes, onClose, onSave }: SequenceDialogPr
 
       <DialogActions
         sx={{
-          px: 2.5,
-          py: 1.5,
+          px: 3,
+          py: 2,
           gap: 1,
           flexDirection: { xs: 'column', sm: 'row' },
           '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' }, textTransform: 'none' },
         }}
       >
-        <Button onClick={onClose} disabled={isLoading} variant='outlined' color='inherit'>
+        <Button onClick={onClose} disabled={isLoading} variant='outlined'>
           Cancel
         </Button>
-        <Button
-          variant='contained'
-          onClick={handleSave}
-          disabled={isLoading}
-          startIcon={isLoading ? <CircularProgress size={14} color='inherit' /> : undefined}
-          sx={{ minWidth: { sm: 120 } }}
-        >
-          {isLoading ? 'Saving...' : 'Save Order'}
+        <Button variant='contained' onClick={handleSave} disabled={isLoading}>
+          Save
         </Button>
       </DialogActions>
     </Dialog>

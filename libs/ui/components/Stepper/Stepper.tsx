@@ -1,6 +1,6 @@
 import { Stepper as MUIStepper, Step, StepLabel, StepContent } from '@mui/material';
 import { useStyles } from './styles';
-import { DSStepperProps } from './util';
+import { DSStepperProps } from './Stepper.types';
 
 const Stepper: React.FC<DSStepperProps> = ({
   steps = [],

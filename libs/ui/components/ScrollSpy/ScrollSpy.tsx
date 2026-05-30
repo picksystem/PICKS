@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
 import { useStyles } from './styles';
-import { DSScrollSpyProps } from './util';
+import { DSScrollSpyProps } from './ScrollSpy.types';
 
 const ScrollSpy: React.FC<DSScrollSpyProps> = ({
   sections,

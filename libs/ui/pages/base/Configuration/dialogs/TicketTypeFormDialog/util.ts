@@ -11,6 +11,7 @@ export interface TicketTypeFormDialogProps {
     type: string;
     name: string;
     displayName: string;
+    displayTag: string;
     shortDescription: string;
     description: string;
     prefix: string;

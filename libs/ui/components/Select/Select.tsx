@@ -6,7 +6,7 @@ import {
   FormHelperText,
 } from '@mui/material';
 import { useStyles } from './styles';
-import { DSSelectProps } from './util';
+import { DSSelectProps } from './Select.types';
 
 const Select: React.FC<DSSelectProps> = ({
   options,

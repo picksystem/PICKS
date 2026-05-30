@@ -42,7 +42,27 @@
       "@serviceops/services": ["./libs/services/index.ts"],
       "@serviceops/store": ["./libs/ui/store/index.ts"],
       "@serviceops/slices": ["./libs/ui/slices/index.ts"],
-      "@serviceops/state": ["./libs/ui/state/index.ts"]
+      "@serviceops/state": ["./libs/ui/state/index.ts"],
+      "@serviceops/genericpanel": ["./libs/ui/pages/base/Configuration/shared/GenericPanel/GenericPanel"],
+      "@serviceops/configdialogs": ["./libs/ui/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs"],
+      "@serviceops/configsection": ["./libs/ui/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection"],
+      "@serviceops/generictablepanel": ["./libs/ui/pages/base/Configuration/shared/GenericTablePanel/GenericTablePanel"],
+      "@serviceops/generictoolbar": ["./libs/ui/pages/base/Configuration/shared/GenericToolbar/GenericToolbar"],
+      "@serviceops/generictogglepanel": ["./libs/ui/pages/base/Configuration/shared/GenericTogglePanel/GenericTogglePanel"],
+      "@serviceops/genericaccordion": ["./libs/ui/pages/base/Configuration/shared/GenericAccordion/GenericAccordion"],
+      "@serviceops/configplaceholder": ["./libs/ui/pages/base/Configuration/shared/ConfigPlaceholder/ConfigPlaceholder"],
+      "@serviceops/richtexteditor": ["./libs/ui/pages/base/Configuration/shared/RichTextEditor/RichTextEditor"],
+      "@serviceops/configbase": ["./libs/ui/pages/base/Configuration/shared/styles/ConfigurationBase.styles.shared"],
+      "@serviceops/confighooks": ["./libs/ui/pages/base/Configuration/hooks/useConfiguration"],
+      "@serviceops/configutils": ["./libs/ui/pages/base/Configuration/utils/cellRenderers"],
+      "@serviceops/configpriorityutil": ["./libs/ui/pages/base/Configuration/sections/Priorities/util"],
+      "@serviceops/configtickettypetable": ["./libs/ui/pages/base/Configuration/components/TicketTypeTable/TicketTypeTable"],
+      "@serviceops/configtickettypeformdialog": ["./libs/ui/pages/base/Configuration/dialogs/TicketTypeFormDialog/TicketTypeFormDialog"],
+      "@serviceops/configsequencedialog": ["./libs/ui/pages/base/Configuration/dialogs/SequenceDialog/SequenceDialog"],
+      "@serviceops/configtickettypeicons": ["./libs/ui/pages/base/Configuration/utils/ticketTypeIcons"],
+      "@serviceops/configprioritformdialog": ["./libs/ui/pages/base/Configuration/dialogs/PriorityFormDialog/PriorityFormDialog"],
+      "@serviceops/configcatorshared": ["./libs/ui/pages/base/Configuration/sections/Categorization/components/shared"],
+      "@serviceops/configtimesheetshared": ["./libs/ui/pages/base/Configuration/components/shared/TimesheetsPanelConfig"]
     }
   },
   "exclude": ["dist", "node_modules", "temp"]

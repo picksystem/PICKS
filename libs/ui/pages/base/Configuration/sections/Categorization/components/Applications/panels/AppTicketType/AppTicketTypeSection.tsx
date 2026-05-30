@@ -1,6 +1,6 @@
 import type { IConfigServiceLineTicketType } from '@serviceops/interfaces';
 import { useGetTicketTypeQuery } from '@serviceops/services';
-import { GenericTogglePanel } from '@serviceops/pages/base/Configuration/shared/GenericTogglePanel/GenericTogglePanel';
+import { GenericTogglePanel } from '@serviceops/generictogglepanel';
 import { TICKET_TYPE_TOGGLE_CONFIG } from './AppTicketTypeSection.config';
 import { AppTicketTypeSectionProps } from './AppTicketTypeSection.types';
 

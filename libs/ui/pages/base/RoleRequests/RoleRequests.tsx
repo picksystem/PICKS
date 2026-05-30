@@ -13,9 +13,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import { IAuthUser } from '@serviceops/interfaces';
 import { useStyles } from './styles';
 import { useRoleRequests } from './hooks/useRoleRequests';
-import TabPanel from './components/TabPanel';
 import DetailDialog from './dialogs/DetailDialog/DetailDialog';
 import ActionDialog from './dialogs/ActionDialog/ActionDialog';
+import TabPanel from './components/TabPanel';
 
 const RoleRequests = () => {
   const { classes } = useStyles();

@@ -1,6 +1,6 @@
 import { ListItemText as MUIListItemText } from '@mui/material';
 import { useStyles } from './styles';
-import { DSListItemTextProps } from './util';
+import { DSListItemTextProps } from './ListItemText.types';
 
 const ListItemText: React.FC<DSListItemTextProps> = ({ className, ...props }) => {
   const { cx, classes } = useStyles();

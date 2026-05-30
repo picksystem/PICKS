@@ -1,13 +1,15 @@
 import type { ReactNode } from 'react';
 
-const TabPanel = ({
-  children,
-  value,
-  index,
-}: {
+interface TabPanelProps {
   children?: ReactNode;
   value: number;
   index: number;
-}) => <div hidden={value !== index}>{value === index && children}</div>;
+}
+
+const TabPanel = ({ children, value, index }: TabPanelProps) => (
+  <div role='tabpanel' hidden={value !== index}>
+    {value === index && children}
+  </div>
+);
 
 export default TabPanel;

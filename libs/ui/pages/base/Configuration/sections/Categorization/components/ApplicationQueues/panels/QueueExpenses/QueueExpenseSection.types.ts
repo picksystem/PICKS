@@ -1,4 +1,4 @@
-import { FlatQueueEXRow } from '@serviceops/pages/base/Configuration/sections/Categorization/components/shared';
+import { FlatQueueEXRow } from '@serviceops/configcatorshared';
 export type { FlatQueueEXRow };
 
 export interface QueueExpenseSectionProps {

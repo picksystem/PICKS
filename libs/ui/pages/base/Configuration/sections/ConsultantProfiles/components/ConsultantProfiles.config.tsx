@@ -5,7 +5,7 @@ import UpdateIcon from '@mui/icons-material/Update';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
-import type { TableConfig } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import type { TableConfig } from '@serviceops/genericpanel';
 
 export type CPActiveView =
   | 'profiles'

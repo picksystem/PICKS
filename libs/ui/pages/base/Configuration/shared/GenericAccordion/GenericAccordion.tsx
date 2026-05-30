@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Box, Typography } from '@serviceops/component';
-import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import { Accordion, AccordionSummary, AccordionDetails, alpha } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useStyles } from './styles';
 
@@ -30,6 +30,11 @@ export const GenericAccordion = ({
       defaultExpanded={defaultExpanded}
       className={`${classes.accordion} ${className || ''}`}
       elevation={0}
+      sx={{
+        border: '1px solid',
+        borderColor: alpha(accent, 0.25),
+        borderRadius: '12px !important',
+      }}
     >
       <AccordionSummary
         expandIcon={<ExpandMoreIcon className={classes.expandIcon} />}

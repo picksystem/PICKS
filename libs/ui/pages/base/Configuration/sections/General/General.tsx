@@ -3,7 +3,7 @@ import { AdminControlsSection } from './components/AdminControls/AdminControlsSe
 import { ApprovedEstimatesSection } from './components/ApprovedEstimates/ApprovedEstimatesSection';
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
-import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
+import { ConfigurationSection } from '@serviceops/configsection';
 import { useState, useEffect, useCallback } from 'react';
 import { IConfigGeneral, IConfigApprovedEstimateRow } from '@serviceops/interfaces';
 import { useDebounce } from '@serviceops/hooks';

@@ -1,5 +1,5 @@
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import type { TableConfig } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import type { TableConfig } from '@serviceops/genericpanel';
 
 export const APP_EXPENSES_CONFIG: TableConfig = {
   title: 'Add Expenses Projects',

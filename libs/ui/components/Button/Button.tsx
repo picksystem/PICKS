@@ -1,6 +1,6 @@
 import { Button as MUIButton, CircularProgress } from '@mui/material';
 import { useStyles } from './styles';
-import { DSButtonProps } from './util';
+import { DSButtonProps } from './Button.types';
 
 const Button: React.FC<DSButtonProps> = ({
   label,

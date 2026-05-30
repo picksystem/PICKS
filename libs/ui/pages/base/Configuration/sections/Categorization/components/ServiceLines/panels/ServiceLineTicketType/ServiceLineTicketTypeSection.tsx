@@ -7,7 +7,7 @@ import { useGetTicketTypeQuery } from '@serviceops/services';
 import {
   GenericTogglePanel,
   TICKET_TYPE_TOGGLE_CONFIG,
-} from '@serviceops/pages/base/Configuration/sections/Categorization/components/shared';
+} from '@serviceops/configcatorshared';
 
 interface ServiceLineTicketTypeSectionProps {
   rows?: IConfigServiceLine[];

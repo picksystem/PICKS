@@ -1,6 +1,6 @@
 import { Box } from '@serviceops/component';
 import { useStyles } from './styles';
-import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
+import { ConfigurationSection } from '@serviceops/configsection';
 import { TicketStatusesSection, ReleaseCycleStatusesSection } from './components';
 import { useGetTicketTypeQuery } from '@serviceops/services';
 

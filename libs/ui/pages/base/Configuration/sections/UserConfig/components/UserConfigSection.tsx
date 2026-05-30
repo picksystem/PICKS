@@ -4,9 +4,9 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import GroupIcon from '@mui/icons-material/Group';
 import WatchLaterIcon from '@mui/icons-material/WatchLater';
 import LinkIcon from '@mui/icons-material/Link';
-import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
-import { GenericToolbar } from '@serviceops/pages/base/Configuration/shared/GenericToolbar/GenericToolbar';
-import { GenericAccordion } from '@serviceops/pages/base/Configuration/shared/GenericAccordion/GenericAccordion';
+import { useConfiguration } from '@serviceops/confighooks';
+import { GenericToolbar } from '@serviceops/generictoolbar';
+import { GenericAccordion } from '@serviceops/genericaccordion';
 import type {
   IConfigWorkLocation,
   IConfigWorkLocationWorkingTime,

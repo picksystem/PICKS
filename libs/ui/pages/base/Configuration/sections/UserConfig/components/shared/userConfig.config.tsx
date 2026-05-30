@@ -11,8 +11,8 @@ import type {
   IConfigWorkLocationAssociatedProfile,
   IConfigWorkLocationAssociation,
 } from '@serviceops/interfaces';
-import { mkCell, mkDescCell } from '@serviceops/pages/base/Configuration/utils/cellRenderers';
-import type { TableConfig } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { mkCell, mkDescCell } from '@serviceops/configutils';
+import type { TableConfig } from '@serviceops/genericpanel';
 
 // ── Column Definitions ─────────────────────────────────────────────────────────
 

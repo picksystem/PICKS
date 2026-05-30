@@ -1,10 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Box, Typography, Paper, Switch, TextField, alpha, InputAdornment } from '@mui/material';
 import { DataTable, Column } from '@serviceops/component';
-import {
-  PanelHeader,
-  TableConfig,
-} from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { PanelHeader, TableConfig } from '@serviceops/genericpanel';
 import SearchIcon from '@mui/icons-material/Search';
 import type { IConfigServiceLineTicketType } from '@serviceops/interfaces';
 

@@ -49,7 +49,7 @@ const SLASettingsSection = ({
             <TimerIcon sx={{ color: '#fff', fontSize: '1rem' }} />
           </Box>
           <Box>
-            <Typography className={classes.sectionTitle}>SLA Settings</Typography>
+            <Typography className={classes.sectionTitle}>SLA Admin Controls</Typography>
             <Typography className={classes.sectionSubtitle}>
               Master switch and ticket-type activation for SLA tracking
             </Typography>
@@ -67,7 +67,14 @@ const SLASettingsSection = ({
             py: 0.5,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.625 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              py: 0.625,
+            }}
+          >
             <Box>
               <Typography sx={{ fontWeight: 700, fontSize: '0.85rem' }}>Enable SLAs</Typography>
               <Typography sx={{ fontSize: '0.73rem', color: 'text.secondary' }}>

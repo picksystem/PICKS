@@ -1,7 +1,7 @@
 import { TextField as MUITextField, InputAdornment } from '@mui/material';
 import { useStyles } from './styles';
 import React from 'react';
-import { DSTextFieldProps } from './util';
+import { DSTextFieldProps } from './TextField.types';
 
 const TextField: React.FC<DSTextFieldProps> = ({
   variant = 'outlined',

@@ -1,6 +1,6 @@
 import { Card, CardMedia, CardContent, CardActions, Button, Typography } from '@mui/material';
 import { useStyles } from './styles';
-import { DSCardCTAProps } from './util';
+import { DSCardCTAProps } from './CardCTA.types';
 
 const CardCTA: React.FC<DSCardCTAProps> = ({
   title,

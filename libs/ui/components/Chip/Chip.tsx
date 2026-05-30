@@ -1,6 +1,6 @@
 import { Chip as MUIChip } from '@mui/material';
 import { useStyles } from './styles';
-import { DSChipProps } from './util';
+import { DSChipProps } from './Chip.types';
 
 const Chip: React.FC<DSChipProps> = ({ className, ...props }) => {
   const { cx, classes } = useStyles();

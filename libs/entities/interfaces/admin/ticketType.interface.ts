@@ -31,6 +31,7 @@ export interface ITicketType {
   type: string;
   name: string;
   displayName: string;
+  displayTag: string;
   shortDescription: string;
   description: string;
   prefix: string;
@@ -46,6 +47,7 @@ export interface ICreateTicketTypeInput {
   type: string;
   name: string;
   displayName?: string;
+  displayTag?: string;
   shortDescription?: string;
   description?: string;
   prefix?: string;
@@ -58,6 +60,7 @@ export interface IUpdateTicketTypeInput {
   type?: string;
   name?: string;
   displayName?: string;
+  displayTag?: string;
   shortDescription?: string;
   description?: string;
   prefix?: string;

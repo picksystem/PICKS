@@ -1,6 +1,6 @@
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
-import { TableConfig } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { TableConfig } from '@serviceops/genericpanel';
 
 export const STATUS_ACCENT = '#0369a1';
 

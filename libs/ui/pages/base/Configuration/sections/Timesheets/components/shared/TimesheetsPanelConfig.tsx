@@ -7,7 +7,7 @@ import AppsIcon from '@mui/icons-material/Apps';
 import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
 import PersonIcon from '@mui/icons-material/Person';
 import type { Column } from '@serviceops/component';
-import { mkCell, mkDescCell } from '@serviceops/pages/base/Configuration/utils/cellRenderers';
+import { mkCell, mkDescCell } from '@serviceops/configutils';
 import type {
   IConfigTimesheetProjectEntry,
   IConfigTimesheetConversionCode,

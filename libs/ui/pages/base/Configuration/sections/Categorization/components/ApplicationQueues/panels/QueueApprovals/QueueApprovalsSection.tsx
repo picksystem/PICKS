@@ -1,7 +1,7 @@
 import {
   QUEUE_APPROVALS_CONFIG,
   GenericPanel,
-} from '@serviceops/pages/base/Configuration/sections/Categorization/components/shared';
+} from '@serviceops/configcatorshared';
 import { QueueApprovalsSectionProps, FlatQueueApRow } from './QueueApprovalsSection.types';
 
 export const QueueApprovalsSection = ({ data, onDataChange }: QueueApprovalsSectionProps) => {

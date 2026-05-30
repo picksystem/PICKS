@@ -96,11 +96,23 @@ const CalendarRulesSection = ({ ctrl, onUpdate }: CalendarRulesSectionProps) => 
         >
           {(
             [
-              ['basedOnCallerCalendar', "Based on caller's working calendar"],
-              ['basedOnConsultantCalendar', "Based on consultant's working calendar"],
-              ['excludeCallerBankHolidays', "Exclude caller's bank holidays"],
+              [
+                'basedOnCallerCalendar',
+                "Change to Calculate SLAs Based on caller's working calendar",
+              ],
+              [
+                'basedOnConsultantCalendar',
+                "Change to Calculate SLAs based on Based on consultant's working calendar",
+              ],
+              [
+                'excludeCallerBankHolidays',
+                'Change to Exclude Caller’s bank holidays (Public Holidays)',
+              ],
               ['excludeCallerLeaves', "Exclude caller's leaves"],
-              ['excludeConsultantBankHolidays', "Exclude consultant's bank holidays"],
+              [
+                'excludeConsultantBankHolidays',
+                'Change to Exclude Consultant’s Bank Holidays (Public Holidays)',
+              ],
               ['excludeConsultantLeaves', "Exclude consultant's leaves"],
               ['excludeSaturdaysAndSundays', 'Exclude Saturdays and Sundays'],
               ['excludeFridaysAndSaturdays', 'Exclude Fridays and Saturdays'],

@@ -1,6 +1,6 @@
 import { Column, Typography } from '@serviceops/component';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import type { TableConfig } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import type { TableConfig } from '@serviceops/genericpanel';
 import type { IConfigApprovedEstimateRow } from '@serviceops/interfaces';
 
 export const APPROVED_ESTIMATES_ACCENT = '#0369a1';

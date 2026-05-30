@@ -1,21 +1,21 @@
 import type { ReactNode } from 'react';
 import { Box, Typography } from '@serviceops/component';
-import { makeStyles } from 'tss-react/mui';
 
-const useStyles = makeStyles()((theme) => ({
-  root: { marginBottom: theme.spacing(1.5) },
-}));
+interface ReadFieldProps {
+  label: string;
+  value?: ReactNode;
+  muted?: boolean;
+}
 
-const ReadField = ({ label, value }: { label: string; value: ReactNode }) => {
-  const { classes } = useStyles();
-  return (
-    <Box className={classes.root}>
-      <Typography variant='caption' color='text.secondary' display='block'>
-        {label}
-      </Typography>
-      <Typography variant='body2'>{(value as string) || '-'}</Typography>
-    </Box>
-  );
-};
+const ReadField = ({ label, value, muted }: ReadFieldProps) => (
+  <Box sx={{ mb: 1.5 }}>
+    <Typography variant='caption' color='text.secondary' display='block'>
+      {label}
+    </Typography>
+    <Typography variant='body2' color={muted ? 'text.disabled' : 'text.primary'}>
+      {(value as string) || '-'}
+    </Typography>
+  </Box>
+);
 
 export default ReadField;

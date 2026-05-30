@@ -1,6 +1,6 @@
 import { MenuItem as MUIMenuItem } from '@mui/material';
 import { useStyles } from './styles';
-import { DSMenuItemProps } from './util';
+import { DSMenuItemProps } from './MenuItem.types';
 
 const MenuItem: React.FC<DSMenuItemProps> = ({ className, ...props }) => {
   const { cx, classes } = useStyles();

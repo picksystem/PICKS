@@ -1,5 +1,5 @@
 import { IConfigConsultantWorkingTime } from '@serviceops/interfaces';
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { GenericPanel } from '@serviceops/genericpanel';
 import { WORKING_TIMES_CONFIG } from '../ConsultantProfiles.config';
 
 export interface WorkingTimesSectionProps {

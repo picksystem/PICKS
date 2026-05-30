@@ -1,6 +1,6 @@
 import WorkIcon from '@mui/icons-material/Work';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
-import { ToolbarButton } from '@serviceops/pages/base/Configuration/shared/GenericToolbar/GenericToolbar';
+import { ToolbarButton } from '@serviceops/generictoolbar';
 
 export interface SectionConfig {
   title: string;

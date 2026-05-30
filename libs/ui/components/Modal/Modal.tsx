@@ -1,7 +1,7 @@
 import { Modal as MUIModal, Fade, Box } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useStyles } from './styles';
-import { DSModalProps } from './util';
+import { DSModalProps } from './Modal.types';
 
 const Modal: React.FC<DSModalProps> = ({
   open,

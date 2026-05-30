@@ -1,7 +1,7 @@
 import {
   QUEUE_EXPENSES_CONFIG,
   GenericPanel,
-} from '@serviceops/pages/base/Configuration/sections/Categorization/components/shared';
+} from '@serviceops/configcatorshared';
 import { QueueExpenseSectionProps, FlatQueueEXRow } from './QueueExpenseSection.types';
 
 export const QueueExpenseSection = ({ data, onDataChange }: QueueExpenseSectionProps) => {

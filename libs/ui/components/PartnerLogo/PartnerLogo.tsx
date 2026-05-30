@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import { useStyles } from './styles';
-import { DSPartnerLogoProps } from './util';
+import { DSPartnerLogoProps } from './PartnerLogo.types';
 
 const PartnerLogo: React.FC<DSPartnerLogoProps> = ({
   src,

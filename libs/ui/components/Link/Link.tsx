@@ -1,6 +1,6 @@
 import { Link as MUILink } from '@mui/material';
 import { useStyles } from './styles';
-import { DSLinkProps } from './util';
+import { DSLinkProps } from './Link.types';
 
 const Link: React.FC<DSLinkProps> = ({
   href,

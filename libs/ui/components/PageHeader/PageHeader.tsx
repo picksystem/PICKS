@@ -1,6 +1,6 @@
 import { Box, Typography, Button } from '@serviceops/component';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { PageHeaderProps } from './util';
+import { PageHeaderProps } from './PageHeader.types';
 
 const PageHeader: React.FC<PageHeaderProps> = ({
   title,

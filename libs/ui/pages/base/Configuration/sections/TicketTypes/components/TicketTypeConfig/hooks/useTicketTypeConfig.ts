@@ -12,12 +12,13 @@ import {
   loadTagMap,
   saveIconMap,
   saveTagMap,
-} from '@serviceops/pages/base/Configuration/utils/ticketTypeIcons';
+} from '@serviceops/configtickettypeicons';
 
 export interface TicketTypeFormValues {
   type: string;
   name: string;
   displayName: string;
+  displayTag: string;
   shortDescription: string;
   description: string;
   prefix: string;
@@ -69,6 +70,7 @@ export function useTicketTypeConfig() {
           data: {
             name: values.name,
             displayName: values.displayName,
+            displayTag: values.displayTag,
             shortDescription: values.shortDescription,
             description: values.description,
             prefix: values.prefix,
@@ -82,6 +84,7 @@ export function useTicketTypeConfig() {
           type: values.type,
           name: values.name,
           displayName: values.displayName,
+          displayTag: values.displayTag,
           shortDescription: values.shortDescription,
           description: values.description,
           prefix: values.prefix,

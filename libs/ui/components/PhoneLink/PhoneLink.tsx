@@ -1,7 +1,7 @@
 import { Link } from '@mui/material';
 import PhoneIcon from '@mui/icons-material/Phone';
 import { useStyles } from './styles';
-import { DSPhoneLinkProps } from './util';
+import { DSPhoneLinkProps } from './PhoneLink.types';
 
 const PhoneLink: React.FC<DSPhoneLinkProps> = ({
   phoneNumber,

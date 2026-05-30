@@ -5,8 +5,6 @@ import { Column } from '@serviceops/component';
 import { useGetIncidentsQuery, useGetDraftIncidentsQuery } from '@serviceops/services';
 import { IIncident } from '@serviceops/interfaces';
 import { constants } from '@serviceops/utils';
-import PriorityChip from '../components/PriorityChip';
-import StatusChip from '../components/StatusChip';
 import { IncidentRow } from '../types/Favourites.types';
 import {
   FAVORITES_KEY,
@@ -14,6 +12,8 @@ import {
   EMPTY_MESSAGES,
   getFilteredData as filterData,
 } from '../utils/Favourites.utils';
+import PriorityChip from '../components/PriorityChip';
+import StatusChip from '../components/StatusChip';
 
 const useFavourites = () => {
   const { BasePath } = constants;

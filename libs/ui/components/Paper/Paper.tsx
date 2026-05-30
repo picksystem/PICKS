@@ -1,6 +1,6 @@
 import { Paper as MUIPaper } from '@mui/material';
 import { useStyles } from './styles';
-import { DSPaperProps } from './util';
+import { DSPaperProps } from './Paper.types';
 
 const Paper: React.FC<DSPaperProps> = ({ className, ...props }) => {
   const { cx, classes } = useStyles();

@@ -1,7 +1,7 @@
 import { Box } from '@mui/material';
 import { useCollapse } from '../../hooks';
 import { useStyles } from './styles';
-import { DSMainContentProps } from './util';
+import { DSMainContentProps } from './MainContent.types';
 
 const MainContent = ({
   children,

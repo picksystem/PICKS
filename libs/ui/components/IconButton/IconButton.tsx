@@ -1,6 +1,6 @@
 import { IconButton as MUIIconButton } from '@mui/material';
 import { useStyles } from './styles';
-import { DSIconButtonProps } from './util';
+import { DSIconButtonProps } from './IconButton.types';
 
 const IconButton: React.FC<DSIconButtonProps> = ({ className, ...props }) => {
   const { cx, classes } = useStyles();

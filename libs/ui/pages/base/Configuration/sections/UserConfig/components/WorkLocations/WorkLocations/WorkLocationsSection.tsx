@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { IConfigWorkLocation } from '@serviceops/interfaces';
-import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { useConfiguration } from '@serviceops/confighooks';
+import { GenericPanel } from '@serviceops/genericpanel';
 import { WORK_LOCATION_CONFIG, workLocationColumns } from '../../shared/userConfig.config';
 
 interface WorkLocationsSectionProps {

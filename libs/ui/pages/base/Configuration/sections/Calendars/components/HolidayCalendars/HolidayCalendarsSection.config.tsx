@@ -1,6 +1,6 @@
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import BeachAccessIcon from '@mui/icons-material/BeachAccess';
-import { ToolbarButton } from '@serviceops/pages/base/Configuration/shared/GenericToolbar/GenericToolbar';
+import { ToolbarButton } from '@serviceops/generictoolbar';
 
 export interface SectionConfig {
   title: string;

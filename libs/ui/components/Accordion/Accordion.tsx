@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useStyles } from './styles/Accordion.styles';
-import type { DSAccordionProps } from './util';
+import type { DSAccordionProps } from './Accordion.types';
 
 const Accordion: React.FC<DSAccordionProps> = ({
   title,

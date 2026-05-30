@@ -1,6 +1,6 @@
 import { TextField } from '@mui/material';
 import { useStyles } from './styles';
-import { DSNumberFormatProps } from './util';
+import { DSNumberFormatProps } from './NumberFormat.types';
 
 const NumberFormat: React.FC<DSNumberFormatProps> = ({
   value,

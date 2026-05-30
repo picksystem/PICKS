@@ -1,2 +1,2 @@
 export { DataTable } from './DataTable';
-export type { Column, DataTableProps } from './util';
+export type { Column, DataTableProps } from './DataTable.types';

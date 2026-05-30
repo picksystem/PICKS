@@ -4,8 +4,6 @@ import { CSSObject } from 'tss-react';
 export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   accordion: {
     boxShadow: 'none',
-    border: '1px solid rgba(0, 0, 0, 0.12)',
-    borderRadius: '12px !important',
     '&::before': { display: 'none' },
   },
 

@@ -1,6 +1,6 @@
 import { TextField } from '@mui/material';
 import { useStyles } from './styles';
-import { DSReadOnlyFieldProps } from './util';
+import { DSReadOnlyFieldProps } from './ReadOnlyField.types';
 
 const ReadOnlyField: React.FC<DSReadOnlyFieldProps> = ({
   label,

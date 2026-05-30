@@ -1,5 +1,5 @@
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import type { TableConfig } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import type { TableConfig } from '@serviceops/genericpanel';
 
 export const APP_TIMESHEET_CONFIG: TableConfig = {
   title: 'Add Timesheet Projects',

@@ -1,4 +1,4 @@
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { GenericPanel } from '@serviceops/genericpanel';
 import { APP_APPROVALS_CONFIG } from './AppApprovalsSection.config';
 import { AppApprovalsSectionProps, FlatAppApRow } from './AppApprovalsSection.types';
 

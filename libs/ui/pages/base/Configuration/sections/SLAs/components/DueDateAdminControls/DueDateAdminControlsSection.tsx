@@ -103,7 +103,7 @@ const DueDateAdminControlsSection = ({ ctrl, onUpdate }: DueDateAdminControlsSec
           />
           <RowDivider />
           <ToggleRow
-            label='Enable dates'
+            label='Enable Due Dates'
             checked={ctrl.dueDateEnableDates}
             disabled={dueDateOff}
             onChange={(v) => onUpdate('dueDateEnableDates', v)}

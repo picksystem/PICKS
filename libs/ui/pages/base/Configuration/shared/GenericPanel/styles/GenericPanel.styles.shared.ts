@@ -43,6 +43,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     flexDirection: 'column' as const,
     gap: '4px',
     borderRadius: 0,
+    border: 'none',
   },
 
   toolbarButtons: {
@@ -141,8 +142,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   tablePaper: {
     overflow: 'hidden',
-    border: '1px solid rgba(0, 0, 0, 0.12)',
-    borderTop: 'none',
   },
 
   sectionAccordion: {

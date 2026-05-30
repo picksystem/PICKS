@@ -1,6 +1,6 @@
 import { TextField } from '@mui/material';
 import { useStyles } from './styles';
-import { DSDatePickerProps } from './util';
+import { DSDatePickerProps } from './DatePicker.types';
 
 const DatePicker: React.FC<DSDatePickerProps> = ({
   value,

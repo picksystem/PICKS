@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import { useStyles } from './styles';
-import { DSImageBackgroundProps } from './util';
+import { DSImageBackgroundProps } from './ImageBackground.types';
 
 const ImageBackground: React.FC<DSImageBackgroundProps> = ({
   src,

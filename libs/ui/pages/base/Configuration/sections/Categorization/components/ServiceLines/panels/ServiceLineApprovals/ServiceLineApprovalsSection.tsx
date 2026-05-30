@@ -1,7 +1,7 @@
 import {
   SERVICE_LINE_APPROVALS_CONFIG,
   GenericPanel,
-} from '@serviceops/pages/base/Configuration/sections/Categorization/components/shared';
+} from '@serviceops/configcatorshared';
 import {
   ServiceLineApprovalsSectionProps,
   FlatServiceLineApRow,

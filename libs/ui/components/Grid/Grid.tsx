@@ -1,6 +1,6 @@
 import { Grid as MUIGrid } from '@mui/material';
 import { useStyles } from './styles';
-import { DSGridProps } from './util';
+import { DSGridProps } from './Grid.types';
 
 const Grid: React.FC<DSGridProps> = ({ className, ...props }) => {
   const { cx, classes } = useStyles();

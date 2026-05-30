@@ -1,6 +1,6 @@
 import { Tooltip as MUITooltip } from '@mui/material';
 import { useStyles } from './styles';
-import { DSTooltipProps } from './util';
+import { DSTooltipProps } from './Tooltip.types';
 
 const Tooltip: React.FC<DSTooltipProps> = ({
   title,

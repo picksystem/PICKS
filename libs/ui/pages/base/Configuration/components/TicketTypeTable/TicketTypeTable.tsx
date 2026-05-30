@@ -27,7 +27,7 @@ const TicketTypeTable = ({
 
   const columns: Column<ITicketType>[] = [
     {
-      id: 'displayName',
+      id: 'name',
       label: 'Ticket Type',
       minWidth: 140,
       format: (_v, row): React.ReactNode => {
@@ -44,7 +44,7 @@ const TicketTypeTable = ({
               }}
             />
             <Typography variant='body2' fontWeight={600} fontSize='0.82rem'>
-              {row.displayName || row.name}
+              {row.name}
             </Typography>
           </Box>
         );
@@ -146,7 +146,30 @@ const TicketTypeTable = ({
       },
     },
     {
-      id: 'creationPageText',
+      id: 'displayTag',
+      label: 'Creation page display tag',
+      minWidth: 120,
+      format: (v): React.ReactNode => {
+        const tag = String(v || '');
+        return tag ? (
+          <Chip
+            label={tag}
+            size='small'
+            sx={{
+              fontWeight: 600,
+              fontSize: '0.75rem',
+              height: 22,
+            }}
+          />
+        ) : (
+          <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>
+            —
+          </Typography>
+        );
+      },
+    },
+    {
+      id: 'displayName',
       label: 'Creation page display text',
       minWidth: 150,
       format: (v): React.ReactNode => (
@@ -165,7 +188,7 @@ const TicketTypeTable = ({
       searchable={false}
       initialRowsPerPage={10}
       onRowClick={onRowClick}
-      activeRowKey={selectedRowId}
+      activeRowKey={selectedRowId ?? undefined}
     />
   );
 };

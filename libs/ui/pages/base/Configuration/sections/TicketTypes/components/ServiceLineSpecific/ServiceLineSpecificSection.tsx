@@ -1,6 +1,6 @@
 import { Box, Typography } from '@serviceops/component';
 import HubIcon from '@mui/icons-material/Hub';
-import { GenericAccordion } from '@serviceops/pages/base/Configuration/shared/GenericAccordion/GenericAccordion';
+import { GenericAccordion } from '@serviceops/genericaccordion';
 import { useStyles } from '../../styles';
 
 const ServiceLineSpecificSection = () => {
@@ -8,7 +8,7 @@ const ServiceLineSpecificSection = () => {
 
   return (
     <GenericAccordion
-      title='Service Line Specific'
+      title='Service Line Specific Ticket Type'
       subtitle='Activate ticket types unique to a specific service line'
       icon={<HubIcon sx={{ fontSize: '1rem' }} />}
       accent='#0369a1'

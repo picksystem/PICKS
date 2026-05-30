@@ -1,6 +1,6 @@
 import { Switch as MUISwitch, FormControlLabel, FormHelperText } from '@mui/material';
 import { useStyles } from './styles';
-import { DSToggleProps } from './util';
+import { DSToggleProps } from './Toggle.types';
 
 const Toggle: React.FC<DSToggleProps> = ({
   label,

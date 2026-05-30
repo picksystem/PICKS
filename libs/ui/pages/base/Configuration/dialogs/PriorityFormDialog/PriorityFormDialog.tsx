@@ -3,8 +3,8 @@ import { Box, Typography, TextField, Switch } from '@serviceops/component';
 import { FormControlLabel } from '@mui/material';
 import { PriorityHigh } from '@mui/icons-material';
 import { useNotification } from '@serviceops/hooks';
-import { PriorityLevel } from '@serviceops/pages/base/Configuration/sections/Priorities/util';
-import { ConfigFormDialog } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
+import { PriorityLevel } from '@serviceops/configpriorityutil';
+import { ConfigFormDialog } from '@serviceops/configdialogs';
 
 interface PriorityFormDialogProps {
   open: boolean;

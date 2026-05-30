@@ -1,16 +1,33 @@
-import React from 'react';
+import type { ReactNode } from 'react';
 import { Box, Typography } from '@serviceops/component';
-import { ReadFieldProps } from './util';
+import { makeStyles } from 'tss-react/mui';
 
-const ReadField = ({ label, value, muted }: ReadFieldProps) => (
-  <Box sx={{ mb: 1.5 }}>
-    <Typography variant='caption' color='text.secondary' display='block'>
-      {label}
-    </Typography>
-    <Typography variant='body2' color={muted ? 'text.disabled' : 'text.primary'}>
-      {(value as string) || '-'}
-    </Typography>
-  </Box>
-);
+const useStyles = makeStyles()(() => ({
+  emptySpan: { color: '#9e9e9e' },
+}));
+
+interface ReadFieldProps {
+  label: string;
+  value?: ReactNode;
+  muted?: boolean;
+}
+
+const ReadField = ({ label, value, muted }: ReadFieldProps) => {
+  const { classes } = useStyles();
+  return (
+    <Box>
+      <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>{label}</span>
+      <Box>
+        {value ? (
+          <Typography variant='body2' color={muted ? 'text.disabled' : 'text.primary'}>
+            {String(value)}
+          </Typography>
+        ) : (
+          <span className={classes.emptySpan}>—</span>
+        )}
+      </Box>
+    </Box>
+  );
+};
 
 export default ReadField;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box } from '@serviceops/component';
 import { useStyles } from './styles';
-import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
+import { useConfiguration } from '@serviceops/confighooks';
 import { useGetTicketTypeQuery } from '@serviceops/services';
 import {
   IConfigSLAAdminControls,
@@ -19,7 +19,7 @@ import { ETAdminControlsSection } from './components/ETAdminControls/ETAdminCont
 import { ETAActivationSection } from './components/ETAActivation/ETAActivationSection';
 import { TimeLogAdminControlsSection } from './components/TimeLogAdminControls/TimeLogAdminControlsSection';
 import { TimeLogsActivationSection } from './components/TimeLogsActivation/TimeLogsActivationSection';
-import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
+import { ConfigurationSection } from '@serviceops/configsection';
 
 const DEFAULT_CONTROLS: IConfigSLAAdminControls = {
   enabled: false,

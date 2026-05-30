@@ -1,6 +1,6 @@
 import { Box, Typography } from '@serviceops/component';
 import WebAssetIcon from '@mui/icons-material/WebAsset';
-import { GenericAccordion } from '@serviceops/pages/base/Configuration/shared/GenericAccordion/GenericAccordion';
+import { GenericAccordion } from '@serviceops/genericaccordion';
 import { useStyles } from '../../styles';
 
 const ApplicationSpecificSection = () => {
@@ -8,7 +8,7 @@ const ApplicationSpecificSection = () => {
 
   return (
     <GenericAccordion
-      title='Application Specific'
+      title='Application Specific Ticket Type'
       subtitle='Ticket types tied to specific business applications'
       icon={<WebAssetIcon sx={{ fontSize: '1rem' }} />}
       accent='#0369a1'

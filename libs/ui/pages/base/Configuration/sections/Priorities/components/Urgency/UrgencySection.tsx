@@ -1,15 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Box, Typography } from '@serviceops/component';
 import { FormControlLabel, Switch } from '@mui/material';
 import SpeedIcon from '@mui/icons-material/Speed';
 import { SimpleLevel } from '../../util';
 import { useStyles } from '../../styles';
 import { useNotification } from '@serviceops/hooks';
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
-import {
-  ConfigFormDialog,
-  ConfigDeleteDialog,
-} from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
+import { GenericPanel } from '@serviceops/genericpanel';
+import { ConfigFormDialog, ConfigDeleteDialog } from '@serviceops/configdialogs';
 
 interface UrgencySectionProps {
   items: SimpleLevel[];
@@ -114,42 +111,45 @@ const UrgencySection = ({
     setSelectedRowId(id);
   }, []);
 
-  const customColumns = [
-    {
-      id: 'displayName',
-      label: 'Urgency Values',
-      minWidth: 120,
-      format: (_v: unknown, row: SimpleLevel): React.ReactNode => (
-        <span style={{ fontWeight: 700, fontSize: '0.82rem' }}>{row.displayName}</span>
-      ),
-    },
-    {
-      id: 'description',
-      label: 'Description',
-      minWidth: 300,
-      format: (v: unknown): React.ReactNode => (
-        <span style={{ color: 'text.secondary', fontSize: '0.78rem' }}>{String(v || '—')}</span>
-      ),
-    },
-    ...activeTicketTypeColumns.map((t) => ({
-      id: `enabledFor_${t.key}`,
-      label: t.label,
-      minWidth: 100,
-      align: 'center' as const,
-      format: (_v: unknown, row: SimpleLevel): React.ReactNode => (
-        <Switch
-          size='small'
-          checked={row.enabledFor[t.key] ?? false}
-          onChange={(e) => {
-            e.stopPropagation();
-            onToggleEnabledFor(row.id, t.key);
-          }}
-          onClick={(e) => e.stopPropagation()}
-          color='success'
-        />
-      ),
-    })),
-  ];
+  const customColumns = useMemo(
+    () => [
+      {
+        id: 'displayName',
+        label: 'Urgency Values',
+        minWidth: 120,
+        format: (_v: unknown, row: Record<string, unknown>): React.ReactNode => (
+          <span style={{ fontWeight: 700, fontSize: '0.82rem' }}>{String(row.displayName)}</span>
+        ),
+      },
+      {
+        id: 'description',
+        label: 'Description',
+        minWidth: 300,
+        format: (v: unknown): React.ReactNode => (
+          <span style={{ color: 'text.secondary', fontSize: '0.78rem' }}>{String(v || '—')}</span>
+        ),
+      },
+      ...activeTicketTypeColumns.map((t) => ({
+        id: `enabledFor_${t.key}`,
+        label: t.label,
+        minWidth: 100,
+        align: 'center' as const,
+        format: (_v: unknown, row: SimpleLevel): React.ReactNode => (
+          <Switch
+            size='small'
+            checked={row.enabledFor[t.key] ?? false}
+            onChange={(e) => {
+              e.stopPropagation();
+              onToggleEnabledFor(row.id, t.key);
+            }}
+            onClick={(e) => e.stopPropagation()}
+            color='success'
+          />
+        ),
+      })),
+    ],
+    [activeTicketTypeColumns, onToggleEnabledFor],
+  );
 
   return (
     <div className={classes.sectionAccordion}>
@@ -158,31 +158,13 @@ const UrgencySection = ({
         data={items as unknown as Record<string, unknown>[]}
         onSave={() => {}}
         variant='plain'
-        customColumns={customColumns as never}
+        customColumns={customColumns as unknown as undefined}
         defaultExpanded={false}
         isLoading={isLoading}
         loaderMessage='Loading Urgency levels...'
-        enableNewButton={false}
-        enableEditButton={false}
-        enableDeleteButton={false}
         selectedRowId={selectedRowId}
         onRowSelect={handleRowSelect}
       />
-
-      {/* Custom toolbar for selected row */}
-      {selectedRowId && (
-        <div className={classes.selectedRowToolbar}>
-          <button className={classes.editButton} onClick={handleEditClick}>
-            Edit
-          </button>
-          <button className={classes.deleteButton} onClick={handleDeleteClick}>
-            Delete
-          </button>
-          <button className={classes.clearButton} onClick={() => setSelectedRowId(null)}>
-            Clear
-          </button>
-        </div>
-      )}
 
       <ConfigFormDialog
         open={dialogOpen}

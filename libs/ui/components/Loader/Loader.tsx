@@ -1,6 +1,6 @@
 import { Backdrop, CircularProgress, Box, Typography } from '@mui/material';
 import { useAuth, useLoader } from '@serviceops/hooks';
-import { DSLoaderProps } from './util';
+import { DSLoaderProps } from './Loader.types';
 
 const FullScreenLoader: React.FC<{ message?: string }> = ({ message }) => {
   const { isConsultantMode, isConsultant } = useAuth();

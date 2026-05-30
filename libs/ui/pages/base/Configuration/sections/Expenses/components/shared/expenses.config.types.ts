@@ -1,7 +1,7 @@
 import type {
   TableField,
   TableConfig,
-} from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+} from '@serviceops/genericpanel';
 
 export const EXP_ACCENT = '#0369a1';
 

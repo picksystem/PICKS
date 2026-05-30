@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { IConfigWorkingShift, IConfigShiftConsultant } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
-import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
-import { GenericAccordion } from '@serviceops/pages/base/Configuration/shared/GenericAccordion/GenericAccordion';
-import { GenericToolbar } from '@serviceops/pages/base/Configuration/shared/GenericToolbar/GenericToolbar';
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { useConfiguration } from '@serviceops/confighooks';
+import { GenericAccordion } from '@serviceops/genericaccordion';
+import { GenericToolbar } from '@serviceops/generictoolbar';
+import { GenericPanel } from '@serviceops/genericpanel';
 import {
   WSActiveView,
   WorkingShiftManagementSectionProps,

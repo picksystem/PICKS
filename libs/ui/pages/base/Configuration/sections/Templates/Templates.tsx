@@ -1,7 +1,7 @@
 import { Box } from '@serviceops/component';
 import { useStyles } from './styles';
-import { TicketUpdateSection, CommentSection, InternalNoteSection } from './components';
-import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
+import { TicketUpdateSection, CommentSection, InternalNoteSection, ResolutionSection, TimeEntrySection } from './components';
+import { ConfigurationSection } from '@serviceops/configsection';
 
 const Templates = () => {
   const { classes } = useStyles();
@@ -12,6 +12,8 @@ const Templates = () => {
         <TicketUpdateSection />
         <CommentSection />
         <InternalNoteSection />
+        <ResolutionSection />
+        <TimeEntrySection />
       </ConfigurationSection>
     </Box>
   );

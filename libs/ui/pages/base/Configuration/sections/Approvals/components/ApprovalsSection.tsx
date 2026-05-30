@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import { useStyles } from '../styles';
-import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
-import { GenericAccordion } from '@serviceops/pages/base/Configuration/shared/GenericAccordion/GenericAccordion';
-import { GenericToolbar } from '@serviceops/pages/base/Configuration/shared/GenericToolbar/GenericToolbar';
+import { useConfiguration } from '@serviceops/confighooks';
+import { GenericAccordion } from '@serviceops/genericaccordion';
+import { GenericToolbar } from '@serviceops/generictoolbar';
 import {
   ApprovalRecordsSection,
   UserProfilesSection,

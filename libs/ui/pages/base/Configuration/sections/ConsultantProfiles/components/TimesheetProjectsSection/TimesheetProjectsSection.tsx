@@ -1,5 +1,5 @@
 import { IConfigConsultantTimesheetProject } from '@serviceops/interfaces';
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { GenericPanel } from '@serviceops/genericpanel';
 import { TIMESHEET_PROJECTS_CONFIG } from '../ConsultantProfiles.config';
 
 export interface TimesheetProjectsSectionProps {

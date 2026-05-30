@@ -12,8 +12,8 @@ import {
   Divider,
 } from '@serviceops/component';
 import { FormControl, Select, MenuItem, InputLabel } from '@mui/material';
-import { ConfigFormDialog } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
-import { GenericAccordion } from '@serviceops/pages/base/Configuration/shared/GenericAccordion/GenericAccordion';
+import { ConfigFormDialog } from '@serviceops/configdialogs';
+import { GenericAccordion } from '@serviceops/genericaccordion';
 import TuneIcon from '@mui/icons-material/Tune';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -217,14 +217,14 @@ const TicketMatrixSection = ({
 
   return (
     <GenericAccordion
-      title={`${label} Matrix`}
+      title={`${label} Based on Impact and Urgency`}
       subtitle='Configure priority mappings for this ticket type'
       icon={<MatrixIcon sx={{ fontSize: '1rem' }} />}
       accent={accentColor}
       defaultExpanded={false}
       className={classes.sectionAccordion}
     >
-      <Paper variant='outlined' className={classes.actionToolbar}>
+      <Paper variant='outlined' className={classes.actionToolbar} sx={{ border: 'none' }}>
         <Box className={classes.toolbarButtons} sx={{ flexWrap: 'wrap' }}>
           {!selectedRowId ? (
             <>

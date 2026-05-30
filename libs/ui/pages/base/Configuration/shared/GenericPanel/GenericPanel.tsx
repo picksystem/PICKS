@@ -18,10 +18,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
-import {
-  ConfigFormDialog,
-  ConfigDeleteDialog,
-} from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
+import { ConfigFormDialog, ConfigDeleteDialog } from '@serviceops/configdialogs';
 import { useStyles } from './styles';
 import { GenericAccordion } from '../GenericAccordion/GenericAccordion';
 import { useDebounce, useNotification } from '@serviceops/hooks';
@@ -30,6 +27,7 @@ import { WorkLocationSearchField } from './components/WorkLocationSearchField/Wo
 import { DatePickerField } from './components/DatePickerField/DatePickerField';
 import { TimePickerField } from './components/TimePickerField/TimePickerField';
 import { DurationPickerField } from './components/DurationPickerField/DurationPickerField';
+import { DateTimePickerField } from './components/DateTimePickerField/DateTimePickerField';
 
 export interface TableField {
   name: string;
@@ -41,6 +39,7 @@ export interface TableField {
   type?:
     | 'text'
     | 'date'
+    | 'datetime'
     | 'time'
     | 'duration'
     | 'number'
@@ -80,10 +79,6 @@ export const PanelHeader = memo(({ icon, title, accent }: PanelHeaderProps) => (
       px: 2,
       py: 1.25,
       bgcolor: alpha(accent, 0.08),
-      border: '1px solid',
-      borderColor: alpha(accent, 0.25),
-      borderRadius: '10px 10px 0 0',
-      borderBottom: 'none',
     }}
   >
     <Box sx={{ color: accent, display: 'flex', alignItems: 'center', fontSize: '1.1rem' }}>
@@ -118,22 +113,9 @@ ActiveChip.displayName = 'ActiveChip';
 
 // ── PanelTable ─────────────────────────────────────────────────────────────────
 
-export const PanelTable = memo(
-  ({ accent, children }: { accent: string; children: React.ReactNode }) => (
-    <Paper
-      elevation={1}
-      sx={{
-        borderRadius: '0 0 10px 10px',
-        overflow: 'hidden',
-        border: '1px solid',
-        borderColor: alpha(accent, 0.25),
-        borderTop: 'none',
-      }}
-    >
-      {children}
-    </Paper>
-  ),
-);
+export const PanelTable = memo(({ children }: { children: React.ReactNode }) => (
+  <Paper elevation={0}>{children}</Paper>
+));
 
 PanelTable.displayName = 'PanelTable';
 
@@ -296,6 +278,12 @@ interface GenericPanelProps {
   selectedRowId?: string | null;
   /** Optional callback when a row is selected (works with selectedRowId) */
   onRowSelect?: (id: string | null) => void;
+  /** Optional callback when New button is clicked */
+  onNewClick?: () => void;
+  /** Optional callback when Edit button is clicked */
+  onEditClick?: () => void;
+  /** Optional callback when Delete button is clicked */
+  onDeleteClick?: () => void;
 }
 
 const createColumns = (fields: TableField[]): Column<Record<string, unknown>>[] =>
@@ -378,7 +366,11 @@ const PanelContent = memo(
     const hasSelection = selectedId !== null;
 
     return (
-      <Paper variant='outlined' className={classes.actionToolbar}>
+      <Paper
+        elevation={0}
+        className={classes.actionToolbar}
+        sx={{ border: 'none', boxShadow: 'none' }}
+      >
         <Box className={classes.toolbarButtons}>
           {!hasSelection ? (
             <Box
@@ -517,7 +509,15 @@ const StandardPanel = memo(
     enableDeleteButton?: boolean;
   }) => {
     return (
-      <Box sx={{ mt: 1.5 }}>
+      <Box
+        sx={{
+          mt: 1.5,
+          border: '1px solid',
+          borderColor: alpha(config.accent, 0.25),
+          borderRadius: '10px',
+          overflow: 'hidden',
+        }}
+      >
         <PanelHeader icon={config.icon} title={config.title} accent={config.accent} />
 
         <PanelContent
@@ -537,16 +537,7 @@ const StandardPanel = memo(
           enableDeleteButton={enableDeleteButton}
         />
 
-        <Paper
-          elevation={1}
-          sx={{
-            borderRadius: '0 0 10px 10px',
-            overflow: 'hidden',
-            border: '1px solid',
-            borderColor: alpha(config.accent, 0.25),
-            borderTop: 'none',
-          }}
-        >
+        <Paper elevation={0} sx={{ borderRadius: 0 }}>
           <DataTable<GenericData>
             columns={columns}
             data={filtered}
@@ -610,43 +601,44 @@ const PlainPanel = memo(
         defaultExpanded={defaultExpanded}
         className={classes.sectionAccordion}
       >
-        <PanelContent
-          config={config}
-          columns={columns}
-          filtered={filtered}
-          selectedId={selectedId}
-          search={search}
-          onSearchChange={onSearchChange}
-          onRowClick={onRowClick}
-          onNewClick={onNewClick}
-          onEditClick={onEditClick}
-          onDeleteClick={onDeleteClick}
-          onClearClick={onClearClick}
-          enableNewButton={enableNewButton}
-          enableEditButton={enableEditButton}
-          enableDeleteButton={enableDeleteButton}
-        />
-
-        <Paper
-          elevation={1}
+        <Box
           sx={{
-            borderRadius: '0 0 10px 10px',
+            mt: 1.5,
+            borderRadius: '10px',
             overflow: 'hidden',
             border: '1px solid',
             borderColor: alpha(config.accent, 0.25),
-            borderTop: 'none',
           }}
         >
-          <DataTable<GenericData>
+          <PanelContent
+            config={config}
             columns={columns}
-            data={filtered}
-            rowKey='id'
-            searchable={false}
-            initialRowsPerPage={10}
-            activeRowKey={selectedId ?? undefined}
+            filtered={filtered}
+            selectedId={selectedId}
+            search={search}
+            onSearchChange={onSearchChange}
             onRowClick={onRowClick}
+            onNewClick={onNewClick}
+            onEditClick={onEditClick}
+            onDeleteClick={onDeleteClick}
+            onClearClick={onClearClick}
+            enableNewButton={enableNewButton}
+            enableEditButton={enableEditButton}
+            enableDeleteButton={enableDeleteButton}
           />
-        </Paper>
+
+          <Paper elevation={0} sx={{ borderRadius: 0 }}>
+            <DataTable<GenericData>
+              columns={columns}
+              data={filtered}
+              rowKey='id'
+              searchable={false}
+              initialRowsPerPage={10}
+              activeRowKey={selectedId ?? undefined}
+              onRowClick={onRowClick}
+            />
+          </Paper>
+        </Box>
       </GenericAccordion>
     );
   },
@@ -671,6 +663,9 @@ export const GenericPanel = ({
   enableDeleteButton = true,
   selectedRowId,
   onRowSelect,
+  onNewClick,
+  onEditClick,
+  onDeleteClick,
 }: GenericPanelProps) => {
   const { success, error: showError } = useNotification();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -728,6 +723,7 @@ export const GenericPanel = ({
 
   const columns = useMemo(
     () => customColumns || createColumns(config.fields),
+
     [config.fields, customColumns],
   );
 
@@ -748,25 +744,43 @@ export const GenericPanel = ({
   );
 
   const handleNewClick = useCallback(() => {
+    // Call external callback if provided
+    if (onNewClick) {
+      onNewClick();
+      return;
+    }
+    // Default behavior
     setEditingRow(null);
     setForm(createEmptyForm(config.fields));
     setIsNewDialog(true);
     setDialogOpen(true);
-  }, [config.fields]);
+  }, [config.fields, onNewClick]);
 
   const handleEditClick = useCallback(() => {
+    // Call external callback if provided
+    if (onEditClick) {
+      onEditClick();
+      return;
+    }
+    // Default behavior
     if (activeSelection !== null && selectedRow) {
       setEditingRow(selectedRow);
       setIsNewDialog(false);
       setDialogOpen(true);
     }
-  }, [activeSelection, selectedRow]);
+  }, [activeSelection, selectedRow, onEditClick]);
 
   const handleDeleteClick = useCallback(() => {
+    // Call external callback if provided
+    if (onDeleteClick) {
+      onDeleteClick();
+      return;
+    }
+    // Default behavior
     if (activeSelection !== null) {
       setDeleteOpen(true);
     }
-  }, [activeSelection]);
+  }, [activeSelection, onDeleteClick]);
 
   const handleClearClick = useCallback(() => {
     setDialogOpen(false);
@@ -1037,6 +1051,18 @@ export const GenericPanel = ({
                 const currentValue = (form[field.name] ?? '') as string;
                 return (
                   <DatePickerField
+                    key={field.name}
+                    label={field.label}
+                    value={currentValue}
+                    onChange={(value) => handleTextFieldChange(field.name, value)}
+                    required={field.required}
+                  />
+                );
+              }
+              if (field.type === 'datetime') {
+                const currentValue = (form[field.name] ?? '') as string;
+                return (
+                  <DateTimePickerField
                     key={field.name}
                     label={field.label}
                     value={currentValue}

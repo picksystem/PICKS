@@ -1,8 +1,8 @@
 import ToggleOnIcon from '@mui/icons-material/ToggleOn';
-import type { TableConfig } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import type { TableConfig } from '@serviceops/genericpanel';
 
 export const TICKET_TYPE_TOGGLE_CONFIG: TableConfig = {
-  title: 'Enable / Disable Ticket Types',
+  title: 'Enable / Disable Application Specific Ticket Types',
   subtitle: 'Configure ticket type activations',
   accent: '#0369a1',
   icon: <ToggleOnIcon sx={{ fontSize: '1.1rem' }} />,

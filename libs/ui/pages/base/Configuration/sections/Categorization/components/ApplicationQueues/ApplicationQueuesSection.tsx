@@ -6,10 +6,10 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import ToggleOnIcon from '@mui/icons-material/ToggleOn';
 import { IConfigApplicationQueue } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
-import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
-import { GenericToolbar } from '@serviceops/pages/base/Configuration/shared/GenericToolbar/GenericToolbar';
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
-import { GenericAccordion } from '@serviceops/pages/base/Configuration/shared/GenericAccordion/GenericAccordion';
+import { useConfiguration } from '@serviceops/confighooks';
+import { GenericToolbar } from '@serviceops/generictoolbar';
+import { GenericPanel } from '@serviceops/genericpanel';
+import { GenericAccordion } from '@serviceops/genericaccordion';
 import { CATEG_ACCENT, TABLE_CONFIG } from '../shared';
 import {
   QueueApprovalsSection,

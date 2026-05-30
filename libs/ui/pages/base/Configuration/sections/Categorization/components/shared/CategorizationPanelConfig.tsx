@@ -11,7 +11,7 @@ import NumbersIcon from '@mui/icons-material/Numbers';
 import LinearScaleIcon from '@mui/icons-material/LinearScale';
 import AppsIcon from '@mui/icons-material/Apps';
 import { TableConfig, CATEG_ACCENT } from './types';
-import { ToolbarButton } from '@serviceops/pages/base/Configuration/shared/GenericToolbar/GenericToolbar';
+import { ToolbarButton } from '@serviceops/generictoolbar';
 import type {
   IConfigApproval,
   IConfigTimesheetProject,
@@ -239,7 +239,7 @@ export const APP_BILLING_CODES_CONFIG: TableConfig = {
 };
 
 export const TICKET_TYPE_TOGGLE_CONFIG: TableConfig = {
-  title: 'Enable / Disable Ticket Types',
+  title: 'Enable / Disable Service Line Specific Ticket Types',
   subtitle: 'Configure ticket type activations',
   accent: CATEG_ACCENT,
   icon: <ToggleOnIcon sx={{ fontSize: '1.1rem' }} />,
@@ -414,7 +414,7 @@ export const EMPTY_QEX: {
 
 // Column definitions for categorization tables
 import type { Column } from '@serviceops/component';
-import { mkCell, mkDescCell } from '@serviceops/pages/base/Configuration/utils/cellRenderers';
+import { mkCell, mkDescCell } from '@serviceops/configutils';
 
 export const businessCategoryColumns: Column<IConfigBusinessCategory>[] = [
   { id: 'name', label: 'Business Category Name', minWidth: 180, format: mkCell(true) },

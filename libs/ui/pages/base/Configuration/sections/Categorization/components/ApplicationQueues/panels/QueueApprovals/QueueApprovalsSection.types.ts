@@ -1,4 +1,4 @@
-import { FlatQueueApRow } from '@serviceops/pages/base/Configuration/sections/Categorization/components/shared';
+import { FlatQueueApRow } from '@serviceops/configcatorshared';
 export type { FlatQueueApRow };
 
 export interface QueueApprovalsSectionProps {

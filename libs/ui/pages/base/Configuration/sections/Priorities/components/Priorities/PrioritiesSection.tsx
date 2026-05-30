@@ -1,11 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Switch } from '@mui/material';
 import { PriorityLevel } from '../../util';
 import { useStyles } from '../../styles';
 import { useNotification } from '@serviceops/hooks';
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
-import { ConfigDeleteDialog } from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
-import PriorityFormDialog from '@serviceops/pages/base/Configuration/dialogs/PriorityFormDialog/PriorityFormDialog';
+import { GenericPanel } from '@serviceops/genericpanel';
+import { ConfigDeleteDialog } from '@serviceops/configdialogs';
+import PriorityFormDialog from '@serviceops/configprioritformdialog';
 import { PRIORITY_TABLE_CONFIG } from '../shared/PrioritiesPanelConfig';
 
 interface PrioritiesSectionProps {
@@ -16,8 +16,6 @@ interface PrioritiesSectionProps {
   selectedPriorityId: string | null;
   setSelectedPriorityId: (id: string | null) => void;
   setSelectedPriority: (priority: PriorityLevel | null) => void;
-  confirmDeleteOpen: boolean;
-  setConfirmDeleteOpen: (open: boolean) => void;
   onToggleEnabledFor: (id: string, ticketType: string) => void;
 }
 
@@ -29,7 +27,6 @@ const PrioritiesSection = ({
   selectedPriorityId,
   setSelectedPriorityId,
   setSelectedPriority,
-  setConfirmDeleteOpen,
   onToggleEnabledFor,
 }: PrioritiesSectionProps) => {
   const { classes } = useStyles();
@@ -74,23 +71,6 @@ const PrioritiesSection = ({
     [editingPriority, priorities, activeTicketTypeColumns, handleSave],
   );
 
-  const handleNewClick = useCallback(() => {
-    setEditingPriority(null);
-    setDialogOpen(true);
-  }, []);
-
-  const handleEditClick = useCallback(() => {
-    const selected = priorities.find((p) => p.id === selectedPriorityId);
-    if (selected) {
-      setEditingPriority(selected);
-      setDialogOpen(true);
-    }
-  }, [priorities, selectedPriorityId]);
-
-  const handleDeleteClick = useCallback(() => {
-    setDeleteOpen(true);
-  }, []);
-
   const handleConfirmDelete = useCallback(async () => {
     if (!selectedPriorityId) return;
     try {
@@ -114,52 +94,78 @@ const PrioritiesSection = ({
     setSelectedPriority,
   ]);
 
-  const customColumns = [
-    {
-      id: 'name',
-      label: 'Priority Name',
-      minWidth: 130,
-      format: (_v: unknown, row: Record<string, unknown>): React.ReactNode => (
-        <span style={{ fontWeight: 700, fontSize: '0.82rem' }}>{String(row.name)}</span>
-      ),
-    },
-    {
-      id: 'description',
-      label: 'Description',
-      minWidth: 300,
-      format: (v: unknown): React.ReactNode => (
-        <span style={{ color: 'text.secondary', fontSize: '0.78rem' }}>{String(v || '—')}</span>
-      ),
-    },
-    ...activeTicketTypeColumns.map((t) => ({
-      id: `enabledFor_${t.key}`,
-      label: t.label,
-      minWidth: 100,
-      align: 'center' as const,
-      format: (_v: unknown, row: PriorityLevel): React.ReactNode => (
-        <Switch
-          size='small'
-          checked={row.enabledFor[t.key] ?? false}
-          onChange={(e) => {
-            e.stopPropagation();
-            onToggleEnabledFor(row.id, t.key);
-          }}
-          onClick={(e) => e.stopPropagation()}
-          color='success'
-        />
-      ),
-    })),
-  ];
+  const customColumns = useMemo(
+    () => [
+      {
+        id: 'name',
+        label: 'Priority Name',
+        minWidth: 130,
+        format: (_v: unknown, row: Record<string, unknown>): React.ReactNode => (
+          <span style={{ fontWeight: 700, fontSize: '0.82rem' }}>{String(row.name)}</span>
+        ),
+      },
+      {
+        id: 'description',
+        label: 'Description',
+        minWidth: 300,
+        format: (v: unknown): React.ReactNode => (
+          <span style={{ color: 'text.secondary', fontSize: '0.78rem' }}>{String(v || '—')}</span>
+        ),
+      },
+      ...activeTicketTypeColumns.map((t) => ({
+        id: `enabledFor_${t.key}`,
+        label: t.label,
+        minWidth: 100,
+        align: 'center' as const,
+        format: (_v: unknown, row: PriorityLevel): React.ReactNode => (
+          <Switch
+            size='small'
+            checked={row.enabledFor[t.key] ?? false}
+            onChange={(e) => {
+              e.stopPropagation();
+              onToggleEnabledFor(row.id, t.key);
+            }}
+            onClick={(e) => e.stopPropagation()}
+            color='success'
+          />
+        ),
+      })),
+    ],
+    [activeTicketTypeColumns, onToggleEnabledFor],
+  );
 
-  // Use GenericPanel without dialog for table display only, with custom toolbar
   const handleTableSave = useCallback(
     (data: PriorityLevel[]) => {
-      // This is called for delete operations from GenericPanel
       setPriorities(data);
       onPersist(data);
     },
     [setPriorities, onPersist],
   );
+
+  const handleRowSelect = useCallback(
+    (id: string | null) => {
+      setSelectedPriorityId(id);
+      setSelectedPriority(priorities.find((p) => p.id === id) ?? null);
+    },
+    [setSelectedPriorityId, setSelectedPriority, priorities],
+  );
+
+  const handleNewClick = useCallback(() => {
+    setEditingPriority(null);
+    setDialogOpen(true);
+  }, []);
+
+  const handleEditClick = useCallback(() => {
+    const selected = priorities.find((p) => p.id === selectedPriorityId);
+    if (selected) {
+      setEditingPriority(selected);
+      setDialogOpen(true);
+    }
+  }, [priorities, selectedPriorityId]);
+
+  const handleDeleteClick = useCallback(() => {
+    setDeleteOpen(true);
+  }, []);
 
   const selectedPriority = priorities.find((p) => p.id === selectedPriorityId) ?? null;
 
@@ -167,40 +173,13 @@ const PrioritiesSection = ({
     <div className={classes.sectionAccordion}>
       <GenericPanel
         config={PRIORITY_TABLE_CONFIG}
-        data={priorities}
+        data={priorities as unknown as Record<string, unknown>[]}
         onSave={handleTableSave}
         variant='plain'
-        customColumns={customColumns as never}
-        enableNewButton={false}
-        enableEditButton={false}
-        enableDeleteButton={false}
+        customColumns={customColumns as unknown as undefined}
         selectedRowId={selectedPriorityId}
-        onRowSelect={(id) => {
-          setSelectedPriorityId(id);
-          setSelectedPriority(priorities.find((p) => p.id === id) ?? null);
-        }}
+        onRowSelect={handleRowSelect}
       />
-
-      {/* Custom toolbar for selected row */}
-      {selectedPriority && (
-        <div className={classes.selectedRowToolbar}>
-          <button className={classes.editButton} onClick={handleEditClick}>
-            Edit
-          </button>
-          <button className={classes.deleteButton} onClick={handleDeleteClick}>
-            Delete
-          </button>
-          <button
-            className={classes.clearButton}
-            onClick={() => {
-              setSelectedPriorityId(null);
-              setSelectedPriority(null);
-            }}
-          >
-            Clear
-          </button>
-        </div>
-      )}
 
       <PriorityFormDialog
         open={dialogOpen}

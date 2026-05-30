@@ -6,5 +6,5 @@ export {
   PanelToolbar,
   ActiveChip,
   GenericPanel,
-} from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
-export { GenericTogglePanel } from '@serviceops/pages/base/Configuration/shared/GenericTogglePanel/GenericTogglePanel';
+} from '@serviceops/genericpanel';
+export { GenericTogglePanel } from '@serviceops/generictogglepanel';

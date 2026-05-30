@@ -1,6 +1,6 @@
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
-import { ToolbarButton } from '@serviceops/pages/base/Configuration/shared/GenericToolbar/GenericToolbar';
+import { ToolbarButton } from '@serviceops/generictoolbar';
 
 export interface SectionConfig {
   title: string;

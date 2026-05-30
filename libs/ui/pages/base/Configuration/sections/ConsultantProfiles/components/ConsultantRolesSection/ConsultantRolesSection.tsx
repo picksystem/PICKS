@@ -2,8 +2,8 @@ import { useState } from 'react';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import LinkIcon from '@mui/icons-material/Link';
 import { IConfigConsultantRole, IConfigAssociatedConsultantProfile } from '@serviceops/interfaces';
-import { GenericToolbar } from '@serviceops/pages/base/Configuration/shared/GenericToolbar/GenericToolbar';
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { GenericToolbar } from '@serviceops/generictoolbar';
+import { GenericPanel } from '@serviceops/genericpanel';
 import {
   CONSULTANT_ROLES_CONFIG,
   ASSOC_CONSULTANT_PROFILES_CONFIG,

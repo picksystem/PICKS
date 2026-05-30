@@ -1,19 +1,16 @@
-import type { ReactNode } from 'react';
 import { Box } from '@serviceops/component';
-import { makeStyles } from 'tss-react/mui';
-import { TabPanelProps } from './util';
+import type { ReactNode } from 'react';
 
-const useStyles = makeStyles()((theme) => ({
-  root: { paddingTop: theme.spacing(2) },
-}));
+interface TabPanelProps {
+  children?: ReactNode;
+  value: number;
+  index: number;
+}
 
-const TabPanel = ({ children, value, index }: TabPanelProps) => {
-  const { classes } = useStyles();
-  return (
-    <div role='tabpanel' hidden={value !== index}>
-      {value === index && <Box className={classes.root}>{children}</Box>}
-    </div>
-  );
-};
+const TabPanel = ({ children, value, index }: TabPanelProps) => (
+  <div role='tabpanel' hidden={value !== index} id={`tabpanel-${index}`}>
+    {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+  </div>
+);
 
 export default TabPanel;

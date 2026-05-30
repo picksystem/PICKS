@@ -1,6 +1,6 @@
 import { Pagination as MUIPagination } from '@mui/material';
 import { useStyles } from './styles';
-import { DSPaginationProps } from './util';
+import { DSPaginationProps } from './Pagination.types';
 
 const Pagination: React.FC<DSPaginationProps> = ({
   count,

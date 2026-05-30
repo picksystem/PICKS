@@ -1,7 +1,7 @@
 import {
   APP_BILLING_CODES_CONFIG,
   GenericPanel,
-} from '@serviceops/pages/base/Configuration/sections/Categorization/components/shared';
+} from '@serviceops/configcatorshared';
 import { AppBillingCodesSectionProps, FlatAppBCRow } from './AppBillingCodesSection.types';
 
 export const AppBillingCodesSection = ({ data, onDataChange }: AppBillingCodesSectionProps) => {

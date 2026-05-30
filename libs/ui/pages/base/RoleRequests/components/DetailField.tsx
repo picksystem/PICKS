@@ -1,21 +1,18 @@
 import type { ReactNode } from 'react';
 import { Box, Typography } from '@serviceops/component';
-import { makeStyles } from 'tss-react/mui';
 
-const useStyles = makeStyles()((theme) => ({
-  root: { marginBottom: theme.spacing(1.5) },
-}));
+interface DetailFieldProps {
+  label: string;
+  value?: ReactNode;
+}
 
-const DetailField = ({ label, value }: { label: string; value: ReactNode }) => {
-  const { classes } = useStyles();
-  return (
-    <Box className={classes.root}>
-      <Typography variant='caption' color='text.secondary'>
-        {label}
-      </Typography>
-      <Typography variant='body2'>{value || '-'}</Typography>
-    </Box>
-  );
-};
+const DetailField = ({ label, value }: DetailFieldProps) => (
+  <Box sx={{ mb: 1.5 }}>
+    <Typography variant='caption' color='text.secondary'>
+      {label}
+    </Typography>
+    <Box>{value ?? '-'}</Box>
+  </Box>
+);
 
 export default DetailField;

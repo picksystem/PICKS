@@ -1,29 +1,7 @@
 import { Theme } from '@mui/material/styles';
 import { CSSObject } from 'tss-react';
+import { getBaseStyles as getSharedBaseStyles } from '@serviceops/configbase';
 
 export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
-  container: {
-    padding: theme.spacing(3),
-    width: '100%',
-    [theme.breakpoints.down('sm')]: {
-      padding: theme.spacing(2),
-    },
-  },
-
-  sectionAccordion: {
-    marginTop: theme.spacing(2.5),
-    width: '100%',
-    '&::before': { display: 'none' },
-  },
-
-  sectionTitle: {
-    fontWeight: 700,
-    fontSize: '0.95rem',
-  },
-
-  sectionSubtitle: {
-    fontSize: '0.8rem',
-    color: theme.palette.text.secondary,
-    marginTop: 2,
-  },
+  ...getSharedBaseStyles(theme),
 });

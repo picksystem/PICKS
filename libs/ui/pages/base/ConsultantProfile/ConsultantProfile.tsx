@@ -25,11 +25,11 @@ import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import SearchIcon from '@mui/icons-material/Search';
 import { useStyles } from './styles';
 import { useConsultantProfile } from './hooks/useConsultantProfile';
-import TabPanel from './components/TabPanel';
 import ProfileDialog from './dialogs/ProfileDialog/ProfileDialog';
 import RoleDialog from './dialogs/RoleDialog/RoleDialog';
 import ViewProfileDialog from './dialogs/ViewProfileDialog/ViewProfileDialog';
 import TicketTemplates from '../TicketTemplates/TicketTemplates';
+import TabPanel from './components/TabPanel';
 
 const ConsultantProfile = () => {
   const { classes } = useStyles();

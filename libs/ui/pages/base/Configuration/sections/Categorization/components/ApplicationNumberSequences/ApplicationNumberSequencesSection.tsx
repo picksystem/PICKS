@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { IConfigApplicationNumberSequence } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
-import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
+import { useConfiguration } from '@serviceops/confighooks';
 import { useGetTicketTypeQuery } from '@serviceops/services';
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { GenericPanel } from '@serviceops/genericpanel';
 import {
   CATEG_TABLE_CONFIG,
   applicationNumberSequenceColumns,

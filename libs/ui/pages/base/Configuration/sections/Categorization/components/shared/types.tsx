@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import LinearScaleIcon from '@mui/icons-material/LinearScale';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
-import type { TableField, TableConfig } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import type { TableField, TableConfig } from '@serviceops/genericpanel';
 
 export const CATEG_ACCENT = '#0369a1';
 

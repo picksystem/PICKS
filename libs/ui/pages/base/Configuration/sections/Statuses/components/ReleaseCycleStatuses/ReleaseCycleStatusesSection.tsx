@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { IConfigStatusLevel } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
-import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { useConfiguration } from '@serviceops/confighooks';
+import { GenericPanel } from '@serviceops/genericpanel';
 import { RELEASE_CYCLE_STATUSES_CONFIG, releaseStatusColumns } from '../../Statuses.config';
 
 interface ReleaseCycleStatusesSectionProps {

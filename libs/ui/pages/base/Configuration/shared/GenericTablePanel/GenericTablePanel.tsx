@@ -11,7 +11,7 @@ import { useNotification } from '@serviceops/hooks';
 import {
   ConfigFormDialog,
   ConfigDeleteDialog,
-} from '@serviceops/pages/base/Configuration/dialogs/ConfigDialogs/ConfigDialogs';
+} from '@serviceops/configdialogs';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Button, Stepper, Step, StepLabel } from '@mui/material';
 import { useStyles } from './styles';
-import { DSWizardProps } from './util';
+import { DSWizardProps } from './Wizard.types';
 
 const Wizard: React.FC<DSWizardProps> = ({
   steps,

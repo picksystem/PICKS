@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { IConfigWorkLocationAssociation } from '@serviceops/interfaces';
-import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { useConfiguration } from '@serviceops/confighooks';
+import { GenericPanel } from '@serviceops/genericpanel';
 import { ASSOCIATION_CONFIG, associationColumns } from '../../shared/userConfig.config';
 
 interface AssociationsSectionProps {

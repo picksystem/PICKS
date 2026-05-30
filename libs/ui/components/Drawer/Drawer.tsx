@@ -2,7 +2,7 @@ import MuiDrawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import { useStyles } from './styles';
-import { DrawerProps } from './util';
+import { DrawerProps } from './Drawer.types';
 
 const Drawer: React.FC<DrawerProps> = ({ open, onClose, children, anchor = 'left', className }) => {
   const { cx, classes } = useStyles();

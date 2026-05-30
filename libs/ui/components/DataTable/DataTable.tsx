@@ -23,7 +23,7 @@ import {
   Search as SearchIcon,
 } from '@mui/icons-material';
 import { useStyles } from './styles';
-import { DataTableProps, Order } from './util';
+import { DataTableProps, Order } from './DataTable.types';
 
 export function DataTable<T extends object>({
   columns,

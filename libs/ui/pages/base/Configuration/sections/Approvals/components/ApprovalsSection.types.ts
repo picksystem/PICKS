@@ -7,7 +7,7 @@ import {
 import type {
   TableField,
   TableConfig,
-} from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+} from '@serviceops/genericpanel';
 
 export interface ApprovalsSectionProps {
   records?: IConfigApprovalRecord[];

@@ -1,4 +1,4 @@
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { GenericPanel } from '@serviceops/genericpanel';
 import { APP_EXPENSES_CONFIG } from './AppExpensesSection.config';
 import { AppExpensesSectionProps, FlatAppEXRow } from './AppExpensesSection.types';
 

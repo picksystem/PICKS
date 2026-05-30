@@ -1,7 +1,7 @@
 import {
   QUEUE_TIMESHEET_CONFIG,
   GenericPanel,
-} from '@serviceops/pages/base/Configuration/sections/Categorization/components/shared';
+} from '@serviceops/configcatorshared';
 import { QueueTimesheetSectionProps, FlatQueueTSRow } from './QueueTimesheetSection.types';
 
 export const QueueTimesheetSection = ({ data, onDataChange }: QueueTimesheetSectionProps) => {

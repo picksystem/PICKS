@@ -1,5 +1,5 @@
 import { useStyles } from '../../styles';
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { GenericPanel } from '@serviceops/genericpanel';
 import {
   DUE_DATES_CONFIG,
   ticketTypeChipCell,

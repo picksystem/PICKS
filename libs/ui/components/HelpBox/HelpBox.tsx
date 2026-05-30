@@ -5,7 +5,7 @@ import ErrorIcon from '@mui/icons-material/Error';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CloseIcon from '@mui/icons-material/Close';
 import { useStyles } from './styles';
-import { DSHelpBoxProps } from './util';
+import { DSHelpBoxProps } from './HelpBox.types';
 
 const HelpBox: React.FC<DSHelpBoxProps> = ({
   title,

@@ -10,7 +10,7 @@ import {
   ApplicationSubCategoriesSection,
   ApplicationNumberSequencesSection,
 } from './components';
-import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
+import { ConfigurationSection } from '@serviceops/configsection';
 
 const Categorization = () => {
   const { classes } = useStyles();

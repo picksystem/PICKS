@@ -1,4 +1,4 @@
-import { FlatQueueTSRow } from '@serviceops/pages/base/Configuration/sections/Categorization/components/shared';
+import { FlatQueueTSRow } from '@serviceops/configcatorshared';
 export type { FlatQueueTSRow };
 
 export interface QueueTimesheetSectionProps {

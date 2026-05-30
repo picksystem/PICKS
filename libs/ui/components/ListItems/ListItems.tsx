@@ -1,6 +1,6 @@
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
 import { useStyles } from './styles';
-import { DSListItem, DSListItemsProps } from './util';
+import { DSListItem, DSListItemsProps } from './ListItems.types';
 
 const ListItems: React.FC<DSListItemsProps> = ({
   items,

@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import { useStyles } from './styles';
-import { DSGridItemProps } from './util';
+import { DSGridItemProps } from './GridItem.types';
 
 const GridItem: React.FC<DSGridItemProps> = ({
   children,

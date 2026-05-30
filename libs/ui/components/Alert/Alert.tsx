@@ -1,6 +1,6 @@
 import { Alert as MUIAlert } from '@mui/material';
 import { useStyles } from './styles';
-import { DSAlertProps } from './util';
+import { DSAlertProps } from './Alert.types';
 
 const Alert: React.FC<DSAlertProps> = ({
   severity = 'info',

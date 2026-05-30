@@ -146,6 +146,7 @@ model AdminTicketType {
   type                    String  @unique
   name                    String
   displayName             String  @default("")
+  displayTag              String  @default("")
   shortDescription        String  @default("")
   description             String  @default("")
   prefix                  String  @default("")

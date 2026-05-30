@@ -8,7 +8,7 @@ import {
   ReopenSection,
   ConversionSection,
 } from './components';
-import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
+import { ConfigurationSection } from '@serviceops/configsection';
 
 const ReasonCodes = () => {
   const { classes } = useStyles();

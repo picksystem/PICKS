@@ -16,10 +16,10 @@ import {
   IConfigConsultantRole,
   IConfigAssociatedConsultantProfile,
 } from '@serviceops/interfaces';
-import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
-import { GenericToolbar } from '@serviceops/pages/base/Configuration/shared/GenericToolbar/GenericToolbar';
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
-import { GenericAccordion } from '@serviceops/pages/base/Configuration/shared/GenericAccordion/GenericAccordion';
+import { useConfiguration } from '@serviceops/confighooks';
+import { GenericToolbar } from '@serviceops/generictoolbar';
+import { GenericPanel } from '@serviceops/genericpanel';
+import { GenericAccordion } from '@serviceops/genericaccordion';
 import { CP_ACCENT, CP_TABLE_CONFIG } from './ConsultantProfiles.config';
 import {
   UserProfilesSection,

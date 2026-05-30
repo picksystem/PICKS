@@ -1,6 +1,6 @@
 import { Card as MUICard, CardHeader, CardContent, CardActions } from '@mui/material';
 import { useStyles } from './styles';
-import { DSCardProps } from './util';
+import { DSCardProps } from './Card.types';
 
 const Card: React.FC<DSCardProps> = ({
   title,

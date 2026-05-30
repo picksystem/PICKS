@@ -6,7 +6,7 @@ import {
   PeriodTypesSection,
   WorkingShiftManagementSection,
 } from './components';
-import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
+import { ConfigurationSection } from '@serviceops/configsection';
 import { useStyles } from './styles';
 
 const Calendars = () => {

@@ -1,7 +1,7 @@
 import { Children, type FC } from 'react';
 import { Grid, Box } from '@mui/material';
 import { useStyles } from './styles';
-import { DSAutoGridProps } from './util';
+import { DSAutoGridProps } from './AutoGrid.types';
 
 const AutoGrid: FC<DSAutoGridProps> = ({
   children,

@@ -15,6 +15,7 @@ export const CreateTicketTypeSchema = yup.object({
     .required('Display name is required')
     .max(100, 'Display name must be 100 characters or less')
     .default(''),
+  displayTag: yup.string().max(50, 'Tag must be 50 characters or less').default(''),
   shortDescription: yup.string().max(200, 'Must be 200 characters or less').default(''),
   description: yup
     .string()
@@ -46,6 +47,7 @@ export const UpdateTicketTypeSchema = yup.object({
     .matches(/^[a-z0-9_]+$/, 'Only lowercase letters, numbers, and underscores allowed'),
   name: yup.string().max(100, 'Name must be 100 characters or less'),
   displayName: yup.string().max(100, 'Display name must be 100 characters or less'),
+  displayTag: yup.string().max(50, 'Tag must be 50 characters or less'),
   shortDescription: yup.string().max(200, 'Must be 200 characters or less'),
   description: yup.string().max(500, 'Description must be 500 characters or less'),
   prefix: yup

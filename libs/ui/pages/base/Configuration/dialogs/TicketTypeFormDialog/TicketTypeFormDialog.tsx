@@ -19,9 +19,9 @@ import {
   darken,
   Dialog,
   DialogContent,
+  DialogActions,
   ListSubheader,
   FormControl,
-  InputLabel,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import { CreateTicketTypeSchema } from '@serviceops/interfaces';
@@ -81,6 +81,7 @@ const TicketTypeFormDialog = ({
       type: editingItem?.type ?? '',
       name: editingItem?.name ?? '',
       displayName: editingItem?.displayName ?? '',
+      displayTag: editingItem?.displayTag ?? '',
       shortDescription: editingItem?.shortDescription ?? '',
       description: editingItem?.description ?? '',
       prefix: editingItem?.prefix ?? '',
@@ -96,6 +97,7 @@ const TicketTypeFormDialog = ({
           type: values.type,
           name: values.name,
           displayName: values.displayName ?? '',
+          displayTag: values.displayTag ?? '',
           shortDescription: values.shortDescription ?? '',
           description: values.description ?? '',
           prefix: (values.prefix ?? '').toUpperCase(),
@@ -139,7 +141,7 @@ const TicketTypeFormDialog = ({
   const color = tagColor;
   const gradient = `linear-gradient(135deg, ${darken(tagColor, 0.2)} 0%, ${tagColor} 100%)`;
   const preview = buildPreview(formik.values.prefix || '???', formik.values.numberLength || 7);
-  const displayLabel = formik.values.displayName || formik.values.name || 'Ticket Type Name';
+  const displayLabel = formik.values.name || formik.values.displayName || 'Ticket Type Name';
   const descriptionPreview =
     formik.values.description || 'Add a description to describe this ticket type and its purpose.';
   const tagOption = getTagOption(formik.values.tag);
@@ -226,7 +228,7 @@ const TicketTypeFormDialog = ({
             {/* Name */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
-                label='Name'
+                label='Ticket Type'
                 name='name'
                 value={formik.values.name}
                 onChange={formik.handleChange}
@@ -252,11 +254,31 @@ const TicketTypeFormDialog = ({
                 )}
                 helperText={
                   reqError(formik.touched.displayName, formik.errors.displayName as string) ||
-                  'Shown in UI to end users'
+                  ''
                 }
                 fullWidth
                 size='small'
                 required
+              />
+            </Grid>
+
+            {/* Display Tag */}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label='Creation page display tag'
+                name='displayTag'
+                value={formik.values.displayTag}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={Boolean(
+                  reqError(formik.touched.displayTag, formik.errors.displayTag as string),
+                )}
+                helperText={
+                  reqError(formik.touched.displayTag, formik.errors.displayTag as string) || ''
+                }
+                fullWidth
+                size='small'
+                placeholder='e.g. Incident, Request, Task'
               />
             </Grid>
 
@@ -545,34 +567,25 @@ const TicketTypeFormDialog = ({
       </DialogContent>
 
       {/* ══ ACTIONS ═══════════════════════════════════════════════════════════ */}
-      <Box className={classes.dialogFooter} sx={{ bgcolor: alpha(color, 0.02) }}>
-        <Button
-          type='submit'
-          form='ticket-type-form'
-          variant='contained'
-          className={classes.dialogSaveBtn}
-          sx={{
-            background: gradient,
-            boxShadow: `0 4px 16px ${alpha(color, 0.4)}`,
-            '&:hover': {
-              background: gradient,
-              filter: 'brightness(1.08)',
-              boxShadow: `0 6px 20px ${alpha(color, 0.5)}`,
-            },
-          }}
-          disabled={formik.isSubmitting}
-        >
-          {formik.isSubmitting ? 'Saving...' : isEditing ? 'Save' : 'Submit'}
-        </Button>
+      <DialogActions sx={{ px: 3, py: 2, gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}>
         <Button
           onClick={handleClose}
           variant='outlined'
-          className={classes.dialogCancelBtn}
+          sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
           disabled={formik.isSubmitting}
         >
           Cancel
         </Button>
-      </Box>
+        <Button
+          type='submit'
+          form='ticket-type-form'
+          variant='contained'
+          sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+          disabled={formik.isSubmitting}
+        >
+          {formik.isSubmitting ? 'Saving...' : isEditing ? 'Save' : 'Submit'}
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 };

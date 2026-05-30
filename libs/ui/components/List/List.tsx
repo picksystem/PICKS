@@ -1,6 +1,6 @@
 import { List as MUIList } from '@mui/material';
 import { useStyles } from './styles';
-import { DSListProps } from './util';
+import { DSListProps } from './List.types';
 
 const List: React.FC<DSListProps> = ({ className, ...props }) => {
   const { cx, classes } = useStyles();

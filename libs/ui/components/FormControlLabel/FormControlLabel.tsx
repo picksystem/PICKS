@@ -1,6 +1,6 @@
 import { FormControlLabel as MUIFormControlLabel } from '@mui/material';
 import { useStyles } from './styles';
-import { DSFormControlLabelProps } from './util';
+import { DSFormControlLabelProps } from './FormControlLabel.types';
 
 const FormControlLabel: React.FC<DSFormControlLabelProps> = ({
   label,

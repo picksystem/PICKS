@@ -1,5 +1,5 @@
 import { useStyles } from './styles';
-import { HeadingProps } from './util';
+import { HeadingProps } from './Typography.types';
 import { Typography as MUITypography } from '@mui/material';
 
 const Typography: React.FC<HeadingProps> = ({

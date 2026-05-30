@@ -4,7 +4,7 @@ import DateRangeIcon from '@mui/icons-material/DateRange';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import { Typography, Switch } from '@serviceops/component';
-import { TableConfig } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { TableConfig } from '@serviceops/genericpanel';
 
 export const SLA_ACCENT = '#0369a1';
 

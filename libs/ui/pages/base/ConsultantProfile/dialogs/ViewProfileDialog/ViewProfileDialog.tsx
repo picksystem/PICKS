@@ -4,8 +4,6 @@ import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 import { ViewProfileDialogProps } from './util';
-import { IAuthUser, IConsultantProfile } from '@serviceops/interfaces';
-import ReadField from '../../components/ReadField';
 import SectionLabel from '../../components/SectionLabel';
 import {
   getUserName,
@@ -13,6 +11,7 @@ import {
   getConsultantProfilePicture,
 } from '../../utils/consultantProfile.utils';
 import { useStyles } from './styles';
+import ReadField from '../../components/ReadField';
 
 const ViewProfileDialog = ({
   viewProfile,

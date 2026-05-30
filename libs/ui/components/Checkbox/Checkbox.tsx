@@ -1,6 +1,6 @@
 import { Checkbox as MUICheckbox, FormControlLabel, FormHelperText, Box } from '@mui/material';
 import { useStyles } from './styles';
-import { DSCheckboxProps } from './util';
+import { DSCheckboxProps } from './Checkbox.types';
 
 const Checkbox: React.FC<DSCheckboxProps> = ({
   label,

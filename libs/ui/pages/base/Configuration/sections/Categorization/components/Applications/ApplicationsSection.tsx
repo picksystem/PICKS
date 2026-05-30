@@ -12,8 +12,8 @@ import {
   IConfigServiceLine,
   IConfigServiceLineTicketType,
 } from '@serviceops/interfaces';
-import { GenericToolbar } from '@serviceops/pages/base/Configuration/shared/GenericToolbar/GenericToolbar';
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { GenericToolbar } from '@serviceops/generictoolbar';
+import { GenericPanel } from '@serviceops/genericpanel';
 import {
   AppApprovalsSection,
   AppTimesheetSection,
@@ -26,8 +26,8 @@ import {
 import { CATEG_ACCENT, TABLE_CONFIG } from '../shared';
 import { ApplicationActiveView } from './ApplicationsSection.types';
 import { useStyles } from '../../styles';
-import { GenericAccordion } from '@serviceops/pages/base/Configuration/shared/GenericAccordion/GenericAccordion';
-import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
+import { GenericAccordion } from '@serviceops/genericaccordion';
+import { useConfiguration } from '@serviceops/confighooks';
 
 export interface ApplicationsSectionProps {
   data?: IConfigApplication[];

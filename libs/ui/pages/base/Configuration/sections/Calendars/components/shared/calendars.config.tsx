@@ -8,7 +8,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import { Column } from '@serviceops/component';
-import { mkCell, mkDescCell } from '@serviceops/pages/base/Configuration/utils/cellRenderers';
+import { mkCell, mkDescCell } from '@serviceops/configutils';
 import type {
   IConfigHolidayCalendar,
   IConfigBankHoliday,
@@ -21,7 +21,7 @@ import type {
 import type {
   TableField,
   TableConfig,
-} from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+} from '@serviceops/genericpanel';
 
 // ── Colors ─────────────────────────────────────────────────────────────────────
 
@@ -191,7 +191,7 @@ export const consultantsColumns: Column<IConfigCalendarConsultant>[] = [
 
 // ── Period Types Table Configs ─────────────────────────────────────────────────
 
-import { ToolbarButton } from '@serviceops/pages/base/Configuration/shared/GenericToolbar/GenericToolbar';
+import { ToolbarButton } from '@serviceops/generictoolbar';
 
 interface SectionConfig {
   title: string;

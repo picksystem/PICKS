@@ -1,4 +1,4 @@
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { GenericPanel } from '@serviceops/genericpanel';
 import { APP_TIMESHEET_CONFIG } from './AppTimesheetSection.config';
 import { AppTimesheetSectionProps, FlatAppTSRow } from './AppTimesheetSection.types';
 

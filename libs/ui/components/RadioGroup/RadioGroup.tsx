@@ -7,7 +7,7 @@ import {
   FormHelperText,
 } from '@mui/material';
 import { useStyles } from './styles';
-import { DSRadioGroupProps } from './util';
+import { DSRadioGroupProps } from './RadioGroup.types';
 
 const RadioGroup: React.FC<DSRadioGroupProps> = ({
   options,

@@ -10,7 +10,7 @@ import {
   mkCell,
   mkChip,
   mkDescCell,
-} from '@serviceops/pages/base/Configuration/utils/cellRenderers';
+} from '@serviceops/configutils';
 import { TableConfig } from './expenses.config.types';
 
 import type {

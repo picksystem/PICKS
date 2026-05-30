@@ -1,6 +1,6 @@
 import { Divider as MUIDivider } from '@mui/material';
 import { useStyles } from './styles';
-import { DSDividerProps } from './util';
+import { DSDividerProps } from './Divider.types';
 
 const Divider: React.FC<DSDividerProps> = ({ className, ...props }) => {
   const { cx, classes } = useStyles();

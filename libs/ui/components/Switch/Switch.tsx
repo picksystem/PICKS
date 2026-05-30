@@ -1,6 +1,6 @@
 import { Switch as MUISwitch, FormControlLabel, FormHelperText } from '@mui/material';
 import { useStyles } from './styles';
-import { DSSwitchProps } from './util';
+import { DSSwitchProps } from './Switch.types';
 
 const Switch: React.FC<DSSwitchProps> = ({
   label,

@@ -1,7 +1,7 @@
 import { Box } from '@serviceops/component';
 import { useStyles } from './styles';
 import { UserConfigSection } from './components/UserConfigSection';
-import { ConfigurationSection } from '@serviceops/pages/base/Configuration/shared/ConfigurationSection/ConfigurationSection';
+import { ConfigurationSection } from '@serviceops/configsection';
 
 const UserConfig = () => {
   const { classes } = useStyles();

@@ -1,7 +1,7 @@
 import { Box, Typography, Switch, Divider } from '@serviceops/component';
 import { Radio, RadioGroup, FormControlLabel } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { GenericAccordion } from '@serviceops/pages/base/Configuration/shared/GenericAccordion/GenericAccordion';
+import { GenericAccordion } from '@serviceops/genericaccordion';
 import { IConfigGeneral } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
 import { memo, useCallback } from 'react';

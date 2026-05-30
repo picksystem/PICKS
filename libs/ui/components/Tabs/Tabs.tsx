@@ -1,6 +1,6 @@
 import { Tabs as MUITabs } from '@mui/material';
 import { useStyles } from './styles';
-import { DSTabsProps } from './util';
+import { DSTabsProps } from './Tabs.types';
 
 const Tabs: React.FC<DSTabsProps> = ({ className, ...props }) => {
   const { cx, classes } = useStyles();

@@ -30,7 +30,6 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import BadgeIcon from '@mui/icons-material/Badge';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import TuneIcon from '@mui/icons-material/Tune';
-import TabPanel from './components/TabPanel';
 import useUserManagement from './hooks/useUserManagement';
 import AdminControlsDialog from './dialogs/AdminControlsDialog/AdminControlsDialog';
 import EditUserDialog from './dialogs/EditUserDialog/EditUserDialog';
@@ -42,6 +41,7 @@ import ChangeProfileDialog from './dialogs/ChangeProfileDialog/ChangeProfileDial
 import TempPasswordDialog from './dialogs/TempPasswordDialog/TempPasswordDialog';
 import ResetPasswordDialog from './dialogs/ResetPasswordDialog/ResetPasswordDialog';
 import { useStyles } from './styles';
+import TabPanel from './components/TabPanel';
 
 const UserManagement = () => {
   const { classes } = useStyles();

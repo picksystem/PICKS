@@ -1,5 +1,5 @@
 import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
-import type { TableConfig } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import type { TableConfig } from '@serviceops/genericpanel';
 
 export const APP_SUPPORT_LINES_CONFIG: TableConfig = {
   title: 'Support Lines / Queues',

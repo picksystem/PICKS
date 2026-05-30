@@ -5,8 +5,8 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import { mkCell, mkDescCell } from '@serviceops/pages/base/Configuration/utils/cellRenderers';
-import type { TableConfig } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { mkCell, mkDescCell } from '@serviceops/configutils';
+import type { TableConfig } from '@serviceops/genericpanel';
 import type {
   IConfigPriorityChangeReasonCode,
   IConfigRoleChangeReasonCode,

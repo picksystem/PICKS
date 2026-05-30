@@ -1,4 +1,4 @@
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { GenericPanel } from '@serviceops/genericpanel';
 import { APP_SUPPORT_LINES_CONFIG } from './AppSupportLinesSection.config';
 import { AppSupportLinesSectionProps, FlatAppSlRow } from './AppSupportLinesSection.types';
 

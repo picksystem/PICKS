@@ -1,7 +1,7 @@
 import { AppBar, Toolbar, IconButton, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useStyles } from './styles';
-import { DSTopbarProps } from './util';
+import { DSTopbarProps } from './Topbar.types';
 
 const Topbar: React.FC<DSTopbarProps> = ({
   title,

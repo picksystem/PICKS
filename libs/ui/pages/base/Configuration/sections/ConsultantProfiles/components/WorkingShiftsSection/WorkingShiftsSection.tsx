@@ -1,5 +1,5 @@
 import { IConfigConsultantWorkingShift } from '@serviceops/interfaces';
-import { GenericPanel } from '@serviceops/pages/base/Configuration/shared/GenericPanel/GenericPanel';
+import { GenericPanel } from '@serviceops/genericpanel';
 import { WORKING_SHIFTS_CONFIG } from '../ConsultantProfiles.config';
 
 export interface WorkingShiftsSectionProps {
