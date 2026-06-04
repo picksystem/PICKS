@@ -7,7 +7,7 @@ import { ConfigurationSection } from '@serviceops/configsection';
 import { useState, useEffect, useCallback } from 'react';
 import { IConfigGeneral, IConfigApprovedEstimateRow } from '@serviceops/interfaces';
 import { useDebounce } from '@serviceops/hooks';
-import { useGetTicketTypeQuery } from '@serviceops/services';
+import { useSharedTicketTypes } from '../../hooks/useSharedTicketTypes';
 
 const DEFAULT_GENERAL: IConfigGeneral = {
   systemName: '',
@@ -24,7 +24,7 @@ const DEFAULT_GENERAL: IConfigGeneral = {
 const General = () => {
   const { classes } = useStyles();
   const { general: apiGeneral, saveSection } = useConfiguration();
-  const { data: ticketTypes } = useGetTicketTypeQuery();
+  const { ticketTypes } = useSharedTicketTypes();
 
   const [form, setForm] = useState<IConfigGeneral>(DEFAULT_GENERAL);
 

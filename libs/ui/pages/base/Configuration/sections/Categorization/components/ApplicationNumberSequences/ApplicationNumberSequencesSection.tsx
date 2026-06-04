@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { IConfigApplicationNumberSequence } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
 import { useConfiguration } from '@serviceops/confighooks';
-import { useGetTicketTypeQuery } from '@serviceops/services';
+import { useSharedTicketTypes } from '../../../../hooks/useSharedTicketTypes';
 import { GenericPanel } from '@serviceops/genericpanel';
 import {
   CATEG_TABLE_CONFIG,
@@ -16,7 +16,7 @@ const ApplicationNumberSequencesSection = ({
 }: ApplicationNumberSequencesSectionProps) => {
   const { classes } = useStyles();
   const { categorization: apiCat, saveSection } = useConfiguration();
-  const { data: ticketTypes } = useGetTicketTypeQuery();
+  const { ticketTypes } = useSharedTicketTypes();
 
   const [rows, setRows] = useState<IConfigApplicationNumberSequence[]>([]);
 
@@ -32,7 +32,9 @@ const ApplicationNumberSequencesSection = ({
     // Transform rows to ensure ticketTypeName is set correctly
     const transformedRows = next.map((row) => {
       if (row.ticketTypeId && !row.ticketTypeName) {
-        const tt = ticketTypes?.find((t) => t.id === row.ticketTypeId);
+        const tt = ticketTypes?.find(
+          (t: { id: string | number }) => String(t.id) === String(row.ticketTypeId),
+        );
         return {
           ...row,
           ticketTypeName: tt?.displayName || tt?.name || String(row.ticketTypeId),

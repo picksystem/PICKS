@@ -4,7 +4,6 @@ import {
   Box,
   Typography,
   TextField,
-  Paper,
   Button,
   Switch,
   Tooltip,
@@ -23,6 +22,7 @@ import TicketTypeFormDialog from '@serviceops/configtickettypeformdialog';
 import { ConfigDeleteDialog } from '@serviceops/configdialogs';
 import SequenceDialog from '@serviceops/configsequencedialog';
 import { GenericAccordion } from '@serviceops/genericaccordion';
+import { GenericToolbar } from '@serviceops/generictoolbar';
 import { useStyles } from '../../styles';
 import { useTicketTypeConfig } from './hooks';
 
@@ -72,7 +72,7 @@ const TicketTypeConfigSection = () => {
         accent={ACCENT}
         className={classes.sectionAccordion}
       >
-        <Paper variant='outlined' className={classes.actionToolbar} sx={{ border: 'none' }}>
+        <GenericToolbar className={classes.actionToolbar}>
           <Box className={classes.toolbarButtons}>
             {!selectedRow ? (
               <>
@@ -209,16 +209,16 @@ const TicketTypeConfigSection = () => {
               </>
             )}
           </Box>
-        </Paper>
+        </GenericToolbar>
 
-        <Paper elevation={1} className={classes.tablePaper}>
+        <Box elevation={1} className={classes.tablePaper}>
           <TicketTypeTable
             ticketTypes={filteredTicketTypes}
             selectedRowId={selectedRow?.id}
             onRowClick={(row) => setSelectedRow(selectedRow?.id === row.id ? null : row)}
             onToggleActive={handleToggleActive}
           />
-        </Paper>
+        </Box>
       </GenericAccordion>
 
       <SequenceDialog

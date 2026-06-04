@@ -73,8 +73,8 @@ const CreateTicket = () => {
             const { accent, gradient, glow } = getVisuals(t.type);
             const iconKey = iconMap[t.type];
             const tag = tagMap[t.type] ?? '';
-            // Use short description if set, otherwise fall back to defaults
-            const displayText = t.shortDescription || t.displayName || t.name;
+            const ticketTypeName = t.name;
+            const creationPageDisplayText = t.displayName;
             const displayTag = tag;
 
             return (
@@ -117,7 +117,7 @@ const CreateTicket = () => {
                     {getIconComponent(iconKey, { fontSize: 24, color: '#fff' })}
                   </Box>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography className={classes.ticketCardTitle}>{displayText}</Typography>
+                    <Typography className={classes.ticketCardTitle}>{ticketTypeName}</Typography>
                     {displayTag && (
                       <Chip
                         label={displayTag}
@@ -136,8 +136,23 @@ const CreateTicket = () => {
                   </Box>
                 </Box>
 
+                {/* Creation page display text */}
+                <Typography
+                  sx={{
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    color: accent,
+                    mb: 0.75,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {creationPageDisplayText}
+                </Typography>
+
                 {/* Description */}
-                <Typography className={classes.ticketCardDesc}>{t.description || '—'}</Typography>
+                <Typography className={classes.ticketCardDesc}>
+                  {t.shortDescription || '—'}
+                </Typography>
               </Box>
             );
           })}
@@ -152,8 +167,13 @@ const CreateTicket = () => {
             <Typography className={classes.ctaSelected}>
               <b>Selected:</b>{' '}
               <span style={{ color: getVisuals(selected.type).accent, fontWeight: 700 }}>
-                {selected.displayName || selected.name}
+                {selected.name}
               </span>
+              {selected.displayName && selected.displayName !== selected.name && (
+                <span style={{ marginLeft: 6, color: 'text.secondary', fontWeight: 500 }}>
+                  ({selected.displayName})
+                </span>
+              )}
             </Typography>
           )}
         </Box>

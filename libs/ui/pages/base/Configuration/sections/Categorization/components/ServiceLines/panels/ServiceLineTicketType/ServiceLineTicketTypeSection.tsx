@@ -3,11 +3,8 @@ import type {
   IConfigServiceLineTicketType,
   ITicketType,
 } from '@serviceops/interfaces';
-import { useGetTicketTypeQuery } from '@serviceops/services';
-import {
-  GenericTogglePanel,
-  TICKET_TYPE_TOGGLE_CONFIG,
-} from '@serviceops/configcatorshared';
+import { useSharedTicketTypes } from '../../../../../../hooks/useSharedTicketTypes';
+import { GenericTogglePanel, TICKET_TYPE_TOGGLE_CONFIG } from '@serviceops/configcatorshared';
 
 interface ServiceLineTicketTypeSectionProps {
   rows?: IConfigServiceLine[];
@@ -22,10 +19,12 @@ export const ServiceLineTicketTypeSection = ({
   rows,
   onTicketTypeToggle,
 }: ServiceLineTicketTypeSectionProps) => {
-  const { data: ticketTypesData } = useGetTicketTypeQuery();
+  const { ticketTypes: ticketTypesData } = useSharedTicketTypes();
 
   const activeTicketTypes: ITicketType[] =
-    ticketTypesData && ticketTypesData.length > 0 ? ticketTypesData.filter((t) => t.isActive) : [];
+    ticketTypesData && ticketTypesData.length > 0
+      ? ticketTypesData.filter((t: ITicketType) => t.isActive)
+      : [];
 
   const allTicketTypeKeys = activeTicketTypes.map((tt) => tt.displayName || tt.name);
 

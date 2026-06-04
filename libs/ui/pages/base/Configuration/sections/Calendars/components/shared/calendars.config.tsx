@@ -18,10 +18,7 @@ import type {
   IConfigCalendarWorkLocation,
   IConfigCalendarConsultant,
 } from '@serviceops/interfaces';
-import type {
-  TableField,
-  TableConfig,
-} from '@serviceops/genericpanel';
+import type { TableField, TableConfig } from '@serviceops/genericpanel';
 
 // ── Colors ─────────────────────────────────────────────────────────────────────
 
@@ -46,7 +43,7 @@ export const TABLE_CONFIG: Record<CalendarActiveView, TableConfig> = {
     ],
   },
   bankHoliday: {
-    title: 'Bank Holidays',
+    title: 'Bank Holidays (Public Holidays)',
     subtitle: 'Add a bank holiday to the selected calendar',
     accent: ACCENT,
     icon: <BeachAccessIcon sx={{ fontSize: '1.1rem' }} />,

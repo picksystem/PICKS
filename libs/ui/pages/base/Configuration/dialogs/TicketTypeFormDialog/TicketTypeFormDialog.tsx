@@ -241,10 +241,34 @@ const TicketTypeFormDialog = ({
               />
             </Grid>
 
+            {/* Description */}
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                label='Description'
+                name='description'
+                value={formik.values.description}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={Boolean(
+                  reqError(formik.touched.description, formik.errors.description as string),
+                )}
+                helperText={reqError(
+                  formik.touched.description,
+                  formik.errors.description as string,
+                )}
+                fullWidth
+                size='small'
+                multiline
+                rows={2}
+                placeholder='Describe this ticket type and when it should be used...'
+                required
+              />
+            </Grid>
+
             {/* Display Name */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
-                label='Creation page display text'
+                label='New Ticket Creation Page Display Text'
                 name='displayName'
                 value={formik.values.displayName}
                 onChange={formik.handleChange}
@@ -252,38 +276,18 @@ const TicketTypeFormDialog = ({
                 error={Boolean(
                   reqError(formik.touched.displayName, formik.errors.displayName as string),
                 )}
-                helperText={
-                  reqError(formik.touched.displayName, formik.errors.displayName as string) ||
-                  ''
-                }
+                helperText={reqError(
+                  formik.touched.displayName,
+                  formik.errors.displayName as string,
+                )}
                 fullWidth
                 size='small'
                 required
               />
             </Grid>
 
-            {/* Display Tag */}
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                label='Creation page display tag'
-                name='displayTag'
-                value={formik.values.displayTag}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={Boolean(
-                  reqError(formik.touched.displayTag, formik.errors.displayTag as string),
-                )}
-                helperText={
-                  reqError(formik.touched.displayTag, formik.errors.displayTag as string) || ''
-                }
-                fullWidth
-                size='small'
-                placeholder='e.g. Incident, Request, Task'
-              />
-            </Grid>
-
             {/* Short Description */}
-            <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 label='Short Description'
                 name='shortDescription'
@@ -306,27 +310,23 @@ const TicketTypeFormDialog = ({
               />
             </Grid>
 
-            {/* Description */}
-            <Grid size={{ xs: 12 }}>
+            {/* Display Tag */}
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
-                label='Description'
-                name='description'
-                value={formik.values.description}
+                label='Creation page display tag'
+                name='displayTag'
+                value={formik.values.displayTag}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={Boolean(
-                  reqError(formik.touched.description, formik.errors.description as string),
+                  reqError(formik.touched.displayTag, formik.errors.displayTag as string),
                 )}
-                helperText={reqError(
-                  formik.touched.description,
-                  formik.errors.description as string,
-                )}
+                helperText={
+                  reqError(formik.touched.displayTag, formik.errors.displayTag as string) || ''
+                }
                 fullWidth
                 size='small'
-                multiline
-                rows={2}
-                placeholder='Describe this ticket type and when it should be used...'
-                required
+                placeholder='e.g. Incident, Request, Task'
               />
             </Grid>
 

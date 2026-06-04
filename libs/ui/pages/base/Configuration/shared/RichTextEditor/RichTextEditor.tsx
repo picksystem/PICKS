@@ -29,6 +29,7 @@ interface Props {
   placeholder?: string;
   icon?: React.ReactNode;
   title?: string;
+  showFooterActions?: boolean;
 }
 
 export const parseRichText = (text: string): RichTextValue => {
@@ -103,6 +104,7 @@ const RichTextEditor = ({
   onChange,
   accent = '#2d5ebb',
   placeholder = 'Describe the issue in detail...',
+  showFooterActions = true,
 }: Props) => {
   const { classes } = useStyles();
   const editorRef = useRef<HTMLDivElement>(null);
@@ -114,8 +116,12 @@ const RichTextEditor = ({
   });
 
   useEffect(() => {
-    if (editorRef.current && value.segments.length > 0) {
-      editorRef.current.innerHTML = serializeToHtml(value.segments);
+    if (editorRef.current && document.activeElement !== editorRef.current) {
+      if (value.segments.length > 0) {
+        editorRef.current.innerHTML = serializeToHtml(value.segments);
+      } else {
+        editorRef.current.innerHTML = '';
+      }
     }
   }, [value]);
 
@@ -396,48 +402,50 @@ const RichTextEditor = ({
         />
       </Box>
 
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
-          justifyContent: 'flex-end',
-          gap: 1,
-          mt: 1.5,
-        }}
-      >
-        <Button
-          size='small'
-          variant='outlined'
-          startIcon={<ClearIcon />}
-          onClick={handleClear}
+      {showFooterActions && (
+        <Box
           sx={{
-            textTransform: 'none',
-            borderColor: '#2d5ebb',
-            color: '#2d5ebb',
-            width: { xs: '100%', sm: 'auto' },
-            '&:hover': {
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            justifyContent: 'flex-end',
+            gap: 1,
+            mt: 1.5,
+          }}
+        >
+          <Button
+            size='small'
+            variant='outlined'
+            startIcon={<ClearIcon />}
+            onClick={handleClear}
+            sx={{
+              textTransform: 'none',
               borderColor: '#2d5ebb',
-              bgcolor: 'rgba(45, 94, 187, 0.08)',
-            },
-          }}
-        >
-          Clear
-        </Button>
-        <Button
-          size='small'
-          variant='contained'
-          startIcon={<SaveIcon />}
-          onClick={handleSave}
-          sx={{
-            textTransform: 'none',
-            bgcolor: '#2d5ebb',
-            width: { xs: '100%', sm: 'auto' },
-            '&:hover': { bgcolor: '#2d5ebb' },
-          }}
-        >
-          Save
-        </Button>
-      </Box>
+              color: '#2d5ebb',
+              width: { xs: '100%', sm: 'auto' },
+              '&:hover': {
+                borderColor: '#2d5ebb',
+                bgcolor: 'rgba(45, 94, 187, 0.08)',
+              },
+            }}
+          >
+            Clear
+          </Button>
+          <Button
+            size='small'
+            variant='contained'
+            startIcon={<SaveIcon />}
+            onClick={handleSave}
+            sx={{
+              textTransform: 'none',
+              bgcolor: '#2d5ebb',
+              width: { xs: '100%', sm: 'auto' },
+              '&:hover': { bgcolor: '#2d5ebb' },
+            }}
+          >
+            Save
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 };

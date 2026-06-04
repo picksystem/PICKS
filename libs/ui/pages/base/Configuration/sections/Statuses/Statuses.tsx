@@ -2,11 +2,11 @@ import { Box } from '@serviceops/component';
 import { useStyles } from './styles';
 import { ConfigurationSection } from '@serviceops/configsection';
 import { TicketStatusesSection, ReleaseCycleStatusesSection } from './components';
-import { useGetTicketTypeQuery } from '@serviceops/services';
+import { useSharedTicketTypes } from '../../hooks/useSharedTicketTypes';
 
 const Statuses = () => {
   const { classes } = useStyles();
-  const { data: ticketTypes = [] } = useGetTicketTypeQuery();
+  const { ticketTypes } = useSharedTicketTypes();
 
   const activeTicketTypeColumns =
     ticketTypes.length > 0

@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import { List, ListItem, ListItemIcon, ListItemText, alpha } from '@mui/material';
-import { Box, Typography } from '@serviceops/component';
+import { Box, Typography, Loader } from '@serviceops/component';
 import TuneIcon from '@mui/icons-material/Tune';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
@@ -17,20 +18,21 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { useCollapse, useDevice } from '@serviceops/hooks';
 
-import General from './sections/General';
-import TicketTypes from './sections/TicketTypes';
-import Priorities from './sections/Priorities/Priorities';
-import Statuses from './sections/Statuses/Statuses';
-import Categorization from './sections/Categorization/Categorization';
-import ConsultantProfiles from './sections/ConsultantProfiles/ConsultantProfiles';
-import Approvals from './sections/Approvals';
-import UserConfig from './sections/UserConfig/UserConfig';
-import Templates from './sections/Templates/Templates';
-import ReasonCodes from './sections/ReasonCodes/ReasonCodes';
-import Calendars from './sections/Calendars/Calendars';
-import Expenses from './sections/Expenses/Expenses';
-import SLAs from './sections/SLAs';
-import Timesheets from './sections/Timesheets';
+// Lazy load all sections for better performance
+const General = lazy(() => import('./sections/General'));
+const TicketTypes = lazy(() => import('./sections/TicketTypes'));
+const Priorities = lazy(() => import('./sections/Priorities/Priorities'));
+const Statuses = lazy(() => import('./sections/Statuses/Statuses'));
+const Categorization = lazy(() => import('./sections/Categorization/Categorization'));
+const ConsultantProfiles = lazy(() => import('./sections/ConsultantProfiles/ConsultantProfiles'));
+const Approvals = lazy(() => import('./sections/Approvals'));
+const UserConfig = lazy(() => import('./sections/UserConfig/UserConfig'));
+const Templates = lazy(() => import('./sections/Templates/Templates'));
+const ReasonCodes = lazy(() => import('./sections/ReasonCodes/ReasonCodes'));
+const Calendars = lazy(() => import('./sections/Calendars/Calendars'));
+const Expenses = lazy(() => import('./sections/Expenses/Expenses'));
+const SLAs = lazy(() => import('./sections/SLAs'));
+const Timesheets = lazy(() => import('./sections/Timesheets'));
 
 const BASE = '/app/admin/configuration';
 const INNER_NAV_WIDTH = 220;
@@ -206,24 +208,32 @@ const MobilePillNav = ({
 
 // ── Section routes ─────────────────────────────────────────────────────────────
 const ConfigRoutes = () => (
-  <Routes>
-    <Route index element={<Navigate to='general' replace />} />
-    <Route path='general' element={<General />} />
-    <Route path='ticket-types' element={<TicketTypes />} />
-    <Route path='priorities' element={<Priorities />} />
-    <Route path='statuses' element={<Statuses />} />
-    <Route path='slas' element={<SLAs />} />
-    <Route path='categorization' element={<Categorization />} />
-    <Route path='consultant-profiles' element={<ConsultantProfiles />} />
-    <Route path='approvals' element={<Approvals />} />
-    <Route path='user-config' element={<UserConfig />} />
-    <Route path='templates' element={<Templates />} />
-    <Route path='reason-codes' element={<ReasonCodes />} />
-    <Route path='calendars' element={<Calendars />} />
-    <Route path='timesheets' element={<Timesheets />} />
-    <Route path='expenses' element={<Expenses />} />
-    <Route path='*' element={<Navigate to='general' replace />} />
-  </Routes>
+  <Suspense
+    fallback={
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <Loader />
+      </Box>
+    }
+  >
+    <Routes>
+      <Route index element={<Navigate to='general' replace />} />
+      <Route path='general' element={<General />} />
+      <Route path='ticket-types' element={<TicketTypes />} />
+      <Route path='priorities' element={<Priorities />} />
+      <Route path='statuses' element={<Statuses />} />
+      <Route path='slas' element={<SLAs />} />
+      <Route path='categorization' element={<Categorization />} />
+      <Route path='consultant-profiles' element={<ConsultantProfiles />} />
+      <Route path='approvals' element={<Approvals />} />
+      <Route path='user-config' element={<UserConfig />} />
+      <Route path='templates' element={<Templates />} />
+      <Route path='reason-codes' element={<ReasonCodes />} />
+      <Route path='calendars' element={<Calendars />} />
+      <Route path='timesheets' element={<Timesheets />} />
+      <Route path='expenses' element={<Expenses />} />
+      <Route path='*' element={<Navigate to='general' replace />} />
+    </Routes>
+  </Suspense>
 );
 
 // ── Main component ─────────────────────────────────────────────────────────────

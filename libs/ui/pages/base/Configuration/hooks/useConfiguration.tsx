@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   useGetConfigurationQuery,
   useUpdateConfigurationSectionMutation,
@@ -42,7 +42,7 @@ import {
  * - `isSaving`        – mutation in-flight state
  */
 export const useConfiguration = () => {
-  const { data: config, isLoading, error } = useGetConfigurationQuery();
+  const { data: config, isLoading, error } = useGetConfigurationQuery(undefined);
   const [patchSection, { isLoading: isPatchLoading }] = useUpdateConfigurationSectionMutation();
   const [putAll, { isLoading: isPutLoading }] = useUpdateConfigurationMutation();
   const { success, error: showError } = useNotification();
@@ -50,7 +50,8 @@ export const useConfiguration = () => {
   const data: IConfigurationData = config?.data ?? DEFAULT_CONFIGURATION_DATA;
 
   // Derive the active ticket type keys from the matrices object (enriched by backend)
-  const ticketTypeKeys: string[] = Object.keys(data.priorities.matrices);
+  // Memoize to prevent recalculation on every render
+  const ticketTypeKeys = useMemo(() => Object.keys(data.priorities.matrices), [data.priorities.matrices]);
 
   const saveSection = useCallback(
     async <K extends keyof IConfigurationData>(section: K, value: IConfigurationData[K]) => {

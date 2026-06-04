@@ -5,7 +5,6 @@ import {
   Accordion,
   Alert,
   TextField,
-  Paper,
   Button,
   Tooltip,
   Link,
@@ -29,6 +28,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 import { Loader } from '../../../components';
+import { GenericToolbar } from '@serviceops/generictoolbar';
 import { useStyles } from './styles';
 import { useTicketTemplates } from './hooks/useTicketTemplates';
 import TicketTypeTable from './components/TicketTypeTable';
@@ -124,7 +124,7 @@ const TicketTemplates = () => {
         </AccordionSummary>
         <AccordionDetails sx={{ p: 2 }}>
           {/* ── Action Toolbar ── */}
-          <Paper variant='outlined' className={classes.actionToolbar}>
+          <GenericToolbar className={classes.actionToolbar}>
             <Box className={classes.toolbarButtons}>
               {/* Add New — shown only when no row is selected */}
               {!selectedRow && (
@@ -214,16 +214,16 @@ const TicketTemplates = () => {
                 </Link>
               </Typography>
             )}
-          </Paper>
+          </GenericToolbar>
 
-          <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+          <Box elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
             <TicketTypeTable
               ticketTypes={filteredTicketTypes}
               selectedRowId={selectedRow?.id}
               onRowClick={(row) => setSelectedRow(selectedRow?.id === row.id ? null : row)}
               onToggleActive={handleToggleActive}
             />
-          </Paper>
+          </Box>
         </AccordionDetails>
       </Accordion>
 

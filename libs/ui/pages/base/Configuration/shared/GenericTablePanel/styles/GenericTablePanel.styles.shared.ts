@@ -7,7 +7,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     display: 'flex',
     flexDirection: 'column' as const,
     gap: theme.spacing(0.5),
-    border: 'none',
   },
 
   toolbarButtons: {

@@ -2,7 +2,6 @@ import { Box, Typography, Chip, Card, IconButton, Tooltip, Grid } from '@service
 import { alpha, CardContent, CardActions } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { ITicketType } from '@serviceops/interfaces';
 import { getIconComponent, getTypeColor, getTypeGradient } from '../utils/ticketTypeIcons';
 import { TicketTypeCardsProps } from './TicketTypeCards.util';
 

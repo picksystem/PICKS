@@ -9,7 +9,7 @@ import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import TuneIcon from '@mui/icons-material/Tune';
 import { useStyles } from './styles';
 import { useConfiguration } from '../../hooks/useConfiguration';
-import { useGetTicketTypeQuery } from '@serviceops/services';
+import { useSharedTicketTypes } from '../../hooks/useSharedTicketTypes';
 import { ConfigurationSection } from '@serviceops/configsection';
 import {
   PrioritiesSection,
@@ -235,7 +235,7 @@ const Priorities = () => {
   const { classes } = useStyles();
   const { success } = useNotification();
   const { priorities: apiPriorities, ticketTypeKeys, saveSection, isLoading } = useConfiguration();
-  const { data: ticketTypes = [] } = useGetTicketTypeQuery();
+  const { ticketTypes } = useSharedTicketTypes();
 
   const ticketTypeDisplayNames = Object.fromEntries(
     ticketTypes.map((t) => [t.type, t.displayName]),

@@ -51,9 +51,9 @@ const TicketTypeTable = ({
       },
     },
     {
-      id: 'shortDescription',
-      label: 'Short Description',
-      minWidth: 180,
+      id: 'description',
+      label: 'Description',
+      minWidth: 200,
       format: (v): React.ReactNode => (
         <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>
           {String(v || '—')}
@@ -61,11 +61,11 @@ const TicketTypeTable = ({
       ),
     },
     {
-      id: 'description',
-      label: 'Description',
-      minWidth: 200,
+      id: 'displayName',
+      label: 'Creation Page Display Text',
+      minWidth: 150,
       format: (v): React.ReactNode => (
-        <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>
+        <Typography variant='body2' fontWeight={500} fontSize='0.82rem'>
           {String(v || '—')}
         </Typography>
       ),
@@ -86,40 +86,6 @@ const TicketTypeTable = ({
           size='small'
           color='success'
         />
-      ),
-    },
-    {
-      id: 'prefix',
-      label: 'Prefix',
-      minWidth: 90,
-      format: (_v, row): React.ReactNode => {
-        const accentColor = getAccentColor(row.type);
-        const prefix = row.prefix || row.type.slice(0, 3).toUpperCase();
-        return (
-          <Chip
-            label={prefix}
-            size='small'
-            sx={{
-              fontFamily: 'monospace',
-              fontWeight: 700,
-              fontSize: '0.78rem',
-              bgcolor: alpha(accentColor, 0.12),
-              color: accentColor,
-              border: `1px solid ${alpha(accentColor, 0.25)}`,
-              height: 24,
-            }}
-          />
-        );
-      },
-    },
-    {
-      id: 'numberLength',
-      label: 'Number Length',
-      minWidth: 110,
-      format: (v): React.ReactNode => (
-        <Typography variant='body2' fontFamily='monospace' fontSize='0.82rem'>
-          {String(v || 7)} digits
-        </Typography>
       ),
     },
     {
@@ -146,6 +112,16 @@ const TicketTypeTable = ({
       },
     },
     {
+      id: 'shortDescription',
+      label: 'Short Description',
+      minWidth: 180,
+      format: (v): React.ReactNode => (
+        <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>
+          {String(v || '—')}
+        </Typography>
+      ),
+    },
+    {
       id: 'displayTag',
       label: 'Creation page display tag',
       minWidth: 120,
@@ -167,16 +143,6 @@ const TicketTypeTable = ({
           </Typography>
         );
       },
-    },
-    {
-      id: 'displayName',
-      label: 'Creation page display text',
-      minWidth: 150,
-      format: (v): React.ReactNode => (
-        <Typography variant='body2' fontWeight={500} fontSize='0.82rem'>
-          {String(v || '—')}
-        </Typography>
-      ),
     },
   ];
 

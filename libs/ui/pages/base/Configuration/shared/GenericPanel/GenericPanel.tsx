@@ -733,8 +733,15 @@ export const GenericPanel = ({
   const filtered = useMemo(() => {
     if (!debouncedSearch) return data;
     const lower = debouncedSearch.toLowerCase();
-    return data.filter((row) => JSON.stringify(row).toLowerCase().includes(lower));
-  }, [debouncedSearch, data]);
+    // Use only the configured searchable fields instead of JSON.stringify
+    const searchableKeys = config.fields.map((f) => f.name);
+    return data.filter((row) =>
+      searchableKeys.some((key) => {
+        const val = row[key];
+        return val !== null && String(val).toLowerCase().includes(lower);
+      }),
+    );
+  }, [debouncedSearch, data, config.fields]);
 
   const handleRowClick = useCallback(
     (row: GenericData) => {

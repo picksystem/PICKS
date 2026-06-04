@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Box,
   Typography,
-  Paper,
   Button,
   Tooltip,
   DataTable,
@@ -11,9 +10,10 @@ import {
   FormControlLabel,
   Divider,
 } from '@serviceops/component';
-import { FormControl, Select, MenuItem, InputLabel } from '@mui/material';
+import { FormControl, Select, MenuItem, InputLabel, Paper } from '@mui/material';
 import { ConfigFormDialog } from '@serviceops/configdialogs';
 import { GenericAccordion } from '@serviceops/genericaccordion';
+import { GenericToolbar } from '@serviceops/generictoolbar';
 import TuneIcon from '@mui/icons-material/Tune';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -63,25 +63,27 @@ const TicketMatrixSection = ({
   const [editForm, setEditForm] = useState({ impactId: '', urgencyId: '', priorityId: '' });
   const [defineInfoOpen, setDefineInfoOpen] = useState(false);
 
-  const activeImpacts = impacts.filter((i) => i.isActive);
-  const activeUrgencies = urgencies.filter((u) => u.isActive);
+  const activeImpacts = useMemo(() => impacts.filter((i) => i.isActive), [impacts]);
+  const activeUrgencies = useMemo(() => urgencies.filter((u) => u.isActive), [urgencies]);
 
   // Deduplicate by using a Map with unique keys
-  const rowMap = new Map<string, MatrixRow>();
-  activeImpacts.forEach((impact) =>
-    activeUrgencies.forEach((urgency) => {
-      const id = `${impact.id}_${urgency.id}`;
-      if (!rowMap.has(id)) {
-        rowMap.set(id, {
-          id,
-          impactId: impact.id,
-          urgencyId: urgency.id,
-          priorityId: matrix[impact.id]?.[urgency.id] ?? '',
-        });
-      }
-    }),
-  );
-  const allRows: MatrixRow[] = Array.from(rowMap.values());
+  const allRows = useMemo(() => {
+    const rowMap = new Map<string, MatrixRow>();
+    activeImpacts.forEach((impact) =>
+      activeUrgencies.forEach((urgency) => {
+        const id = `${impact.id}_${urgency.id}`;
+        if (!rowMap.has(id)) {
+          rowMap.set(id, {
+            id,
+            impactId: impact.id,
+            urgencyId: urgency.id,
+            priorityId: matrix[impact.id]?.[urgency.id] ?? '',
+          });
+        }
+      }),
+    );
+    return Array.from(rowMap.values());
+  }, [activeImpacts, activeUrgencies, matrix]);
 
   const handleDeleteRow = () => {
     if (!selectedRowId) return;
@@ -224,7 +226,7 @@ const TicketMatrixSection = ({
       defaultExpanded={false}
       className={classes.sectionAccordion}
     >
-      <Paper variant='outlined' className={classes.actionToolbar} sx={{ border: 'none' }}>
+      <GenericToolbar className={classes.actionToolbar}>
         <Box className={classes.toolbarButtons} sx={{ flexWrap: 'wrap' }}>
           {!selectedRowId ? (
             <>
@@ -348,7 +350,7 @@ const TicketMatrixSection = ({
             </>
           )}
         </Box>
-      </Paper>
+      </GenericToolbar>
 
       {useSimple ? (
         <Paper variant='outlined' sx={{ p: 2, borderRadius: 2, mt: 1 }}>

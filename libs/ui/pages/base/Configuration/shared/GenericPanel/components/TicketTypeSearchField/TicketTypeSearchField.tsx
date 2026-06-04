@@ -9,7 +9,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useGetTicketTypeQuery } from '@serviceops/services';
+import { useSharedTicketTypes } from '../../../../hooks/useSharedTicketTypes';
 
 export interface TicketTypeSearchFieldProps {
   label: string;
@@ -34,7 +34,7 @@ export const TicketTypeSearchField = ({
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { data: ticketTypes, isLoading } = useGetTicketTypeQuery();
+  const { ticketTypes, isLoading } = useSharedTicketTypes();
 
   useEffect(() => {
     setInputValue(value || '');

@@ -1,14 +1,19 @@
 import type { IConfigServiceLineTicketType } from '@serviceops/interfaces';
-import { useGetTicketTypeQuery } from '@serviceops/services';
+import { useSharedTicketTypes } from '../../../../../../hooks/useSharedTicketTypes';
 import { GenericTogglePanel } from '@serviceops/generictogglepanel';
 import { TICKET_TYPE_TOGGLE_CONFIG } from './AppTicketTypeSection.config';
 import { AppTicketTypeSectionProps } from './AppTicketTypeSection.types';
 
 export const AppTicketTypeSection = ({ rows, onTicketTypeToggle }: AppTicketTypeSectionProps) => {
-  const { data: ticketTypesData } = useGetTicketTypeQuery();
+  const { ticketTypes: ticketTypesData } = useSharedTicketTypes();
 
   const activeTicketTypes: { id: string | number; displayName?: string; name: string }[] =
-    ticketTypesData && ticketTypesData.length > 0 ? ticketTypesData.filter((t) => t.isActive) : [];
+    ticketTypesData && ticketTypesData.length > 0
+      ? ticketTypesData.filter(
+          (t: { id: string | number; displayName?: string; name: string; isActive?: boolean }) =>
+            t.isActive,
+        )
+      : [];
 
   const allTicketTypeKeys = activeTicketTypes.map((tt) => tt.displayName || tt.name);
 

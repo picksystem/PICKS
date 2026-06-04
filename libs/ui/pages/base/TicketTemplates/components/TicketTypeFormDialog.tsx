@@ -378,7 +378,7 @@ const TicketTypeFormDialog = ({
             {/* Display Name */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
-                label='Creation page display text'
+                label='New Ticket Creation Page Display Text'
                 name='displayName'
                 value={formik.values.displayName}
                 onChange={formik.handleChange}
@@ -386,10 +386,10 @@ const TicketTypeFormDialog = ({
                 error={Boolean(
                   reqError(formik.touched.displayName, formik.errors.displayName as string),
                 )}
-                helperText={
-                  reqError(formik.touched.displayName, formik.errors.displayName as string) ||
-                  'Shown in UI to end users'
-                }
+                helperText={reqError(
+                  formik.touched.displayName,
+                  formik.errors.displayName as string,
+                )}
                 fullWidth
                 size='small'
               />

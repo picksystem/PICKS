@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box } from '@serviceops/component';
 import { useStyles } from './styles';
 import { useConfiguration } from '@serviceops/confighooks';
-import { useGetTicketTypeQuery } from '@serviceops/services';
+import { useSharedTicketTypes } from '../../hooks/useSharedTicketTypes';
 import {
   IConfigSLAAdminControls,
   IConfigResponseAckSLARow,
@@ -93,7 +93,7 @@ const DEFAULT_DUEDATE_VALUES: Record<
 const SLAs = () => {
   const { classes } = useStyles();
   const { slas: apiSlas, saveSection } = useConfiguration();
-  const { data: ticketTypesData } = useGetTicketTypeQuery();
+  const { ticketTypes: ticketTypesData } = useSharedTicketTypes();
 
   const activeTicketTypes: ITicketType[] =
     ticketTypesData && ticketTypesData.length > 0 ? ticketTypesData.filter((t) => t.isActive) : [];
