@@ -11,7 +11,7 @@ import {
   Chip,
   Loader,
 } from '@serviceops/component';
-import { alpha, InputAdornment, FormControlLabel, Switch } from '@mui/material';
+import { alpha, Alert, InputAdornment, FormControlLabel, Switch } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -21,9 +21,12 @@ import ClearIcon from '@mui/icons-material/Clear';
 import { ConfigFormDialog, ConfigDeleteDialog } from '@serviceops/configdialogs';
 import { useStyles } from './styles';
 import { GenericAccordion } from '../GenericAccordion/GenericAccordion';
-import { useDebounce, useNotification } from '@serviceops/hooks';
+import { useDebounce, useFieldError, useNotification } from '@serviceops/hooks';
 import { TicketTypeSearchField } from './components/TicketTypeSearchField/TicketTypeSearchField';
 import { WorkLocationSearchField } from './components/WorkLocationSearchField/WorkLocationSearchField';
+import { ServiceLineSearchField } from './components/ServiceLineSearchField/ServiceLineSearchField';
+import { ApplicationSearchField } from './components/ApplicationSearchField/ApplicationSearchField';
+import { QueueSearchField } from './components/QueueSearchField/QueueSearchField';
 import { DatePickerField } from './components/DatePickerField/DatePickerField';
 import { TimePickerField } from './components/TimePickerField/TimePickerField';
 import { DurationPickerField } from './components/DurationPickerField/DurationPickerField';
@@ -36,6 +39,7 @@ export interface TableField {
   bold?: boolean;
   minWidth?: number;
   defaultValue?: string | number | boolean;
+  sx?: import('@mui/system').SxProps<import('@mui/material').Theme>;
   type?:
     | 'text'
     | 'date'
@@ -45,7 +49,10 @@ export interface TableField {
     | 'number'
     | 'toggle'
     | 'ticketTypeSearch'
-    | 'workLocationSearch';
+    | 'workLocationSearch'
+    | 'serviceLineSearch'
+    | 'applicationSearch'
+    | 'queueSearch';
   /** For workLocationSearch type - fields to auto-fill when location is selected */
   autoFillFields?: {
     city?: string;
@@ -284,6 +291,12 @@ interface GenericPanelProps {
   onEditClick?: () => void;
   /** Optional callback when Delete button is clicked */
   onDeleteClick?: () => void;
+  /**
+   * Optional cross-field validator. When provided, the returned message is
+   * rendered as an inline error at the bottom of the form and blocks submit
+   * (greys the Submit button). Re-evaluates on every form change.
+   */
+  validate?: (form: FormData, data: GenericData[], editingRow: GenericData | null) => string | null;
 }
 
 const createColumns = (fields: TableField[]): Column<Record<string, unknown>>[] =>
@@ -666,14 +679,18 @@ export const GenericPanel = ({
   onNewClick,
   onEditClick,
   onDeleteClick,
+  validate,
 }: GenericPanelProps) => {
   const { success, error: showError } = useNotification();
+  const reqError = useFieldError();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editingRow, setEditingRow] = useState<GenericData | null>(null);
   const [isNewDialog, setIsNewDialog] = useState(false);
   const [search, setSearch] = useState('');
   const [form, setForm] = useState<FormData>(createEmptyForm(config.fields));
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [showValidation, setShowValidation] = useState(false);
 
   // Use controlled selection if provided, otherwise use internal state
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
@@ -719,6 +736,8 @@ export const GenericPanel = ({
     } else {
       setForm(createEmptyForm(config.fields));
     }
+    setFormErrors({});
+    setShowValidation(false);
   }, [dialogOpen, editingRow, config.fields]);
 
   const columns = useMemo(
@@ -800,7 +819,8 @@ export const GenericPanel = ({
   }, [config.fields, activeSetSelection]);
 
   const handleSubmit = useCallback(async () => {
-    // Check if form has any actual values to save
+    // For editing: check if anything actually changed
+    // For new: treat the form as having values if any field is filled
     const hasAnyValue = Object.values(form).some(
       (v) =>
         v !== undefined &&
@@ -809,10 +829,7 @@ export const GenericPanel = ({
         v !== null &&
         (Array.isArray(v) ? v.length > 0 : true),
     );
-
-    // For editing: check if anything actually changed
-    // For new: only save if there's at least one value
-    const shouldSave = editingRow
+    const hasChanges = editingRow
       ? config.fields.some((field) => {
           const original = editingRow[field.name];
           const current = form[field.name];
@@ -820,8 +837,29 @@ export const GenericPanel = ({
         })
       : hasAnyValue;
 
-    // If no changes and no values, just close without saving
-    if (!shouldSave) {
+    // Always run required-field validation when the user attempts to submit.
+    // This prevents bypassing validation by submitting a completely empty new form.
+    const errors = validateForm();
+    const hasRequiredErrors = Object.keys(errors).length > 0;
+
+    if (hasRequiredErrors) {
+      setFormErrors(errors);
+      setShowValidation(true);
+      showError('Please fill in all required fields');
+      return;
+    }
+
+    if (validate) {
+      const dupErr = validate(form, data, editingRow);
+      if (dupErr) {
+        showError(dupErr);
+        return;
+      }
+    }
+
+    // No required errors, but nothing to save (e.g. user opened a row, made no
+    // changes, and clicked Submit) — close silently.
+    if (!hasChanges) {
       setDialogOpen(false);
       setTimeout(() => {
         setEditingRow(null);
@@ -868,6 +906,7 @@ export const GenericPanel = ({
     success,
     showError,
     activeSetSelection,
+    validate,
   ]);
 
   const handleDelete = useCallback(async () => {
@@ -956,9 +995,54 @@ export const GenericPanel = ({
   }, []);
 
   // Memoized text field change handler
-  const handleTextFieldChange = useCallback((fieldName: string, value: string) => {
-    setForm((prev) => ({ ...prev, [fieldName]: value }));
-  }, []);
+  const handleTextFieldChange = useCallback(
+    (fieldName: string, value: string) => {
+      setForm((prev) => ({ ...prev, [fieldName]: value }));
+      if (showValidation) {
+        setFormErrors((prev) => {
+          if (!prev[fieldName]) return prev;
+          const next = { ...prev };
+          delete next[fieldName];
+          return next;
+        });
+      }
+    },
+    [showValidation],
+  );
+
+  // Validate required fields. Returns a map of field name -> error message.
+  const validateForm = useCallback((): Record<string, string> => {
+    const errors: Record<string, string> = {};
+    config.fields.forEach((field) => {
+      if (!field.required) return;
+      const value = form[field.name];
+      const isEmpty =
+        value === undefined ||
+        value === null ||
+        value === '' ||
+        (typeof value === 'boolean' && value === false) ||
+        (Array.isArray(value) && value.length === 0);
+      if (isEmpty) errors[field.name] = 'required';
+    });
+    return errors;
+  }, [config.fields, form]);
+
+  // Cross-field validation (e.g. duplicate-row detection). Re-evaluates on
+  // every form/data change so the inline error appears/disappears live.
+  const crossFieldError = useMemo(
+    () => (validate ? validate(form, data, editingRow) : null),
+    [validate, form, data, editingRow],
+  );
+
+  // Reflect required-field validity in the submit button so users get visual
+  // feedback before they click Submit. Also block submit on any cross-field
+  // validation error returned by the optional `validate` prop.
+  const formIsInvalid = useMemo(
+    () =>
+      (config.fields.some((f) => f.required) && Object.keys(validateForm()).length > 0) ||
+      !!crossFieldError,
+    [config.fields, validateForm, crossFieldError],
+  );
 
   return (
     <>
@@ -979,7 +1063,7 @@ export const GenericPanel = ({
         accent={config.accent}
         title={config.entity}
         subtitle={config.subtitle}
-        submitDisabled={false}
+        submitDisabled={formIsInvalid}
         submitLabel={editingRow ? 'Save' : 'Submit'}
         maxWidth='sm'
       >
@@ -1008,6 +1092,9 @@ export const GenericPanel = ({
                     label={field.label}
                     value={currentValue}
                     onChange={(value) => handleTextFieldChange(field.name, value)}
+                    onSelect={(option) => {
+                      setForm((prev) => ({ ...prev, ticketTypeName: option.name }));
+                    }}
                     required={field.required}
                   />
                 );
@@ -1050,6 +1137,42 @@ export const GenericPanel = ({
                           }
                         : undefined
                     }
+                    required={field.required}
+                  />
+                );
+              }
+              if (field.type === 'serviceLineSearch') {
+                const currentValue = (form[field.name] ?? '') as string;
+                return (
+                  <ServiceLineSearchField
+                    key={field.name}
+                    label={field.label}
+                    value={currentValue}
+                    onChange={(value) => handleTextFieldChange(field.name, value)}
+                    required={field.required}
+                  />
+                );
+              }
+              if (field.type === 'applicationSearch') {
+                const currentValue = (form[field.name] ?? '') as string;
+                return (
+                  <ApplicationSearchField
+                    key={field.name}
+                    label={field.label}
+                    value={currentValue}
+                    onChange={(value) => handleTextFieldChange(field.name, value)}
+                    required={field.required}
+                  />
+                );
+              }
+              if (field.type === 'queueSearch') {
+                const currentValue = (form[field.name] ?? '') as string;
+                return (
+                  <QueueSearchField
+                    key={field.name}
+                    label={field.label}
+                    value={currentValue}
+                    onChange={(value) => handleTextFieldChange(field.name, value)}
                     required={field.required}
                   />
                 );
@@ -1099,6 +1222,7 @@ export const GenericPanel = ({
                     value={currentValue}
                     onChange={(value) => handleTextFieldChange(field.name, value)}
                     required={field.required}
+                    sx={field.sx}
                   />
                 );
               }
@@ -1111,12 +1235,19 @@ export const GenericPanel = ({
                   size='small'
                   fullWidth
                   required={field.required}
+                  error={Boolean(showValidation && formErrors[field.name])}
+                  helperText={reqError(showValidation, formErrors[field.name])}
                   type={field.type === 'number' ? 'number' : 'text'}
                   value={textValue}
                   onChange={(e) => handleTextFieldChange(field.name, e.target.value)}
                 />
               );
             })}
+            {crossFieldError && (
+              <Alert severity='error' sx={{ mt: 0.5 }}>
+                {crossFieldError}
+              </Alert>
+            )}
           </Box>
         </LocalizationProvider>
       </ConfigFormDialog>

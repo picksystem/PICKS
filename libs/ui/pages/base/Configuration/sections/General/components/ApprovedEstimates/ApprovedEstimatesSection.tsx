@@ -3,6 +3,7 @@ import {
   APPROVED_ESTIMATES_CONFIG,
   approvedEstimateColumns,
 } from './shared/ApprovedEstimatesConfig';
+import { validateApprovedEstimateDuplicate } from './shared/validateApprovedEstimate';
 import { IConfigApprovedEstimateRow } from '@serviceops/interfaces';
 
 interface ApprovedEstimatesSectionProps {
@@ -20,6 +21,7 @@ const ApprovedEstimatesSection = ({ displayRows, onDataChange }: ApprovedEstimat
       variant='plain'
       defaultExpanded={false}
       enableSuccessMessage
+      validate={validateApprovedEstimateDuplicate}
     />
   );
 };

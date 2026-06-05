@@ -25,7 +25,7 @@ export const HOLIDAY_CALENDAR_SECTION_CONFIG: SectionConfig = {
     },
     {
       key: 'bankHolidays',
-      label: 'Bank Holidays',
+      label: 'Bank Holidays (Public Holidays)',
       icon: <BeachAccessIcon />,
       isActive: false,
       onClick: () => {},

@@ -60,7 +60,6 @@ const ETAActivationSection = ({
         customColumns={columns as any}
         variant='plain'
         defaultExpanded={false}
-        enableNewButton={false}
       />
     </div>
   );

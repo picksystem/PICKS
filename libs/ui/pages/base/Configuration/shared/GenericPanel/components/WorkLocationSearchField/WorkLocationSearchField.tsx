@@ -273,7 +273,7 @@ export interface WorkLocationSearchFieldProps {
   }) => void;
   required?: boolean;
   error?: boolean;
-  helperText?: string;
+  helperText?: React.ReactNode;
 }
 
 export const WorkLocationSearchField = ({

@@ -286,10 +286,10 @@ const TicketTypeFormDialog = ({
               />
             </Grid>
 
-            {/* Short Description */}
+            {/* IT team internal note */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
-                label='Short Description'
+                label='IT Team Internal Note'
                 name='shortDescription'
                 value={formik.values.shortDescription}
                 onChange={formik.handleChange}

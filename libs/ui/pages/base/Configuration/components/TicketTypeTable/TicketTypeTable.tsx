@@ -113,7 +113,7 @@ const TicketTypeTable = ({
     },
     {
       id: 'shortDescription',
-      label: 'Short Description',
+      label: 'IT Team Internal Note',
       minWidth: 180,
       format: (v): React.ReactNode => (
         <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>

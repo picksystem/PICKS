@@ -13,15 +13,16 @@ interface ToggleRowProps {
 }
 
 const ToggleRow = memo(({ label, checked, onChange }: ToggleRowProps) => (
-  <Box
-    sx={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      py: 0.75,
-    }}
-  >
-    <Typography sx={{ fontSize: '0.83rem', fontWeight: 500, color: 'text.primary' }}>
+  <Box sx={{ display: 'flex', alignItems: 'center', py: 0.75 }}>
+    <Typography
+      sx={{
+        fontSize: '0.83rem',
+        fontWeight: 500,
+        color: 'text.primary',
+        width: 240,
+        flexShrink: 0,
+      }}
+    >
       {label}
     </Typography>
     <Switch
@@ -29,7 +30,6 @@ const ToggleRow = memo(({ label, checked, onChange }: ToggleRowProps) => (
       color='primary'
       checked={checked!}
       onChange={(e) => onChange(e.target.checked)}
-      sx={{ flexShrink: 0 }}
     />
   </Box>
 ));
@@ -48,19 +48,30 @@ const AdminControlsSection = ({
   const { classes } = useStyles();
 
   const handleToggleDefaultHours = useCallback(
-    (v: boolean) => update('activateDefaultApprovedHours', v),
-    [update],
+    (v: boolean) =>
+      update('generalAdminControls', {
+        ...form.generalAdminControls,
+        activateDefaultApprovedHours: v,
+      }),
+    [update, form.generalAdminControls],
   );
 
   const handleToggleTimeEntries = useCallback(
-    (v: boolean) => update('timeEntriesEnabled', v),
-    [update],
+    (v: boolean) =>
+      update('generalAdminControls', { ...form.generalAdminControls, timeEntriesEnabled: v }),
+    [update, form.generalAdminControls],
   );
 
   const handleChangeDisplayName = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) =>
-      update('timeEntriesDisplayName', e.target.value as IConfigGeneral['timeEntriesDisplayName']),
-    [update],
+      update('generalAdminControls', {
+        ...form.generalAdminControls,
+        changeDisplayName: {
+          approved_estimates: e.target.value === 'approved_estimates',
+          estimated_hours: e.target.value === 'estimated_hours',
+        },
+      }),
+    [update, form.generalAdminControls],
   );
 
   return (
@@ -84,13 +95,13 @@ const AdminControlsSection = ({
       >
         <ToggleRow
           label='Activate default approved hours'
-          checked={form.activateDefaultApprovedHours}
+          checked={form.generalAdminControls.activateDefaultApprovedHours}
           onChange={handleToggleDefaultHours}
         />
         <RowDivider />
         <ToggleRow
           label='Enable time entries on tickets'
-          checked={form.timeEntriesEnabled}
+          checked={form.generalAdminControls.timeEntriesEnabled}
           onChange={handleToggleTimeEntries}
         />
         <RowDivider />
@@ -101,7 +112,11 @@ const AdminControlsSection = ({
             Change display name
           </Typography>
           <RadioGroup
-            value={form.timeEntriesDisplayName}
+            value={
+              form.generalAdminControls.changeDisplayName.approved_estimates
+                ? 'approved_estimates'
+                : 'estimated_hours'
+            }
             onChange={handleChangeDisplayName}
             sx={{ pl: 0.5, gap: 0.25 }}
           >

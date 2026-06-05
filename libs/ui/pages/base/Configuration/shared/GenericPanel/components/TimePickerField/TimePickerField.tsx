@@ -13,7 +13,7 @@ export interface TimePickerFieldProps {
   onChange: (value: string) => void;
   required?: boolean;
   error?: boolean;
-  helperText?: string;
+  helperText?: React.ReactNode;
 }
 
 export const TimePickerField = ({

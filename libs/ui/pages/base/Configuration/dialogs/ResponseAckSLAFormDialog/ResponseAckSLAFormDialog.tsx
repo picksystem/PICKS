@@ -94,7 +94,7 @@ const ResponseAckSLAFormDialog = ({
       icon={<AccessTimeIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
       accent='#0369a1'
       title='Response / Acknowledgement SLA Row'
-      subtitle='Set response time targets (in minutes) per priority level'
+      subtitle='Set response time targets (in hours) per priority level'
       submitDisabled={!form.ticketTypeId}
       submitLabel={isEditing ? 'Save' : 'Submit'}
       maxWidth='sm'

@@ -132,7 +132,7 @@ export const RESOLUTION_SLA_CONFIG: TableConfig = {
 
 // Response/Acknowledgement SLA Config
 export const RESPONSE_ACK_SLA_CONFIG: TableConfig = {
-  title: 'Response / Acknowledgement SLA (in minutes)',
+  title: 'Response / Acknowledgement SLA (in hours)',
   subtitle: 'Configure response time targets and breach alerting for initial acknowledgement',
   accent: SLA_ACCENT,
   icon: <MarkEmailReadIcon sx={{ fontSize: '1.1rem' }} />,

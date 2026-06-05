@@ -66,7 +66,6 @@ const ResolutionSLASection = ({
         customColumns={columns as any}
         variant='plain'
         defaultExpanded={false}
-        enableNewButton={false}
       />
     </div>
   );

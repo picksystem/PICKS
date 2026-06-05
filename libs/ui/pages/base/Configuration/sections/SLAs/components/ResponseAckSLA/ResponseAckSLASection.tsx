@@ -24,7 +24,7 @@ const ResponseAckSLASection = ({
   // Create a read-only config for the panel (no New button)
   const readonlyConfig = {
     ...RESPONSE_ACK_SLA_CONFIG,
-    title: 'Response / Acknowledgement SLA (in minutes)',
+    title: 'Response / Acknowledgement SLA (in hours)',
     subtitle: 'Configure response time targets and breach alerting for initial acknowledgement',
   };
 
@@ -66,7 +66,6 @@ const ResponseAckSLASection = ({
         customColumns={columns as any}
         variant='plain'
         defaultExpanded={false}
-        enableNewButton={false}
       />
     </div>
   );

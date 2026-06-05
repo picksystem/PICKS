@@ -6,19 +6,27 @@ import { useConfiguration } from '../../hooks/useConfiguration';
 import { ConfigurationSection } from '@serviceops/configsection';
 import { useState, useEffect, useCallback } from 'react';
 import { IConfigGeneral, IConfigApprovedEstimateRow } from '@serviceops/interfaces';
-import { useDebounce } from '@serviceops/hooks';
 import { useSharedTicketTypes } from '../../hooks/useSharedTicketTypes';
 
 const DEFAULT_GENERAL: IConfigGeneral = {
-  systemName: '',
-  systemDescription: '',
-  timezone: 'UTC',
-  dateFormat: 'MM/DD/YYYY',
-  language: 'en',
-  timeEntriesEnabled: false,
-  activateDefaultApprovedHours: false,
-  timeEntriesDisplayName: 'estimated_hours',
-  approvedEstimateRows: [],
+  system: {
+    systemName: '',
+    systemDescription: '',
+    timezone: 'UTC',
+    dateFormat: 'MM/DD/YYYY',
+    language: 'en',
+  },
+  generalAdminControls: {
+    activateDefaultApprovedHours: false,
+    timeEntriesEnabled: false,
+    changeDisplayName: {
+      approved_estimates: false,
+      estimated_hours: true,
+    },
+  },
+  defaultApprovedEstimates: {
+    rows: [],
+  },
 };
 
 const General = () => {
@@ -28,21 +36,20 @@ const General = () => {
 
   const [form, setForm] = useState<IConfigGeneral>(DEFAULT_GENERAL);
 
-  // Debounced form state to prevent excessive API calls
-  const debouncedForm = useDebounce(form, 300);
-
   useEffect(() => {
     if (apiGeneral) setForm({ ...DEFAULT_GENERAL, ...apiGeneral });
   }, [apiGeneral]);
 
-  const update = useCallback(<K extends keyof IConfigGeneral>(key: K, value: IConfigGeneral[K]) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  }, []);
-
-  // Only save other fields via debounce (not approvedEstimateRows which is saved immediately)
-  useEffect(() => {
-    // This debounced effect can be used for other general fields if needed
-  }, [debouncedForm]);
+  const update = useCallback(
+    <K extends keyof IConfigGeneral>(key: K, value: IConfigGeneral[K]) => {
+      setForm((prev) => {
+        const next = { ...prev, [key]: value };
+        saveSection('general', next);
+        return next;
+      });
+    },
+    [saveSection],
+  );
 
   const handleDataChange = useCallback(
     (rows: IConfigApprovedEstimateRow[]) => {
@@ -61,7 +68,7 @@ const General = () => {
 
       // Update local form state
       setForm((prev) => {
-        const newForm = { ...prev, approvedEstimateRows: transformedRows };
+        const newForm = { ...prev, defaultApprovedEstimates: { rows: transformedRows } };
         // Save to API immediately
         saveSection('general', newForm);
         return newForm;
@@ -70,7 +77,7 @@ const General = () => {
     [ticketTypes, saveSection],
   );
 
-  const displayRows: IConfigApprovedEstimateRow[] = form.approvedEstimateRows ?? [];
+  const displayRows: IConfigApprovedEstimateRow[] = form.defaultApprovedEstimates?.rows ?? [];
 
   return (
     <Box className={classes.container}>

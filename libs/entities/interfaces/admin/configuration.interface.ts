@@ -115,16 +115,31 @@ export interface IConfigSLAAdminControls {
 
 // ── Section shapes ─────────────────────────────────────────────────────────────
 
-export interface IConfigGeneral {
+export interface IConfigSystem {
   systemName: string;
   systemDescription: string;
   timezone: string;
   dateFormat: string;
   language: string;
-  timeEntriesEnabled: boolean;
+}
+
+export interface IConfigGeneralAdminControls {
   activateDefaultApprovedHours: boolean;
-  timeEntriesDisplayName: 'approved_estimates' | 'estimated_hours';
-  approvedEstimateRows: IConfigApprovedEstimateRow[];
+  timeEntriesEnabled: boolean;
+  changeDisplayName: {
+    approved_estimates: boolean;
+    estimated_hours: boolean;
+  };
+}
+
+export interface IConfigDefaultApprovedEstimates {
+  rows: IConfigApprovedEstimateRow[];
+}
+
+export interface IConfigGeneral {
+  system: IConfigSystem;
+  generalAdminControls: IConfigGeneralAdminControls;
+  defaultApprovedEstimates: IConfigDefaultApprovedEstimates;
 }
 
 export interface IConfigPriorities {
@@ -160,6 +175,8 @@ export interface IConfigApprovedEstimateRow {
   application?: string;
   queue?: string;
   hours: number;
+  isActive?: boolean;
+  shortDescription?: string;
 }
 
 export interface IConfigActivationRow {
@@ -1049,15 +1066,24 @@ export interface IUpdateConfigurationSectionUseCase {
 
 export const DEFAULT_CONFIGURATION_DATA: IConfigurationData = {
   general: {
-    systemName: 'serivceops',
-    systemDescription: 'IT Service Management Platform',
-    timezone: 'UTC',
-    dateFormat: 'MM/DD/YYYY',
-    language: 'en',
-    timeEntriesEnabled: false,
-    activateDefaultApprovedHours: false,
-    timeEntriesDisplayName: 'estimated_hours',
-    approvedEstimateRows: [],
+    system: {
+      systemName: 'serivceops',
+      systemDescription: 'IT Service Management Platform',
+      timezone: 'UTC',
+      dateFormat: 'MM/DD/YYYY',
+      language: 'en',
+    },
+    generalAdminControls: {
+      activateDefaultApprovedHours: false,
+      timeEntriesEnabled: false,
+      changeDisplayName: {
+        approved_estimates: false,
+        estimated_hours: true,
+      },
+    },
+    defaultApprovedEstimates: {
+      rows: [],
+    },
   },
   priorities: {
     levels: [

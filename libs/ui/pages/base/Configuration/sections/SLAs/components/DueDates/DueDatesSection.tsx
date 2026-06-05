@@ -66,7 +66,6 @@ const DueDatesSection = ({
         customColumns={columns as any}
         variant='plain'
         defaultExpanded={false}
-        enableNewButton={false}
       />
     </div>
   );

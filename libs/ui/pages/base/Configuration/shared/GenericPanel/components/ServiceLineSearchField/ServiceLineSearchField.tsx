@@ -9,64 +9,44 @@ import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useSharedTicketTypes } from '../../../../hooks/useSharedTicketTypes';
+import { useSharedServiceLines } from '../../../../hooks/useSharedServiceLines';
 
-export interface TicketTypeSearchFieldProps {
+export interface ServiceLineSearchFieldProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  /** Optional callback fired when the user picks an option, with id and name. */
-  onSelect?: (option: { id: string; name: string }) => void;
   required?: boolean;
   error?: boolean;
   helperText?: React.ReactNode;
 }
 
-export const TicketTypeSearchField = ({
+export const ServiceLineSearchField = ({
   label,
   value,
   onChange,
-  onSelect,
   required,
   error,
   helperText,
-}: TicketTypeSearchFieldProps) => {
-  const [inputValue, setInputValue] = useState('');
-  const [options, setOptions] = useState<{ id: string; displayName: string; name: string }[]>([]);
-  const [loading, setLoading] = useState(false);
+}: ServiceLineSearchFieldProps) => {
+  const [inputValue, setInputValue] = useState(value || '');
+  const [options, setOptions] = useState<{ id: string; name: string }[]>([]);
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { ticketTypes, isLoading } = useSharedTicketTypes();
+  const { options: allOptions, isLoading } = useSharedServiceLines();
 
-  // Resolve the displayed text from the stored id, so the input always shows
-  // the ticket type name (e.g. "Incident") rather than the stored key.
   useEffect(() => {
-    if (!value) {
-      setInputValue('');
-      return;
-    }
-    const match = (ticketTypes ?? []).find((tt) => String(tt.id) === String(value));
-    setInputValue(match?.name ?? '');
-  }, [value, ticketTypes]);
+    setInputValue(value || '');
+  }, [value]);
 
   const buildOptions = useCallback(
     (query: string) =>
-      (ticketTypes ?? [])
-        .filter((tt) => {
-          if (!query) return true;
-          const searchLower = query.toLowerCase();
-          return (
-            tt.name.toLowerCase().includes(searchLower) ||
-            tt.type.toLowerCase().includes(searchLower)
-          );
-        })
-        .map((tt) => ({
-          id: String(tt.id),
-          displayName: tt.name,
-          name: tt.name,
-        })),
-    [ticketTypes],
+      allOptions.filter((sl) => {
+        if (!query) return true;
+        const q = query.toLowerCase();
+        return sl.name.toLowerCase().includes(q) || sl.id.toLowerCase().includes(q);
+      }),
+    [allOptions],
   );
 
   const handleInputChange = useCallback(
@@ -78,22 +58,19 @@ export const TicketTypeSearchField = ({
       }
 
       debounceRef.current = setTimeout(() => {
-        setLoading(true);
         const filtered = buildOptions(newInputValue);
         setOptions(filtered);
         setOpen(filtered.length > 0);
-        setLoading(false);
       }, 200);
     },
     [buildOptions],
   );
 
-  const handleSelect = (ticketType: { id: string; displayName: string; name: string }) => {
-    setInputValue(ticketType.displayName);
+  const handleSelect = (option: { id: string; name: string }) => {
+    setInputValue(option.name);
     setOpen(false);
     setOptions([]);
-    onChange(ticketType.id);
-    onSelect?.({ id: ticketType.id, name: ticketType.name });
+    onChange(option.name);
   };
 
   const handleClear = () => {
@@ -107,7 +84,7 @@ export const TicketTypeSearchField = ({
     <Box sx={{ position: 'relative' }}>
       <TextField
         label={label}
-        placeholder='Search ticket types...'
+        placeholder='Search service lines...'
         value={inputValue}
         onChange={(e) => {
           setInputValue(e.target.value);
@@ -131,7 +108,7 @@ export const TicketTypeSearchField = ({
             endAdornment: (
               <InputAdornment position='end'>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  {loading || isLoading ? (
+                  {isLoading ? (
                     <CircularProgress size={16} />
                   ) : inputValue ? (
                     <ClearIcon
@@ -181,7 +158,7 @@ export const TicketTypeSearchField = ({
                   }}
                 >
                   <ListItemText
-                    primary={option.displayName}
+                    primary={option.name}
                     primaryTypographyProps={{
                       fontSize: '0.84rem',
                       noWrap: true,
@@ -197,4 +174,4 @@ export const TicketTypeSearchField = ({
   );
 };
 
-export default TicketTypeSearchField;
+export default ServiceLineSearchField;
