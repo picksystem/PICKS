@@ -2,21 +2,24 @@ import { useState } from 'react';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import {
   Box,
-  Typography,
   TextField,
   Button,
-  Switch,
-  Tooltip,
   Divider,
-  FormControlLabel,
+  ListItemIcon,
+  ListItemText,
+  Paper,
+  Typography,
+  Tooltip,
 } from '@serviceops/component';
-import { InputAdornment } from '@mui/material';
+import { InputAdornment, Popper } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 import SortIcon from '@mui/icons-material/Sort';
+import LinkIcon from '@mui/icons-material/Link';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import TicketTypeTable from '@serviceops/configtickettypetable';
 import TicketTypeFormDialog from '@serviceops/configtickettypeformdialog';
 import { ConfigDeleteDialog } from '@serviceops/configdialogs';
@@ -33,6 +36,36 @@ const TicketTypeConfigSection = () => {
   const [tableSearch, setTableSearch] = useState('');
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [sequenceOpen, setDisplaySequenceOpen] = useState(false);
+  const [usefulLinksAnchor, setUsefulLinksAnchor] = useState<HTMLElement | null>(null);
+  const [usefulLinksOpen, setUsefulLinksOpen] = useState(false);
+
+  const handleUsefulLinksOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setUsefulLinksAnchor(event.currentTarget);
+    setUsefulLinksOpen(true);
+  };
+
+  const handleUsefulLinksClose = () => {
+    setUsefulLinksAnchor(null);
+    setUsefulLinksOpen(false);
+  };
+
+  const usefulLinks = [
+    {
+      label: 'User Guide',
+      description: 'Learn how to configure ticket types effectively',
+      href: '#',
+    },
+    {
+      label: 'Best Practices',
+      description: 'Recommended patterns for ticket type setup',
+      href: '#',
+    },
+    {
+      label: 'Troubleshooting',
+      description: 'Solutions for common configuration issues',
+      href: '#',
+    },
+  ];
 
   const {
     ticketTypes,
@@ -48,8 +81,6 @@ const TicketTypeConfigSection = () => {
     handleToggleActive,
     iconMap,
     tagMap,
-    advancedDisplaySequences,
-    setAdvancedDisplaySequences,
   } = useTicketTypeConfig();
 
   const filteredTicketTypes = tableSearch
@@ -105,49 +136,82 @@ const TicketTypeConfigSection = () => {
                   className={classes.toolbarDivider}
                   sx={{ mx: 0.5 }}
                 />
-                <FormControlLabel
-                  labelPlacement='start'
-                  control={
-                    <Switch
-                      checked={advancedDisplaySequences}
-                      onChange={(e) => setAdvancedDisplaySequences(e.target.checked)}
-                      size='small'
-                      color='primary'
-                    />
-                  }
-                  label={
-                    <Typography variant='body2' fontWeight={500} fontSize='0.82rem'>
-                      Use Advanced Number Display Sequences
+                <Tooltip title='Useful Links'>
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    color='secondary'
+                    startIcon={<LinkIcon />}
+                    onClick={handleUsefulLinksOpen}
+                    sx={{ width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    Useful Links
+                  </Button>
+                </Tooltip>
+                <Popper
+                  open={usefulLinksOpen}
+                  anchorEl={usefulLinksAnchor}
+                  placement='bottom-start'
+                  sx={{ zIndex: 1300 }}
+                >
+                  <Paper
+                    elevation={3}
+                    sx={{
+                      p: 1.5,
+                      minWidth: 250,
+                      border: 1,
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                    }}
+                    onMouseLeave={handleUsefulLinksClose}
+                  >
+                    <Typography variant='subtitle2' sx={{ px: 1, py: 0.5, fontWeight: 600 }}>
+                      Clicking a link opens a new page with the following options:
                     </Typography>
-                  }
-                  sx={{ mr: 0, ml: 0, gap: 1, width: { xs: '100%', sm: 'auto' } }}
-                />
-                <Divider
-                  orientation='vertical'
-                  flexItem
-                  className={classes.toolbarDivider}
-                  sx={{ mx: 0.5 }}
-                />
-                <Tooltip title='Configure advanced number sequences'>
-                  <Button
-                    size='small'
-                    variant='outlined'
-                    color='secondary'
-                    sx={{ width: { xs: '100%', sm: 'auto' } }}
-                  >
-                    Define Advanced Number Display Sequences
-                  </Button>
-                </Tooltip>
-                <Tooltip title='Configure application-specific number sequences'>
-                  <Button
-                    size='small'
-                    variant='outlined'
-                    color='secondary'
-                    sx={{ width: { xs: '100%', sm: 'auto' } }}
-                  >
-                    Define Application Specific Number Display Sequences
-                  </Button>
-                </Tooltip>
+                    <Divider sx={{ my: 1 }} />
+                    {usefulLinks.map((link, index) => (
+                      <Box
+                        key={index}
+                        onClick={() => {
+                          window.open(link.href, '_blank');
+                          handleUsefulLinksClose();
+                        }}
+                        sx={{
+                          px: 1.5,
+                          py: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1.5,
+                          borderLeft: 3,
+                          borderColor: 'transparent',
+                          borderRadius: 0.5,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                          '&:hover': {
+                            bgcolor: 'action.hover',
+                            borderColor: 'primary.main',
+                          },
+                        }}
+                      >
+                        <ListItemIcon sx={{ minWidth: 28 }}>
+                          <LinkIcon sx={{ fontSize: '1rem', color: 'text.secondary' }} />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={link.label}
+                          secondary={link.description}
+                          primaryTypographyProps={{
+                            variant: 'body2',
+                            fontSize: '0.85rem',
+                            fontWeight: 500,
+                          }}
+                          secondaryTypographyProps={{ variant: 'caption', color: 'text.secondary' }}
+                          sx={{ m: 0 }}
+                        />
+                        <OpenInNewIcon sx={{ fontSize: '0.75rem', color: 'text.secondary' }} />
+                      </Box>
+                    ))}
+                  </Paper>
+                </Popper>
                 <TextField
                   placeholder='Search...'
                   value={tableSearch}
@@ -211,7 +275,7 @@ const TicketTypeConfigSection = () => {
           </Box>
         </GenericToolbar>
 
-        <Box elevation={1} className={classes.tablePaper}>
+        <Box className={classes.tablePaper} sx={{ boxShadow: 1, bgcolor: 'background.paper' }}>
           <TicketTypeTable
             ticketTypes={filteredTicketTypes}
             selectedRowId={selectedRow?.id}
@@ -231,7 +295,6 @@ const TicketTypeConfigSection = () => {
       <TicketTypeFormDialog
         open={dialogOpen}
         editingItem={editingItem}
-        advancedSequences={advancedDisplaySequences}
         iconMap={iconMap}
         tagMap={tagMap}
         onClose={closeDialog}

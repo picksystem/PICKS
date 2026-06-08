@@ -10,7 +10,7 @@ export interface DateTimePickerFieldProps {
   onChange: (value: string) => void;
   required?: boolean;
   error?: boolean;
-  helperText?: string;
+  helperText?: React.ReactNode;
 }
 
 export const DateTimePickerField = ({

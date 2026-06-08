@@ -1,5 +1,13 @@
 import type { IConfigApprovedEstimateRow } from '@serviceops/interfaces';
 
+export interface ValidationError {
+  ticketTypeId?: string;
+  hours?: string;
+  serviceLine?: string;
+  application?: string;
+  queue?: string;
+}
+
 const norm = (v: unknown): string => {
   if (v === undefined || v === null) return '';
   return String(v).trim().toLowerCase();
@@ -20,18 +28,21 @@ const toTicketTypeKey = (v: unknown): string => {
 };
 
 /**
- * Returns an error string when the in-progress Approved Estimate row shares
+ * Returns field-level errors when the in-progress Approved Estimate row shares
  * its (ticketType, serviceLine, application, queue) tuple with an existing
  * row. Hours is intentionally NOT part of the key. The row being edited is
  * excluded from the check.
+ *
+ * Returns an object keyed by field name, e.g. { ticketTypeId: '...', hours: '...' }
+ * when a duplicate is found. Returns null when the row is unique.
  */
 export const validateApprovedEstimateDuplicate = (
-  form: Record<string, unknown>,
+  form: Record<string, string | boolean | number | undefined>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any[],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   editingRow: any | null,
-): string | null => {
+): ValidationError | null => {
   const rows = data as IConfigApprovedEstimateRow[];
   const editing = editingRow as IConfigApprovedEstimateRow | null;
 
@@ -56,5 +67,12 @@ export const validateApprovedEstimateDuplicate = (
   });
 
   if (dupIndex === -1) return null;
-  return `DUPLICATE — not allowed. Duplicate of line ${dupIndex + 1}.`;
+  const message = `This combination already exists on row ${dupIndex + 1}. Please choose a different combination of ticket type, service line, application, or queue`;
+  return {
+    ticketTypeId: message,
+    hours: message,
+    serviceLine: message,
+    application: message,
+    queue: message,
+  };
 };

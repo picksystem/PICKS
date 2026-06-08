@@ -1,2 +1,2 @@
-export { RichTextEditor, parseRichText } from './RichTextEditor';
+export { RichTextEditor, parseRichText, serializeRichText } from './RichTextEditor';
 export { useStyles } from './styles';

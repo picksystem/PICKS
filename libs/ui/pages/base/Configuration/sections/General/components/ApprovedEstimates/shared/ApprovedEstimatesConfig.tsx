@@ -82,7 +82,7 @@ export const approvedEstimateColumns = (): Column<IConfigApprovedEstimateRow>[] 
   },
   {
     id: 'hours',
-    label: 'Default Hours',
+    label: 'Default Hours (HH:MM)',
     minWidth: 140,
     format: (v) => {
       const { value, minutes } = formatHours(v);
@@ -110,12 +110,24 @@ export const approvedEstimateColumns = (): Column<IConfigApprovedEstimateRow>[] 
   },
   {
     id: 'shortDescription',
-    label: 'IT Team Internal Note',
+    label: 'Internal Note',
     minWidth: 180,
     format: (v) => {
       const val = v as string | undefined;
+      if (!val)
+        return <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>—</Typography>;
+
       return (
-        <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>{val || '—'}</Typography>
+        <Typography
+          sx={{
+            fontSize: '0.8rem',
+            color: 'text.secondary',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+          }}
+        >
+          {val}
+        </Typography>
       );
     },
   },
@@ -146,7 +158,13 @@ export const APPROVED_ESTIMATES_CONFIG: TableConfig = {
       type: 'duration' as const,
       sx: { '& .MuiOutlinedInput-root': { borderRadius: '8px' } },
     },
-    { name: 'shortDescription', label: 'IT Team Internal Note' },
+    {
+      name: 'shortDescription',
+      label: 'Internal Note',
+      type: 'text',
+      multiline: true,
+      minRows: 3,
+    },
     { name: 'isActive', label: 'Activation', type: 'toggle' as const },
   ],
 };

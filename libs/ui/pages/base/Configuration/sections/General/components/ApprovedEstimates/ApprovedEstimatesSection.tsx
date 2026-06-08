@@ -21,7 +21,7 @@ const ApprovedEstimatesSection = ({ displayRows, onDataChange }: ApprovedEstimat
       variant='plain'
       defaultExpanded={false}
       enableSuccessMessage
-      validate={validateApprovedEstimateDuplicate}
+      validateFields={validateApprovedEstimateDuplicate as never}
     />
   );
 };

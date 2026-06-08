@@ -7,6 +7,13 @@ import type { TicketTypeTableProps } from './util';
 
 const FALLBACK_COLOR = '#64748b';
 
+// Access control chip colors
+const ACCESS_ROLES_CONFIG = [
+  { value: 'admin', label: 'Admin', color: '#f97316' }, // orange
+  { value: 'consultant', label: 'Consultant', color: '#3b82f6' }, // blue
+  { value: 'endUser', label: 'End User', color: '#22c55e' }, // green
+];
+
 function buildPreview(prefix: string, length: number): string {
   const num = '1'.padStart(Math.max(1, length), '0');
   return `${prefix.toUpperCase()}${num}`;
@@ -51,18 +58,31 @@ const TicketTypeTable = ({
       },
     },
     {
-      id: 'description',
-      label: 'Description',
-      minWidth: 200,
-      format: (v): React.ReactNode => (
-        <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>
-          {String(v || '—')}
-        </Typography>
-      ),
+      id: 'displayTag',
+      label: 'Display Tag',
+      minWidth: 120,
+      format: (v): React.ReactNode => {
+        const tag = String(v || '');
+        return tag ? (
+          <Chip
+            label={tag}
+            size='small'
+            sx={{
+              fontWeight: 600,
+              fontSize: '0.75rem',
+              height: 22,
+            }}
+          />
+        ) : (
+          <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>
+            —
+          </Typography>
+        );
+      },
     },
     {
       id: 'displayName',
-      label: 'Creation Page Display Text',
+      label: 'Display Text',
       minWidth: 150,
       format: (v): React.ReactNode => (
         <Typography variant='body2' fontWeight={500} fontSize='0.82rem'>
@@ -113,7 +133,7 @@ const TicketTypeTable = ({
     },
     {
       id: 'shortDescription',
-      label: 'IT Team Internal Note',
+      label: 'Internal Note',
       minWidth: 180,
       format: (v): React.ReactNode => (
         <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>
@@ -141,6 +161,44 @@ const TicketTypeTable = ({
           <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>
             —
           </Typography>
+        );
+      },
+    },
+    {
+      id: 'accessControl',
+      label: 'Access Control',
+      minWidth: 200,
+      format: (_v, row): React.ReactNode => {
+        const { accessControl } = row as unknown as { accessControl?: string[] };
+        if (!accessControl || accessControl.length === 0) {
+          return (
+            <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>
+              —
+            </Typography>
+          );
+        }
+        return (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {accessControl.map((role: string) => {
+              const roleConfig = ACCESS_ROLES_CONFIG.find((r) => r.value === role);
+              if (!roleConfig) return null;
+              return (
+                <Chip
+                  key={role}
+                  label={roleConfig.label}
+                  size='small'
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: '0.7rem',
+                    height: 22,
+                    bgcolor: alpha(roleConfig.color, 0.15),
+                    color: roleConfig.color,
+                    border: `1px solid ${alpha(roleConfig.color, 0.4)}`,
+                  }}
+                />
+              );
+            })}
+          </Box>
         );
       },
     },

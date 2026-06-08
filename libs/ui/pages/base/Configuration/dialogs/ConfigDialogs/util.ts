@@ -25,6 +25,8 @@ interface ConfigFormDialogProps {
   submitDisabled?: boolean;
   /** Override submit button label (defaults: "Save Changes" / "Add") */
   submitLabel?: string;
+  /** Hide both Cancel and Submit buttons (useful for read-only or auto-save forms) */
+  hideActions?: boolean;
   maxWidth?: 'xs' | 'sm' | 'md' | 'lg';
   children: React.ReactNode;
 }

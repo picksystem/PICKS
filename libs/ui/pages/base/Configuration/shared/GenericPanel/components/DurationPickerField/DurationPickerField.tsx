@@ -8,7 +8,7 @@ export interface DurationPickerFieldProps {
   onChange: (value: string) => void;
   required?: boolean;
   error?: boolean;
-  helperText?: string;
+  helperText?: React.ReactNode;
   sx?: SxProps<Theme>;
 }
 

@@ -18,6 +18,7 @@ export const ConfigFormDialog = ({
   editSubtitle,
   submitDisabled,
   submitLabel,
+  hideActions,
   maxWidth = 'sm',
   children,
 }: ConfigFormDialogProps) => {
@@ -82,23 +83,25 @@ export const ConfigFormDialog = ({
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, py: 2, gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}>
-        <Button
-          onClick={onClose}
-          variant='outlined'
-          sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-        >
-          Cancel
-        </Button>
-        <Button
-          variant='contained'
-          onClick={onSubmit}
-          disabled={submitDisabled}
-          sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-        >
-          {resolvedSubmitLabel}
-        </Button>
-      </DialogActions>
+      {!hideActions && (
+        <DialogActions sx={{ px: 3, py: 2, gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}>
+          <Button
+            onClick={onClose}
+            variant='outlined'
+            sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant='contained'
+            onClick={onSubmit}
+            disabled={submitDisabled}
+            sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+          >
+            {resolvedSubmitLabel}
+          </Button>
+        </DialogActions>
+      )}
     </Dialog>
   );
 };

@@ -10,13 +10,13 @@ import {
   Column,
   Chip,
   Loader,
+  Alert,
 } from '@serviceops/component';
-import { alpha, Alert, InputAdornment, FormControlLabel, Switch } from '@mui/material';
+import { alpha, FormControlLabel, Switch } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import { ConfigFormDialog, ConfigDeleteDialog } from '@serviceops/configdialogs';
 import { useStyles } from './styles';
@@ -27,10 +27,12 @@ import { WorkLocationSearchField } from './components/WorkLocationSearchField/Wo
 import { ServiceLineSearchField } from './components/ServiceLineSearchField/ServiceLineSearchField';
 import { ApplicationSearchField } from './components/ApplicationSearchField/ApplicationSearchField';
 import { QueueSearchField } from './components/QueueSearchField/QueueSearchField';
+import { SearchField } from '../SearchField';
 import { DatePickerField } from './components/DatePickerField/DatePickerField';
 import { TimePickerField } from './components/TimePickerField/TimePickerField';
 import { DurationPickerField } from './components/DurationPickerField/DurationPickerField';
 import { DateTimePickerField } from './components/DateTimePickerField/DateTimePickerField';
+import { RichTextEditor, parseRichText, serializeRichText } from '../RichTextEditor';
 
 export interface TableField {
   name: string;
@@ -52,7 +54,12 @@ export interface TableField {
     | 'workLocationSearch'
     | 'serviceLineSearch'
     | 'applicationSearch'
-    | 'queueSearch';
+    | 'queueSearch'
+    | 'richText';
+  /** For text field - enable multiline textarea */
+  multiline?: boolean;
+  /** For multiline text field - minimum number of rows */
+  minRows?: number;
   /** For workLocationSearch type - fields to auto-fill when location is selected */
   autoFillFields?: {
     city?: string;
@@ -153,6 +160,8 @@ export const PanelToolbar = memo(
       onSearch(debouncedSearch);
     }, [debouncedSearch, onSearch]);
 
+    const isSearchLoading = localSearch.length > 0 && localSearch !== debouncedSearch;
+
     return (
       <Paper
         variant='outlined'
@@ -188,21 +197,11 @@ export const PanelToolbar = memo(
                 </Tooltip>
               </Box>
               <Box className={classes.searchFieldContainer}>
-                <TextField
-                  size='small'
-                  placeholder='Search…'
+                <SearchField
                   value={localSearch}
-                  onChange={(e) => setLocalSearch(e.target.value)}
+                  onChange={setLocalSearch}
+                  isLoading={isSearchLoading}
                   className={classes.tableSearchField}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position='end'>
-                          <SearchIcon sx={{ fontSize: '1rem' }} />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
                 />
               </Box>
             </Box>
@@ -275,6 +274,8 @@ interface GenericPanelProps {
   isLoading?: boolean;
   loaderMessage?: string;
   enableSuccessMessage?: boolean;
+  /** Hide the Cancel/Submit buttons at the bottom of the dialog */
+  hideDialogActions?: boolean;
   /** Set to false to hide the New button (for read-only/view-only panels) */
   enableNewButton?: boolean;
   /** Set to false to hide the Edit button */
@@ -297,6 +298,16 @@ interface GenericPanelProps {
    * (greys the Submit button). Re-evaluates on every form change.
    */
   validate?: (form: FormData, data: GenericData[], editingRow: GenericData | null) => string | null;
+  /**
+   * Optional field-level validator. Returns an object keyed by field name
+   * (e.g. { ticketTypeId: 'Error message', hours: 'Error message' }).
+   * Field errors render inline on the specific input with red border + helper text.
+   */
+  validateFields?: (
+    form: FormData,
+    data: GenericData[],
+    editingRow: GenericData | null,
+  ) => Record<string, string> | null;
 }
 
 const createColumns = (fields: TableField[]): Column<Record<string, unknown>>[] =>
@@ -350,6 +361,9 @@ interface PanelContentProps {
   filtered: GenericData[];
   selectedId: string | null;
   search: string;
+  /** True while the search input has a value that has not yet been debounced
+   *  to `search`. Used to drive the loading spinner inside SearchField. */
+  isSearchLoading?: boolean;
   onSearchChange: (v: string) => void;
   onRowClick: (row: GenericData) => void;
   onNewClick: () => void;
@@ -366,6 +380,7 @@ const PanelContent = memo(
     config,
     selectedId,
     search,
+    isSearchLoading = false,
     onSearchChange,
     onNewClick,
     onEditClick,
@@ -416,21 +431,11 @@ const PanelContent = memo(
                 </Box>
               )}
               <Box className={classes.searchFieldContainer}>
-                <TextField
-                  size='small'
-                  placeholder='Search...'
+                <SearchField
                   value={search}
-                  onChange={(e) => onSearchChange(e.target.value)}
+                  onChange={onSearchChange}
+                  isLoading={isSearchLoading}
                   className={classes.tableSearchField}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position='end'>
-                          <SearchIcon fontSize='small' />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
                 />
               </Box>
             </Box>
@@ -496,6 +501,7 @@ const StandardPanel = memo(
     filtered,
     selectedId,
     search,
+    isSearchLoading,
     onSearchChange,
     onRowClick,
     onNewClick,
@@ -511,6 +517,7 @@ const StandardPanel = memo(
     filtered: GenericData[];
     selectedId: string | null;
     search: string;
+    isSearchLoading?: boolean;
     onSearchChange: (v: string) => void;
     onRowClick: (row: GenericData) => void;
     onNewClick: () => void;
@@ -539,6 +546,7 @@ const StandardPanel = memo(
           filtered={filtered}
           selectedId={selectedId}
           search={search}
+          isSearchLoading={isSearchLoading}
           onSearchChange={onSearchChange}
           onRowClick={onRowClick}
           onNewClick={onNewClick}
@@ -576,6 +584,7 @@ const PlainPanel = memo(
     filtered,
     selectedId,
     search,
+    isSearchLoading,
     onSearchChange,
     onRowClick,
     onNewClick,
@@ -592,6 +601,7 @@ const PlainPanel = memo(
     filtered: GenericData[];
     selectedId: string | null;
     search: string;
+    isSearchLoading?: boolean;
     onSearchChange: (v: string) => void;
     onRowClick: (row: GenericData) => void;
     onNewClick: () => void;
@@ -629,6 +639,7 @@ const PlainPanel = memo(
             filtered={filtered}
             selectedId={selectedId}
             search={search}
+            isSearchLoading={isSearchLoading}
             onSearchChange={onSearchChange}
             onRowClick={onRowClick}
             onNewClick={onNewClick}
@@ -671,6 +682,7 @@ export const GenericPanel = ({
   isLoading = false,
   loaderMessage = 'Loading...',
   enableSuccessMessage = true,
+  hideDialogActions = false,
   enableNewButton = true,
   enableEditButton = true,
   enableDeleteButton = true,
@@ -680,6 +692,7 @@ export const GenericPanel = ({
   onEditClick,
   onDeleteClick,
   validate,
+  validateFields,
 }: GenericPanelProps) => {
   const { success, error: showError } = useNotification();
   const reqError = useFieldError();
@@ -696,6 +709,7 @@ export const GenericPanel = ({
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
   const isControlled = selectedRowId !== undefined;
   const activeSelection = isControlled ? selectedRowId : internalSelectedId;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const activeSetSelection = isControlled
     ? (id: string | null) => onRowSelect?.(id)
     : setInternalSelectedId;
@@ -748,6 +762,12 @@ export const GenericPanel = ({
 
   // Use debounce for search to prevent excessive filtering
   const debouncedSearch = useDebounce(search, 300);
+
+  // While the user is typing, the typed value (`search`) is ahead of the
+  // debounced value used for filtering. We expose this as `isSearchLoading`
+  // so the SearchField can show a loading spinner, and swap it for a
+  // "Cancel" button once the debounce settles.
+  const isSearchLoading = search.length > 0 && search !== debouncedSearch;
 
   const filtered = useMemo(() => {
     if (!debouncedSearch) return data;
@@ -849,12 +869,18 @@ export const GenericPanel = ({
       return;
     }
 
+    // Keep old validate prop check for backward compatibility, but don't show a toast since
+    // field-level errors (validateFields) will already show inline. The formIsInvalid check handles blocking.
     if (validate) {
       const dupErr = validate(form, data, editingRow);
       if (dupErr) {
-        showError(dupErr);
         return;
       }
+    }
+
+    // Also check field-level validation errors (returned as object)
+    if (fieldErrors) {
+      return;
     }
 
     // No required errors, but nothing to save (e.g. user opened a row, made no
@@ -944,6 +970,7 @@ export const GenericPanel = ({
       filtered: filtered as GenericData[],
       selectedId: activeSelection,
       search,
+      isSearchLoading,
       onSearchChange: setSearch,
       onRowClick: handleRowClick,
       onNewClick: handleNewClick,
@@ -961,6 +988,7 @@ export const GenericPanel = ({
       filtered,
       activeSelection,
       search,
+      isSearchLoading,
       handleRowClick,
       handleNewClick,
       handleEditClick,
@@ -1027,21 +1055,33 @@ export const GenericPanel = ({
     return errors;
   }, [config.fields, form]);
 
-  // Cross-field validation (e.g. duplicate-row detection). Re-evaluates on
-  // every form/data change so the inline error appears/disappears live.
-  const crossFieldError = useMemo(
-    () => (validate ? validate(form, data, editingRow) : null),
-    [validate, form, data, editingRow],
+  // Field-level validation errors (e.g. duplicate-row detection). Returns an object
+  // keyed by field name, e.g. { ticketTypeId: 'Error message', hours: 'Error message' }.
+  // Field errors render inline on the specific input with red border + helper text.
+  const fieldErrors = useMemo(
+    () => (validateFields ? validateFields(form, data, editingRow) : null),
+    [validateFields, form, data, editingRow],
   );
+
+  // Merge form errors: required-field errors take precedence unless a field-level error exists.
+  const mergedFormErrors = useMemo(() => {
+    const base = { ...formErrors };
+    if (fieldErrors) {
+      Object.keys(fieldErrors).forEach((key) => {
+        base[key] = fieldErrors[key];
+      });
+    }
+    return base;
+  }, [formErrors, fieldErrors]);
 
   // Reflect required-field validity in the submit button so users get visual
   // feedback before they click Submit. Also block submit on any cross-field
-  // validation error returned by the optional `validate` prop.
+  // validation error returned by the optional `validate` prop (kept for backwards compatibility).
   const formIsInvalid = useMemo(
     () =>
       (config.fields.some((f) => f.required) && Object.keys(validateForm()).length > 0) ||
-      !!crossFieldError,
-    [config.fields, validateForm, crossFieldError],
+      !!fieldErrors,
+    [config.fields, validateForm, fieldErrors],
   );
 
   return (
@@ -1065,10 +1105,16 @@ export const GenericPanel = ({
         subtitle={config.subtitle}
         submitDisabled={formIsInvalid}
         submitLabel={editingRow ? 'Save' : 'Submit'}
+        hideActions={hideDialogActions}
         maxWidth='sm'
       >
         <LocalizationProvider>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+            {fieldErrors && (
+              <Alert severity='error' variant='outlined' sx={{ alignItems: 'center' }}>
+                {Object.values(fieldErrors)[0]}
+              </Alert>
+            )}
             {config.fields.map((field) => {
               if (field.type === 'toggle') {
                 return (
@@ -1096,6 +1142,8 @@ export const GenericPanel = ({
                       setForm((prev) => ({ ...prev, ticketTypeName: option.name }));
                     }}
                     required={field.required}
+                    error={Boolean(showValidation && mergedFormErrors[field.name])}
+                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
                   />
                 );
               }
@@ -1138,6 +1186,8 @@ export const GenericPanel = ({
                         : undefined
                     }
                     required={field.required}
+                    error={Boolean(showValidation && mergedFormErrors[field.name])}
+                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
                   />
                 );
               }
@@ -1150,6 +1200,8 @@ export const GenericPanel = ({
                     value={currentValue}
                     onChange={(value) => handleTextFieldChange(field.name, value)}
                     required={field.required}
+                    error={Boolean(showValidation && mergedFormErrors[field.name])}
+                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
                   />
                 );
               }
@@ -1162,6 +1214,8 @@ export const GenericPanel = ({
                     value={currentValue}
                     onChange={(value) => handleTextFieldChange(field.name, value)}
                     required={field.required}
+                    error={Boolean(showValidation && mergedFormErrors[field.name])}
+                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
                   />
                 );
               }
@@ -1174,6 +1228,8 @@ export const GenericPanel = ({
                     value={currentValue}
                     onChange={(value) => handleTextFieldChange(field.name, value)}
                     required={field.required}
+                    error={Boolean(showValidation && mergedFormErrors[field.name])}
+                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
                   />
                 );
               }
@@ -1186,6 +1242,8 @@ export const GenericPanel = ({
                     value={currentValue}
                     onChange={(value) => handleTextFieldChange(field.name, value)}
                     required={field.required}
+                    error={Boolean(showValidation && mergedFormErrors[field.name])}
+                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
                   />
                 );
               }
@@ -1198,6 +1256,8 @@ export const GenericPanel = ({
                     value={currentValue}
                     onChange={(value) => handleTextFieldChange(field.name, value)}
                     required={field.required}
+                    error={Boolean(showValidation && mergedFormErrors[field.name])}
+                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
                   />
                 );
               }
@@ -1210,6 +1270,8 @@ export const GenericPanel = ({
                     value={currentValue}
                     onChange={(value) => handleTextFieldChange(field.name, value)}
                     required={field.required}
+                    error={Boolean(showValidation && mergedFormErrors[field.name])}
+                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
                   />
                 );
               }
@@ -1222,7 +1284,23 @@ export const GenericPanel = ({
                     value={currentValue}
                     onChange={(value) => handleTextFieldChange(field.name, value)}
                     required={field.required}
+                    error={Boolean(showValidation && mergedFormErrors[field.name])}
+                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
                     sx={field.sx}
+                  />
+                );
+              }
+              if (field.type === 'richText') {
+                const currentValue = (form[field.name] ?? '') as string;
+                const richTextValue = parseRichText(currentValue);
+                return (
+                  <RichTextEditor
+                    key={field.name}
+                    value={richTextValue}
+                    onChange={(value) =>
+                      handleTextFieldChange(field.name, serializeRichText(value.segments))
+                    }
+                    showFooterActions={false}
                   />
                 );
               }
@@ -1235,19 +1313,16 @@ export const GenericPanel = ({
                   size='small'
                   fullWidth
                   required={field.required}
-                  error={Boolean(showValidation && formErrors[field.name])}
-                  helperText={reqError(showValidation, formErrors[field.name])}
+                  error={Boolean(showValidation && mergedFormErrors[field.name])}
+                  helperText={reqError(showValidation, mergedFormErrors[field.name])}
                   type={field.type === 'number' ? 'number' : 'text'}
                   value={textValue}
                   onChange={(e) => handleTextFieldChange(field.name, e.target.value)}
+                  multiline={field.multiline}
+                  minRows={field.minRows}
                 />
               );
             })}
-            {crossFieldError && (
-              <Alert severity='error' sx={{ mt: 0.5 }}>
-                {crossFieldError}
-              </Alert>
-            )}
           </Box>
         </LocalizationProvider>
       </ConfigFormDialog>

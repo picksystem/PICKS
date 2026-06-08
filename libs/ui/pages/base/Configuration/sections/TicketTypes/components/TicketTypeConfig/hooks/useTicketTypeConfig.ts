@@ -35,7 +35,6 @@ export function useTicketTypeConfig() {
   const [deleteTicketType] = useDeleteTicketTypeMutation();
   const notify = useNotification();
 
-  const [advancedDisplaySequences, setAdvancedDisplaySequences] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ITicketType | null>(null);
   const [selectedRow, setSelectedRow] = useState<ITicketType | null>(null);
@@ -138,8 +137,6 @@ export function useTicketTypeConfig() {
     ticketTypes: ticketTypes as ITicketType[] | undefined,
     isLoading,
     error,
-    advancedDisplaySequences,
-    setAdvancedDisplaySequences,
     dialogOpen,
     editingItem,
     selectedRow,

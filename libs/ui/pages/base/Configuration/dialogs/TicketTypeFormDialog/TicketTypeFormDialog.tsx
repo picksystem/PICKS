@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   Button,
   TextField,
@@ -13,6 +13,7 @@ import {
   Chip,
   Grid,
   Divider,
+  Checkbox,
 } from '@serviceops/component';
 import {
   alpha,
@@ -21,7 +22,10 @@ import {
   DialogContent,
   DialogActions,
   ListSubheader,
+  Radio,
+  FormGroup,
   FormControl,
+  Collapse,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import { CreateTicketTypeSchema } from '@serviceops/interfaces';
@@ -36,6 +40,14 @@ import {
 } from '../../utils/ticketTypeIcons';
 import { useStyles } from '../../styles';
 import { useFieldError, useNotification } from '@serviceops/hooks';
+import { parseRichText, serializeRichText } from '../../shared/RichTextEditor';
+
+// Access control roles
+const ACCESS_CONTROL_ROLES = [
+  { value: 'admin', label: 'Admin', description: 'Full administrative access' },
+  { value: 'consultant', label: 'Consultant', description: 'Can view and manage tickets' },
+  { value: 'endUser', label: 'End User', description: 'Basic ticket creation and viewing' },
+];
 
 function generateTicketId(name: string): string {
   return name
@@ -62,6 +74,22 @@ const TicketTypeFormDialog = ({
   const { classes } = useStyles();
   const reqError = useFieldError();
   const { success } = useNotification();
+  const [accessControlExpanded, setAccessControlExpanded] = useState(false);
+
+  // Initialize rich text values
+  const getInitialDescription = () => {
+    if (editingItem?.description) {
+      return parseRichText(editingItem.description);
+    }
+    return { segments: [] };
+  };
+
+  const getInitialShortDescription = () => {
+    if (editingItem?.shortDescription) {
+      return parseRichText(editingItem.shortDescription);
+    }
+    return { segments: [] };
+  };
 
   const getInitialIcon = () => {
     if (editingItem)
@@ -75,6 +103,15 @@ const TicketTypeFormDialog = ({
     return 'Standard';
   };
 
+  // Get initial access control values
+  const getInitialAccessControl = (): string[] => {
+    if (editingItem && 'accessControl' in editingItem && editingItem.accessControl) {
+      return editingItem.accessControl as unknown as string[];
+    }
+    // Default: all roles selected
+    return ['admin', 'consultant', 'endUser'];
+  };
+
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
@@ -82,13 +119,15 @@ const TicketTypeFormDialog = ({
       name: editingItem?.name ?? '',
       displayName: editingItem?.displayName ?? '',
       displayTag: editingItem?.displayTag ?? '',
-      shortDescription: editingItem?.shortDescription ?? '',
-      description: editingItem?.description ?? '',
+      shortDescription: getInitialShortDescription(),
+      description: getInitialDescription(),
       prefix: editingItem?.prefix ?? '',
       isActive: editingItem?.isActive ?? true,
       numberLength: editingItem?.numberLength ?? 7,
       iconKey: getInitialIcon(),
       tag: getInitialTag(),
+      accessControl: getInitialAccessControl(),
+      selectAll: getInitialAccessControl().length === 3,
     },
     validationSchema: CreateTicketTypeSchema,
     onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -98,13 +137,14 @@ const TicketTypeFormDialog = ({
           name: values.name,
           displayName: values.displayName ?? '',
           displayTag: values.displayTag ?? '',
-          shortDescription: values.shortDescription ?? '',
-          description: values.description ?? '',
+          shortDescription: serializeRichText(values.shortDescription.segments),
+          description: serializeRichText(values.description.segments),
           prefix: (values.prefix ?? '').toUpperCase(),
           isActive: values.isActive ?? true,
           numberLength: values.numberLength ?? 7,
           iconKey: values.iconKey,
           tag: values.tag,
+          accessControl: values.accessControl,
         });
         success(isEditing ? 'Ticket Type updated successfully' : 'Ticket Type added successfully');
         resetForm();
@@ -113,6 +153,33 @@ const TicketTypeFormDialog = ({
       }
     },
   });
+
+  // Handle access control checkboxes
+  const handleAccessControlChange = useCallback(
+    (role: string, checked: boolean) => {
+      let newRoles = [...formik.values.accessControl];
+      if (checked) {
+        if (!newRoles.includes(role)) {
+          newRoles.push(role);
+        }
+      } else {
+        newRoles = newRoles.filter((r) => r !== role);
+      }
+      formik.setFieldValue('accessControl', newRoles);
+      formik.setFieldValue('selectAll', newRoles.length === 3);
+    },
+    [formik],
+  );
+
+  // Handle "Select All" toggle
+  const handleSelectAllChange = useCallback(
+    (checked: boolean) => {
+      const newRoles = checked ? ['admin', 'consultant', 'endUser'] : [];
+      formik.setFieldValue('accessControl', newRoles);
+      formik.setFieldValue('selectAll', checked);
+    },
+    [formik],
+  );
 
   useEffect(() => {
     if (!isEditing) {
@@ -143,7 +210,8 @@ const TicketTypeFormDialog = ({
   const preview = buildPreview(formik.values.prefix || '???', formik.values.numberLength || 7);
   const displayLabel = formik.values.name || formik.values.displayName || 'Ticket Type Name';
   const descriptionPreview =
-    formik.values.description || 'Add a description to describe this ticket type and its purpose.';
+    serializeRichText(formik.values.description.segments) ||
+    'Add a description to describe this ticket type and its purpose.';
   const tagOption = getTagOption(formik.values.tag);
 
   return (
@@ -225,7 +293,7 @@ const TicketTypeFormDialog = ({
               </Divider>
             </Grid>
 
-            {/* Name */}
+            {/* 1. Ticket Type */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 label='Ticket Type'
@@ -241,31 +309,27 @@ const TicketTypeFormDialog = ({
               />
             </Grid>
 
-            {/* Description */}
-            <Grid size={{ xs: 12 }}>
+            {/* 3. Display Tag */}
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
-                label='Description'
-                name='description'
-                value={formik.values.description}
+                label='New Ticket Creation Page Display Tag'
+                name='displayTag'
+                value={formik.values.displayTag}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={Boolean(
-                  reqError(formik.touched.description, formik.errors.description as string),
+                  reqError(formik.touched.displayTag, formik.errors.displayTag as string),
                 )}
-                helperText={reqError(
-                  formik.touched.description,
-                  formik.errors.description as string,
-                )}
+                helperText={
+                  reqError(formik.touched.displayTag, formik.errors.displayTag as string) || ''
+                }
                 fullWidth
                 size='small'
-                multiline
-                rows={2}
-                placeholder='Describe this ticket type and when it should be used...'
-                required
+                placeholder='e.g. Incident, Request, Task'
               />
             </Grid>
 
-            {/* Display Name */}
+            {/* 4. Display Text */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 label='New Ticket Creation Page Display Text'
@@ -286,163 +350,7 @@ const TicketTypeFormDialog = ({
               />
             </Grid>
 
-            {/* IT team internal note */}
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                label='IT Team Internal Note'
-                name='shortDescription'
-                value={formik.values.shortDescription}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={Boolean(
-                  reqError(
-                    formik.touched.shortDescription,
-                    formik.errors.shortDescription as string,
-                  ),
-                )}
-                helperText={reqError(
-                  formik.touched.shortDescription,
-                  formik.errors.shortDescription as string,
-                )}
-                fullWidth
-                size='small'
-                placeholder='A brief summary of this ticket type...'
-              />
-            </Grid>
-
-            {/* Display Tag */}
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                label='Creation page display tag'
-                name='displayTag'
-                value={formik.values.displayTag}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={Boolean(
-                  reqError(formik.touched.displayTag, formik.errors.displayTag as string),
-                )}
-                helperText={
-                  reqError(formik.touched.displayTag, formik.errors.displayTag as string) || ''
-                }
-                fullWidth
-                size='small'
-                placeholder='e.g. Incident, Request, Task'
-              />
-            </Grid>
-
-            {/* ── NUMBERING & ICON ── */}
-
-            {/* Prefix */}
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <TextField
-                label='Prefix'
-                name='prefix'
-                value={formik.values.prefix}
-                onChange={(e) => formik.setFieldValue('prefix', e.target.value.toUpperCase())}
-                onBlur={formik.handleBlur}
-                error={Boolean(reqError(formik.touched.prefix, formik.errors.prefix as string))}
-                helperText={
-                  reqError(formik.touched.prefix, formik.errors.prefix as string) || 'e.g. INC, SRQ'
-                }
-                fullWidth
-                size='small'
-                required
-                className={classes.dialogPrefixInput}
-                inputProps={{ maxLength: 6 }}
-              />
-            </Grid>
-
-            {/* Number Length */}
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <TextField
-                label='Number Length'
-                name='numberLength'
-                type='number'
-                value={formik.values.numberLength}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={Boolean(
-                  reqError(formik.touched.numberLength, formik.errors.numberLength as string),
-                )}
-                helperText={
-                  reqError(formik.touched.numberLength, formik.errors.numberLength as string) ||
-                  'Digits in ticket number'
-                }
-                fullWidth
-                size='small'
-                required
-                inputProps={{ min: 1, max: 12 }}
-              />
-            </Grid>
-
-            {/* Icon Picker */}
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <FormControl fullWidth size='small'>
-                <Select
-                  name='iconKey'
-                  value={formik.values.iconKey}
-                  label='Icon'
-                  onChange={(e) => formik.setFieldValue('iconKey', e.target.value)}
-                  renderValue={(selected) => {
-                    const opt = TICKET_ICON_OPTIONS.find((o) => o.key === selected);
-                    return (
-                      <Box className={classes.dialogSelectRenderValue}>
-                        <Box
-                          className={classes.dialogIconPreviewWrap}
-                          sx={{ background: gradient }}
-                        >
-                          {getIconComponent(selected, { color: '#fff', fontSize: '0.75rem' })}
-                        </Box>
-                        <Typography variant='body2' fontSize='0.82rem'>
-                          {opt?.label ?? selected}
-                        </Typography>
-                      </Box>
-                    );
-                  }}
-                  MenuProps={{ PaperProps: { sx: { maxHeight: 340 } } }}
-                >
-                  {(() => {
-                    const categories = Array.from(
-                      new Set(TICKET_ICON_OPTIONS.map((o) => o.category)),
-                    );
-                    return categories.flatMap((cat) => {
-                      const items = TICKET_ICON_OPTIONS.filter((o) => o.category === cat);
-                      return [
-                        <ListSubheader key={`hdr-${cat}`} className={classes.dialogIconSubheader}>
-                          {cat.toUpperCase()}
-                        </ListSubheader>,
-                        ...items.map((opt) => {
-                          const isActive = formik.values.iconKey === opt.key;
-                          return (
-                            <MenuItem key={opt.key} value={opt.key} dense>
-                              <ListItemIcon className={classes.dialogIconListItemIcon}>
-                                <Box
-                                  className={classes.dialogIconMenuWrap}
-                                  sx={{
-                                    background: isActive ? gradient : alpha(color, 0.08),
-                                  }}
-                                >
-                                  {getIconComponent(opt.key, {
-                                    fontSize: '0.85rem',
-                                    color: isActive ? '#fff' : color,
-                                  })}
-                                </Box>
-                              </ListItemIcon>
-                              <ListItemText
-                                primary={opt.label}
-                                primaryTypographyProps={{ variant: 'body2', fontSize: '0.8rem' }}
-                              />
-                            </MenuItem>
-                          );
-                        }),
-                      ];
-                    });
-                  })()}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* Priority Tag */}
+            {/* 4. Priority Tag */}
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <FormControl fullWidth size='small'>
                 <Select
@@ -512,6 +420,265 @@ const TicketTypeFormDialog = ({
                   })}
                 </Select>
               </FormControl>
+            </Grid>
+
+            {/* 5. Icon */}
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <FormControl fullWidth size='small'>
+                <Select
+                  name='iconKey'
+                  value={formik.values.iconKey}
+                  label='Icon'
+                  onChange={(e) => formik.setFieldValue('iconKey', e.target.value)}
+                  renderValue={(selected) => {
+                    const opt = TICKET_ICON_OPTIONS.find((o) => o.key === selected);
+                    return (
+                      <Box className={classes.dialogSelectRenderValue}>
+                        <Box
+                          className={classes.dialogIconPreviewWrap}
+                          sx={{ background: gradient }}
+                        >
+                          {getIconComponent(selected, { color: '#fff', fontSize: '0.75rem' })}
+                        </Box>
+                        <Typography variant='body2' fontSize='0.82rem'>
+                          {opt?.label ?? selected}
+                        </Typography>
+                      </Box>
+                    );
+                  }}
+                  MenuProps={{ PaperProps: { sx: { maxHeight: 340 } } }}
+                >
+                  {(() => {
+                    const categories = Array.from(
+                      new Set(TICKET_ICON_OPTIONS.map((o) => o.category)),
+                    );
+                    return categories.flatMap((cat) => {
+                      const items = TICKET_ICON_OPTIONS.filter((o) => o.category === cat);
+                      return [
+                        <ListSubheader key={`hdr-${cat}`} className={classes.dialogIconSubheader}>
+                          {cat.toUpperCase()}
+                        </ListSubheader>,
+                        ...items.map((opt) => {
+                          const isActive = formik.values.iconKey === opt.key;
+                          return (
+                            <MenuItem key={opt.key} value={opt.key} dense>
+                              <ListItemIcon className={classes.dialogIconListItemIcon}>
+                                <Box
+                                  className={classes.dialogIconMenuWrap}
+                                  sx={{
+                                    background: isActive ? gradient : alpha(color, 0.08),
+                                  }}
+                                >
+                                  {getIconComponent(opt.key, {
+                                    fontSize: '0.85rem',
+                                    color: isActive ? '#fff' : color,
+                                  })}
+                                </Box>
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={opt.label}
+                                primaryTypographyProps={{ variant: 'body2', fontSize: '0.8rem' }}
+                              />
+                            </MenuItem>
+                          );
+                        }),
+                      ];
+                    });
+                  })()}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* ── 6. Description (textarea) ── */}
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                label='Description'
+                name='description'
+                value={formik.values.description?.segments?.[0]?.text ?? ''}
+                onChange={(e) =>
+                  formik.setFieldValue('description', { segments: [{ text: e.target.value }] })
+                }
+                placeholder='Describe this ticket type and when it should be used...'
+                multiline
+                minRows={4}
+                fullWidth
+                size='small'
+                sx={{
+                  '& .MuiOutlinedInput-root': { borderRadius: '8px' },
+                }}
+              />
+            </Grid>
+
+            {/* ── 7. Internal Note (textarea only) ── */}
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                label='Internal Note'
+                name='shortDescription'
+                value={formik.values.shortDescription?.segments?.[0]?.text ?? ''}
+                onChange={(e) =>
+                  formik.setFieldValue('shortDescription', { segments: [{ text: e.target.value }] })
+                }
+                placeholder='A brief summary of this ticket type for internal use...'
+                multiline
+                minRows={3}
+                fullWidth
+                size='small'
+                sx={{
+                  '& .MuiOutlinedInput-root': { borderRadius: '8px' },
+                }}
+              />
+            </Grid>
+
+            {/* ── 8. Access Control ── */}
+            <Grid size={{ xs: 12 }}>
+              <Box
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  overflow: 'hidden',
+                }}
+              >
+                <Box
+                  onClick={() => setAccessControlExpanded(!accessControlExpanded)}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    px: 2,
+                    py: 1.5,
+                    cursor: 'pointer',
+                    bgcolor: accessControlExpanded ? 'action.hover' : 'transparent',
+                    transition: 'background-color 0.2s',
+                    '&:hover': { bgcolor: 'action.hover' },
+                  }}
+                >
+                  <Typography variant='body2' sx={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                    Access Control
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant='caption' color='text.secondary'>
+                      {formik.values.accessControl.length} of {ACCESS_CONTROL_ROLES.length} selected
+                    </Typography>
+                    <Radio
+                      size='small'
+                      checked={formik.values.selectAll}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => handleSelectAllChange(e.target.checked)}
+                      sx={{
+                        '&.Mui-checked': { color: '#0369a1' },
+                      }}
+                    />
+                    <Typography variant='caption' sx={{ fontWeight: 500 }}>
+                      Select All
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Collapse in={accessControlExpanded}>
+                  <Box sx={{ px: 2, pb: 2 }}>
+                    <FormControl component='fieldset' fullWidth>
+                      <FormGroup>
+                        {ACCESS_CONTROL_ROLES.map((role) => {
+                          const isChecked = formik.values.accessControl.includes(role.value);
+                          return (
+                            <Box
+                              key={role.value}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                py: 0.75,
+                                borderBottom: '1px solid',
+                                borderColor: 'divider',
+                                '&:last-child': { borderBottom: 'none' },
+                              }}
+                            >
+                              <Checkbox
+                                checked={isChecked}
+                                onChange={(e) =>
+                                  handleAccessControlChange(role.value, e.target.checked)
+                                }
+                                sx={{
+                                  color: '#0369a1',
+                                  '&.Mui-checked': { color: '#0369a1' },
+                                }}
+                              />
+                              <Box sx={{ flex: 1 }}>
+                                <Typography
+                                  variant='body2'
+                                  sx={{ fontWeight: 500, fontSize: '0.85rem' }}
+                                >
+                                  {role.label}
+                                </Typography>
+                                <Typography variant='caption' color='text.secondary'>
+                                  {role.description}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          );
+                        })}
+                      </FormGroup>
+                    </FormControl>
+                  </Box>
+                </Collapse>
+              </Box>
+            </Grid>
+
+            {/* ── NUMBERING ── */}
+
+            {/* Prefix */}
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <TextField
+                label='Prefix'
+                name='prefix'
+                value={formik.values.prefix}
+                onChange={(e) => formik.setFieldValue('prefix', e.target.value.toUpperCase())}
+                onBlur={formik.handleBlur}
+                error={Boolean(reqError(formik.touched.prefix, formik.errors.prefix as string))}
+                helperText={
+                  reqError(formik.touched.prefix, formik.errors.prefix as string) || 'e.g. INC, SRQ'
+                }
+                fullWidth
+                size='small'
+                required
+                className={classes.dialogPrefixInput}
+                inputProps={{ maxLength: 6 }}
+              />
+            </Grid>
+
+            {/* Number Length */}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label='Number Length'
+                name='numberLength'
+                type='number'
+                value={formik.values.numberLength}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={Boolean(
+                  reqError(formik.touched.numberLength, formik.errors.numberLength as string),
+                )}
+                helperText={
+                  reqError(formik.touched.numberLength, formik.errors.numberLength as string) ||
+                  'Digits in ticket number'
+                }
+                fullWidth
+                size='small'
+                required
+                inputProps={{ min: 1, max: 12 }}
+              />
+            </Grid>
+
+            {/* Format Preview (display only) */}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label='Format Preview'
+                value={buildPreview(formik.values.prefix || '???', formik.values.numberLength || 7)}
+                fullWidth
+                size='small'
+                disabled
+                InputProps={{ readOnly: true }}
+              />
             </Grid>
 
             {/* Active switch */}

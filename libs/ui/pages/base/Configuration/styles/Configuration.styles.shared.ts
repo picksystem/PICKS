@@ -81,7 +81,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   tableSearchField: {
     flexShrink: 0,
-    width: '160px',
+    width: '210px',
     '& .MuiOutlinedInput-root': {
       height: '30px',
       fontSize: '0.8rem',

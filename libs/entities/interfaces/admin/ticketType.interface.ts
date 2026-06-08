@@ -38,6 +38,7 @@ export interface ITicketType {
   isActive: boolean;
   numberLength: number;
   displayOrder: number;
+  accessControl?: string[];
 }
 
 // ============================================
@@ -54,6 +55,7 @@ export interface ICreateTicketTypeInput {
   isActive?: boolean;
   numberLength?: number;
   displayOrder?: number;
+  accessControl?: string[];
 }
 
 export interface IUpdateTicketTypeInput {
@@ -67,6 +69,7 @@ export interface IUpdateTicketTypeInput {
   isActive?: boolean;
   numberLength?: number;
   displayOrder?: number;
+  accessControl?: string[];
 }
 
 // ============================================

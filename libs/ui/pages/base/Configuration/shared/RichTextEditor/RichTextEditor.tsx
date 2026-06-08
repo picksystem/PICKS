@@ -151,19 +151,36 @@ const RichTextEditor = ({
         if (text) segments.push({ text });
       } else if (node.nodeType === Node.ELEMENT_NODE) {
         const el = node as HTMLElement;
-        const bold =
-          el.style.fontWeight === '700' || el.querySelector('[style*="font-weight:700"]') !== null;
-        const italic = el.style.fontStyle === 'italic';
-        const underline = el.style.textDecoration === 'underline';
+        // Recursively check if element or any child has formatting
+        const hasBold =
+          el.tagName === 'B' ||
+          el.tagName === 'STRONG' ||
+          el.style.fontWeight === '700' ||
+          el.querySelector('b, strong, [style*="font-weight:700"]') !== null;
+        const hasItalic =
+          el.tagName === 'I' ||
+          el.tagName === 'EM' ||
+          el.style.fontStyle === 'italic' ||
+          el.querySelector('i, em, [style*="font-style:italic"]') !== null;
+        const hasUnderline =
+          el.tagName === 'U' ||
+          el.style.textDecoration === 'underline' ||
+          el.querySelector('u, [style*="text-decoration:underline"]') !== null;
 
-        const text = el.textContent || '';
-        if (text) {
-          segments.push({
-            text: text.replace(/<br>/gi, '\n'),
-            bold,
-            italic,
-            underline,
-          });
+        // If no children, just process this element
+        if (el.childNodes.length === 0) {
+          const text = el.textContent || '';
+          if (text) {
+            segments.push({
+              text: text.replace(/<br>/gi, '\n'),
+              bold: hasBold,
+              italic: hasItalic,
+              underline: hasUnderline,
+            });
+          }
+        } else {
+          // Process children individually
+          el.childNodes.forEach((child) => processNode(child));
         }
       }
     };
