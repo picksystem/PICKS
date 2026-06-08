@@ -169,7 +169,7 @@ const SequenceDialog = ({ open, ticketTypes, onClose, onSave }: SequenceDialogPr
                   primary={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Typography fontWeight={600} fontSize='0.9rem'>
-                        {t.displayName || t.name}
+                        {t.name}
                       </Typography>
                       {!t.isActive && (
                         <Chip
@@ -181,8 +181,24 @@ const SequenceDialog = ({ open, ticketTypes, onClose, onSave }: SequenceDialogPr
                       )}
                     </Box>
                   }
-                  secondary={t.description || t.type}
-                  secondaryTypographyProps={{ fontSize: '0.75rem', noWrap: true }}
+                  secondary={
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        flexDirection: 'column',
+                        gap: 1,
+                        mt: 0.5,
+                      }}
+                    >
+                      <Typography fontSize='0.75rem' noWrap>
+                        {t.displayTag}
+                      </Typography>
+                      <Typography fontSize='0.75rem' noWrap>
+                        {t.description}
+                      </Typography>
+                    </Box>
+                  }
                 />
               </ListItem>
             );

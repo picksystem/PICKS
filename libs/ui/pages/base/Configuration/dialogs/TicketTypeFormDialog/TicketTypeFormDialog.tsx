@@ -42,6 +42,25 @@ import { useStyles } from '../../styles';
 import { useFieldError, useNotification } from '@serviceops/hooks';
 import { parseRichText, serializeRichText } from '../../shared/RichTextEditor';
 
+// Consistent field styles
+const fieldStyles = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '8px',
+    height: '40px',
+  },
+  '& .MuiInputBase-input': {
+    py: 1,
+    fontSize: '0.875rem',
+  },
+  '& .MuiSelect-root': {
+    height: '40px',
+  },
+  '& .MuiSelect-select': {
+    py: 1,
+    fontSize: '0.875rem',
+  },
+};
+
 // Access control roles
 const ACCESS_CONTROL_ROLES = [
   { value: 'admin', label: 'Admin', description: 'Full administrative access' },
@@ -208,11 +227,14 @@ const TicketTypeFormDialog = ({
   const color = tagColor;
   const gradient = `linear-gradient(135deg, ${darken(tagColor, 0.2)} 0%, ${tagColor} 100%)`;
   const preview = buildPreview(formik.values.prefix || '???', formik.values.numberLength || 7);
-  const displayLabel = formik.values.name || formik.values.displayName || 'Ticket Type Name';
+  const displayLabel = formik.values.name || 'Ticket Type Name';
   const descriptionPreview =
     serializeRichText(formik.values.description.segments) ||
     'Add a description to describe this ticket type and its purpose.';
   const tagOption = getTagOption(formik.values.tag);
+  const displayTagOption =
+    (getTagOption(formik.values.displayTag)?.label ?? formik.values.displayTag) ||
+    'Add display tag';
 
   return (
     <Dialog
@@ -246,6 +268,9 @@ const TicketTypeFormDialog = ({
                     className={classes.dialogHeroTagChip}
                   />
                 )}
+                <Box className={classes.dialogHeroFormatRow}>
+                  <Typography className={classes.dialogHeroFormatCode}>{preview}</Typography>
+                </Box>
                 <Chip
                   label={formik.values.isActive ? 'Active' : 'Inactive'}
                   size='small'
@@ -261,13 +286,10 @@ const TicketTypeFormDialog = ({
             </Box>
           </Box>
 
-          {/* Format preview */}
-          <Box className={classes.dialogHeroFormatRow}>
-            <Typography className={classes.dialogHeroFormatCode}>{preview}</Typography>
-            <Box className={classes.dialogHeroFormatBadge}>
-              <Typography className={classes.dialogHeroFormatBadgeText}>FORMAT</Typography>
-            </Box>
-          </Box>
+          {/* Display tag */}
+          {displayTagOption && (
+            <Typography className={classes.dialogHeroDescription}>{displayTagOption}</Typography>
+          )}
 
           {/* Description */}
           <Typography className={classes.dialogHeroDescription}>{descriptionPreview}</Typography>
@@ -312,7 +334,7 @@ const TicketTypeFormDialog = ({
             {/* 3. Display Tag */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
-                label='New Ticket Creation Page Display Tag'
+                label='Display Tag'
                 name='displayTag'
                 value={formik.values.displayTag}
                 onChange={formik.handleChange}
@@ -321,18 +343,20 @@ const TicketTypeFormDialog = ({
                   reqError(formik.touched.displayTag, formik.errors.displayTag as string),
                 )}
                 helperText={
-                  reqError(formik.touched.displayTag, formik.errors.displayTag as string) || ''
+                  reqError(formik.touched.displayTag, formik.errors.displayTag as string) ||
+                  'Displays as a tag in the new ticket creation page'
                 }
                 fullWidth
                 size='small'
                 placeholder='e.g. Incident, Request, Task'
+                required
               />
             </Grid>
 
             {/* 4. Display Text */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
-                label='New Ticket Creation Page Display Text'
+                label='Display Text'
                 name='displayName'
                 value={formik.values.displayName}
                 onChange={formik.handleChange}
@@ -340,10 +364,10 @@ const TicketTypeFormDialog = ({
                 error={Boolean(
                   reqError(formik.touched.displayName, formik.errors.displayName as string),
                 )}
-                helperText={reqError(
-                  formik.touched.displayName,
-                  formik.errors.displayName as string,
-                )}
+                helperText={
+                  reqError(formik.touched.displayName, formik.errors.displayName as string) ||
+                  'Displays as a text in the new ticket creation page'
+                }
                 fullWidth
                 size='small'
                 required
@@ -351,8 +375,8 @@ const TicketTypeFormDialog = ({
             </Grid>
 
             {/* 4. Priority Tag */}
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <FormControl fullWidth size='small'>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth size='small' sx={fieldStyles}>
                 <Select
                   name='tag'
                   value={formik.values.tag}
@@ -423,8 +447,8 @@ const TicketTypeFormDialog = ({
             </Grid>
 
             {/* 5. Icon */}
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <FormControl fullWidth size='small'>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth size='small' sx={fieldStyles}>
                 <Select
                   name='iconKey'
                   value={formik.values.iconKey}
@@ -627,9 +651,9 @@ const TicketTypeFormDialog = ({
             {/* ── NUMBERING ── */}
 
             {/* Prefix */}
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
-                label='Prefix'
+                label='Numbering Prefix'
                 name='prefix'
                 value={formik.values.prefix}
                 onChange={(e) => formik.setFieldValue('prefix', e.target.value.toUpperCase())}
@@ -678,6 +702,7 @@ const TicketTypeFormDialog = ({
                 size='small'
                 disabled
                 InputProps={{ readOnly: true }}
+                helperText='Preview of ticket numbering'
               />
             </Grid>
 

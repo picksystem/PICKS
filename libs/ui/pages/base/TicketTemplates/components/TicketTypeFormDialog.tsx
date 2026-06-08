@@ -378,7 +378,7 @@ const TicketTypeFormDialog = ({
             {/* Display Name */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
-                label='New Ticket Creation Page Display Text'
+                label='Display Text'
                 name='displayName'
                 value={formik.values.displayName}
                 onChange={formik.handleChange}

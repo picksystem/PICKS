@@ -291,7 +291,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
       paddingLeft: theme.spacing(4),
       paddingRight: theme.spacing(4),
       paddingTop: theme.spacing(3.5),
-      paddingBottom: theme.spacing(3.5),
+      paddingBottom: theme.spacing(4.5),
     },
   },
 
@@ -353,6 +353,8 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   dialogHeroChipRow: {
     display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
     gap: theme.spacing(0.75),
     marginTop: theme.spacing(0.5),
     flexWrap: 'wrap' as const,
@@ -363,33 +365,40 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     color: '#fff',
     border: '1px solid rgba(255,255,255,0.35)',
     fontWeight: 700,
-    fontSize: '0.6rem',
-    height: 18,
-    borderRadius: '5px',
+    fontSize: '0.65rem',
+    height: 22,
+    borderRadius: '6px',
+    '& .MuiChip-label': {
+      px: 0.75,
+    },
   },
 
   dialogHeroStatusChip: {
     color: '#fff',
     fontWeight: 700,
-    fontSize: '0.6rem',
-    height: 18,
+    fontSize: '0.65rem',
+    height: 22,
+    borderRadius: '6px',
+    '& .MuiChip-label': {
+      px: 0.75,
+    },
   },
 
   dialogHeroFormatRow: {
     display: 'flex',
     alignItems: 'center',
-    gap: theme.spacing(1),
-    marginBottom: theme.spacing(1),
+    height: 22,
   },
 
   dialogHeroFormatCode: {
     fontFamily: 'monospace',
-    fontWeight: 800,
+    fontWeight: 700,
+    fontSize: '0.7rem',
     color: 'rgba(255,255,255,0.95)',
     textShadow: '0 2px 8px rgba(0,0,0,0.2)',
     lineHeight: 1,
     [theme.breakpoints.down('sm')]: {
-      fontSize: '1rem',
+      fontSize: '0.85rem',
       letterSpacing: 1,
     },
     [theme.breakpoints.up('sm')]: {

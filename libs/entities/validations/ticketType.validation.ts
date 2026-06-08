@@ -15,16 +15,18 @@ export const CreateTicketTypeSchema = yup.object({
     .required('Display name is required')
     .max(100, 'Display name must be 100 characters or less')
     .default(''),
-  displayTag: yup.string().max(50, 'Tag must be 50 characters or less').default(''),
-  shortDescription: yup.string().max(200, 'Must be 200 characters or less').default(''),
-  description: yup
+  displayTag: yup
     .string()
-    .required('Description is required')
-    .max(500, 'Description must be 500 characters or less')
+    .required('Display tag is required')
+    .max(50, 'Tag must be 50 characters or less')
     .default(''),
+  shortDescription: yup.string().max(200, 'Must be 200 characters or less').default(''),
+  description: yup.string().max(500, 'Description must be 500 characters or less').default(''),
+  iconKey: yup.string().required('Icon is required').default('warning_amber'),
+  tag: yup.string().default('Standard'),
   prefix: yup
     .string()
-    .required('Prefix is required')
+    .required('Numbering Prefix is required')
     .max(6, 'Prefix must be 6 characters or less')
     .matches(/^[A-Z0-9]*$/i, 'Only letters and numbers allowed')
     .default(''),
@@ -36,6 +38,12 @@ export const CreateTicketTypeSchema = yup.object({
     .min(1, 'Must be at least 1')
     .max(12, 'Must be 12 or less')
     .default(7),
+  accessControl: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, 'At least one role must be selected')
+    .required('Access control is required')
+    .default(['admin', 'consultant', 'endUser']),
 });
 
 /**
