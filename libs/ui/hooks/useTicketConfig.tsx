@@ -66,7 +66,7 @@ export const useTicketConfig = (ticketType?: string) => {
   // ── Impact options ──────────────────────────────────────────────────────────
   const impactOptions: ITicketConfigOption[] = p?.impactLevels?.length
     ? p.impactLevels
-        .filter((l) => l.isActive && (!ticketType || l.enabledFor[ticketType] !== false))
+        .filter((l) => l.isActive && (!ticketType || l.enabledFor?.[ticketType] !== false))
         .sort((a, b) => a.sortOrder - b.sortOrder)
         .map((l) => ({ value: l.name, label: l.displayName, bgColor: l.bgColor }))
     : FALLBACK_IMPACT_OPTIONS;
@@ -74,7 +74,7 @@ export const useTicketConfig = (ticketType?: string) => {
   // ── Urgency options ─────────────────────────────────────────────────────────
   const urgencyOptions: ITicketConfigOption[] = p?.urgencyLevels?.length
     ? p.urgencyLevels
-        .filter((l) => l.isActive && (!ticketType || l.enabledFor[ticketType] !== false))
+        .filter((l) => l.isActive && (!ticketType || l.enabledFor?.[ticketType] !== false))
         .sort((a, b) => a.sortOrder - b.sortOrder)
         .map((l) => ({ value: l.name, label: l.displayName, bgColor: l.bgColor }))
     : FALLBACK_URGENCY_OPTIONS;
@@ -82,7 +82,7 @@ export const useTicketConfig = (ticketType?: string) => {
   // ── Priority options ────────────────────────────────────────────────────────
   const priorityOptions: ITicketConfigOption[] = p?.levels?.length
     ? p.levels
-        .filter((l) => !ticketType || l.enabledFor[ticketType] !== false)
+        .filter((l) => !ticketType || l.enabledFor?.[ticketType] !== false)
         .sort((a, b) => a.sortOrder - b.sortOrder)
         .map((l) => ({ value: l.id, label: l.name, bgColor: l.bgColor, color: l.color }))
     : FALLBACK_PRIORITY_OPTIONS;
@@ -91,7 +91,7 @@ export const useTicketConfig = (ticketType?: string) => {
   // Falls back to shared defaults until statuses are configured in the admin UI.
   const allStatuses: IConfigStatusLevel[] = config?.data?.statuses?.items ?? [];
   const configStatuses: IConfigStatusLevel[] = ticketType
-    ? allStatuses.filter((s) => s.enabledFor[ticketType] !== false)
+    ? allStatuses.filter((s) => s.enabledFor?.[ticketType] !== false)
     : allStatuses;
   const statusOptions: ITicketConfigOption[] = configStatuses.length
     ? configStatuses

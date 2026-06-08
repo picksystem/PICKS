@@ -132,9 +132,9 @@ const TicketTypeFormDialog = ({
   const color = getTypeColor(formik.values.type || editingItem?.type || '');
   const gradient = getTypeGradient(formik.values.type || editingItem?.type || '');
   const preview = buildPreview(formik.values.prefix || '???', formik.values.numberLength || 7);
-  const displayLabel = formik.values.displayName || formik.values.name || 'Ticket Type Name';
+  const displayLabel = formik.values.name || 'Ticket Type Name';
   const descriptionPreview =
-    formik.values.description || 'Add a description to describe this ticket type and its purpose.';
+    formik.values.displayName || 'Add a description to describe this ticket type and its purpose.';
   const tagOption = getTagOption(formik.values.tag);
 
   return (

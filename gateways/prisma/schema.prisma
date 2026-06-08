@@ -153,6 +153,9 @@ model AdminTicketType {
   isActive                Boolean @default(true)
   numberLength            Int     @default(7)
   displayOrder            Int     @default(0)
+  accessControl          String  @default("") // JSON string of role array: ["admin","consultant","endUser"]
+
+  @@map("admin_ticket_type")
 }
 
 model AdminIncident {

@@ -68,6 +68,29 @@ const TicketTypeTable = ({
       ),
     },
     {
+      id: 'displayTag',
+      label: 'Display Tag',
+      minWidth: 120,
+      format: (v): React.ReactNode => {
+        const tag = String(v || '');
+        return tag ? (
+          <Chip
+            label={tag}
+            size='small'
+            sx={{
+              fontWeight: 600,
+              fontSize: '0.75rem',
+              height: 22,
+            }}
+          />
+        ) : (
+          <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>
+            —
+          </Typography>
+        );
+      },
+    },
+    {
       id: 'displayName',
       label: 'Display Text',
       minWidth: 150,
@@ -76,44 +99,6 @@ const TicketTypeTable = ({
           {String(v || '—')}
         </Typography>
       ),
-    },
-    {
-      id: 'accessControl',
-      label: 'Access Control',
-      minWidth: 200,
-      format: (_v, row): React.ReactNode => {
-        const { accessControl } = row as unknown as { accessControl?: string[] };
-        if (!accessControl || accessControl.length === 0) {
-          return (
-            <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>
-              —
-            </Typography>
-          );
-        }
-        return (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {accessControl.map((role: string) => {
-              const roleConfig = ACCESS_ROLES_CONFIG.find((r) => r.value === role);
-              if (!roleConfig) return null;
-              return (
-                <Chip
-                  key={role}
-                  label={roleConfig.label}
-                  size='small'
-                  sx={{
-                    fontWeight: 600,
-                    fontSize: '0.7rem',
-                    height: 22,
-                    bgcolor: alpha(roleConfig.color, 0.15),
-                    color: roleConfig.color,
-                    border: `1px solid ${alpha(roleConfig.color, 0.4)}`,
-                  }}
-                />
-              );
-            })}
-          </Box>
-        );
-      },
     },
     {
       id: 'isActive',
@@ -157,6 +142,44 @@ const TicketTypeTable = ({
       },
     },
     {
+      id: 'accessControl',
+      label: 'Access Control',
+      minWidth: 200,
+      format: (_v, row): React.ReactNode => {
+        const { accessControl } = row as unknown as { accessControl?: string[] };
+        if (!accessControl || accessControl.length === 0) {
+          return (
+            <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>
+              —
+            </Typography>
+          );
+        }
+        return (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {accessControl.map((role: string) => {
+              const roleConfig = ACCESS_ROLES_CONFIG.find((r) => r.value === role);
+              if (!roleConfig) return null;
+              return (
+                <Chip
+                  key={role}
+                  label={roleConfig.label}
+                  size='small'
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: '0.7rem',
+                    height: 22,
+                    bgcolor: alpha(roleConfig.color, 0.15),
+                    color: roleConfig.color,
+                    border: `1px solid ${alpha(roleConfig.color, 0.4)}`,
+                  }}
+                />
+              );
+            })}
+          </Box>
+        );
+      },
+    },
+    {
       id: 'shortDescription',
       label: 'Internal Note',
       minWidth: 180,
@@ -165,29 +188,6 @@ const TicketTypeTable = ({
           {String(v || '—')}
         </Typography>
       ),
-    },
-    {
-      id: 'displayTag',
-      label: 'Display Tag',
-      minWidth: 120,
-      format: (v): React.ReactNode => {
-        const tag = String(v || '');
-        return tag ? (
-          <Chip
-            label={tag}
-            size='small'
-            sx={{
-              fontWeight: 600,
-              fontSize: '0.75rem',
-              height: 22,
-            }}
-          />
-        ) : (
-          <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>
-            —
-          </Typography>
-        );
-      },
     },
   ];
 

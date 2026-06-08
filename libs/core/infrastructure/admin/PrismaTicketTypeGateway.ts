@@ -13,34 +13,69 @@ import {
 export class PrismaTicketTypeGateway implements ITicketTypeGateway {
   constructor(private readonly prisma: any) {}
 
+  // Convert accessControl string[] to JSON string for database storage
+  private prepareDataForDb(data: ICreateTicketTypeInput | IUpdateTicketTypeInput): any {
+    const dbData: any = { ...data };
+    if (data.accessControl) {
+      dbData.accessControl = JSON.stringify(data.accessControl);
+    }
+    // Remove frontend-only fields that don't exist in the database schema
+    delete dbData.iconKey;
+    delete dbData.tag;
+    return dbData;
+  }
+
+  // Parse accessControl JSON string back to string[] for API response
+  private parseAccessControl(ticketType: any): ITicketType {
+    const result = { ...ticketType };
+    if (ticketType.accessControl) {
+      try {
+        result.accessControl = JSON.parse(ticketType.accessControl);
+      } catch {
+        result.accessControl = [];
+      }
+    } else {
+      result.accessControl = [];
+    }
+    return result;
+  }
+
   async create(data: ICreateTicketTypeInput): Promise<ITicketType> {
-    return this.prisma.adminTicketType.create({ data }) as unknown as ITicketType;
+    const dbData = this.prepareDataForDb(data);
+    const result = await this.prisma.adminTicketType.create({ data: dbData });
+    return this.parseAccessControl(result) as unknown as ITicketType;
   }
 
   async findAll(): Promise<ITicketType[]> {
-    return this.prisma.adminTicketType.findMany({
+    const results = await this.prisma.adminTicketType.findMany({
       orderBy: { displayOrder: 'asc' },
-    }) as unknown as ITicketType[];
+    });
+    return results.map((r: any) => this.parseAccessControl(r)) as unknown as ITicketType[];
   }
 
   async findById(id: number): Promise<ITicketType | null> {
-    return this.prisma.adminTicketType.findUnique({
+    const result = await this.prisma.adminTicketType.findUnique({
       where: { id },
-    }) as unknown as ITicketType | null;
+    });
+    return result ? this.parseAccessControl(result) : null;
   }
 
   async findByType(type: string): Promise<ITicketType | null> {
-    return this.prisma.adminTicketType.findUnique({
+    const result = await this.prisma.adminTicketType.findUnique({
       where: { type },
-    }) as unknown as ITicketType | null;
+    });
+    return result ? this.parseAccessControl(result) : null;
   }
 
   async update(id: number, data: IUpdateTicketTypeInput): Promise<ITicketType> {
-    return this.prisma.adminTicketType.update({ where: { id }, data }) as unknown as ITicketType;
+    const dbData = this.prepareDataForDb(data);
+    const result = await this.prisma.adminTicketType.update({ where: { id }, data: dbData });
+    return this.parseAccessControl(result) as unknown as ITicketType;
   }
 
   async delete(id: number): Promise<ITicketType> {
-    return this.prisma.adminTicketType.delete({ where: { id } }) as unknown as ITicketType;
+    const result = await this.prisma.adminTicketType.delete({ where: { id } });
+    return this.parseAccessControl(result) as unknown as ITicketType;
   }
 
   async reorder(orders: IReorderTicketTypeInput[]): Promise<void> {

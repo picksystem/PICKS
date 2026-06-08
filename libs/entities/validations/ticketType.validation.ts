@@ -8,20 +8,44 @@ export const CreateTicketTypeSchema = yup.object({
   type: yup
     .string()
     .required('Type is required')
+    .max(25, 'Type must be 25 characters or less')
     .matches(/^[a-z0-9_]+$/, 'Only lowercase letters, numbers, and underscores allowed'),
-  name: yup.string().required('Name is required').max(100, 'Name must be 100 characters or less'),
+  name: yup.string().required('Name is required').max(25, 'Name must be 25 characters or less'),
   displayName: yup
     .string()
-    .required('Display name is required')
-    .max(100, 'Display name must be 100 characters or less')
+    .required('Display text is required')
+    .max(60, 'Display text must be 60 characters or less')
     .default(''),
-  displayTag: yup
+  displayTag: yup.string().max(40, 'Display tag must be 40 characters or less').default(''),
+  shortDescription: yup
     .string()
-    .required('Display tag is required')
-    .max(50, 'Tag must be 50 characters or less')
+    .transform((value) => {
+      if (
+        value &&
+        typeof value === 'object' &&
+        'segments' in value &&
+        Array.isArray(value.segments)
+      ) {
+        return value.segments?.[0]?.text || '';
+      }
+      return value || '';
+    })
     .default(''),
-  shortDescription: yup.string().max(200, 'Must be 200 characters or less').default(''),
-  description: yup.string().max(500, 'Description must be 500 characters or less').default(''),
+  description: yup
+    .string()
+    .transform((value) => {
+      if (
+        value &&
+        typeof value === 'object' &&
+        'segments' in value &&
+        Array.isArray(value.segments)
+      ) {
+        return value.segments?.[0]?.text || '';
+      }
+      return value || '';
+    })
+    .max(60, 'Description must be 60 characters or less')
+    .default(''),
   iconKey: yup.string().required('Icon is required').default('warning_amber'),
   tag: yup.string().default('Standard'),
   prefix: yup
@@ -35,14 +59,13 @@ export const CreateTicketTypeSchema = yup.object({
     .number()
     .required('Number length is required')
     .integer()
-    .min(1, 'Must be at least 1')
-    .max(12, 'Must be 12 or less')
+    .min(3, 'Must be between 3 and 9')
+    .max(9, 'Must be between 3 and 9')
     .default(7),
   accessControl: yup
     .array()
     .of(yup.string().required())
     .min(1, 'At least one role must be selected')
-    .required('Access control is required')
     .default(['admin', 'consultant', 'endUser']),
 });
 
@@ -52,18 +75,27 @@ export const CreateTicketTypeSchema = yup.object({
 export const UpdateTicketTypeSchema = yup.object({
   type: yup
     .string()
+    .max(25, 'Type must be 25 characters or less')
     .matches(/^[a-z0-9_]+$/, 'Only lowercase letters, numbers, and underscores allowed'),
-  name: yup.string().max(100, 'Name must be 100 characters or less'),
-  displayName: yup.string().max(100, 'Display name must be 100 characters or less'),
-  displayTag: yup.string().max(50, 'Tag must be 50 characters or less'),
-  shortDescription: yup.string().max(200, 'Must be 200 characters or less'),
-  description: yup.string().max(500, 'Description must be 500 characters or less'),
+  name: yup.string().max(25, 'Name must be 25 characters or less'),
+  displayName: yup.string().max(60, 'Display text must be 60 characters or less'),
+  displayTag: yup.string().max(40, 'Display tag must be 40 characters or less'),
+  shortDescription: yup.string(),
+  description: yup.string().max(60, 'Description must be 60 characters or less'),
   prefix: yup
     .string()
     .max(6, 'Prefix must be 6 characters or less')
     .matches(/^[A-Z0-9]*$/i, 'Only letters and numbers allowed'),
   isActive: yup.boolean(),
-  numberLength: yup.number().integer().min(1, 'Must be at least 1').max(12, 'Must be 12 or less'),
+  numberLength: yup
+    .number()
+    .integer()
+    .min(3, 'Must be between 3 and 9')
+    .max(9, 'Must be between 3 and 9'),
+  accessControl: yup
+    .array()
+    .of(yup.string().required())
+    .min(1, 'At least one role must be selected'),
 });
 
 /**

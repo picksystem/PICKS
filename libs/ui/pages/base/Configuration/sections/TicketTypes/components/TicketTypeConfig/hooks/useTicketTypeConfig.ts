@@ -26,6 +26,7 @@ export interface TicketTypeFormValues {
   numberLength: number;
   iconKey: string;
   tag: string;
+  accessControl?: string[];
 }
 
 export function useTicketTypeConfig() {
@@ -75,6 +76,7 @@ export function useTicketTypeConfig() {
             prefix: values.prefix,
             isActive: values.isActive,
             numberLength: values.numberLength,
+            accessControl: values.accessControl,
           },
         }).unwrap();
         notify.success('Ticket type updated successfully');
@@ -89,6 +91,7 @@ export function useTicketTypeConfig() {
           prefix: values.prefix,
           isActive: values.isActive,
           numberLength: values.numberLength,
+          accessControl: values.accessControl,
         }).unwrap();
         notify.success('Ticket type created successfully');
       }

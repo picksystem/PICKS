@@ -195,7 +195,7 @@ const SequenceDialog = ({ open, ticketTypes, onClose, onSave }: SequenceDialogPr
                         {t.displayTag}
                       </Typography>
                       <Typography fontSize='0.75rem' noWrap>
-                        {t.description}
+                        {t.displayName}
                       </Typography>
                     </Box>
                   }

@@ -149,8 +149,17 @@ const TicketTypeFormDialog = ({
       selectAll: getInitialAccessControl().length === 3,
     },
     validationSchema: CreateTicketTypeSchema,
+    validateOnBlur: true,
+    validateOnChange: false,
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
+        // Manually validate first to get clear errors
+        const errors = await formik.validateForm();
+        if (Object.keys(errors).length > 0) {
+          formik.setErrors(errors);
+          setSubmitting(false);
+          return;
+        }
         await onSubmit({
           type: values.type,
           name: values.name,
@@ -167,6 +176,8 @@ const TicketTypeFormDialog = ({
         });
         success(isEditing ? 'Ticket Type updated successfully' : 'Ticket Type added successfully');
         resetForm();
+      } catch (error) {
+        throw error;
       } finally {
         setSubmitting(false);
       }
@@ -228,9 +239,7 @@ const TicketTypeFormDialog = ({
   const gradient = `linear-gradient(135deg, ${darken(tagColor, 0.2)} 0%, ${tagColor} 100%)`;
   const preview = buildPreview(formik.values.prefix || '???', formik.values.numberLength || 7);
   const displayLabel = formik.values.name || 'Ticket Type Name';
-  const descriptionPreview =
-    serializeRichText(formik.values.description.segments) ||
-    'Add a description to describe this ticket type and its purpose.';
+  const descriptionPreview = formik.values.displayName || 'Add a display name';
   const tagOption = getTagOption(formik.values.tag);
   const displayTagOption =
     (getTagOption(formik.values.displayTag)?.label ?? formik.values.displayTag) ||
@@ -324,10 +333,14 @@ const TicketTypeFormDialog = ({
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={Boolean(reqError(formik.touched.name, formik.errors.name as string))}
-                helperText={reqError(formik.touched.name, formik.errors.name as string)}
+                helperText={
+                  reqError(formik.touched.name, formik.errors.name as string) ||
+                  'Alphanumeric, max 25 characters'
+                }
                 fullWidth
                 size='small'
                 required
+                inputProps={{ maxLength: 25 }}
               />
             </Grid>
 
@@ -350,6 +363,7 @@ const TicketTypeFormDialog = ({
                 size='small'
                 placeholder='e.g. Incident, Request, Task'
                 required
+                inputProps={{ maxLength: 40 }}
               />
             </Grid>
 
@@ -371,6 +385,7 @@ const TicketTypeFormDialog = ({
                 fullWidth
                 size='small'
                 required
+                inputProps={{ maxLength: 60 }}
               />
             </Grid>
 
@@ -524,16 +539,17 @@ const TicketTypeFormDialog = ({
                 }
                 placeholder='Describe this ticket type and when it should be used...'
                 multiline
-                minRows={4}
+                minRows={3}
                 fullWidth
                 size='small'
+                inputProps={{ maxLength: 60 }}
                 sx={{
                   '& .MuiOutlinedInput-root': { borderRadius: '8px' },
                 }}
               />
             </Grid>
 
-            {/* ── 7. Internal Note (textarea only) ── */}
+            {/* ── 7. Internal Note (textarea only, optional, no max length) ── */}
             <Grid size={{ xs: 12 }}>
               <TextField
                 label='Internal Note'
@@ -542,9 +558,9 @@ const TicketTypeFormDialog = ({
                 onChange={(e) =>
                   formik.setFieldValue('shortDescription', { segments: [{ text: e.target.value }] })
                 }
-                placeholder='A brief summary of this ticket type for internal use...'
+                placeholder='Internal note for this ticket type (optional)...'
                 multiline
-                minRows={3}
+                minRows={2}
                 fullWidth
                 size='small'
                 sx={{
@@ -689,7 +705,7 @@ const TicketTypeFormDialog = ({
                 fullWidth
                 size='small'
                 required
-                inputProps={{ min: 1, max: 12 }}
+                inputProps={{ min: 3, max: 9 }}
               />
             </Grid>
 
@@ -769,11 +785,11 @@ const TicketTypeFormDialog = ({
           Cancel
         </Button>
         <Button
-          type='submit'
-          form='ticket-type-form'
+          type='button'
           variant='contained'
           sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
           disabled={formik.isSubmitting}
+          onClick={() => formik.handleSubmit()}
         >
           {formik.isSubmitting ? 'Saving...' : isEditing ? 'Save' : 'Submit'}
         </Button>
