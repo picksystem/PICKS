@@ -3,6 +3,10 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import type { TableConfig } from '@serviceops/genericpanel';
 import type { IConfigApprovedEstimateRow } from '@serviceops/interfaces';
 import { mkActiveChip } from '@serviceops/pages/base/Configuration/utils/cellRenderers';
+import {
+  parseRichText,
+  serializeRichText,
+} from '@serviceops/pages/base/Configuration/shared/RichTextEditor';
 
 export const APPROVED_ESTIMATES_ACCENT = '#0369a1';
 
@@ -117,8 +121,9 @@ export const approvedEstimateColumns = (): Column<IConfigApprovedEstimateRow>[] 
       if (!val)
         return <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>—</Typography>;
 
+      const richTextValue = parseRichText(val);
       return (
-        <Typography
+        <Box
           sx={{
             fontSize: '0.8rem',
             color: 'text.secondary',
@@ -126,8 +131,21 @@ export const approvedEstimateColumns = (): Column<IConfigApprovedEstimateRow>[] 
             wordBreak: 'break-word',
           }}
         >
-          {val}
-        </Typography>
+          {richTextValue.segments.map((segment, index) => (
+            <Typography
+              key={index}
+              component='span'
+              sx={{
+                fontWeight: segment.bold ? 700 : 400,
+                fontStyle: segment.italic ? 'italic' : 'normal',
+                textDecoration: segment.underline ? 'underline' : 'normal',
+                display: 'inline',
+              }}
+            >
+              {segment.text}
+            </Typography>
+          ))}
+        </Box>
       );
     },
   },
@@ -161,9 +179,7 @@ export const APPROVED_ESTIMATES_CONFIG: TableConfig = {
     {
       name: 'shortDescription',
       label: 'Internal Note',
-      type: 'text',
-      multiline: true,
-      minRows: 3,
+      type: 'richText',
     },
     { name: 'isActive', label: 'Activation', type: 'toggle' as const },
   ],

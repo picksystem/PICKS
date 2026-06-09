@@ -77,7 +77,7 @@ function generateTicketId(name: string): string {
 }
 
 function buildPreview(prefix: string, length: number): string {
-  const num = '1'.padStart(Math.max(1, length), '0');
+  const num = length > 0 ? '1'.padStart(length, '0') : '';
   return `${prefix.toUpperCase()}${num}`;
 }
 
@@ -142,7 +142,7 @@ const TicketTypeFormDialog = ({
       description: getInitialDescription(),
       prefix: editingItem?.prefix ?? '',
       isActive: editingItem?.isActive ?? true,
-      numberLength: editingItem?.numberLength ?? 7,
+      numberLength: editingItem?.numberLength ?? '',
       iconKey: getInitialIcon(),
       tag: getInitialTag(),
       accessControl: getInitialAccessControl(),
@@ -169,7 +169,7 @@ const TicketTypeFormDialog = ({
           description: serializeRichText(values.description.segments),
           prefix: (values.prefix ?? '').toUpperCase(),
           isActive: values.isActive ?? true,
-          numberLength: values.numberLength ?? 7,
+          numberLength: Number(values.numberLength) || 7,
           iconKey: values.iconKey,
           tag: values.tag,
           accessControl: values.accessControl,
@@ -233,11 +233,19 @@ const TicketTypeFormDialog = ({
     onClose();
   };
 
+  // Use onClick instead of onSubmit to prevent double submission
+  const submitForm = () => {
+    formik.handleSubmit();
+  };
+
   const FALLBACK_COLOR = '#64748b';
   const tagColor = getTagOption(formik.values.tag)?.color ?? FALLBACK_COLOR;
   const color = tagColor;
   const gradient = `linear-gradient(135deg, ${darken(tagColor, 0.2)} 0%, ${tagColor} 100%)`;
-  const preview = buildPreview(formik.values.prefix || '???', formik.values.numberLength || 7);
+  const numberLengthVal = formik.values.numberLength
+    ? parseInt(formik.values.numberLength.toString(), 10)
+    : 7;
+  const preview = buildPreview(formik.values.prefix || '???', numberLengthVal);
   const displayLabel = formik.values.name || 'Ticket Type Name';
   const descriptionPreview = formik.values.displayName || 'Add a display name';
   const tagOption = getTagOption(formik.values.tag);
@@ -310,7 +318,10 @@ const TicketTypeFormDialog = ({
         <Box
           component='form'
           id='ticket-type-form'
-          onSubmit={formik.handleSubmit}
+          onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
+            e.preventDefault();
+            formik.handleSubmit();
+          }}
           noValidate
           className={classes.dialogForm}
         >
@@ -367,8 +378,8 @@ const TicketTypeFormDialog = ({
               />
             </Grid>
 
-            {/* 4. Display Text */}
-            <Grid size={{ xs: 12, sm: 6 }}>
+            {/* 4. Display Text (textarea) */}
+            <Grid size={{ xs: 12 }}>
               <TextField
                 label='Display Text'
                 name='displayName'
@@ -385,7 +396,12 @@ const TicketTypeFormDialog = ({
                 fullWidth
                 size='small'
                 required
+                multiline
+                minRows={2}
                 inputProps={{ maxLength: 60 }}
+                sx={{
+                  '& .MuiOutlinedInput-root': { borderRadius: '8px' },
+                }}
               />
             </Grid>
 
@@ -667,12 +683,15 @@ const TicketTypeFormDialog = ({
             {/* ── NUMBERING ── */}
 
             {/* Prefix */}
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 label='Numbering Prefix'
                 name='prefix'
                 value={formik.values.prefix}
-                onChange={(e) => formik.setFieldValue('prefix', e.target.value.toUpperCase())}
+                onChange={(e) => {
+                  const value = e.target.value.toUpperCase().slice(0, 6);
+                  formik.setFieldValue('prefix', value);
+                }}
                 onBlur={formik.handleBlur}
                 error={Boolean(reqError(formik.touched.prefix, formik.errors.prefix as string))}
                 helperText={
@@ -687,13 +706,23 @@ const TicketTypeFormDialog = ({
             </Grid>
 
             {/* Number Length */}
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 label='Number Length'
                 name='numberLength'
                 type='number'
                 value={formik.values.numberLength}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const inputValue = e.target.value;
+                  if (inputValue === '') {
+                    formik.setFieldValue('numberLength', '');
+                  } else {
+                    const val = parseInt(inputValue, 10);
+                    if (!isNaN(val)) {
+                      formik.setFieldValue('numberLength', Math.min(9, Math.max(0, val)));
+                    }
+                  }
+                }}
                 onBlur={formik.handleBlur}
                 error={Boolean(
                   reqError(formik.touched.numberLength, formik.errors.numberLength as string),
@@ -705,15 +734,15 @@ const TicketTypeFormDialog = ({
                 fullWidth
                 size='small'
                 required
-                inputProps={{ min: 3, max: 9 }}
+                inputProps={{ min: 0, max: 9 }}
               />
             </Grid>
 
             {/* Format Preview (display only) */}
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 label='Format Preview'
-                value={buildPreview(formik.values.prefix || '???', formik.values.numberLength || 7)}
+                value={buildPreview(formik.values.prefix || '???', numberLengthVal)}
                 fullWidth
                 size='small'
                 disabled

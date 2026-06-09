@@ -1,4 +1,7 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Underline from '@tiptap/extension-underline';
 import { Box, IconButton, Button, Tooltip, Divider } from '@serviceops/component';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import StickyNote2Icon from '@mui/icons-material/StickyNote2';
@@ -6,10 +9,8 @@ import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
-import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import SaveIcon from '@mui/icons-material/Save';
 import ClearIcon from '@mui/icons-material/Clear';
-import { useStyles } from './styles';
 
 interface RichTextSegment {
   text: string;
@@ -22,20 +23,12 @@ interface RichTextValue {
   segments: RichTextSegment[];
 }
 
-interface Props {
-  value: RichTextValue;
-  onChange?: (value: RichTextValue) => void;
-  accent?: string;
-  placeholder?: string;
-  icon?: React.ReactNode;
-  title?: string;
-  showFooterActions?: boolean;
-}
-
+// Export parseRichText - converts text like **bold** *italic* __underline__ to segments
 export const parseRichText = (text: string): RichTextValue => {
   const segments: RichTextSegment[] = [];
-  let remaining = text;
+  if (!text) return { segments };
 
+  let remaining = text;
   while (remaining.length > 0) {
     const boldMatch = remaining.match(/^\*\*(.+?)\*\*/);
     const italicMatch = remaining.match(/^\*(.+?)\*/);
@@ -64,11 +57,12 @@ export const parseRichText = (text: string): RichTextValue => {
       }
     }
   }
-
   return { segments };
 };
 
+// Export serializeRichText - converts segments to text like **bold** *italic* __underline__
 export const serializeRichText = (segments: RichTextSegment[]): string => {
+  if (!segments) return '';
   return segments
     .map((s) => {
       let prefix = '';
@@ -83,6 +77,16 @@ export const serializeRichText = (segments: RichTextSegment[]): string => {
     })
     .join('');
 };
+
+interface Props {
+  value: RichTextValue;
+  onChange?: (value: RichTextValue) => void;
+  accent?: string;
+  placeholder?: string;
+  icon?: React.ReactNode;
+  title?: string;
+  showFooterActions?: boolean;
+}
 
 const toolbarBtnSx = {
   width: 30,
@@ -99,181 +103,126 @@ const getFormatBtnSx = (isActive: boolean) => ({
   border: isActive ? '1px solid #0369a1' : '1px solid transparent',
 });
 
+// Convert HTML to segments
+const htmlToSegments = (html: string): RichTextSegment[] => {
+  const segments: RichTextSegment[] = [];
+  if (!html || html === '<p></p>') return segments;
+
+  const div = document.createElement('div');
+  div.innerHTML = html;
+
+  const processNode = (
+    node: Node,
+    formatting: { bold: boolean; italic: boolean; underline: boolean },
+  ) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent?.trim();
+      if (text) segments.push({ text, ...formatting });
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      const tag = el.tagName;
+      const { style } = el;
+
+      const newFormat = { ...formatting };
+      if (
+        tag === 'B' ||
+        tag === 'STRONG' ||
+        style.fontWeight === '700' ||
+        style.fontWeight === 'bold'
+      )
+        newFormat.bold = true;
+      if (tag === 'I' || tag === 'EM' || style.fontStyle === 'italic') newFormat.italic = true;
+      if (
+        tag === 'U' ||
+        style.textDecorationLine === 'underline' ||
+        style.textDecoration?.includes('underline')
+      )
+        newFormat.underline = true;
+
+      if (el.childNodes.length === 0) {
+        const text = el.textContent?.trim();
+        if (text) segments.push({ text, ...newFormat });
+      } else {
+        Array.from(el.childNodes).forEach((child) => processNode(child, newFormat));
+      }
+    }
+  };
+
+  Array.from(div.childNodes).forEach((node) =>
+    processNode(node, { bold: false, italic: false, underline: false }),
+  );
+  return segments;
+};
+
+// Convert our segments to TipTap HTML
+const segmentsToHtml = (segments: RichTextSegment[]): string => {
+  if (!segments || segments.length === 0) return '<p></p>';
+  return segments
+    .map((s) => {
+      let { text } = s;
+      if (s.bold) text = `<strong>${text}</strong>`;
+      if (s.italic) text = `<em>${text}</em>`;
+      if (s.underline) text = `<u>${text}</u>`;
+      return `<p>${text}</p>`;
+    })
+    .join('');
+};
+
 const RichTextEditor = ({
   value,
   onChange,
   accent = '#2d5ebb',
   placeholder = 'Describe the issue in detail...',
+  title = 'Internal Note',
   showFooterActions = true,
 }: Props) => {
-  const { classes } = useStyles();
-  const editorRef = useRef<HTMLDivElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const [activeFormats, setActiveFormats] = useState({
-    bold: false,
-    italic: false,
-    underline: false,
-  });
+  const initialContent = value?.segments?.length > 0 ? segmentsToHtml(value.segments) : '';
 
-  useEffect(() => {
-    if (editorRef.current && document.activeElement !== editorRef.current) {
-      if (value.segments.length > 0) {
-        editorRef.current.innerHTML = serializeToHtml(value.segments);
-      } else {
-        editorRef.current.innerHTML = '';
-      }
-    }
-  }, [value]);
-
-  const serializeToHtml = (segments: RichTextSegment[]): string => {
-    return segments
-      .map((s) => {
-        let text = s.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        text = text.replace(/\n/g, '<br>');
-        const styles = [];
-        if (s.bold) styles.push('font-weight:700');
-        if (s.italic) styles.push('font-style:italic');
-        if (s.underline) styles.push('text-decoration:underline');
-        const styleAttr = styles.length ? ` style="${styles.join(';')}"` : '';
-        return `<span${styleAttr}>${text}</span>`;
-      })
-      .join('');
-  };
-
-  const parseHtmlToSegments = (html: string): RichTextSegment[] => {
-    const segments: RichTextSegment[] = [];
-    const div = document.createElement('div');
-    div.innerHTML = html;
-
-    const processNode = (node: Node): void => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const text = node.textContent || '';
-        if (text) segments.push({ text });
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
-        const el = node as HTMLElement;
-        // Recursively check if element or any child has formatting
-        const hasBold =
-          el.tagName === 'B' ||
-          el.tagName === 'STRONG' ||
-          el.style.fontWeight === '700' ||
-          el.querySelector('b, strong, [style*="font-weight:700"]') !== null;
-        const hasItalic =
-          el.tagName === 'I' ||
-          el.tagName === 'EM' ||
-          el.style.fontStyle === 'italic' ||
-          el.querySelector('i, em, [style*="font-style:italic"]') !== null;
-        const hasUnderline =
-          el.tagName === 'U' ||
-          el.style.textDecoration === 'underline' ||
-          el.querySelector('u, [style*="text-decoration:underline"]') !== null;
-
-        // If no children, just process this element
-        if (el.childNodes.length === 0) {
-          const text = el.textContent || '';
-          if (text) {
-            segments.push({
-              text: text.replace(/<br>/gi, '\n'),
-              bold: hasBold,
-              italic: hasItalic,
-              underline: hasUnderline,
-            });
-          }
-        } else {
-          // Process children individually
-          el.childNodes.forEach((child) => processNode(child));
-        }
-      }
-    };
-
-    div.childNodes.forEach(processNode);
-    return segments;
-  };
-
-  const checkActiveFormats = useCallback(() => {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
-
-    const range = selection.getRangeAt(0);
-    let element = range.commonAncestorContainer.parentElement;
-
-    let bold = false;
-    let italic = false;
-    let underline = false;
-
-    while (element && element !== editorRef.current) {
-      const style = window.getComputedStyle(element);
-      if (style.fontWeight === '700') bold = true;
-      if (style.fontStyle === 'italic') italic = true;
-      if (style.textDecoration === 'underline') underline = true;
-      element = element.parentElement as HTMLElement;
-    }
-
-    setActiveFormats({ bold, italic, underline });
-  }, []);
-
-  const handleFormat = useCallback(
-    (command: string) => {
-      editorRef.current?.focus();
-      document.execCommand(command, false);
-      if (editorRef.current) {
-        const html = editorRef.current.innerHTML;
-        const segments = parseHtmlToSegments(html);
-        onChange?.({ segments });
-      }
-      checkActiveFormats();
-    },
-    [checkActiveFormats, onChange],
-  );
-
-  const handleInput = () => {
-    if (editorRef.current && onChange) {
-      const html = editorRef.current.innerHTML;
-      const segments = parseHtmlToSegments(html);
-      onChange({ segments });
-    }
-  };
-
-  const handleSave = () => {
-    if (editorRef.current) {
-      const html = editorRef.current.innerHTML;
-      const segments = parseHtmlToSegments(html);
+  const editor = useEditor({
+    extensions: [StarterKit, Underline],
+    content: initialContent || `<p>${placeholder}</p>`,
+    onUpdate: ({ editor: ed }) => {
       if (onChange) {
+        const html = ed.getHTML();
+        const json = ed.getJSON();
+        const segments = htmlToSegments(html);
         onChange({ segments });
       }
-    }
-  };
+    },
+    editorProps: {
+      attributes: {
+        style: 'outline: none; min-height: 80px; padding: 8px;',
+      },
+    },
+  });
 
-  const handleClear = () => {
-    if (editorRef.current) {
-      editorRef.current.innerHTML = '';
+  // Update editor when value changes from outside
+  useEffect(() => {
+    if (editor && value?.segments?.length > 0) {
+      const newHtml = segmentsToHtml(value.segments);
+      const currentHtml = editor.getHTML();
+      if (newHtml !== currentHtml && newHtml !== `<p>${placeholder}</p>`) {
+        editor.commands.setContent(newHtml);
+      }
+    }
+  }, [editor, value, placeholder]);
+
+  const handleClear = useCallback(() => {
+    if (editor) {
+      editor.commands.clearContent();
       onChange?.({ segments: [] });
     }
-  };
+  }, [editor, onChange]);
 
-  const handleImageInsert = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file || !editorRef.current) return;
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const src = evt.target?.result as string;
-        editorRef.current?.focus();
-        document.execCommand(
-          'insertHTML',
-          false,
-          `<img src="${src}" style="max-width:100%;height:auto;border-radius:4px;margin:4px 0;" alt="image"/>`,
-        );
-        if (editorRef.current) {
-          const html = editorRef.current.innerHTML;
-          const segments = parseHtmlToSegments(html);
-          onChange?.({ segments });
-        }
-      };
-      reader.readAsDataURL(file);
-      e.target.value = '';
-    },
-    [onChange],
-  );
+  const handleSave = useCallback(() => {
+    if (editor) {
+      const html = editor.getHTML();
+      const segments = htmlToSegments(html);
+      onChange?.({ segments });
+    }
+  }, [editor, onChange]);
+
+  if (!editor) return null;
 
   return (
     <Box sx={{ width: '100%', mt: 1.5 }}>
@@ -282,10 +231,7 @@ const RichTextEditor = ({
           border: '1px solid #2d5ebb',
           borderRadius: 2,
           overflow: 'hidden',
-          '&:focus-within': {
-            borderColor: accent,
-            borderWidth: 1,
-          },
+          '&:focus-within': { borderColor: accent, borderWidth: 1 },
         }}
       >
         <Box
@@ -323,17 +269,14 @@ const RichTextEditor = ({
                 fontSize: '0.92rem',
               }}
             >
-              Sticky note
+              {title}
             </Box>
           </Box>
           <Tooltip title='Bold'>
             <IconButton
               size='small'
-              sx={getFormatBtnSx(activeFormats.bold)}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleFormat('bold');
-              }}
+              sx={getFormatBtnSx(editor.isActive('bold'))}
+              onClick={() => editor.chain().focus().toggleBold().run()}
             >
               <FormatBoldIcon />
             </IconButton>
@@ -341,11 +284,8 @@ const RichTextEditor = ({
           <Tooltip title='Italic'>
             <IconButton
               size='small'
-              sx={getFormatBtnSx(activeFormats.italic)}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleFormat('italic');
-              }}
+              sx={getFormatBtnSx(editor.isActive('italic'))}
+              onClick={() => editor.chain().focus().toggleItalic().run()}
             >
               <FormatItalicIcon />
             </IconButton>
@@ -353,11 +293,8 @@ const RichTextEditor = ({
           <Tooltip title='Underline'>
             <IconButton
               size='small'
-              sx={getFormatBtnSx(activeFormats.underline)}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleFormat('underline');
-              }}
+              sx={getFormatBtnSx(editor.isActive('underline'))}
+              onClick={() => editor.chain().focus().toggleUnderline().run()}
             >
               <FormatUnderlinedIcon />
             </IconButton>
@@ -367,10 +304,7 @@ const RichTextEditor = ({
             <IconButton
               size='small'
               sx={toolbarBtnSx}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleFormat('insertUnorderedList');
-              }}
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
             >
               <FormatListBulletedIcon />
             </IconButton>
@@ -379,44 +313,28 @@ const RichTextEditor = ({
             <IconButton
               size='small'
               sx={toolbarBtnSx}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleFormat('insertOrderedList');
-              }}
+              onClick={() => editor.chain().focus().toggleOrderedList().run()}
             >
               <FormatListNumberedIcon />
             </IconButton>
           </Tooltip>
-          <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />
-          <Tooltip title='Insert Image'>
-            <IconButton
-              size='small'
-              sx={toolbarBtnSx}
-              onClick={() => imageInputRef.current?.click()}
-            >
-              <ImageOutlinedIcon />
-            </IconButton>
-          </Tooltip>
-          <input
-            ref={imageInputRef}
-            type='file'
-            accept='image/*'
-            hidden
-            onChange={handleImageInsert}
-          />
         </Box>
 
         <Box
-          ref={editorRef}
-          contentEditable
-          suppressContentEditableWarning
-          onInput={handleInput}
-          onKeyUp={checkActiveFormats}
-          onMouseUp={checkActiveFormats}
-          className={classes.editor}
-          data-placeholder={placeholder}
-          sx={{ direction: 'ltr', textAlign: 'left' }}
-        />
+          sx={{
+            p: 1,
+            minHeight: 80,
+            '& .ProseMirror': {
+              outline: 'none',
+              minHeight: 60,
+              '& p': { margin: 0 },
+              '& ul, & ol': { paddingLeft: 3, margin: '4px 0' },
+              '& li': { marginBottom: 0.5 },
+            },
+          }}
+        >
+          <EditorContent editor={editor} />
+        </Box>
       </Box>
 
       {showFooterActions && (
@@ -439,10 +357,7 @@ const RichTextEditor = ({
               borderColor: '#2d5ebb',
               color: '#2d5ebb',
               width: { xs: '100%', sm: 'auto' },
-              '&:hover': {
-                borderColor: '#2d5ebb',
-                bgcolor: 'rgba(45, 94, 187, 0.08)',
-              },
+              '&:hover': { borderColor: '#2d5ebb', bgcolor: 'rgba(45, 94, 187, 0.08)' },
             }}
           >
             Clear

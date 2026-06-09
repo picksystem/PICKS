@@ -1301,6 +1301,7 @@ export const GenericPanel = ({
                       handleTextFieldChange(field.name, serializeRichText(value.segments))
                     }
                     showFooterActions={false}
+                    title={field.label}
                   />
                 );
               }

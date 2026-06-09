@@ -81,6 +81,7 @@ const TicketTypeConfigSection = () => {
     handleToggleActive,
     iconMap,
     tagMap,
+    isSubmitting,
   } = useTicketTypeConfig();
 
   const filteredTicketTypes = tableSearch
@@ -236,7 +237,13 @@ const TicketTypeConfigSection = () => {
                   variant='contained'
                   startIcon={<EditIcon />}
                   onClick={openEditSelected}
-                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                  disabled={isSubmitting}
+                  sx={{
+                    textTransform: 'none',
+                    width: { xs: '100%', sm: 'auto' },
+                    opacity: isSubmitting ? 0.5 : 1,
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  }}
                 >
                   Edit
                 </Button>
@@ -279,7 +286,11 @@ const TicketTypeConfigSection = () => {
           <TicketTypeTable
             ticketTypes={filteredTicketTypes}
             selectedRowId={selectedRow?.id}
-            onRowClick={(row) => setSelectedRow(selectedRow?.id === row.id ? null : row)}
+            onRowClick={(row) => {
+              // Prevent row selection during submission
+              if (isSubmitting) return;
+              setSelectedRow(selectedRow?.id === row.id ? null : row);
+            }}
             onToggleActive={handleToggleActive}
           />
         </Box>

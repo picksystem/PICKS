@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   useGetTicketTypeQuery,
   useCreateTicketTypeMutation,
@@ -39,16 +39,23 @@ export function useTicketTypeConfig() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ITicketType | null>(null);
   const [selectedRow, setSelectedRow] = useState<ITicketType | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastClosedAt, setLastClosedAt] = useState(0);
+  const dialogCloseRef = useRef(false);
 
   const [iconMap, setIconMap] = useState<Record<string, string>>(loadIconMap);
   const [tagMap, setTagMap] = useState<Record<string, string>>(loadTagMap);
 
   const openAddDialog = () => {
+    // Prevent opening during submission or within 500ms after closing
+    if (isSubmitting || dialogCloseRef.current || Date.now() - lastClosedAt < 500) return;
     setEditingItem(null);
     setDialogOpen(true);
   };
 
   const openEditDialog = (item: ITicketType) => {
+    // Prevent opening during submission or within 500ms after closing
+    if (isSubmitting || dialogCloseRef.current || Date.now() - lastClosedAt < 500) return;
     setEditingItem(item);
     setDialogOpen(true);
   };
@@ -58,11 +65,19 @@ export function useTicketTypeConfig() {
   };
 
   const closeDialog = () => {
+    dialogCloseRef.current = true;
     setDialogOpen(false);
     setEditingItem(null);
+    setSelectedRow(null);
+    setLastClosedAt(Date.now());
+    // Reset the ref after a delay to prevent immediate re-open
+    setTimeout(() => {
+      dialogCloseRef.current = false;
+    }, 500);
   };
 
   const handleSubmit = async (values: TicketTypeFormValues) => {
+    setIsSubmitting(true);
     try {
       if (editingItem) {
         await updateTicketType({
@@ -112,6 +127,8 @@ export function useTicketTypeConfig() {
     } catch {
       notify.error(editingItem ? 'Failed to update ticket type' : 'Failed to create ticket type');
       throw new Error('Submit failed');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -153,5 +170,6 @@ export function useTicketTypeConfig() {
     handleToggleActive,
     iconMap,
     tagMap,
+    isSubmitting,
   };
 }

@@ -16,7 +16,11 @@ export const CreateTicketTypeSchema = yup.object({
     .required('Display text is required')
     .max(60, 'Display text must be 60 characters or less')
     .default(''),
-  displayTag: yup.string().max(40, 'Display tag must be 40 characters or less').default(''),
+  displayTag: yup
+    .string()
+    .required('Display tag is required')
+    .max(40, 'Display tag must be 40 characters or less')
+    .default(''),
   shortDescription: yup
     .string()
     .transform((value) => {
@@ -59,8 +63,8 @@ export const CreateTicketTypeSchema = yup.object({
     .number()
     .required('Number length is required')
     .integer()
-    .min(3, 'Must be between 3 and 9')
-    .max(9, 'Must be between 3 and 9')
+    .min(0, 'Must be between 0 and 9')
+    .max(9, 'Must be between 0 and 9')
     .default(7),
   accessControl: yup
     .array()
@@ -90,8 +94,8 @@ export const UpdateTicketTypeSchema = yup.object({
   numberLength: yup
     .number()
     .integer()
-    .min(3, 'Must be between 3 and 9')
-    .max(9, 'Must be between 3 and 9'),
+    .min(0, 'Must be between 0 and 9')
+    .max(9, 'Must be between 0 and 9'),
   accessControl: yup
     .array()
     .of(yup.string().required())
