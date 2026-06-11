@@ -2,6 +2,7 @@ import {
   IConfiguration,
   IConfigurationData,
   IConfigurationGateway,
+  IConfigMatrixMap,
   DEFAULT_CONFIGURATION_DATA,
   IConfigApproval,
   IConfigServiceLineTicketType,
@@ -53,6 +54,45 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
       return result;
     };
 
+    /**
+     * Normalize a stored matrix value into the extended cell shape.
+     * Older rows in the DB may still contain a plain `priorityId` string for
+     * each (impact, urgency) cell; this helper lifts those to the full
+     * `{ priorityId, shortDescription, description, activateSimplePriorities,
+     * internalNote }` shape so downstream code can rely on it.
+     */
+    const normalizeMatrixCells = (raw: Record<string, unknown> | undefined): IConfigMatrixMap => {
+      const result: IConfigMatrixMap = {};
+      if (!raw) return result;
+      for (const [impactId, byUrgency] of Object.entries(raw)) {
+        if (!byUrgency || typeof byUrgency !== 'object') continue;
+        const normalizedImpact: IConfigMatrixMap[string] = {};
+        for (const [urgencyId, cell] of Object.entries(byUrgency as Record<string, unknown>)) {
+          if (cell === null) continue;
+          if (typeof cell === 'string') {
+            normalizedImpact[urgencyId] = { priorityId: cell };
+          } else if (typeof cell === 'object') {
+            const c = cell as Partial<{
+              priorityId: string;
+              shortDescription?: string;
+              description?: string;
+              activateSimplePriorities?: boolean;
+              internalNote?: string;
+            }>;
+            normalizedImpact[urgencyId] = {
+              priorityId: c.priorityId ?? '',
+              shortDescription: c.shortDescription,
+              description: c.description,
+              activateSimplePriorities: c.activateSimplePriorities,
+              internalNote: c.internalNote,
+            };
+          }
+        }
+        result[impactId] = normalizedImpact;
+      }
+      return result;
+    };
+
     const enrichedPriorities: IConfigurationData['priorities'] = {
       levels: data.priorities.levels.map((l) => ({
         ...l,
@@ -66,16 +106,33 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
         ...l,
         enabledFor: syncEnabledFor(l.enabledFor),
       })),
-      matrices: { ...data.priorities.matrices },
+      matrices: Object.fromEntries(
+        Object.entries(data.priorities.matrices ?? {}).map(([k, v]) => [
+          k,
+          normalizeMatrixCells(v as Record<string, unknown>),
+        ]),
+      ),
     };
 
     // Add missing matrix entries for new ticket types
     for (const key of typeKeys) {
       if (!enrichedPriorities.matrices[key]) {
         enrichedPriorities.matrices[key] = {
-          high: { high: 'critical', medium: 'high', low: 'medium' },
-          medium: { high: 'high', medium: 'medium', low: 'low' },
-          low: { high: 'medium', medium: 'low', low: 'planning' },
+          high: {
+            high: { priorityId: 'critical' },
+            medium: { priorityId: 'high' },
+            low: { priorityId: 'medium' },
+          },
+          medium: {
+            high: { priorityId: 'high' },
+            medium: { priorityId: 'medium' },
+            low: { priorityId: 'low' },
+          },
+          low: {
+            high: { priorityId: 'medium' },
+            medium: { priorityId: 'low' },
+            low: { priorityId: 'planning' },
+          },
         };
       }
     }

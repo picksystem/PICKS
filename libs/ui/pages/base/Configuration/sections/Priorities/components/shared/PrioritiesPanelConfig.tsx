@@ -14,9 +14,10 @@ export const PRIORITY_TABLE_CONFIG = {
   icon: <PriorityHighIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Priority',
   fields: [
-    { name: 'name', label: 'Priority Name', required: true, bold: true },
+    { name: 'name', label: 'Priority', required: true, bold: true },
+    { name: 'shortDescription', label: 'Short Description' },
     { name: 'description', label: 'Description' },
-    { name: 'bgColor', label: 'Color', type: 'text' as const },
+    { name: 'internalNote', label: 'Internal note' },
   ],
 };
 
@@ -29,7 +30,9 @@ export const IMPACT_TABLE_CONFIG = {
   entity: 'Impact Level',
   fields: [
     { name: 'displayName', label: 'Display Name', required: true, bold: true },
+    { name: 'shortDescription', label: 'Short Description' },
     { name: 'description', label: 'Description' },
+    { name: 'internalNote', label: 'Internal note' },
     { name: 'bgColor', label: 'Color' },
     { name: 'isActive', label: 'Active', type: 'toggle' as const },
   ],
@@ -44,7 +47,9 @@ export const URGENCY_TABLE_CONFIG = {
   entity: 'Urgency Level',
   fields: [
     { name: 'displayName', label: 'Display Name', required: true, bold: true },
+    { name: 'shortDescription', label: 'Short Description' },
     { name: 'description', label: 'Description' },
+    { name: 'internalNote', label: 'Internal note' },
     { name: 'bgColor', label: 'Color' },
     { name: 'isActive', label: 'Active', type: 'toggle' as const },
   ],

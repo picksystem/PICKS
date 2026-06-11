@@ -390,6 +390,20 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     height: 22,
   },
 
+  dialogHeroFormatChip: {
+    fontFamily: 'monospace',
+    fontWeight: 700,
+    fontSize: '0.65rem',
+    height: 22,
+    borderRadius: '6px',
+    background: 'rgba(255,255,255,0.18)',
+    border: '1px solid rgba(255,255,255,0.35)',
+    color: '#fff',
+    '& .MuiChip-label': {
+      px: 0.75,
+    },
+  },
+
   dialogHeroFormatCode: {
     fontFamily: 'monospace',
     fontWeight: 700,

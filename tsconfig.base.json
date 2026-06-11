@@ -51,7 +51,7 @@
       "@serviceops/generictogglepanel": ["./libs/ui/pages/base/Configuration/shared/GenericTogglePanel/GenericTogglePanel"],
       "@serviceops/genericaccordion": ["./libs/ui/pages/base/Configuration/shared/GenericAccordion/GenericAccordion"],
       "@serviceops/configplaceholder": ["./libs/ui/pages/base/Configuration/shared/ConfigPlaceholder/ConfigPlaceholder"],
-      "@serviceops/richtexteditor": ["./libs/ui/pages/base/Configuration/shared/RichTextEditor/RichTextEditor"],
+      "@serviceops/richtexteditor": ["./libs/ui/pages/base/Configuration/shared/RichTextEditor/index"],
       "@serviceops/configbase": ["./libs/ui/pages/base/Configuration/shared/styles/ConfigurationBase.styles.shared"],
       "@serviceops/confighooks": ["./libs/ui/pages/base/Configuration/hooks/useConfiguration"],
       "@serviceops/configutils": ["./libs/ui/pages/base/Configuration/utils/cellRenderers"],

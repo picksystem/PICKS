@@ -7,6 +7,50 @@ import { useStyles } from '../../styles';
 import { useNotification } from '@serviceops/hooks';
 import { GenericPanel } from '@serviceops/genericpanel';
 import { ConfigFormDialog, ConfigDeleteDialog } from '@serviceops/configdialogs';
+import {
+  parseRichText,
+  serializeRichText,
+  RichTextEditor,
+  segmentsToHtml,
+} from '@serviceops/pages/base/Configuration/shared/RichTextEditor';
+
+const renderRichTextCell = (v: unknown, maxWidth: number): React.ReactNode => {
+  const raw = String(v || '');
+  if (!raw) {
+    return (
+      <Typography
+        variant='body2'
+        color='text.secondary'
+        fontSize='0.78rem'
+        sx={{ fontStyle: 'italic' }}
+      >
+        —
+      </Typography>
+    );
+  }
+  const html = segmentsToHtml(parseRichText(raw).segments);
+  const plainText = parseRichText(raw)
+    .segments.map((s) => s.text)
+    .join(' • ');
+  return (
+    <Box
+      title={plainText}
+      sx={{
+        maxWidth,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        fontSize: '0.78rem',
+        color: 'text.secondary',
+        lineHeight: 1.5,
+        '& b': { fontWeight: 700, color: 'text.primary' },
+        '& i': { fontStyle: 'italic' },
+        '& u': { textDecoration: 'underline' },
+      }}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
+};
 
 interface ImpactSectionProps {
   items: SimpleLevel[];
@@ -61,7 +105,9 @@ const ImpactSection = ({
       setEditingItem(selected);
       setForm({
         displayName: selected.displayName,
+        shortDescription: selected.shortDescription ?? '',
         description: selected.description,
+        internalNote: selected.internalNote ?? '',
         isActive: selected.isActive,
       });
       setDialogOpen(true);
@@ -122,12 +168,22 @@ const ImpactSection = ({
         ),
       },
       {
+        id: 'shortDescription',
+        label: 'Short Description',
+        minWidth: 200,
+        format: (v: unknown): React.ReactNode => renderRichTextCell(v, 260),
+      },
+      {
         id: 'description',
         label: 'Description',
-        minWidth: 300,
-        format: (v: unknown): React.ReactNode => (
-          <span style={{ color: 'text.secondary', fontSize: '0.78rem' }}>{String(v || '—')}</span>
-        ),
+        minWidth: 240,
+        format: (v: unknown): React.ReactNode => renderRichTextCell(v, 300),
+      },
+      {
+        id: 'internalNote',
+        label: 'Internal note',
+        minWidth: 200,
+        format: (v: unknown): React.ReactNode => renderRichTextCell(v, 260),
       },
       ...activeTicketTypeColumns.map((t) => ({
         id: `enabledFor_${t.key}`,
@@ -188,6 +244,61 @@ const ImpactSection = ({
               ? 'Edit the impact level details below.'
               : 'Configure the new impact level.'}
           </Typography>
+
+          <Box>
+            <RichTextEditor
+              value={parseRichText(form.shortDescription ?? '')}
+              onChange={(value) =>
+                setForm((f) => ({ ...f, shortDescription: serializeRichText(value.segments) }))
+              }
+              showFooterActions={false}
+              title='Short Description'
+            />
+            <Typography
+              variant='caption'
+              color='text.secondary'
+              sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
+            >
+              Brief summary shown in compact views
+            </Typography>
+          </Box>
+
+          <Box>
+            <RichTextEditor
+              value={parseRichText(form.description ?? '')}
+              onChange={(value) =>
+                setForm((f) => ({ ...f, description: serializeRichText(value.segments) }))
+              }
+              showFooterActions={false}
+              title='Description'
+            />
+            <Typography
+              variant='caption'
+              color='text.secondary'
+              sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
+            >
+              Describe when this impact level should be used
+            </Typography>
+          </Box>
+
+          <Box>
+            <RichTextEditor
+              value={parseRichText(form.internalNote ?? '')}
+              onChange={(value) =>
+                setForm((f) => ({ ...f, internalNote: serializeRichText(value.segments) }))
+              }
+              showFooterActions={false}
+              title='Internal note'
+            />
+            <Typography
+              variant='caption'
+              color='text.secondary'
+              sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
+            >
+              Internal note for this impact level (not visible to end users)
+            </Typography>
+          </Box>
+
           <FormControlLabel
             control={
               <Switch

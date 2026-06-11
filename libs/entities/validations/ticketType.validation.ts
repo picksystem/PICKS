@@ -11,11 +11,7 @@ export const CreateTicketTypeSchema = yup.object({
     .max(25, 'Type must be 25 characters or less')
     .matches(/^[a-z0-9_]+$/, 'Only lowercase letters, numbers, and underscores allowed'),
   name: yup.string().required('Name is required').max(25, 'Name must be 25 characters or less'),
-  displayName: yup
-    .string()
-    .required('Display text is required')
-    .max(60, 'Display text must be 60 characters or less')
-    .default(''),
+  displayName: yup.string().required('Display text is required').default(''),
   displayTag: yup
     .string()
     .required('Display tag is required')
@@ -30,7 +26,7 @@ export const CreateTicketTypeSchema = yup.object({
         'segments' in value &&
         Array.isArray(value.segments)
       ) {
-        return value.segments?.[0]?.text || '';
+        return value.segments?.map((s: { text: string }) => s.text).join('\n') || '';
       }
       return value || '';
     })
@@ -44,11 +40,10 @@ export const CreateTicketTypeSchema = yup.object({
         'segments' in value &&
         Array.isArray(value.segments)
       ) {
-        return value.segments?.[0]?.text || '';
+        return value.segments?.map((s: { text: string }) => s.text).join('\n') || '';
       }
       return value || '';
     })
-    .max(60, 'Description must be 60 characters or less')
     .default(''),
   iconKey: yup.string().required('Icon is required').default('warning_amber'),
   tag: yup.string().default('Standard'),
@@ -82,10 +77,10 @@ export const UpdateTicketTypeSchema = yup.object({
     .max(25, 'Type must be 25 characters or less')
     .matches(/^[a-z0-9_]+$/, 'Only lowercase letters, numbers, and underscores allowed'),
   name: yup.string().max(25, 'Name must be 25 characters or less'),
-  displayName: yup.string().max(60, 'Display text must be 60 characters or less'),
+  displayName: yup.string(),
   displayTag: yup.string().max(40, 'Display tag must be 40 characters or less'),
   shortDescription: yup.string(),
-  description: yup.string().max(60, 'Description must be 60 characters or less'),
+  description: yup.string(),
   prefix: yup
     .string()
     .max(6, 'Prefix must be 6 characters or less')

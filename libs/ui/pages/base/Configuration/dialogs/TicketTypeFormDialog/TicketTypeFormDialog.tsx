@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
+  Alert,
   Button,
   TextField,
   Switch,
@@ -40,26 +41,8 @@ import {
 } from '../../utils/ticketTypeIcons';
 import { useStyles } from '../../styles';
 import { useFieldError, useNotification } from '@serviceops/hooks';
-import { parseRichText, serializeRichText } from '../../shared/RichTextEditor';
-
-// Consistent field styles
-const fieldStyles = {
-  '& .MuiOutlinedInput-root': {
-    borderRadius: '8px',
-    height: '40px',
-  },
-  '& .MuiInputBase-input': {
-    py: 1,
-    fontSize: '0.875rem',
-  },
-  '& .MuiSelect-root': {
-    height: '40px',
-  },
-  '& .MuiSelect-select': {
-    py: 1,
-    fontSize: '0.875rem',
-  },
-};
+import { parseRichText, serializeRichText, RichTextEditor } from '../../shared/RichTextEditor';
+import CustomDropdown from './components/CustomDropdown';
 
 // Access control roles
 const ACCESS_CONTROL_ROLES = [
@@ -81,9 +64,25 @@ function buildPreview(prefix: string, length: number): string {
   return `${prefix.toUpperCase()}${num}`;
 }
 
+// Normalize a value for case-insensitive duplicate comparison
+const normalize = (v: unknown): string =>
+  String(v ?? '')
+    .trim()
+    .toLowerCase();
+
+// Strip rich text markers (**, *, __) and decode to plain text for duplicate checks
+const plainText = (v: string): string =>
+  String(v ?? '')
+    .replace(/\*\*/g, '')
+    .replace(/__/g, '')
+    .replace(/\*/g, '')
+    .trim()
+    .toLowerCase();
+
 const TicketTypeFormDialog = ({
   open,
   editingItem,
+  existingTicketTypes = [],
   iconMap,
   tagMap,
   onClose,
@@ -94,20 +93,21 @@ const TicketTypeFormDialog = ({
   const reqError = useFieldError();
   const { success } = useNotification();
   const [accessControlExpanded, setAccessControlExpanded] = useState(false);
+  const [duplicateErrors, setDuplicateErrors] = useState<Record<string, string>>({});
 
   // Initialize rich text values
-  const getInitialDescription = () => {
+  const getInitialDescription = (): string => {
     if (editingItem?.description) {
-      return parseRichText(editingItem.description);
+      return editingItem.description;
     }
-    return { segments: [] };
+    return '';
   };
 
-  const getInitialShortDescription = () => {
+  const getInitialShortDescription = (): string => {
     if (editingItem?.shortDescription) {
-      return parseRichText(editingItem.shortDescription);
+      return editingItem.shortDescription;
     }
-    return { segments: [] };
+    return '';
   };
 
   const getInitialIcon = () => {
@@ -151,12 +151,52 @@ const TicketTypeFormDialog = ({
     validationSchema: CreateTicketTypeSchema,
     validateOnBlur: true,
     validateOnChange: false,
-    onSubmit: async (values, { setSubmitting, resetForm }) => {
+    onSubmit: async (values, { setSubmitting, resetForm, setErrors }) => {
       try {
-        // Manually validate first to get clear errors
-        const errors = await formik.validateForm();
-        if (Object.keys(errors).length > 0) {
-          formik.setErrors(errors);
+        // Check for duplicates: only fields marked as "Not allowed" per requirements
+        const dupErrors: Record<string, string> = {};
+        const myId = editingItem?.id;
+        const others = existingTicketTypes.filter((t) => t.id !== myId);
+
+        // 1. Ticket type (name) - must be unique
+        const nameVal = normalize(values.name);
+        if (nameVal && others.some((t) => normalize(t.name) === nameVal)) {
+          dupErrors.name = 'Ticket type already exists';
+        }
+
+        // 2. Description - must be unique
+        const descVal = plainText(values.description ?? '');
+        if (descVal && others.some((t) => plainText(t.description ?? '') === descVal)) {
+          dupErrors.description = 'Description already exists';
+        }
+
+        // 3. Display tag - must be unique
+        const tagVal = normalize(values.displayTag);
+        if (tagVal && others.some((t) => normalize(t.displayTag) === tagVal)) {
+          dupErrors.displayTag = 'Display tag already exists';
+        }
+
+        // 4. Numbering Prefix - must be unique
+        const prefixVal = normalize(values.prefix);
+        if (prefixVal && others.some((t) => normalize(t.prefix) === prefixVal)) {
+          dupErrors.prefix = 'Numbering prefix already exists';
+        }
+
+        if (Object.keys(dupErrors).length > 0) {
+          setErrors(dupErrors);
+
+          // Mark fields as touched so they show validation errors
+          formik.setTouched({
+            ...formik.touched,
+            name: true,
+            description: true,
+            displayTag: true,
+            prefix: true,
+          });
+
+          // Show alert at the top of the form
+          setDuplicateErrors(dupErrors);
+
           setSubmitting(false);
           return;
         }
@@ -165,8 +205,8 @@ const TicketTypeFormDialog = ({
           name: values.name,
           displayName: values.displayName ?? '',
           displayTag: values.displayTag ?? '',
-          shortDescription: serializeRichText(values.shortDescription.segments),
-          description: serializeRichText(values.description.segments),
+          shortDescription: values.shortDescription ?? '',
+          description: values.description ?? '',
           prefix: (values.prefix ?? '').toUpperCase(),
           isActive: values.isActive ?? true,
           numberLength: Number(values.numberLength) || 7,
@@ -176,6 +216,7 @@ const TicketTypeFormDialog = ({
         });
         success(isEditing ? 'Ticket Type updated successfully' : 'Ticket Type added successfully');
         resetForm();
+        setDuplicateErrors({});
       } catch (error) {
         throw error;
       } finally {
@@ -228,14 +269,17 @@ const TicketTypeFormDialog = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.type, isEditing]);
 
+  // Clear duplicate errors when dialog opens
+  useEffect(() => {
+    if (open) {
+      setDuplicateErrors({});
+    }
+  }, [open]);
+
   const handleClose = () => {
     formik.resetForm();
+    setDuplicateErrors({});
     onClose();
-  };
-
-  // Use onClick instead of onSubmit to prevent double submission
-  const submitForm = () => {
-    formik.handleSubmit();
   };
 
   const FALLBACK_COLOR = '#64748b';
@@ -247,7 +291,10 @@ const TicketTypeFormDialog = ({
     : 7;
   const preview = buildPreview(formik.values.prefix || '???', numberLengthVal);
   const displayLabel = formik.values.name || 'Ticket Type Name';
-  const descriptionPreview = formik.values.displayName || 'Add a display name';
+  const descriptionPreview =
+    parseRichText(formik.values.displayName ?? '')
+      .segments.map((s) => s.text)
+      .join(' ') || 'Add a display name';
   const tagOption = getTagOption(formik.values.tag);
   const displayTagOption =
     (getTagOption(formik.values.displayTag)?.label ?? formik.values.displayTag) ||
@@ -285,9 +332,7 @@ const TicketTypeFormDialog = ({
                     className={classes.dialogHeroTagChip}
                   />
                 )}
-                <Box className={classes.dialogHeroFormatRow}>
-                  <Typography className={classes.dialogHeroFormatCode}>{preview}</Typography>
-                </Box>
+                <Chip label={preview} size='small' className={classes.dialogHeroFormatChip} />
                 <Chip
                   label={formik.values.isActive ? 'Active' : 'Inactive'}
                   size='small'
@@ -335,6 +380,17 @@ const TicketTypeFormDialog = ({
               </Divider>
             </Grid>
 
+            {/* Duplicate Error Alert */}
+            {Object.keys(duplicateErrors).length > 0 && (
+              <Grid size={{ xs: 12 }}>
+                <Alert severity='error' variant='outlined'>
+                  {Object.values(duplicateErrors).map((msg, idx) => (
+                    <div key={idx}>{msg}</div>
+                  ))}
+                </Alert>
+              </Grid>
+            )}
+
             {/* 1. Ticket Type */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
@@ -378,211 +434,141 @@ const TicketTypeFormDialog = ({
               />
             </Grid>
 
-            {/* 4. Display Text (textarea) */}
+            {/* 4. Display Text (RichTextEditor, like Add Approved Estimate) */}
             <Grid size={{ xs: 12 }}>
-              <TextField
-                label='Display Text'
-                name='displayName'
-                value={formik.values.displayName}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={Boolean(
-                  reqError(formik.touched.displayName, formik.errors.displayName as string),
-                )}
-                helperText={
-                  reqError(formik.touched.displayName, formik.errors.displayName as string) ||
-                  'Displays as a text in the new ticket creation page'
-                }
-                fullWidth
-                size='small'
-                required
-                multiline
-                minRows={2}
-                inputProps={{ maxLength: 60 }}
-                sx={{
-                  '& .MuiOutlinedInput-root': { borderRadius: '8px' },
-                }}
-              />
+              <Box
+                onBlur={() => formik.setFieldTouched('displayName', true)}
+                sx={{ borderRadius: 1 }}
+              >
+                <RichTextEditor
+                  value={parseRichText(formik.values.displayName ?? '')}
+                  onChange={(value) => {
+                    formik.setFieldValue('displayName', serializeRichText(value.segments));
+                    formik.setFieldTouched('displayName', true, false);
+                  }}
+                  showFooterActions={false}
+                  title='Display Text'
+                />
+                <Typography
+                  variant='caption'
+                  sx={{
+                    color: reqError(formik.touched.displayName, formik.errors.displayName as string)
+                      ? '#d32f2f'
+                      : 'text.secondary',
+                    fontSize: '0.7rem',
+                    mt: 0.5,
+                    display: 'block',
+                  }}
+                >
+                  {reqError(formik.touched.displayName, formik.errors.displayName as string) ||
+                    'Displays as a text in the new ticket creation page'}
+                </Typography>
+              </Box>
             </Grid>
 
             {/* 4. Priority Tag */}
             <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth size='small' sx={fieldStyles}>
-                <Select
-                  name='tag'
-                  value={formik.values.tag}
-                  label='Priority Tag'
-                  onChange={(e) => formik.setFieldValue('tag', e.target.value)}
-                  renderValue={(selected) => {
-                    const opt = TICKET_TAG_OPTIONS.find((t) => t.value === selected);
-                    if (!opt) return selected;
-                    return (
-                      <Box className={classes.dialogSelectRenderValue}>
-                        <Box className={classes.dialogTagDot} sx={{ bgcolor: opt.color }} />
-                        <Typography
-                          variant='body2'
-                          className={classes.dialogTagRenderLabel}
-                          sx={{ color: opt.color }}
-                        >
-                          {opt.label}
-                        </Typography>
-                      </Box>
-                    );
-                  }}
-                  MenuProps={{ PaperProps: { sx: { maxHeight: 300 } } }}
-                >
-                  {TICKET_TAG_OPTIONS.map((opt) => {
-                    const isActive = formik.values.tag === opt.value;
-                    return (
-                      <MenuItem key={opt.value} value={opt.value} dense>
-                        <ListItemIcon className={classes.dialogTagListItemIcon}>
-                          <Box
-                            className={classes.dialogTagMenuDot}
-                            sx={{
-                              bgcolor: opt.color,
-                              border: isActive ? `2px solid ${opt.color}` : 'none',
-                              outline: isActive ? `2px solid ${alpha(opt.color, 0.3)}` : 'none',
-                            }}
-                          />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={opt.label}
-                          primaryTypographyProps={{
-                            variant: 'body2',
-                            fontSize: '0.82rem',
-                            fontWeight: isActive ? 700 : 400,
-                            sx: { color: isActive ? opt.color : 'text.primary' },
-                          }}
-                        />
-                        {isActive && (
-                          <Box
-                            className={classes.dialogTagSelectedBadge}
-                            sx={{
-                              bgcolor: alpha(opt.color, 0.12),
-                              border: `1px solid ${alpha(opt.color, 0.3)}`,
-                            }}
-                          >
-                            <Typography
-                              className={classes.dialogTagSelectedLabel}
-                              sx={{ color: opt.color }}
-                            >
-                              SELECTED
-                            </Typography>
-                          </Box>
-                        )}
-                      </MenuItem>
-                    );
-                  })}
-                </Select>
-              </FormControl>
+              <CustomDropdown
+                label='Priority Tag'
+                value={formik.values.tag}
+                onChange={(value) => formik.setFieldValue('tag', value)}
+                options={TICKET_TAG_OPTIONS.map((opt) => ({
+                  value: opt.value,
+                  label: opt.label,
+                  color: opt.color,
+                }))}
+                selectedColor={tagColor}
+                error={Boolean(reqError(formik.touched.tag, formik.errors.tag as string))}
+                helperText={
+                  reqError(formik.touched.tag, formik.errors.tag as string) ||
+                  'Select a priority tag for this ticket type'
+                }
+                required
+              />
             </Grid>
 
             {/* 5. Icon */}
             <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth size='small' sx={fieldStyles}>
-                <Select
-                  name='iconKey'
-                  value={formik.values.iconKey}
-                  label='Icon'
-                  onChange={(e) => formik.setFieldValue('iconKey', e.target.value)}
-                  renderValue={(selected) => {
-                    const opt = TICKET_ICON_OPTIONS.find((o) => o.key === selected);
-                    return (
-                      <Box className={classes.dialogSelectRenderValue}>
-                        <Box
-                          className={classes.dialogIconPreviewWrap}
-                          sx={{ background: gradient }}
-                        >
-                          {getIconComponent(selected, { color: '#fff', fontSize: '0.75rem' })}
-                        </Box>
-                        <Typography variant='body2' fontSize='0.82rem'>
-                          {opt?.label ?? selected}
-                        </Typography>
-                      </Box>
-                    );
+              <CustomDropdown
+                label='Icon'
+                value={formik.values.iconKey}
+                onChange={(value) => formik.setFieldValue('iconKey', value)}
+                options={TICKET_ICON_OPTIONS.map((opt) => ({
+                  value: opt.key,
+                  label: opt.label,
+                  category: opt.category,
+                }))}
+                selectedColor={color}
+                gradient={gradient}
+                showIconInSelect
+                error={Boolean(reqError(formik.touched.iconKey, formik.errors.iconKey as string))}
+                helperText={
+                  reqError(formik.touched.iconKey, formik.errors.iconKey as string) ||
+                  'Select an icon for this ticket type'
+                }
+                required
+              />
+            </Grid>
+
+            {/* ── 6. Description (RichTextEditor, like Add Approved Estimate) ── */}
+            <Grid size={{ xs: 12 }}>
+              <Box
+                onBlur={() => formik.setFieldTouched('description', true)}
+                sx={{ borderRadius: 1 }}
+              >
+                <RichTextEditor
+                  value={parseRichText(formik.values.description ?? '')}
+                  onChange={(value) => {
+                    formik.setFieldValue('description', serializeRichText(value.segments));
+                    formik.setFieldTouched('description', true, false);
                   }}
-                  MenuProps={{ PaperProps: { sx: { maxHeight: 340 } } }}
+                  showFooterActions={false}
+                  title='Description'
+                />
+                <Typography
+                  variant='caption'
+                  sx={{
+                    color: reqError(formik.touched.description, formik.errors.description as string)
+                      ? '#d32f2f'
+                      : 'text.secondary',
+                    fontSize: '0.7rem',
+                    mt: 0.5,
+                    display: 'block',
+                  }}
                 >
-                  {(() => {
-                    const categories = Array.from(
-                      new Set(TICKET_ICON_OPTIONS.map((o) => o.category)),
-                    );
-                    return categories.flatMap((cat) => {
-                      const items = TICKET_ICON_OPTIONS.filter((o) => o.category === cat);
-                      return [
-                        <ListSubheader key={`hdr-${cat}`} className={classes.dialogIconSubheader}>
-                          {cat.toUpperCase()}
-                        </ListSubheader>,
-                        ...items.map((opt) => {
-                          const isActive = formik.values.iconKey === opt.key;
-                          return (
-                            <MenuItem key={opt.key} value={opt.key} dense>
-                              <ListItemIcon className={classes.dialogIconListItemIcon}>
-                                <Box
-                                  className={classes.dialogIconMenuWrap}
-                                  sx={{
-                                    background: isActive ? gradient : alpha(color, 0.08),
-                                  }}
-                                >
-                                  {getIconComponent(opt.key, {
-                                    fontSize: '0.85rem',
-                                    color: isActive ? '#fff' : color,
-                                  })}
-                                </Box>
-                              </ListItemIcon>
-                              <ListItemText
-                                primary={opt.label}
-                                primaryTypographyProps={{ variant: 'body2', fontSize: '0.8rem' }}
-                              />
-                            </MenuItem>
-                          );
-                        }),
-                      ];
-                    });
-                  })()}
-                </Select>
-              </FormControl>
+                  {reqError(formik.touched.description, formik.errors.description as string) ||
+                    'Describe this ticket type and when it should be used'}
+                </Typography>
+              </Box>
             </Grid>
 
-            {/* ── 6. Description (textarea) ── */}
+            {/* ── 7. Internal Note (RichTextEditor, like Add Approved Estimate) ── */}
             <Grid size={{ xs: 12 }}>
-              <TextField
-                label='Description'
-                name='description'
-                value={formik.values.description?.segments?.[0]?.text ?? ''}
-                onChange={(e) =>
-                  formik.setFieldValue('description', { segments: [{ text: e.target.value }] })
-                }
-                placeholder='Describe this ticket type and when it should be used...'
-                multiline
-                minRows={3}
-                fullWidth
-                size='small'
-                inputProps={{ maxLength: 60 }}
-                sx={{
-                  '& .MuiOutlinedInput-root': { borderRadius: '8px' },
-                }}
-              />
-            </Grid>
-
-            {/* ── 7. Internal Note (textarea only, optional, no max length) ── */}
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                label='Internal Note'
-                name='shortDescription'
-                value={formik.values.shortDescription?.segments?.[0]?.text ?? ''}
-                onChange={(e) =>
-                  formik.setFieldValue('shortDescription', { segments: [{ text: e.target.value }] })
-                }
-                placeholder='Internal note for this ticket type (optional)...'
-                multiline
-                minRows={2}
-                fullWidth
-                size='small'
-                sx={{
-                  '& .MuiOutlinedInput-root': { borderRadius: '8px' },
-                }}
-              />
+              <Box
+                onBlur={() => formik.setFieldTouched('shortDescription', true)}
+                sx={{ borderRadius: 1 }}
+              >
+                <RichTextEditor
+                  value={parseRichText(formik.values.shortDescription ?? '')}
+                  onChange={(value) => {
+                    formik.setFieldValue('shortDescription', serializeRichText(value.segments));
+                    formik.setFieldTouched('shortDescription', true, false);
+                  }}
+                  showFooterActions={false}
+                  title='Internal Note'
+                />
+                <Typography
+                  variant='caption'
+                  sx={{
+                    color: 'text.secondary',
+                    fontSize: '0.7rem',
+                    mt: 0.5,
+                    display: 'block',
+                  }}
+                >
+                  Internal note for this ticket type (optional)
+                </Typography>
+              </Box>
             </Grid>
 
             {/* ── 8. Access Control ── */}

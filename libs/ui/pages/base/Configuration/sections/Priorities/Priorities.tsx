@@ -19,7 +19,13 @@ import {
 } from './components';
 import { ConfigDeleteDialog } from '../../dialogs/ConfigDialogs/ConfigDialogs';
 import { useNotification } from '@serviceops/hooks';
-import { PriorityLevel, ImpactLevel, UrgencyLevel, MatrixMap } from './util';
+import {
+  PriorityLevel,
+  ImpactLevel,
+  UrgencyLevel,
+  ExtendedMatrixMap,
+  MatrixCellData,
+} from './util';
 
 const TICKET_TYPE_COLUMNS = [
   { key: 'incident', label: 'Incident' },
@@ -225,10 +231,22 @@ const DEFAULT_URGENCIES: UrgencyLevel[] = [
   },
 ];
 
-const DEFAULT_MATRIX: MatrixMap = {
-  high: { high: 'critical', medium: 'high', low: 'medium' },
-  medium: { high: 'high', medium: 'medium', low: 'low' },
-  low: { high: 'medium', medium: 'low', low: 'planning' },
+const DEFAULT_MATRIX: ExtendedMatrixMap = {
+  high: {
+    high: { priorityId: 'critical' },
+    medium: { priorityId: 'high' },
+    low: { priorityId: 'medium' },
+  },
+  medium: {
+    high: { priorityId: 'high' },
+    medium: { priorityId: 'medium' },
+    low: { priorityId: 'low' },
+  },
+  low: {
+    high: { priorityId: 'medium' },
+    medium: { priorityId: 'low' },
+    low: { priorityId: 'planning' },
+  },
 };
 
 const Priorities = () => {
@@ -237,14 +255,12 @@ const Priorities = () => {
   const { priorities: apiPriorities, ticketTypeKeys, saveSection, isLoading } = useConfiguration();
   const { ticketTypes } = useSharedTicketTypes();
 
-  const ticketTypeDisplayNames = Object.fromEntries(
-    ticketTypes.map((t) => [t.type, t.displayName]),
-  );
+  const ticketTypeNames = Object.fromEntries(ticketTypes.map((t) => [t.type, t.name]));
 
   const [priorities, setPriorities] = useState<PriorityLevel[]>(DEFAULT_PRIORITIES);
   const [impacts, setImpacts] = useState<ImpactLevel[]>(DEFAULT_IMPACTS);
   const [urgencies, setUrgencies] = useState<UrgencyLevel[]>(DEFAULT_URGENCIES);
-  const [matrices, setMatrices] = useState<Record<string, MatrixMap>>({});
+  const [matrices, setMatrices] = useState<Record<string, ExtendedMatrixMap>>({});
 
   useEffect(() => {
     if (!apiPriorities) return;
@@ -259,7 +275,7 @@ const Priorities = () => {
     levels: PriorityLevel[],
     impactLevels: ImpactLevel[],
     urgencyLevels: UrgencyLevel[],
-    mats: Record<string, MatrixMap>,
+    mats: Record<string, ExtendedMatrixMap>,
   ) => {
     saveSection('priorities', {
       levels,
@@ -272,9 +288,9 @@ const Priorities = () => {
   const activeTicketTypeColumns = ticketTypeKeys.length
     ? ticketTypeKeys.map((key) => ({
         key,
-        label: ticketTypeDisplayNames[key] ?? TICKET_TYPE_MATRIX_CONFIG[key]?.label ?? key,
+        label: ticketTypeNames[key] ?? TICKET_TYPE_MATRIX_CONFIG[key]?.label ?? key,
       }))
-    : TICKET_TYPE_COLUMNS;
+    : TICKET_TYPE_COLUMNS.map((c) => ({ key: c.key, label: c.label }));
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [selectedPriorityId, setSelectedPriorityId] = useState<string | null>(null);
@@ -302,14 +318,43 @@ const Priorities = () => {
       ...matrices,
       [ticketType]: {
         ...(matrices[ticketType] ?? {}),
-        [impact]: { ...(matrices[ticketType]?.[impact] ?? {}), [urgency]: priorityId },
+        [impact]: {
+          ...(matrices[ticketType]?.[impact] ?? {}),
+          [urgency]: {
+            ...(matrices[ticketType]?.[impact]?.[urgency] ?? {}),
+            priorityId,
+          },
+        },
       },
     };
     setMatrices(next);
     persistPriorities(priorities, impacts, urgencies, next);
   };
 
-  const resetMatrixForType = (ticketType: string, newMatrix: MatrixMap) => {
+  const updateMatrixCell = (
+    ticketType: string,
+    impact: string,
+    urgency: string,
+    data: MatrixCellData,
+  ) => {
+    const next = {
+      ...matrices,
+      [ticketType]: {
+        ...(matrices[ticketType] ?? {}),
+        [impact]: {
+          ...(matrices[ticketType]?.[impact] ?? {}),
+          [urgency]: {
+            ...(matrices[ticketType]?.[impact]?.[urgency] ?? { priorityId: '' }),
+            ...data,
+          },
+        },
+      },
+    };
+    setMatrices(next);
+    persistPriorities(priorities, impacts, urgencies, next);
+  };
+
+  const resetMatrixForType = (ticketType: string, newMatrix: ExtendedMatrixMap) => {
     const next = { ...matrices, [ticketType]: newMatrix };
     setMatrices(next);
     persistPriorities(priorities, impacts, urgencies, next);
@@ -436,31 +481,25 @@ const Priorities = () => {
           isLoading={isLoading}
         />
 
-        {activeTicketTypeColumns.map(({ key }) => {
-          const displayName =
-            ticketTypeDisplayNames[key] ?? TICKET_TYPE_MATRIX_CONFIG[key]?.label ?? key;
-          const cfg = TICKET_TYPE_MATRIX_CONFIG[key] ?? {
-            label: displayName,
-            pluralLabel: `${displayName}s`,
-            accentColor: '#0369a1',
-            Icon: TuneIcon,
-          };
-          const { Icon } = cfg;
-          return (
-            <TicketMatrixSection
-              key={key}
-              label={cfg.pluralLabel}
-              accentColor={cfg.accentColor}
-              MatrixIcon={Icon}
-              priorities={priorities}
-              impacts={impacts}
-              urgencies={urgencies}
-              matrix={matrices[key] ?? DEFAULT_MATRIX}
-              onMatrixChange={(i, u, p) => updateMatrix(key, i, u, p)}
-              onMatrixReset={(newMatrix) => resetMatrixForType(key, newMatrix)}
-            />
-          );
-        })}
+        <TicketMatrixSection
+          ticketTypes={activeTicketTypeColumns.map(({ key }) => {
+            const name = ticketTypeNames[key] ?? TICKET_TYPE_MATRIX_CONFIG[key]?.label ?? key;
+            const cfg = TICKET_TYPE_MATRIX_CONFIG[key] ?? {
+              label: name,
+              pluralLabel: name,
+              accentColor: '#0369a1',
+              Icon: TuneIcon,
+            };
+            return { key, ...cfg };
+          })}
+          priorities={priorities}
+          impacts={impacts}
+          urgencies={urgencies}
+          matrices={matrices}
+          onMatrixChange={updateMatrix}
+          onMatrixReset={resetMatrixForType}
+          onMatrixCellUpdate={updateMatrixCell}
+        />
 
         <ConfigDeleteDialog
           open={confirmDeleteOpen}

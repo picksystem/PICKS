@@ -1,10 +1,12 @@
 export interface PriorityLevel {
   id: string;
   name: string;
+  shortDescription?: string;
   description: string;
   color: string; // text color (always #fff for dark badges)
   bgColor: string; // badge background
   sortOrder: number;
+  internalNote?: string;
   enabledFor: Record<string, boolean>; // ticketType -> enabled
 }
 
@@ -12,7 +14,9 @@ export interface ImpactLevel {
   id: string;
   name: string;
   displayName: string;
+  shortDescription?: string;
   description: string;
+  internalNote?: string;
   bgColor: string;
   sortOrder: number;
   isActive: boolean;
@@ -23,14 +27,38 @@ export interface UrgencyLevel {
   id: string;
   name: string;
   displayName: string;
+  shortDescription?: string;
   description: string;
+  internalNote?: string;
   bgColor: string;
   sortOrder: number;
   isActive: boolean;
   enabledFor: Record<string, boolean>;
 }
 
+export interface MatrixCellData {
+  shortDescription?: string;
+  description?: string;
+  activateSimplePriorities?: boolean;
+  internalNote?: string;
+}
+
 export type MatrixMap = Record<string, Record<string, string>>;
+
+// Extended matrix map storing fullcell data (priorityId + additional fields) for each impact x urgency
+export type ExtendedMatrixMap = Record<
+  string,
+  Record<
+    string,
+    {
+      priorityId: string;
+      shortDescription?: string;
+      description?: string;
+      activateSimplePriorities?: boolean;
+      internalNote?: string;
+    }
+  >
+>;
 
 export interface SectionProps {
   icon: React.ReactNode;
@@ -53,9 +81,11 @@ export interface MatrixTableProps {
 export interface SimpleLevel {
   id: string;
   displayName: string;
+  shortDescription?: string;
   description: string;
   bgColor: string;
   isActive: boolean;
+  internalNote?: string;
   enabledFor: Record<string, boolean>;
 }
 
@@ -91,6 +121,10 @@ export interface MatrixRow {
   impactId: string;
   urgencyId: string;
   priorityId: string;
+  shortDescription?: string;
+  description?: string;
+  activateSimplePriorities?: boolean;
+  internalNote?: string;
 }
 
 export interface TicketMatrixSectionProps {

@@ -306,6 +306,7 @@ const TicketTypeConfigSection = () => {
       <TicketTypeFormDialog
         open={dialogOpen}
         editingItem={editingItem}
+        existingTicketTypes={ticketTypes || []}
         iconMap={iconMap}
         tagMap={tagMap}
         onClose={closeDialog}

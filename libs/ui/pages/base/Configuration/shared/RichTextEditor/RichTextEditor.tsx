@@ -1,7 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
+import React, { useRef, useCallback, useEffect } from 'react';
 import { Box, IconButton, Button, Tooltip, Divider } from '@serviceops/component';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import StickyNote2Icon from '@mui/icons-material/StickyNote2';
@@ -23,342 +20,301 @@ interface RichTextValue {
   segments: RichTextSegment[];
 }
 
-// Export parseRichText - converts text like **bold** *italic* __underline__ to segments
-export const parseRichText = (text: string): RichTextValue => {
-  const segments: RichTextSegment[] = [];
-  if (!text) return { segments };
-
-  let remaining = text;
-  while (remaining.length > 0) {
-    const boldMatch = remaining.match(/^\*\*(.+?)\*\*/);
-    const italicMatch = remaining.match(/^\*(.+?)\*/);
-    const underlineMatch = remaining.match(/^__(.+?)__/);
-
-    if (boldMatch) {
-      segments.push({ text: boldMatch[1], bold: true });
-      remaining = remaining.slice(boldMatch[0].length);
-    } else if (italicMatch) {
-      segments.push({ text: italicMatch[1], italic: true });
-      remaining = remaining.slice(italicMatch[0].length);
-    } else if (underlineMatch) {
-      segments.push({ text: underlineMatch[1], underline: true });
-      remaining = remaining.slice(underlineMatch[0].length);
-    } else {
-      const nextIndex = remaining.search(/\*\*|\*|__/);
-      if (nextIndex === -1) {
-        segments.push({ text: remaining });
-        break;
-      }
-      if (nextIndex > 0) {
-        segments.push({ text: remaining.slice(0, nextIndex) });
-        remaining = remaining.slice(nextIndex);
-      } else {
-        remaining = remaining.slice(1);
-      }
-    }
-  }
-  return { segments };
-};
-
-// Export serializeRichText - converts segments to text like **bold** *italic* __underline__
-export const serializeRichText = (segments: RichTextSegment[]): string => {
-  if (!segments) return '';
-  return segments
-    .map((s) => {
-      let prefix = '';
-      if (s.bold) prefix += '**';
-      if (s.italic) prefix += '*';
-      if (s.underline) prefix += '__';
-      let suffix = '';
-      if (s.underline) suffix = `__${suffix}`;
-      if (s.italic) suffix = `*${suffix}`;
-      if (s.bold) suffix = `**${suffix}`;
-      return `${prefix}${s.text}${suffix}`;
-    })
-    .join('');
-};
-
 interface Props {
   value: RichTextValue;
   onChange?: (value: RichTextValue) => void;
   accent?: string;
   placeholder?: string;
-  icon?: React.ReactNode;
   title?: string;
   showFooterActions?: boolean;
+  icon?: React.ReactNode;
 }
 
-const toolbarBtnSx = {
-  width: 30,
-  height: 30,
-  borderRadius: 1,
-  color: '#0369a1',
-  '&:hover': { backgroundColor: 'action.hover', color: '#0369a1' },
-  '& svg': { fontSize: '1.1rem' },
-};
-
-const getFormatBtnSx = (isActive: boolean) => ({
-  ...toolbarBtnSx,
-  bgcolor: isActive ? 'rgba(3, 105, 161, 0.08)' : 'transparent',
-  border: isActive ? '1px solid #0369a1' : '1px solid transparent',
-});
-
-// Convert HTML to segments
-const htmlToSegments = (html: string): RichTextSegment[] => {
+export const parseRichText = (text: string): RichTextValue => {
   const segments: RichTextSegment[] = [];
-  if (!html || html === '<p></p>') return segments;
+  if (!text || typeof text !== 'string') return { segments };
 
-  const div = document.createElement('div');
-  div.innerHTML = html;
+  const items = text.split(/\n+/).filter(Boolean);
+  items.forEach((item) => {
+    const trimmed = item.trim();
+    if (!trimmed) return;
 
-  const processNode = (
-    node: Node,
-    formatting: { bold: boolean; italic: boolean; underline: boolean },
-  ) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const text = node.textContent?.trim();
-      if (text) segments.push({ text, ...formatting });
-    } else if (node.nodeType === Node.ELEMENT_NODE) {
-      const el = node as HTMLElement;
-      const tag = el.tagName;
-      const { style } = el;
-
-      const newFormat = { ...formatting };
-      if (
-        tag === 'B' ||
-        tag === 'STRONG' ||
-        style.fontWeight === '700' ||
-        style.fontWeight === 'bold'
-      )
-        newFormat.bold = true;
-      if (tag === 'I' || tag === 'EM' || style.fontStyle === 'italic') newFormat.italic = true;
-      if (
-        tag === 'U' ||
-        style.textDecorationLine === 'underline' ||
-        style.textDecoration?.includes('underline')
-      )
-        newFormat.underline = true;
-
-      if (el.childNodes.length === 0) {
-        const text = el.textContent?.trim();
-        if (text) segments.push({ text, ...newFormat });
-      } else {
-        Array.from(el.childNodes).forEach((child) => processNode(child, newFormat));
-      }
+    if (trimmed.startsWith('**') && trimmed.includes('**', 2)) {
+      const end = trimmed.indexOf('**', 2);
+      segments.push({ text: trimmed.slice(2, end), bold: true });
+    } else if (trimmed.startsWith('*') && trimmed.endsWith('*') && trimmed.length > 2) {
+      segments.push({ text: trimmed.slice(1, -1), italic: true });
+    } else if (trimmed.startsWith('__') && trimmed.endsWith('__')) {
+      segments.push({ text: trimmed.slice(2, -2), underline: true });
+    } else if (trimmed.startsWith('• ') || trimmed.startsWith('- ')) {
+      segments.push({ text: trimmed.replace(/^[•\-]\s*/, ''), bold: true });
+    } else if (/^\d+\.\s/.test(trimmed)) {
+      segments.push({ text: trimmed.replace(/^\d+\.\s*/, ''), italic: true });
+    } else {
+      segments.push({ text: trimmed });
     }
-  };
+  });
 
-  Array.from(div.childNodes).forEach((node) =>
-    processNode(node, { bold: false, italic: false, underline: false }),
-  );
-  return segments;
+  return { segments };
 };
 
-// Convert our segments to TipTap HTML
-const segmentsToHtml = (segments: RichTextSegment[]): string => {
-  if (!segments || segments.length === 0) return '<p></p>';
+export const serializeRichText = (segments: RichTextSegment[]): string => {
+  if (!segments || !Array.isArray(segments)) return '';
+
   return segments
     .map((s) => {
-      let { text } = s;
-      if (s.bold) text = `<strong>${text}</strong>`;
-      if (s.italic) text = `<em>${text}</em>`;
-      if (s.underline) text = `<u>${text}</u>`;
-      return `<p>${text}</p>`;
+      let result = s.text;
+      if (s.bold) result = `**${result}**`;
+      else if (s.italic) result = `*${result}*`;
+      else if (s.underline) result = `__${result}__`;
+      return result;
     })
-    .join('');
+    .join('\n');
+};
+
+const escapeHtml = (text: string): string => {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
+export const segmentsToHtml = (segments: RichTextSegment[]): string => {
+  if (!segments || !Array.isArray(segments) || segments.length === 0) return '';
+
+  return segments
+    .map((s) => {
+      const safeText = escapeHtml(s.text);
+      if (s.bold) return `<b>${safeText}</b>`;
+      if (s.italic) return `<i>${safeText}</i>`;
+      if (s.underline) return `<u>${safeText}</u>`;
+      return safeText;
+    })
+    .join('<br>');
+};
+
+const toolbarBtnSx = {
+  width: 28,
+  height: 28,
+  padding: 0,
+  borderRadius: 1,
+  color: '#0369a1',
 };
 
 const RichTextEditor = ({
   value,
   onChange,
   accent = '#2d5ebb',
-  placeholder = 'Describe the issue in detail...',
   title = 'Internal Note',
   showFooterActions = true,
+  icon,
 }: Props) => {
-  const initialContent = value?.segments?.length > 0 ? segmentsToHtml(value.segments) : '';
+  const editorRef = useRef<HTMLDivElement>(null);
+  // Track the serialized form of the value we last initialized the editor
+  // from. We only re-sync when the serialized form changes AND the editor
+  // is not currently focused (so we never wipe what the user is typing).
+  const lastInitializedRef = useRef<string>('');
+  // Track if editor currently has focus
+  const isFocusedRef = useRef(false);
 
-  const editor = useEditor({
-    extensions: [StarterKit, Underline],
-    content: initialContent || `<p>${placeholder}</p>`,
-    onUpdate: ({ editor: ed }) => {
-      if (onChange) {
-        const html = ed.getHTML();
-        const json = ed.getJSON();
-        const segments = htmlToSegments(html);
-        onChange({ segments });
-      }
-    },
-    editorProps: {
-      attributes: {
-        style: 'outline: none; min-height: 80px; padding: 8px;',
-      },
-    },
-  });
+  const ensureEditor = useCallback(() => editorRef.current, []);
 
-  // Update editor when value changes from outside
+  // Sync from value prop when the serialized form changes from outside
+  // (e.g. parent resets the form, or user opens a different edit item).
+  // We skip the sync while the editor is focused to protect in-progress edits.
   useEffect(() => {
-    if (editor && value?.segments?.length > 0) {
-      const newHtml = segmentsToHtml(value.segments);
-      const currentHtml = editor.getHTML();
-      if (newHtml !== currentHtml && newHtml !== `<p>${placeholder}</p>`) {
-        editor.commands.setContent(newHtml);
-      }
-    }
-  }, [editor, value, placeholder]);
+    const ed = ensureEditor();
+    if (!ed) return;
 
-  const handleClear = useCallback(() => {
-    if (editor) {
-      editor.commands.clearContent();
-      onChange?.({ segments: [] });
-    }
-  }, [editor, onChange]);
+    const incomingSerialized = serializeRichText(value?.segments ?? []);
+    if (incomingSerialized === lastInitializedRef.current) return;
+
+    if (isFocusedRef.current) return;
+
+    const html = segmentsToHtml(value?.segments ?? []);
+    ed.innerHTML = html;
+    lastInitializedRef.current = incomingSerialized;
+  }, [value, ensureEditor]);
+
+  const execCmd = useCallback(
+    (cmd: string, val?: string) => {
+      const ed = ensureEditor();
+      if (!ed) return;
+      ed.focus();
+      document.execCommand(cmd, false, val);
+    },
+    [ensureEditor],
+  );
+
+  const handleBold = () => execCmd('bold');
+  const handleItalic = () => execCmd('italic');
+  const handleUnderline = () => execCmd('underline');
+  const handleBullet = () => execCmd('insertUnorderedList');
+  const handleNumber = () => execCmd('insertOrderedList');
 
   const handleSave = useCallback(() => {
-    if (editor) {
-      const html = editor.getHTML();
-      const segments = htmlToSegments(html);
-      onChange?.({ segments });
-    }
-  }, [editor, onChange]);
+    const ed = ensureEditor();
+    if (!ed || !onChange) return;
 
-  if (!editor) return null;
+    const html = ed.innerHTML;
+    if (!html || html === '<br>') {
+      onChange({ segments: [] });
+      return;
+    }
+
+    const segments: RichTextSegment[] = [];
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+
+    // Handle lists
+    const ul = tempDiv.querySelector('ul');
+    const ol = tempDiv.querySelector('ol');
+
+    if (ul) {
+      ul.querySelectorAll('li').forEach((li) => {
+        const text = li.textContent?.trim();
+        if (text) segments.push({ text, bold: true });
+      });
+    } else if (ol) {
+      ol.querySelectorAll('li').forEach((li) => {
+        const text = li.textContent?.trim();
+        if (text) segments.push({ text, italic: true });
+      });
+    } else {
+      // Track which text nodes have already been claimed by a formatting
+      // element so we don't double-count them in the plain-text fallback.
+      const claimed = new Set<Element>();
+      tempDiv.querySelectorAll('b, strong').forEach((el) => {
+        const text = el.textContent?.trim();
+        if (text) segments.push({ text, bold: true });
+        claimed.add(el);
+      });
+      tempDiv.querySelectorAll('i, em').forEach((el) => {
+        const text = el.textContent?.trim();
+        if (text) segments.push({ text, italic: true });
+        claimed.add(el);
+      });
+      tempDiv.querySelectorAll('u').forEach((el) => {
+        const text = el.textContent?.trim();
+        if (text) segments.push({ text, underline: true });
+        claimed.add(el);
+      });
+      // Capture plain text from block-level wrappers (p, div) that don't
+      // already contain formatting. This handles both <div>Hello</div>
+      // (Chrome) and bare "Hello" (Firefox) shapes.
+      tempDiv.querySelectorAll('p, div').forEach((el) => {
+        if (el.querySelector('b, strong, i, em, u, ul, ol')) return;
+        const text = el.textContent?.trim();
+        if (text) segments.push({ text });
+      });
+
+      // If we still have no segments, the browser stored the text without
+      // any block-level wrapper. Fall back to the raw textContent so the
+      // user's input is never silently dropped.
+      if (segments.length === 0) {
+        const rawText = tempDiv.textContent?.trim();
+        if (rawText) {
+          // Preserve line breaks the user typed (Enter inserts <br> or new
+          // block elements; both are already normalized into newlines by
+          // the browser before we read innerHTML).
+          const lines = rawText
+            .split(/\r?\n/)
+            .map((l) => l.trim())
+            .filter(Boolean);
+          lines.forEach((line) => segments.push({ text: line }));
+        }
+      }
+    }
+
+    onChange({ segments });
+  }, [ensureEditor, onChange]);
+
+  const handleClear = useCallback(() => {
+    const ed = ensureEditor();
+    if (ed) {
+      ed.innerHTML = '';
+      onChange?.({ segments: [] });
+    }
+  }, [ensureEditor, onChange]);
 
   return (
     <Box sx={{ width: '100%', mt: 1.5 }}>
-      <Box
-        sx={{
-          border: '1px solid #2d5ebb',
-          borderRadius: 2,
-          overflow: 'hidden',
-          '&:focus-within': { borderColor: accent, borderWidth: 1 },
-        }}
-      >
+      <Box sx={{ border: `1px solid ${accent}`, borderRadius: 2, overflow: 'hidden' }}>
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
-            gap: 0.25,
+            gap: 0.5,
             px: 1,
             py: 0.5,
-            backgroundColor: '#0369a114',
-            borderBottom: '1px solid',
-            borderColor: 'divider',
+            bgcolor: '#f0f4f8',
+            borderBottom: `1px solid ${accent}`,
             flexWrap: 'wrap',
           }}
         >
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-              px: 1,
-              py: 0.25,
-              borderRadius: 1,
-              mr: 0.5,
-            }}
-          >
-            <StickyNote2Icon sx={{ fontSize: '1rem', color: '#0369a1' }} />
-            <Box
-              sx={{
-                fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-                lineHeight: 1.5,
-                letterSpacing: '0.00938em',
-                color: '#0369a1',
-                fontWeight: 700,
-                fontSize: '0.92rem',
-              }}
-            >
-              {title}
-            </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mr: 1 }}>
+            {icon ?? <StickyNote2Icon sx={{ fontSize: 16, color: '#0369a1' }} />}
+            <Box sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#0369a1' }}>{title}</Box>
           </Box>
           <Tooltip title='Bold'>
-            <IconButton
-              size='small'
-              sx={getFormatBtnSx(editor.isActive('bold'))}
-              onClick={() => editor.chain().focus().toggleBold().run()}
-            >
-              <FormatBoldIcon />
+            <IconButton size='small' sx={toolbarBtnSx} onClick={handleBold}>
+              <FormatBoldIcon sx={{ fontSize: 16 }} />
             </IconButton>
           </Tooltip>
           <Tooltip title='Italic'>
-            <IconButton
-              size='small'
-              sx={getFormatBtnSx(editor.isActive('italic'))}
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-            >
-              <FormatItalicIcon />
+            <IconButton size='small' sx={toolbarBtnSx} onClick={handleItalic}>
+              <FormatItalicIcon sx={{ fontSize: 16 }} />
             </IconButton>
           </Tooltip>
           <Tooltip title='Underline'>
-            <IconButton
-              size='small'
-              sx={getFormatBtnSx(editor.isActive('underline'))}
-              onClick={() => editor.chain().focus().toggleUnderline().run()}
-            >
-              <FormatUnderlinedIcon />
+            <IconButton size='small' sx={toolbarBtnSx} onClick={handleUnderline}>
+              <FormatUnderlinedIcon sx={{ fontSize: 16 }} />
             </IconButton>
           </Tooltip>
           <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />
           <Tooltip title='Bullet List'>
-            <IconButton
-              size='small'
-              sx={toolbarBtnSx}
-              onClick={() => editor.chain().focus().toggleBulletList().run()}
-            >
-              <FormatListBulletedIcon />
+            <IconButton size='small' sx={toolbarBtnSx} onClick={handleBullet}>
+              <FormatListBulletedIcon sx={{ fontSize: 16 }} />
             </IconButton>
           </Tooltip>
           <Tooltip title='Numbered List'>
-            <IconButton
-              size='small'
-              sx={toolbarBtnSx}
-              onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            >
-              <FormatListNumberedIcon />
+            <IconButton size='small' sx={toolbarBtnSx} onClick={handleNumber}>
+              <FormatListNumberedIcon sx={{ fontSize: 16 }} />
             </IconButton>
           </Tooltip>
         </Box>
 
         <Box
+          ref={editorRef}
+          contentEditable
+          suppressContentEditableWarning
+          onFocus={() => {
+            isFocusedRef.current = true;
+          }}
+          onBlur={() => {
+            isFocusedRef.current = false;
+            handleSave();
+          }}
           sx={{
             p: 1,
             minHeight: 80,
-            '& .ProseMirror': {
-              outline: 'none',
-              minHeight: 60,
-              '& p': { margin: 0 },
-              '& ul, & ol': { paddingLeft: 3, margin: '4px 0' },
-              '& li': { marginBottom: 0.5 },
-            },
+            outline: 'none',
+            fontSize: '0.875rem',
+            lineHeight: 1.6,
           }}
-        >
-          <EditorContent editor={editor} />
-        </Box>
+        />
       </Box>
 
       {showFooterActions && (
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            justifyContent: 'flex-end',
-            gap: 1,
-            mt: 1.5,
-          }}
-        >
+        <Box sx={{ display: 'flex', gap: 1, mt: 1.5, justifyContent: 'flex-end' }}>
           <Button
             size='small'
             variant='outlined'
             startIcon={<ClearIcon />}
             onClick={handleClear}
-            sx={{
-              textTransform: 'none',
-              borderColor: '#2d5ebb',
-              color: '#2d5ebb',
-              width: { xs: '100%', sm: 'auto' },
-              '&:hover': { borderColor: '#2d5ebb', bgcolor: 'rgba(45, 94, 187, 0.08)' },
-            }}
+            sx={{ minWidth: 80, borderColor: accent, color: accent }}
           >
             Clear
           </Button>
@@ -367,12 +323,7 @@ const RichTextEditor = ({
             variant='contained'
             startIcon={<SaveIcon />}
             onClick={handleSave}
-            sx={{
-              textTransform: 'none',
-              bgcolor: '#2d5ebb',
-              width: { xs: '100%', sm: 'auto' },
-              '&:hover': { bgcolor: '#2d5ebb' },
-            }}
+            sx={{ minWidth: 80, bgcolor: accent }}
           >
             Save
           </Button>
@@ -382,5 +333,4 @@ const RichTextEditor = ({
   );
 };
 
-export { RichTextEditor };
 export default RichTextEditor;

@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Switch } from '@mui/material';
+import { Box, Switch, Typography } from '@serviceops/component';
 import { PriorityLevel } from '../../util';
 import { useStyles } from '../../styles';
 import { useNotification } from '@serviceops/hooks';
@@ -7,6 +7,48 @@ import { GenericPanel } from '@serviceops/genericpanel';
 import { ConfigDeleteDialog } from '@serviceops/configdialogs';
 import PriorityFormDialog from '@serviceops/configprioritformdialog';
 import { PRIORITY_TABLE_CONFIG } from '../shared/PrioritiesPanelConfig';
+import {
+  parseRichText,
+  segmentsToHtml,
+} from '@serviceops/pages/base/Configuration/shared/RichTextEditor';
+
+const renderRichTextCell = (v: unknown, maxWidth: number): React.ReactNode => {
+  const raw = String(v || '');
+  if (!raw) {
+    return (
+      <Typography
+        variant='body2'
+        color='text.secondary'
+        fontSize='0.78rem'
+        sx={{ fontStyle: 'italic' }}
+      >
+        —
+      </Typography>
+    );
+  }
+  const html = segmentsToHtml(parseRichText(raw).segments);
+  const plainText = parseRichText(raw)
+    .segments.map((s) => s.text)
+    .join(' • ');
+  return (
+    <Box
+      title={plainText}
+      sx={{
+        maxWidth,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        fontSize: '0.78rem',
+        color: 'text.secondary',
+        lineHeight: 1.5,
+        '& b': { fontWeight: 700, color: 'text.primary' },
+        '& i': { fontStyle: 'italic' },
+        '& u': { textDecoration: 'underline' },
+      }}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
+};
 
 interface PrioritiesSectionProps {
   priorities: PriorityLevel[];
@@ -54,10 +96,12 @@ const PrioritiesSection = ({
         const newItem: PriorityLevel = {
           id,
           name: data.name ?? id,
+          shortDescription: data.shortDescription ?? '',
           description: data.description ?? '',
           color: '#fff',
           bgColor: data.bgColor ?? '#2563eb',
           sortOrder: priorities.length + 1,
+          internalNote: data.internalNote ?? '',
           enabledFor:
             data.enabledFor ??
             Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
@@ -98,19 +142,45 @@ const PrioritiesSection = ({
     () => [
       {
         id: 'name',
-        label: 'Priority Name',
-        minWidth: 130,
-        format: (_v: unknown, row: Record<string, unknown>): React.ReactNode => (
-          <span style={{ fontWeight: 700, fontSize: '0.82rem' }}>{String(row.name)}</span>
-        ),
+        label: 'Priority',
+        minWidth: 140,
+        format: (_v: unknown, row: Record<string, unknown>): React.ReactNode => {
+          const color = String(row.bgColor || '#2563eb');
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box
+                sx={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  bgcolor: color,
+                  flexShrink: 0,
+                }}
+              />
+              <Typography variant='body2' fontWeight={700} fontSize='0.82rem'>
+                {String(row.name)}
+              </Typography>
+            </Box>
+          );
+        },
+      },
+      {
+        id: 'shortDescription',
+        label: 'Short Description',
+        minWidth: 200,
+        format: (v: unknown): React.ReactNode => renderRichTextCell(v, 260),
       },
       {
         id: 'description',
         label: 'Description',
-        minWidth: 300,
-        format: (v: unknown): React.ReactNode => (
-          <span style={{ color: 'text.secondary', fontSize: '0.78rem' }}>{String(v || '—')}</span>
-        ),
+        minWidth: 240,
+        format: (v: unknown): React.ReactNode => renderRichTextCell(v, 300),
+      },
+      {
+        id: 'internalNote',
+        label: 'Internal note',
+        minWidth: 200,
+        format: (v: unknown): React.ReactNode => renderRichTextCell(v, 260),
       },
       ...activeTicketTypeColumns.map((t) => ({
         id: `enabledFor_${t.key}`,

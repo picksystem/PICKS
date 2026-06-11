@@ -3,6 +3,7 @@ import { ITicketType } from '@serviceops/interfaces';
 export interface TicketTypeFormDialogProps {
   open: boolean;
   editingItem: ITicketType | null;
+  existingTicketTypes?: ITicketType[];
   advancedSequences?: boolean;
   iconMap: Record<string, string>;
   tagMap: Record<string, string>;

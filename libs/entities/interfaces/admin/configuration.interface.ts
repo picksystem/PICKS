@@ -3,10 +3,12 @@
 export interface IConfigPriorityLevel {
   id: string;
   name: string;
+  shortDescription?: string;
   description: string;
   color: string;
   bgColor: string;
   sortOrder: number;
+  internalNote?: string;
   /** ticketType key → enabled flag; keys are synced from AdminTicketType */
   enabledFor: Record<string, boolean>;
 }
@@ -35,8 +37,20 @@ export interface IConfigUrgencyLevel {
   enabledFor: Record<string, boolean>;
 }
 
-/** impactId → urgencyId → priorityId */
-export type IConfigMatrixMap = Record<string, Record<string, string>>;
+/** impactId → urgencyId → priorityId (plus optional cell-level fields) */
+export type IConfigMatrixMap = Record<
+  string,
+  Record<
+    string,
+    {
+      priorityId: string;
+      shortDescription?: string;
+      description?: string;
+      activateSimplePriorities?: boolean;
+      internalNote?: string;
+    }
+  >
+>;
 
 export interface IConfigStatusLevel {
   id: string;
