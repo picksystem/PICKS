@@ -50,12 +50,20 @@ export interface TableField {
     | 'duration'
     | 'number'
     | 'toggle'
+    | 'activationToggle'
     | 'ticketTypeSearch'
     | 'workLocationSearch'
     | 'serviceLineSearch'
     | 'applicationSearch'
     | 'queueSearch'
-    | 'richText';
+    | 'richText'
+    | 'color';
+  /** For activationToggle - description shown when the toggle is ON */
+  activationDescriptionActive?: string;
+  /** For activationToggle - description shown when the toggle is OFF */
+  activationDescriptionInactive?: string;
+  /** For activationToggle - accent color used for the row border/background */
+  activationAccent?: string;
   /** For text field - enable multiline textarea */
   multiline?: boolean;
   /** For multiline text field - minimum number of rows */
@@ -326,6 +334,30 @@ const createColumns = (fields: TableField[]): Column<Record<string, unknown>>[] 
           </Typography>
         );
       }
+      if (field.type === 'color') {
+        const color = String(v || '#2563eb');
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box
+              sx={{
+                width: 16,
+                height: 16,
+                borderRadius: '50%',
+                bgcolor: color,
+                border: '1px solid',
+                borderColor: 'divider',
+                flexShrink: 0,
+              }}
+            />
+            <Typography
+              variant='body2'
+              sx={{ fontSize: '0.78rem', color: 'text.secondary', fontFamily: 'monospace' }}
+            >
+              {color}
+            </Typography>
+          </Box>
+        );
+      }
       return (
         <Typography
           variant='body2'
@@ -347,6 +379,8 @@ const createEmptyForm = (fields: TableField[]): FormData =>
       acc[field.name] = field.defaultValue ?? false;
     } else if (field.type === 'number') {
       acc[field.name] = field.defaultValue ?? '';
+    } else if (field.type === 'color') {
+      acc[field.name] = (field.defaultValue ?? '') as string;
     } else {
       acc[field.name] = (field.defaultValue ?? '') as string;
     }
@@ -696,6 +730,7 @@ export const GenericPanel = ({
 }: GenericPanelProps) => {
   const { success, error: showError } = useNotification();
   const reqError = useFieldError();
+  const { classes } = useStyles();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editingRow, setEditingRow] = useState<GenericData | null>(null);
@@ -729,9 +764,11 @@ export const GenericPanel = ({
     }
   }, [data, isControlled]);
 
-  // Initialize form when dialog opens
+  // Initialize form when dialog opens; reset validation state when it closes
   useEffect(() => {
     if (!dialogOpen) {
+      setShowValidation(false);
+      setFormErrors({});
       return;
     }
 
@@ -742,6 +779,8 @@ export const GenericPanel = ({
           values[field.name] = editingRow[field.name] ?? false;
         } else if (field.type === 'number') {
           values[field.name] = editingRow[field.name] ?? '';
+        } else if (field.type === 'color') {
+          values[field.name] = String(editingRow[field.name] || '');
         } else {
           values[field.name] = String(editingRow[field.name] || '');
         }
@@ -798,6 +837,8 @@ export const GenericPanel = ({
     // Default behavior
     setEditingRow(null);
     setForm(createEmptyForm(config.fields));
+    setFormErrors({});
+    setShowValidation(false);
     setIsNewDialog(true);
     setDialogOpen(true);
   }, [config.fields, onNewClick]);
@@ -812,6 +853,8 @@ export const GenericPanel = ({
     if (activeSelection !== null && selectedRow) {
       setEditingRow(selectedRow);
       setIsNewDialog(false);
+      setFormErrors({});
+      setShowValidation(false);
       setDialogOpen(true);
     }
   }, [activeSelection, selectedRow, onEditClick]);
@@ -829,6 +872,8 @@ export const GenericPanel = ({
   }, [activeSelection, onDeleteClick]);
 
   const handleClearClick = useCallback(() => {
+    setShowValidation(false);
+    setFormErrors({});
     setDialogOpen(false);
     setTimeout(() => {
       setEditingRow(null);
@@ -837,6 +882,31 @@ export const GenericPanel = ({
       setForm(createEmptyForm(config.fields));
     }, 0);
   }, [config.fields, activeSetSelection]);
+
+  // Validate required fields. Returns a map of field name -> error message.
+  const validateForm = useCallback((): Record<string, string> => {
+    const errors: Record<string, string> = {};
+    config.fields.forEach((field) => {
+      if (!field.required) return;
+      const value = form[field.name];
+      const isEmpty =
+        value === undefined ||
+        value === null ||
+        value === '' ||
+        (typeof value === 'boolean' && value === false) ||
+        (Array.isArray(value) && value.length === 0);
+      if (isEmpty) errors[field.name] = 'required';
+    });
+    return errors;
+  }, [config.fields, form]);
+
+  // Field-level validation errors (e.g. duplicate-row detection). Returns an object
+  // keyed by field name, e.g. { ticketTypeId: 'Error message', hours: 'Error message' }.
+  // Field errors render inline on the specific input with red border + helper text.
+  const fieldErrors = useMemo(
+    () => (validateFields ? validateFields(form, data, editingRow) : null),
+    [validateFields, form, data, editingRow],
+  );
 
   const handleSubmit = useCallback(async () => {
     // For editing: check if anything actually changed
@@ -865,7 +935,6 @@ export const GenericPanel = ({
     if (hasRequiredErrors) {
       setFormErrors(errors);
       setShowValidation(true);
-      showError('Please fill in all required fields');
       return;
     }
 
@@ -886,6 +955,8 @@ export const GenericPanel = ({
     // No required errors, but nothing to save (e.g. user opened a row, made no
     // changes, and clicked Submit) — close silently.
     if (!hasChanges) {
+      setShowValidation(false);
+      setFormErrors({});
       setDialogOpen(false);
       setTimeout(() => {
         setEditingRow(null);
@@ -902,7 +973,7 @@ export const GenericPanel = ({
       : [...data, { id: newId, ...form }];
 
     try {
-      await onSave(updated);
+      await Promise.resolve(onSave(updated));
       if (enableSuccessMessage) {
         const message = editingRow
           ? `${config.title} updated successfully`
@@ -913,6 +984,8 @@ export const GenericPanel = ({
       const errorMessage = err instanceof Error ? err.message : 'Failed to save. Please try again.';
       showError(errorMessage);
     } finally {
+      setShowValidation(false);
+      setFormErrors({});
       setDialogOpen(false);
       setTimeout(() => {
         setEditingRow(null);
@@ -933,11 +1006,13 @@ export const GenericPanel = ({
     showError,
     activeSetSelection,
     validate,
+    fieldErrors,
+    validateForm,
   ]);
 
   const handleDelete = useCallback(async () => {
     try {
-      await onSave(data.filter((r) => r.id !== activeSelection));
+      await Promise.resolve(onSave(data.filter((r) => r.id !== activeSelection)));
       if (enableSuccessMessage) {
         success(`${config.title} deleted successfully`);
       }
@@ -1002,20 +1077,17 @@ export const GenericPanel = ({
   );
 
   // Memoized dialog close handler
-  const handleDialogClose = useCallback(
-    (_event: unknown, reason?: string) => {
-      if (reason === undefined) {
-        setDialogOpen(false);
-        setTimeout(() => {
-          setEditingRow(null);
-          setIsNewDialog(false);
-          activeSetSelection(null);
-          setForm(createEmptyForm(config.fields));
-        }, 0);
-      }
-    },
-    [config.fields, activeSetSelection],
-  );
+  const handleDialogClose = useCallback(() => {
+    setShowValidation(false);
+    setFormErrors({});
+    setDialogOpen(false);
+    setTimeout(() => {
+      setEditingRow(null);
+      setIsNewDialog(false);
+      activeSetSelection(null);
+      setForm(createEmptyForm(config.fields));
+    }, 0);
+  }, [config.fields, activeSetSelection]);
 
   // Memoized toggle change handler
   const handleToggleChange = useCallback((fieldName: string, checked: boolean) => {
@@ -1038,31 +1110,6 @@ export const GenericPanel = ({
     [showValidation],
   );
 
-  // Validate required fields. Returns a map of field name -> error message.
-  const validateForm = useCallback((): Record<string, string> => {
-    const errors: Record<string, string> = {};
-    config.fields.forEach((field) => {
-      if (!field.required) return;
-      const value = form[field.name];
-      const isEmpty =
-        value === undefined ||
-        value === null ||
-        value === '' ||
-        (typeof value === 'boolean' && value === false) ||
-        (Array.isArray(value) && value.length === 0);
-      if (isEmpty) errors[field.name] = 'required';
-    });
-    return errors;
-  }, [config.fields, form]);
-
-  // Field-level validation errors (e.g. duplicate-row detection). Returns an object
-  // keyed by field name, e.g. { ticketTypeId: 'Error message', hours: 'Error message' }.
-  // Field errors render inline on the specific input with red border + helper text.
-  const fieldErrors = useMemo(
-    () => (validateFields ? validateFields(form, data, editingRow) : null),
-    [validateFields, form, data, editingRow],
-  );
-
   // Merge form errors: required-field errors take precedence unless a field-level error exists.
   const mergedFormErrors = useMemo(() => {
     const base = { ...formErrors };
@@ -1074,15 +1121,10 @@ export const GenericPanel = ({
     return base;
   }, [formErrors, fieldErrors]);
 
-  // Reflect required-field validity in the submit button so users get visual
-  // feedback before they click Submit. Also block submit on any cross-field
-  // validation error returned by the optional `validate` prop (kept for backwards compatibility).
-  const formIsInvalid = useMemo(
-    () =>
-      (config.fields.some((f) => f.required) && Object.keys(validateForm()).length > 0) ||
-      !!fieldErrors,
-    [config.fields, validateForm, fieldErrors],
-  );
+  // Only block submit on cross-field validation errors (e.g. duplicates). Required-field
+  // validation is intentionally NOT used to disable the button — the user must be able
+  // to click Submit and see the "Required" error hook on missing fields.
+  const formIsInvalid = useMemo(() => !!fieldErrors, [fieldErrors]);
 
   return (
     <>
@@ -1109,8 +1151,8 @@ export const GenericPanel = ({
         maxWidth='sm'
       >
         <LocalizationProvider>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-            {fieldErrors && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {showValidation && fieldErrors && (
               <Alert severity='error' variant='outlined' sx={{ alignItems: 'center' }}>
                 {Object.values(fieldErrors)[0]}
               </Alert>
@@ -1128,6 +1170,57 @@ export const GenericPanel = ({
                     }
                     label={<Typography sx={{ fontSize: '0.85rem' }}>{field.label}</Typography>}
                   />
+                );
+              }
+              if (field.type === 'activationToggle') {
+                const checked = form[field.name] === 'true' || form[field.name] === true;
+                const accent = field.activationAccent ?? '#0369a1';
+                return (
+                  <Box
+                    key={field.name}
+                    className={classes.dialogActivationRow}
+                    sx={{
+                      borderColor: checked ? alpha(accent, 0.3) : 'divider',
+                      bgcolor: checked ? alpha(accent, 0.04) : 'transparent',
+                    }}
+                  >
+                    <Box>
+                      <Typography variant='body2' color='#0369a1' fontWeight={600}>
+                        {field.label}
+                      </Typography>
+                      <Typography
+                        variant='caption'
+                        color='#2687bb'
+                        className={classes.dialogActivationDescription}
+                      >
+                        {checked
+                          ? (field.activationDescriptionActive ??
+                            'This row is active and available to users')
+                          : (field.activationDescriptionInactive ??
+                            'This row is inactive and hidden from users')}
+                      </Typography>
+                    </Box>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={checked}
+                          onChange={(e) => handleToggleChange(field.name, e.target.checked)}
+                          color='success'
+                        />
+                      }
+                      label={
+                        <Typography
+                          variant='body2'
+                          fontWeight={700}
+                          className={classes.dialogActivationLabel}
+                          sx={{ color: checked ? 'success.main' : 'text.secondary' }}
+                        >
+                          {checked ? 'Active' : 'Inactive'}
+                        </Typography>
+                      }
+                      className={classes.dialogActivationFormControl}
+                    />
+                  </Box>
                 );
               }
               if (field.type === 'ticketTypeSearch') {
@@ -1290,19 +1383,90 @@ export const GenericPanel = ({
                   />
                 );
               }
+              if (field.type === 'color') {
+                const currentValue = String(form[field.name] ?? '');
+                const isValidHex = /^#[0-9A-Fa-f]{6}$/.test(currentValue);
+                const safeValue = isValidHex ? currentValue : '#2563eb';
+                return (
+                  <TextField
+                    key={field.name}
+                    label={field.label}
+                    size='small'
+                    fullWidth
+                    required={field.required}
+                    error={Boolean(showValidation && mergedFormErrors[field.name])}
+                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    value={currentValue}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      if (/^#[0-9A-Fa-f]{0,6}$/.test(value)) {
+                        handleTextFieldChange(field.name, value);
+                      }
+                    }}
+                    placeholder='#2563eb'
+                    inputProps={{
+                      style: { fontFamily: 'monospace', textTransform: 'lowercase' },
+                      maxLength: 7,
+                    }}
+                    InputProps={{
+                      endAdornment: (
+                        <Box
+                          component='input'
+                          type='color'
+                          value={safeValue}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            handleTextFieldChange(field.name, e.target.value)
+                          }
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            border: 'none',
+                            borderRadius: 1,
+                            cursor: 'pointer',
+                            padding: 0,
+                            ml: 1,
+                            backgroundColor: 'transparent',
+                            '&::-webkit-color-swatch-wrapper': { padding: 0 },
+                            '&::-webkit-color-swatch': {
+                              border: '1px solid',
+                              borderColor: 'divider',
+                              borderRadius: 5,
+                            },
+                          }}
+                        />
+                      ),
+                    }}
+                  />
+                );
+              }
               if (field.type === 'richText') {
                 const currentValue = (form[field.name] ?? '') as string;
                 const richTextValue = parseRichText(currentValue);
+                const isError = Boolean(showValidation && mergedFormErrors[field.name]);
                 return (
-                  <RichTextEditor
-                    key={field.name}
-                    value={richTextValue}
-                    onChange={(value) =>
-                      handleTextFieldChange(field.name, serializeRichText(value.segments))
-                    }
-                    showFooterActions={false}
-                    title={field.label}
-                  />
+                  <Box key={field.name}>
+                    <RichTextEditor
+                      value={richTextValue}
+                      onChange={(value) =>
+                        handleTextFieldChange(field.name, serializeRichText(value.segments))
+                      }
+                      showFooterActions={false}
+                      title={field.required ? `${field.label} *` : field.label}
+                      error={isError}
+                    />
+                    <Typography
+                      variant='caption'
+                      sx={{
+                        color: isError ? '#d32f2f' : 'text.secondary',
+                        fontSize: '0.7rem',
+                        mt: 0.25,
+                        display: 'block',
+                        fontWeight: isError ? 600 : 400,
+                      }}
+                    >
+                      {reqError(showValidation, mergedFormErrors[field.name]) || ' '}
+                    </Typography>
+                  </Box>
                 );
               }
               const textValue: string =

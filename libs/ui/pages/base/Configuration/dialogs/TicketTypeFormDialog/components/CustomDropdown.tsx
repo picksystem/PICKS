@@ -25,6 +25,7 @@ interface CustomDropdownProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
   options: DropdownOption[];
   selectedColor?: string;
   gradient?: string;
@@ -40,6 +41,7 @@ export const CustomDropdown = ({
   label,
   value,
   onChange,
+  onBlur,
   options,
   selectedColor,
   gradient,
@@ -137,6 +139,7 @@ export const CustomDropdown = ({
           onBlur={() => {
             // Delay closing so the click on a list item registers
             setTimeout(() => setOpen(false), 200);
+            onBlur?.();
           }}
           required={required}
           error={error}
@@ -370,7 +373,6 @@ export const CustomDropdown = ({
             color: error ? '#d32f2f' : 'text.secondary',
             fontSize: '0.7rem',
             mt: 0.5,
-            display: 'block',
           }}
         >
           {helperText}

@@ -5,8 +5,14 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   root: {
     '& .MuiOutlinedInput-root': {
       borderRadius: 8,
+      '& fieldset': {
+        borderColor: '#2d5ebb',
+      },
       '&:hover fieldset': {
-        borderColor: theme.palette.primary.main,
+        borderColor: '#2d5ebb',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#2d5ebb',
       },
     },
     '& .MuiInputLabel-root': {

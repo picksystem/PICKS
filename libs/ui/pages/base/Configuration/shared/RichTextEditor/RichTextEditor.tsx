@@ -28,6 +28,7 @@ interface Props {
   title?: string;
   showFooterActions?: boolean;
   icon?: React.ReactNode;
+  error?: boolean;
 }
 
 export const parseRichText = (text: string): RichTextValue => {
@@ -100,7 +101,6 @@ const toolbarBtnSx = {
   height: 28,
   padding: 0,
   borderRadius: 1,
-  color: '#0369a1',
 };
 
 const RichTextEditor = ({
@@ -110,6 +110,7 @@ const RichTextEditor = ({
   title = 'Internal Note',
   showFooterActions = true,
   icon,
+  error = false,
 }: Props) => {
   const editorRef = useRef<HTMLDivElement>(null);
   // Track the serialized form of the value we last initialized the editor
@@ -239,49 +240,73 @@ const RichTextEditor = ({
     }
   }, [ensureEditor, onChange]);
 
+  const borderColor = error ? '#d32f2f' : accent;
+  const themeColor = error ? '#d32f2f' : '#0369a1';
+  const toolbarBg = error ? '#fdecea' : '#f0f4f8';
+
   return (
-    <Box sx={{ width: '100%', mt: 1.5 }}>
-      <Box sx={{ border: `1px solid ${accent}`, borderRadius: 2, overflow: 'hidden' }}>
+    <Box sx={{ width: '100%' }}>
+      <Box sx={{ border: `1px solid ${borderColor}`, borderRadius: 2, overflow: 'hidden' }}>
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
-            gap: 0.5,
+            gap: 0.25,
             px: 1,
-            py: 0.5,
-            bgcolor: '#f0f4f8',
-            borderBottom: `1px solid ${accent}`,
+            py: 0.125,
+            bgcolor: toolbarBg,
+            borderBottom: `1px solid ${borderColor}`,
             flexWrap: 'wrap',
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mr: 1 }}>
-            {icon ?? <StickyNote2Icon sx={{ fontSize: 16, color: '#0369a1' }} />}
-            <Box sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#0369a1' }}>{title}</Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mr: 0.5 }}>
+            {icon ?? <StickyNote2Icon sx={{ fontSize: 16, color: themeColor }} />}
+            <Box sx={{ fontSize: '0.75rem', fontWeight: 600, color: themeColor }}>{title}</Box>
           </Box>
           <Tooltip title='Bold'>
-            <IconButton size='small' sx={toolbarBtnSx} onClick={handleBold}>
-              <FormatBoldIcon sx={{ fontSize: 16 }} />
+            <IconButton
+              size='small'
+              sx={{ ...toolbarBtnSx, color: themeColor }}
+              onClick={handleBold}
+            >
+              <FormatBoldIcon sx={{ fontSize: 16, color: themeColor }} />
             </IconButton>
           </Tooltip>
           <Tooltip title='Italic'>
-            <IconButton size='small' sx={toolbarBtnSx} onClick={handleItalic}>
-              <FormatItalicIcon sx={{ fontSize: 16 }} />
+            <IconButton
+              size='small'
+              sx={{ ...toolbarBtnSx, color: themeColor }}
+              onClick={handleItalic}
+            >
+              <FormatItalicIcon sx={{ fontSize: 16, color: themeColor }} />
             </IconButton>
           </Tooltip>
           <Tooltip title='Underline'>
-            <IconButton size='small' sx={toolbarBtnSx} onClick={handleUnderline}>
-              <FormatUnderlinedIcon sx={{ fontSize: 16 }} />
+            <IconButton
+              size='small'
+              sx={{ ...toolbarBtnSx, color: themeColor }}
+              onClick={handleUnderline}
+            >
+              <FormatUnderlinedIcon sx={{ fontSize: 16, color: themeColor }} />
             </IconButton>
           </Tooltip>
-          <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />
+          <Divider orientation='vertical' flexItem sx={{ mx: 0.25 }} />
           <Tooltip title='Bullet List'>
-            <IconButton size='small' sx={toolbarBtnSx} onClick={handleBullet}>
-              <FormatListBulletedIcon sx={{ fontSize: 16 }} />
+            <IconButton
+              size='small'
+              sx={{ ...toolbarBtnSx, color: themeColor }}
+              onClick={handleBullet}
+            >
+              <FormatListBulletedIcon sx={{ fontSize: 16, color: themeColor }} />
             </IconButton>
           </Tooltip>
           <Tooltip title='Numbered List'>
-            <IconButton size='small' sx={toolbarBtnSx} onClick={handleNumber}>
-              <FormatListNumberedIcon sx={{ fontSize: 16 }} />
+            <IconButton
+              size='small'
+              sx={{ ...toolbarBtnSx, color: themeColor }}
+              onClick={handleNumber}
+            >
+              <FormatListNumberedIcon sx={{ fontSize: 16, color: themeColor }} />
             </IconButton>
           </Tooltip>
         </Box>
@@ -298,11 +323,11 @@ const RichTextEditor = ({
             handleSave();
           }}
           sx={{
-            p: 1,
-            minHeight: 80,
+            p: '4px 10px',
+            minHeight: 60,
             outline: 'none',
             fontSize: '0.875rem',
-            lineHeight: 1.6,
+            lineHeight: 1.4,
           }}
         />
       </Box>

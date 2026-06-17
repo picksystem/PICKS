@@ -66,7 +66,6 @@ const TicketMatrixAccordion = ({
             priorityId: matrix[impact.id]?.[urgency.id]?.priorityId ?? '',
             shortDescription: matrix[impact.id]?.[urgency.id]?.shortDescription,
             description: matrix[impact.id]?.[urgency.id]?.description,
-            activateSimplePriorities: matrix[impact.id]?.[urgency.id]?.activateSimplePriorities,
             internalNote: matrix[impact.id]?.[urgency.id]?.internalNote,
           });
         }

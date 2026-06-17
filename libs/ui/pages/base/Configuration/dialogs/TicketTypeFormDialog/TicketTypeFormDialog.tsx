@@ -111,15 +111,13 @@ const TicketTypeFormDialog = ({
   };
 
   const getInitialIcon = () => {
-    if (editingItem)
-      return iconMap[editingItem.type] ?? DEFAULT_TYPE_ICONS[editingItem.type] ?? 'warning_amber';
-    return 'warning_amber';
+    if (editingItem) return iconMap[editingItem.type] ?? DEFAULT_TYPE_ICONS[editingItem.type] ?? '';
+    return '';
   };
 
   const getInitialTag = () => {
-    if (editingItem)
-      return tagMap[editingItem.type] ?? DEFAULT_TYPE_TAGS[editingItem.type] ?? 'Standard';
-    return 'Standard';
+    if (editingItem) return tagMap[editingItem.type] ?? '';
+    return '';
   };
 
   // Get initial access control values
@@ -142,9 +140,9 @@ const TicketTypeFormDialog = ({
       description: getInitialDescription(),
       prefix: editingItem?.prefix ?? '',
       isActive: editingItem?.isActive ?? true,
-      numberLength: editingItem?.numberLength ?? '',
+      numberLength: editingItem?.numberLength ?? undefined,
       iconKey: getInitialIcon(),
-      tag: getInitialTag(),
+      tag: getInitialTag() || '',
       accessControl: getInitialAccessControl(),
       selectAll: getInitialAccessControl().length === 3,
     },
@@ -182,21 +180,22 @@ const TicketTypeFormDialog = ({
           dupErrors.prefix = 'Numbering prefix already exists';
         }
 
+        // Mark all required fields as touched so validation errors show on submit
+        formik.setTouched({
+          ...formik.touched,
+          name: true,
+          displayTag: true,
+          displayName: true,
+          description: true,
+          tag: true,
+          iconKey: true,
+          prefix: true,
+          numberLength: true,
+        });
+
         if (Object.keys(dupErrors).length > 0) {
           setErrors(dupErrors);
-
-          // Mark fields as touched so they show validation errors
-          formik.setTouched({
-            ...formik.touched,
-            name: true,
-            description: true,
-            displayTag: true,
-            prefix: true,
-          });
-
-          // Show alert at the top of the form
           setDuplicateErrors(dupErrors);
-
           setSubmitting(false);
           return;
         }
@@ -306,6 +305,7 @@ const TicketTypeFormDialog = ({
       onClose={handleClose}
       maxWidth='md'
       fullWidth
+      disableEnforceFocus
       PaperProps={{ className: classes.dialogPaper }}
     >
       {/* ══ LIVE PREVIEW HERO BANNER ══════════════════════════════════════════ */}
@@ -400,10 +400,7 @@ const TicketTypeFormDialog = ({
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={Boolean(reqError(formik.touched.name, formik.errors.name as string))}
-                helperText={
-                  reqError(formik.touched.name, formik.errors.name as string) ||
-                  'Alphanumeric, max 25 characters'
-                }
+                helperText={reqError(formik.touched.name, formik.errors.name as string)}
                 fullWidth
                 size='small'
                 required
@@ -448,6 +445,9 @@ const TicketTypeFormDialog = ({
                   }}
                   showFooterActions={false}
                   title='Display Text'
+                  error={Boolean(
+                    reqError(formik.touched.displayName, formik.errors.displayName as string),
+                  )}
                 />
                 <Typography
                   variant='caption'
@@ -471,14 +471,23 @@ const TicketTypeFormDialog = ({
               <CustomDropdown
                 label='Priority Tag'
                 value={formik.values.tag}
-                onChange={(value) => formik.setFieldValue('tag', value)}
+                onChange={(value) => {
+                  formik.setFieldValue('tag', value);
+                  if (!value) {
+                    formik.setFieldError('tag', 'Priority tag is required');
+                  } else {
+                    formik.setFieldError('tag', undefined);
+                  }
+                  formik.setFieldTouched('tag', true, false);
+                }}
+                onBlur={() => formik.setFieldTouched('tag', true, true)}
                 options={TICKET_TAG_OPTIONS.map((opt) => ({
                   value: opt.value,
                   label: opt.label,
                   color: opt.color,
                 }))}
                 selectedColor={tagColor}
-                error={Boolean(reqError(formik.touched.tag, formik.errors.tag as string))}
+                error={Boolean(formik.touched.tag && formik.errors.tag)}
                 helperText={
                   reqError(formik.touched.tag, formik.errors.tag as string) ||
                   'Select a priority tag for this ticket type'
@@ -492,7 +501,16 @@ const TicketTypeFormDialog = ({
               <CustomDropdown
                 label='Icon'
                 value={formik.values.iconKey}
-                onChange={(value) => formik.setFieldValue('iconKey', value)}
+                onChange={(value) => {
+                  formik.setFieldValue('iconKey', value);
+                  if (!value) {
+                    formik.setFieldError('iconKey', 'Icon is required');
+                  } else {
+                    formik.setFieldError('iconKey', undefined);
+                  }
+                  formik.setFieldTouched('iconKey', true, false);
+                }}
+                onBlur={() => formik.setFieldTouched('iconKey', true, true)}
                 options={TICKET_ICON_OPTIONS.map((opt) => ({
                   value: opt.key,
                   label: opt.label,
@@ -501,7 +519,7 @@ const TicketTypeFormDialog = ({
                 selectedColor={color}
                 gradient={gradient}
                 showIconInSelect
-                error={Boolean(reqError(formik.touched.iconKey, formik.errors.iconKey as string))}
+                error={Boolean(formik.touched.iconKey && formik.errors.iconKey)}
                 helperText={
                   reqError(formik.touched.iconKey, formik.errors.iconKey as string) ||
                   'Select an icon for this ticket type'
@@ -524,6 +542,9 @@ const TicketTypeFormDialog = ({
                   }}
                   showFooterActions={false}
                   title='Description'
+                  error={Boolean(
+                    reqError(formik.touched.description, formik.errors.description as string),
+                  )}
                 />
                 <Typography
                   variant='caption'
@@ -556,6 +577,12 @@ const TicketTypeFormDialog = ({
                   }}
                   showFooterActions={false}
                   title='Internal Note'
+                  error={Boolean(
+                    reqError(
+                      formik.touched.shortDescription,
+                      formik.errors.shortDescription as string,
+                    ),
+                  )}
                 />
                 <Typography
                   variant='caption'
@@ -575,8 +602,7 @@ const TicketTypeFormDialog = ({
             <Grid size={{ xs: 12 }}>
               <Box
                 sx={{
-                  border: '1px solid',
-                  borderColor: 'divider',
+                  border: '1px solid #2d5ebb',
                   borderRadius: 2,
                   overflow: 'hidden',
                 }}
@@ -590,16 +616,19 @@ const TicketTypeFormDialog = ({
                     px: 2,
                     py: 1.5,
                     cursor: 'pointer',
-                    bgcolor: accessControlExpanded ? 'action.hover' : 'transparent',
+                    bgcolor: '#f0f4f8',
                     transition: 'background-color 0.2s',
-                    '&:hover': { bgcolor: 'action.hover' },
                   }}
                 >
-                  <Typography variant='body2' sx={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                  <Typography
+                    variant='body2'
+                    color='#0369a1'
+                    sx={{ fontWeight: 600, fontSize: '0.85rem' }}
+                  >
                     Access Control
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant='caption' color='text.secondary'>
+                    <Typography variant='caption' color='#0369a1'>
                       {formik.values.accessControl.length} of {ACCESS_CONTROL_ROLES.length} selected
                     </Typography>
                     <Radio
@@ -611,7 +640,7 @@ const TicketTypeFormDialog = ({
                         '&.Mui-checked': { color: '#0369a1' },
                       }}
                     />
-                    <Typography variant='caption' sx={{ fontWeight: 500 }}>
+                    <Typography variant='caption' sx={{ fontWeight: 500, color: '#0369a1' }}>
                       Select All
                     </Typography>
                   </Box>
@@ -631,7 +660,7 @@ const TicketTypeFormDialog = ({
                                 alignItems: 'center',
                                 py: 0.75,
                                 borderBottom: '1px solid',
-                                borderColor: 'divider',
+                                borderColor: '#2d5ebb',
                                 '&:last-child': { borderBottom: 'none' },
                               }}
                             >
@@ -681,12 +710,14 @@ const TicketTypeFormDialog = ({
                 onBlur={formik.handleBlur}
                 error={Boolean(reqError(formik.touched.prefix, formik.errors.prefix as string))}
                 helperText={
-                  reqError(formik.touched.prefix, formik.errors.prefix as string) || 'e.g. INC, SRQ'
+                  reqError(formik.touched.prefix, formik.errors.prefix as string) ||
+                  'Prefix in ticket number'
                 }
                 fullWidth
                 size='small'
                 required
                 className={classes.dialogPrefixInput}
+                placeholder='e.g. INC, SRQ'
                 inputProps={{ maxLength: 6 }}
               />
             </Grid>
@@ -702,10 +733,14 @@ const TicketTypeFormDialog = ({
                   const inputValue = e.target.value;
                   if (inputValue === '') {
                     formik.setFieldValue('numberLength', '');
+                    formik.setFieldError('numberLength', 'Number length is required');
+                    formik.setFieldTouched('numberLength', true, false);
                   } else {
                     const val = parseInt(inputValue, 10);
                     if (!isNaN(val)) {
                       formik.setFieldValue('numberLength', Math.min(9, Math.max(0, val)));
+                      formik.setFieldError('numberLength', undefined);
+                      formik.setFieldTouched('numberLength', true, false);
                     }
                   }
                 }}
@@ -747,12 +782,12 @@ const TicketTypeFormDialog = ({
                 }}
               >
                 <Box>
-                  <Typography variant='body2' fontWeight={600}>
+                  <Typography variant='body2' color='#0369a1' fontWeight={600}>
                     Activation Status
                   </Typography>
                   <Typography
                     variant='caption'
-                    color='text.secondary'
+                    color='#2687bb'
                     className={classes.dialogActivationDescription}
                   >
                     {formik.values.isActive

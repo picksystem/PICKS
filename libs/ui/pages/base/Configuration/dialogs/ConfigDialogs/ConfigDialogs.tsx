@@ -33,6 +33,7 @@ export const ConfigFormDialog = ({
       maxWidth={maxWidth}
       fullWidth
       disableEscapeKeyDown
+      disableEnforceFocus
       TransitionProps={{ unmountOnExit: true }}
       PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}
     >
@@ -77,7 +78,7 @@ export const ConfigFormDialog = ({
         </Box>
       </Box>
 
-      <DialogContent dividers sx={{ p: 0 }}>
+      <DialogContent dividers sx={{ p: 0, overflowY: 'auto', maxHeight: 'calc(90vh - 140px)' }}>
         <Box sx={{ px: 3, py: 2.5, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
           {children}
         </Box>
@@ -131,6 +132,7 @@ export const ConfigDeleteDialog = ({
     maxWidth='xs'
     fullWidth
     disableEscapeKeyDown
+    disableEnforceFocus
     TransitionProps={{ unmountOnExit: true }}
     PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}
   >

@@ -58,8 +58,8 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
      * Normalize a stored matrix value into the extended cell shape.
      * Older rows in the DB may still contain a plain `priorityId` string for
      * each (impact, urgency) cell; this helper lifts those to the full
-     * `{ priorityId, shortDescription, description, activateSimplePriorities,
-     * internalNote }` shape so downstream code can rely on it.
+     * `{ priorityId, shortDescription, description, internalNote }` shape
+     * so downstream code can rely on it.
      */
     const normalizeMatrixCells = (raw: Record<string, unknown> | undefined): IConfigMatrixMap => {
       const result: IConfigMatrixMap = {};
@@ -76,14 +76,12 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
               priorityId: string;
               shortDescription?: string;
               description?: string;
-              activateSimplePriorities?: boolean;
               internalNote?: string;
             }>;
             normalizedImpact[urgencyId] = {
               priorityId: c.priorityId ?? '',
               shortDescription: c.shortDescription,
               description: c.description,
-              activateSimplePriorities: c.activateSimplePriorities,
               internalNote: c.internalNote,
             };
           }
@@ -93,31 +91,16 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
       return result;
     };
 
-    const enrichedPriorities: IConfigurationData['priorities'] = {
-      levels: data.priorities.levels.map((l) => ({
-        ...l,
-        enabledFor: syncEnabledFor(l.enabledFor),
-      })),
-      impactLevels: data.priorities.impactLevels.map((l) => ({
-        ...l,
-        enabledFor: syncEnabledFor(l.enabledFor),
-      })),
-      urgencyLevels: data.priorities.urgencyLevels.map((l) => ({
-        ...l,
-        enabledFor: syncEnabledFor(l.enabledFor),
-      })),
-      matrices: Object.fromEntries(
-        Object.entries(data.priorities.matrices ?? {}).map(([k, v]) => [
-          k,
-          normalizeMatrixCells(v as Record<string, unknown>),
-        ]),
-      ),
-    };
+    const rawMatrices = (data.priorities.matrices ?? {}) as Record<string, unknown>;
+    const enrichedMatrices: Record<string, IConfigMatrixMap> = {};
+    for (const [key, value] of Object.entries(rawMatrices)) {
+      enrichedMatrices[key] = normalizeMatrixCells(value as Record<string, unknown>);
+    }
 
     // Add missing matrix entries for new ticket types
     for (const key of typeKeys) {
-      if (!enrichedPriorities.matrices[key]) {
-        enrichedPriorities.matrices[key] = {
+      if (!enrichedMatrices[key]) {
+        enrichedMatrices[key] = {
           high: {
             high: { priorityId: 'critical' },
             medium: { priorityId: 'high' },
@@ -137,9 +120,38 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
       }
     }
     // Remove matrices for deleted ticket types
-    for (const key of Object.keys(enrichedPriorities.matrices)) {
-      if (!typeKeys.includes(key)) delete enrichedPriorities.matrices[key];
+    for (const key of Object.keys(enrichedMatrices)) {
+      if (!typeKeys.includes(key)) delete enrichedMatrices[key];
     }
+
+    // Simple Properties lives in its own top-level field, but the on-disk
+    // shape predates that and stored it under `matrices['__simple__']`.
+    // Pull it out of there if present so older documents still load.
+    const legacySimple = enrichedMatrices['__simple__'] as unknown as
+      | Record<string, { active: boolean; description?: string }>
+      | undefined;
+    delete enrichedMatrices['__simple__'];
+    const storedSimple =
+      (data.priorities.simplePriorities as
+        | Record<string, { active: boolean; description?: string }>
+        | undefined) ?? legacySimple;
+
+    const enrichedPriorities: IConfigurationData['priorities'] = {
+      levels: data.priorities.levels.map((l) => ({
+        ...l,
+        enabledFor: syncEnabledFor(l.enabledFor),
+      })),
+      impactLevels: data.priorities.impactLevels.map((l) => ({
+        ...l,
+        enabledFor: syncEnabledFor(l.enabledFor),
+      })),
+      urgencyLevels: data.priorities.urgencyLevels.map((l) => ({
+        ...l,
+        enabledFor: syncEnabledFor(l.enabledFor),
+      })),
+      matrices: enrichedMatrices,
+      simplePriorities: storedSimple,
+    };
 
     const enrichedStatuses: IConfigurationData['statuses'] = {
       items: data.statuses?.items ?? [],

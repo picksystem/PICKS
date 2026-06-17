@@ -26,6 +26,21 @@ const theme = createTheme({
         },
       },
     },
+    // Apply text color to TextField input across all variants
+    MuiOutlinedInput: {
+      styleOverrides: {
+        input: {
+          color: '#0369a1',
+        },
+      },
+    },
+    MuiInputBase: {
+      styleOverrides: {
+        input: {
+          color: '#0369a1',
+        },
+      },
+    },
   },
 });
 

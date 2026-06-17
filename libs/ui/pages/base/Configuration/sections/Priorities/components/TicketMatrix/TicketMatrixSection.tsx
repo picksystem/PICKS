@@ -16,10 +16,13 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ClearIcon from '@mui/icons-material/Clear';
-import { ConfigFormDialog } from '@serviceops/configdialogs';
+import TuneIcon from '@mui/icons-material/Tune';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { ConfigFormDialog, ConfigDeleteDialog } from '@serviceops/configdialogs';
 import { GenericAccordion } from '@serviceops/genericaccordion';
 import { GenericToolbar } from '@serviceops/generictoolbar';
 import { PriorityLevel, ImpactLevel, UrgencyLevel, ExtendedMatrixMap, MatrixRow } from '../../util';
+import { IConfigMatrixMap, IConfigSimplePrioritiesBucket } from '@serviceops/interfaces';
 import { useStyles } from '../../../../shared/GenericPanel/styles';
 import { useNotification, useDebounce } from '@serviceops/hooks';
 import { SearchField } from '@serviceops/pages/base/Configuration/shared/SearchField';
@@ -30,6 +33,8 @@ import {
   RichTextEditor,
   segmentsToHtml,
 } from '@serviceops/pages/base/Configuration/shared/RichTextEditor';
+
+type SimplePrioritiesState = Record<string, IConfigSimplePrioritiesBucket> | undefined;
 
 interface TicketTypeConfig {
   key: string;
@@ -44,7 +49,8 @@ interface TicketMatrixSectionProps {
   priorities: PriorityLevel[];
   impacts: ImpactLevel[];
   urgencies: UrgencyLevel[];
-  matrices: Record<string, ExtendedMatrixMap>;
+  matrices: Record<string, IConfigMatrixMap>;
+  simplePriorities: SimplePrioritiesState;
   onMatrixChange: (ticketType: string, impact: string, urgency: string, priorityId: string) => void;
   onMatrixReset: (ticketType: string, newMatrix: ExtendedMatrixMap) => void;
   onMatrixCellUpdate?: (
@@ -54,10 +60,10 @@ interface TicketMatrixSectionProps {
     data: {
       shortDescription?: string;
       description?: string;
-      activateSimplePriorities?: boolean;
       internalNote?: string;
     },
   ) => void;
+  onSimplePrioritiesChange?: (next: Record<string, IConfigSimplePrioritiesBucket>) => void;
 }
 
 const renderRichTextCell = (v: unknown, maxWidth: number): React.ReactNode => {
@@ -104,14 +110,17 @@ const TicketMatrixSection = ({
   impacts,
   urgencies,
   matrices,
+  simplePriorities,
   onMatrixChange,
   onMatrixReset,
   onMatrixCellUpdate,
+  onSimplePrioritiesChange,
 }: TicketMatrixSectionProps) => {
   const { classes } = useStyles();
   const { success } = useNotification();
   const [activeTicketType, setActiveTicketType] = useState<string>(ticketTypes[0]?.key ?? '');
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [addForm, setAddForm] = useState<{
     impactId: string;
@@ -119,7 +128,6 @@ const TicketMatrixSection = ({
     priorityId: string;
     shortDescription: string;
     description: string;
-    activateSimplePriorities: boolean;
     internalNote: string;
   }>({
     impactId: '',
@@ -127,7 +135,6 @@ const TicketMatrixSection = ({
     priorityId: '',
     shortDescription: '',
     description: '',
-    activateSimplePriorities: false,
     internalNote: '',
   });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -137,7 +144,6 @@ const TicketMatrixSection = ({
     priorityId: string;
     shortDescription: string;
     description: string;
-    activateSimplePriorities: boolean;
     internalNote: string;
   }>({
     impactId: '',
@@ -145,11 +151,15 @@ const TicketMatrixSection = ({
     priorityId: '',
     shortDescription: '',
     description: '',
-    activateSimplePriorities: false,
     internalNote: '',
   });
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
+  const [simplePropsOpen, setSimplePropsOpen] = useState(false);
+  const [simpleForm, setSimpleForm] = useState<{ active: boolean; description: string }>({
+    active: false,
+    description: '',
+  });
 
   useEffect(() => {
     if (!ticketTypes.find((t) => t.key === activeTicketType)) {
@@ -163,7 +173,17 @@ const TicketMatrixSection = ({
   );
 
   const activeTicket = ticketTypeByKey[activeTicketType];
-  const matrix: ExtendedMatrixMap = matrices[activeTicketType] ?? {};
+  const matrix: ExtendedMatrixMap =
+    (matrices[activeTicketType] as ExtendedMatrixMap | undefined) ?? {};
+
+  const currentSimple = simplePriorities?.[activeTicketType];
+  const isSimpleActive = Boolean(currentSimple?.active);
+
+  useEffect(() => {
+    if (isSimpleActive) {
+      setSelectedRowId(null);
+    }
+  }, [isSimpleActive, activeTicketType]);
 
   const activeImpacts = impacts.filter((i) => i.isActive);
   const activeUrgencies = urgencies.filter((u) => u.isActive);
@@ -175,15 +195,18 @@ const TicketMatrixSection = ({
         const id = `${impact.id}_${urgency.id}`;
         if (!rowMap.has(id)) {
           const cell = matrix[impact.id]?.[urgency.id];
+          // Only include rows that have a real cell defined in the matrix
+          // (i.e. were explicitly added). Empty cells (deleted combinations)
+          // should not appear in the table.
+          if (!cell) return;
           rowMap.set(id, {
             id,
             impactId: impact.id,
             urgencyId: urgency.id,
-            priorityId: cell?.priorityId ?? '',
-            shortDescription: cell?.shortDescription,
-            description: cell?.description,
-            activateSimplePriorities: cell?.activateSimplePriorities,
-            internalNote: cell?.internalNote,
+            priorityId: cell.priorityId,
+            shortDescription: cell.shortDescription,
+            description: cell.description,
+            internalNote: cell.internalNote,
           });
         }
       }),
@@ -219,8 +242,16 @@ const TicketMatrixSection = ({
     onMatrixChange(activeTicketType, impact, urgency, priorityId);
   };
 
-  const handleDeleteRow = () => {
+  const openDeleteDialog = () => {
     if (!selectedRowId) return;
+    setDeleteOpen(true);
+  };
+
+  const handleConfirmDeleteRow = () => {
+    if (!selectedRowId) {
+      setDeleteOpen(false);
+      return;
+    }
     const [impactId, urgencyId] = selectedRowId.split('_');
     const next: ExtendedMatrixMap = { ...matrix };
     if (next[impactId]) {
@@ -230,16 +261,26 @@ const TicketMatrixSection = ({
     onMatrixReset(activeTicketType, next);
     success('Combination deleted successfully');
     setSelectedRowId(null);
+    setDeleteOpen(false);
   };
+
+  const selectedCombinationName = (() => {
+    if (!selectedRowId) return '';
+    const [impactId, urgencyId] = selectedRowId.split('_');
+    const impact = impacts.find((i) => i.id === impactId);
+    const urgency = urgencies.find((u) => u.id === urgencyId);
+    const impactName = impact?.displayName ?? impactId;
+    const urgencyName = urgency?.displayName ?? urgencyId;
+    return `${impactName} / ${urgencyName}`;
+  })();
 
   const openAddDialog = () => {
     setAddForm({
-      impactId: activeImpacts[0]?.id ?? '',
-      urgencyId: activeUrgencies[0]?.id ?? '',
-      priorityId: priorities[0]?.id ?? '',
+      impactId: '',
+      urgencyId: '',
+      priorityId: '',
       shortDescription: '',
       description: '',
-      activateSimplePriorities: false,
       internalNote: '',
     });
     setAddDialogOpen(true);
@@ -252,7 +293,6 @@ const TicketMatrixSection = ({
         onMatrixCellUpdate(activeTicketType, addForm.impactId, addForm.urgencyId, {
           shortDescription: addForm.shortDescription,
           description: addForm.description,
-          activateSimplePriorities: addForm.activateSimplePriorities,
           internalNote: addForm.internalNote,
         });
       }
@@ -271,7 +311,6 @@ const TicketMatrixSection = ({
       priorityId: cell?.priorityId ?? '',
       shortDescription: cell?.shortDescription ?? '',
       description: cell?.description ?? '',
-      activateSimplePriorities: cell?.activateSimplePriorities ?? false,
       internalNote: cell?.internalNote ?? '',
     });
     setEditDialogOpen(true);
@@ -293,12 +332,42 @@ const TicketMatrixSection = ({
       onMatrixCellUpdate(activeTicketType, editForm.impactId, editForm.urgencyId, {
         shortDescription: editForm.shortDescription,
         description: editForm.description,
-        activateSimplePriorities: editForm.activateSimplePriorities,
         internalNote: editForm.internalNote,
       });
     }
     success('Combination updated successfully');
     setEditDialogOpen(false);
+  };
+
+  const openSimplePropsDialog = () => {
+    setSimpleForm({
+      active: currentSimple?.active ?? false,
+      description: currentSimple?.description ?? '',
+    });
+    setSimplePropsOpen(true);
+  };
+
+  const handleSaveSimpleProps = () => {
+    const next: Record<string, IConfigSimplePrioritiesBucket> = {
+      ...(simplePriorities ?? {}),
+      [activeTicketType]: {
+        active: simpleForm.active,
+        description: simpleForm.description,
+      },
+    };
+    if (onSimplePrioritiesChange) {
+      onSimplePrioritiesChange(next);
+    } else {
+      // Fallback: no-op. The simple priorities state lives in the parent
+      // and is persisted via the priorities section.
+      return;
+    }
+    success(
+      simpleForm.active
+        ? 'Simple priorities activated. The matrix is now read-only for this ticket type.'
+        : 'Simple priorities deactivated. The matrix is editable again.',
+    );
+    setSimplePropsOpen(false);
   };
 
   const columns: Column<MatrixRow>[] = [
@@ -352,42 +421,6 @@ const TicketMatrixSection = ({
       label: 'Description',
       minWidth: 200,
       format: (v): React.ReactNode => renderRichTextCell(v, 260),
-    },
-    {
-      id: 'activateSimplePriorities',
-      label: 'Simple Priorities',
-      minWidth: 130,
-      align: 'center' as const,
-      format: (v): React.ReactNode => {
-        const isActive = Boolean(v);
-        return (
-          <Box
-            sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              px: 1,
-              py: 0.25,
-              borderRadius: 1,
-              bgcolor: isActive ? alpha('#22c55e', 0.15) : alpha('#64748b', 0.1),
-              border: '1px solid',
-              borderColor: isActive ? alpha('#22c55e', 0.4) : alpha('#64748b', 0.3),
-            }}
-          >
-            <Typography
-              variant='body2'
-              fontSize='0.7rem'
-              fontWeight={700}
-              sx={{
-                color: isActive ? '#16a34a' : '#64748b',
-                textTransform: 'uppercase',
-                letterSpacing: '0.02em',
-              }}
-            >
-              {isActive ? 'Simple' : 'Matrix'}
-            </Typography>
-          </Box>
-        );
-      },
     },
     {
       id: 'internalNote',
@@ -475,20 +508,70 @@ const TicketMatrixSection = ({
                   }}
                 >
                   <Box className={classes.newButtonContainer}>
-                    <Tooltip title='Add a new Combination'>
+                    <Tooltip
+                      title={
+                        isSimpleActive
+                          ? 'Simple priorities are active. The matrix is read-only.'
+                          : 'Add a new Combination'
+                      }
+                    >
+                      <span>
+                        <Button
+                          size='small'
+                          variant='contained'
+                          startIcon={<AddIcon />}
+                          onClick={openAddDialog}
+                          disabled={isSimpleActive}
+                          sx={{
+                            textTransform: 'none',
+                            bgcolor: isSimpleActive ? alpha('#2d5ebb', 0.4) : '#2d5ebb',
+                            width: '100%',
+                            '&:hover': {
+                              bgcolor: isSimpleActive ? alpha('#2d5ebb', 0.4) : '#2d5ebb',
+                            },
+                          }}
+                        >
+                          New
+                        </Button>
+                      </span>
+                    </Tooltip>
+                    <Tooltip
+                      title={
+                        isSimpleActive
+                          ? 'Simple priorities are active for this ticket type — click to manage'
+                          : 'Activate simple priorities for this ticket type'
+                      }
+                    >
                       <Button
                         size='small'
-                        variant='contained'
-                        startIcon={<AddIcon />}
-                        onClick={openAddDialog}
+                        variant={isSimpleActive ? 'contained' : 'outlined'}
+                        startIcon={
+                          isSimpleActive ? (
+                            <LockOutlinedIcon sx={{ fontSize: '1rem' }} />
+                          ) : (
+                            <TuneIcon />
+                          )
+                        }
+                        onClick={openSimplePropsDialog}
                         sx={{
                           textTransform: 'none',
-                          bgcolor: '#2d5ebb',
                           width: '100%',
-                          '&:hover': { bgcolor: '#2d5ebb' },
+                          ...(isSimpleActive
+                            ? {
+                                bgcolor: '#16a34a',
+                                '&:hover': { bgcolor: '#15803d' },
+                              }
+                            : {
+                                borderColor: '#2d5ebb',
+                                color: '#2d5ebb',
+                                '&:hover': {
+                                  borderColor: '#2d5ebb',
+                                  bgcolor: alpha('#2d5ebb', 0.08),
+                                },
+                              }),
                         }}
                       >
-                        New
+                        Simple Properties
                       </Button>
                     </Tooltip>
                   </Box>
@@ -522,7 +605,7 @@ const TicketMatrixSection = ({
                     variant='outlined'
                     color='error'
                     startIcon={<DeleteIcon />}
-                    onClick={handleDeleteRow}
+                    onClick={openDeleteDialog}
                     sx={{ textTransform: 'none' }}
                   >
                     Delete
@@ -547,17 +630,60 @@ const TicketMatrixSection = ({
           </Box>
 
           {/* Data Table */}
-          <Paper elevation={0} sx={{ borderRadius: 0 }}>
-            <DataTable
-              columns={columns}
-              data={filteredRows}
-              rowKey='id'
-              searchable={false}
-              initialRowsPerPage={10}
-              onRowClick={(row) => setSelectedRowId((prev) => (prev === row.id ? null : row.id))}
-              activeRowKey={selectedRowId ?? undefined}
-            />
-          </Paper>
+          <Box sx={{ position: 'relative' }}>
+            {isSimpleActive && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: 5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  px: 1.75,
+                  py: 0.6,
+                  borderRadius: 999,
+                  bgcolor: 'rgba(148, 163, 184, 0.18)',
+                  border: '1px solid',
+                  borderColor: 'rgba(100, 116, 139, 0.4)',
+                  color: '#475569',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  letterSpacing: 0.3,
+                  pointerEvents: 'none',
+                  boxShadow: '0 1px 2px rgba(15, 23, 42, 0.08)',
+                }}
+              >
+                <LockOutlinedIcon sx={{ fontSize: '0.85rem' }} />
+                Read-only — Simple Priorities Activated
+              </Box>
+            )}
+            <Paper
+              elevation={0}
+              sx={{
+                borderRadius: 0,
+                opacity: isSimpleActive ? 0.55 : 1,
+                pointerEvents: isSimpleActive ? 'none' : 'auto',
+                transition: 'opacity 0.2s ease',
+                filter: isSimpleActive ? 'grayscale(0.55)' : 'none',
+              }}
+            >
+              <DataTable
+                columns={columns}
+                data={filteredRows}
+                rowKey='id'
+                searchable={false}
+                initialRowsPerPage={10}
+                onRowClick={(row) => {
+                  if (isSimpleActive) return;
+                  setSelectedRowId((prev) => (prev === row.id ? null : row.id));
+                }}
+                activeRowKey={isSimpleActive ? undefined : (selectedRowId ?? undefined)}
+              />
+            </Paper>
+          </Box>
         </Box>
 
         {/* Add Dialog */}
@@ -586,38 +712,36 @@ const TicketMatrixSection = ({
                 label='Impact'
                 value={addForm.impactId}
                 onChange={(value) => setAddForm((f) => ({ ...f, impactId: value }))}
-                options={activeImpacts.map((i) => ({
-                  value: i.id,
-                  label: i.displayName,
-                  color: i.bgColor,
-                }))}
-                selectedColor={activeImpacts.find((i) => i.id === addForm.impactId)?.bgColor}
+                options={activeImpacts
+                  .filter((i) => i.enabledFor?.[activeTicketType] === true)
+                  .map((i) => ({
+                    value: i.id,
+                    label: i.displayName,
+                  }))}
                 required
-                disabled={addForm.activateSimplePriorities}
               />
               <CustomDropdown
                 label='Urgency'
                 value={addForm.urgencyId}
                 onChange={(value) => setAddForm((f) => ({ ...f, urgencyId: value }))}
-                options={activeUrgencies.map((u) => ({
-                  value: u.id,
-                  label: u.displayName,
-                  color: u.bgColor,
-                }))}
-                selectedColor={activeUrgencies.find((u) => u.id === addForm.urgencyId)?.bgColor}
+                options={activeUrgencies
+                  .filter((u) => u.enabledFor?.[activeTicketType] === true)
+                  .map((u) => ({
+                    value: u.id,
+                    label: u.displayName,
+                  }))}
                 required
-                disabled={addForm.activateSimplePriorities}
               />
               <CustomDropdown
                 label='Priority'
                 value={addForm.priorityId}
                 onChange={(value) => setAddForm((f) => ({ ...f, priorityId: value }))}
-                options={priorities.map((p) => ({
-                  value: p.id,
-                  label: p.name,
-                  color: p.bgColor,
-                }))}
-                selectedColor={priorities.find((p) => p.id === addForm.priorityId)?.bgColor}
+                options={priorities
+                  .filter((p) => p.enabledFor?.[activeTicketType] === true)
+                  .map((p) => ({
+                    value: p.id,
+                    label: p.name,
+                  }))}
                 required
               />
             </Box>
@@ -656,55 +780,6 @@ const TicketMatrixSection = ({
               >
                 Describe when this combination should be used
               </Typography>
-            </Box>
-
-            <Box
-              className={classes.dialogActivationRow}
-              sx={{
-                borderColor: addForm.activateSimplePriorities ? alpha(accentColor, 0.3) : 'divider',
-                bgcolor: addForm.activateSimplePriorities
-                  ? alpha(accentColor, 0.04)
-                  : 'transparent',
-              }}
-            >
-              <Box>
-                <Typography variant='body2' fontWeight={600}>
-                  Activate simple priorities
-                </Typography>
-                <Typography
-                  variant='caption'
-                  color='text.secondary'
-                  className={classes.dialogActivationDescription}
-                >
-                  {addForm.activateSimplePriorities
-                    ? 'Impact and Urgency are locked. Only the Priority field can be changed.'
-                    : 'When enabled, Impact and Urgency are disabled and only Priority can be set.'}
-                </Typography>
-              </Box>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={addForm.activateSimplePriorities}
-                    onChange={(e) =>
-                      setAddForm((f) => ({ ...f, activateSimplePriorities: e.target.checked }))
-                    }
-                    color='success'
-                  />
-                }
-                label={
-                  <Typography
-                    variant='body2'
-                    fontWeight={700}
-                    className={classes.dialogActivationLabel}
-                    sx={{
-                      color: addForm.activateSimplePriorities ? 'success.main' : 'text.secondary',
-                    }}
-                  >
-                    {addForm.activateSimplePriorities ? 'Active' : 'Inactive'}
-                  </Typography>
-                }
-                className={classes.dialogActivationFormControl}
-              />
             </Box>
 
             <Box>
@@ -753,38 +828,36 @@ const TicketMatrixSection = ({
                 label='Impact'
                 value={editForm.impactId}
                 onChange={(value) => setEditForm((f) => ({ ...f, impactId: value }))}
-                options={activeImpacts.map((i) => ({
-                  value: i.id,
-                  label: i.displayName,
-                  color: i.bgColor,
-                }))}
-                selectedColor={activeImpacts.find((i) => i.id === editForm.impactId)?.bgColor}
+                options={activeImpacts
+                  .filter((i) => i.enabledFor?.[activeTicketType] === true)
+                  .map((i) => ({
+                    value: i.id,
+                    label: i.displayName,
+                  }))}
                 required
-                disabled={editForm.activateSimplePriorities}
               />
               <CustomDropdown
                 label='Urgency'
                 value={editForm.urgencyId}
                 onChange={(value) => setEditForm((f) => ({ ...f, urgencyId: value }))}
-                options={activeUrgencies.map((u) => ({
-                  value: u.id,
-                  label: u.displayName,
-                  color: u.bgColor,
-                }))}
-                selectedColor={activeUrgencies.find((u) => u.id === editForm.urgencyId)?.bgColor}
+                options={activeUrgencies
+                  .filter((u) => u.enabledFor?.[activeTicketType] === true)
+                  .map((u) => ({
+                    value: u.id,
+                    label: u.displayName,
+                  }))}
                 required
-                disabled={editForm.activateSimplePriorities}
               />
               <CustomDropdown
                 label='Priority'
                 value={editForm.priorityId}
                 onChange={(value) => setEditForm((f) => ({ ...f, priorityId: value }))}
-                options={priorities.map((p) => ({
-                  value: p.id,
-                  label: p.name,
-                  color: p.bgColor,
-                }))}
-                selectedColor={priorities.find((p) => p.id === editForm.priorityId)?.bgColor}
+                options={priorities
+                  .filter((p) => p.enabledFor?.[activeTicketType] === true)
+                  .map((p) => ({
+                    value: p.id,
+                    label: p.name,
+                  }))}
                 required
               />
             </Box>
@@ -828,57 +901,6 @@ const TicketMatrixSection = ({
               </Typography>
             </Box>
 
-            <Box
-              className={classes.dialogActivationRow}
-              sx={{
-                borderColor: editForm.activateSimplePriorities
-                  ? alpha(accentColor, 0.3)
-                  : 'divider',
-                bgcolor: editForm.activateSimplePriorities
-                  ? alpha(accentColor, 0.04)
-                  : 'transparent',
-              }}
-            >
-              <Box>
-                <Typography variant='body2' fontWeight={600}>
-                  Activate simple priorities
-                </Typography>
-                <Typography
-                  variant='caption'
-                  color='text.secondary'
-                  className={classes.dialogActivationDescription}
-                >
-                  {editForm.activateSimplePriorities
-                    ? 'Impact and Urgency are locked. Only the Priority field can be changed.'
-                    : 'When enabled, Impact and Urgency are disabled and only Priority can be set.'}
-                </Typography>
-              </Box>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={editForm.activateSimplePriorities}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, activateSimplePriorities: e.target.checked }))
-                    }
-                    color='success'
-                  />
-                }
-                label={
-                  <Typography
-                    variant='body2'
-                    fontWeight={700}
-                    className={classes.dialogActivationLabel}
-                    sx={{
-                      color: editForm.activateSimplePriorities ? 'success.main' : 'text.secondary',
-                    }}
-                  >
-                    {editForm.activateSimplePriorities ? 'Active' : 'Inactive'}
-                  </Typography>
-                }
-                className={classes.dialogActivationFormControl}
-              />
-            </Box>
-
             <Box>
               <RichTextEditor
                 value={parseRichText(editForm.internalNote)}
@@ -898,6 +920,120 @@ const TicketMatrixSection = ({
             </Box>
           </Box>
         </ConfigFormDialog>
+
+        {/* Simple Properties Dialog */}
+        <ConfigFormDialog
+          open={simplePropsOpen}
+          onClose={() => setSimplePropsOpen(false)}
+          onSubmit={handleSaveSimpleProps}
+          isEdit={isSimpleActive}
+          icon={<TuneIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+          accent={accentColor}
+          title='Simple Properties'
+          subtitle={`Configure simple priorities for ${activeTicket?.label ?? 'this ticket type'}. When active, the matrix below becomes read-only.`}
+          submitDisabled={false}
+          submitLabel={isSimpleActive ? 'Save' : 'Activate'}
+          maxWidth='sm'
+        >
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: alpha(accentColor, 0.3),
+                bgcolor: alpha(accentColor, 0.04),
+              }}
+            >
+              <Typography variant='body2' fontWeight={600} sx={{ mb: 0.5 }}>
+                How this works
+              </Typography>
+              <Typography variant='caption' color='text.secondary'>
+                When the activation switch is on, the system uses a single fixed priority for this
+                ticket type and ignores Impact and Urgency combinations. The matrix below becomes
+                read-only — you cannot add, edit, or delete combinations. Turn the switch off to
+                restore normal editing.
+              </Typography>
+            </Box>
+
+            <Box>
+              <RichTextEditor
+                value={parseRichText(simpleForm.description)}
+                onChange={(value) =>
+                  setSimpleForm((f) => ({
+                    ...f,
+                    description: serializeRichText(value.segments),
+                  }))
+                }
+                showFooterActions={false}
+                title='Description'
+              />
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
+              >
+                Optional notes describing why simple priorities are used for this ticket type
+              </Typography>
+            </Box>
+
+            <Box
+              className={classes.dialogActivationRow}
+              sx={{
+                borderColor: simpleForm.active ? alpha(accentColor, 0.4) : 'divider',
+                bgcolor: simpleForm.active ? alpha(accentColor, 0.06) : 'transparent',
+              }}
+            >
+              <Box>
+                <Typography variant='body2' fontWeight={600}>
+                  Activate simple priorities
+                </Typography>
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  className={classes.dialogActivationDescription}
+                >
+                  {simpleForm.active
+                    ? 'The matrix is read-only. The + New button and table rows are disabled.'
+                    : 'When enabled, the + New button and the matrix table become read-only.'}
+                </Typography>
+              </Box>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={simpleForm.active}
+                    onChange={(e) => setSimpleForm((f) => ({ ...f, active: e.target.checked }))}
+                    color='success'
+                  />
+                }
+                label={
+                  <Typography
+                    variant='body2'
+                    fontWeight={700}
+                    className={classes.dialogActivationLabel}
+                    sx={{
+                      color: simpleForm.active ? 'success.main' : 'text.secondary',
+                    }}
+                  >
+                    {simpleForm.active ? 'Active' : 'Inactive'}
+                  </Typography>
+                }
+                className={classes.dialogActivationFormControl}
+              />
+            </Box>
+          </Box>
+        </ConfigFormDialog>
+
+        {/* Delete Confirmation Dialog */}
+        <ConfigDeleteDialog
+          open={deleteOpen}
+          onClose={() => {
+            setDeleteOpen(false);
+          }}
+          onConfirm={handleConfirmDeleteRow}
+          entityName='Combination'
+          itemName={selectedCombinationName}
+        />
       </Box>
     </GenericAccordion>
   );

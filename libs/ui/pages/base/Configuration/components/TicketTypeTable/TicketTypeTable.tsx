@@ -103,20 +103,45 @@ const TicketTypeTable = ({
     {
       id: 'isActive',
       label: 'Activation',
-      minWidth: 100,
-      align: 'left',
-      format: (_v, row): React.ReactNode => (
-        <Switch
-          checked={row.isActive}
-          onChange={(e) => {
-            e.stopPropagation();
-            onToggleActive?.(row);
-          }}
-          onClick={(e) => e.stopPropagation()}
-          size='small'
-          color='success'
-        />
-      ),
+      minWidth: 130,
+      align: 'center',
+      format: (_v, row): React.ReactNode => {
+        const on = row.isActive;
+        return (
+          <Box
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 0.75,
+              px: 1.25,
+              py: 0.4,
+              borderRadius: 999,
+              fontSize: '0.65rem',
+              fontWeight: 700,
+              letterSpacing: 0.3,
+              textTransform: 'uppercase',
+              minWidth: 96,
+              border: '1px solid',
+              borderColor: on ? '#16a34a' : '#cbd5e1',
+              bgcolor: on ? '#dcfce7' : '#f1f5f9',
+              color: on ? '#15803d' : '#64748b',
+            }}
+          >
+            <Box
+              component='span'
+              sx={{
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                bgcolor: on ? '#16a34a' : '#94a3b8',
+                boxShadow: on ? '0 0 0 3px rgba(22, 163, 74, 0.18)' : 'none',
+              }}
+            />
+            {on ? 'Active' : 'Inactive'}
+          </Box>
+        );
+      },
     },
     {
       id: 'formatPreview',

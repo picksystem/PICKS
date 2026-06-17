@@ -61,6 +61,7 @@
       "@serviceops/configsequencedialog": ["./libs/ui/pages/base/Configuration/dialogs/SequenceDialog/SequenceDialog"],
       "@serviceops/configtickettypeicons": ["./libs/ui/pages/base/Configuration/utils/ticketTypeIcons"],
       "@serviceops/configprioritformdialog": ["./libs/ui/pages/base/Configuration/dialogs/PriorityFormDialog/PriorityFormDialog"],
+      "@serviceops/configstatusformdialog": ["./libs/ui/pages/base/Configuration/dialogs/StatusFormDialog/StatusFormDialog"],
       "@serviceops/configcatorshared": ["./libs/ui/pages/base/Configuration/sections/Categorization/components/shared"],
       "@serviceops/configtimesheetshared": ["./libs/ui/pages/base/Configuration/components/shared/TimesheetsPanelConfig"]
     }

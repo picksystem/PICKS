@@ -9,15 +9,22 @@ const PRIORITY_ACCENT = '#0369a1';
 // Priority Table Config
 export const PRIORITY_TABLE_CONFIG = {
   title: 'Priorities',
-  subtitle: 'Define priority levels and control which ticket types each priority applies to',
+  subtitle:
+    'Define priority levels, control which ticket types each priority applies to, and manage role-based access',
   accent: PRIORITY_ACCENT,
   icon: <PriorityHighIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Priority',
   fields: [
     { name: 'name', label: 'Priority', required: true, bold: true },
-    { name: 'shortDescription', label: 'Short Description' },
-    { name: 'description', label: 'Description' },
-    { name: 'internalNote', label: 'Internal note' },
+    {
+      name: 'shortDescription',
+      label: 'Short Description',
+      required: true,
+      type: 'richText' as const,
+    },
+    { name: 'description', label: 'Description', required: true, type: 'richText' as const },
+    { name: 'bgColor', label: 'Colour', required: true, type: 'color' as const },
+    { name: 'internalNote', label: 'Internal note', type: 'richText' as const },
   ],
 };
 

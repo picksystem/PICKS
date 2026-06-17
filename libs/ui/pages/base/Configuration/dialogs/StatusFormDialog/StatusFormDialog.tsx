@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Box, Typography, TextField, IconButton } from '@serviceops/component';
+import { Box, Typography, TextField, IconButton, Switch } from '@serviceops/component';
 import {
   Dialog,
   DialogContent,
@@ -7,24 +7,86 @@ import {
   alpha,
   Radio,
   FormControl,
+  FormControlLabel,
   FormGroup,
   Checkbox,
   Collapse,
 } from '@mui/material';
-import { PriorityHigh, ColorLens, Close, Check, ExpandMore } from '@mui/icons-material';
+import { RadioButtonChecked, ColorLens, Close, Check, ExpandMore } from '@mui/icons-material';
 import { useNotification } from '@serviceops/hooks';
-import { PriorityLevel } from '@serviceops/configpriorityutil';
+import { IConfigStatusLevel } from '@serviceops/interfaces';
 import { ConfigFormDialog } from '@serviceops/configdialogs';
 import { parseRichText, serializeRichText, RichTextEditor } from '../../shared/RichTextEditor';
 
-interface PriorityFormDialogProps {
+interface StatusFormDialogProps {
   open: boolean;
-  editing: PriorityLevel | null;
+  editing: IConfigStatusLevel | null;
   onClose: () => void;
-  onSave: (data: Partial<PriorityLevel>) => void;
+  onSave: (data: Partial<IConfigStatusLevel>) => void;
   ticketTypeColumns: { key: string; label: string }[];
   subtitle?: string;
+  title?: string;
+  hideFinalStatus?: boolean;
+  successMessage?: { add: string; edit: string };
 }
+
+const STATUS_ACCENT = '#0369a1';
+
+interface ActivationRowProps {
+  label: string;
+  description: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}
+
+const ActivationRow = ({ label, description, checked, onChange }: ActivationRowProps) => (
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      px: 2,
+      py: 1.25,
+      borderRadius: 1,
+      border: '1px solid #2d5ebb',
+      bgcolor: alpha(STATUS_ACCENT, 0.04),
+      borderColor: '#2d5ebb',
+      transition: 'all 0.2s ease',
+    }}
+  >
+    <Box>
+      <Typography variant='body2' color='#0369a1' fontWeight={600}>
+        {label}
+      </Typography>
+      <Typography variant='caption' color='#2687bb' sx={{ display: { xs: 'none', sm: 'block' } }}>
+        {description}
+      </Typography>
+    </Box>
+    <FormControlLabel
+      sx={{ ml: 0 }}
+      control={
+        <Switch
+          size='small'
+          color='success'
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+        />
+      }
+      label={
+        <Typography
+          variant='body2'
+          fontWeight={700}
+          sx={{
+            color: checked ? 'success.main' : 'text.secondary',
+            display: { xs: 'none', sm: 'block' },
+          }}
+        >
+          {checked ? 'Active' : 'Inactive'}
+        </Typography>
+      }
+    />
+  </Box>
+);
 
 const PRESET_COLORS = [
   '#2563eb',
@@ -37,16 +99,19 @@ const PRESET_COLORS = [
   '#475569',
 ];
 
-const PriorityFormDialog = ({
+const StatusFormDialog = ({
   open,
   editing,
   onClose,
   onSave,
   ticketTypeColumns,
   subtitle,
-}: PriorityFormDialogProps) => {
+  title = 'Ticket Status',
+  hideFinalStatus = false,
+  successMessage,
+}: StatusFormDialogProps) => {
   const { success } = useNotification();
-  const [form, setForm] = useState<Partial<PriorityLevel>>({});
+  const [form, setForm] = useState<Partial<IConfigStatusLevel>>({});
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [ticketTypesExpanded, setTicketTypesExpanded] = useState(false);
 
@@ -65,30 +130,35 @@ const PriorityFormDialog = ({
       editing
         ? {
             name: editing.name,
+            displayName: editing.displayName,
             shortDescription: editing.shortDescription ?? '',
             description: editing.description,
             bgColor: editing.bgColor,
+            color: editing.color,
+            isActive: editing.isActive,
+            slaActive: editing.slaActive,
+            isFinal: editing.isFinal,
+            sortOrder: editing.sortOrder,
             internalNote: editing.internalNote ?? '',
             enabledFor: { ...editing.enabledFor },
-            accessControl: (editing as { accessControl?: string[] }).accessControl ?? [
-              'admin',
-              'consultant',
-              'endUser',
-            ],
           }
         : {
             name: '',
+            displayName: '',
             shortDescription: '',
             description: '',
             bgColor: '#2563eb',
+            color: '#fff',
+            isActive: true,
+            slaActive: true,
+            isFinal: false,
+            sortOrder: 1,
             internalNote: '',
             enabledFor: Object.fromEntries(ticketTypeColumns.map((t) => [t.key, true])),
-            accessControl: ['admin', 'consultant', 'endUser'],
           },
     );
   }, [open, editing, ticketTypeColumns]);
 
-  // Handle "Select All" toggle for ticket types
   const handleSelectAllTicketTypes = useCallback(
     (checked: boolean) => {
       setForm((f) => ({
@@ -101,11 +171,11 @@ const PriorityFormDialog = ({
 
   const handleSubmit = () => {
     onSave(form);
-    success(editing ? 'Priority updated successfully' : 'Priority added successfully');
-  };
-
-  const handleColorIconClick = () => {
-    setColorPickerOpen(true);
+    success(
+      editing
+        ? (successMessage?.edit ?? 'Status updated successfully')
+        : (successMessage?.add ?? 'Status added successfully'),
+    );
   };
 
   const handleColorPickerClose = () => {
@@ -124,7 +194,7 @@ const PriorityFormDialog = ({
     }
   };
 
-  const currentColor = form.bgColor ?? '#2563eb';
+  const currentColor = form.bgColor || '#2563eb';
 
   return (
     <>
@@ -133,20 +203,22 @@ const PriorityFormDialog = ({
         onClose={onClose}
         onSubmit={handleSubmit}
         isEdit={!!editing}
-        icon={<PriorityHigh sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent='#b91c1c'
-        title='Priority'
+        icon={<RadioButtonChecked sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent='#0369a1'
+        title={title}
         subtitle={subtitle}
-        submitDisabled={!form.name}
+        submitDisabled={!form.displayName}
         submitLabel={editing ? 'Save' : 'Submit'}
         maxWidth='md'
       >
         <TextField
-          label='Priority'
+          label='Ticket Status'
           size='small'
-          value={form.name ?? ''}
-          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-          placeholder='e.g. 1-Critical, 2-High, 3-Medium'
+          value={form.displayName ?? ''}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, displayName: e.target.value, name: e.target.value }))
+          }
+          placeholder='e.g. New, In Progress, On Hold'
           inputProps={{ style: { fontFamily: 'monospace', fontWeight: 700 } }}
           required
         />
@@ -183,55 +255,68 @@ const PriorityFormDialog = ({
             color='text.secondary'
             sx={{ fontSize: '0.7rem', mt: 0.5, display: 'none' }}
           >
-            Describe when this priority should be used
+            Describe when this status should be used
           </Typography>
         </Box>
 
-        <Box>
-          <Typography
-            variant='caption'
-            fontWeight={700}
-            color='text.secondary'
-            sx={{ mb: 1, display: 'block' }}
-          >
-            Colour
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Box
-              onClick={handleColorIconClick}
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 1.5,
-                bgcolor: currentColor,
-                border: '2px solid',
-                borderColor: 'divider',
-                boxShadow: 1,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  opacity: 0.9,
-                  boxShadow: 2,
-                  transform: 'scale(1.02)',
-                },
-              }}
-              role='button'
-              aria-label='Pick a colour'
-            >
-              <ColorLens sx={{ color: '#fff', fontSize: '1.1rem' }} />
-            </Box>
-            <TextField
-              size='small'
-              value={currentColor}
-              onChange={handleColorInputChange}
-              placeholder='#2563eb'
-              inputProps={{ style: { fontFamily: 'monospace', textTransform: 'lowercase' } }}
-              sx={{ flex: 1 }}
+        <TextField
+          label='Colour'
+          size='small'
+          fullWidth
+          required
+          value={currentColor}
+          onChange={handleColorInputChange}
+          placeholder='#2563eb'
+          inputProps={{
+            style: { fontFamily: 'monospace', textTransform: 'lowercase' },
+            maxLength: 7,
+          }}
+          InputProps={{
+            endAdornment: (
+              <Box
+                component='input'
+                type='color'
+                value={currentColor || '#000000'}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  handleColorChange(e.target.value)
+                }
+                aria-label='Pick a colour'
+                sx={{
+                  width: 32,
+                  height: 32,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: '50%',
+                  cursor: 'pointer',
+                  padding: 0,
+                  bgcolor: currentColor || 'transparent',
+                }}
+              />
+            ),
+          }}
+        />
+
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+          <ActivationRow
+            label='Status Activation'
+            description='Enable this status for use on tickets'
+            checked={form.isActive ?? true}
+            onChange={(checked) => setForm((f) => ({ ...f, isActive: checked }))}
+          />
+          <ActivationRow
+            label='SLA Activation'
+            description='Track SLA timers for tickets in this status'
+            checked={form.slaActive ?? true}
+            onChange={(checked) => setForm((f) => ({ ...f, slaActive: checked }))}
+          />
+          {!hideFinalStatus && (
+            <ActivationRow
+              label='Final Status'
+              description='Mark this status as a closed/final state'
+              checked={form.isFinal ?? false}
+              onChange={(checked) => setForm((f) => ({ ...f, isFinal: checked }))}
             />
-          </Box>
+          )}
         </Box>
 
         <Box>
@@ -248,11 +333,11 @@ const PriorityFormDialog = ({
             color='text.secondary'
             sx={{ fontSize: '0.7rem', mt: 0.5, display: 'none' }}
           >
-            Internal note for this priority (not visible to end users)
+            Internal note for this status (not visible to end users)
           </Typography>
         </Box>
 
-        {/* ── Ticket Types Activation ── */}
+        {/* Ticket Types Activation */}
         <Box>
           <Box
             sx={{
@@ -360,8 +445,6 @@ const PriorityFormDialog = ({
             </Collapse>
           </Box>
         </Box>
-
-        {/* ── Access Control ── */}
       </ConfigFormDialog>
 
       <Dialog
@@ -528,4 +611,4 @@ const PriorityFormDialog = ({
   );
 };
 
-export default PriorityFormDialog;
+export default StatusFormDialog;

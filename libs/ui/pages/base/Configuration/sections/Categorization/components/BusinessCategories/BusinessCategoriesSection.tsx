@@ -4,7 +4,6 @@ import { useStyles } from '../../styles';
 import { useConfiguration } from '@serviceops/confighooks';
 import { useNotification } from '@serviceops/hooks';
 import { GenericPanel } from '@serviceops/genericpanel';
-import { ConfigDeleteDialog } from '@serviceops/configdialogs';
 import { CATEG_TABLE_CONFIG, businessCategoryColumns } from '../shared/CategorizationPanelConfig';
 
 interface BusinessCategoriesSectionProps {
@@ -96,7 +95,6 @@ const BusinessCategoriesSection = ({ data, onDataChange }: BusinessCategoriesSec
         onSave={handleSave}
         customColumns={businessCategoryColumns as any}
         variant='plain'
-        enableNewButton={false}
         enableEditButton={false}
         enableDeleteButton={false}
         selectedRowId={selectedRowId}

@@ -8,6 +8,7 @@ export interface PriorityLevel {
   sortOrder: number;
   internalNote?: string;
   enabledFor: Record<string, boolean>; // ticketType -> enabled
+  accessControl?: string[];
 }
 
 export interface ImpactLevel {
@@ -39,7 +40,6 @@ export interface UrgencyLevel {
 export interface MatrixCellData {
   shortDescription?: string;
   description?: string;
-  activateSimplePriorities?: boolean;
   internalNote?: string;
 }
 
@@ -54,7 +54,6 @@ export type ExtendedMatrixMap = Record<
       priorityId: string;
       shortDescription?: string;
       description?: string;
-      activateSimplePriorities?: boolean;
       internalNote?: string;
     }
   >
@@ -87,6 +86,7 @@ export interface SimpleLevel {
   isActive: boolean;
   internalNote?: string;
   enabledFor: Record<string, boolean>;
+  accessControl?: string[];
 }
 
 export interface SimpleLevelFormDialogProps {
@@ -123,8 +123,12 @@ export interface MatrixRow {
   priorityId: string;
   shortDescription?: string;
   description?: string;
-  activateSimplePriorities?: boolean;
   internalNote?: string;
+}
+
+export interface SimplePrioritiesBucket {
+  active: boolean;
+  description?: string;
 }
 
 export interface TicketMatrixSectionProps {
@@ -134,9 +138,10 @@ export interface TicketMatrixSectionProps {
   priorities: PriorityLevel[];
   impacts: ImpactLevel[];
   urgencies: UrgencyLevel[];
-  matrix: MatrixMap;
+  matrices: Record<string, ExtendedMatrixMap | SimplePrioritiesBucket>;
   onMatrixChange: (impact: string, urgency: string, priorityId: string) => void;
-  onMatrixReset: (newMatrix: MatrixMap) => void;
+  onMatrixReset: (ticketType: string, newMatrix: ExtendedMatrixMap) => void;
+  onMatricesChange?: (next: Record<string, ExtendedMatrixMap | SimplePrioritiesBucket>) => void;
 }
 
 export interface PriorityFormDialogProps {

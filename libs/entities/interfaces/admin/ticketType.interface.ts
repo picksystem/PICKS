@@ -56,6 +56,8 @@ export interface ICreateTicketTypeInput {
   numberLength?: number;
   displayOrder?: number;
   accessControl?: string[];
+  iconKey?: string;
+  tag?: string;
 }
 
 export interface IUpdateTicketTypeInput {
@@ -70,6 +72,8 @@ export interface IUpdateTicketTypeInput {
   numberLength?: number;
   displayOrder?: number;
   accessControl?: string[];
+  iconKey?: string;
+  tag?: string;
 }
 
 // ============================================

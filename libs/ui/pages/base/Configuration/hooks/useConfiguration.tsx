@@ -25,6 +25,7 @@ import {
   IConfigExpenses,
   IConfigCalendars,
   DEFAULT_CONFIGURATION_DATA,
+  SIMPLE_PRIORITIES_MATRIX_KEY,
 } from '@serviceops/interfaces';
 
 /**
@@ -49,9 +50,16 @@ export const useConfiguration = () => {
 
   const data: IConfigurationData = config?.data ?? DEFAULT_CONFIGURATION_DATA;
 
-  // Derive the active ticket type keys from the matrices object (enriched by backend)
+  // Derive the active ticket type keys from the matrices object (enriched by backend).
+  // Exclude the reserved `__simple__` meta bucket — it's not a real ticket type.
   // Memoize to prevent recalculation on every render
-  const ticketTypeKeys = useMemo(() => Object.keys(data.priorities.matrices), [data.priorities.matrices]);
+  const ticketTypeKeys = useMemo(
+    () =>
+      Object.keys(data.priorities.matrices).filter(
+        (k) => k !== SIMPLE_PRIORITIES_MATRIX_KEY,
+      ),
+    [data.priorities.matrices],
+  );
 
   const saveSection = useCallback(
     async <K extends keyof IConfigurationData>(section: K, value: IConfigurationData[K]) => {

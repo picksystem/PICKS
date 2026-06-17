@@ -11,30 +11,38 @@ export interface IConfigPriorityLevel {
   internalNote?: string;
   /** ticketType key → enabled flag; keys are synced from AdminTicketType */
   enabledFor: Record<string, boolean>;
+  /** Role-based access control — which roles can see/use this priority */
+  accessControl?: string[];
 }
 
 export interface IConfigImpactLevel {
   id: string;
   name: string;
   displayName: string;
+  shortDescription?: string;
   description: string;
   bgColor: string;
   sortOrder: number;
   isActive: boolean;
   /** ticketType key → enabled flag */
   enabledFor: Record<string, boolean>;
+  /** Role-based access control — which roles can see/use this impact level */
+  accessControl?: string[];
 }
 
 export interface IConfigUrgencyLevel {
   id: string;
   name: string;
   displayName: string;
+  shortDescription?: string;
   description: string;
   bgColor: string;
   sortOrder: number;
   isActive: boolean;
   /** ticketType key → enabled flag */
   enabledFor: Record<string, boolean>;
+  /** Role-based access control — which roles can see/use this urgency level */
+  accessControl?: string[];
 }
 
 /** impactId → urgencyId → priorityId (plus optional cell-level fields) */
@@ -46,16 +54,34 @@ export type IConfigMatrixMap = Record<
       priorityId: string;
       shortDescription?: string;
       description?: string;
-      activateSimplePriorities?: boolean;
       internalNote?: string;
     }
   >
 >;
 
+/**
+ * Per-ticket-type "Simple Priorities" activation metadata. Lives in
+ * `priorities.simplePriorities` and is consumed by the Ticket Matrix UI to
+ * lock a ticket type to a single fixed priority. The matrix for that
+ * ticket type becomes read-only while `active` is true.
+ */
+export interface IConfigSimplePrioritiesBucket {
+  active: boolean;
+  description?: string;
+}
+
+/**
+ * Convenience constant for the legacy on-disk key. Kept for backward
+ * compatibility with documents written before Simple Properties was moved
+ * to its own top-level field.
+ */
+export const SIMPLE_PRIORITIES_MATRIX_KEY = '__simple__';
+
 export interface IConfigStatusLevel {
   id: string;
   name: string;
   displayName: string;
+  shortDescription?: string;
   description: string;
   color: string;
   bgColor: string;
@@ -65,6 +91,7 @@ export interface IConfigStatusLevel {
   isFinal: boolean; // resolved/closed/cancelled
   /** ticketType key → enabled flag */
   enabledFor: Record<string, boolean>;
+  internalNote?: string;
 }
 
 export interface IConfigSLA {
@@ -162,6 +189,12 @@ export interface IConfigPriorities {
   urgencyLevels: IConfigUrgencyLevel[];
   /** ticketType key → IConfigMatrixMap; auto-populated for every active ticket type */
   matrices: Record<string, IConfigMatrixMap>;
+  /**
+   * Per-ticket-type "Simple Priorities" activation state. While `active` is
+   * true for a given ticket type, the matrix for that ticket type is
+   * rendered read-only in the UI.
+   */
+  simplePriorities?: Record<string, IConfigSimplePrioritiesBucket>;
 }
 
 export interface IConfigStatuses {

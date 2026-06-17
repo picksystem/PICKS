@@ -1,6 +1,6 @@
 import React from 'react';
 import { alpha } from '@mui/material';
-import { Typography, Chip } from '@serviceops/component';
+import { Box, Typography, Chip } from '@serviceops/component';
 
 export const mkCell =
   (bold = false) =>
@@ -38,20 +38,41 @@ export const mkChip =
     />
   );
 
-// Format function for active/inactive chip - treats v as the value directly
+// Pill-style active/inactive status badge with status dot
 export const mkActiveChip = (v: unknown): React.ReactNode => {
   const on = Boolean(v);
   return (
-    <Chip
-      label={on ? 'Active' : 'Inactive'}
-      size='small'
+    <Box
       sx={{
-        height: 20,
-        fontSize: '0.68rem',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 0.75,
+        px: 1.25,
+        py: 0.4,
+        borderRadius: 999,
+        fontSize: '0.65rem',
         fontWeight: 700,
-        bgcolor: on ? alpha('#059669', 0.12) : alpha('#9ca3af', 0.12),
-        color: on ? '#059669' : '#6b7280',
+        letterSpacing: 0.3,
+        textTransform: 'uppercase',
+        minWidth: 96,
+        border: '1px solid',
+        borderColor: on ? '#16a34a' : '#cbd5e1',
+        bgcolor: on ? '#dcfce7' : '#f1f5f9',
+        color: on ? '#15803d' : '#64748b',
       }}
-    />
+    >
+      <Box
+        component='span'
+        sx={{
+          width: 7,
+          height: 7,
+          borderRadius: '50%',
+          bgcolor: on ? '#16a34a' : '#94a3b8',
+          boxShadow: on ? '0 0 0 3px rgba(22, 163, 74, 0.18)' : 'none',
+        }}
+      />
+      {on ? 'Active' : 'Inactive'}
+    </Box>
   );
 };

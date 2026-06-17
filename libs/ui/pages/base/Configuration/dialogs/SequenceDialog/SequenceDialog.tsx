@@ -66,6 +66,7 @@ const SequenceDialog = ({ open, ticketTypes, onClose, onSave }: SequenceDialogPr
       maxWidth='sm'
       fullWidth
       disableEscapeKeyDown
+      disableEnforceFocus
       TransitionProps={{ unmountOnExit: true }}
       PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}
     >

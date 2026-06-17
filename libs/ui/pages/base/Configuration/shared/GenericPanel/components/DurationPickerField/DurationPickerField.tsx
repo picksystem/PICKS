@@ -114,7 +114,15 @@ export const DurationPickerField = ({
       onChange={(e) => handleChange(e.target.value)}
       onBlur={handleBlur}
       placeholder='HH:MM'
-      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' }, ...sx }}
+      sx={{
+        '& .MuiOutlinedInput-root': {
+          borderRadius: '8px',
+        },
+        '& .MuiOutlinedInput-root fieldset': { borderColor: '#2d5ebb' },
+        '& .MuiOutlinedInput-root:hover fieldset': { borderColor: '#2d5ebb' },
+        '& .MuiOutlinedInput-root.Mui-focused fieldset': { borderColor: '#2d5ebb' },
+        ...sx,
+      }}
       inputProps={{ inputMode: 'numeric', maxLength: 4 }}
       slotProps={{
         input: {

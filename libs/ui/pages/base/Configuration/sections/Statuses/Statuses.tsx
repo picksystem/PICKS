@@ -10,9 +10,7 @@ const Statuses = () => {
 
   const activeTicketTypeColumns =
     ticketTypes.length > 0
-      ? ticketTypes
-          .filter((t) => t.isActive)
-          .map((t) => ({ key: t.type, label: t.displayName || t.type }))
+      ? ticketTypes.filter((t) => t.isActive).map((t) => ({ key: t.type, label: t.name }))
       : [
           { key: 'incident', label: 'Incident' },
           { key: 'service_request', label: 'Service Request' },

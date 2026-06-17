@@ -45,8 +45,8 @@ export const CreateTicketTypeSchema = yup.object({
       return value || '';
     })
     .default(''),
-  iconKey: yup.string().required('Icon is required').default('warning_amber'),
-  tag: yup.string().default('Standard'),
+  iconKey: yup.string().required('Icon is required'),
+  tag: yup.string().required('Priority tag is required'),
   prefix: yup
     .string()
     .required('Numbering Prefix is required')
@@ -56,11 +56,11 @@ export const CreateTicketTypeSchema = yup.object({
   isActive: yup.boolean().default(true),
   numberLength: yup
     .number()
+    .transform((value, originalValue) => (originalValue === '' ? undefined : value))
     .required('Number length is required')
     .integer()
     .min(0, 'Must be between 0 and 9')
-    .max(9, 'Must be between 0 and 9')
-    .default(7),
+    .max(9, 'Must be between 0 and 9'),
   accessControl: yup
     .array()
     .of(yup.string().required())

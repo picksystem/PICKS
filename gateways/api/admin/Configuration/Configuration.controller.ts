@@ -9,26 +9,61 @@ const MATRIX_ALLOWED_FIELDS = new Set([
   'priorityId',
   'shortDescription',
   'description',
-  'activateSimplePriorities',
   'internalNote',
 ]);
+
+const SIMPLE_BUCKET_ALLOWED_FIELDS = new Set(['active', 'description']);
 
 const isPlainObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
 /**
- * Validate the `priorities.matrices` payload shape.
+ * Validate the `priorities` section payload shape.
  * Returns an error string if invalid, null if valid.
- * The on-disk format is the extended cell shape
- * `{ priorityId, shortDescription?, description?, activateSimplePriorities?, internalNote? }`,
+ * The on-disk format for matrix cells is the extended cell shape
+ * `{ priorityId, shortDescription?, description?, internalNote? }`,
  * so we reject anything that doesn't conform (and gracefully coerce the
  * legacy `priorityId: string` form).
+ *
+ * The Simple Properties activation state lives in `priorities.simplePriorities`
+ * and is validated separately.
  */
 const validatePrioritiesMatrices = (value: unknown): string | null => {
   if (!isPlainObject(value)) return '`priorities` section must be an object';
-  const { matrices } = value as { matrices?: unknown };
+  const { matrices, simplePriorities } = value as {
+    matrices?: unknown;
+    simplePriorities?: unknown;
+  };
+  if (matrices === undefined && simplePriorities === undefined) return null;
+  if (matrices !== undefined && !isPlainObject(matrices)) {
+    return '`priorities.matrices` must be an object';
+  }
+  if (simplePriorities !== undefined) {
+    if (!isPlainObject(simplePriorities)) {
+      return '`priorities.simplePriorities` must be an object keyed by ticket type';
+    }
+    for (const [ttKey, bucket] of Object.entries(simplePriorities)) {
+      if (!isPlainObject(bucket)) {
+        return `priorities.simplePriorities['${ttKey}'] must be an object`;
+      }
+      for (const field of Object.keys(bucket)) {
+        if (!SIMPLE_BUCKET_ALLOWED_FIELDS.has(field)) {
+          return `priorities.simplePriorities['${ttKey}'] has unknown field '${field}'`;
+        }
+      }
+      const b = bucket as { active?: unknown; description?: unknown };
+      if (b.active !== undefined && typeof b.active !== 'boolean') {
+        return `priorities.simplePriorities['${ttKey}'].active must be a boolean`;
+      }
+      if (b.description !== undefined && typeof b.description !== 'string') {
+        return `priorities.simplePriorities['${ttKey}'].description must be a string`;
+      }
+      if (typeof b.description === 'string' && b.description.length > MAX_RICH_TEXT_LENGTH) {
+        return `priorities.simplePriorities['${ttKey}'].description exceeds ${MAX_RICH_TEXT_LENGTH} characters`;
+      }
+    }
+  }
   if (matrices === undefined) return null;
-  if (!isPlainObject(matrices)) return '`priorities.matrices` must be an object';
 
   for (const [ticketType, byImpact] of Object.entries(matrices)) {
     if (!isPlainObject(byImpact)) {
@@ -55,7 +90,6 @@ const validatePrioritiesMatrices = (value: unknown): string | null => {
           priorityId?: unknown;
           shortDescription?: unknown;
           description?: unknown;
-          activateSimplePriorities?: unknown;
           internalNote?: unknown;
         };
         if (typeof c.priorityId !== 'string') {
@@ -69,12 +103,6 @@ const validatePrioritiesMatrices = (value: unknown): string | null => {
           if (typeof v === 'string' && v.length > MAX_RICH_TEXT_LENGTH) {
             return `priorities.matrices['${ticketType}']['${impactId}']['${urgencyId}'].${textField} exceeds ${MAX_RICH_TEXT_LENGTH} characters`;
           }
-        }
-        if (
-          c.activateSimplePriorities !== undefined &&
-          typeof c.activateSimplePriorities !== 'boolean'
-        ) {
-          return `priorities.matrices['${ticketType}']['${impactId}']['${urgencyId}'].activateSimplePriorities must be a boolean`;
         }
       }
     }

@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Box, Typography } from '@serviceops/component';
-import { FormControlLabel, Switch } from '@mui/material';
-import SpeedIcon from '@mui/icons-material/Speed';
+import { Box, Typography, TextField } from '@serviceops/component';
+import { FormControl, FormGroup, Checkbox, Collapse, Radio } from '@mui/material';
+import { Speed } from '@mui/icons-material';
 import { SimpleLevel } from '../../util';
 import { useStyles } from '../../styles';
 import { useNotification } from '@serviceops/hooks';
@@ -54,10 +54,9 @@ const renderRichTextCell = (v: unknown, maxWidth: number): React.ReactNode => {
 
 interface UrgencySectionProps {
   items: SimpleLevel[];
-  onAdd: (data: Partial<SimpleLevel>) => void;
-  onEdit: (id: string, data: Partial<SimpleLevel>) => void;
-  onDelete: (id: string) => void;
-  onToggleEnabledFor: (id: string, ticketType: string) => void;
+  onAdd: (data: Partial<SimpleLevel>) => Promise<void> | void;
+  onEdit: (id: string, data: Partial<SimpleLevel>) => Promise<void> | void;
+  onDelete: (id: string) => Promise<void> | void;
   activeTicketTypeColumns: { key: string; label: string }[];
   isLoading?: boolean;
 }
@@ -66,12 +65,13 @@ const URGENCY_CONFIG = {
   title: 'Urgency',
   subtitle: 'Define urgency levels — how time-sensitive a ticket is',
   accent: '#0369a1',
-  icon: <SpeedIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
+  icon: <Speed sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Urgency Level',
   fields: [
-    { name: 'displayName', label: 'Display Name', required: true, bold: true },
-    { name: 'description', label: 'Description' },
-    { name: 'isActive', label: 'Active', type: 'toggle' as const, defaultValue: true },
+    { name: 'displayName', label: 'Urgency', required: true, bold: true },
+    { name: 'shortDescription', label: 'Short Description', type: 'richText' as const },
+    { name: 'description', label: 'Description', type: 'richText' as const },
+    { name: 'internalNote', label: 'Internal note', type: 'richText' as const },
   ],
 };
 
@@ -80,7 +80,6 @@ const UrgencySection = ({
   onAdd,
   onEdit,
   onDelete,
-  onToggleEnabledFor,
   activeTicketTypeColumns,
   isLoading,
 }: UrgencySectionProps) => {
@@ -92,12 +91,22 @@ const UrgencySection = ({
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<SimpleLevel>>({});
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [ticketTypesExpanded, setTicketTypesExpanded] = useState(true);
+
+  const getActiveTicketTypeCount = (): number => {
+    const { enabledFor } = form as { enabledFor?: Record<string, boolean> };
+    if (!enabledFor) return activeTicketTypeColumns.length;
+    return activeTicketTypeColumns.filter((t) => enabledFor[t.key] ?? true).length;
+  };
 
   const handleNewClick = useCallback(() => {
     setEditingItem(null);
-    setForm({ isActive: true });
+    setForm({
+      isActive: true,
+      enabledFor: Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
+    });
     setDialogOpen(true);
-  }, []);
+  }, [activeTicketTypeColumns]);
 
   const handleEditClick = useCallback(() => {
     const selected = items.find((i) => i.id === selectedRowId);
@@ -108,7 +117,8 @@ const UrgencySection = ({
         shortDescription: selected.shortDescription ?? '',
         description: selected.description,
         internalNote: selected.internalNote ?? '',
-        isActive: selected.isActive,
+        isActive: selected.isActive ?? true,
+        enabledFor: { ...(selected.enabledFor ?? {}) },
       });
       setDialogOpen(true);
     }
@@ -130,13 +140,33 @@ const UrgencySection = ({
       }
     } catch (err) {
       showError('Failed to save urgency level. Please try again.');
-      throw err;
     } finally {
       setDialogOpen(false);
       setEditingItem(null);
       setForm({});
     }
   }, [editingItem, form, onEdit, onAdd, success, showError]);
+
+  // Handle ticket type checkbox
+  const handleTicketTypeChange = useCallback((ticketType: string, checked: boolean) => {
+    setForm((f) => {
+      const current = (f as { enabledFor?: Record<string, boolean> }).enabledFor ?? {};
+      return {
+        ...f,
+        enabledFor: { ...current, [ticketType]: checked },
+      };
+    });
+  }, []);
+
+  const handleSelectAllTicketTypes = useCallback(
+    (checked: boolean) => {
+      setForm((f) => ({
+        ...f,
+        enabledFor: Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, checked])),
+      }));
+    },
+    [activeTicketTypeColumns],
+  );
 
   const handleConfirmDelete = useCallback(async () => {
     try {
@@ -188,23 +218,48 @@ const UrgencySection = ({
       ...activeTicketTypeColumns.map((t) => ({
         id: `enabledFor_${t.key}`,
         label: t.label,
-        minWidth: 100,
+        minWidth: 130,
         align: 'center' as const,
-        format: (_v: unknown, row: SimpleLevel): React.ReactNode => (
-          <Switch
-            size='small'
-            checked={row.enabledFor[t.key] ?? false}
-            onChange={(e) => {
-              e.stopPropagation();
-              onToggleEnabledFor(row.id, t.key);
-            }}
-            onClick={(e) => e.stopPropagation()}
-            color='success'
-          />
-        ),
+        format: (_v: unknown, row: SimpleLevel): React.ReactNode => {
+          const isActive = row.enabledFor[t.key] ?? false;
+          return (
+            <Box
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 0.75,
+                px: 1.25,
+                py: 0.4,
+                borderRadius: 999,
+                fontSize: '0.65rem',
+                fontWeight: 700,
+                letterSpacing: 0.3,
+                textTransform: 'uppercase',
+                minWidth: 96,
+                border: '1px solid',
+                borderColor: isActive ? '#16a34a' : '#cbd5e1',
+                bgcolor: isActive ? '#dcfce7' : '#f1f5f9',
+                color: isActive ? '#15803d' : '#64748b',
+              }}
+            >
+              <Box
+                component='span'
+                sx={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  bgcolor: isActive ? '#16a34a' : '#94a3b8',
+                  boxShadow: isActive ? '0 0 0 3px rgba(22, 163, 74, 0.18)' : 'none',
+                }}
+              />
+              {isActive ? 'Active' : 'Inactive'}
+            </Box>
+          );
+        },
       })),
     ],
-    [activeTicketTypeColumns, onToggleEnabledFor],
+    [activeTicketTypeColumns],
   );
 
   return (
@@ -220,6 +275,9 @@ const UrgencySection = ({
         loaderMessage='Loading Urgency levels...'
         selectedRowId={selectedRowId}
         onRowSelect={handleRowSelect}
+        onNewClick={handleNewClick}
+        onEditClick={handleEditClick}
+        onDeleteClick={handleDeleteClick}
       />
 
       <ConfigFormDialog
@@ -231,84 +289,176 @@ const UrgencySection = ({
         }}
         onSubmit={handleSubmit}
         isEdit={!!editingItem}
-        icon={<SpeedIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-        accent='#ca8a04'
+        icon={<Speed sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+        accent='#0369a1'
         title='Urgency Level'
         submitDisabled={!form.displayName}
         submitLabel={editingItem ? 'Save' : 'Submit'}
-        maxWidth='sm'
+        maxWidth='md'
+        subtitle={URGENCY_CONFIG.subtitle}
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-          <Typography variant='body2' color='text.secondary'>
-            {editingItem
-              ? 'Edit the urgency level details below.'
-              : 'Configure the new urgency level.'}
-          </Typography>
+        <TextField
+          label='Urgency'
+          size='small'
+          value={form.displayName ?? ''}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setForm((f) => ({ ...f, displayName: e.target.value }))
+          }
+          placeholder='e.g. 1-Immediate, 2-High, 3-Medium, 4-Low'
+          inputProps={{ style: { fontFamily: 'monospace', fontWeight: 700 } }}
+          required
+        />
 
-          <Box>
-            <RichTextEditor
-              value={parseRichText(form.shortDescription ?? '')}
-              onChange={(value) =>
-                setForm((f) => ({ ...f, shortDescription: serializeRichText(value.segments) }))
-              }
-              showFooterActions={false}
-              title='Short Description'
-            />
-            <Typography
-              variant='caption'
-              color='text.secondary'
-              sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-            >
-              Brief summary shown in compact views
-            </Typography>
-          </Box>
-
-          <Box>
-            <RichTextEditor
-              value={parseRichText(form.description ?? '')}
-              onChange={(value) =>
-                setForm((f) => ({ ...f, description: serializeRichText(value.segments) }))
-              }
-              showFooterActions={false}
-              title='Description'
-            />
-            <Typography
-              variant='caption'
-              color='text.secondary'
-              sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-            >
-              Describe when this urgency level should be used
-            </Typography>
-          </Box>
-
-          <Box>
-            <RichTextEditor
-              value={parseRichText(form.internalNote ?? '')}
-              onChange={(value) =>
-                setForm((f) => ({ ...f, internalNote: serializeRichText(value.segments) }))
-              }
-              showFooterActions={false}
-              title='Internal note'
-            />
-            <Typography
-              variant='caption'
-              color='text.secondary'
-              sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-            >
-              Internal note for this urgency level (not visible to end users)
-            </Typography>
-          </Box>
-
-          <FormControlLabel
-            control={
-              <Switch
-                checked={form.isActive ?? true}
-                onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
-                color='success'
-              />
+        <Box>
+          <RichTextEditor
+            value={parseRichText(form.shortDescription ?? '')}
+            onChange={(value) =>
+              setForm((f) => ({ ...f, shortDescription: serializeRichText(value.segments) }))
             }
-            label={<Typography sx={{ fontSize: '0.85rem' }}>Active</Typography>}
+            showFooterActions={false}
+            title='Short Description'
           />
+          <Typography
+            variant='caption'
+            color='text.secondary'
+            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'none' }}
+          >
+            Brief summary shown in compact views
+          </Typography>
+        </Box>
+
+        <Box>
+          <RichTextEditor
+            value={parseRichText(form.description ?? '')}
+            onChange={(value) =>
+              setForm((f) => ({ ...f, description: serializeRichText(value.segments) }))
+            }
+            showFooterActions={false}
+            title='Description'
+          />
+          <Typography
+            variant='caption'
+            color='text.secondary'
+            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'none' }}
+          >
+            Describe when this urgency level should be used
+          </Typography>
+        </Box>
+
+        <Box>
+          <RichTextEditor
+            value={parseRichText(form.internalNote ?? '')}
+            onChange={(value) =>
+              setForm((f) => ({ ...f, internalNote: serializeRichText(value.segments) }))
+            }
+            showFooterActions={false}
+            title='Internal note'
+          />
+          <Typography
+            variant='caption'
+            color='text.secondary'
+            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'none' }}
+          >
+            Internal note for this urgency level (not visible to end users)
+          </Typography>
+        </Box>
+
+        {/* ── Ticket Types Activation ── */}
+        <Box>
+          <Box
+            sx={{
+              border: '1px solid #2d5ebb',
+              borderRadius: 2,
+              overflow: 'hidden',
+            }}
+          >
+            <Box
+              onClick={() => setTicketTypesExpanded(!ticketTypesExpanded)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                px: 2,
+                py: 1.5,
+                cursor: 'pointer',
+                bgcolor: '#f0f4f8',
+                transition: 'background-color 0.2s',
+              }}
+            >
+              <Typography
+                variant='body2'
+                color='#0369a1'
+                sx={{ fontWeight: 600, fontSize: '0.85rem' }}
+              >
+                Ticket Types Activation
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography
+                  variant='caption'
+                  color='#0369a1'
+                  sx={{ fontWeight: 500, fontSize: '0.78rem' }}
+                >
+                  {getActiveTicketTypeCount()} of {activeTicketTypeColumns.length} selected
+                </Typography>
+                <Radio
+                  size='small'
+                  checked={getActiveTicketTypeCount() === activeTicketTypeColumns.length}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => handleSelectAllTicketTypes(e.target.checked)}
+                  sx={{
+                    '&.Mui-checked': { color: '#0369a1' },
+                  }}
+                />
+                <Typography variant='caption' sx={{ fontWeight: 500, color: '#0369a1' }}>
+                  Select All
+                </Typography>
+              </Box>
+            </Box>
+
+            <Collapse in={ticketTypesExpanded}>
+              <Box sx={{ px: 2, pb: 2 }}>
+                <FormControl component='fieldset' fullWidth>
+                  <FormGroup>
+                    {activeTicketTypeColumns.map((ticketType) => {
+                      const isChecked = form.enabledFor?.[ticketType.key] ?? true;
+                      return (
+                        <Box
+                          key={ticketType.key}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            py: 0.75,
+                            borderBottom: '1px solid',
+                            borderColor: '#2d5ebb',
+                            '&:last-child': { borderBottom: 'none' },
+                          }}
+                        >
+                          <Checkbox
+                            checked={isChecked}
+                            onChange={(e) =>
+                              handleTicketTypeChange(ticketType.key, e.target.checked)
+                            }
+                            sx={{
+                              color: '#0369a1',
+                              '&.Mui-checked': { color: '#0369a1' },
+                            }}
+                          />
+                          <Box sx={{ flex: 1 }}>
+                            <Typography
+                              variant='body2'
+                              sx={{ fontWeight: 500, fontSize: '0.85rem' }}
+                            >
+                              {ticketType.label}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      );
+                    })}
+                  </FormGroup>
+                </FormControl>
+              </Box>
+            </Collapse>
+          </Box>
         </Box>
       </ConfigFormDialog>
 

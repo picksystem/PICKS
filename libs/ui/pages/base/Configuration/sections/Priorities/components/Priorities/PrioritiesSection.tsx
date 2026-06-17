@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Box, Switch, Typography } from '@serviceops/component';
+import { Box, Chip, Typography } from '@serviceops/component';
 import { PriorityLevel } from '../../util';
 import { useStyles } from '../../styles';
 import { useNotification } from '@serviceops/hooks';
@@ -58,7 +58,6 @@ interface PrioritiesSectionProps {
   selectedPriorityId: string | null;
   setSelectedPriorityId: (id: string | null) => void;
   setSelectedPriority: (priority: PriorityLevel | null) => void;
-  onToggleEnabledFor: (id: string, ticketType: string) => void;
 }
 
 const PrioritiesSection = ({
@@ -69,7 +68,6 @@ const PrioritiesSection = ({
   selectedPriorityId,
   setSelectedPriorityId,
   setSelectedPriority,
-  onToggleEnabledFor,
 }: PrioritiesSectionProps) => {
   const { classes } = useStyles();
   const { success, error: showError } = useNotification();
@@ -105,6 +103,7 @@ const PrioritiesSection = ({
           enabledFor:
             data.enabledFor ??
             Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
+          accessControl: data.accessControl ?? ['admin', 'consultant', 'endUser'],
         };
         next = [...priorities, newItem];
       }
@@ -185,23 +184,48 @@ const PrioritiesSection = ({
       ...activeTicketTypeColumns.map((t) => ({
         id: `enabledFor_${t.key}`,
         label: t.label,
-        minWidth: 100,
+        minWidth: 130,
         align: 'center' as const,
-        format: (_v: unknown, row: PriorityLevel): React.ReactNode => (
-          <Switch
-            size='small'
-            checked={row.enabledFor[t.key] ?? false}
-            onChange={(e) => {
-              e.stopPropagation();
-              onToggleEnabledFor(row.id, t.key);
-            }}
-            onClick={(e) => e.stopPropagation()}
-            color='success'
-          />
-        ),
+        format: (_v: unknown, row: PriorityLevel): React.ReactNode => {
+          const isActive = row.enabledFor[t.key] ?? false;
+          return (
+            <Box
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 0.75,
+                px: 1.25,
+                py: 0.4,
+                borderRadius: 999,
+                fontSize: '0.65rem',
+                fontWeight: 700,
+                letterSpacing: 0.3,
+                textTransform: 'uppercase',
+                minWidth: 96,
+                border: '1px solid',
+                borderColor: isActive ? '#16a34a' : '#cbd5e1',
+                bgcolor: isActive ? '#dcfce7' : '#f1f5f9',
+                color: isActive ? '#15803d' : '#64748b',
+              }}
+            >
+              <Box
+                component='span'
+                sx={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  bgcolor: isActive ? '#16a34a' : '#94a3b8',
+                  boxShadow: isActive ? '0 0 0 3px rgba(22, 163, 74, 0.18)' : 'none',
+                }}
+              />
+              {isActive ? 'Active' : 'Inactive'}
+            </Box>
+          );
+        },
       })),
     ],
-    [activeTicketTypeColumns, onToggleEnabledFor],
+    [activeTicketTypeColumns],
   );
 
   const handleTableSave = useCallback(
@@ -260,6 +284,7 @@ const PrioritiesSection = ({
         }}
         onSave={handleSavePriority}
         ticketTypeColumns={activeTicketTypeColumns}
+        subtitle={PRIORITY_TABLE_CONFIG.subtitle}
       />
 
       <ConfigDeleteDialog

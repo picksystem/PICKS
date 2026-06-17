@@ -109,7 +109,8 @@ export const approvedEstimateColumns = (): Column<IConfigApprovedEstimateRow>[] 
   {
     id: 'isActive',
     label: 'Activation',
-    minWidth: 100,
+    minWidth: 130,
+    align: 'center' as const,
     format: (v) => mkActiveChip(v),
   },
   {
@@ -174,13 +175,19 @@ export const APPROVED_ESTIMATES_CONFIG: TableConfig = {
       label: 'Default Hours',
       required: true,
       type: 'duration' as const,
-      sx: { '& .MuiOutlinedInput-root': { borderRadius: '8px' } },
     },
     {
       name: 'shortDescription',
       label: 'Internal Note',
       type: 'richText',
     },
-    { name: 'isActive', label: 'Activation', type: 'toggle' as const },
+    {
+      name: 'isActive',
+      label: 'Activation',
+      type: 'activationToggle' as const,
+      activationDescriptionActive: 'This default estimate is enabled',
+      activationDescriptionInactive: 'This default estimate is disabled',
+      activationAccent: APPROVED_ESTIMATES_ACCENT,
+    },
   ],
 };

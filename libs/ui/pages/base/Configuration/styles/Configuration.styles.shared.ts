@@ -475,7 +475,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     paddingTop: theme.spacing(1.25),
     paddingBottom: theme.spacing(1.25),
     borderRadius: theme.spacing(1),
-    border: '1px solid',
+    border: '1px solid #2d5ebb',
     transition: 'all 0.2s ease',
   },
 

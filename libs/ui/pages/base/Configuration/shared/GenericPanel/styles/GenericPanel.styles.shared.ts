@@ -182,4 +182,33 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     color: theme.palette.text.secondary,
     marginTop: 2,
   },
+
+  dialogActivationRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
+    paddingTop: theme.spacing(1.25),
+    paddingBottom: theme.spacing(1.25),
+    borderRadius: theme.spacing(1),
+    border: '1px solid #2d5ebb',
+    transition: 'all 0.2s ease',
+  },
+
+  dialogActivationDescription: {
+    [theme.breakpoints.down('sm')]: {
+      display: 'none',
+    },
+  },
+
+  dialogActivationLabel: {
+    [theme.breakpoints.down('sm')]: {
+      display: 'none',
+    },
+  },
+
+  dialogActivationFormControl: {
+    marginLeft: 0,
+  },
 });

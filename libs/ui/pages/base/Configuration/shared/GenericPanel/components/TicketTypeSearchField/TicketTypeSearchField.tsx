@@ -138,7 +138,7 @@ export const TicketTypeSearchField = ({
                       onClick={handleClear}
                       sx={{
                         fontSize: 18,
-                        color: 'text.secondary',
+                        color: 'text.primary',
                         cursor: 'pointer',
                         '&:hover': { color: 'text.primary' },
                       }}

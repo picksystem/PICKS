@@ -92,6 +92,8 @@ export function useTicketTypeConfig() {
             isActive: values.isActive,
             numberLength: values.numberLength,
             accessControl: values.accessControl,
+            iconKey: values.iconKey,
+            tag: values.tag,
           },
         }).unwrap();
         notify.success('Ticket type updated successfully');
@@ -107,6 +109,8 @@ export function useTicketTypeConfig() {
           isActive: values.isActive,
           numberLength: values.numberLength,
           accessControl: values.accessControl,
+          iconKey: values.iconKey,
+          tag: values.tag,
         }).unwrap();
         notify.success('Ticket type created successfully');
       }

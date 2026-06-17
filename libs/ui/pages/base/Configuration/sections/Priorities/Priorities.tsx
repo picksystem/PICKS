@@ -26,6 +26,7 @@ import {
   ExtendedMatrixMap,
   MatrixCellData,
 } from './util';
+import { IConfigMatrixMap, IConfigSimplePrioritiesBucket } from '@serviceops/interfaces';
 
 const TICKET_TYPE_COLUMNS = [
   { key: 'incident', label: 'Incident' },
@@ -98,6 +99,7 @@ const DEFAULT_PRIORITIES: PriorityLevel[] = [
       problem_request: true,
       task: false,
     },
+    accessControl: ['admin', 'consultant', 'endUser'],
   },
   {
     id: 'high',
@@ -114,6 +116,7 @@ const DEFAULT_PRIORITIES: PriorityLevel[] = [
       problem_request: true,
       task: true,
     },
+    accessControl: ['admin', 'consultant', 'endUser'],
   },
   {
     id: 'medium',
@@ -130,6 +133,7 @@ const DEFAULT_PRIORITIES: PriorityLevel[] = [
       problem_request: true,
       task: true,
     },
+    accessControl: ['admin', 'consultant', 'endUser'],
   },
   {
     id: 'low',
@@ -146,6 +150,7 @@ const DEFAULT_PRIORITIES: PriorityLevel[] = [
       problem_request: true,
       task: true,
     },
+    accessControl: ['admin', 'consultant', 'endUser'],
   },
   {
     id: 'planning',
@@ -162,6 +167,7 @@ const DEFAULT_PRIORITIES: PriorityLevel[] = [
       problem_request: false,
       task: true,
     },
+    accessControl: ['admin', 'consultant', 'endUser'],
   },
 ];
 
@@ -260,28 +266,33 @@ const Priorities = () => {
   const [priorities, setPriorities] = useState<PriorityLevel[]>(DEFAULT_PRIORITIES);
   const [impacts, setImpacts] = useState<ImpactLevel[]>(DEFAULT_IMPACTS);
   const [urgencies, setUrgencies] = useState<UrgencyLevel[]>(DEFAULT_URGENCIES);
-  const [matrices, setMatrices] = useState<Record<string, ExtendedMatrixMap>>({});
+  const [matrices, setMatrices] = useState<Record<string, IConfigMatrixMap>>({});
+  const [simplePriorities, setSimplePriorities] = useState<
+    Record<string, IConfigSimplePrioritiesBucket> | undefined
+  >(undefined);
 
   useEffect(() => {
     if (!apiPriorities) return;
-    if (apiPriorities.levels.length) setPriorities(apiPriorities.levels as PriorityLevel[]);
-    if (apiPriorities.impactLevels.length) setImpacts(apiPriorities.impactLevels as ImpactLevel[]);
-    if (apiPriorities.urgencyLevels.length)
-      setUrgencies(apiPriorities.urgencyLevels as UrgencyLevel[]);
-    if (Object.keys(apiPriorities.matrices).length) setMatrices(apiPriorities.matrices);
+    setPriorities(apiPriorities.levels as PriorityLevel[]);
+    setImpacts(apiPriorities.impactLevels as ImpactLevel[]);
+    setUrgencies(apiPriorities.urgencyLevels as UrgencyLevel[]);
+    setMatrices(apiPriorities.matrices as Record<string, IConfigMatrixMap>);
+    setSimplePriorities(apiPriorities.simplePriorities);
   }, [apiPriorities]);
 
-  const persistPriorities = (
+  const persistPriorities = async (
     levels: PriorityLevel[],
     impactLevels: ImpactLevel[],
     urgencyLevels: UrgencyLevel[],
-    mats: Record<string, ExtendedMatrixMap>,
+    mats: Record<string, IConfigMatrixMap>,
+    simple?: Record<string, IConfigSimplePrioritiesBucket>,
   ) => {
-    saveSection('priorities', {
+    await saveSection('priorities', {
       levels,
       impactLevels,
       urgencyLevels,
       matrices: mats,
+      simplePriorities: simple,
     });
   };
 
@@ -300,7 +311,7 @@ const Priorities = () => {
     if (selectedPriorityId) {
       const next = priorities.filter((p) => p.id !== selectedPriorityId);
       setPriorities(next);
-      persistPriorities(next, impacts, urgencies, matrices);
+      persistPriorities(next, impacts, urgencies, matrices, simplePriorities);
       success('Priority deleted successfully');
       setSelectedPriorityId(null);
       setSelectedPriority(null);
@@ -314,21 +325,23 @@ const Priorities = () => {
     urgency: string,
     priorityId: string,
   ) => {
-    const next = {
-      ...matrices,
-      [ticketType]: {
-        ...(matrices[ticketType] ?? {}),
-        [impact]: {
-          ...(matrices[ticketType]?.[impact] ?? {}),
-          [urgency]: {
-            ...(matrices[ticketType]?.[impact]?.[urgency] ?? {}),
-            priorityId,
+    setMatrices((prev) => {
+      const next = {
+        ...prev,
+        [ticketType]: {
+          ...(prev[ticketType] ?? {}),
+          [impact]: {
+            ...(prev[ticketType]?.[impact] ?? {}),
+            [urgency]: {
+              ...(prev[ticketType]?.[impact]?.[urgency] ?? {}),
+              priorityId,
+            },
           },
         },
-      },
-    };
-    setMatrices(next);
-    persistPriorities(priorities, impacts, urgencies, next);
+      };
+      persistPriorities(priorities, impacts, urgencies, next, simplePriorities);
+      return next;
+    });
   };
 
   const updateMatrixCell = (
@@ -337,27 +350,39 @@ const Priorities = () => {
     urgency: string,
     data: MatrixCellData,
   ) => {
-    const next = {
-      ...matrices,
-      [ticketType]: {
-        ...(matrices[ticketType] ?? {}),
-        [impact]: {
-          ...(matrices[ticketType]?.[impact] ?? {}),
-          [urgency]: {
-            ...(matrices[ticketType]?.[impact]?.[urgency] ?? { priorityId: '' }),
-            ...data,
+    setMatrices((prev) => {
+      const next = {
+        ...prev,
+        [ticketType]: {
+          ...(prev[ticketType] ?? {}),
+          [impact]: {
+            ...(prev[ticketType]?.[impact] ?? {}),
+            [urgency]: {
+              ...(prev[ticketType]?.[impact]?.[urgency] ?? { priorityId: '' }),
+              ...data,
+            },
           },
         },
-      },
-    };
-    setMatrices(next);
-    persistPriorities(priorities, impacts, urgencies, next);
+      };
+      persistPriorities(priorities, impacts, urgencies, next, simplePriorities);
+      return next;
+    });
   };
 
   const resetMatrixForType = (ticketType: string, newMatrix: ExtendedMatrixMap) => {
-    const next = { ...matrices, [ticketType]: newMatrix };
-    setMatrices(next);
-    persistPriorities(priorities, impacts, urgencies, next);
+    setMatrices((prev) => {
+      const next: Record<string, IConfigMatrixMap> = {
+        ...prev,
+        [ticketType]: newMatrix,
+      };
+      persistPriorities(priorities, impacts, urgencies, next, simplePriorities);
+      return next;
+    });
+  };
+
+  const replaceSimplePriorities = (next: Record<string, IConfigSimplePrioritiesBucket>) => {
+    setSimplePriorities(next);
+    persistPriorities(priorities, impacts, urgencies, matrices, next);
   };
 
   return (
@@ -366,28 +391,18 @@ const Priorities = () => {
         <PrioritiesSection
           priorities={priorities}
           setPriorities={setPriorities}
-          onPersist={(next) => persistPriorities(next, impacts, urgencies, matrices)}
+          onPersist={(next) =>
+            persistPriorities(next, impacts, urgencies, matrices, simplePriorities)
+          }
           activeTicketTypeColumns={activeTicketTypeColumns}
           selectedPriorityId={selectedPriorityId}
           setSelectedPriorityId={setSelectedPriorityId}
           setSelectedPriority={setSelectedPriority}
-          onToggleEnabledFor={(id, ticketType) => {
-            const next = priorities.map((p) =>
-              p.id === id
-                ? {
-                    ...p,
-                    enabledFor: { ...p.enabledFor, [ticketType]: !p.enabledFor[ticketType] },
-                  }
-                : p,
-            );
-            setPriorities(next);
-            persistPriorities(next, impacts, urgencies, matrices);
-          }}
         />
 
         <ImpactSection
           items={impacts}
-          onAdd={(data) => {
+          onAdd={async (data) => {
             const id =
               (data.displayName ?? '').toLowerCase().replace(/[^a-z0-9]/g, '_') ||
               `impact_${Date.now()}`;
@@ -398,36 +413,24 @@ const Priorities = () => {
               description: data.description ?? '',
               bgColor: data.bgColor ?? '#2563eb',
               sortOrder: impacts.length + 1,
-              isActive: true,
+              isActive: data.isActive ?? true,
               enabledFor:
                 data.enabledFor ??
                 Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
             };
             const next = [...impacts, newItem];
             setImpacts(next);
-            persistPriorities(priorities, next, urgencies, matrices);
+            await persistPriorities(priorities, next, urgencies, matrices, simplePriorities);
           }}
-          onEdit={(id, data) => {
+          onEdit={async (id, data) => {
             const next = impacts.map((i) => (i.id === id ? { ...i, ...data } : i));
             setImpacts(next);
-            persistPriorities(priorities, next, urgencies, matrices);
+            await persistPriorities(priorities, next, urgencies, matrices, simplePriorities);
           }}
-          onDelete={(id) => {
+          onDelete={async (id) => {
             const next = impacts.filter((i) => i.id !== id);
             setImpacts(next);
-            persistPriorities(priorities, next, urgencies, matrices);
-          }}
-          onToggleEnabledFor={(id, ticketType) => {
-            const next = impacts.map((i) =>
-              i.id === id
-                ? {
-                    ...i,
-                    enabledFor: { ...i.enabledFor, [ticketType]: !i.enabledFor[ticketType] },
-                  }
-                : i,
-            );
-            setImpacts(next);
-            persistPriorities(priorities, next, urgencies, matrices);
+            await persistPriorities(priorities, next, urgencies, matrices, simplePriorities);
           }}
           activeTicketTypeColumns={activeTicketTypeColumns}
           isLoading={isLoading}
@@ -435,7 +438,7 @@ const Priorities = () => {
 
         <UrgencySection
           items={urgencies}
-          onAdd={(data) => {
+          onAdd={async (data) => {
             const id =
               (data.displayName ?? '').toLowerCase().replace(/[^a-z0-9]/g, '_') ||
               `urgency_${Date.now()}`;
@@ -446,36 +449,24 @@ const Priorities = () => {
               description: data.description ?? '',
               bgColor: data.bgColor ?? '#2563eb',
               sortOrder: urgencies.length + 1,
-              isActive: true,
+              isActive: data.isActive ?? true,
               enabledFor:
                 data.enabledFor ??
                 Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
             };
             const next = [...urgencies, newItem];
             setUrgencies(next);
-            persistPriorities(priorities, impacts, next, matrices);
+            await persistPriorities(priorities, impacts, next, matrices, simplePriorities);
           }}
-          onEdit={(id, data) => {
+          onEdit={async (id, data) => {
             const next = urgencies.map((u) => (u.id === id ? { ...u, ...data } : u));
             setUrgencies(next);
-            persistPriorities(priorities, impacts, next, matrices);
+            await persistPriorities(priorities, impacts, next, matrices, simplePriorities);
           }}
-          onDelete={(id) => {
+          onDelete={async (id) => {
             const next = urgencies.filter((u) => u.id !== id);
             setUrgencies(next);
-            persistPriorities(priorities, impacts, next, matrices);
-          }}
-          onToggleEnabledFor={(id, ticketType) => {
-            const next = urgencies.map((u) =>
-              u.id === id
-                ? {
-                    ...u,
-                    enabledFor: { ...u.enabledFor, [ticketType]: !u.enabledFor[ticketType] },
-                  }
-                : u,
-            );
-            setUrgencies(next);
-            persistPriorities(priorities, impacts, next, matrices);
+            await persistPriorities(priorities, impacts, next, matrices, simplePriorities);
           }}
           activeTicketTypeColumns={activeTicketTypeColumns}
           isLoading={isLoading}
@@ -496,9 +487,11 @@ const Priorities = () => {
           impacts={impacts}
           urgencies={urgencies}
           matrices={matrices}
+          simplePriorities={simplePriorities}
           onMatrixChange={updateMatrix}
           onMatrixReset={resetMatrixForType}
           onMatrixCellUpdate={updateMatrixCell}
+          onSimplePrioritiesChange={replaceSimplePriorities}
         />
 
         <ConfigDeleteDialog
