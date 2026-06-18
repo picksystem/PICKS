@@ -283,84 +283,104 @@ const SLAs = () => {
     return (r) => String(r.ticketTypeId ?? '') === key;
   };
 
-  const displayAckRows: IConfigResponseAckSLARow[] = activeTicketTypes.map((tt) => {
+  // Only show rows for ticket types that have a stored config — deleting
+  // a row should make the ticket type disappear from the table entirely
+  // (not fall back to defaults). The defaults are still used by the rest
+  // of the app at runtime, but the user can re-add a row via the New
+  // button if they want a non-default config.
+  const displayAckRows: IConfigResponseAckSLARow[] = activeTicketTypes.flatMap((tt) => {
     const stored = ackRows.find(matchByTicketTypeId({ ticketTypeId: tt.id }));
+    if (!stored) return [];
     const def = DEFAULT_ACK_VALUES[tt.type] ?? FALLBACK_DEFAULTS;
-    const isActive = stored?.isActive ?? stored?.activation ?? def.activation;
-    return {
-      id: stored?.id ?? `rack_${tt.type}`,
-      ticketTypeId: tt.id,
-      ticketTypeName: tt.name || tt.displayName,
-      activation: isActive,
-      isActive,
-      shortDescription: stored?.shortDescription ?? '',
-      internalNote: stored?.internalNote ?? '',
-      p1: stored?.p1 ?? def.p1,
-      p2: stored?.p2 ?? def.p2,
-      p3: stored?.p3 ?? def.p3,
-      p4: stored?.p4 ?? def.p4,
-      p5: stored?.p5 ?? def.p5,
-    };
+    const isActive = stored.isActive ?? stored.activation ?? def.activation;
+    return [
+      {
+        id: stored.id,
+        ticketTypeId: tt.id,
+        ticketTypeName: tt.name || tt.displayName,
+        activation: isActive,
+        isActive,
+        shortDescription: stored.shortDescription ?? '',
+        internalNote: stored.internalNote ?? '',
+        p1: stored.p1 ?? def.p1,
+        p2: stored.p2 ?? def.p2,
+        p3: stored.p3 ?? def.p3,
+        p4: stored.p4 ?? def.p4,
+        p5: stored.p5 ?? def.p5,
+      } as IConfigResponseAckSLARow,
+    ];
   });
 
-  const displayResRows: IConfigResponseAckSLARow[] = activeTicketTypes.map((tt) => {
+  const displayResRows: IConfigResponseAckSLARow[] = activeTicketTypes.flatMap((tt) => {
     const stored = resRows.find(matchByTicketTypeId({ ticketTypeId: tt.id }));
+    if (!stored) return [];
     const def = DEFAULT_RES_VALUES[tt.type] ?? FALLBACK_RES;
-    return {
-      id: stored?.id ?? `rres_${tt.type}`,
-      ticketTypeId: tt.id,
-      ticketTypeName: tt.name || tt.displayName,
-      activation: stored?.activation ?? def.activation,
-      shortDescription: stored?.shortDescription ?? '',
-      internalNote: stored?.internalNote ?? '',
-      p1: stored?.p1 ?? def.p1,
-      p2: stored?.p2 ?? def.p2,
-      p3: stored?.p3 ?? def.p3,
-      p4: stored?.p4 ?? def.p4,
-      p5: stored?.p5 ?? def.p5,
-    };
+    return [
+      {
+        id: stored.id,
+        ticketTypeId: tt.id,
+        ticketTypeName: tt.name || tt.displayName,
+        activation: stored.activation ?? def.activation,
+        shortDescription: stored.shortDescription ?? '',
+        internalNote: stored.internalNote ?? '',
+        p1: stored.p1 ?? def.p1,
+        p2: stored.p2 ?? def.p2,
+        p3: stored.p3 ?? def.p3,
+        p4: stored.p4 ?? def.p4,
+        p5: stored.p5 ?? def.p5,
+      } as IConfigResponseAckSLARow,
+    ];
   });
 
-  const displayDueDateRows: IConfigResponseAckSLARow[] = activeTicketTypes.map((tt) => {
+  const displayDueDateRows: IConfigResponseAckSLARow[] = activeTicketTypes.flatMap((tt) => {
     const stored = dueDateRows.find(matchByTicketTypeId({ ticketTypeId: tt.id }));
+    if (!stored) return [];
     const def = DEFAULT_DUEDATE_VALUES[tt.type] ?? FALLBACK_DUEDATE;
-    return {
-      id: stored?.id ?? `rdd_${tt.type}`,
-      ticketTypeId: tt.id,
-      ticketTypeName: tt.name || tt.displayName,
-      activation: stored?.activation ?? def.activation,
-      shortDescription: stored?.shortDescription ?? '',
-      internalNote: stored?.internalNote ?? '',
-      p1: stored?.p1 ?? def.p1,
-      p2: stored?.p2 ?? def.p2,
-      p3: stored?.p3 ?? def.p3,
-      p4: stored?.p4 ?? def.p4,
-      p5: stored?.p5 ?? def.p5,
-    };
+    return [
+      {
+        id: stored.id,
+        ticketTypeId: tt.id,
+        ticketTypeName: tt.name || tt.displayName,
+        activation: stored.activation ?? def.activation,
+        shortDescription: stored.shortDescription ?? '',
+        internalNote: stored.internalNote ?? '',
+        p1: stored.p1 ?? def.p1,
+        p2: stored.p2 ?? def.p2,
+        p3: stored.p3 ?? def.p3,
+        p4: stored.p4 ?? def.p4,
+        p5: stored.p5 ?? def.p5,
+      } as IConfigResponseAckSLARow,
+    ];
   });
 
-  const displayEtaActRows: IConfigActivationRow[] = activeTicketTypes.map((tt) => {
+  const displayEtaActRows: IConfigActivationRow[] = activeTicketTypes.flatMap((tt) => {
     const stored = etaActRows.find(matchByTicketTypeId({ ticketTypeId: tt.id }));
-    return {
-      id: stored?.id ?? `eta_${tt.type}`,
-      ticketTypeId: tt.id,
-      ticketTypeName: tt.name || tt.displayName,
-      activation: stored?.activation ?? true,
-      shortDescription: stored?.shortDescription ?? '',
-      internalNote: stored?.internalNote ?? '',
-    };
+    if (!stored) return [];
+    return [
+      {
+        id: stored.id,
+        ticketTypeId: tt.id,
+        ticketTypeName: tt.name || tt.displayName,
+        activation: stored.activation ?? true,
+        shortDescription: stored.shortDescription ?? '',
+        internalNote: stored.internalNote ?? '',
+      } as IConfigActivationRow,
+    ];
   });
 
-  const displayTimeLogActRows: IConfigActivationRow[] = activeTicketTypes.map((tt) => {
+  const displayTimeLogActRows: IConfigActivationRow[] = activeTicketTypes.flatMap((tt) => {
     const stored = timeLogActRows.find(matchByTicketTypeId({ ticketTypeId: tt.id }));
-    return {
-      id: stored?.id ?? `tlog_${tt.type}`,
-      ticketTypeId: tt.id,
-      ticketTypeName: tt.name || tt.displayName,
-      activation: stored?.activation ?? true,
-      shortDescription: stored?.shortDescription ?? '',
-      internalNote: stored?.internalNote ?? '',
-    };
+    if (!stored) return [];
+    return [
+      {
+        id: stored.id,
+        ticketTypeId: tt.id,
+        ticketTypeName: tt.name || tt.displayName,
+        activation: stored.activation ?? true,
+        shortDescription: stored.shortDescription ?? '',
+        internalNote: stored.internalNote ?? '',
+      } as IConfigActivationRow,
+    ];
   });
 
   // Save handlers for GenericPanel onSave callbacks. The `ticketTypeId` is
