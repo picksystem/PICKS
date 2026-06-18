@@ -35,17 +35,6 @@ const TicketStatusesSection = ({ activeTicketTypeColumns }: TicketStatusesSectio
     }
   }, [apiStatuses]);
 
-  const handleUpdateRow = useCallback(
-    (id: string, patch: Partial<IConfigStatusLevel>) => {
-      setRows((prev) => {
-        const next = prev.map((r) => (r.id === id ? { ...r, ...patch } : r));
-        saveSection('statuses', { items: next });
-        return next;
-      });
-    },
-    [saveSection],
-  );
-
   const handleNewClick = useCallback(() => {
     setEditingItem(null);
     setDialogOpen(true);
@@ -137,7 +126,7 @@ const TicketStatusesSection = ({ activeTicketTypeColumns }: TicketStatusesSectio
           saveSection('statuses', { items: next as IConfigStatusLevel[] });
         }}
         customColumns={
-          ticketStatusColumns(activeTicketTypeColumns, handleUpdateRow) as unknown as undefined
+          ticketStatusColumns(activeTicketTypeColumns) as unknown as undefined
         }
         variant='plain'
         selectedRowId={selectedRowId}

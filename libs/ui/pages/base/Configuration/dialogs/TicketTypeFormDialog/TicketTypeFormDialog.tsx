@@ -850,7 +850,9 @@ const TicketTypeFormDialog = ({
               />
             </Grid>
 
-            {/* Format Preview (display only) */}
+            {/* Format Preview (display only) — prefix in monospace grey,
+                digit sequence in the priority tag color so it visually
+                matches the rest of the dialog. */}
             <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 label='Format Preview'
@@ -860,6 +862,27 @@ const TicketTypeFormDialog = ({
                 disabled
                 InputProps={{ readOnly: true }}
                 helperText='Preview of ticket numbering'
+                sx={{
+                  '& .MuiInputBase-input': {
+                    fontFamily: 'monospace',
+                    fontWeight: 700,
+                    letterSpacing: '2px',
+                  },
+                }}
+                slotProps={{
+                  htmlInput: {
+                    startAdornment: (() => {
+                      const prefixText = (formik.values.prefix || '???').toUpperCase();
+                      const digits = numberLengthVal > 0 ? '1'.padStart(numberLengthVal, '0') : '';
+                      return (
+                        <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                          <span style={{ color: '#64748b' }}>{prefixText}</span>
+                          <span style={{ color: tagColor }}>{digits}</span>
+                        </span>
+                      );
+                    })(),
+                  },
+                }}
               />
             </Grid>
 

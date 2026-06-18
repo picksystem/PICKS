@@ -255,7 +255,7 @@ const StatusFormDialog = ({
           displayName: '',
           shortDescription: '',
           description: '',
-          bgColor: '#2563eb',
+          bgColor: '',
           color: '#fff',
           isActive: true,
           slaActive: true,
@@ -321,6 +321,10 @@ const StatusFormDialog = ({
         ? (successMessage?.edit ?? 'Status updated successfully')
         : (successMessage?.add ?? 'Status added successfully'),
     );
+  };
+
+  const handleColorIconClick = () => {
+    setColorPickerOpen(true);
   };
 
   const handleColorPickerClose = () => {
@@ -447,23 +451,24 @@ const StatusFormDialog = ({
           InputProps={{
             endAdornment: (
               <Box
-                component='input'
-                type='color'
-                value={currentColor || '#000000'}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  handleColorChange(e.target.value)
-                }
-                aria-label='Pick a colour'
+                onClick={handleColorIconClick}
                 sx={{
-                  width: 32,
-                  height: 32,
+                  width: 24,
+                  height: 24,
+                  borderRadius: '50%',
+                  bgcolor: currentColor || 'transparent',
                   border: '1px solid',
                   borderColor: 'divider',
-                  borderRadius: '50%',
                   cursor: 'pointer',
-                  padding: 0,
-                  bgcolor: currentColor || 'transparent',
+                  flexShrink: 0,
+                  transition: 'transform 0.15s, box-shadow 0.15s',
+                  '&:hover': {
+                    transform: 'scale(1.1)',
+                    boxShadow: 1,
+                  },
                 }}
+                role='button'
+                aria-label='Pick a colour'
               />
             ),
           }}

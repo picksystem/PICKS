@@ -5,7 +5,6 @@ import { useStyles } from '../../styles';
 import { useNotification } from '@serviceops/hooks';
 import { GenericPanel } from '@serviceops/genericpanel';
 import { ConfigDeleteDialog } from '@serviceops/configdialogs';
-import PriorityFormDialog from '@serviceops/configprioritformdialog';
 import { PRIORITY_TABLE_CONFIG } from '../shared/PrioritiesPanelConfig';
 import {
   parseRichText,
@@ -71,8 +70,6 @@ const PrioritiesSection = ({
 }: PrioritiesSectionProps) => {
   const { classes } = useStyles();
   const { success, error: showError } = useNotification();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingPriority, setEditingPriority] = useState<PriorityLevel | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const handleSave = useCallback(
@@ -81,37 +78,6 @@ const PrioritiesSection = ({
       onPersist(data);
     },
     [setPriorities, onPersist],
-  );
-
-  const handleSavePriority = useCallback(
-    (data: Partial<PriorityLevel>) => {
-      let next: PriorityLevel[];
-      if (editingPriority) {
-        next = priorities.map((p) => (p.id === editingPriority.id ? { ...p, ...data } : p));
-      } else {
-        const id =
-          (data.name ?? '').toLowerCase().replace(/[^a-z0-9]/g, '_') || `priority_${Date.now()}`;
-        const newItem: PriorityLevel = {
-          id,
-          name: data.name ?? id,
-          shortDescription: data.shortDescription ?? '',
-          description: data.description ?? '',
-          color: '#fff',
-          bgColor: data.bgColor ?? '#2563eb',
-          sortOrder: priorities.length + 1,
-          internalNote: data.internalNote ?? '',
-          enabledFor:
-            data.enabledFor ??
-            Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
-          accessControl: data.accessControl ?? ['admin', 'consultant', 'endUser'],
-        };
-        next = [...priorities, newItem];
-      }
-      handleSave(next);
-      setDialogOpen(false);
-      setEditingPriority(null);
-    },
-    [editingPriority, priorities, activeTicketTypeColumns, handleSave],
   );
 
   const handleConfirmDelete = useCallback(async () => {
@@ -273,19 +239,6 @@ const PrioritiesSection = ({
         selectedRowId={selectedPriorityId}
         onRowSelect={handleRowSelect}
         validateFields={validatePriorityDuplicate as unknown as undefined}
-      />
-
-      <PriorityFormDialog
-        open={dialogOpen}
-        editing={editingPriority}
-        existingPriorities={priorities}
-        onClose={() => {
-          setDialogOpen(false);
-          setEditingPriority(null);
-        }}
-        onSave={handleSavePriority}
-        ticketTypeColumns={activeTicketTypeColumns}
-        subtitle={PRIORITY_TABLE_CONFIG.subtitle}
       />
 
       <ConfigDeleteDialog

@@ -69,11 +69,13 @@ const PriorityFormDialog = ({
     name?: boolean;
     shortDescription?: boolean;
     description?: boolean;
+    bgColor?: boolean;
   }>({});
   const [requiredErrors, setRequiredErrors] = useState<{
     name?: string;
     shortDescription?: string;
     description?: string;
+    bgColor?: string;
   }>({});
 
   // Updates both the ref and the state in one go. Use this everywhere a
@@ -113,6 +115,7 @@ const PriorityFormDialog = ({
     if (!String(f.name ?? '').trim()) errs.name = 'required';
     if (!plainText(f.shortDescription ?? '')) errs.shortDescription = 'required';
     if (!plainText(f.description ?? '')) errs.description = 'required';
+    if (!String(f.bgColor ?? '').trim()) errs.bgColor = 'required';
     return errs;
   };
 
@@ -223,7 +226,7 @@ const PriorityFormDialog = ({
     // errors render even if the user hasn't blurred them yet.
     const reqErrs = validateRequired(formRef.current);
     setRequiredErrors(reqErrs);
-    setTouched({ name: true, shortDescription: true, description: true });
+    setTouched({ name: true, shortDescription: true, description: true, bgColor: true });
     if (Object.keys(reqErrs).length > 0) {
       return;
     }
@@ -258,7 +261,7 @@ const PriorityFormDialog = ({
     }
   };
 
-  const currentColor = form.bgColor ?? '#2563eb';
+  const currentColor = form.bgColor || '#2563eb';
 
   return (
     <>
@@ -275,6 +278,7 @@ const PriorityFormDialog = ({
           !form.name ||
           !plainText(form.shortDescription ?? '') ||
           !plainText(form.description ?? '') ||
+          !form.bgColor ||
           Boolean(duplicateAlert)
         }
         submitLabel={editing ? 'Save' : 'Submit'}
@@ -366,52 +370,46 @@ const PriorityFormDialog = ({
           </Box>
         </Box>
 
-        <Box>
-          <Typography
-            variant='caption'
-            fontWeight={700}
-            color='text.secondary'
-            sx={{ mb: 1, display: 'block' }}
-          >
-            Colour
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Box
-              onClick={handleColorIconClick}
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 1.5,
-                bgcolor: currentColor,
-                border: '2px solid',
-                borderColor: 'divider',
-                boxShadow: 1,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  opacity: 0.9,
-                  boxShadow: 2,
-                  transform: 'scale(1.02)',
-                },
-              }}
-              role='button'
-              aria-label='Pick a colour'
-            >
-              <ColorLens sx={{ color: '#fff', fontSize: '1.1rem' }} />
-            </Box>
-            <TextField
-              size='small'
-              value={currentColor}
-              onChange={handleColorInputChange}
-              placeholder='#2563eb'
-              inputProps={{ style: { fontFamily: 'monospace', textTransform: 'lowercase' } }}
-              sx={{ flex: 1 }}
-            />
-          </Box>
-        </Box>
+        <TextField
+          label='Colour'
+          size='small'
+          fullWidth
+          required
+          value={currentColor}
+          onChange={handleColorInputChange}
+          onBlur={() => setTouched((t) => ({ ...t, bgColor: true }))}
+          placeholder='#2563eb'
+          error={Boolean(reqError(touched.bgColor, requiredErrors.bgColor))}
+          helperText={reqError(touched.bgColor, requiredErrors.bgColor)}
+          inputProps={{
+            style: { fontFamily: 'monospace', textTransform: 'lowercase' },
+            maxLength: 7,
+          }}
+          InputProps={{
+            endAdornment: (
+              <Box
+                onClick={handleColorIconClick}
+                sx={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: '50%',
+                  bgcolor: currentColor || 'transparent',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  transition: 'transform 0.15s, box-shadow 0.15s',
+                  '&:hover': {
+                    transform: 'scale(1.1)',
+                    boxShadow: 1,
+                  },
+                }}
+                role='button'
+                aria-label='Pick a colour'
+              />
+            ),
+          }}
+        />
 
         <Box>
           <RichTextEditor

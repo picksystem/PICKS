@@ -39,17 +39,6 @@ const ReleaseCycleStatusesSection = ({
     }
   }, [apiReleaseStatuses]);
 
-  const handleUpdateRow = useCallback(
-    (id: string, patch: Partial<IConfigStatusLevel>) => {
-      setRows((prev) => {
-        const next = prev.map((r) => (r.id === id ? { ...r, ...patch } : r));
-        saveSection('releaseStatuses', { items: next });
-        return next;
-      });
-    },
-    [saveSection],
-  );
-
   const handleNewClick = useCallback(() => {
     setEditingItem(null);
     setDialogOpen(true);
@@ -142,9 +131,7 @@ const ReleaseCycleStatusesSection = ({
           lastSyncedIdsRef.current = new Set((next as IConfigStatusLevel[]).map((r) => r.id));
           saveSection('releaseStatuses', { items: next as IConfigStatusLevel[] });
         }}
-        customColumns={
-          releaseStatusColumns(activeTicketTypeColumns, handleUpdateRow) as unknown as undefined
-        }
+        customColumns={releaseStatusColumns(activeTicketTypeColumns) as unknown as undefined}
         variant='plain'
         defaultExpanded={false}
         selectedRowId={selectedRowId}
@@ -168,7 +155,10 @@ const ReleaseCycleStatusesSection = ({
         subtitle={RELEASE_CYCLE_STATUSES_CONFIG.subtitle}
         title='Release Cycle Status'
         hideFinalStatus
-        successMessage={{ add: 'Release status added successfully', edit: 'Release status updated successfully' }}
+        successMessage={{
+          add: 'Release status added successfully',
+          edit: 'Release status updated successfully',
+        }}
       />
 
       <ConfigDeleteDialog

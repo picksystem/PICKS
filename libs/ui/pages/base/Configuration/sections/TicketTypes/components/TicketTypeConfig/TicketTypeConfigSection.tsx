@@ -299,6 +299,7 @@ const TicketTypeConfigSection = () => {
       <SequenceDialog
         open={sequenceOpen}
         ticketTypes={ticketTypes || []}
+        tagMap={tagMap}
         onClose={() => setDisplaySequenceOpen(false)}
         onSave={() => setDisplaySequenceOpen(false)}
       />

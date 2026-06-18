@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Box } from '@serviceops/component';
 import { useStyles } from './styles';
 import { useConfiguration } from '@serviceops/confighooks';
@@ -57,31 +57,6 @@ const DEFAULT_CONTROLS: IConfigSLAAdminControls = {
   requireTimeLogsForResolution: false,
   timeLogsActivationEnabled: true,
   showTimeLogsToCallers: false,
-};
-
-const FALLBACK_DEFAULTS = {
-  activation: true,
-  p1: '00:15',
-  p2: '00:30',
-  p3: '01:00',
-  p4: '04:00',
-  p5: '08:00',
-};
-const FALLBACK_RES = {
-  activation: true,
-  p1: '04:00',
-  p2: '08:00',
-  p3: '16:00',
-  p4: '24:00',
-  p5: '48:00',
-};
-const FALLBACK_DUEDATE = {
-  activation: true,
-  p1: '08:00',
-  p2: '16:00',
-  p3: '24:00',
-  p4: '48:00',
-  p5: '72:00',
 };
 
 const DEFAULT_ACK_VALUES: Record<
@@ -291,7 +266,14 @@ const SLAs = () => {
   const displayAckRows: IConfigResponseAckSLARow[] = activeTicketTypes.flatMap((tt) => {
     const stored = ackRows.find(matchByTicketTypeId({ ticketTypeId: tt.id }));
     if (!stored) return [];
-    const def = DEFAULT_ACK_VALUES[tt.type] ?? FALLBACK_DEFAULTS;
+    const def = DEFAULT_ACK_VALUES[tt.type] ?? {
+      activation: true,
+      p1: '00:15',
+      p2: '00:30',
+      p3: '01:00',
+      p4: '04:00',
+      p5: '08:00',
+    };
     const isActive = stored.isActive ?? stored.activation ?? def.activation;
     return [
       {
@@ -314,7 +296,14 @@ const SLAs = () => {
   const displayResRows: IConfigResponseAckSLARow[] = activeTicketTypes.flatMap((tt) => {
     const stored = resRows.find(matchByTicketTypeId({ ticketTypeId: tt.id }));
     if (!stored) return [];
-    const def = DEFAULT_RES_VALUES[tt.type] ?? FALLBACK_RES;
+    const def = DEFAULT_RES_VALUES[tt.type] ?? {
+      activation: true,
+      p1: '04:00',
+      p2: '08:00',
+      p3: '16:00',
+      p4: '24:00',
+      p5: '48:00',
+    };
     return [
       {
         id: stored.id,
@@ -335,7 +324,14 @@ const SLAs = () => {
   const displayDueDateRows: IConfigResponseAckSLARow[] = activeTicketTypes.flatMap((tt) => {
     const stored = dueDateRows.find(matchByTicketTypeId({ ticketTypeId: tt.id }));
     if (!stored) return [];
-    const def = DEFAULT_DUEDATE_VALUES[tt.type] ?? FALLBACK_DUEDATE;
+    const def = DEFAULT_DUEDATE_VALUES[tt.type] ?? {
+      activation: true,
+      p1: '08:00',
+      p2: '16:00',
+      p3: '24:00',
+      p4: '48:00',
+      p5: '72:00',
+    };
     return [
       {
         id: stored.id,

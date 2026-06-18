@@ -18,11 +18,12 @@ import { SequenceDialogProps } from './util';
 import { ITicketType } from '@serviceops/interfaces';
 import { useReorderTicketTypesMutation } from '@serviceops/services';
 import { useNotification } from '@serviceops/hooks';
-import { getTypeColor } from '../../utils/ticketTypeIcons';
+import { getTagOption, getTypeColor } from '../../utils/ticketTypeIcons';
 
 const ACCENT = '#0369a1';
+const FALLBACK_TAG_COLOR = '#64748b';
 
-const SequenceDialog = ({ open, ticketTypes, onClose, onSave }: SequenceDialogProps) => {
+const SequenceDialog = ({ open, ticketTypes, tagMap, onClose, onSave }: SequenceDialogProps) => {
   const [ordered, setOrdered] = useState<ITicketType[]>([]);
   const [reorderTicketTypes, { isLoading }] = useReorderTicketTypesMutation();
   const { success } = useNotification();
@@ -112,7 +113,12 @@ const SequenceDialog = ({ open, ticketTypes, onClose, onSave }: SequenceDialogPr
       <DialogContent dividers sx={{ p: 0 }}>
         <List disablePadding>
           {ordered.map((t, index) => {
-            const color = getTypeColor(t.type);
+            // Prefer the priority tag color so the sequence number circle
+            // matches the chip shown in the ticket type card / form dialog.
+            // Falls back to the per-type color, then grey for unrecognised
+            // ticket types.
+            const tagValue = tagMap?.[t.type];
+            const color = (tagValue && getTagOption(tagValue)?.color) || getTypeColor(t.type);
             return (
               <ListItem
                 key={t.type}

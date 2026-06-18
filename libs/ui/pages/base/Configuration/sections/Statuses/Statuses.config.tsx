@@ -131,37 +131,12 @@ const StatusNameCell = ({ row }: { row: IConfigStatusLevel }): React.ReactNode =
     <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: 'text.primary' }}>
       {row.displayName}
     </Typography>
-    {row.isFinal && (
-      <Typography
-        component='span'
-        sx={{
-          fontSize: '0.65rem',
-          fontWeight: 600,
-          color: 'text.secondary',
-          px: 0.75,
-          py: 0.25,
-          borderRadius: 1,
-          border: '1px solid',
-          borderColor: 'divider',
-        }}
-      >
-        Final
-      </Typography>
-    )}
   </Box>
-);
-
-// Description cell renderer
-const descCell = (v: unknown): React.ReactNode => (
-  <Typography variant='body2' color='text.secondary' fontSize='0.78rem'>
-    {String(v || '—')}
-  </Typography>
 );
 
 // Build ticket status columns
 export const ticketStatusColumns = (
   activeTicketTypeColumns: Array<{ key: string; label: string }>,
-  onUpdateRow: (id: string, patch: Partial<IConfigStatusLevel>) => void,
 ): Column<IConfigStatusLevel>[] => [
   {
     id: 'displayName',
@@ -217,7 +192,6 @@ export const ticketStatusColumns = (
 // Build release status columns
 export const releaseStatusColumns = (
   activeTicketTypeColumns: Array<{ key: string; label: string }>,
-  onUpdateRow: (id: string, patch: Partial<IConfigStatusLevel>) => void,
 ): Column<IConfigStatusLevel>[] => [
   {
     id: 'displayName',
@@ -269,6 +243,3 @@ export const releaseStatusColumns = (
     }),
   ),
 ];
-
-export * from './components/TicketStatuses/defaults';
-export * from './components/ReleaseTicketStatuses/defaults';

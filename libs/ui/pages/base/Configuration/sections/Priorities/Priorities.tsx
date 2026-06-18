@@ -17,8 +17,6 @@ import {
   UrgencySection,
   TicketMatrixSection,
 } from './components';
-import { ConfigDeleteDialog } from '../../dialogs/ConfigDialogs/ConfigDialogs';
-import { useNotification } from '@serviceops/hooks';
 import {
   PriorityLevel,
   ImpactLevel,
@@ -257,7 +255,6 @@ const DEFAULT_MATRIX: ExtendedMatrixMap = {
 
 const Priorities = () => {
   const { classes } = useStyles();
-  const { success } = useNotification();
   const { priorities: apiPriorities, ticketTypeKeys, saveSection, isLoading } = useConfiguration();
   const { ticketTypes } = useSharedTicketTypes();
 
@@ -303,21 +300,8 @@ const Priorities = () => {
       }))
     : TICKET_TYPE_COLUMNS.map((c) => ({ key: c.key, label: c.label }));
 
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [selectedPriorityId, setSelectedPriorityId] = useState<string | null>(null);
-  const [selectedPriority, setSelectedPriority] = useState<PriorityLevel | null>(null);
-
-  const handleDeletePriority = () => {
-    if (selectedPriorityId) {
-      const next = priorities.filter((p) => p.id !== selectedPriorityId);
-      setPriorities(next);
-      persistPriorities(next, impacts, urgencies, matrices, simplePriorities);
-      success('Priority deleted successfully');
-      setSelectedPriorityId(null);
-      setSelectedPriority(null);
-    }
-    setConfirmDeleteOpen(false);
-  };
+  const [, setSelectedPriority] = useState<PriorityLevel | null>(null);
 
   const updateMatrix = (
     ticketType: string,
@@ -492,14 +476,6 @@ const Priorities = () => {
           onMatrixReset={resetMatrixForType}
           onMatrixCellUpdate={updateMatrixCell}
           onSimplePrioritiesChange={replaceSimplePriorities}
-        />
-
-        <ConfigDeleteDialog
-          open={confirmDeleteOpen}
-          onClose={() => setConfirmDeleteOpen(false)}
-          onConfirm={handleDeletePriority}
-          entityName='Priority'
-          itemName={selectedPriority?.name}
         />
       </ConfigurationSection>
     </Box>
