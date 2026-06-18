@@ -12,11 +12,7 @@ export const CreateTicketTypeSchema = yup.object({
     .matches(/^[a-z0-9_]+$/, 'Only lowercase letters, numbers, and underscores allowed'),
   name: yup.string().required('Name is required').max(25, 'Name must be 25 characters or less'),
   displayName: yup.string().required('Display text is required').default(''),
-  displayTag: yup
-    .string()
-    .required('Display tag is required')
-    .max(40, 'Display tag must be 40 characters or less')
-    .default(''),
+  displayTag: yup.string().max(40, 'Display tag must be 40 characters or less').default(''),
   shortDescription: yup
     .string()
     .transform((value) => {

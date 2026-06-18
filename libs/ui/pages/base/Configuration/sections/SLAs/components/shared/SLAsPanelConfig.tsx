@@ -137,6 +137,7 @@ export const DUE_DATES_CONFIG: TableConfig = {
     {
       name: 'shortDescription',
       label: 'Short Description',
+      required: true,
       type: 'richText' as const,
     },
     {
@@ -178,6 +179,7 @@ export const RESOLUTION_SLA_CONFIG: TableConfig = {
     {
       name: 'shortDescription',
       label: 'Short Description',
+      required: true,
       type: 'richText' as const,
     },
     {
@@ -219,6 +221,7 @@ export const RESPONSE_ACK_SLA_CONFIG: TableConfig = {
     {
       name: 'shortDescription',
       label: 'Short Description',
+      required: true,
       type: 'richText' as const,
     },
     {

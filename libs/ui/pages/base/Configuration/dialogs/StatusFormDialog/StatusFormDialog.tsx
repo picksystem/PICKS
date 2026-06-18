@@ -13,7 +13,7 @@ import {
   Collapse,
 } from '@mui/material';
 import { RadioButtonChecked, ColorLens, Close, Check, ExpandMore } from '@mui/icons-material';
-import { useNotification } from '@serviceops/hooks';
+import { useFieldError, useNotification } from '@serviceops/hooks';
 import { IConfigStatusLevel } from '@serviceops/interfaces';
 import { ConfigFormDialog } from '@serviceops/configdialogs';
 import { parseRichText, serializeRichText, RichTextEditor } from '../../shared/RichTextEditor';
@@ -129,6 +129,7 @@ const StatusFormDialog = ({
   successMessage,
 }: StatusFormDialogProps) => {
   const { success } = useNotification();
+  const reqError = useFieldError();
   const [form, setForm] = useState<Partial<IConfigStatusLevel>>({});
   // Mirror of `form` that updates synchronously inside onChange handlers.
   // The RichTextEditor only fires onChange on blur, so a state update from
@@ -140,6 +141,41 @@ const StatusFormDialog = ({
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [ticketTypesExpanded, setTicketTypesExpanded] = useState(false);
   const [duplicateAlert, setDuplicateAlert] = useState<string | null>(null);
+  // Per-field required-validation state. Touched flips true on blur (or
+  // immediately on Submit) and `requiredErrors` carries the field-level
+  // message produced by validateRequired. Mirrors the formik
+  // touched/errors shape that useFieldError expects.
+  const [touched, setTouched] = useState<{
+    displayName?: boolean;
+    shortDescription?: boolean;
+    bgColor?: boolean;
+  }>({});
+  const [requiredErrors, setRequiredErrors] = useState<{
+    displayName?: string;
+    shortDescription?: string;
+    bgColor?: string;
+  }>({});
+
+  /**
+   * Required-field validation per the spec for the Ticket Status section:
+   *   <displayName> (Ticket Status)  — Yes
+   *   Short Description              — Yes
+   *   Description                    — No
+   *   Colour                         — Yes
+   *   Status Activation              — NA  — skip
+   *   SLA Activation                 — NA  — skip
+   *   Internal note                  — No
+   *
+   * Rich-text fields are checked on plain text (markers stripped) so a user
+   * who only typed formatting without content still fails validation.
+   */
+  const validateRequired = (f: Partial<IConfigStatusLevel>): typeof requiredErrors => {
+    const errs: typeof requiredErrors = {};
+    if (!String(f.displayName ?? '').trim()) errs.displayName = 'required';
+    if (!plainText(String(f.shortDescription ?? ''))) errs.shortDescription = 'required';
+    if (!String(f.bgColor ?? '').trim()) errs.bgColor = 'required';
+    return errs;
+  };
 
   /**
    * Returns a single consolidated duplicate message, or null when the form
@@ -191,8 +227,14 @@ const StatusFormDialog = ({
   useEffect(() => {
     if (!open) {
       setColorPickerOpen(false);
+      setTouched({});
+      setRequiredErrors({});
       return;
     }
+    // Reset required-validation state each time the dialog opens so
+    // errors from a previous Add/Edit don't carry over.
+    setTouched({});
+    setRequiredErrors({});
     const initial: Partial<IConfigStatusLevel> = editing
       ? {
           name: editing.name,
@@ -256,6 +298,17 @@ const StatusFormDialog = ({
 
   const handleSubmit = () => {
     // Read the ref, not the form state — see formRef comment above for why.
+    // Run required-field validation first so the user sees a per-field red
+    // border / helper text on Ticket Status, Short Description, and Colour
+    // when any of them is blank. Mark all required fields as touched so the
+    // errors render even if the user hasn't blurred them yet.
+    const reqErrs = validateRequired(formRef.current);
+    setRequiredErrors(reqErrs);
+    setTouched({ displayName: true, shortDescription: true, bgColor: true });
+    if (Object.keys(reqErrs).length > 0) {
+      return;
+    }
+
     const message = computeDuplicateMessage(formRef.current);
     if (message) {
       setDuplicateAlert(message);
@@ -299,7 +352,7 @@ const StatusFormDialog = ({
         accent='#0369a1'
         title={title}
         subtitle={subtitle}
-        submitDisabled={!form.displayName || Boolean(duplicateAlert)}
+        submitDisabled={Boolean(duplicateAlert)}
         submitLabel={editing ? 'Save' : 'Submit'}
         maxWidth='md'
       >
@@ -312,33 +365,50 @@ const StatusFormDialog = ({
           </Alert>
         )}
         <TextField
-          label='Ticket Status'
+          label={displayNameLabel}
           size='small'
           value={form.displayName ?? ''}
           onChange={(e) =>
             setForm((f) => ({ ...f, displayName: e.target.value, name: e.target.value }))
           }
+          onBlur={() => setTouched((t) => ({ ...t, displayName: true }))}
           placeholder='e.g. New, In Progress, On Hold'
           inputProps={{ style: { fontFamily: 'monospace', fontWeight: 700 } }}
+          error={Boolean(reqError(touched.displayName, requiredErrors.displayName))}
+          helperText={reqError(touched.displayName, requiredErrors.displayName)}
           required
         />
 
         <Box>
-          <RichTextEditor
-            value={parseRichText(form.shortDescription ?? '')}
-            onChange={(value) =>
-              setForm((f) => ({ ...f, shortDescription: serializeRichText(value.segments) }))
-            }
-            showFooterActions={false}
-            title='Short Description'
-          />
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'none' }}
+          <Box
+            onBlur={() => setTouched((t) => ({ ...t, shortDescription: true }))}
+            sx={{ borderRadius: 1 }}
           >
-            Brief summary shown in compact views
-          </Typography>
+            <RichTextEditor
+              value={parseRichText(form.shortDescription ?? '')}
+              onChange={(value) =>
+                setForm((f) => ({ ...f, shortDescription: serializeRichText(value.segments) }))
+              }
+              showFooterActions={false}
+              title='Short Description'
+              required
+              error={Boolean(reqError(touched.shortDescription, requiredErrors.shortDescription))}
+            />
+            <Typography
+              variant='caption'
+              sx={{
+                color: reqError(touched.shortDescription, requiredErrors.shortDescription)
+                  ? '#d32f2f'
+                  : 'text.secondary',
+                fontSize: '0.7rem',
+                mt: 0.5,
+                display: 'block',
+              }}
+            >
+              {reqError(touched.shortDescription, requiredErrors.shortDescription) ||
+                'Brief summary shown in compact views'}
+            </Typography>
+          </Box>
         </Box>
 
         <Box>
@@ -353,9 +423,9 @@ const StatusFormDialog = ({
           <Typography
             variant='caption'
             color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'none' }}
+            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
           >
-            Describe when this status should be used
+            Describe when this status should be used — optional
           </Typography>
         </Box>
 
@@ -366,7 +436,10 @@ const StatusFormDialog = ({
           required
           value={currentColor}
           onChange={handleColorInputChange}
+          onBlur={() => setTouched((t) => ({ ...t, bgColor: true }))}
           placeholder='#2563eb'
+          error={Boolean(reqError(touched.bgColor, requiredErrors.bgColor))}
+          helperText={reqError(touched.bgColor, requiredErrors.bgColor)}
           inputProps={{
             style: { fontFamily: 'monospace', textTransform: 'lowercase' },
             maxLength: 7,
@@ -431,9 +504,9 @@ const StatusFormDialog = ({
           <Typography
             variant='caption'
             color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'none' }}
+            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
           >
-            Internal note for this status (not visible to end users)
+            Internal note for this status (not visible to end users) — optional
           </Typography>
         </Box>
 

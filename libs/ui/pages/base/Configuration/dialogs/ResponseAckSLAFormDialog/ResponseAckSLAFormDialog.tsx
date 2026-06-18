@@ -11,7 +11,7 @@ import {
 } from '@serviceops/component';
 import { FormControl, InputLabel } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import { useNotification } from '@serviceops/hooks';
+import { useFieldError, useNotification } from '@serviceops/hooks';
 import { ResponseAckSLAFormDialogProps } from './util';
 import { ConfigFormDialog } from '../ConfigDialogs/ConfigDialogs';
 import { parseRichText, serializeRichText, RichTextEditor } from '../../shared/RichTextEditor';
@@ -66,11 +66,60 @@ const ResponseAckSLAFormDialog = ({
   onSubmit,
 }: ResponseAckSLAFormDialogProps) => {
   const { success } = useNotification();
+  const reqError = useFieldError();
   const [form, setForm] = useState(EMPTY_FORM);
   // Mirror of `form` that updates synchronously inside onChange handlers.
   // The RichTextEditor only fires onChange on blur, so the ref lets handleSubmit
   // always read the latest typed value.
   const formRef = useRef(EMPTY_FORM);
+  // Per-field required-validation state. Touched flips true on blur (or
+  // immediately on Submit) and `requiredErrors` carries the field-level
+  // message produced by validateRequired. Mirrors the formik
+  // touched/errors shape that useFieldError expects.
+  const [touched, setTouched] = useState<{
+    shortDescription?: boolean;
+    p1?: boolean;
+    p2?: boolean;
+    p3?: boolean;
+    p4?: boolean;
+    p5?: boolean;
+  }>({});
+  const [requiredErrors, setRequiredErrors] = useState<{
+    shortDescription?: string;
+    p1?: string;
+    p2?: string;
+    p3?: string;
+    p4?: string;
+    p5?: string;
+  }>({});
+
+  /**
+   * Required-field validation per the spec for the Response / Acknowledgement
+   * SLA row dialog:
+   *   SLAs (Ticket Type)         — Auto filled / required (enforced via submitDisabled)
+   *   Activation                 — NA          — skip
+   *   Short Description          — Yes
+   *   Internal note              — No          — skip
+   *   P1, P2, ... (Time entries) — Yes
+   *
+   * Rich-text fields are checked on plain text (markers stripped) so a user
+   * who only typed formatting without content still fails validation.
+   */
+  const validateRequired = (f: typeof EMPTY_FORM): typeof requiredErrors => {
+    const errs: typeof requiredErrors = {};
+    const shortVal = String(f.shortDescription ?? '')
+      .replace(/\*\*/g, '')
+      .replace(/__/g, '')
+      .replace(/\*/g, '')
+      .trim();
+    if (!shortVal) errs.shortDescription = 'required';
+    (['p1', 'p2', 'p3', 'p4', 'p5'] as const).forEach((p) => {
+      const raw = String(f[p] ?? '').trim();
+      const n = parseInt(raw.split(':')[0] ?? '', 10);
+      if (!raw || isNaN(n) || n < 0) errs[p] = 'required';
+    });
+    return errs;
+  };
 
   useEffect(() => {
     if (editingRow) {
@@ -92,6 +141,10 @@ const ResponseAckSLAFormDialog = ({
       formRef.current = EMPTY_FORM;
       setForm(EMPTY_FORM);
     }
+    // Reset required-validation state each time the dialog opens so
+    // errors from a previous Add/Edit don't carry over.
+    setTouched({});
+    setRequiredErrors({});
   }, [editingRow, open]);
 
   useEffect(() => {
@@ -120,7 +173,24 @@ const ResponseAckSLAFormDialog = ({
 
   const handleSubmit = () => {
     if (!form.ticketTypeId) return;
+    // Run required-field validation first so the user sees a per-field red
+    // border / helper text on Short Description and P1–P5 when any of them
+    // is blank. Mark all required fields as touched so the errors render
+    // even if the user hasn't blurred them yet.
     const live = formRef.current;
+    const reqErrs = validateRequired(live);
+    setRequiredErrors(reqErrs);
+    setTouched({
+      shortDescription: true,
+      p1: true,
+      p2: true,
+      p3: true,
+      p4: true,
+      p5: true,
+    });
+    if (Object.keys(reqErrs).length > 0) {
+      return;
+    }
     onSubmit({
       id: editingRow?.id ?? `rack_${Date.now()}`,
       ticketTypeId: live.ticketTypeId,
@@ -207,12 +277,33 @@ const ResponseAckSLAFormDialog = ({
       )}
 
       <Box>
-        <RichTextEditor
-          value={parseRichText(form.shortDescription ?? '')}
-          onChange={handleShortDescriptionChange}
-          showFooterActions={false}
-          title='Short Description'
-        />
+        <Box
+          onBlur={() => setTouched((t) => ({ ...t, shortDescription: true }))}
+          sx={{ borderRadius: 1 }}
+        >
+          <RichTextEditor
+            value={parseRichText(form.shortDescription ?? '')}
+            onChange={handleShortDescriptionChange}
+            showFooterActions={false}
+            title='Short Description'
+            required
+            error={Boolean(reqError(touched.shortDescription, requiredErrors.shortDescription))}
+          />
+          <Typography
+            variant='caption'
+            sx={{
+              color: reqError(touched.shortDescription, requiredErrors.shortDescription)
+                ? '#d32f2f'
+                : 'text.secondary',
+              fontSize: '0.7rem',
+              mt: 0.5,
+              display: 'block',
+            }}
+          >
+            {reqError(touched.shortDescription, requiredErrors.shortDescription) ||
+              'Brief summary shown in compact views'}
+          </Typography>
+        </Box>
       </Box>
 
       <Box>
@@ -235,9 +326,13 @@ const ResponseAckSLAFormDialog = ({
               label={p.toUpperCase()}
               type='number'
               size='small'
+              required
               fullWidth
               value={form[p]}
               onChange={(e) => setNum(p, e.target.value)}
+              onBlur={() => setTouched((t) => ({ ...t, [p]: true }))}
+              error={Boolean(reqError(touched[p], requiredErrors[p]))}
+              helperText={reqError(touched[p], requiredErrors[p])}
               slotProps={{ htmlInput: { min: 0 } }}
             />
           </Grid>

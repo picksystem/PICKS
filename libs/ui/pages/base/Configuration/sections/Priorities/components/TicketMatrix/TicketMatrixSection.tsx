@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import {
   Alert,
   Box,
@@ -32,7 +32,7 @@ import {
 } from '../../util';
 import { IConfigMatrixMap, IConfigSimplePrioritiesBucket } from '@serviceops/interfaces';
 import { useStyles } from '../../../../shared/GenericPanel/styles';
-import { useNotification, useDebounce } from '@serviceops/hooks';
+import { useFieldError, useNotification, useDebounce } from '@serviceops/hooks';
 import { SearchField } from '@serviceops/pages/base/Configuration/shared/SearchField';
 import CustomDropdown from '../../../../dialogs/TicketTypeFormDialog/components/CustomDropdown';
 import {
@@ -126,6 +126,7 @@ const TicketMatrixSection = ({
 }: TicketMatrixSectionProps) => {
   const { classes } = useStyles();
   const { success } = useNotification();
+  const reqError = useFieldError();
   const [activeTicketType, setActiveTicketType] = useState<string>(ticketTypes[0]?.key ?? '');
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -180,6 +181,85 @@ const TicketMatrixSection = ({
   const editFormRef = useRef<typeof editForm>(editForm);
   const [addDuplicateAlert, setAddDuplicateAlert] = useState<string | null>(null);
   const [editDuplicateAlert, setEditDuplicateAlert] = useState<string | null>(null);
+  // Per-field required-validation state for the Add dialog. Touched flips
+  // true on blur (or immediately on Submit) and `requiredErrors` carries
+  // the field-level message produced by validateRequired. Mirrors the
+  // formik touched/errors shape that useFieldError expects.
+  const [addTouched, setAddTouched] = useState<{
+    impactId?: boolean;
+    urgencyId?: boolean;
+    priorityId?: boolean;
+    shortDescription?: boolean;
+    description?: boolean;
+  }>({});
+  const [addRequiredErrors, setAddRequiredErrors] = useState<{
+    impactId?: string;
+    urgencyId?: string;
+    priorityId?: string;
+    shortDescription?: string;
+    description?: string;
+  }>({});
+  // Per-field required-validation state for the Edit dialog.
+  const [editTouched, setEditTouched] = useState<{
+    impactId?: boolean;
+    urgencyId?: boolean;
+    priorityId?: boolean;
+    shortDescription?: boolean;
+    description?: boolean;
+  }>({});
+  const [editRequiredErrors, setEditRequiredErrors] = useState<{
+    impactId?: string;
+    urgencyId?: string;
+    priorityId?: string;
+    shortDescription?: string;
+    description?: string;
+  }>({});
+
+  // Strip rich-text markers and compare case-insensitively on plain text.
+  // Mirrors the helper used in PriorityFormDialog.
+  const plainText = (v: string): string =>
+    String(v ?? '')
+      .replace(/\*\*/g, '')
+      .replace(/__/g, '')
+      .replace(/\*/g, '')
+      .trim()
+      .toLowerCase();
+
+  /**
+   * Required-field validation per the spec for the Matrix section:
+   *   Impact, Urgency, Priority, Short Description, Description — Yes
+   *   Activate simple priorities, Internal note                  — No
+   *
+   * Rich-text fields are checked on plain text (markers stripped) so a user
+   * who only typed formatting without content still fails validation.
+   */
+  const validateRequired = (f: {
+    impactId: string;
+    urgencyId: string;
+    priorityId: string;
+    shortDescription: string;
+    description: string;
+  }): {
+    impactId?: string;
+    urgencyId?: string;
+    priorityId?: string;
+    shortDescription?: string;
+    description?: string;
+  } => {
+    const errs: {
+      impactId?: string;
+      urgencyId?: string;
+      priorityId?: string;
+      shortDescription?: string;
+      description?: string;
+    } = {};
+    if (!String(f.impactId ?? '').trim()) errs.impactId = 'required';
+    if (!String(f.urgencyId ?? '').trim()) errs.urgencyId = 'required';
+    if (!String(f.priorityId ?? '').trim()) errs.priorityId = 'required';
+    if (!plainText(f.shortDescription ?? '')) errs.shortDescription = 'required';
+    if (!plainText(f.description ?? '')) errs.description = 'required';
+    return errs;
+  };
 
   // Keep refs in sync with the form state. The refs are read by the
   // submit handlers to capture the latest values typed into the
@@ -349,32 +429,60 @@ const TicketMatrixSection = ({
       description: '',
       internalNote: '',
     });
+    setAddTouched({});
+    setAddRequiredErrors({});
     setAddDialogOpen(true);
   };
 
   const handleAddRow = () => {
-    if (addForm.impactId && addForm.urgencyId && addForm.priorityId) {
-      // Read the ref, not the form state — see addFormRef comment for why.
-      const dupError = validateMatrixRowDuplicate(
-        addFormRef.current as unknown as Record<string, unknown>,
-        allRows,
-        null,
-      );
-      if (dupError) {
-        setAddDuplicateAlert(dupError._form);
-        return;
-      }
-      onMatrixChange(activeTicketType, addForm.impactId, addForm.urgencyId, addForm.priorityId);
-      if (onMatrixCellUpdate) {
-        onMatrixCellUpdate(activeTicketType, addForm.impactId, addForm.urgencyId, {
-          shortDescription: addForm.shortDescription,
-          description: addForm.description,
-          internalNote: addForm.internalNote,
-        });
-      }
-      success('Combination added successfully');
-      setAddDialogOpen(false);
+    // Read the ref, not the form state — see addFormRef comment for why.
+    // Run required-field validation first so the user sees a per-field
+    // red border / helper text on Impact, Urgency, Priority, Short
+    // Description, and Description when any of them is blank. Mark all
+    // required fields as touched so the errors render even if the user
+    // hasn't blurred them yet.
+    const reqErrs = validateRequired(addFormRef.current);
+    setAddRequiredErrors(reqErrs);
+    setAddTouched({
+      impactId: true,
+      urgencyId: true,
+      priorityId: true,
+      shortDescription: true,
+      description: true,
+    });
+    if (Object.keys(reqErrs).length > 0) {
+      return;
     }
+
+    const dupError = validateMatrixRowDuplicate(
+      addFormRef.current as unknown as Record<string, unknown>,
+      allRows,
+      null,
+    );
+    if (dupError) {
+      setAddDuplicateAlert(dupError._form);
+      return;
+    }
+    onMatrixChange(
+      activeTicketType,
+      addFormRef.current.impactId,
+      addFormRef.current.urgencyId,
+      addFormRef.current.priorityId,
+    );
+    if (onMatrixCellUpdate) {
+      onMatrixCellUpdate(
+        activeTicketType,
+        addFormRef.current.impactId,
+        addFormRef.current.urgencyId,
+        {
+          shortDescription: addFormRef.current.shortDescription,
+          description: addFormRef.current.description,
+          internalNote: addFormRef.current.internalNote,
+        },
+      );
+    }
+    success('Combination added successfully');
+    setAddDialogOpen(false);
   };
 
   const openEditDialog = () => {
@@ -389,12 +497,30 @@ const TicketMatrixSection = ({
       description: cell?.description ?? '',
       internalNote: cell?.internalNote ?? '',
     });
+    setEditTouched({});
+    setEditRequiredErrors({});
     setEditDialogOpen(true);
   };
 
   const handleEditRow = () => {
-    if (!editForm.impactId || !editForm.urgencyId || !selectedRowId) return;
     // Read the ref, not the form state — see editFormRef comment for why.
+    // Run required-field validation first so the user sees a per-field
+    // red border / helper text on Impact, Urgency, Priority, Short
+    // Description, and Description when any of them is blank.
+    const reqErrs = validateRequired(editFormRef.current);
+    setEditRequiredErrors(reqErrs);
+    setEditTouched({
+      impactId: true,
+      urgencyId: true,
+      priorityId: true,
+      shortDescription: true,
+      description: true,
+    });
+    if (Object.keys(reqErrs).length > 0) {
+      return;
+    }
+
+    if (!selectedRowId) return;
     const dupError = validateMatrixRowDuplicate(
       editFormRef.current as unknown as Record<string, unknown>,
       allRows,
@@ -413,7 +539,12 @@ const TicketMatrixSection = ({
       }
       onMatrixReset(activeTicketType, next);
     }
-    onMatrixChange(activeTicketType, editForm.impactId, editForm.urgencyId, editForm.priorityId);
+    onMatrixChange(
+      activeTicketType,
+      editForm.impactId,
+      editForm.urgencyId,
+      editForm.priorityId,
+    );
     if (onMatrixCellUpdate) {
       onMatrixCellUpdate(activeTicketType, editForm.impactId, editForm.urgencyId, {
         shortDescription: editForm.shortDescription,
@@ -775,19 +906,18 @@ const TicketMatrixSection = ({
         {/* Add Dialog */}
         <ConfigFormDialog
           open={addDialogOpen}
-          onClose={() => setAddDialogOpen(false)}
+          onClose={() => {
+            setAddDialogOpen(false);
+            setAddTouched({});
+            setAddRequiredErrors({});
+          }}
           onSubmit={handleAddRow}
           isEdit={false}
           icon={<MatrixIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
           accent={accentColor}
           title='Combination'
           subtitle='Map a priority to an impact and urgency pair'
-          submitDisabled={
-            !addForm.impactId ||
-            !addForm.urgencyId ||
-            !addForm.priorityId ||
-            Boolean(addDuplicateAlert)
-          }
+          submitDisabled={Boolean(addDuplicateAlert)}
           submitLabel='Submit'
           maxWidth='md'
         >
@@ -812,74 +942,121 @@ const TicketMatrixSection = ({
                 label='Impact'
                 value={addForm.impactId}
                 onChange={(value) => setAddForm((f) => ({ ...f, impactId: value }))}
+                onBlur={() => setAddTouched((t) => ({ ...t, impactId: true }))}
                 options={activeImpacts
                   .filter((i) => i.enabledFor?.[activeTicketType] === true)
                   .map((i) => ({
                     value: i.id,
                     label: i.displayName,
                   }))}
+                error={Boolean(reqError(addTouched.impactId, addRequiredErrors.impactId))}
+                helperText={reqError(addTouched.impactId, addRequiredErrors.impactId)}
                 required
               />
               <CustomDropdown
                 label='Urgency'
                 value={addForm.urgencyId}
                 onChange={(value) => setAddForm((f) => ({ ...f, urgencyId: value }))}
+                onBlur={() => setAddTouched((t) => ({ ...t, urgencyId: true }))}
                 options={activeUrgencies
                   .filter((u) => u.enabledFor?.[activeTicketType] === true)
                   .map((u) => ({
                     value: u.id,
                     label: u.displayName,
                   }))}
+                error={Boolean(reqError(addTouched.urgencyId, addRequiredErrors.urgencyId))}
+                helperText={reqError(addTouched.urgencyId, addRequiredErrors.urgencyId)}
                 required
               />
               <CustomDropdown
                 label='Priority'
                 value={addForm.priorityId}
                 onChange={(value) => setAddForm((f) => ({ ...f, priorityId: value }))}
+                onBlur={() => setAddTouched((t) => ({ ...t, priorityId: true }))}
                 options={priorities
                   .filter((p) => p.enabledFor?.[activeTicketType] === true)
                   .map((p) => ({
                     value: p.id,
                     label: p.name,
                   }))}
+                error={Boolean(reqError(addTouched.priorityId, addRequiredErrors.priorityId))}
+                helperText={reqError(addTouched.priorityId, addRequiredErrors.priorityId)}
                 required
               />
             </Box>
 
             <Box>
-              <RichTextEditor
-                value={parseRichText(addForm.shortDescription)}
-                onChange={(value) =>
-                  setAddForm((f) => ({ ...f, shortDescription: serializeRichText(value.segments) }))
-                }
-                showFooterActions={false}
-                title='Short Description'
-              />
-              <Typography
-                variant='caption'
-                color='text.secondary'
-                sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
+              <Box
+                onBlur={() => setAddTouched((t) => ({ ...t, shortDescription: true }))}
+                sx={{ borderRadius: 1 }}
               >
-                Brief summary shown in compact views
-              </Typography>
+                <RichTextEditor
+                  value={parseRichText(addForm.shortDescription)}
+                  onChange={(value) =>
+                    setAddForm((f) => ({
+                      ...f,
+                      shortDescription: serializeRichText(value.segments),
+                    }))
+                  }
+                  showFooterActions={false}
+                  title='Short Description'
+                  required
+                  error={Boolean(
+                    reqError(addTouched.shortDescription, addRequiredErrors.shortDescription),
+                  )}
+                />
+                <Typography
+                  variant='caption'
+                  sx={{
+                    color: reqError(
+                      addTouched.shortDescription,
+                      addRequiredErrors.shortDescription,
+                    )
+                      ? '#d32f2f'
+                      : 'text.secondary',
+                    fontSize: '0.7rem',
+                    mt: 0.5,
+                    display: 'block',
+                  }}
+                >
+                  {reqError(addTouched.shortDescription, addRequiredErrors.shortDescription) ||
+                    'Brief summary shown in compact views'}
+                </Typography>
+              </Box>
             </Box>
 
             <Box>
-              <RichTextEditor
-                value={parseRichText(addForm.description)}
-                onChange={(value) =>
-                  setAddForm((f) => ({ ...f, description: serializeRichText(value.segments) }))
-                }
-                showFooterActions={false}
-                title='Description'
-              />
-              <Typography
-                variant='caption'
-                color='text.secondary'
-                sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
+              <Box
+                onBlur={() => setAddTouched((t) => ({ ...t, description: true }))}
+                sx={{ borderRadius: 1 }}
               >
-                Describe when this combination should be used
-              </Typography>
+                <RichTextEditor
+                  value={parseRichText(addForm.description)}
+                  onChange={(value) =>
+                    setAddForm((f) => ({ ...f, description: serializeRichText(value.segments) }))
+                  }
+                  showFooterActions={false}
+                  title='Description'
+                  required
+                  error={Boolean(
+                    reqError(addTouched.description, addRequiredErrors.description),
+                  )}
+                />
+                <Typography
+                  variant='caption'
+                  sx={{
+                    color: reqError(addTouched.description, addRequiredErrors.description)
+                      ? '#d32f2f'
+                      : 'text.secondary',
+                    fontSize: '0.7rem',
+                    mt: 0.5,
+                    display: 'block',
+                  }}
+                >
+                  {reqError(addTouched.description, addRequiredErrors.description) ||
+                    'Describe when this combination should be used'}
+                </Typography>
+              </Box>
             </Box>
 
             <Box>
@@ -896,7 +1073,7 @@ const TicketMatrixSection = ({
                 color='text.secondary'
                 sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
               >
-                Internal note for this combination (not visible to end users)
+                Internal note for this combination (not visible to end users) — optional
               </Typography>
             </Box>
           </Box>
@@ -905,7 +1082,11 @@ const TicketMatrixSection = ({
         {/* Edit Dialog */}
         <ConfigFormDialog
           open={editDialogOpen}
-          onClose={() => setEditDialogOpen(false)}
+          onClose={() => {
+            setEditDialogOpen(false);
+            setEditTouched({});
+            setEditRequiredErrors({});
+          }}
           onSubmit={handleEditRow}
           isEdit
           icon={<MatrixIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
@@ -937,77 +1118,121 @@ const TicketMatrixSection = ({
                 label='Impact'
                 value={editForm.impactId}
                 onChange={(value) => setEditForm((f) => ({ ...f, impactId: value }))}
+                onBlur={() => setEditTouched((t) => ({ ...t, impactId: true }))}
                 options={activeImpacts
                   .filter((i) => i.enabledFor?.[activeTicketType] === true)
                   .map((i) => ({
                     value: i.id,
                     label: i.displayName,
                   }))}
+                error={Boolean(reqError(editTouched.impactId, editRequiredErrors.impactId))}
+                helperText={reqError(editTouched.impactId, editRequiredErrors.impactId)}
                 required
               />
               <CustomDropdown
                 label='Urgency'
                 value={editForm.urgencyId}
                 onChange={(value) => setEditForm((f) => ({ ...f, urgencyId: value }))}
+                onBlur={() => setEditTouched((t) => ({ ...t, urgencyId: true }))}
                 options={activeUrgencies
                   .filter((u) => u.enabledFor?.[activeTicketType] === true)
                   .map((u) => ({
                     value: u.id,
                     label: u.displayName,
                   }))}
+                error={Boolean(reqError(editTouched.urgencyId, editRequiredErrors.urgencyId))}
+                helperText={reqError(editTouched.urgencyId, editRequiredErrors.urgencyId)}
                 required
               />
               <CustomDropdown
                 label='Priority'
                 value={editForm.priorityId}
                 onChange={(value) => setEditForm((f) => ({ ...f, priorityId: value }))}
+                onBlur={() => setEditTouched((t) => ({ ...t, priorityId: true }))}
                 options={priorities
                   .filter((p) => p.enabledFor?.[activeTicketType] === true)
                   .map((p) => ({
                     value: p.id,
                     label: p.name,
                   }))}
+                error={Boolean(reqError(editTouched.priorityId, editRequiredErrors.priorityId))}
+                helperText={reqError(editTouched.priorityId, editRequiredErrors.priorityId)}
                 required
               />
             </Box>
 
             <Box>
-              <RichTextEditor
-                value={parseRichText(editForm.shortDescription)}
-                onChange={(value) =>
-                  setEditForm((f) => ({
-                    ...f,
-                    shortDescription: serializeRichText(value.segments),
-                  }))
-                }
-                showFooterActions={false}
-                title='Short Description'
-              />
-              <Typography
-                variant='caption'
-                color='text.secondary'
-                sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
+              <Box
+                onBlur={() => setEditTouched((t) => ({ ...t, shortDescription: true }))}
+                sx={{ borderRadius: 1 }}
               >
-                Brief summary shown in compact views
-              </Typography>
+                <RichTextEditor
+                  value={parseRichText(editForm.shortDescription)}
+                  onChange={(value) =>
+                    setEditForm((f) => ({
+                      ...f,
+                      shortDescription: serializeRichText(value.segments),
+                    }))
+                  }
+                  showFooterActions={false}
+                  title='Short Description'
+                  required
+                  error={Boolean(
+                    reqError(editTouched.shortDescription, editRequiredErrors.shortDescription),
+                  )}
+                />
+                <Typography
+                  variant='caption'
+                  sx={{
+                    color: reqError(
+                      editTouched.shortDescription,
+                      editRequiredErrors.shortDescription,
+                    )
+                      ? '#d32f2f'
+                      : 'text.secondary',
+                    fontSize: '0.7rem',
+                    mt: 0.5,
+                    display: 'block',
+                  }}
+                >
+                  {reqError(editTouched.shortDescription, editRequiredErrors.shortDescription) ||
+                    'Brief summary shown in compact views'}
+                </Typography>
+              </Box>
             </Box>
 
             <Box>
-              <RichTextEditor
-                value={parseRichText(editForm.description)}
-                onChange={(value) =>
-                  setEditForm((f) => ({ ...f, description: serializeRichText(value.segments) }))
-                }
-                showFooterActions={false}
-                title='Description'
-              />
-              <Typography
-                variant='caption'
-                color='text.secondary'
-                sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
+              <Box
+                onBlur={() => setEditTouched((t) => ({ ...t, description: true }))}
+                sx={{ borderRadius: 1 }}
               >
-                Describe when this combination should be used
-              </Typography>
+                <RichTextEditor
+                  value={parseRichText(editForm.description)}
+                  onChange={(value) =>
+                    setEditForm((f) => ({ ...f, description: serializeRichText(value.segments) }))
+                  }
+                  showFooterActions={false}
+                  title='Description'
+                  required
+                  error={Boolean(
+                    reqError(editTouched.description, editRequiredErrors.description),
+                  )}
+                />
+                <Typography
+                  variant='caption'
+                  sx={{
+                    color: reqError(editTouched.description, editRequiredErrors.description)
+                      ? '#d32f2f'
+                      : 'text.secondary',
+                    fontSize: '0.7rem',
+                    mt: 0.5,
+                    display: 'block',
+                  }}
+                >
+                  {reqError(editTouched.description, editRequiredErrors.description) ||
+                    'Describe when this combination should be used'}
+                </Typography>
+              </Box>
             </Box>
 
             <Box>
@@ -1024,7 +1249,7 @@ const TicketMatrixSection = ({
                 color='text.secondary'
                 sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
               >
-                Internal note for this combination (not visible to end users)
+                Internal note for this combination (not visible to end users) — optional
               </Typography>
             </Box>
           </Box>

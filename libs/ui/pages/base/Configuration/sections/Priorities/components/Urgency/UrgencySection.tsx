@@ -4,7 +4,7 @@ import { FormControl, FormGroup, Checkbox, Collapse, Radio } from '@mui/material
 import { Speed } from '@mui/icons-material';
 import { SimpleLevel, validateSimpleLevelDuplicate } from '../../util';
 import { useStyles } from '../../styles';
-import { useNotification } from '@serviceops/hooks';
+import { useFieldError, useNotification } from '@serviceops/hooks';
 import { GenericPanel } from '@serviceops/genericpanel';
 import { ConfigFormDialog, ConfigDeleteDialog } from '@serviceops/configdialogs';
 import {
@@ -85,6 +85,7 @@ const UrgencySection = ({
 }: UrgencySectionProps) => {
   const { classes } = useStyles();
   const { success, error: showError } = useNotification();
+  const reqError = useFieldError();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<SimpleLevel | null>(null);
@@ -100,6 +101,20 @@ const UrgencySection = ({
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [ticketTypesExpanded, setTicketTypesExpanded] = useState(true);
   const [duplicateAlert, setDuplicateAlert] = useState<string | null>(null);
+  // Per-field required-validation state. Touched flips true on blur (or
+  // immediately on Submit) and `requiredErrors` carries the field-level
+  // message produced by validateRequired. Mirrors the formik
+  // touched/errors shape that useFieldError expects.
+  const [touched, setTouched] = useState<{
+    displayName?: boolean;
+    shortDescription?: boolean;
+    description?: boolean;
+  }>({});
+  const [requiredErrors, setRequiredErrors] = useState<{
+    displayName?: string;
+    shortDescription?: string;
+    description?: string;
+  }>({});
 
   // Updates both the ref and the state in one go. Use this everywhere a
   // field changes so handleSubmit always sees the latest values.
@@ -112,6 +127,34 @@ const UrgencySection = ({
     [],
   );
 
+  // Strip rich-text markers and compare case-insensitively on plain text.
+  // Mirrors the helper used in PriorityFormDialog.
+  const plainText = (v: string): string =>
+    String(v ?? '')
+      .replace(/\*\*/g, '')
+      .replace(/__/g, '')
+      .replace(/\*/g, '')
+      .trim()
+      .toLowerCase();
+
+  /**
+   * Required-field validation per the spec for the Urgency section:
+   *   Urgency (displayName)  — Yes
+   *   Short Description      — Yes
+   *   Description            — Yes
+   *   Internal note          — No
+   *
+   * Rich-text fields are checked on plain text (markers stripped) so a user
+   * who only typed formatting without content still fails validation.
+   */
+  const validateRequired = (f: Partial<SimpleLevel>): typeof requiredErrors => {
+    const errs: typeof requiredErrors = {};
+    if (!String(f.displayName ?? '').trim()) errs.displayName = 'required';
+    if (!plainText(f.shortDescription ?? '')) errs.shortDescription = 'required';
+    if (!plainText(f.description ?? '')) errs.description = 'required';
+    return errs;
+  };
+
   const getActiveTicketTypeCount = (): number => {
     const { enabledFor } = form as { enabledFor?: Record<string, boolean> };
     if (!enabledFor) return activeTicketTypeColumns.length;
@@ -120,6 +163,8 @@ const UrgencySection = ({
 
   const handleNewClick = useCallback(() => {
     setEditingItem(null);
+    setTouched({});
+    setRequiredErrors({});
     const initial: Partial<SimpleLevel> = {
       isActive: true,
       enabledFor: Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
@@ -133,6 +178,8 @@ const UrgencySection = ({
     const selected = items.find((i) => i.id === selectedRowId);
     if (selected) {
       setEditingItem(selected);
+      setTouched({});
+      setRequiredErrors({});
       const initial: Partial<SimpleLevel> = {
         displayName: selected.displayName,
         shortDescription: selected.shortDescription ?? '',
@@ -169,6 +216,18 @@ const UrgencySection = ({
   }, [form, dialogOpen, editingItem, items]);
 
   const handleSubmit = useCallback(async () => {
+    // Read the ref, not the `form` state — see formRef comment above for why.
+    // Run required-field validation first so the user sees a per-field red
+    // border / helper text on Urgency, Short Description, and Description
+    // when any of them is blank. Mark all required fields as touched so the
+    // errors render even if the user hasn't blurred them yet.
+    const reqErrs = validateRequired(formRef.current);
+    setRequiredErrors(reqErrs);
+    setTouched({ displayName: true, shortDescription: true, description: true });
+    if (Object.keys(reqErrs).length > 0) {
+      return;
+    }
+
     const dupError = validateSimpleLevelDuplicate(formRef.current, items, editingItem);
     if (dupError) {
       setDuplicateAlert(dupError._form);
@@ -335,6 +394,8 @@ const UrgencySection = ({
         onClose={() => {
           setDialogOpen(false);
           setEditingItem(null);
+          setTouched({});
+          setRequiredErrors({});
           formRef.current = {};
           setForm({});
         }}
@@ -364,52 +425,83 @@ const UrgencySection = ({
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             updateForm((f) => ({ ...f, displayName: e.target.value }))
           }
+          onBlur={() => setTouched((t) => ({ ...t, displayName: true }))}
           placeholder='e.g. 1-Immediate, 2-High, 3-Medium, 4-Low'
           inputProps={{ style: { fontFamily: 'monospace', fontWeight: 700 } }}
+          error={Boolean(reqError(touched.displayName, requiredErrors.displayName))}
+          helperText={reqError(touched.displayName, requiredErrors.displayName)}
           required
         />
 
         <Box>
-          <RichTextEditor
-            value={parseRichText(form.shortDescription ?? '')}
-            onChange={(value) =>
-              updateForm((f) => ({ ...f, shortDescription: serializeRichText(value.segments) }))
-            }
-            showFooterActions={false}
-            title='Short Description'
-          />
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'none' }}
+          <Box
+            onBlur={() => setTouched((t) => ({ ...t, shortDescription: true }))}
+            sx={{ borderRadius: 1 }}
           >
-            Brief summary shown in compact views
-          </Typography>
+            <RichTextEditor
+              value={parseRichText(form.shortDescription ?? '')}
+              onChange={(value) =>
+                updateForm((f) => ({ ...f, shortDescription: serializeRichText(value.segments) }))
+              }
+              showFooterActions={false}
+              title='Short Description'
+              required
+              error={Boolean(reqError(touched.shortDescription, requiredErrors.shortDescription))}
+            />
+            <Typography
+              variant='caption'
+              sx={{
+                color: reqError(touched.shortDescription, requiredErrors.shortDescription)
+                  ? '#d32f2f'
+                  : 'text.secondary',
+                fontSize: '0.7rem',
+                mt: 0.5,
+                display: 'block',
+              }}
+            >
+              {reqError(touched.shortDescription, requiredErrors.shortDescription) ||
+                'Brief summary shown in compact views'}
+            </Typography>
+          </Box>
         </Box>
 
         <Box>
-          <RichTextEditor
-            value={parseRichText(form.description ?? '')}
-            onChange={(value) =>
-              updateForm((f) => ({ ...f, description: serializeRichText(value.segments) }))
-            }
-            showFooterActions={false}
-            title='Description'
-          />
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'none' }}
+          <Box
+            onBlur={() => setTouched((t) => ({ ...t, description: true }))}
+            sx={{ borderRadius: 1 }}
           >
-            Describe when this urgency level should be used
-          </Typography>
+            <RichTextEditor
+              value={parseRichText(form.description ?? '')}
+              onChange={(value) =>
+                updateForm((f) => ({ ...f, description: serializeRichText(value.segments) }))
+              }
+              showFooterActions={false}
+              title='Description'
+              required
+              error={Boolean(reqError(touched.description, requiredErrors.description))}
+            />
+            <Typography
+              variant='caption'
+              sx={{
+                color: reqError(touched.description, requiredErrors.description)
+                  ? '#d32f2f'
+                  : 'text.secondary',
+                fontSize: '0.7rem',
+                mt: 0.5,
+                display: 'block',
+              }}
+            >
+              {reqError(touched.description, requiredErrors.description) ||
+                'Describe when this urgency level should be used'}
+            </Typography>
+          </Box>
         </Box>
 
         <Box>
           <RichTextEditor
             value={parseRichText(form.internalNote ?? '')}
             onChange={(value) =>
-              setForm((f) => ({ ...f, internalNote: serializeRichText(value.segments) }))
+              updateForm((f) => ({ ...f, internalNote: serializeRichText(value.segments) }))
             }
             showFooterActions={false}
             title='Internal note'
@@ -417,9 +509,9 @@ const UrgencySection = ({
           <Typography
             variant='caption'
             color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'none' }}
+            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
           >
-            Internal note for this urgency level (not visible to end users)
+            Internal note for this urgency level (not visible to end users) — optional
           </Typography>
         </Box>
 

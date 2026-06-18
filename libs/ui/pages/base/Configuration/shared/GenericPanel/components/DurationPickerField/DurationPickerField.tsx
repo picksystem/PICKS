@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { SxProps, TextField, Theme } from '@mui/material';
+import { SxProps, Theme } from '@mui/material';
+import { TextField } from '@serviceops/component';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 
 export interface DurationPickerFieldProps {

@@ -199,14 +199,30 @@ const SLAs = () => {
       const apiIds = new Set(incoming.map((r) => r.id));
       const known = lastSyncedIdsRef.current[key];
       const everyKnownPresent = known.size === 0 || Array.from(known).every((id) => apiIds.has(id));
-      if (everyKnownPresent) {
-        setter(incoming);
-        lastSyncedIdsRef.current[key] = apiIds;
-      } else if (current.length === 0) {
-        // First sync: API returned data before any optimistic update — adopt it.
-        setter(incoming);
-        lastSyncedIdsRef.current[key] = apiIds;
+      if (!everyKnownPresent && current.length > 0) {
+        // API hasn't caught up to our just-saved rows yet. Hold off.
+        return;
       }
+      // When the API does have our just-saved ids, the refetch can still
+      // return stale content (DB write hasn't been observed by this read).
+      // Compare each known row's content to detect the stale-refetch case and
+      // preserve the local row when it differs.
+      const localById = new Map(current.map((r) => [r.id, r]));
+      const merged: T[] = incoming.map((apiRow) => {
+        if (!known.has(apiRow.id)) return apiRow;
+        const localRow = localById.get(apiRow.id);
+        if (!localRow) return apiRow;
+        if (JSON.stringify(localRow) === JSON.stringify(apiRow)) return apiRow;
+        return localRow;
+      });
+      // Keep any local rows missing from the API (e.g. server replaced a
+      // temp id with a real one — the new id will appear on the next refetch).
+      const mergedIds = new Set(merged.map((r) => r.id));
+      for (const localRow of current) {
+        if (!mergedIds.has(localRow.id)) merged.push(localRow);
+      }
+      setter(merged);
+      lastSyncedIdsRef.current[key] = new Set(merged.map((r) => r.id));
     };
 
     if (apiSlas.adminControls) setCtrl(apiSlas.adminControls);

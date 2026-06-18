@@ -1495,18 +1495,20 @@ export const GenericPanel = ({
                       title={field.required ? `${field.label} *` : field.label}
                       error={isError}
                     />
-                    <Typography
-                      variant='caption'
-                      sx={{
-                        color: isError ? '#d32f2f' : 'text.secondary',
-                        fontSize: '0.7rem',
-                        mt: 0.25,
-                        display: 'block',
-                        fontWeight: isError ? 600 : 400,
-                      }}
-                    >
-                      {reqError(showValidation, mergedFormErrors[field.name]) || ' '}
-                    </Typography>
+                    {field.required && (
+                      <Typography
+                        variant='caption'
+                        sx={{
+                          color: isError ? '#d32f2f' : 'text.secondary',
+                          fontSize: '0.7rem',
+                          mt: 0.25,
+                          display: 'block',
+                          fontWeight: isError ? 600 : 400,
+                        }}
+                      >
+                        {reqError(showValidation, mergedFormErrors[field.name]) || ' '}
+                      </Typography>
+                    )}
                   </Box>
                 );
               }

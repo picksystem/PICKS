@@ -225,13 +225,13 @@ const TicketTypeFormDialog = ({
         formik.setTouched({
           ...formik.touched,
           name: true,
-          displayTag: true,
           displayName: true,
           description: true,
           tag: true,
           iconKey: true,
           prefix: true,
           numberLength: true,
+          accessControl: true,
         });
 
         if (Object.keys(dupErrors).length > 0) {
@@ -338,7 +338,6 @@ const TicketTypeFormDialog = ({
         others,
       ),
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     open,
     formik.values.name,
@@ -508,7 +507,6 @@ const TicketTypeFormDialog = ({
                 fullWidth
                 size='small'
                 placeholder='e.g. Incident, Request, Task'
-                required
                 inputProps={{ maxLength: 40 }}
               />
             </Grid>
@@ -707,7 +705,7 @@ const TicketTypeFormDialog = ({
                     color='#0369a1'
                     sx={{ fontWeight: 600, fontSize: '0.85rem' }}
                   >
-                    Access Control
+                    Access Control <span style={{ color: '#d32f2f' }}>*</span>
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Typography variant='caption' color='#0369a1'>
@@ -774,6 +772,17 @@ const TicketTypeFormDialog = ({
                     </FormControl>
                   </Box>
                 </Collapse>
+                {reqError(
+                  formik.touched.accessControl as boolean,
+                  formik.errors.accessControl as string,
+                ) && (
+                  <Typography
+                    variant='caption'
+                    sx={{ color: '#d32f2f', fontSize: '0.7rem', px: 2, pb: 1, display: 'block' }}
+                  >
+                    {String(formik.errors.accessControl)}
+                  </Typography>
+                )}
               </Box>
             </Grid>
 
