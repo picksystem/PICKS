@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Box, Chip, Typography } from '@serviceops/component';
-import { PriorityLevel } from '../../util';
+import { Box, Typography } from '@serviceops/component';
+import { PriorityLevel, validatePriorityDuplicate } from '../../util';
 import { useStyles } from '../../styles';
 import { useNotification } from '@serviceops/hooks';
 import { GenericPanel } from '@serviceops/genericpanel';
@@ -187,7 +187,10 @@ const PrioritiesSection = ({
         minWidth: 130,
         align: 'center' as const,
         format: (_v: unknown, row: PriorityLevel): React.ReactNode => {
-          const isActive = row.enabledFor[t.key] ?? false;
+          // Guard against rows that haven't been enriched with enabledFor
+          // (e.g. rows just added via the inline GenericPanel editor, which
+          // only carries the form fields and not the full PriorityLevel).
+          const isActive = row?.enabledFor?.[t.key] ?? false;
           return (
             <Box
               sx={{
@@ -230,10 +233,23 @@ const PrioritiesSection = ({
 
   const handleTableSave = useCallback(
     (data: PriorityLevel[]) => {
-      setPriorities(data);
-      onPersist(data);
+      // The GenericPanel inline editor only carries the form fields, so a
+      // brand-new row will be missing `enabledFor`, `color`, `sortOrder`,
+      // and `accessControl`. Enrich any row that's missing them with sane
+      // defaults so the table's format functions (which read `enabledFor`)
+      // don't throw on the first render after adding.
+      const enriched = data.map((p) => ({
+        ...p,
+        color: p.color ?? '#fff',
+        sortOrder: p.sortOrder ?? 0,
+        enabledFor:
+          p.enabledFor ?? Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
+        accessControl: p.accessControl ?? ['admin', 'consultant', 'endUser'],
+      }));
+      setPriorities(enriched);
+      onPersist(enriched);
     },
-    [setPriorities, onPersist],
+    [setPriorities, onPersist, activeTicketTypeColumns],
   );
 
   const handleRowSelect = useCallback(
@@ -243,23 +259,6 @@ const PrioritiesSection = ({
     },
     [setSelectedPriorityId, setSelectedPriority, priorities],
   );
-
-  const handleNewClick = useCallback(() => {
-    setEditingPriority(null);
-    setDialogOpen(true);
-  }, []);
-
-  const handleEditClick = useCallback(() => {
-    const selected = priorities.find((p) => p.id === selectedPriorityId);
-    if (selected) {
-      setEditingPriority(selected);
-      setDialogOpen(true);
-    }
-  }, [priorities, selectedPriorityId]);
-
-  const handleDeleteClick = useCallback(() => {
-    setDeleteOpen(true);
-  }, []);
 
   const selectedPriority = priorities.find((p) => p.id === selectedPriorityId) ?? null;
 
@@ -273,11 +272,13 @@ const PrioritiesSection = ({
         customColumns={customColumns as unknown as undefined}
         selectedRowId={selectedPriorityId}
         onRowSelect={handleRowSelect}
+        validateFields={validatePriorityDuplicate as unknown as undefined}
       />
 
       <PriorityFormDialog
         open={dialogOpen}
         editing={editingPriority}
+        existingPriorities={priorities}
         onClose={() => {
           setDialogOpen(false);
           setEditingPriority(null);

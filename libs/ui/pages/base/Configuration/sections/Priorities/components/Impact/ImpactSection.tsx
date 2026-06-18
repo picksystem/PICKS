@@ -1,8 +1,8 @@
-import { useState, useCallback, useMemo } from 'react';
-import { Box, Typography, TextField } from '@serviceops/component';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { Alert, Box, Typography, TextField } from '@serviceops/component';
 import { FormControl, FormGroup, Checkbox, Collapse, Radio } from '@mui/material';
 import { Whatshot } from '@mui/icons-material';
-import { SimpleLevel } from '../../util';
+import { SimpleLevel, validateSimpleLevelDuplicate } from '../../util';
 import { useStyles } from '../../styles';
 import { useNotification } from '@serviceops/hooks';
 import { GenericPanel } from '@serviceops/genericpanel';
@@ -91,8 +91,27 @@ const ImpactSection = ({
   const [editingItem, setEditingItem] = useState<SimpleLevel | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<SimpleLevel>>({});
+  // Mirror of `form` that updates synchronously inside onChange handlers.
+  // The RichTextEditor only fires onChange on blur, so a state update from
+  // there lands AFTER the user has already clicked Submit. By the time
+  // handleSubmit runs, `form` is still the previous render's value and
+  // duplicate checks would miss values typed into the editor. We read this
+  // ref in handleSubmit to get the live value.
+  const formRef = useRef<Partial<SimpleLevel>>({});
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [ticketTypesExpanded, setTicketTypesExpanded] = useState(true);
+  const [duplicateAlert, setDuplicateAlert] = useState<string | null>(null);
+
+  // Updates both the ref and the state in one go. Use this everywhere a
+  // field changes so handleSubmit always sees the latest values.
+  const updateForm = useCallback(
+    (patch: Partial<SimpleLevel> | ((f: Partial<SimpleLevel>) => Partial<SimpleLevel>)) => {
+      formRef.current =
+        typeof patch === 'function' ? patch(formRef.current) : { ...formRef.current, ...patch };
+      setForm(formRef.current);
+    },
+    [],
+  );
 
   const getActiveTicketTypeCount = (): number => {
     const { enabledFor } = form as { enabledFor?: Record<string, boolean> };
@@ -102,10 +121,12 @@ const ImpactSection = ({
 
   const handleNewClick = useCallback(() => {
     setEditingItem(null);
-    setForm({
+    const initial: Partial<SimpleLevel> = {
       isActive: true,
       enabledFor: Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, true])),
-    });
+    };
+    formRef.current = initial;
+    setForm(initial);
     setDialogOpen(true);
   }, [activeTicketTypeColumns]);
 
@@ -113,14 +134,16 @@ const ImpactSection = ({
     const selected = items.find((i) => i.id === selectedRowId);
     if (selected) {
       setEditingItem(selected);
-      setForm({
+      const initial: Partial<SimpleLevel> = {
         displayName: selected.displayName,
         shortDescription: selected.shortDescription ?? '',
         description: selected.description,
         internalNote: selected.internalNote ?? '',
         isActive: selected.isActive ?? true,
         enabledFor: { ...(selected.enabledFor ?? {}) },
-      });
+      };
+      formRef.current = initial;
+      setForm(initial);
       setDialogOpen(true);
     }
   }, [items, selectedRowId]);
@@ -130,13 +153,35 @@ const ImpactSection = ({
     setDeleteOpen(true);
   }, [selectedRowId]);
 
+  // Live-recompute the duplicate alert so the user sees it as they type,
+  // not only after clicking Submit. Per spec for the Impact section:
+  //   - Display name (Impact):  Allowed  — skip
+  //   - Short Description:      Not allowed
+  //   - Description:            Not allowed
+  //   - Internal note:          Allowed  — skip
+  useEffect(() => {
+    if (!dialogOpen) {
+      setDuplicateAlert(null);
+      return;
+    }
+    setDuplicateAlert(
+      validateSimpleLevelDuplicate(formRef.current, items, editingItem)?._form ?? null,
+    );
+  }, [form, dialogOpen, editingItem, items]);
+
   const handleSubmit = useCallback(async () => {
+    const dupError = validateSimpleLevelDuplicate(formRef.current, items, editingItem);
+    if (dupError) {
+      setDuplicateAlert(dupError._form);
+      return;
+    }
+    setDuplicateAlert(null);
     try {
       if (editingItem) {
-        await onEdit(editingItem.id, form);
+        await onEdit(editingItem.id, formRef.current);
         success('Impact updated successfully');
       } else {
-        await onAdd(form);
+        await onAdd(formRef.current);
         success('Impact added successfully');
       }
     } catch (err) {
@@ -144,28 +189,32 @@ const ImpactSection = ({
     } finally {
       setDialogOpen(false);
       setEditingItem(null);
+      formRef.current = {};
       setForm({});
     }
-  }, [editingItem, form, onEdit, onAdd, success, showError]);
+  }, [editingItem, items, onEdit, onAdd, success, showError]);
 
-  const handleTicketTypeChange = useCallback((ticketType: string, checked: boolean) => {
-    setForm((f) => {
-      const current = (f as { enabledFor?: Record<string, boolean> }).enabledFor ?? {};
-      return {
-        ...f,
-        enabledFor: { ...current, [ticketType]: checked },
-      };
-    });
-  }, []);
+  const handleTicketTypeChange = useCallback(
+    (ticketType: string, checked: boolean) => {
+      updateForm((f) => {
+        const current = (f as { enabledFor?: Record<string, boolean> }).enabledFor ?? {};
+        return {
+          ...f,
+          enabledFor: { ...current, [ticketType]: checked },
+        };
+      });
+    },
+    [updateForm],
+  );
 
   const handleSelectAllTicketTypes = useCallback(
     (checked: boolean) => {
-      setForm((f) => ({
+      updateForm((f) => ({
         ...f,
         enabledFor: Object.fromEntries(activeTicketTypeColumns.map((t) => [t.key, checked])),
       }));
     },
-    [activeTicketTypeColumns],
+    [activeTicketTypeColumns, updateForm],
   );
 
   const handleConfirmDelete = useCallback(async () => {
@@ -221,7 +270,10 @@ const ImpactSection = ({
         minWidth: 130,
         align: 'center' as const,
         format: (_v: unknown, row: SimpleLevel): React.ReactNode => {
-          const isActive = row.enabledFor[t.key] ?? false;
+          // Guard against rows that haven't been enriched with enabledFor
+          // (e.g. rows just added via the inline GenericPanel editor, which
+          // only carries the form fields and not the full SimpleLevel).
+          const isActive = row?.enabledFor?.[t.key] ?? false;
           return (
             <Box
               sx={{
@@ -278,6 +330,7 @@ const ImpactSection = ({
         onNewClick={handleNewClick}
         onEditClick={handleEditClick}
         onDeleteClick={handleDeleteClick}
+        validateFields={validateSimpleLevelDuplicate as never}
       />
 
       <ConfigFormDialog
@@ -285,6 +338,7 @@ const ImpactSection = ({
         onClose={() => {
           setDialogOpen(false);
           setEditingItem(null);
+          formRef.current = {};
           setForm({});
         }}
         onSubmit={handleSubmit}
@@ -292,17 +346,26 @@ const ImpactSection = ({
         icon={<Whatshot sx={{ color: '#fff', fontSize: '1.1rem' }} />}
         accent='#0369a1'
         title='Impact Level'
-        submitDisabled={!form.displayName}
+        submitDisabled={Boolean(duplicateAlert)}
         submitLabel={editingItem ? 'Save' : 'Submit'}
         maxWidth='md'
         subtitle={IMPACT_CONFIG.subtitle}
       >
+        {/* Duplicate Alert — single dialog-level message. Per spec, only
+            Short Description and Description must be unique. The Alert is
+            the only signal; no per-field red borders for duplicates. */}
+        {duplicateAlert && (
+          <Alert severity='error' variant='outlined' sx={{ mb: 1 }}>
+            {duplicateAlert}
+          </Alert>
+        )}
+
         <TextField
           label='Impact'
           size='small'
           value={form.displayName ?? ''}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setForm((f) => ({ ...f, displayName: e.target.value }))
+            updateForm((f) => ({ ...f, displayName: e.target.value }))
           }
           placeholder='e.g. 1-Extensive, 2-Significant, 3-Moderate'
           inputProps={{ style: { fontFamily: 'monospace', fontWeight: 700 } }}
@@ -313,7 +376,7 @@ const ImpactSection = ({
           <RichTextEditor
             value={parseRichText(form.shortDescription ?? '')}
             onChange={(value) =>
-              setForm((f) => ({ ...f, shortDescription: serializeRichText(value.segments) }))
+              updateForm((f) => ({ ...f, shortDescription: serializeRichText(value.segments) }))
             }
             showFooterActions={false}
             title='Short Description'
@@ -331,7 +394,7 @@ const ImpactSection = ({
           <RichTextEditor
             value={parseRichText(form.description ?? '')}
             onChange={(value) =>
-              setForm((f) => ({ ...f, description: serializeRichText(value.segments) }))
+              updateForm((f) => ({ ...f, description: serializeRichText(value.segments) }))
             }
             showFooterActions={false}
             title='Description'
@@ -349,7 +412,7 @@ const ImpactSection = ({
           <RichTextEditor
             value={parseRichText(form.internalNote ?? '')}
             onChange={(value) =>
-              setForm((f) => ({ ...f, internalNote: serializeRichText(value.segments) }))
+              updateForm((f) => ({ ...f, internalNote: serializeRichText(value.segments) }))
             }
             showFooterActions={false}
             title='Internal note'

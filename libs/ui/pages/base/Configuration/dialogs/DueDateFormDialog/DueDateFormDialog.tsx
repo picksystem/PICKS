@@ -14,6 +14,24 @@ import { useNotification } from '@serviceops/hooks';
 import { DueDateFormDialogProps } from './util';
 import { ConfigFormDialog } from '../ConfigDialogs/ConfigDialogs';
 
+// Legacy custom dialog stores P1-P5 as numeric hours. Newer rows may arrive
+// as HH:MM strings (from the GenericPanel duration picker) — normalize those
+// back to numeric hours so the legacy TextField still works.
+const toNumericHours = (v: string | number | undefined): number => {
+  if (v === undefined || v === null) return 0;
+  if (typeof v === 'number') return v;
+  const raw = String(v).trim();
+  if (!raw) return 0;
+  if (/^\d+:\d{1,2}$/.test(raw)) {
+    const [hStr, mStr] = raw.split(':');
+    const h = parseInt(hStr, 10) || 0;
+    const m = parseInt(mStr, 10) || 0;
+    return h + m / 60;
+  }
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : 0;
+};
+
 const EMPTY_FORM = {
   ticketTypeId: 0,
   ticketTypeName: '',
@@ -41,12 +59,12 @@ const DueDateFormDialog = ({
       setForm({
         ticketTypeId: editingRow.ticketTypeId,
         ticketTypeName: editingRow.ticketTypeName,
-        activation: editingRow.activation,
-        p1: editingRow.p1,
-        p2: editingRow.p2,
-        p3: editingRow.p3,
-        p4: editingRow.p4,
-        p5: editingRow.p5,
+        activation: editingRow.activation ?? false,
+        p1: toNumericHours(editingRow.p1),
+        p2: toNumericHours(editingRow.p2),
+        p3: toNumericHours(editingRow.p3),
+        p4: toNumericHours(editingRow.p4),
+        p5: toNumericHours(editingRow.p5),
       });
     } else {
       setForm(EMPTY_FORM);
@@ -117,7 +135,7 @@ const DueDateFormDialog = ({
           >
             {availableTicketTypes.map((tt) => (
               <MenuItem key={tt.id} value={tt.id}>
-                {tt.displayName || tt.name}
+                {tt.name}
               </MenuItem>
             ))}
           </Select>

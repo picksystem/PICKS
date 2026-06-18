@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Box, Typography, TextField, IconButton, Switch } from '@serviceops/component';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Alert, Box, Typography, TextField, IconButton, Switch } from '@serviceops/component';
 import {
   Dialog,
   DialogContent,
@@ -24,11 +24,27 @@ interface StatusFormDialogProps {
   onClose: () => void;
   onSave: (data: Partial<IConfigStatusLevel>) => void;
   ticketTypeColumns: { key: string; label: string }[];
+  /** Other status rows for duplicate detection. The row currently being
+   *  edited is excluded from the comparison automatically. */
+  existingStatuses?: IConfigStatusLevel[];
+  /** Label used in the duplicate alert for the displayName field.
+   *  Defaults to "Ticket Status". For release-cycle status flows this is
+   *  typically "Release cycle status". */
+  displayNameLabel?: string;
   subtitle?: string;
   title?: string;
   hideFinalStatus?: boolean;
   successMessage?: { add: string; edit: string };
 }
+
+// Strip rich-text markers and lowercase for case-insensitive comparison.
+const plainText = (v: string): string =>
+  String(v ?? '')
+    .replace(/\*\*/g, '')
+    .replace(/__/g, '')
+    .replace(/\*/g, '')
+    .trim()
+    .toLowerCase();
 
 const STATUS_ACCENT = '#0369a1';
 
@@ -105,6 +121,8 @@ const StatusFormDialog = ({
   onClose,
   onSave,
   ticketTypeColumns,
+  existingStatuses = [],
+  displayNameLabel = 'Ticket Status',
   subtitle,
   title = 'Ticket Status',
   hideFinalStatus = false,
@@ -112,8 +130,57 @@ const StatusFormDialog = ({
 }: StatusFormDialogProps) => {
   const { success } = useNotification();
   const [form, setForm] = useState<Partial<IConfigStatusLevel>>({});
+  // Mirror of `form` that updates synchronously inside onChange handlers.
+  // The RichTextEditor only fires onChange on blur, so a state update from
+  // there lands AFTER the user has already clicked Submit. By the time
+  // handleSubmit runs, `form` is still the previous render's value and
+  // duplicate checks would miss values typed into the editor. We read this
+  // ref in handleSubmit to get the live value.
+  const formRef = useRef<Partial<IConfigStatusLevel>>({});
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [ticketTypesExpanded, setTicketTypesExpanded] = useState(false);
+  const [duplicateAlert, setDuplicateAlert] = useState<string | null>(null);
+
+  /**
+   * Returns a single consolidated duplicate message, or null when the form
+   * passes the duplicate check.
+   *
+   * Per the spec for the Ticket Status / Release Cycle Status section:
+   *   - <displayName> (Ticket Status / Release cycle status):  Not allowed
+   *   - Short Description:                                     Not allowed
+   *   - Description:                                           Allowed  — skip
+   *   - Colour:                                                Allowed  — skip
+   *   - Status Activation:                                     NA       — skip
+   *   - SLA Activation:                                        NA       — skip
+   *   - Internal note:                                         Allowed  — skip
+   *   - Ticket types - activation:                             Allowed  — skip
+   *
+   * `displayNameLabel` controls the user-visible label of the first
+   * conflict (e.g. "Ticket Status" vs "Release cycle status") so the
+   * Alert reads naturally in each section.
+   */
+  const computeDuplicateMessage = (f: Partial<IConfigStatusLevel>): string | null => {
+    const myId = editing?.id;
+    const others = existingStatuses.filter((s) => s.id !== myId);
+
+    const conflicts: string[] = [];
+
+    const statusVal = plainText(String(f.displayName ?? ''));
+    if (statusVal && others.some((s) => plainText(String(s.displayName ?? '')) === statusVal)) {
+      conflicts.push(displayNameLabel);
+    }
+
+    const shortVal = plainText(String(f.shortDescription ?? ''));
+    if (shortVal && others.some((s) => plainText(String(s.shortDescription ?? '')) === shortVal)) {
+      conflicts.push('Short Description');
+    }
+
+    if (conflicts.length === 0) return null;
+    if (conflicts.length === 1) {
+      return `${conflicts[0]} already exists. Please use a different value.`;
+    }
+    return `${conflicts.join(' and ')} already exist. Please use different values.`;
+  };
 
   const getActiveTicketTypeCount = (): number => {
     const { enabledFor } = form;
@@ -126,38 +193,56 @@ const StatusFormDialog = ({
       setColorPickerOpen(false);
       return;
     }
-    setForm(
-      editing
-        ? {
-            name: editing.name,
-            displayName: editing.displayName,
-            shortDescription: editing.shortDescription ?? '',
-            description: editing.description,
-            bgColor: editing.bgColor,
-            color: editing.color,
-            isActive: editing.isActive,
-            slaActive: editing.slaActive,
-            isFinal: editing.isFinal,
-            sortOrder: editing.sortOrder,
-            internalNote: editing.internalNote ?? '',
-            enabledFor: { ...editing.enabledFor },
-          }
-        : {
-            name: '',
-            displayName: '',
-            shortDescription: '',
-            description: '',
-            bgColor: '#2563eb',
-            color: '#fff',
-            isActive: true,
-            slaActive: true,
-            isFinal: false,
-            sortOrder: 1,
-            internalNote: '',
-            enabledFor: Object.fromEntries(ticketTypeColumns.map((t) => [t.key, true])),
-          },
-    );
+    const initial: Partial<IConfigStatusLevel> = editing
+      ? {
+          name: editing.name,
+          displayName: editing.displayName,
+          shortDescription: editing.shortDescription ?? '',
+          description: editing.description,
+          bgColor: editing.bgColor,
+          color: editing.color,
+          isActive: editing.isActive,
+          slaActive: editing.slaActive,
+          isFinal: editing.isFinal,
+          sortOrder: editing.sortOrder,
+          internalNote: editing.internalNote ?? '',
+          enabledFor: { ...editing.enabledFor },
+        }
+      : {
+          name: '',
+          displayName: '',
+          shortDescription: '',
+          description: '',
+          bgColor: '#2563eb',
+          color: '#fff',
+          isActive: true,
+          slaActive: true,
+          isFinal: false,
+          sortOrder: 1,
+          internalNote: '',
+          enabledFor: Object.fromEntries(ticketTypeColumns.map((t) => [t.key, true])),
+        };
+    formRef.current = initial;
+    setForm(initial);
   }, [open, editing, ticketTypeColumns]);
+
+  // Live-recompute the duplicate alert so the user sees it as they type,
+  // not only after clicking Submit.
+  useEffect(() => {
+    if (!open) {
+      setDuplicateAlert(null);
+      return;
+    }
+    setDuplicateAlert(computeDuplicateMessage(formRef.current));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form, open, editing, existingStatuses]);
+
+  // Keep the ref in sync with the form state. The ref is read by the
+  // submit handler (and by the live-recompute effect above) so it always
+  // reflects the latest values typed into the RichTextEditor.
+  useEffect(() => {
+    formRef.current = form;
+  }, [form]);
 
   const handleSelectAllTicketTypes = useCallback(
     (checked: boolean) => {
@@ -170,6 +255,13 @@ const StatusFormDialog = ({
   );
 
   const handleSubmit = () => {
+    // Read the ref, not the form state — see formRef comment above for why.
+    const message = computeDuplicateMessage(formRef.current);
+    if (message) {
+      setDuplicateAlert(message);
+      return;
+    }
+    setDuplicateAlert(null);
     onSave(form);
     success(
       editing
@@ -207,10 +299,18 @@ const StatusFormDialog = ({
         accent='#0369a1'
         title={title}
         subtitle={subtitle}
-        submitDisabled={!form.displayName}
+        submitDisabled={!form.displayName || Boolean(duplicateAlert)}
         submitLabel={editing ? 'Save' : 'Submit'}
         maxWidth='md'
       >
+        {/* Duplicate Alert — single dialog-level message. Per spec, only
+            Ticket Status and Short Description must be unique. The Alert is
+            the only signal; no per-field red borders for duplicates. */}
+        {duplicateAlert && (
+          <Alert severity='error' variant='outlined' sx={{ mb: 1 }}>
+            {duplicateAlert}
+          </Alert>
+        )}
         <TextField
           label='Ticket Status'
           size='small'

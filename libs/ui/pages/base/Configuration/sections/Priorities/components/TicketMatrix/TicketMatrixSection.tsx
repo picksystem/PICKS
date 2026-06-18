@@ -1,5 +1,6 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
+  Alert,
   Box,
   Typography,
   Button,
@@ -21,7 +22,14 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { ConfigFormDialog, ConfigDeleteDialog } from '@serviceops/configdialogs';
 import { GenericAccordion } from '@serviceops/genericaccordion';
 import { GenericToolbar } from '@serviceops/generictoolbar';
-import { PriorityLevel, ImpactLevel, UrgencyLevel, ExtendedMatrixMap, MatrixRow } from '../../util';
+import {
+  PriorityLevel,
+  ImpactLevel,
+  UrgencyLevel,
+  ExtendedMatrixMap,
+  MatrixRow,
+  validateMatrixRowDuplicate,
+} from '../../util';
 import { IConfigMatrixMap, IConfigSimplePrioritiesBucket } from '@serviceops/interfaces';
 import { useStyles } from '../../../../shared/GenericPanel/styles';
 import { useNotification, useDebounce } from '@serviceops/hooks';
@@ -161,6 +169,28 @@ const TicketMatrixSection = ({
     description: '',
   });
 
+  // Mirror of `addForm` that updates synchronously inside onChange handlers.
+  // The RichTextEditor only fires onChange on blur, so a state update from
+  // there lands AFTER the user has already clicked Submit. By the time
+  // handleAddRow runs, `addForm` is still the previous render's value and
+  // duplicate checks would miss values typed into the editor. We read this
+  // ref in handleAddRow to get the live value.
+  const addFormRef = useRef<typeof addForm>(addForm);
+  // Mirror of `editForm` for the same reason as addFormRef.
+  const editFormRef = useRef<typeof editForm>(editForm);
+  const [addDuplicateAlert, setAddDuplicateAlert] = useState<string | null>(null);
+  const [editDuplicateAlert, setEditDuplicateAlert] = useState<string | null>(null);
+
+  // Keep refs in sync with the form state. The refs are read by the
+  // submit handlers to capture the latest values typed into the
+  // RichTextEditor (whose onChange fires on blur).
+  useEffect(() => {
+    addFormRef.current = addForm;
+  }, [addForm]);
+  useEffect(() => {
+    editFormRef.current = editForm;
+  }, [editForm]);
+
   useEffect(() => {
     if (!ticketTypes.find((t) => t.key === activeTicketType)) {
       setActiveTicketType(ticketTypes[0]?.key ?? '');
@@ -213,6 +243,42 @@ const TicketMatrixSection = ({
     );
     return Array.from(rowMap.values());
   }, [activeImpacts, activeUrgencies, matrix]);
+
+  // Live-recompute the duplicate alert for the Add dialog so the user sees
+  // it as they type, not only after clicking Submit. Per spec for Matrix:
+  //   - Impact, Urgency, Priority:                  Allowed  — skip
+  //   - Short Description, Description:             Not allowed
+  //   - Activate simple priorities, Internal note:  Allowed  — skip
+  // We pass `null` for editingRowId because we're adding a brand-new row.
+  useEffect(() => {
+    if (!addDialogOpen) {
+      setAddDuplicateAlert(null);
+      return;
+    }
+    setAddDuplicateAlert(
+      validateMatrixRowDuplicate(
+        addFormRef.current as unknown as Record<string, unknown>,
+        allRows,
+        null,
+      )?._form ?? null,
+    );
+  }, [addForm, addDialogOpen, allRows]);
+
+  // Live-recompute the duplicate alert for the Edit dialog. We exclude the
+  // row currently being edited from the comparison.
+  useEffect(() => {
+    if (!editDialogOpen) {
+      setEditDuplicateAlert(null);
+      return;
+    }
+    setEditDuplicateAlert(
+      validateMatrixRowDuplicate(
+        editFormRef.current as unknown as Record<string, unknown>,
+        allRows,
+        selectedRowId,
+      )?._form ?? null,
+    );
+  }, [editForm, editDialogOpen, allRows, selectedRowId]);
 
   const filteredRows = useMemo(() => {
     if (!debouncedSearch) return allRows;
@@ -288,6 +354,16 @@ const TicketMatrixSection = ({
 
   const handleAddRow = () => {
     if (addForm.impactId && addForm.urgencyId && addForm.priorityId) {
+      // Read the ref, not the form state — see addFormRef comment for why.
+      const dupError = validateMatrixRowDuplicate(
+        addFormRef.current as unknown as Record<string, unknown>,
+        allRows,
+        null,
+      );
+      if (dupError) {
+        setAddDuplicateAlert(dupError._form);
+        return;
+      }
       onMatrixChange(activeTicketType, addForm.impactId, addForm.urgencyId, addForm.priorityId);
       if (onMatrixCellUpdate) {
         onMatrixCellUpdate(activeTicketType, addForm.impactId, addForm.urgencyId, {
@@ -318,6 +394,16 @@ const TicketMatrixSection = ({
 
   const handleEditRow = () => {
     if (!editForm.impactId || !editForm.urgencyId || !selectedRowId) return;
+    // Read the ref, not the form state — see editFormRef comment for why.
+    const dupError = validateMatrixRowDuplicate(
+      editFormRef.current as unknown as Record<string, unknown>,
+      allRows,
+      selectedRowId,
+    );
+    if (dupError) {
+      setEditDuplicateAlert(dupError._form);
+      return;
+    }
     const [prevImpactId, prevUrgencyId] = selectedRowId.split('_');
     if (prevImpactId !== editForm.impactId || prevUrgencyId !== editForm.urgencyId) {
       const next: ExtendedMatrixMap = { ...matrix };
@@ -696,10 +782,24 @@ const TicketMatrixSection = ({
           accent={accentColor}
           title='Combination'
           subtitle='Map a priority to an impact and urgency pair'
-          submitDisabled={!addForm.impactId || !addForm.urgencyId || !addForm.priorityId}
+          submitDisabled={
+            !addForm.impactId ||
+            !addForm.urgencyId ||
+            !addForm.priorityId ||
+            Boolean(addDuplicateAlert)
+          }
           submitLabel='Submit'
           maxWidth='md'
         >
+          {/* Duplicate Alert — single dialog-level message. Per spec, only
+              Short Description and Description must be unique across rows
+              in the same ticket-type matrix. The Alert is the only signal;
+              no per-field red borders for duplicates. */}
+          {addDuplicateAlert && (
+            <Alert severity='error' variant='outlined' sx={{ mb: 1 }}>
+              {addDuplicateAlert}
+            </Alert>
+          )}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Box
               sx={{
@@ -812,10 +912,19 @@ const TicketMatrixSection = ({
           accent={accentColor}
           title='Combination'
           subtitle='Modify the priority mapping for this impact and urgency pair'
-          submitDisabled={false}
+          submitDisabled={Boolean(editDuplicateAlert)}
           submitLabel='Save'
           maxWidth='md'
         >
+          {/* Duplicate Alert — single dialog-level message. Per spec, only
+              Short Description and Description must be unique across rows
+              in the same ticket-type matrix. The Alert is the only signal;
+              no per-field red borders for duplicates. */}
+          {editDuplicateAlert && (
+            <Alert severity='error' variant='outlined' sx={{ mb: 1 }}>
+              {editDuplicateAlert}
+            </Alert>
+          )}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Box
               sx={{

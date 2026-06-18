@@ -6,6 +6,13 @@ export interface ValidationError {
   serviceLine?: string;
   application?: string;
   queue?: string;
+  /**
+   * Cross-field / form-level message. Rendered in the dialog's top Alert but
+   * intentionally NOT surfaced on any individual input. Field components only
+   * read their own key, so a non-field key (e.g. `_form`) stays in the error
+   * map without producing a red border or helper text on any input.
+   */
+  _form?: string;
 }
 
 const norm = (v: unknown): string => {
@@ -49,7 +56,7 @@ export const validateApprovedEstimateDuplicate = (
   const ticketTypeKey = toTicketTypeKey(form.ticketTypeId);
   if (!ticketTypeKey) return null;
 
-  const key = {
+  const incoming = {
     ticketType: ticketTypeKey,
     serviceLine: norm(form.serviceLine),
     application: norm(form.application),
@@ -59,20 +66,20 @@ export const validateApprovedEstimateDuplicate = (
   const dupIndex = rows.findIndex((r) => {
     if (editing && r.id === editing.id) return false;
     return (
-      toTicketTypeKey(r.ticketTypeId) === key.ticketType &&
-      norm(r.serviceLine) === key.serviceLine &&
-      norm(r.application) === key.application &&
-      norm(r.queue) === key.queue
+      toTicketTypeKey(r.ticketTypeId) === incoming.ticketType &&
+      norm(r.serviceLine) === incoming.serviceLine &&
+      norm(r.application) === incoming.application &&
+      norm(r.queue) === incoming.queue
     );
   });
 
   if (dupIndex === -1) return null;
-  const message = `This combination already exists on row ${dupIndex + 1}. Please choose a different combination of ticket type, service line, application, or queue`;
+
+  // Surface the duplicate as a single dialog-level alert only. We attach the
+  // message to the `_form` key (not a real field name) so the top-of-dialog
+  // Alert renders via `Object.values(fieldErrors)[0]`, but no individual input
+  // sees a matching key and therefore shows no red border or helper text.
   return {
-    ticketTypeId: message,
-    hours: message,
-    serviceLine: message,
-    application: message,
-    queue: message,
+    _form: `This combination already exists on row ${dupIndex + 1}. Please choose a different combination of ticket type, service line, application, or queue.`,
   };
 };

@@ -156,6 +156,7 @@ const TicketStatusesSection = ({ activeTicketTypeColumns }: TicketStatusesSectio
         }}
         onSave={handleSave}
         ticketTypeColumns={activeTicketTypeColumns}
+        existingStatuses={rows}
         subtitle={TICKET_STATUSES_CONFIG.subtitle}
       />
 

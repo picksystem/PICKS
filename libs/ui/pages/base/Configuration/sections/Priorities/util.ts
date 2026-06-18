@@ -147,7 +147,160 @@ export interface TicketMatrixSectionProps {
 export interface PriorityFormDialogProps {
   open: boolean;
   editing: PriorityLevel | null;
+  /** Other priority rows. Used to detect duplicates on Short Description
+   *  and Description fields. The row currently being edited is excluded
+   *  from the comparison. */
+  existingPriorities?: PriorityLevel[];
   onClose: () => void;
   onSave: (data: Partial<PriorityLevel>) => void;
   ticketTypeColumns: { key: string; label: string }[];
 }
+
+/**
+ * Strip rich-text markers (`**bold**`, `*italic*`, `__underline__`) and
+ * compare case-insensitively on plain text. Mirrors the helper used in
+ * TicketTypeFormDialog.
+ */
+const plainText = (v: string): string =>
+  String(v ?? '')
+    .replace(/\*\*/g, '')
+    .replace(/__/g, '')
+    .replace(/\*/g, '')
+    .trim()
+    .toLowerCase();
+
+/**
+ * Returns a `{ _form: '...' }` error when the in-progress priority row
+ * shares its Short Description or Description with an existing row. The
+ * row being edited is excluded. The `_form` key is intentionally a
+ * non-field key — it drives the top-of-dialog Alert but does NOT put a
+ * red border on any individual input.
+ *
+ * Per the spec for the Priority section:
+ *   - Priority (name):    Allowed  — skip
+ *   - Short Description:  Not allowed
+ *   - Description:        Not allowed
+ *   - Colour (bgColor):   Allowed  — skip
+ *   - Internal note:      Allowed  — skip
+ */
+export const validatePriorityDuplicate = (
+  form: Record<string, unknown>,
+  data: PriorityLevel[],
+  editingRow: PriorityLevel | null,
+): { _form: string } | null => {
+  const myId = editingRow?.id;
+  const others = data.filter((p) => p.id !== myId);
+
+  const conflicts: string[] = [];
+
+  const shortVal = plainText(String(form.shortDescription ?? ''));
+  if (shortVal && others.some((p) => plainText(String(p.shortDescription ?? '')) === shortVal)) {
+    conflicts.push('Short Description');
+  }
+
+  const descVal = plainText(String(form.description ?? ''));
+  if (descVal && others.some((p) => plainText(String(p.description ?? '')) === descVal)) {
+    conflicts.push('Description');
+  }
+
+  if (conflicts.length === 0) return null;
+  if (conflicts.length === 1) {
+    return {
+      _form: `${conflicts[0]} already exists. Please use a different value.`,
+    };
+  }
+  return {
+    _form: `${conflicts.join(' and ')} already exist. Please use different values.`,
+  };
+};
+
+/**
+ * Returns a `{ _form: '...' }` error when the in-progress SimpleLevel row
+ * (used for both Impact and Urgency) shares its Short Description or
+ * Description with an existing row. The row being edited is excluded.
+ * The `_form` key is intentionally a non-field key — it drives the
+ * top-of-dialog Alert but does NOT put a red border on any individual input.
+ *
+ * Per the spec for the Impact / Urgency sections:
+ *   - Display name:        Allowed  — skip
+ *   - Short Description:   Not allowed
+ *   - Description:         Not allowed
+ *   - Internal note:       Allowed  — skip
+ */
+export const validateSimpleLevelDuplicate = (
+  form: Record<string, unknown>,
+  data: SimpleLevel[],
+  editingRow: SimpleLevel | null,
+): { _form: string } | null => {
+  const myId = editingRow?.id;
+  const others = data.filter((p) => p.id !== myId);
+
+  const conflicts: string[] = [];
+
+  const shortVal = plainText(String(form.shortDescription ?? ''));
+  if (shortVal && others.some((p) => plainText(String(p.shortDescription ?? '')) === shortVal)) {
+    conflicts.push('Short Description');
+  }
+
+  const descVal = plainText(String(form.description ?? ''));
+  if (descVal && others.some((p) => plainText(String(p.description ?? '')) === descVal)) {
+    conflicts.push('Description');
+  }
+
+  if (conflicts.length === 0) return null;
+  if (conflicts.length === 1) {
+    return {
+      _form: `${conflicts[0]} already exists. Please use a different value.`,
+    };
+  }
+  return {
+    _form: `${conflicts.join(' and ')} already exist. Please use different values.`,
+  };
+};
+
+/**
+ * Returns a `{ _form: '...' }` error when the in-progress Matrix row
+ * (an Impact × Urgency combination cell) shares its Short Description or
+ * Description with another existing cell row in the same ticket-type
+ * matrix. The row currently being edited is excluded by id.
+ * The `_form` key is intentionally a non-field key — it drives the
+ * top-of-dialog Alert but does NOT put a red border on any individual input.
+ *
+ * Per the spec for the Matrix section:
+ *   - Impact:                       Allowed  — skip
+ *   - Urgency:                      Allowed  — skip
+ *   - Priority:                     Allowed  — skip
+ *   - Short Description:            Not allowed
+ *   - Description:                  Not allowed
+ *   - Activate simple priorities:   Allowed  — skip
+ *   - Internal note:                Allowed  — skip
+ */
+export const validateMatrixRowDuplicate = (
+  form: Record<string, unknown>,
+  data: MatrixRow[],
+  editingRowId: string | null,
+): { _form: string } | null => {
+  const others = data.filter((r) => r.id !== editingRowId);
+
+  const conflicts: string[] = [];
+
+  const shortVal = plainText(String(form.shortDescription ?? ''));
+  if (shortVal && others.some((r) => plainText(String(r.shortDescription ?? '')) === shortVal)) {
+    conflicts.push('Short Description');
+  }
+
+  const descVal = plainText(String(form.description ?? ''));
+  if (descVal && others.some((r) => plainText(String(r.description ?? '')) === descVal)) {
+    conflicts.push('Description');
+  }
+
+  if (conflicts.length === 0) return null;
+  if (conflicts.length === 1) {
+    return {
+      _form: `${conflicts[0]} already exists. Please use a different value.`,
+    };
+  }
+  return {
+    _form: `${conflicts.join(' and ')} already exist. Please use different values.`,
+  };
+};

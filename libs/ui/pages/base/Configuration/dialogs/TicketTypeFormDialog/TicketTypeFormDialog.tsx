@@ -79,6 +79,60 @@ const plainText = (v: string): string =>
     .trim()
     .toLowerCase();
 
+/**
+ * Returns a map of fieldName → error message for any field whose value
+ * collides with another ticket type (excluding the one currently being
+ * edited). The keys intentionally use the same names as the spec
+ * (Ticket type, Description, Display tag, Format preview) so the
+ * top-of-dialog Alert reads naturally.
+ *
+ * Per the spec for the Ticket Type section:
+ *   - Ticket type:        Not allowed
+ *   - Description:        Not allowed
+ *   - Display tag:        Not allowed
+ *   - Display text:       Allowed   — skip
+ *   - Activation:         N/A       — skip
+ *   - Format preview:     Not allowed (driven by Numbering prefix)
+ *   - Access control:     Allowed   — skip
+ *   - Internal note:      Allowed   — skip
+ */
+const computeTicketTypeDuplicates = (
+  values: {
+    name: string;
+    description: string;
+    displayTag: string;
+    prefix: string;
+  },
+  others: { name: string; description?: string; displayTag?: string; prefix?: string }[],
+): Record<string, string> => {
+  const dupErrors: Record<string, string> = {};
+
+  const nameVal = normalize(values.name);
+  if (nameVal && others.some((t) => normalize(t.name) === nameVal)) {
+    dupErrors.name = 'Ticket type already exists';
+  }
+
+  const descVal = plainText(values.description ?? '');
+  if (descVal && others.some((t) => plainText(t.description ?? '') === descVal)) {
+    dupErrors.description = 'Description already exists';
+  }
+
+  const tagVal = normalize(values.displayTag);
+  if (tagVal && others.some((t) => normalize(t.displayTag) === tagVal)) {
+    dupErrors.displayTag = 'Display tag already exists';
+  }
+
+  // Format preview is derived from the Numbering prefix, so enforcing
+  // uniqueness on `prefix` keeps the preview itself unique as the spec
+  // requires. Case-insensitive match so `INC` and `inc` collide.
+  const prefixVal = normalize(values.prefix);
+  if (prefixVal && others.some((t) => normalize(t.prefix) === prefixVal)) {
+    dupErrors.prefix = 'Format preview already exists';
+  }
+
+  return dupErrors;
+};
+
 const TicketTypeFormDialog = ({
   open,
   editingItem,
@@ -149,38 +203,25 @@ const TicketTypeFormDialog = ({
     validationSchema: CreateTicketTypeSchema,
     validateOnBlur: true,
     validateOnChange: false,
-    onSubmit: async (values, { setSubmitting, resetForm, setErrors }) => {
+    onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
-        // Check for duplicates: only fields marked as "Not allowed" per requirements
-        const dupErrors: Record<string, string> = {};
-        const myId = editingItem?.id;
-        const others = existingTicketTypes.filter((t) => t.id !== myId);
+        // Check for duplicates on fields marked "Not allowed" in the spec.
+        // Display text, access control, and internal note are allowed to
+        // duplicate; activation is N/A. Ticket type, description, display
+        // tag, and numbering prefix (which drives the format preview) must
+        // be unique across the other ticket types.
+        const others = existingTicketTypes.filter((t) => t.id !== editingItem?.id);
+        const dupErrors = computeTicketTypeDuplicates(
+          {
+            name: values.name,
+            description: values.description,
+            displayTag: values.displayTag,
+            prefix: values.prefix,
+          },
+          others,
+        );
 
-        // 1. Ticket type (name) - must be unique
-        const nameVal = normalize(values.name);
-        if (nameVal && others.some((t) => normalize(t.name) === nameVal)) {
-          dupErrors.name = 'Ticket type already exists';
-        }
-
-        // 2. Description - must be unique
-        const descVal = plainText(values.description ?? '');
-        if (descVal && others.some((t) => plainText(t.description ?? '') === descVal)) {
-          dupErrors.description = 'Description already exists';
-        }
-
-        // 3. Display tag - must be unique
-        const tagVal = normalize(values.displayTag);
-        if (tagVal && others.some((t) => normalize(t.displayTag) === tagVal)) {
-          dupErrors.displayTag = 'Display tag already exists';
-        }
-
-        // 4. Numbering Prefix - must be unique
-        const prefixVal = normalize(values.prefix);
-        if (prefixVal && others.some((t) => normalize(t.prefix) === prefixVal)) {
-          dupErrors.prefix = 'Numbering prefix already exists';
-        }
-
-        // Mark all required fields as touched so validation errors show on submit
+        // Mark all required fields as touched so required-field errors render.
         formik.setTouched({
           ...formik.touched,
           name: true,
@@ -194,7 +235,11 @@ const TicketTypeFormDialog = ({
         });
 
         if (Object.keys(dupErrors).length > 0) {
-          setErrors(dupErrors);
+          // Surface duplicates ONLY in the top-of-dialog Alert. We deliberately
+          // do NOT call setErrors(dupErrors) here, because that would also put
+          // a red border + helper text under each individual input. The Alert
+          // (rendered from `duplicateErrors`) is the single source of truth for
+          // duplicate feedback.
           setDuplicateErrors(dupErrors);
           setSubmitting(false);
           return;
@@ -274,6 +319,35 @@ const TicketTypeFormDialog = ({
       setDuplicateErrors({});
     }
   }, [open]);
+
+  // Live-recompute duplicate errors so the Alert updates as the user types
+  // in any of the spec-restricted fields, not only after clicking Submit.
+  // Mirrors the live-validation pattern used by Impact, Urgency, Priority,
+  // and Matrix sections.
+  useEffect(() => {
+    if (!open) return;
+    const others = existingTicketTypes.filter((t) => t.id !== editingItem?.id);
+    setDuplicateErrors(
+      computeTicketTypeDuplicates(
+        {
+          name: formik.values.name,
+          description: formik.values.description,
+          displayTag: formik.values.displayTag,
+          prefix: formik.values.prefix,
+        },
+        others,
+      ),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    open,
+    formik.values.name,
+    formik.values.description,
+    formik.values.displayTag,
+    formik.values.prefix,
+    editingItem?.id,
+    existingTicketTypes,
+  ]);
 
   const handleClose = () => {
     formik.resetForm();
@@ -380,13 +454,21 @@ const TicketTypeFormDialog = ({
               </Divider>
             </Grid>
 
-            {/* Duplicate Error Alert */}
+            {/* Duplicate Error Alert — single dialog-level message.
+                Per-field red borders and helper text are intentionally NOT
+                shown for duplicates; the Alert is the only signal. */}
             {Object.keys(duplicateErrors).length > 0 && (
               <Grid size={{ xs: 12 }}>
                 <Alert severity='error' variant='outlined'>
-                  {Object.values(duplicateErrors).map((msg, idx) => (
-                    <div key={idx}>{msg}</div>
-                  ))}
+                  {(() => {
+                    const conflicts = Object.values(duplicateErrors).map((m) =>
+                      m.replace(/ already exists$/i, ''),
+                    );
+                    if (conflicts.length === 1) {
+                      return `${conflicts[0]} already exists. Please use a different value.`;
+                    }
+                    return `${conflicts.join(', ')} already exist. Please use different values.`;
+                  })()}
                 </Alert>
               </Grid>
             )}

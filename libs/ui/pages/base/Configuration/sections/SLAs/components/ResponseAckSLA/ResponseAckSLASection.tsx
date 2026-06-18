@@ -1,71 +1,47 @@
+import { useCallback } from 'react';
 import { useStyles } from '../../styles';
 import { GenericPanel } from '@serviceops/genericpanel';
-import {
-  RESPONSE_ACK_SLA_CONFIG,
-  ticketTypeChipCell,
-  activationCell,
-  priorityCell,
-} from '../shared/SLAsPanelConfig';
-import type { IConfigResponseAckSLARow, ITicketType } from '@serviceops/interfaces';
+import { RESPONSE_ACK_SLA_CONFIG, responseAckSLAColumns } from '../shared/SLAsPanelConfig';
+import { validateSlaRowDuplicate } from '../shared/textUtils';
+import type { IConfigResponseAckSLARow } from '@serviceops/interfaces';
 
 interface ResponseAckSLASectionProps {
   displayRows: IConfigResponseAckSLARow[];
-  activeTicketTypes: ITicketType[];
   onDataChange: (rows: IConfigResponseAckSLARow[]) => void;
 }
 
-const ResponseAckSLASection = ({
-  displayRows,
-  activeTicketTypes,
-  onDataChange,
-}: ResponseAckSLASectionProps) => {
+const ResponseAckSLASection = ({ displayRows, onDataChange }: ResponseAckSLASectionProps) => {
   const { classes } = useStyles();
 
-  // Create a read-only config for the panel (no New button)
-  const readonlyConfig = {
-    ...RESPONSE_ACK_SLA_CONFIG,
-    title: 'Response / Acknowledgement SLA (in hours)',
-    subtitle: 'Configure response time targets and breach alerting for initial acknowledgement',
-  };
-
-  const columns = [
-    {
-      id: 'ticketTypeName',
-      label: 'SLAs',
-      minWidth: 140,
-      format: (_v: unknown, row: { ticketTypeId: number; ticketTypeName: string }) =>
-        ticketTypeChipCell(row, activeTicketTypes),
-    },
-    {
-      id: 'activation',
-      label: 'Activation',
-      minWidth: 90,
-      align: 'center' as const,
-      format: (_v: unknown, row: { ticketTypeId: number; activation: boolean }) =>
-        activationCell(row, (ticketTypeId: number, value: boolean) => {
-          onDataChange(
-            displayRows.map((r) =>
-              r.ticketTypeId === ticketTypeId ? { ...r, activation: value } : r,
-            ),
-          );
-        }),
-    },
-    { id: 'p1', label: 'P1', minWidth: 55, format: priorityCell },
-    { id: 'p2', label: 'P2', minWidth: 55, format: priorityCell },
-    { id: 'p3', label: 'P3', minWidth: 55, format: priorityCell },
-    { id: 'p4', label: 'P4', minWidth: 55, format: priorityCell },
-    { id: 'p5', label: 'P5', minWidth: 55, format: priorityCell },
-  ];
+  // Per the spec for the Response / Acknowledgement SLA section:
+  //   - SLAs (ticket type):  Not allowed
+  //   - Activation:          N/A
+  //   - Short Description:   Not allowed
+  //   - Internal note:       Allowed  — skip
+  //   - P1, P2, etc:         Allowed  — skip
+  //
+  // The Alert is the only signal — no per-field red borders for duplicates.
+  // See validateSlaRowDuplicate in ../shared/textUtils for the rule details.
+  const summaryValidator = useCallback(
+    (form: Record<string, unknown>, _all: unknown[], editingRow: Record<string, unknown> | null) =>
+      validateSlaRowDuplicate(
+        form,
+        displayRows as unknown as Parameters<typeof validateSlaRowDuplicate>[1],
+        (editingRow?.id as string | null) ?? null,
+      ),
+    [displayRows],
+  );
 
   return (
     <div className={classes.sectionAccordion}>
       <GenericPanel
-        config={readonlyConfig}
-        data={displayRows}
-        onSave={onDataChange}
-        customColumns={columns as any}
+        config={RESPONSE_ACK_SLA_CONFIG}
+        data={displayRows as unknown as Record<string, unknown>[]}
+        onSave={onDataChange as unknown as (data: unknown[]) => void}
+        customColumns={responseAckSLAColumns() as unknown as never}
         variant='plain'
         defaultExpanded={false}
+        summaryValidator={summaryValidator as unknown as never}
       />
     </div>
   );

@@ -29,6 +29,7 @@ interface Props {
   showFooterActions?: boolean;
   icon?: React.ReactNode;
   error?: boolean;
+  required?: boolean;
 }
 
 export const parseRichText = (text: string): RichTextValue => {
@@ -111,6 +112,7 @@ const RichTextEditor = ({
   showFooterActions = true,
   icon,
   error = false,
+  required = false,
 }: Props) => {
   const editorRef = useRef<HTMLDivElement>(null);
   // Track the serialized form of the value we last initialized the editor
@@ -262,6 +264,11 @@ const RichTextEditor = ({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mr: 0.5 }}>
             {icon ?? <StickyNote2Icon sx={{ fontSize: 16, color: themeColor }} />}
             <Box sx={{ fontSize: '0.75rem', fontWeight: 600, color: themeColor }}>{title}</Box>
+            {required && (
+              <Box component='span' sx={{ color: '#d32f2f', fontSize: '0.75rem', fontWeight: 600 }}>
+                *
+              </Box>
+            )}
           </Box>
           <Tooltip title='Bold'>
             <IconButton

@@ -1,11 +1,10 @@
+import { useCallback } from 'react';
 import { useStyles } from '../../styles';
+import { Typography } from '@serviceops/component';
 import { GenericPanel } from '@serviceops/genericpanel';
-import {
-  DUE_DATES_CONFIG,
-  ticketTypeChipCell,
-  activationCell,
-  priorityCell,
-} from '../shared/SLAsPanelConfig';
+import { mkActiveChip } from '@serviceops/pages/base/Configuration/utils/cellRenderers';
+import { DUE_DATES_CONFIG, ticketTypeChipCell, priorityCell } from '../shared/SLAsPanelConfig';
+import { stripRichText, validateSlaRowDuplicate } from '../shared/textUtils';
 import type { IConfigResponseAckSLARow, ITicketType } from '@serviceops/interfaces';
 
 interface DueDatesSectionProps {
@@ -37,25 +36,58 @@ const DueDatesSection = ({
         ticketTypeChipCell(row, activeTicketTypes),
     },
     {
-      id: 'activation',
+      id: 'isActive',
       label: 'Activation',
-      minWidth: 90,
+      minWidth: 110,
       align: 'center' as const,
-      format: (_v: unknown, row: { ticketTypeId: number; activation: boolean }) =>
-        activationCell(row, (ticketTypeId: number, value: boolean) => {
-          onDataChange(
-            displayRows.map((r) =>
-              r.ticketTypeId === ticketTypeId ? { ...r, activation: value } : r,
-            ),
-          );
-        }),
+      format: (_v: unknown, row: IConfigResponseAckSLARow) =>
+        mkActiveChip(row.activation ?? row.isActive),
     },
-    { id: 'p1', label: 'P1', minWidth: 55, format: priorityCell },
-    { id: 'p2', label: 'P2', minWidth: 55, format: priorityCell },
-    { id: 'p3', label: 'P3', minWidth: 55, format: priorityCell },
-    { id: 'p4', label: 'P4', minWidth: 55, format: priorityCell },
-    { id: 'p5', label: 'P5', minWidth: 55, format: priorityCell },
+    {
+      id: 'shortDescription',
+      label: 'Short Description',
+      minWidth: 180,
+      format: (_v: unknown, row: IConfigResponseAckSLARow) => (
+        <Typography sx={{ fontSize: '0.78rem', color: 'text.primary' }}>
+          {row.shortDescription ? stripRichText(row.shortDescription) : '—'}
+        </Typography>
+      ),
+    },
+    {
+      id: 'internalNote',
+      label: 'Internal note',
+      minWidth: 180,
+      format: (_v: unknown, row: IConfigResponseAckSLARow) => (
+        <Typography sx={{ fontSize: '0.78rem', color: 'text.primary' }}>
+          {row.internalNote ? stripRichText(row.internalNote) : '—'}
+        </Typography>
+      ),
+    },
+    { id: 'p1', label: 'P1', minWidth: 70, format: priorityCell },
+    { id: 'p2', label: 'P2', minWidth: 70, format: priorityCell },
+    { id: 'p3', label: 'P3', minWidth: 70, format: priorityCell },
+    { id: 'p4', label: 'P4', minWidth: 70, format: priorityCell },
+    { id: 'p5', label: 'P5', minWidth: 70, format: priorityCell },
   ];
+
+  // Per the spec for the Due Date section:
+  //   - SLAs (ticket type):  Not allowed
+  //   - Activation:          N/A
+  //   - Short Description:   Not allowed
+  //   - Internal note:       Allowed  — skip
+  //   - P1, P2, etc:         Allowed  — skip
+  //
+  // The Alert is the only signal — no per-field red borders for duplicates.
+  // See validateSlaRowDuplicate in ../shared/textUtils for the rule details.
+  const summaryValidator = useCallback(
+    (form: Record<string, unknown>, _all: unknown[], editingRow: Record<string, unknown> | null) =>
+      validateSlaRowDuplicate(
+        form,
+        displayRows as unknown as Parameters<typeof validateSlaRowDuplicate>[1],
+        (editingRow?.id as string | null) ?? null,
+      ),
+    [displayRows],
+  );
 
   return (
     <div className={classes.sectionAccordion}>
@@ -66,6 +98,7 @@ const DueDatesSection = ({
         customColumns={columns as any}
         variant='plain'
         defaultExpanded={false}
+        summaryValidator={summaryValidator as unknown as never}
       />
     </div>
   );

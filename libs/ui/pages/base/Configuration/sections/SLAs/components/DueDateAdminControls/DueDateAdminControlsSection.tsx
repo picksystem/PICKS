@@ -29,20 +29,27 @@ const ToggleRow = ({
     sx={{
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      py: 0.625,
+      py: 0.75,
       opacity: disabled ? 0.42 : 1,
     }}
   >
-    <Typography sx={{ fontSize: '0.83rem', fontWeight: 500, color: 'text.primary', pr: 1 }}>
+    <Typography
+      sx={{
+        fontSize: '0.83rem',
+        fontWeight: 500,
+        color: 'text.primary',
+        width: 390,
+        flexShrink: 0,
+      }}
+    >
       {label}
     </Typography>
     <Switch
       size='small'
+      color='primary'
       checked={checked}
       disabled={disabled}
       onChange={(e) => onChange(e.target.checked)}
-      color='primary'
     />
   </Box>
 );

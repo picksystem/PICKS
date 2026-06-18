@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Box, Typography, TextField, IconButton } from '@serviceops/component';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Alert, Box, Typography, TextField, IconButton } from '@serviceops/component';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import {
   Collapse,
 } from '@mui/material';
 import { PriorityHigh, ColorLens, Close, Check, ExpandMore } from '@mui/icons-material';
-import { useNotification } from '@serviceops/hooks';
+import { useFieldError, useNotification } from '@serviceops/hooks';
 import { PriorityLevel } from '@serviceops/configpriorityutil';
 import { ConfigFormDialog } from '@serviceops/configdialogs';
 import { parseRichText, serializeRichText, RichTextEditor } from '../../shared/RichTextEditor';
@@ -20,6 +20,8 @@ import { parseRichText, serializeRichText, RichTextEditor } from '../../shared/R
 interface PriorityFormDialogProps {
   open: boolean;
   editing: PriorityLevel | null;
+  /** Other priority rows for duplicate detection. */
+  existingPriorities?: PriorityLevel[];
   onClose: () => void;
   onSave: (data: Partial<PriorityLevel>) => void;
   ticketTypeColumns: { key: string; label: string }[];
@@ -40,15 +42,125 @@ const PRESET_COLORS = [
 const PriorityFormDialog = ({
   open,
   editing,
+  existingPriorities = [],
   onClose,
   onSave,
   ticketTypeColumns,
   subtitle,
 }: PriorityFormDialogProps) => {
   const { success } = useNotification();
+  const reqError = useFieldError();
   const [form, setForm] = useState<Partial<PriorityLevel>>({});
+  // Mirror of `form` that updates synchronously inside onChange handlers.
+  // The RichTextEditor only fires onChange on blur, so a state update from
+  // there lands AFTER the user has already clicked Submit. By the time
+  // handleSubmit runs, `form` is still the previous render's value and
+  // duplicate checks would miss values typed into the editor. We read this
+  // ref in handleSubmit / computeDuplicateMessage to get the live value.
+  const formRef = useRef<Partial<PriorityLevel>>({});
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [ticketTypesExpanded, setTicketTypesExpanded] = useState(false);
+  const [duplicateAlert, setDuplicateAlert] = useState<string | null>(null);
+  // Per-field required-validation state. Touched flips true on blur (or
+  // immediately on Submit) and `errors` carries the field-level message
+  // produced by validateRequired. Mirrors the formik `touched`/`errors`
+  // shape that useFieldError expects in TicketTypeFormDialog.
+  const [touched, setTouched] = useState<{
+    name?: boolean;
+    shortDescription?: boolean;
+    description?: boolean;
+  }>({});
+  const [requiredErrors, setRequiredErrors] = useState<{
+    name?: string;
+    shortDescription?: string;
+    description?: string;
+  }>({});
+
+  // Updates both the ref and the state in one go. Use this everywhere a
+  // field changes so handleSubmit always sees the latest values.
+  const updateForm = useCallback(
+    (patch: Partial<PriorityLevel> | ((f: Partial<PriorityLevel>) => Partial<PriorityLevel>)) => {
+      formRef.current =
+        typeof patch === 'function' ? patch(formRef.current) : { ...formRef.current, ...patch };
+      setForm(formRef.current);
+    },
+    [],
+  );
+
+  // Strip rich-text markers and compare case-insensitively on plain text.
+  // Mirrors the helper used in TicketTypeFormDialog.
+  const plainText = (v: string): string =>
+    String(v ?? '')
+      .replace(/\*\*/g, '')
+      .replace(/__/g, '')
+      .replace(/\*/g, '')
+      .trim()
+      .toLowerCase();
+
+  /**
+   * Required-field validation per the spec:
+   *   Priority (name)        — Yes
+   *   Short Description       — Yes
+   *   Description             — Yes
+   *   Internal note           — No
+   *
+   * Returns a map of fieldName → 'required' for any blank required field.
+   * Rich-text fields are checked on plain text (markers stripped) so a
+   * user who only typed formatting without content still fails validation.
+   */
+  const validateRequired = (f: Partial<PriorityLevel>): typeof requiredErrors => {
+    const errs: typeof requiredErrors = {};
+    if (!String(f.name ?? '').trim()) errs.name = 'required';
+    if (!plainText(f.shortDescription ?? '')) errs.shortDescription = 'required';
+    if (!plainText(f.description ?? '')) errs.description = 'required';
+    return errs;
+  };
+
+  /**
+   * Returns a single consolidated duplicate message, or null when the form
+   * passes the duplicate check.
+   *
+   * Per the spec for the Priority section:
+   *   - Priority (name):    Allowed  — skip
+   *   - Short Description:  Not allowed
+   *   - Description:        Not allowed
+   *   - Colour (bgColor):   Allowed  — skip
+   *   - Internal note:      Allowed  — skip
+   */
+  const computeDuplicateMessage = (f: Partial<PriorityLevel>): string | null => {
+    const myId = editing?.id;
+    const others = existingPriorities.filter((p) => p.id !== myId);
+
+    const conflicts: string[] = [];
+
+    const shortVal = plainText(f.shortDescription ?? '');
+    if (shortVal && others.some((p) => plainText(p.shortDescription ?? '') === shortVal)) {
+      conflicts.push('Short Description');
+    }
+
+    const descVal = plainText(f.description ?? '');
+    if (descVal && others.some((p) => plainText(p.description ?? '') === descVal)) {
+      conflicts.push('Description');
+    }
+
+    if (conflicts.length === 0) return null;
+    if (conflicts.length === 1) {
+      return `${conflicts[0]} already exists. Please use a different value.`;
+    }
+    return `${conflicts.join(' and ')} already exist. Please use different values.`;
+  };
+
+  // Live-recompute the duplicate alert so the user sees it as they type,
+  // not only after clicking Submit. This mirrors the live validation the
+  // approved-estimates and ticket-types dialogs do.
+  useEffect(() => {
+    if (!open) {
+      setDuplicateAlert(null);
+      return;
+    }
+    setDuplicateAlert(computeDuplicateMessage(formRef.current));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form, open, editing, existingPriorities]);
 
   const getActiveTicketTypeCount = (): number => {
     const { enabledFor } = form;
@@ -61,46 +173,68 @@ const PriorityFormDialog = ({
       setColorPickerOpen(false);
       return;
     }
-    setForm(
-      editing
-        ? {
-            name: editing.name,
-            shortDescription: editing.shortDescription ?? '',
-            description: editing.description,
-            bgColor: editing.bgColor,
-            internalNote: editing.internalNote ?? '',
-            enabledFor: { ...editing.enabledFor },
-            accessControl: (editing as { accessControl?: string[] }).accessControl ?? [
-              'admin',
-              'consultant',
-              'endUser',
-            ],
-          }
-        : {
-            name: '',
-            shortDescription: '',
-            description: '',
-            bgColor: '#2563eb',
-            internalNote: '',
-            enabledFor: Object.fromEntries(ticketTypeColumns.map((t) => [t.key, true])),
-            accessControl: ['admin', 'consultant', 'endUser'],
-          },
-    );
+    // Reset required-validation state each time the dialog opens so
+    // errors from a previous Add/Edit don't carry over.
+    setTouched({});
+    setRequiredErrors({});
+    const initial = editing
+      ? {
+          name: editing.name,
+          shortDescription: editing.shortDescription ?? '',
+          description: editing.description,
+          bgColor: editing.bgColor,
+          internalNote: editing.internalNote ?? '',
+          enabledFor: { ...editing.enabledFor },
+          accessControl: (editing as { accessControl?: string[] }).accessControl ?? [
+            'admin',
+            'consultant',
+            'endUser',
+          ],
+        }
+      : {
+          name: '',
+          shortDescription: '',
+          description: '',
+          bgColor: '#2563eb',
+          internalNote: '',
+          enabledFor: Object.fromEntries(ticketTypeColumns.map((t) => [t.key, true])),
+          accessControl: ['admin', 'consultant', 'endUser'],
+        };
+    formRef.current = initial;
+    setForm(initial);
   }, [open, editing, ticketTypeColumns]);
 
   // Handle "Select All" toggle for ticket types
   const handleSelectAllTicketTypes = useCallback(
     (checked: boolean) => {
-      setForm((f) => ({
+      updateForm((f) => ({
         ...f,
         enabledFor: Object.fromEntries(ticketTypeColumns.map((t) => [t.key, checked])),
       }));
     },
-    [ticketTypeColumns],
+    [ticketTypeColumns, updateForm],
   );
 
   const handleSubmit = () => {
-    onSave(form);
+    // Read the ref, not the `form` state — see formRef comment above for why.
+    // Run required-field validation first so the user sees a per-field red
+    // border / helper text on Priority, Short Description, and Description
+    // when any of them is blank. Mark all required fields as touched so the
+    // errors render even if the user hasn't blurred them yet.
+    const reqErrs = validateRequired(formRef.current);
+    setRequiredErrors(reqErrs);
+    setTouched({ name: true, shortDescription: true, description: true });
+    if (Object.keys(reqErrs).length > 0) {
+      return;
+    }
+
+    const message = computeDuplicateMessage(formRef.current);
+    if (message) {
+      setDuplicateAlert(message);
+      return;
+    }
+    setDuplicateAlert(null);
+    onSave(formRef.current);
     success(editing ? 'Priority updated successfully' : 'Priority added successfully');
   };
 
@@ -113,14 +247,14 @@ const PriorityFormDialog = ({
   };
 
   const handleColorChange = (color: string) => {
-    setForm((f) => ({ ...f, bgColor: color }));
+    updateForm((f) => ({ ...f, bgColor: color }));
     setColorPickerOpen(false);
   };
 
   const handleColorInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     if (/^#[0-9A-Fa-f]{0,6}$/.test(value)) {
-      setForm((f) => ({ ...f, bgColor: value }));
+      updateForm((f) => ({ ...f, bgColor: value }));
     }
   };
 
@@ -137,54 +271,99 @@ const PriorityFormDialog = ({
         accent='#b91c1c'
         title='Priority'
         subtitle={subtitle}
-        submitDisabled={!form.name}
+        submitDisabled={
+          !form.name ||
+          !plainText(form.shortDescription ?? '') ||
+          !plainText(form.description ?? '') ||
+          Boolean(duplicateAlert)
+        }
         submitLabel={editing ? 'Save' : 'Submit'}
         maxWidth='md'
       >
+        {/* Duplicate Alert — single dialog-level message. Per spec, only
+            Short Description and Description must be unique. The Alert is
+            the only signal; no per-field red borders for duplicates. */}
+        {duplicateAlert && (
+          <Alert severity='error' variant='outlined' sx={{ mb: 1 }}>
+            {duplicateAlert}
+          </Alert>
+        )}
+
         <TextField
           label='Priority'
           size='small'
           value={form.name ?? ''}
-          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+          onChange={(e) => updateForm((f) => ({ ...f, name: e.target.value }))}
+          onBlur={() => setTouched((t) => ({ ...t, name: true }))}
           placeholder='e.g. 1-Critical, 2-High, 3-Medium'
           inputProps={{ style: { fontFamily: 'monospace', fontWeight: 700 } }}
+          error={Boolean(reqError(touched.name, requiredErrors.name))}
+          helperText={reqError(touched.name, requiredErrors.name)}
           required
         />
 
         <Box>
-          <RichTextEditor
-            value={parseRichText(form.shortDescription ?? '')}
-            onChange={(value) =>
-              setForm((f) => ({ ...f, shortDescription: serializeRichText(value.segments) }))
-            }
-            showFooterActions={false}
-            title='Short Description'
-          />
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'none' }}
+          <Box
+            onBlur={() => setTouched((t) => ({ ...t, shortDescription: true }))}
+            sx={{ borderRadius: 1 }}
           >
-            Brief summary shown in compact views
-          </Typography>
+            <RichTextEditor
+              value={parseRichText(form.shortDescription ?? '')}
+              onChange={(value) =>
+                updateForm((f) => ({ ...f, shortDescription: serializeRichText(value.segments) }))
+              }
+              showFooterActions={false}
+              title='Short Description'
+              required
+              error={Boolean(reqError(touched.shortDescription, requiredErrors.shortDescription))}
+            />
+            <Typography
+              variant='caption'
+              sx={{
+                color: reqError(touched.shortDescription, requiredErrors.shortDescription)
+                  ? '#d32f2f'
+                  : 'text.secondary',
+                fontSize: '0.7rem',
+                mt: 0.5,
+                display: 'block',
+              }}
+            >
+              {reqError(touched.shortDescription, requiredErrors.shortDescription) ||
+                'Brief summary shown in compact views'}
+            </Typography>
+          </Box>
         </Box>
 
         <Box>
-          <RichTextEditor
-            value={parseRichText(form.description ?? '')}
-            onChange={(value) =>
-              setForm((f) => ({ ...f, description: serializeRichText(value.segments) }))
-            }
-            showFooterActions={false}
-            title='Description'
-          />
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'none' }}
+          <Box
+            onBlur={() => setTouched((t) => ({ ...t, description: true }))}
+            sx={{ borderRadius: 1 }}
           >
-            Describe when this priority should be used
-          </Typography>
+            <RichTextEditor
+              value={parseRichText(form.description ?? '')}
+              onChange={(value) =>
+                updateForm((f) => ({ ...f, description: serializeRichText(value.segments) }))
+              }
+              showFooterActions={false}
+              title='Description'
+              required
+              error={Boolean(reqError(touched.description, requiredErrors.description))}
+            />
+            <Typography
+              variant='caption'
+              sx={{
+                color: reqError(touched.description, requiredErrors.description)
+                  ? '#d32f2f'
+                  : 'text.secondary',
+                fontSize: '0.7rem',
+                mt: 0.5,
+                display: 'block',
+              }}
+            >
+              {reqError(touched.description, requiredErrors.description) ||
+                'Describe when this priority should be used'}
+            </Typography>
+          </Box>
         </Box>
 
         <Box>
@@ -238,7 +417,7 @@ const PriorityFormDialog = ({
           <RichTextEditor
             value={parseRichText(form.internalNote ?? '')}
             onChange={(value) =>
-              setForm((f) => ({ ...f, internalNote: serializeRichText(value.segments) }))
+              updateForm((f) => ({ ...f, internalNote: serializeRichText(value.segments) }))
             }
             showFooterActions={false}
             title='Internal note'
@@ -246,9 +425,9 @@ const PriorityFormDialog = ({
           <Typography
             variant='caption'
             color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'none' }}
+            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
           >
-            Internal note for this priority (not visible to end users)
+            Internal note for this priority (not visible to end users) — optional
           </Typography>
         </Box>
 
@@ -333,7 +512,7 @@ const PriorityFormDialog = ({
                           <Checkbox
                             checked={isChecked}
                             onChange={(e) =>
-                              setForm((f) => ({
+                              updateForm((f) => ({
                                 ...f,
                                 enabledFor: { ...(f.enabledFor ?? {}), [t.key]: e.target.checked },
                               }))

@@ -71,21 +71,22 @@ const SLASettingsSection = ({
             sx={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
-              py: 0.625,
+              py: 0.75,
             }}
           >
-            <Box>
-              <Typography sx={{ fontWeight: 700, fontSize: '0.85rem' }}>Enable SLAs</Typography>
+            <Box sx={{ width: 390, flexShrink: 0 }}>
+              <Typography sx={{ fontSize: '0.83rem', fontWeight: 500, color: 'text.primary' }}>
+                Enable SLAs
+              </Typography>
               <Typography sx={{ fontSize: '0.73rem', color: 'text.secondary' }}>
                 Master switch — activates all SLA tracking across the system
               </Typography>
             </Box>
             <Switch
+              size='small'
+              color='primary'
               checked={ctrl.enabled}
               onChange={(e) => onUpdate('enabled', e.target.checked)}
-              color='primary'
-              sx={{ flexShrink: 0 }}
             />
           </Box>
 
@@ -95,7 +96,7 @@ const SLASettingsSection = ({
             <Typography
               sx={{
                 fontSize: '0.83rem',
-                fontWeight: 600,
+                fontWeight: 500,
                 color: off ? 'text.disabled' : 'text.primary',
                 transition: 'color 0.18s',
                 mb: 1,
@@ -118,21 +119,28 @@ const SLASettingsSection = ({
                         sx={{
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'space-between',
-                          py: 0.5,
+                          py: 0.75,
                           opacity: off ? 0.42 : 1,
                           transition: 'opacity 0.18s',
                         }}
                       >
-                        <Typography sx={{ fontSize: '0.82rem', color: 'text.primary' }}>
-                          {tt.displayName || tt.name}
+                        <Typography
+                          sx={{
+                            fontSize: '0.83rem',
+                            fontWeight: 500,
+                            color: 'text.primary',
+                            width: 390,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {tt.name}
                         </Typography>
                         <Switch
                           size='small'
+                          color='primary'
                           checked={isOn}
                           disabled={off}
                           onChange={(e) => toggleTicketTypeActivation(tt.type, e.target.checked)}
-                          color='primary'
                         />
                       </Box>
                       {idx < activeTicketTypes.length - 1 && <Divider sx={{ opacity: 0.45 }} />}

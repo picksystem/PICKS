@@ -206,12 +206,20 @@ export interface IConfigResponseAckSLARow {
   id: string;
   ticketTypeId: number;
   ticketTypeName: string;
-  activation: boolean;
-  p1: number;
-  p2: number;
-  p3: number;
-  p4: number;
-  p5: number;
+  activation?: boolean;
+  isActive?: boolean;
+  shortDescription?: string;
+  internalNote?: string;
+  /** Duration in HH:MM format (e.g. "15:00") or numeric hours for legacy data. */
+  p1: string | number;
+  /** Duration in HH:MM format (e.g. "30:00") or numeric hours for legacy data. */
+  p2: string | number;
+  /** Duration in HH:MM format (e.g. "60:00") or numeric hours for legacy data. */
+  p3: string | number;
+  /** Duration in HH:MM format (e.g. "240:00") or numeric hours for legacy data. */
+  p4: string | number;
+  /** Duration in HH:MM format (e.g. "480:00") or numeric hours for legacy data. */
+  p5: string | number;
 }
 
 export interface IConfigApprovedEstimateRow {
@@ -231,6 +239,8 @@ export interface IConfigActivationRow {
   ticketTypeId: number;
   ticketTypeName: string;
   activation: boolean;
+  shortDescription?: string;
+  internalNote?: string;
 }
 
 export interface IConfigBusinessCategory {

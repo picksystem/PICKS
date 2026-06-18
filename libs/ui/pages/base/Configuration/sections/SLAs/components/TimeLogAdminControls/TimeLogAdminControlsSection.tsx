@@ -62,18 +62,25 @@ const TimeLogAdminControlsSection = ({ ctrl, onUpdate }: TimeLogAdminControlsSec
             sx={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
-              py: 0.625,
+              py: 0.75,
             }}
           >
-            <Typography sx={{ fontSize: '0.83rem', fontWeight: 500, color: 'text.primary', pr: 1 }}>
+            <Typography
+              sx={{
+                fontSize: '0.83rem',
+                fontWeight: 500,
+                color: 'text.primary',
+                width: 390,
+                flexShrink: 0,
+              }}
+            >
               Active time log
             </Typography>
             <Switch
               size='small'
+              color='primary'
               checked={ctrl.timeLogAdminEnabled}
               onChange={(e) => onUpdate('timeLogAdminEnabled', e.target.checked)}
-              color='primary'
             />
           </Box>
         </Box>

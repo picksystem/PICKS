@@ -7,6 +7,7 @@ export interface ActivationRowFormDialogProps {
   ticketTypes: ITicketType[];
   usedTicketTypeIds: number[];
   idPrefix: string;
+  rows: IConfigActivationRow[];
   onClose: () => void;
   onSubmit: (row: IConfigActivationRow) => void;
 }

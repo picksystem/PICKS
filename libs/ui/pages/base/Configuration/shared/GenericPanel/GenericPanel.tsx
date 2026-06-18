@@ -316,6 +316,20 @@ interface GenericPanelProps {
     data: GenericData[],
     editingRow: GenericData | null,
   ) => Record<string, string> | null;
+  /**
+   * Optional cross-field validator that returns a single dialog-level
+   * message (e.g. "Short Description already exists. Please use a
+   * different value."). When the message is non-null it is rendered
+   * as a top-of-dialog Alert (no per-field red borders) and the
+   * submit button is disabled. Re-evaluates on every form change.
+   * Use this when a validation error spans multiple fields and you
+   * want a single composite message instead of per-field red borders.
+   */
+  summaryValidator?: (
+    form: FormData,
+    data: GenericData[],
+    editingRow: GenericData | null,
+  ) => string | null;
 }
 
 const createColumns = (fields: TableField[]): Column<Record<string, unknown>>[] =>
@@ -727,6 +741,7 @@ export const GenericPanel = ({
   onDeleteClick,
   validate,
   validateFields,
+  summaryValidator,
 }: GenericPanelProps) => {
   const { success, error: showError } = useNotification();
   const reqError = useFieldError();
@@ -907,6 +922,24 @@ export const GenericPanel = ({
     () => (validateFields ? validateFields(form, data, editingRow) : null),
     [validateFields, form, data, editingRow],
   );
+
+  // Dialog-level (summary) validation error. Returns a single composite
+  // message rendered as a top-of-dialog Alert with no per-field red borders.
+  // Used for cross-field checks (e.g. duplicate detection across multiple
+  // fields) where one consolidated message reads better than per-field errors.
+  const summaryMessage = useMemo(
+    () => (summaryValidator ? summaryValidator(form, data, editingRow) : null),
+    [summaryValidator, form, data, editingRow],
+  );
+
+  // Surface cross-field errors (e.g. duplicates) the moment they appear, so the
+  // Alert and per-field red helper text become visible without requiring the
+  // user to click Submit first. Submit is also blocked by `formIsInvalid`.
+  useEffect(() => {
+    if (fieldErrors) {
+      setShowValidation(true);
+    }
+  }, [fieldErrors]);
 
   const handleSubmit = useCallback(async () => {
     // For editing: check if anything actually changed
@@ -1124,7 +1157,10 @@ export const GenericPanel = ({
   // Only block submit on cross-field validation errors (e.g. duplicates). Required-field
   // validation is intentionally NOT used to disable the button — the user must be able
   // to click Submit and see the "Required" error hook on missing fields.
-  const formIsInvalid = useMemo(() => !!fieldErrors, [fieldErrors]);
+  const formIsInvalid = useMemo(
+    () => !!fieldErrors || !!summaryMessage,
+    [fieldErrors, summaryMessage],
+  );
 
   return (
     <>
@@ -1152,6 +1188,11 @@ export const GenericPanel = ({
       >
         <LocalizationProvider>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {summaryMessage && (
+              <Alert severity='error' variant='outlined' sx={{ alignItems: 'center' }}>
+                {summaryMessage}
+              </Alert>
+            )}
             {showValidation && fieldErrors && (
               <Alert severity='error' variant='outlined' sx={{ alignItems: 'center' }}>
                 {Object.values(fieldErrors)[0]}

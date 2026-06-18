@@ -163,6 +163,8 @@ const ReleaseCycleStatusesSection = ({
         }}
         onSave={handleSave}
         ticketTypeColumns={activeTicketTypeColumns}
+        existingStatuses={rows}
+        displayNameLabel='Release cycle status'
         subtitle={RELEASE_CYCLE_STATUSES_CONFIG.subtitle}
         title='Release Cycle Status'
         hideFinalStatus

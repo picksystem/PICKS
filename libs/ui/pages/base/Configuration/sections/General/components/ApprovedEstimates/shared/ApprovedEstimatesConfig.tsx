@@ -87,7 +87,7 @@ export const approvedEstimateColumns = (): Column<IConfigApprovedEstimateRow>[] 
   {
     id: 'hours',
     label: 'Default Hours (HH:MM)',
-    minWidth: 140,
+    minWidth: 100,
     format: (v) => {
       const { value, minutes } = formatHours(v);
       if (minutes === null) {
@@ -109,8 +109,7 @@ export const approvedEstimateColumns = (): Column<IConfigApprovedEstimateRow>[] 
   {
     id: 'isActive',
     label: 'Activation',
-    minWidth: 130,
-    align: 'center' as const,
+    minWidth: 100,
     format: (v) => mkActiveChip(v),
   },
   {

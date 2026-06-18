@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box } from '@serviceops/component';
 import { useStyles } from './styles';
 import { useConfiguration } from '@serviceops/confighooks';
@@ -59,35 +59,98 @@ const DEFAULT_CONTROLS: IConfigSLAAdminControls = {
   showTimeLogsToCallers: false,
 };
 
-const FALLBACK_DEFAULTS = { activation: true, p1: 15, p2: 30, p3: 60, p4: 240, p5: 480 };
-const FALLBACK_RES = { activation: true, p1: 4, p2: 8, p3: 16, p4: 24, p5: 48 };
-const FALLBACK_DUEDATE = { activation: true, p1: 8, p2: 16, p3: 24, p4: 48, p5: 72 };
+const FALLBACK_DEFAULTS = {
+  activation: true,
+  p1: '00:15',
+  p2: '00:30',
+  p3: '01:00',
+  p4: '04:00',
+  p5: '08:00',
+};
+const FALLBACK_RES = {
+  activation: true,
+  p1: '04:00',
+  p2: '08:00',
+  p3: '16:00',
+  p4: '24:00',
+  p5: '48:00',
+};
+const FALLBACK_DUEDATE = {
+  activation: true,
+  p1: '08:00',
+  p2: '16:00',
+  p3: '24:00',
+  p4: '48:00',
+  p5: '72:00',
+};
 
 const DEFAULT_ACK_VALUES: Record<
   string,
-  { activation: boolean; p1: number; p2: number; p3: number; p4: number; p5: number }
+  { activation: boolean; p1: string; p2: string; p3: string; p4: string; p5: string }
 > = {
-  incident: { activation: true, p1: 15, p2: 30, p3: 60, p4: 240, p5: 480 },
-  service_request: { activation: true, p1: 30, p2: 60, p3: 120, p4: 480, p5: 960 },
-  advisory_request: { activation: false, p1: 60, p2: 120, p3: 240, p4: 960, p5: 1920 },
+  incident: { activation: true, p1: '00:15', p2: '00:30', p3: '01:00', p4: '04:00', p5: '08:00' },
+  service_request: {
+    activation: true,
+    p1: '00:30',
+    p2: '01:00',
+    p3: '02:00',
+    p4: '08:00',
+    p5: '16:00',
+  },
+  advisory_request: {
+    activation: false,
+    p1: '01:00',
+    p2: '02:00',
+    p3: '04:00',
+    p4: '16:00',
+    p5: '32:00',
+  },
 };
 
 const DEFAULT_RES_VALUES: Record<
   string,
-  { activation: boolean; p1: number; p2: number; p3: number; p4: number; p5: number }
+  { activation: boolean; p1: string; p2: string; p3: string; p4: string; p5: string }
 > = {
-  incident: { activation: true, p1: 4, p2: 8, p3: 16, p4: 24, p5: 48 },
-  service_request: { activation: true, p1: 8, p2: 16, p3: 24, p4: 48, p5: 96 },
-  advisory_request: { activation: false, p1: 16, p2: 24, p3: 48, p4: 96, p5: 168 },
+  incident: { activation: true, p1: '04:00', p2: '08:00', p3: '16:00', p4: '24:00', p5: '48:00' },
+  service_request: {
+    activation: true,
+    p1: '08:00',
+    p2: '16:00',
+    p3: '24:00',
+    p4: '48:00',
+    p5: '96:00',
+  },
+  advisory_request: {
+    activation: false,
+    p1: '16:00',
+    p2: '24:00',
+    p3: '48:00',
+    p4: '96:00',
+    p5: '168:00',
+  },
 };
 
 const DEFAULT_DUEDATE_VALUES: Record<
   string,
-  { activation: boolean; p1: number; p2: number; p3: number; p4: number; p5: number }
+  { activation: boolean; p1: string; p2: string; p3: string; p4: string; p5: string }
 > = {
-  incident: { activation: true, p1: 8, p2: 16, p3: 24, p4: 48, p5: 72 },
-  service_request: { activation: true, p1: 16, p2: 24, p3: 48, p4: 72, p5: 120 },
-  advisory_request: { activation: false, p1: 24, p2: 48, p3: 72, p4: 120, p5: 168 },
+  incident: { activation: true, p1: '08:00', p2: '16:00', p3: '24:00', p4: '48:00', p5: '72:00' },
+  service_request: {
+    activation: true,
+    p1: '16:00',
+    p2: '24:00',
+    p3: '48:00',
+    p4: '72:00',
+    p5: '120:00',
+  },
+  advisory_request: {
+    activation: false,
+    p1: '24:00',
+    p2: '48:00',
+    p3: '72:00',
+    p4: '120:00',
+    p5: '168:00',
+  },
 };
 
 const SLAs = () => {
@@ -105,13 +168,54 @@ const SLAs = () => {
   const [etaActRows, setEtaActRows] = useState<IConfigActivationRow[]>([]);
   const [timeLogActRows, setTimeLogActRows] = useState<IConfigActivationRow[]>([]);
 
+  // Track which row ids we've already synced so a stale refetch (the PATCH
+  // invalidates the RTK tag and the new fetch returns BEFORE the DB has
+  // committed the optimistic update) doesn't clobber the just-saved values
+  // in our local state. Same pattern as ReleaseCycleStatusesSection.
+  const lastSyncedIdsRef = useRef<{
+    ackRows: Set<string>;
+    resRows: Set<string>;
+    dueDateRows: Set<string>;
+    etaActRows: Set<string>;
+    timeLogActRows: Set<string>;
+  }>({
+    ackRows: new Set(),
+    resRows: new Set(),
+    dueDateRows: new Set(),
+    etaActRows: new Set(),
+    timeLogActRows: new Set(),
+  });
+
   useEffect(() => {
-    if (apiSlas?.adminControls) setCtrl(apiSlas.adminControls);
-    if (apiSlas?.responseAckRows) setAckRows(apiSlas.responseAckRows);
-    if (apiSlas?.resolutionRows) setResRows(apiSlas.resolutionRows);
-    if (apiSlas?.dueDateRows) setDueDateRows(apiSlas.dueDateRows);
-    if (apiSlas?.etaActivationRows) setEtaActRows(apiSlas.etaActivationRows);
-    if (apiSlas?.timeLogActivationRows) setTimeLogActRows(apiSlas.timeLogActivationRows);
+    if (!apiSlas) return;
+
+    const trySync = <T extends { id: string }>(
+      incoming: T[] | undefined,
+      current: T[],
+      key: keyof typeof lastSyncedIdsRef.current,
+      setter: (next: T[]) => void,
+    ) => {
+      if (!incoming) return;
+      const apiIds = new Set(incoming.map((r) => r.id));
+      const known = lastSyncedIdsRef.current[key];
+      const everyKnownPresent = known.size === 0 || Array.from(known).every((id) => apiIds.has(id));
+      if (everyKnownPresent) {
+        setter(incoming);
+        lastSyncedIdsRef.current[key] = apiIds;
+      } else if (current.length === 0) {
+        // First sync: API returned data before any optimistic update — adopt it.
+        setter(incoming);
+        lastSyncedIdsRef.current[key] = apiIds;
+      }
+    };
+
+    if (apiSlas.adminControls) setCtrl(apiSlas.adminControls);
+    trySync(apiSlas.responseAckRows, ackRows, 'ackRows', setAckRows);
+    trySync(apiSlas.resolutionRows, resRows, 'resRows', setResRows);
+    trySync(apiSlas.dueDateRows, dueDateRows, 'dueDateRows', setDueDateRows);
+    trySync(apiSlas.etaActivationRows, etaActRows, 'etaActRows', setEtaActRows);
+    trySync(apiSlas.timeLogActivationRows, timeLogActRows, 'timeLogActRows', setTimeLogActRows);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiSlas]);
 
   const persistSlas = (
@@ -151,15 +255,30 @@ const SLAs = () => {
     persistSlas(next, ackRows, resRows, dueDateRows, etaActRows, timeLogActRows);
   };
 
-  // Display rows computation
+  // Display rows computation. The GenericPanel form's `ticketTypeSearch`
+  // field returns ticketTypeId as a string (see TicketTypeSearchField.handleSelect),
+  // so rows that come from the form have a string ticketTypeId while rows
+  // that come from the API have a number. A strict `===` comparison would
+  // miss the just-saved row and the table would not reflect the change.
+  const matchByTicketTypeId = (row: {
+    ticketTypeId?: number | string;
+  }): ((r: { ticketTypeId?: number | string }) => boolean) => {
+    const key = String(row.ticketTypeId ?? '');
+    return (r) => String(r.ticketTypeId ?? '') === key;
+  };
+
   const displayAckRows: IConfigResponseAckSLARow[] = activeTicketTypes.map((tt) => {
-    const stored = ackRows.find((r) => r.ticketTypeId === tt.id);
+    const stored = ackRows.find(matchByTicketTypeId({ ticketTypeId: tt.id }));
     const def = DEFAULT_ACK_VALUES[tt.type] ?? FALLBACK_DEFAULTS;
+    const isActive = stored?.isActive ?? stored?.activation ?? def.activation;
     return {
       id: stored?.id ?? `rack_${tt.type}`,
       ticketTypeId: tt.id,
-      ticketTypeName: tt.displayName || tt.name,
-      activation: stored?.activation ?? def.activation,
+      ticketTypeName: tt.name || tt.displayName,
+      activation: isActive,
+      isActive,
+      shortDescription: stored?.shortDescription ?? '',
+      internalNote: stored?.internalNote ?? '',
       p1: stored?.p1 ?? def.p1,
       p2: stored?.p2 ?? def.p2,
       p3: stored?.p3 ?? def.p3,
@@ -169,13 +288,15 @@ const SLAs = () => {
   });
 
   const displayResRows: IConfigResponseAckSLARow[] = activeTicketTypes.map((tt) => {
-    const stored = resRows.find((r) => r.ticketTypeId === tt.id);
+    const stored = resRows.find(matchByTicketTypeId({ ticketTypeId: tt.id }));
     const def = DEFAULT_RES_VALUES[tt.type] ?? FALLBACK_RES;
     return {
       id: stored?.id ?? `rres_${tt.type}`,
       ticketTypeId: tt.id,
-      ticketTypeName: tt.displayName || tt.name,
+      ticketTypeName: tt.name || tt.displayName,
       activation: stored?.activation ?? def.activation,
+      shortDescription: stored?.shortDescription ?? '',
+      internalNote: stored?.internalNote ?? '',
       p1: stored?.p1 ?? def.p1,
       p2: stored?.p2 ?? def.p2,
       p3: stored?.p3 ?? def.p3,
@@ -185,13 +306,15 @@ const SLAs = () => {
   });
 
   const displayDueDateRows: IConfigResponseAckSLARow[] = activeTicketTypes.map((tt) => {
-    const stored = dueDateRows.find((r) => r.ticketTypeId === tt.id);
+    const stored = dueDateRows.find(matchByTicketTypeId({ ticketTypeId: tt.id }));
     const def = DEFAULT_DUEDATE_VALUES[tt.type] ?? FALLBACK_DUEDATE;
     return {
       id: stored?.id ?? `rdd_${tt.type}`,
       ticketTypeId: tt.id,
-      ticketTypeName: tt.displayName || tt.name,
+      ticketTypeName: tt.name || tt.displayName,
       activation: stored?.activation ?? def.activation,
+      shortDescription: stored?.shortDescription ?? '',
+      internalNote: stored?.internalNote ?? '',
       p1: stored?.p1 ?? def.p1,
       p2: stored?.p2 ?? def.p2,
       p3: stored?.p3 ?? def.p3,
@@ -201,83 +324,134 @@ const SLAs = () => {
   });
 
   const displayEtaActRows: IConfigActivationRow[] = activeTicketTypes.map((tt) => {
-    const stored = etaActRows.find((r) => r.ticketTypeId === tt.id);
+    const stored = etaActRows.find(matchByTicketTypeId({ ticketTypeId: tt.id }));
     return {
       id: stored?.id ?? `eta_${tt.type}`,
       ticketTypeId: tt.id,
-      ticketTypeName: tt.displayName || tt.name,
+      ticketTypeName: tt.name || tt.displayName,
       activation: stored?.activation ?? true,
+      shortDescription: stored?.shortDescription ?? '',
+      internalNote: stored?.internalNote ?? '',
     };
   });
 
   const displayTimeLogActRows: IConfigActivationRow[] = activeTicketTypes.map((tt) => {
-    const stored = timeLogActRows.find((r) => r.ticketTypeId === tt.id);
+    const stored = timeLogActRows.find(matchByTicketTypeId({ ticketTypeId: tt.id }));
     return {
       id: stored?.id ?? `tlog_${tt.type}`,
       ticketTypeId: tt.id,
-      ticketTypeName: tt.displayName || tt.name,
+      ticketTypeName: tt.name || tt.displayName,
       activation: stored?.activation ?? true,
+      shortDescription: stored?.shortDescription ?? '',
+      internalNote: stored?.internalNote ?? '',
     };
   });
 
-  // Save handlers for GenericPanel onSave callbacks
+  // Save handlers for GenericPanel onSave callbacks. The `ticketTypeId` is
+  // normalized to a number on every save because the form's
+  // `ticketTypeSearch` field returns a string. Without this, the row stored
+  // in `ackRows` would have a string `ticketTypeId` while rows returned by
+  // the API have a number, and downstream consumers (and the
+  // ticketTypeName lookup below) would not be able to find them.
+  const normalizeTicketTypeId = <T extends { ticketTypeId?: number | string }>(row: T): T => {
+    if (row.ticketTypeId === undefined || row.ticketTypeId === null || row.ticketTypeId === '') {
+      return row;
+    }
+    const num = Number(row.ticketTypeId);
+    if (Number.isFinite(num)) {
+      return { ...row, ticketTypeId: num };
+    }
+    return row;
+  };
+
   const saveAckRows = (rows: IConfigResponseAckSLARow[]) => {
     const transformedRows = rows.map((row) => {
-      if (row.ticketTypeId && !row.ticketTypeName) {
-        const tt = ticketTypesData?.find((t) => t.id === row.ticketTypeId);
-        return { ...row, ticketTypeName: tt?.displayName || tt?.name || String(row.ticketTypeId) };
+      const normalized = normalizeTicketTypeId(row) as IConfigResponseAckSLARow;
+      // Keep activation and isActive in sync so both the legacy custom dialog
+      // and the GenericPanel built-in dialog work without divergence.
+      if (normalized.isActive === undefined && normalized.activation !== undefined) {
+        normalized.isActive = normalized.activation;
+      } else if (normalized.activation === undefined && normalized.isActive !== undefined) {
+        normalized.activation = normalized.isActive;
       }
-      return row;
+      if (normalized.ticketTypeId && !normalized.ticketTypeName) {
+        const tt = ticketTypesData?.find((t) => t.id === normalized.ticketTypeId);
+        normalized.ticketTypeName = tt?.name || tt?.displayName || String(normalized.ticketTypeId);
+      }
+      return normalized;
     });
     setAckRows(transformedRows);
+    // Mark the new ids as known so the post-PATCH refetch doesn't clobber
+    // our optimistic update.
+    lastSyncedIdsRef.current.ackRows = new Set(transformedRows.map((r) => r.id));
     persistSlas(ctrl, transformedRows, resRows, dueDateRows, etaActRows, timeLogActRows);
   };
 
   const saveResRows = (rows: IConfigResponseAckSLARow[]) => {
     const transformedRows = rows.map((row) => {
-      if (row.ticketTypeId && !row.ticketTypeName) {
-        const tt = ticketTypesData?.find((t) => t.id === row.ticketTypeId);
-        return { ...row, ticketTypeName: tt?.displayName || tt?.name || String(row.ticketTypeId) };
+      const normalized = normalizeTicketTypeId(row);
+      if (normalized.ticketTypeId && !normalized.ticketTypeName) {
+        const tt = ticketTypesData?.find((t) => t.id === normalized.ticketTypeId);
+        return {
+          ...normalized,
+          ticketTypeName: tt?.name || tt?.displayName || String(normalized.ticketTypeId),
+        };
       }
-      return row;
+      return normalized;
     });
     setResRows(transformedRows);
+    lastSyncedIdsRef.current.resRows = new Set(transformedRows.map((r) => r.id));
     persistSlas(ctrl, ackRows, transformedRows, dueDateRows, etaActRows, timeLogActRows);
   };
 
   const saveDueDateRows = (rows: IConfigResponseAckSLARow[]) => {
     const transformedRows = rows.map((row) => {
-      if (row.ticketTypeId && !row.ticketTypeName) {
-        const tt = ticketTypesData?.find((t) => t.id === row.ticketTypeId);
-        return { ...row, ticketTypeName: tt?.displayName || tt?.name || String(row.ticketTypeId) };
+      const normalized = normalizeTicketTypeId(row);
+      if (normalized.ticketTypeId && !normalized.ticketTypeName) {
+        const tt = ticketTypesData?.find((t) => t.id === normalized.ticketTypeId);
+        return {
+          ...normalized,
+          ticketTypeName: tt?.name || tt?.displayName || String(normalized.ticketTypeId),
+        };
       }
-      return row;
+      return normalized;
     });
     setDueDateRows(transformedRows);
+    lastSyncedIdsRef.current.dueDateRows = new Set(transformedRows.map((r) => r.id));
     persistSlas(ctrl, ackRows, resRows, transformedRows, etaActRows, timeLogActRows);
   };
 
   const saveEtaActRows = (rows: IConfigActivationRow[]) => {
     const transformedRows = rows.map((row) => {
-      if (row.ticketTypeId && !row.ticketTypeName) {
-        const tt = ticketTypesData?.find((t) => t.id === row.ticketTypeId);
-        return { ...row, ticketTypeName: tt?.displayName || tt?.name || String(row.ticketTypeId) };
+      const normalized = normalizeTicketTypeId(row);
+      if (normalized.ticketTypeId && !normalized.ticketTypeName) {
+        const tt = ticketTypesData?.find((t) => t.id === normalized.ticketTypeId);
+        return {
+          ...normalized,
+          ticketTypeName: tt?.name || tt?.displayName || String(normalized.ticketTypeId),
+        };
       }
-      return row;
+      return normalized;
     });
     setEtaActRows(transformedRows);
+    lastSyncedIdsRef.current.etaActRows = new Set(transformedRows.map((r) => r.id));
     persistSlas(ctrl, ackRows, resRows, dueDateRows, transformedRows, timeLogActRows);
   };
 
   const saveTimeLogActRows = (rows: IConfigActivationRow[]) => {
     const transformedRows = rows.map((row) => {
-      if (row.ticketTypeId && !row.ticketTypeName) {
-        const tt = ticketTypesData?.find((t) => t.id === row.ticketTypeId);
-        return { ...row, ticketTypeName: tt?.displayName || tt?.name || String(row.ticketTypeId) };
+      const normalized = normalizeTicketTypeId(row);
+      if (normalized.ticketTypeId && !normalized.ticketTypeName) {
+        const tt = ticketTypesData?.find((t) => t.id === normalized.ticketTypeId);
+        return {
+          ...normalized,
+          ticketTypeName: tt?.name || tt?.displayName || String(normalized.ticketTypeId),
+        };
       }
-      return row;
+      return normalized;
     });
     setTimeLogActRows(transformedRows);
+    lastSyncedIdsRef.current.timeLogActRows = new Set(transformedRows.map((r) => r.id));
     persistSlas(ctrl, ackRows, resRows, dueDateRows, etaActRows, transformedRows);
   };
 
@@ -291,11 +465,7 @@ const SLAs = () => {
           toggleTicketTypeActivation={toggleTicketTypeActivation}
         />
         <CalendarRulesSection ctrl={ctrl} onUpdate={update} />
-        <ResponseAckSLASection
-          displayRows={displayAckRows}
-          activeTicketTypes={activeTicketTypes}
-          onDataChange={saveAckRows}
-        />
+        <ResponseAckSLASection displayRows={displayAckRows} onDataChange={saveAckRows} />
         <ResolutionSLASection
           displayRows={displayResRows}
           activeTicketTypes={activeTicketTypes}
