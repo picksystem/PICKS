@@ -246,8 +246,10 @@ export interface IConfigActivationRow {
 export interface IConfigBusinessCategory {
   id: string;
   name: string;
+  shortDescription?: string;
   description: string;
   head: string;
+  internalNote?: string;
 }
 
 export interface IConfigTimesheetProject {
@@ -258,6 +260,15 @@ export interface IConfigTimesheetProject {
   toDate: string;
   activate: boolean;
   maxHoursPerDayPerResource: number;
+  /**
+   * Toggle: when true, a mirror row exists in the parent service line's
+   * `expenseProjects` array (same service line, project, date range and
+   * activation; `maxAmountPerDay` defaults to 0). Once flipped to `true`,
+   * the toggle is non-editable.
+   */
+  useInExpenses?: boolean;
+  /** Optional alpha-numeric internal note (rich text). */
+  internalNote?: string;
 }
 
 export interface IConfigExpenseProject {
@@ -276,6 +287,14 @@ export interface IConfigApproval {
   approverRole: string;
   approvalOrder: number;
   isRequired: boolean;
+  /**
+   * Service Line / Service Line Approvals spec introduced an "Enable" toggle
+   * that controls whether this approver is active. Older rows persisted
+   * before this field existed default to `true` at render time.
+   */
+  isActive?: boolean;
+  /** Optional alpha-numeric note for the approver (Service Line Approvals spec). */
+  internalNote?: string;
 }
 
 export interface IConfigServiceLineTicketType {
@@ -291,6 +310,8 @@ export interface IConfigServiceLine {
   name: string;
   description: string;
   manager: string;
+  shortDescription?: string;
+  internalNote?: string;
   timesheetProjects: IConfigTimesheetProject[];
   expenseProjects: IConfigExpenseProject[];
   approvals: IConfigApproval[];

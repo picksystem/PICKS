@@ -14,5 +14,7 @@ export const SERVICE_LINE_TIMESHEET_CONFIG = {
     { name: 'toDate', label: 'To Date', type: 'date' },
     { name: 'activate', label: 'Activate', type: 'toggle', defaultValue: true },
     { name: 'maxHoursPerDayPerResource', label: 'Max Hours/Day', type: 'number', defaultValue: 8 },
+    { name: 'useInExpenses', label: 'Use in Expenses', type: 'toggle', defaultValue: false },
+    { name: 'internalNote', label: 'Internal note' },
   ],
 };

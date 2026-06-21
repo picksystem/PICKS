@@ -239,6 +239,7 @@ const PrioritiesSection = ({
         selectedRowId={selectedPriorityId}
         onRowSelect={handleRowSelect}
         validateFields={validatePriorityDuplicate as unknown as undefined}
+        ticketTypeColumns={activeTicketTypeColumns}
       />
 
       <ConfigDeleteDialog

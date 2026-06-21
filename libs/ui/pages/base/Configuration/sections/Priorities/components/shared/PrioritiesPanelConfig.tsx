@@ -25,6 +25,11 @@ export const PRIORITY_TABLE_CONFIG = {
     { name: 'description', label: 'Description', required: true, type: 'richText' as const },
     { name: 'bgColor', label: 'Colour', required: true, type: 'color' as const },
     { name: 'internalNote', label: 'Internal note', type: 'richText' as const },
+    {
+      name: 'enabledFor',
+      label: 'Ticket Types Activation',
+      type: 'ticketTypesActivation' as const,
+    },
   ],
 };
 

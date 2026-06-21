@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Alert, Box, Typography, TextField, IconButton, Switch } from '@serviceops/component';
+import { Alert, Box, Typography, TextField, Switch } from '@serviceops/component';
 import {
-  Dialog,
-  DialogContent,
-  DialogActions,
   alpha,
+  Popover,
   Radio,
   FormControl,
   FormControlLabel,
@@ -47,6 +45,17 @@ const plainText = (v: string): string =>
     .toLowerCase();
 
 const STATUS_ACCENT = '#0369a1';
+
+const PRESET_COLORS = [
+  '#2563eb',
+  '#dc2626',
+  '#16a34a',
+  '#ea580c',
+  '#9333ea',
+  '#0891b2',
+  '#ca8a04',
+  '#475569',
+];
 
 interface ActivationRowProps {
   label: string;
@@ -104,17 +113,6 @@ const ActivationRow = ({ label, description, checked, onChange }: ActivationRowP
   </Box>
 );
 
-const PRESET_COLORS = [
-  '#2563eb',
-  '#dc2626',
-  '#16a34a',
-  '#ea580c',
-  '#9333ea',
-  '#0891b2',
-  '#ca8a04',
-  '#475569',
-];
-
 const StatusFormDialog = ({
   open,
   editing,
@@ -136,9 +134,10 @@ const StatusFormDialog = ({
   // there lands AFTER the user has already clicked Submit. By the time
   // handleSubmit runs, `form` is still the previous render's value and
   // duplicate checks would miss values typed into the editor. We read this
-  // ref in handleSubmit to get the live value.
+  // ref in handleSubmit / computeDuplicateMessage to get the live value.
   const formRef = useRef<Partial<IConfigStatusLevel>>({});
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
+  const colorAnchorRef = useRef<HTMLDivElement | null>(null);
   const [ticketTypesExpanded, setTicketTypesExpanded] = useState(false);
   const [duplicateAlert, setDuplicateAlert] = useState<string | null>(null);
   // Per-field required-validation state. Touched flips true on blur (or
@@ -255,7 +254,7 @@ const StatusFormDialog = ({
           displayName: '',
           shortDescription: '',
           description: '',
-          bgColor: '',
+          bgColor: '#2563eb',
           color: '#fff',
           isActive: true,
           slaActive: true,
@@ -268,6 +267,21 @@ const StatusFormDialog = ({
     setForm(initial);
   }, [open, editing, ticketTypeColumns]);
 
+  // Updates both the ref and the state in one go. Use this everywhere a
+  // field changes so handleSubmit always sees the latest values.
+  const updateForm = useCallback(
+    (
+      patch:
+        | Partial<IConfigStatusLevel>
+        | ((f: Partial<IConfigStatusLevel>) => Partial<IConfigStatusLevel>),
+    ) => {
+      formRef.current =
+        typeof patch === 'function' ? patch(formRef.current) : { ...formRef.current, ...patch };
+      setForm(formRef.current);
+    },
+    [],
+  );
+
   // Live-recompute the duplicate alert so the user sees it as they type,
   // not only after clicking Submit.
   useEffect(() => {
@@ -279,21 +293,14 @@ const StatusFormDialog = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form, open, editing, existingStatuses]);
 
-  // Keep the ref in sync with the form state. The ref is read by the
-  // submit handler (and by the live-recompute effect above) so it always
-  // reflects the latest values typed into the RichTextEditor.
-  useEffect(() => {
-    formRef.current = form;
-  }, [form]);
-
   const handleSelectAllTicketTypes = useCallback(
     (checked: boolean) => {
-      setForm((f) => ({
+      updateForm((f) => ({
         ...f,
         enabledFor: Object.fromEntries(ticketTypeColumns.map((t) => [t.key, checked])),
       }));
     },
-    [ticketTypeColumns],
+    [ticketTypeColumns, updateForm],
   );
 
   const handleSubmit = () => {
@@ -315,7 +322,7 @@ const StatusFormDialog = ({
       return;
     }
     setDuplicateAlert(null);
-    onSave(form);
+    onSave(formRef.current);
     success(
       editing
         ? (successMessage?.edit ?? 'Status updated successfully')
@@ -332,14 +339,14 @@ const StatusFormDialog = ({
   };
 
   const handleColorChange = (color: string) => {
-    setForm((f) => ({ ...f, bgColor: color }));
+    updateForm((f) => ({ ...f, bgColor: color }));
     setColorPickerOpen(false);
   };
 
   const handleColorInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     if (/^#[0-9A-Fa-f]{0,6}$/.test(value)) {
-      setForm((f) => ({ ...f, bgColor: value }));
+      updateForm((f) => ({ ...f, bgColor: value }));
     }
   };
 
@@ -356,7 +363,12 @@ const StatusFormDialog = ({
         accent='#0369a1'
         title={title}
         subtitle={subtitle}
-        submitDisabled={Boolean(duplicateAlert)}
+        submitDisabled={
+          !form.displayName ||
+          !plainText(form.shortDescription ?? '') ||
+          !form.bgColor ||
+          Boolean(duplicateAlert)
+        }
         submitLabel={editing ? 'Save' : 'Submit'}
         maxWidth='md'
       >
@@ -373,7 +385,7 @@ const StatusFormDialog = ({
           size='small'
           value={form.displayName ?? ''}
           onChange={(e) =>
-            setForm((f) => ({ ...f, displayName: e.target.value, name: e.target.value }))
+            updateForm((f) => ({ ...f, displayName: e.target.value, name: e.target.value }))
           }
           onBlur={() => setTouched((t) => ({ ...t, displayName: true }))}
           placeholder='e.g. New, In Progress, On Hold'
@@ -391,7 +403,7 @@ const StatusFormDialog = ({
             <RichTextEditor
               value={parseRichText(form.shortDescription ?? '')}
               onChange={(value) =>
-                setForm((f) => ({ ...f, shortDescription: serializeRichText(value.segments) }))
+                updateForm((f) => ({ ...f, shortDescription: serializeRichText(value.segments) }))
               }
               showFooterActions={false}
               title='Short Description'
@@ -419,7 +431,7 @@ const StatusFormDialog = ({
           <RichTextEditor
             value={parseRichText(form.description ?? '')}
             onChange={(value) =>
-              setForm((f) => ({ ...f, description: serializeRichText(value.segments) }))
+              updateForm((f) => ({ ...f, description: serializeRichText(value.segments) }))
             }
             showFooterActions={false}
             title='Description'
@@ -451,6 +463,7 @@ const StatusFormDialog = ({
           InputProps={{
             endAdornment: (
               <Box
+                ref={colorAnchorRef}
                 onClick={handleColorIconClick}
                 sx={{
                   width: 24,
@@ -474,25 +487,113 @@ const StatusFormDialog = ({
           }}
         />
 
+        <Popover
+          open={colorPickerOpen}
+          onClose={handleColorPickerClose}
+          anchorEl={colorAnchorRef.current}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          slotProps={{
+            paper: {
+              sx: {
+                mt: 0.5,
+                p: 1.5,
+                borderRadius: 2,
+                border: '1px solid #2d5ebb',
+                boxShadow: 3,
+                minWidth: 220,
+              },
+            },
+          }}
+        >
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}
+          >
+            <Typography variant='body2' fontWeight={600} color='#0369a1'>
+              Pick a colour
+            </Typography>
+            <Close
+              onClick={handleColorPickerClose}
+              sx={{ fontSize: '1rem', cursor: 'pointer', color: 'text.secondary' }}
+            />
+          </Box>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: 1,
+              mb: 1.25,
+            }}
+          >
+            {PRESET_COLORS.map((c) => {
+              const selected = c.toLowerCase() === currentColor.toLowerCase();
+              return (
+                <Box
+                  key={c}
+                  onClick={() => handleColorChange(c)}
+                  sx={{
+                    position: 'relative',
+                    width: '100%',
+                    aspectRatio: '1 / 1',
+                    borderRadius: 1.5,
+                    bgcolor: c,
+                    cursor: 'pointer',
+                    border: '2px solid',
+                    borderColor: selected ? '#0369a1' : 'transparent',
+                    boxShadow: selected ? 2 : 0,
+                    transition: 'transform 0.15s, box-shadow 0.15s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    '&:hover': {
+                      transform: 'scale(1.08)',
+                      boxShadow: 2,
+                    },
+                  }}
+                  role='button'
+                  aria-label={`Select colour ${c}`}
+                >
+                  {selected && <Check sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+                </Box>
+              );
+            })}
+          </Box>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              pt: 1,
+              borderTop: '1px solid',
+              borderColor: 'divider',
+            }}
+          >
+            <ColorLens sx={{ color: '#0369a1', fontSize: '1.1rem' }} />
+            <Typography variant='caption' color='text.secondary' sx={{ flex: 1 }}>
+              Type a hex value in the field above
+            </Typography>
+          </Box>
+        </Popover>
+
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
           <ActivationRow
             label='Status Activation'
             description='Enable this status for use on tickets'
             checked={form.isActive ?? true}
-            onChange={(checked) => setForm((f) => ({ ...f, isActive: checked }))}
+            onChange={(checked) => updateForm((f) => ({ ...f, isActive: checked }))}
           />
           <ActivationRow
             label='SLA Activation'
             description='Track SLA timers for tickets in this status'
             checked={form.slaActive ?? true}
-            onChange={(checked) => setForm((f) => ({ ...f, slaActive: checked }))}
+            onChange={(checked) => updateForm((f) => ({ ...f, slaActive: checked }))}
           />
           {!hideFinalStatus && (
             <ActivationRow
               label='Final Status'
               description='Mark this status as a closed/final state'
               checked={form.isFinal ?? false}
-              onChange={(checked) => setForm((f) => ({ ...f, isFinal: checked }))}
+              onChange={(checked) => updateForm((f) => ({ ...f, isFinal: checked }))}
             />
           )}
         </Box>
@@ -501,7 +602,7 @@ const StatusFormDialog = ({
           <RichTextEditor
             value={parseRichText(form.internalNote ?? '')}
             onChange={(value) =>
-              setForm((f) => ({ ...f, internalNote: serializeRichText(value.segments) }))
+              updateForm((f) => ({ ...f, internalNote: serializeRichText(value.segments) }))
             }
             showFooterActions={false}
             title='Internal note'
@@ -596,7 +697,7 @@ const StatusFormDialog = ({
                           <Checkbox
                             checked={isChecked}
                             onChange={(e) =>
-                              setForm((f) => ({
+                              updateForm((f) => ({
                                 ...f,
                                 enabledFor: { ...(f.enabledFor ?? {}), [t.key]: e.target.checked },
                               }))
@@ -624,167 +725,6 @@ const StatusFormDialog = ({
           </Box>
         </Box>
       </ConfigFormDialog>
-
-      <Dialog
-        open={colorPickerOpen}
-        onClose={handleColorPickerClose}
-        maxWidth='xs'
-        fullWidth
-        disableEnforceFocus
-        PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}
-      >
-        <Box
-          sx={{
-            px: 2.5,
-            py: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: 1.5,
-                bgcolor: alpha(currentColor, 0.15),
-                border: `2px solid ${currentColor}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <ColorLens sx={{ color: currentColor, fontSize: '1rem' }} />
-            </Box>
-            <Typography variant='subtitle2' fontWeight={700}>
-              Pick a Color
-            </Typography>
-          </Box>
-          <IconButton size='small' onClick={handleColorPickerClose} aria-label='Close color picker'>
-            <Close fontSize='small' />
-          </IconButton>
-        </Box>
-
-        <DialogContent sx={{ p: 2.5 }}>
-          <Box sx={{ mb: 2 }}>
-            <Typography
-              variant='caption'
-              color='text.secondary'
-              sx={{ mb: 1, display: 'block', fontWeight: 600 }}
-            >
-              Preset Colors
-            </Typography>
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1 }}>
-              {PRESET_COLORS.map((preset) => (
-                <Box
-                  key={preset}
-                  onClick={() => handleColorChange(preset)}
-                  sx={{
-                    width: '100%',
-                    aspectRatio: '2 / 1',
-                    bgcolor: preset,
-                    borderRadius: 1,
-                    cursor: 'pointer',
-                    border: '2px solid',
-                    borderColor:
-                      currentColor.toLowerCase() === preset.toLowerCase()
-                        ? 'primary.main'
-                        : 'transparent',
-                    boxShadow: 1,
-                    transition: 'transform 0.15s, border-color 0.15s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    '&:hover': {
-                      transform: 'scale(1.05)',
-                      borderColor: 'primary.main',
-                    },
-                  }}
-                  role='button'
-                  aria-label={`Select color ${preset}`}
-                >
-                  {currentColor.toLowerCase() === preset.toLowerCase() && (
-                    <Check
-                      sx={{
-                        color: '#fff',
-                        fontSize: '1rem',
-                        filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))',
-                      }}
-                    />
-                  )}
-                </Box>
-              ))}
-            </Box>
-          </Box>
-
-          <Box sx={{ mt: 1.5 }}>
-            <Typography
-              variant='caption'
-              color='text.secondary'
-              sx={{ mb: 0.5, display: 'block', fontWeight: 600 }}
-            >
-              Custom Color
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <input
-                type='color'
-                value={currentColor}
-                onChange={(e) => handleColorChange(e.target.value)}
-                style={{
-                  width: 48,
-                  height: 40,
-                  border: 'none',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                  padding: 0,
-                }}
-              />
-              <TextField
-                size='small'
-                fullWidth
-                value={currentColor}
-                onChange={handleColorInputChange}
-                inputProps={{
-                  style: { fontFamily: 'monospace', textTransform: 'lowercase' },
-                  maxLength: 7,
-                }}
-              />
-            </Box>
-          </Box>
-        </DialogContent>
-
-        <DialogActions sx={{ px: 2.5, py: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
-          <Box
-            component='button'
-            type='button'
-            onClick={handleColorPickerClose}
-            sx={{
-              textTransform: 'none',
-              fontFamily: 'inherit',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              px: 2.5,
-              py: 0.75,
-              borderRadius: 1.5,
-              border: '1px solid',
-              borderColor: 'divider',
-              bgcolor: 'background.paper',
-              color: 'text.primary',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              '&:hover': {
-                bgcolor: 'action.hover',
-                borderColor: 'text.secondary',
-              },
-            }}
-          >
-            Cancel
-          </Box>
-        </DialogActions>
-      </Dialog>
     </>
   );
 };

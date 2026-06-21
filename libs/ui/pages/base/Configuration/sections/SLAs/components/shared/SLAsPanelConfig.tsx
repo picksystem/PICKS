@@ -163,7 +163,7 @@ export const DUE_DATES_CONFIG: TableConfig = {
 
 // Resolution SLA Config
 export const RESOLUTION_SLA_CONFIG: TableConfig = {
-  title: 'Resolution SLA (in hours)',
+  title: 'Resolution SLAs (HH:MM)',
   subtitle: 'Track resolution time targets per ticket type and priority level',
   accent: SLA_ACCENT,
   icon: <AssignmentTurnedInIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
@@ -205,7 +205,7 @@ export const RESOLUTION_SLA_CONFIG: TableConfig = {
 
 // Response/Acknowledgement SLA Config
 export const RESPONSE_ACK_SLA_CONFIG: TableConfig = {
-  title: 'Response / Acknowledgement SLA (in hours)',
+  title: 'Response / Acknowledgement SLAs (HH:MM)',
   subtitle: 'Configure response time targets and breach alerting for initial acknowledgement',
   accent: SLA_ACCENT,
   icon: <MarkEmailReadIcon sx={{ fontSize: '1.1rem' }} />,

@@ -23,7 +23,7 @@ const ResolutionSLASection = ({
   // Create a read-only config for the panel (no New button)
   const readonlyConfig = {
     ...RESOLUTION_SLA_CONFIG,
-    title: 'Resolution SLA (in hours)',
+    title: 'Resolution SLAs (HH:MM)',
     subtitle: 'Track resolution time targets per ticket type and priority level',
   };
 

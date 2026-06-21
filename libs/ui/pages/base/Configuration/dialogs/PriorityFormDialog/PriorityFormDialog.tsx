@@ -1,32 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Alert, Box, Typography, TextField, IconButton } from '@serviceops/component';
-import {
-  Dialog,
-  DialogContent,
-  DialogActions,
-  alpha,
-  Radio,
-  FormControl,
-  FormGroup,
-  Checkbox,
-  Collapse,
-} from '@mui/material';
+import { Alert, Box, Typography, TextField } from '@serviceops/component';
+import { Popover, Radio, FormControl, FormGroup, Checkbox, Collapse } from '@mui/material';
 import { PriorityHigh, ColorLens, Close, Check, ExpandMore } from '@mui/icons-material';
 import { useFieldError, useNotification } from '@serviceops/hooks';
 import { PriorityLevel } from '@serviceops/configpriorityutil';
 import { ConfigFormDialog } from '@serviceops/configdialogs';
 import { parseRichText, serializeRichText, RichTextEditor } from '../../shared/RichTextEditor';
 
-interface PriorityFormDialogProps {
-  open: boolean;
-  editing: PriorityLevel | null;
-  /** Other priority rows for duplicate detection. */
-  existingPriorities?: PriorityLevel[];
-  onClose: () => void;
-  onSave: (data: Partial<PriorityLevel>) => void;
-  ticketTypeColumns: { key: string; label: string }[];
-  subtitle?: string;
-}
+const PRIORITY_ACCENT = '#b91c1c';
 
 const PRESET_COLORS = [
   '#2563eb',
@@ -38,6 +19,17 @@ const PRESET_COLORS = [
   '#ca8a04',
   '#475569',
 ];
+
+interface PriorityFormDialogProps {
+  open: boolean;
+  editing: PriorityLevel | null;
+  /** Other priority rows for duplicate detection. */
+  existingPriorities?: PriorityLevel[];
+  onClose: () => void;
+  onSave: (data: Partial<PriorityLevel>) => void;
+  ticketTypeColumns: { key: string; label: string }[];
+  subtitle?: string;
+}
 
 const PriorityFormDialog = ({
   open,
@@ -59,6 +51,7 @@ const PriorityFormDialog = ({
   // ref in handleSubmit / computeDuplicateMessage to get the live value.
   const formRef = useRef<Partial<PriorityLevel>>({});
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
+  const colorAnchorRef = useRef<HTMLDivElement | null>(null);
   const [ticketTypesExpanded, setTicketTypesExpanded] = useState(false);
   const [duplicateAlert, setDuplicateAlert] = useState<string | null>(null);
   // Per-field required-validation state. Touched flips true on blur (or
@@ -388,6 +381,7 @@ const PriorityFormDialog = ({
           InputProps={{
             endAdornment: (
               <Box
+                ref={colorAnchorRef}
                 onClick={handleColorIconClick}
                 sx={{
                   width: 24,
@@ -410,6 +404,92 @@ const PriorityFormDialog = ({
             ),
           }}
         />
+
+        <Popover
+          open={colorPickerOpen}
+          onClose={handleColorPickerClose}
+          anchorEl={colorAnchorRef.current}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          slotProps={{
+            paper: {
+              sx: {
+                mt: 0.5,
+                p: 1.5,
+                borderRadius: 2,
+                border: '1px solid #2d5ebb',
+                boxShadow: 3,
+                minWidth: 220,
+              },
+            },
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+            <Typography variant='body2' fontWeight={600} color={PRIORITY_ACCENT}>
+              Pick a colour
+            </Typography>
+            <Close
+              onClick={handleColorPickerClose}
+              sx={{ fontSize: '1rem', cursor: 'pointer', color: 'text.secondary' }}
+            />
+          </Box>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: 1,
+              mb: 1.25,
+            }}
+          >
+            {PRESET_COLORS.map((c) => {
+              const selected = c.toLowerCase() === currentColor.toLowerCase();
+              return (
+                <Box
+                  key={c}
+                  onClick={() => handleColorChange(c)}
+                  sx={{
+                    position: 'relative',
+                    width: '100%',
+                    aspectRatio: '1 / 1',
+                    borderRadius: 1.5,
+                    bgcolor: c,
+                    cursor: 'pointer',
+                    border: '2px solid',
+                    borderColor: selected ? PRIORITY_ACCENT : 'transparent',
+                    boxShadow: selected ? 2 : 0,
+                    transition: 'transform 0.15s, box-shadow 0.15s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    '&:hover': {
+                      transform: 'scale(1.08)',
+                      boxShadow: 2,
+                    },
+                  }}
+                  role='button'
+                  aria-label={`Select colour ${c}`}
+                >
+                  {selected && <Check sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+                </Box>
+              );
+            })}
+          </Box>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              pt: 1,
+              borderTop: '1px solid',
+              borderColor: 'divider',
+            }}
+          >
+            <ColorLens sx={{ color: PRIORITY_ACCENT, fontSize: '1.1rem' }} />
+            <Typography variant='caption' color='text.secondary' sx={{ flex: 1 }}>
+              Type a hex value in the field above
+            </Typography>
+          </Box>
+        </Popover>
 
         <Box>
           <RichTextEditor
@@ -540,167 +620,6 @@ const PriorityFormDialog = ({
 
         {/* ── Access Control ── */}
       </ConfigFormDialog>
-
-      <Dialog
-        open={colorPickerOpen}
-        onClose={handleColorPickerClose}
-        maxWidth='xs'
-        fullWidth
-        disableEnforceFocus
-        PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}
-      >
-        <Box
-          sx={{
-            px: 2.5,
-            py: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: 1.5,
-                bgcolor: alpha(currentColor, 0.15),
-                border: `2px solid ${currentColor}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <ColorLens sx={{ color: currentColor, fontSize: '1rem' }} />
-            </Box>
-            <Typography variant='subtitle2' fontWeight={700}>
-              Pick a Color
-            </Typography>
-          </Box>
-          <IconButton size='small' onClick={handleColorPickerClose} aria-label='Close color picker'>
-            <Close fontSize='small' />
-          </IconButton>
-        </Box>
-
-        <DialogContent sx={{ p: 2.5 }}>
-          <Box sx={{ mb: 2 }}>
-            <Typography
-              variant='caption'
-              color='text.secondary'
-              sx={{ mb: 1, display: 'block', fontWeight: 600 }}
-            >
-              Preset Colors
-            </Typography>
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1 }}>
-              {PRESET_COLORS.map((preset) => (
-                <Box
-                  key={preset}
-                  onClick={() => handleColorChange(preset)}
-                  sx={{
-                    width: '100%',
-                    aspectRatio: '2 / 1',
-                    bgcolor: preset,
-                    borderRadius: 1,
-                    cursor: 'pointer',
-                    border: '2px solid',
-                    borderColor:
-                      currentColor.toLowerCase() === preset.toLowerCase()
-                        ? 'primary.main'
-                        : 'transparent',
-                    boxShadow: 1,
-                    transition: 'transform 0.15s, border-color 0.15s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    '&:hover': {
-                      transform: 'scale(1.05)',
-                      borderColor: 'primary.main',
-                    },
-                  }}
-                  role='button'
-                  aria-label={`Select color ${preset}`}
-                >
-                  {currentColor.toLowerCase() === preset.toLowerCase() && (
-                    <Check
-                      sx={{
-                        color: '#fff',
-                        fontSize: '1rem',
-                        filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))',
-                      }}
-                    />
-                  )}
-                </Box>
-              ))}
-            </Box>
-          </Box>
-
-          <Box sx={{ mt: 1.5 }}>
-            <Typography
-              variant='caption'
-              color='text.secondary'
-              sx={{ mb: 0.5, display: 'block', fontWeight: 600 }}
-            >
-              Custom Color
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <input
-                type='color'
-                value={currentColor}
-                onChange={(e) => handleColorChange(e.target.value)}
-                style={{
-                  width: 48,
-                  height: 40,
-                  border: 'none',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                  padding: 0,
-                }}
-              />
-              <TextField
-                size='small'
-                fullWidth
-                value={currentColor}
-                onChange={handleColorInputChange}
-                inputProps={{
-                  style: { fontFamily: 'monospace', textTransform: 'lowercase' },
-                  maxLength: 7,
-                }}
-              />
-            </Box>
-          </Box>
-        </DialogContent>
-
-        <DialogActions sx={{ px: 2.5, py: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
-          <Box
-            component='button'
-            type='button'
-            onClick={handleColorPickerClose}
-            sx={{
-              textTransform: 'none',
-              fontFamily: 'inherit',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              px: 2.5,
-              py: 0.75,
-              borderRadius: 1.5,
-              border: '1px solid',
-              borderColor: 'divider',
-              bgcolor: 'background.paper',
-              color: 'text.primary',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              '&:hover': {
-                bgcolor: 'action.hover',
-                borderColor: 'text.secondary',
-              },
-            }}
-          >
-            Cancel
-          </Box>
-        </DialogActions>
-      </Dialog>
     </>
   );
 };

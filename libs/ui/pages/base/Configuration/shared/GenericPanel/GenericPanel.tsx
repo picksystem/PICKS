@@ -12,12 +12,22 @@ import {
   Loader,
   Alert,
 } from '@serviceops/component';
-import { alpha, FormControlLabel, Switch } from '@mui/material';
+import {
+  alpha,
+  FormControlLabel,
+  Switch,
+  Radio,
+  FormControl,
+  FormGroup,
+  Checkbox,
+  Collapse,
+} from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ClearIcon from '@mui/icons-material/Clear';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ConfigFormDialog, ConfigDeleteDialog } from '@serviceops/configdialogs';
 import { useStyles } from './styles';
 import { GenericAccordion } from '../GenericAccordion/GenericAccordion';
@@ -57,7 +67,8 @@ export interface TableField {
     | 'applicationSearch'
     | 'queueSearch'
     | 'richText'
-    | 'color';
+    | 'color'
+    | 'ticketTypesActivation';
   /** For activationToggle - description shown when the toggle is ON */
   activationDescriptionActive?: string;
   /** For activationToggle - description shown when the toggle is OFF */
@@ -267,7 +278,7 @@ PanelToolbar.displayName = 'PanelToolbar';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type GenericData = Record<string, any>;
-type FormData = Record<string, string | boolean | number | undefined>;
+type FormData = Record<string, string | boolean | number | undefined | Record<string, boolean>>;
 
 export type GenericPanelVariant = 'standard' | 'plain';
 
@@ -300,6 +311,15 @@ interface GenericPanelProps {
   onEditClick?: () => void;
   /** Optional callback when Delete button is clicked */
   onDeleteClick?: () => void;
+  /** Optional ticket type columns for fields of type 'ticketTypesActivation' */
+  ticketTypeColumns?: { key: string; label: string }[];
+  /**
+   * Hide the inner panel header banner (the colored icon + title row that
+   * sits above the toolbar inside the panel). Use this when the panel is
+   * already wrapped in an outer `GenericAccordion` whose title is the
+   * source of truth, so the title doesn't render twice.
+   */
+  hideHeader?: boolean;
   /**
    * Optional cross-field validator. When provided, the returned message is
    * rendered as an inline error at the bottom of the form and blocks submit
@@ -395,6 +415,8 @@ const createEmptyForm = (fields: TableField[]): FormData =>
       acc[field.name] = field.defaultValue ?? '';
     } else if (field.type === 'color') {
       acc[field.name] = (field.defaultValue ?? '') as string;
+    } else if (field.type === 'ticketTypesActivation') {
+      acc[field.name] = {} as Record<string, boolean>;
     } else {
       acc[field.name] = (field.defaultValue ?? '') as string;
     }
@@ -559,6 +581,7 @@ const StandardPanel = memo(
     enableNewButton = true,
     enableEditButton = true,
     enableDeleteButton = true,
+    hideHeader = false,
   }: {
     config: TableConfig;
     columns: Column<GenericData>[];
@@ -575,6 +598,7 @@ const StandardPanel = memo(
     enableNewButton?: boolean;
     enableEditButton?: boolean;
     enableDeleteButton?: boolean;
+    hideHeader?: boolean;
   }) => {
     return (
       <Box
@@ -586,7 +610,9 @@ const StandardPanel = memo(
           overflow: 'hidden',
         }}
       >
-        <PanelHeader icon={config.icon} title={config.title} accent={config.accent} />
+        {!hideHeader && (
+          <PanelHeader icon={config.icon} title={config.title} accent={config.accent} />
+        )}
 
         <PanelContent
           config={config}
@@ -739,6 +765,8 @@ export const GenericPanel = ({
   onNewClick,
   onEditClick,
   onDeleteClick,
+  ticketTypeColumns,
+  hideHeader = false,
   validate,
   validateFields,
   summaryValidator,
@@ -754,6 +782,7 @@ export const GenericPanel = ({
   const [form, setForm] = useState<FormData>(createEmptyForm(config.fields));
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [showValidation, setShowValidation] = useState(false);
+  const [ticketTypesExpanded, setTicketTypesExpanded] = useState(false);
 
   // Use controlled selection if provided, otherwise use internal state
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
@@ -796,6 +825,8 @@ export const GenericPanel = ({
           values[field.name] = editingRow[field.name] ?? '';
         } else if (field.type === 'color') {
           values[field.name] = String(editingRow[field.name] || '');
+        } else if (field.type === 'ticketTypesActivation') {
+          values[field.name] = (editingRow[field.name] ?? {}) as string;
         } else {
           values[field.name] = String(editingRow[field.name] || '');
         }
@@ -1089,6 +1120,7 @@ export const GenericPanel = ({
       enableNewButton,
       enableEditButton,
       enableDeleteButton,
+      hideHeader,
     }),
     [
       config,
@@ -1106,6 +1138,7 @@ export const GenericPanel = ({
       enableNewButton,
       enableEditButton,
       enableDeleteButton,
+      hideHeader,
     ],
   );
 
@@ -1129,8 +1162,8 @@ export const GenericPanel = ({
 
   // Memoized text field change handler
   const handleTextFieldChange = useCallback(
-    (fieldName: string, value: string) => {
-      setForm((prev) => ({ ...prev, [fieldName]: value }));
+    (fieldName: string, value: string | Record<string, unknown>) => {
+      setForm((prev) => ({ ...prev, [fieldName]: value as string }));
       if (showValidation) {
         setFormErrors((prev) => {
           if (!prev[fieldName]) return prev;
@@ -1478,6 +1511,131 @@ export const GenericPanel = ({
                       ),
                     }}
                   />
+                );
+              }
+              if (field.type === 'ticketTypesActivation') {
+                const cols = ticketTypeColumns ?? [];
+                const enabledFor = (form[field.name] ?? {}) as Record<string, boolean>;
+                const getActiveCount = (): number => {
+                  if (!enabledFor || Object.keys(enabledFor).length === 0) return cols.length;
+                  return cols.filter((t) => enabledFor[t.key] ?? true).length;
+                };
+                return (
+                  <Box key={field.name}>
+                    <Box
+                      sx={{
+                        border: '1px solid #2d5ebb',
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <Box
+                        onClick={() => setTicketTypesExpanded(!ticketTypesExpanded)}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          px: 2,
+                          py: 1.5,
+                          cursor: 'pointer',
+                          bgcolor: '#f0f4f8',
+                          transition: 'background-color 0.2s',
+                        }}
+                      >
+                        <Typography
+                          variant='body2'
+                          color='#0369a1'
+                          sx={{ fontWeight: 600, fontSize: '0.85rem' }}
+                        >
+                          {field.label || 'Ticket Types Activation'}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography
+                            variant='caption'
+                            color='#0369a1'
+                            sx={{ fontWeight: 500, fontSize: '0.78rem' }}
+                          >
+                            {getActiveCount()} of {cols.length} selected
+                          </Typography>
+                          <Radio
+                            size='small'
+                            checked={getActiveCount() === cols.length}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) =>
+                              handleTextFieldChange(
+                                field.name,
+                                Object.fromEntries(cols.map((t) => [t.key, e.target.checked])),
+                              )
+                            }
+                            sx={{
+                              '&.Mui-checked': { color: '#0369a1' },
+                            }}
+                          />
+                          <Typography
+                            variant='caption'
+                            sx={{ fontWeight: 500, color: '#0369a1' }}
+                          >
+                            Select All
+                          </Typography>
+                          <ExpandMoreIcon
+                            sx={{
+                              color: '#0369a1',
+                              fontSize: '1.1rem',
+                              transform: ticketTypesExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                              transition: 'transform 0.2s',
+                            }}
+                          />
+                        </Box>
+                      </Box>
+
+                      <Collapse in={ticketTypesExpanded}>
+                        <Box sx={{ px: 2, pb: 2 }}>
+                          <FormControl component='fieldset' fullWidth>
+                            <FormGroup>
+                              {cols.map((t) => {
+                                const isChecked = enabledFor?.[t.key] ?? true;
+                                return (
+                                  <Box
+                                    key={t.key}
+                                    sx={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      py: 0.75,
+                                      borderBottom: '1px solid',
+                                      borderColor: '#2d5ebb',
+                                      '&:last-child': { borderBottom: 'none' },
+                                    }}
+                                  >
+                                    <Checkbox
+                                      checked={isChecked}
+                                      onChange={(e) =>
+                                        handleTextFieldChange(field.name, {
+                                          ...enabledFor,
+                                          [t.key]: e.target.checked,
+                                        })
+                                      }
+                                      sx={{
+                                        color: '#0369a1',
+                                        '&.Mui-checked': { color: '#0369a1' },
+                                      }}
+                                    />
+                                    <Box sx={{ flex: 1 }}>
+                                      <Typography
+                                        variant='body2'
+                                        sx={{ fontWeight: 500, fontSize: '0.85rem' }}
+                                      >
+                                        {t.label}
+                                      </Typography>
+                                    </Box>
+                                  </Box>
+                                );
+                              })}
+                            </FormGroup>
+                          </FormControl>
+                        </Box>
+                      </Collapse>
+                    </Box>
+                  </Box>
                 );
               }
               if (field.type === 'richText') {

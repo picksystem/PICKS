@@ -156,10 +156,13 @@ export const SERVICE_LINE_TIMESHEET_CONFIG: TableConfig = {
   fields: [
     { name: 'serviceLineName', label: 'Service Line', required: true, bold: true },
     { name: 'project', label: 'Project', required: true, bold: true },
+    { name: 'application', label: 'Application' },
     { name: 'fromDate', label: 'From Date', type: 'date' },
     { name: 'toDate', label: 'To Date', type: 'date' },
     { name: 'activate', label: 'Activate', type: 'toggle', defaultValue: true },
     { name: 'maxHoursPerDayPerResource', label: 'Max Hours/Day', type: 'number', defaultValue: 8 },
+    { name: 'useInExpenses', label: 'Use in Expenses', type: 'toggle', defaultValue: false },
+    { name: 'internalNote', label: 'Internal note' },
   ],
 };
 
@@ -267,8 +270,10 @@ export const CATEG_TABLE_CONFIG: Record<CategSubView, TableConfig> = {
     entity: 'Business Category',
     fields: [
       { name: 'name', label: 'Business Category Name', required: true, bold: true },
-      { name: 'description', label: 'Description' },
-      { name: 'head', label: 'Business Category Head' },
+      { name: 'shortDescription', label: 'Short Description', required: true },
+      { name: 'description', label: 'Description', multiline: true, minRows: 3 },
+      { name: 'head', label: 'Business Category Head', required: true },
+      { name: 'internalNote', label: 'Internal note', multiline: true, minRows: 3 },
     ],
   },
   applicationCategory: {
@@ -414,12 +419,14 @@ export const EMPTY_QEX: {
 
 // Column definitions for categorization tables
 import type { Column } from '@serviceops/component';
-import { mkCell, mkDescCell } from '@serviceops/configutils';
+import { mkCell, mkDescCell, mkActiveChip } from '@serviceops/configutils';
 
 export const businessCategoryColumns: Column<IConfigBusinessCategory>[] = [
   { id: 'name', label: 'Business Category Name', minWidth: 180, format: mkCell(true) },
+  { id: 'shortDescription', label: 'Short Description', minWidth: 180, format: mkCell() },
   { id: 'description', label: 'Description', minWidth: 220, format: mkDescCell },
   { id: 'head', label: 'Business Category Head', minWidth: 160, format: mkCell() },
+  { id: 'internalNote', label: 'Internal note', minWidth: 200, format: mkCell() },
 ];
 
 export const applicationCategoryColumns: Column<IConfigApplicationCategory>[] = [
@@ -448,6 +455,18 @@ export const serviceLineColumns: Column<IConfigServiceLine>[] = [
   { id: 'name', label: 'Service Line Name', minWidth: 180, format: mkCell(true) },
   { id: 'description', label: 'Description', minWidth: 220, format: mkDescCell },
   { id: 'manager', label: 'Service Line Manager', minWidth: 160, format: mkCell() },
+];
+
+export const serviceLineTimesheetColumns: Column<FlatServiceLineTSRow>[] = [
+  { id: 'serviceLineName', label: 'Service Line', minWidth: 160, format: mkCell(true) },
+  { id: 'project', label: 'Project', minWidth: 160, format: mkCell(true) },
+  { id: 'application', label: 'Application', minWidth: 150, format: mkCell() },
+  { id: 'fromDate', label: 'From Date', minWidth: 130, format: mkCell() },
+  { id: 'toDate', label: 'To Date', minWidth: 130, format: mkCell() },
+  { id: 'activate', label: 'Activate', minWidth: 110, format: (v: unknown) => mkActiveChip(v) },
+  { id: 'maxHoursPerDayPerResource', label: 'Max Hours/Day', minWidth: 130, format: mkCell() },
+  { id: 'useInExpenses', label: 'Use in Expenses', minWidth: 130, format: (v: unknown) => mkActiveChip(v) },
+  { id: 'internalNote', label: 'Internal note', minWidth: 180, format: mkCell() },
 ];
 
 // Service Line Main Config
