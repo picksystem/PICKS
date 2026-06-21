@@ -10,4 +10,5 @@ export type ApplicationQueueActiveView =
   | 'approvals'
   | 'ticketTypes'
   | 'timesheet'
-  | 'expenses';
+  | 'expenses'
+  | 'stickyNote';

@@ -191,12 +191,22 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
       releaseStatuses: enrichedReleaseStatuses,
       slas: enrichedSlas,
       categorization: {
-        businessCategories: data.categorization?.businessCategories ?? [],
+        businessCategories: (data.categorization?.businessCategories ?? []).map((bc) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const b = bc as any;
+          return {
+            ...bc,
+            shortDescription: (b.shortDescription as string | undefined) ?? '',
+            internalNote: b.internalNote as string | undefined,
+          };
+        }),
         serviceLines: (data.categorization?.serviceLines ?? []).map((sl) => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const s = sl as any;
           return {
             ...sl,
+            shortDescription: (s.shortDescription as string | undefined) ?? '',
+            internalNote: s.internalNote as string | undefined,
             timesheetProjects: (s.timesheetProjects ?? []) as IConfigTimesheetProject[],
             expenseProjects: (s.expenseProjects ?? []) as IConfigExpenseProject[],
             approvals: (s.approvals ?? []) as IConfigApproval[],
@@ -209,6 +219,8 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
           const a = app as any;
           return {
             ...app,
+            shortDescription: (a.shortDescription as string | undefined) ?? '',
+            internalNote: a.internalNote as string | undefined,
             approvals: (a.approvals ?? []) as IConfigApproval[],
             ticketTypeActivations: (a.ticketTypeActivations ??
               []) as IConfigServiceLineTicketType[],
@@ -224,21 +236,54 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
           const r = q as any;
           return {
             ...q,
+            shortDescription: (r.shortDescription as string | undefined) ?? '',
             predecessor: (r.predecessor as string | undefined) ?? '',
             successor: (r.successor as string | undefined) ?? '',
             queueSpecificLead: (r.queueSpecificLead as string | undefined) ?? '',
             managerLevel1: (r.managerLevel1 as string | undefined) ?? '',
             managerLevel2: (r.managerLevel2 as string | undefined) ?? '',
+            internalNote: r.internalNote as string | undefined,
             approvals: (r.approvals ?? []) as IConfigApproval[],
             ticketTypeActivations: (r.ticketTypeActivations ??
               []) as IConfigServiceLineTicketType[],
             timesheetProjects: (r.timesheetProjects ?? []) as IConfigTimesheetProject[],
             expenseProjects: (r.expenseProjects ?? []) as IConfigExpenseProject[],
+            stickyNote: (r.stickyNote as string | undefined) ?? '',
           } as IConfigApplicationQueue;
         }),
-        applicationCategories: data.categorization?.applicationCategories ?? [],
-        applicationSubCategories: data.categorization?.applicationSubCategories ?? [],
-        applicationNumberSequences: data.categorization?.applicationNumberSequences ?? [],
+        applicationCategories: (data.categorization?.applicationCategories ?? []).map((ac) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const c = ac as any;
+          return {
+            ...ac,
+            shortDescription: (c.shortDescription as string | undefined) ?? '',
+            internalNote: c.internalNote as string | undefined,
+          };
+        }),
+        applicationSubCategories: (data.categorization?.applicationSubCategories ?? []).map(
+          (asc) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const s = asc as any;
+            return {
+              ...asc,
+              shortDescription: (s.shortDescription as string | undefined) ?? '',
+              internalNote: s.internalNote as string | undefined,
+            };
+          },
+        ),
+        applicationNumberSequences: (data.categorization?.applicationNumberSequences ?? []).map(
+          (ans) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const n = ans as any;
+            return {
+              ...ans,
+              numberSequenceCode: (n.numberSequenceCode as string | undefined) ?? '',
+              numericCharLength: typeof n.numericCharLength === 'number' ? n.numericCharLength : 0,
+              numberSequenceFormat: (n.numberSequenceFormat as string | undefined) ?? '',
+              internalNote: n.internalNote as string | undefined,
+            };
+          },
+        ),
       },
       userConfig: {
         workLocations: data.userConfig?.workLocations ?? [],

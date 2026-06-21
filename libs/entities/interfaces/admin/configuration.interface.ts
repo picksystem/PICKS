@@ -337,11 +337,13 @@ export interface IConfigApplication {
   serviceLineId: string;
   serviceLineName: string;
   name: string;
+  shortDescription?: string;
   description: string;
   enableSupportLevels: boolean;
   applicationLead: string;
   managerLevel1: string;
   managerLevel2: string;
+  internalNote?: string;
   approvals: IConfigApproval[];
   ticketTypeActivations: IConfigServiceLineTicketType[];
   supportLines: IConfigSupportLine[];
@@ -356,16 +358,19 @@ export interface IConfigApplicationQueue {
   applicationId: string;
   applicationName: string;
   name: string;
+  shortDescription?: string;
   description: string;
   predecessor: string;
   successor: string;
   queueSpecificLead: string;
   managerLevel1: string;
   managerLevel2: string;
+  internalNote?: string;
   approvals: IConfigApproval[];
   ticketTypeActivations: IConfigServiceLineTicketType[];
   timesheetProjects: IConfigTimesheetProject[];
   expenseProjects: IConfigExpenseProject[];
+  stickyNote: string;
 }
 
 export interface IConfigApplicationCategory {
@@ -373,7 +378,9 @@ export interface IConfigApplicationCategory {
   applicationId: string;
   applicationName: string;
   categoryName: string;
+  shortDescription?: string;
   description: string;
+  internalNote?: string;
 }
 
 export interface IConfigApplicationSubCategory {
@@ -383,7 +390,9 @@ export interface IConfigApplicationSubCategory {
   applicationCategoryId: string;
   applicationCategoryName: string;
   subCategoryName: string;
+  shortDescription?: string;
   description: string;
+  internalNote?: string;
 }
 
 export interface IConfigApplicationNumberSequence {
@@ -395,6 +404,7 @@ export interface IConfigApplicationNumberSequence {
   numberSequenceCode: string;
   numericCharLength: number;
   numberSequenceFormat: string;
+  internalNote?: string;
 }
 
 export interface IConfigPriorityChangeReasonCode {

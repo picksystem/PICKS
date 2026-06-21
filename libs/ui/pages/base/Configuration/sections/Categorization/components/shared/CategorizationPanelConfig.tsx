@@ -284,8 +284,10 @@ export const CATEG_TABLE_CONFIG: Record<CategSubView, TableConfig> = {
     entity: 'Application Category',
     fields: [
       { name: 'applicationName', label: 'Application', required: true, bold: true },
-      { name: 'categoryName', label: 'Application Category', required: true },
+      { name: 'categoryName', label: 'Application category', required: true, bold: true },
+      { name: 'shortDescription', label: 'Short Description' },
       { name: 'description', label: 'Description' },
+      { name: 'internalNote', label: 'Internal note' },
     ],
   },
   applicationSubCategory: {
@@ -295,10 +297,16 @@ export const CATEG_TABLE_CONFIG: Record<CategSubView, TableConfig> = {
     icon: <SubdirectoryArrowRightIcon sx={{ fontSize: '1.1rem' }} />,
     entity: 'Application Sub-Category',
     fields: [
-      { name: 'applicationName', label: 'Application', required: true, bold: true },
-      { name: 'applicationCategoryName', label: 'Application Category', required: true },
-      { name: 'subCategoryName', label: 'Application Sub-Category', required: true },
+      {
+        name: 'applicationCategoryName',
+        label: 'Application category',
+        required: true,
+        bold: true,
+      },
+      { name: 'subCategoryName', label: 'Application sub-category', required: true, bold: true },
+      { name: 'shortDescription', label: 'Short Description' },
       { name: 'description', label: 'Description' },
+      { name: 'internalNote', label: 'Internal note' },
     ],
   },
   applicationNumberSequence: {
@@ -309,15 +317,11 @@ export const CATEG_TABLE_CONFIG: Record<CategSubView, TableConfig> = {
     entity: 'Number Sequence',
     fields: [
       { name: 'applicationName', label: 'Application', required: true, bold: true },
-      {
-        name: 'ticketTypeId',
-        label: 'Ticket Type',
-        required: true,
-        type: 'ticketTypeSearch' as const,
-      },
-      { name: 'numberSequenceCode', label: 'Number Sequence Code', required: true },
-      { name: 'numericCharLength', label: 'Numeric Char Length' },
-      { name: 'numberSequenceFormat', label: 'Number Sequence Format' },
+      { name: 'ticketTypeName', label: 'Ticket type', required: true, bold: true },
+      { name: 'numberSequenceCode', label: 'Number sequence Prefix', required: true, bold: true },
+      { name: 'numericCharLength', label: 'Number length', required: true },
+      { name: 'numberSequenceFormat', label: 'Numbering Preview' },
+      { name: 'internalNote', label: 'Internal note' },
     ],
   },
 };
@@ -431,23 +435,37 @@ export const businessCategoryColumns: Column<IConfigBusinessCategory>[] = [
 
 export const applicationCategoryColumns: Column<IConfigApplicationCategory>[] = [
   { id: 'applicationName', label: 'Application', minWidth: 160, format: mkCell(true) },
-  { id: 'categoryName', label: 'Application Category', minWidth: 180, format: mkCell() },
+  { id: 'categoryName', label: 'Application category', minWidth: 180, format: mkCell(true) },
+  { id: 'shortDescription', label: 'Short Description', minWidth: 180, format: mkCell() },
   { id: 'description', label: 'Description', minWidth: 220, format: mkDescCell },
+  { id: 'internalNote', label: 'Internal note', minWidth: 200, format: mkDescCell },
 ];
 
 export const applicationSubCategoryColumns: Column<IConfigApplicationSubCategory>[] = [
-  { id: 'applicationName', label: 'Application', minWidth: 150, format: mkCell(true) },
-  { id: 'applicationCategoryName', label: 'Application Category', minWidth: 170, format: mkCell() },
-  { id: 'subCategoryName', label: 'Application Sub-Category', minWidth: 190, format: mkCell() },
+  {
+    id: 'applicationCategoryName',
+    label: 'Application category',
+    minWidth: 170,
+    format: mkCell(true),
+  },
+  { id: 'subCategoryName', label: 'Application sub-category', minWidth: 190, format: mkCell(true) },
+  { id: 'shortDescription', label: 'Short Description', minWidth: 180, format: mkCell() },
   { id: 'description', label: 'Description', minWidth: 220, format: mkDescCell },
+  { id: 'internalNote', label: 'Internal note', minWidth: 200, format: mkDescCell },
 ];
 
 export const applicationNumberSequenceColumns: Column<IConfigApplicationNumberSequence>[] = [
   { id: 'applicationName', label: 'Application', minWidth: 140, format: mkCell(true) },
-  { id: 'ticketTypeName', label: 'Ticket Type', minWidth: 130, format: mkCell() },
-  { id: 'numberSequenceCode', label: 'Number Sequence Code', minWidth: 170, format: mkCell() },
-  { id: 'numericCharLength', label: 'Numeric Char Length', minWidth: 150, format: mkCell() },
-  { id: 'numberSequenceFormat', label: 'Number Sequence Format', minWidth: 180, format: mkCell() },
+  { id: 'ticketTypeName', label: 'Ticket type', minWidth: 130, format: mkCell(true) },
+  {
+    id: 'numberSequenceCode',
+    label: 'Number sequence Prefix',
+    minWidth: 180,
+    format: mkCell(true),
+  },
+  { id: 'numericCharLength', label: 'Number length', minWidth: 130, format: mkCell() },
+  { id: 'numberSequenceFormat', label: 'Numbering Preview', minWidth: 180, format: mkCell() },
+  { id: 'internalNote', label: 'Internal note', minWidth: 200, format: mkDescCell },
 ];
 
 export const serviceLineColumns: Column<IConfigServiceLine>[] = [
@@ -465,7 +483,12 @@ export const serviceLineTimesheetColumns: Column<FlatServiceLineTSRow>[] = [
   { id: 'toDate', label: 'To Date', minWidth: 130, format: mkCell() },
   { id: 'activate', label: 'Activate', minWidth: 110, format: (v: unknown) => mkActiveChip(v) },
   { id: 'maxHoursPerDayPerResource', label: 'Max Hours/Day', minWidth: 130, format: mkCell() },
-  { id: 'useInExpenses', label: 'Use in Expenses', minWidth: 130, format: (v: unknown) => mkActiveChip(v) },
+  {
+    id: 'useInExpenses',
+    label: 'Use in Expenses',
+    minWidth: 130,
+    format: (v: unknown) => mkActiveChip(v),
+  },
   { id: 'internalNote', label: 'Internal note', minWidth: 180, format: mkCell() },
 ];
 
@@ -487,32 +510,38 @@ export const SERVICE_LINE_MAIN_CONFIG: TableConfig = {
 // Application Main Config
 export const APPLICATION_MAIN_CONFIG: TableConfig = {
   title: 'Applications',
-  subtitle: 'Configure applications with associated approvals, timesheets, expenses, and billing',
+  subtitle: 'Configure applications linked to service lines',
   accent: CATEG_ACCENT,
   icon: <AppsIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Application',
   fields: [
-    { name: 'name', label: 'Application Name', required: true, bold: true },
+    { name: 'serviceLineName', label: 'Service line', required: true, bold: true },
+    { name: 'name', label: 'Application name', required: true, bold: true },
+    { name: 'shortDescription', label: 'Short Description' },
     { name: 'description', label: 'Description' },
-    { name: 'categoryName', label: 'Category' },
-    { name: 'businessCategoryName', label: 'Business Category' },
+    { name: 'applicationLead', label: 'Application lead' },
+    { name: 'managerLevel1', label: 'Manager Level 1' },
+    { name: 'managerLevel2', label: 'Manager Level 2' },
+    { name: 'internalNote', label: 'Internal note' },
   ],
 };
 
 // Application Queue Main Config
 export const APPLICATION_QUEUE_MAIN_CONFIG: TableConfig = {
   title: 'Application Queues',
-  subtitle: 'Configure queues with associated approvals, timesheets, and expenses',
+  subtitle: 'Manage application queues linked to applications',
   accent: CATEG_ACCENT,
   icon: <HeadsetMicIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Application Queue',
   fields: [
     { name: 'applicationName', label: 'Application', required: true, bold: true },
     { name: 'name', label: 'Queue Name', required: true, bold: true },
+    { name: 'shortDescription', label: 'Short Description' },
     { name: 'description', label: 'Description' },
-    { name: 'queueSpecificLead', label: 'Queue Lead' },
+    { name: 'queueSpecificLead', label: 'Queue lead' },
     { name: 'managerLevel1', label: 'Manager Level 1' },
     { name: 'managerLevel2', label: 'Manager Level 2' },
+    { name: 'internalNote', label: 'Internal note' },
   ],
 };
 
@@ -521,19 +550,23 @@ export interface IConfigApplicationQueueExtended extends Record<string, unknown>
   applicationId: string;
   applicationName: string;
   name: string;
+  shortDescription?: string;
   description: string;
   predecessor: string;
   successor: string;
   queueSpecificLead: string;
   managerLevel1: string;
   managerLevel2: string;
+  internalNote?: string;
 }
 
 export const applicationQueueColumns: Column<IConfigApplicationQueueExtended>[] = [
   { id: 'applicationName', label: 'Application', minWidth: 160, format: mkCell(true) },
   { id: 'name', label: 'Queue Name', minWidth: 180, format: mkCell(true) },
+  { id: 'shortDescription', label: 'Short Description', minWidth: 180, format: mkCell() },
   { id: 'description', label: 'Description', minWidth: 220, format: mkDescCell },
-  { id: 'queueSpecificLead', label: 'Queue Lead', minWidth: 160, format: mkCell() },
-  { id: 'managerLevel1', label: 'Manager L1', minWidth: 140, format: mkCell() },
-  { id: 'managerLevel2', label: 'Manager L2', minWidth: 140, format: mkCell() },
+  { id: 'queueSpecificLead', label: 'Queue lead', minWidth: 160, format: mkCell() },
+  { id: 'managerLevel1', label: 'Manager Level 1', minWidth: 160, format: mkCell() },
+  { id: 'managerLevel2', label: 'Manager Level 2', minWidth: 160, format: mkCell() },
+  { id: 'internalNote', label: 'Internal note', minWidth: 200, format: mkDescCell },
 ];

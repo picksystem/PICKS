@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
@@ -14,6 +14,11 @@ import {
 } from '@serviceops/interfaces';
 import { GenericToolbar } from '@serviceops/generictoolbar';
 import { GenericPanel } from '@serviceops/genericpanel';
+import { ConfigDeleteDialog } from '@serviceops/configdialogs';
+import { ApplicationsFormDialog } from '@serviceops/pages/base/Configuration/dialogs/ApplicationsFormDialog';
+import { useSharedUsers } from '../../../../hooks/useSharedUsers';
+import type { Column } from '@serviceops/component';
+import { mkCell, mkDescCell } from '@serviceops/configutils';
 import {
   AppApprovalsSection,
   AppTimesheetSection,
@@ -23,7 +28,7 @@ import {
   AppTicketTypeSection,
   AppStickyNoteSection,
 } from './panels';
-import { CATEG_ACCENT, TABLE_CONFIG } from '../shared';
+import { CATEG_ACCENT, APPLICATION_MAIN_CONFIG } from '../shared';
 import { ApplicationActiveView } from './ApplicationsSection.types';
 import { useStyles } from '../../styles';
 import { GenericAccordion } from '@serviceops/genericaccordion';
@@ -81,8 +86,13 @@ const VIEW_BUTTONS: { key: ApplicationActiveView; label: string; icon: React.Rea
 export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionProps) => {
   const { classes } = useStyles();
   const { categorization: apiCat, saveSection } = useConfiguration();
+  const { options: userOptions } = useSharedUsers();
   const [activeView, setActiveView] = useState<ApplicationActiveView>('applications');
   const [rows, setRows] = useState<IConfigApplication[]>([]);
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editingRow, setEditingRow] = useState<IConfigApplication | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     if (data !== undefined) {
@@ -92,22 +102,159 @@ export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionP
     }
   }, [data, apiCat]);
 
-  const handleSave = (next: IConfigApplication[]) => {
-    setRows(next);
-    if (onDataChange) {
-      onDataChange(next);
-    } else {
-      saveSection('categorization', {
-        businessCategories: apiCat?.businessCategories ?? [],
-        serviceLines: apiCat?.serviceLines ?? [],
-        applications: next,
-        queues: apiCat?.queues ?? [],
-        applicationCategories: apiCat?.applicationCategories ?? [],
-        applicationSubCategories: apiCat?.applicationSubCategories ?? [],
-        applicationNumberSequences: apiCat?.applicationNumberSequences ?? [],
+  const handleSave = useCallback(
+    (next: IConfigApplication[]) => {
+      setRows(next);
+      if (onDataChange) {
+        onDataChange(next);
+      } else {
+        saveSection('categorization', {
+          businessCategories: apiCat?.businessCategories ?? [],
+          serviceLines: apiCat?.serviceLines ?? [],
+          applications: next,
+          queues: apiCat?.queues ?? [],
+          applicationCategories: apiCat?.applicationCategories ?? [],
+          applicationSubCategories: apiCat?.applicationSubCategories ?? [],
+          applicationNumberSequences: apiCat?.applicationNumberSequences ?? [],
+        });
+      }
+    },
+    [onDataChange, apiCat, saveSection],
+  );
+
+  // Drop-down options for the "Service line" field. Sourced from the
+  // existing service-lines list. value and label are the service line
+  // name; deduplicated case-insensitively and sorted alphabetically.
+  const serviceLineOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const options: { value: string; label: string }[] = [];
+    (apiCat?.serviceLines ?? []).forEach((sl) => {
+      const name = String(sl?.name ?? '').trim();
+      if (!name) return;
+      const key = name.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      options.push({ value: name, label: name });
+    });
+    options.sort((a, b) => a.label.localeCompare(b.label));
+    return options;
+  }, [apiCat?.serviceLines]);
+
+  // Drop-down options for the user-search fields (Application lead,
+  // Manager Level 1, Manager Level 2). Sourced from User Management →
+  // All Users via the shared users cache. value and label are the
+  // user's full name (firstName + ' ' + lastName). subtitle is the
+  // user's email and shows as the secondary line in the popover. We
+  // store the full name so the data table can render the name directly
+  // via the plain `mkCell` renderer. (If two users share a name, both
+  // resolve to the same stored value; acceptable for this internal
+  // team directory.)
+  const userOpts = useMemo(() => {
+    const seen = new Set<string>();
+    const options: { value: string; label: string; subtitle?: string }[] = [];
+    userOptions.forEach((u) => {
+      const name = String(u.name ?? '').trim();
+      if (!name) return;
+      const key = name.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      options.push({
+        value: name,
+        label: name,
+        subtitle: u.email || undefined,
       });
+    });
+    options.sort((a, b) => a.label.localeCompare(b.label));
+    return options;
+  }, [userOptions]);
+
+  // Column definitions for the data table. Mirrors the Business
+  // Categories / Service Lines table layout: bold cells for the
+  // primary identifiers, description-style rendering for the
+  // multi-line text fields, and a plain render for the user fields
+  // (which already store the full name).
+  const applicationColumns: Column<IConfigApplication>[] = useMemo(
+    () => [
+      { id: 'serviceLineName', label: 'Service line', minWidth: 160, format: mkCell(true) },
+      { id: 'name', label: 'Application name', minWidth: 180, format: mkCell(true) },
+      { id: 'shortDescription', label: 'Short Description', minWidth: 180, format: mkCell() },
+      { id: 'description', label: 'Description', minWidth: 220, format: mkDescCell },
+      { id: 'applicationLead', label: 'Application lead', minWidth: 160, format: mkCell() },
+      { id: 'managerLevel1', label: 'Manager Level 1', minWidth: 160, format: mkCell() },
+      { id: 'managerLevel2', label: 'Manager Level 2', minWidth: 160, format: mkCell() },
+      { id: 'internalNote', label: 'Internal note', minWidth: 200, format: mkDescCell },
+    ],
+    [],
+  );
+
+  const handleNewClick = useCallback(() => {
+    setEditingRow(null);
+    setDialogOpen(true);
+  }, []);
+
+  const handleEditClick = useCallback(() => {
+    const selected = rows.find((r) => r.id === selectedRowId);
+    if (selected) {
+      setEditingRow(selected);
+      setDialogOpen(true);
     }
-  };
+  }, [rows, selectedRowId]);
+
+  const handleDialogClose = useCallback(() => {
+    setDialogOpen(false);
+    setEditingRow(null);
+  }, []);
+
+  const handleDialogSave = useCallback(
+    (form: Partial<IConfigApplication>) => {
+      const myId = editingRow?.id;
+      const next: IConfigApplication[] = myId
+        ? rows.map((r) => (r.id === myId ? { ...r, ...form, id: r.id } : r))
+        : [
+            ...rows,
+            {
+              id: `${Date.now()}`,
+              serviceLineId: form.serviceLineId ?? '',
+              serviceLineName: form.serviceLineName ?? '',
+              name: form.name ?? '',
+              shortDescription: form.shortDescription ?? '',
+              description: form.description ?? '',
+              applicationLead: form.applicationLead ?? '',
+              managerLevel1: form.managerLevel1 ?? '',
+              managerLevel2: form.managerLevel2 ?? '',
+              internalNote: form.internalNote,
+              enableSupportLevels: false,
+              approvals: [],
+              ticketTypeActivations: [],
+              supportLines: [],
+              billingCodes: [],
+              timesheetProjects: [],
+              expenseProjects: [],
+              stickyNote: '',
+            } as IConfigApplication,
+          ];
+      handleSave(next);
+      handleDialogClose();
+    },
+    [rows, editingRow, handleSave, handleDialogClose],
+  );
+
+  const handleDeleteClick = useCallback(() => {
+    setDeleteOpen(true);
+  }, []);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!selectedRowId) return;
+    try {
+      const next = rows.filter((r) => r.id !== selectedRowId);
+      handleSave(next);
+      setSelectedRowId(null);
+    } catch {
+      // Errors already surface via saveSection; just close the dialog.
+    } finally {
+      setDeleteOpen(false);
+    }
+  }, [selectedRowId, rows, handleSave]);
 
   const allApprovals =
     rows?.flatMap((app) =>
@@ -215,13 +362,39 @@ export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionP
         }))}
       />
       {activeView === 'applications' && (
-        <GenericPanel
-          config={TABLE_CONFIG.application}
-          data={rows}
-          onSave={handleSave}
-          variant='standard'
-          enableSuccessMessage
-        />
+        <>
+          <GenericPanel
+            config={APPLICATION_MAIN_CONFIG}
+            data={rows as unknown as Record<string, unknown>[]}
+            onSave={handleSave as (data: unknown[]) => void}
+            customColumns={applicationColumns as unknown as undefined}
+            variant='standard'
+            selectedRowId={selectedRowId}
+            onRowSelect={setSelectedRowId}
+            onNewClick={handleNewClick}
+            onEditClick={handleEditClick}
+            onDeleteClick={handleDeleteClick}
+          />
+
+          <ApplicationsFormDialog
+            open={dialogOpen}
+            editing={editingRow}
+            existingApplications={rows}
+            serviceLineOptions={serviceLineOptions}
+            userOptions={userOpts}
+            onClose={handleDialogClose}
+            onSave={handleDialogSave}
+            subtitle={APPLICATION_MAIN_CONFIG.subtitle}
+          />
+
+          <ConfigDeleteDialog
+            open={deleteOpen}
+            onClose={() => setDeleteOpen(false)}
+            onConfirm={handleConfirmDelete}
+            entityName='Application'
+            itemName={editingRow?.name ?? ''}
+          />
+        </>
       )}
       {activeView === 'approvals' && (
         <AppApprovalsSection
