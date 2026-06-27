@@ -4,6 +4,7 @@ import { useConfiguration } from '@serviceops/confighooks';
 import { GenericPanel } from '@serviceops/genericpanel';
 import { useStyles } from '../../styles';
 import { ROLE_CHANGE_CONFIG, roleChangeColumns } from '../shared/ReasonCodesPanelConfig';
+import { validateRoleChangeDuplicate } from './validateRoleChange';
 
 interface RoleChangeSectionProps {
   data?: IConfigRoleChangeReasonCode[];
@@ -45,6 +46,7 @@ const RoleChangeSection = ({ data, onDataChange }: RoleChangeSectionProps) => {
         customColumns={roleChangeColumns as any}
         variant='plain'
         defaultExpanded={false}
+        validateFields={validateRoleChangeDuplicate as never}
       />
     </div>
   );

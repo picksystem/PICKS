@@ -154,14 +154,14 @@ export const ServiceLinesSection = ({ data, onDataChange }: ServiceLinesSectionP
   // `manager` (which already stores the full name).
   const serviceLineColumns: Column<IConfigServiceLine>[] = useMemo(
     () => [
+      { id: 'name', label: 'Service Line Name', minWidth: 180, format: mkCell(true) },
+      { id: 'shortDescription', label: 'Short Description', minWidth: 180, format: mkCell() },
       {
         id: 'businessCategoryName',
         label: 'Business Category',
         minWidth: 160,
         format: mkCell(true),
       },
-      { id: 'name', label: 'Service Line Name', minWidth: 180, format: mkCell(true) },
-      { id: 'shortDescription', label: 'Short Description', minWidth: 180, format: mkCell() },
       { id: 'description', label: 'Description', minWidth: 220, format: mkDescCell },
       { id: 'manager', label: 'Service Line Manager', minWidth: 160, format: mkCell() },
       { id: 'internalNote', label: 'Internal note', minWidth: 200, format: mkDescCell },

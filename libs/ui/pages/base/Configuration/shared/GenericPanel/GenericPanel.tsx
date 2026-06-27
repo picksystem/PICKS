@@ -1571,10 +1571,7 @@ export const GenericPanel = ({
                               '&.Mui-checked': { color: '#0369a1' },
                             }}
                           />
-                          <Typography
-                            variant='caption'
-                            sx={{ fontWeight: 500, color: '#0369a1' }}
-                          >
+                          <Typography variant='caption' sx={{ fontWeight: 500, color: '#0369a1' }}>
                             Select All
                           </Typography>
                           <ExpandMoreIcon

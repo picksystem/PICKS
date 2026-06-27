@@ -4,6 +4,7 @@ import { useConfiguration } from '@serviceops/confighooks';
 import { GenericPanel } from '@serviceops/genericpanel';
 import { useStyles } from '../../styles';
 import { PRIORITY_CHANGE_CONFIG, priorityChangeColumns } from '../shared/ReasonCodesPanelConfig';
+import { validatePriorityChangeDuplicate } from './validatePriorityChange';
 
 interface PriorityChangeSectionProps {
   data?: IConfigPriorityChangeReasonCode[];
@@ -44,6 +45,7 @@ const PriorityChangeSection = ({ data, onDataChange }: PriorityChangeSectionProp
         onSave={handleSave}
         customColumns={priorityChangeColumns as any}
         variant='plain'
+        validateFields={validatePriorityChangeDuplicate as never}
       />
     </div>
   );

@@ -410,37 +410,49 @@ export interface IConfigApplicationNumberSequence {
 export interface IConfigPriorityChangeReasonCode {
   id: string;
   name: string;
+  internalNote: string;
   description: string;
+  activate: boolean;
 }
 
 export interface IConfigRoleChangeReasonCode {
   id: string;
   name: string;
+  internalNote: string;
   description: string;
+  activate: boolean;
 }
 
 export interface IConfigResolutionCode {
   id: string;
   name: string;
+  internalNote: string;
   description: string;
+  activate: boolean;
 }
 
 export interface IConfigCancellationReasonCode {
   id: string;
   name: string;
+  internalNote: string;
   description: string;
+  activate: boolean;
 }
 
 export interface IConfigReopenReasonCode {
   id: string;
   name: string;
+  internalNote: string;
   description: string;
+  activate: boolean;
 }
 
 export interface IConfigConversionReasonCode {
   id: string;
   name: string;
+  internalNote: string;
   description: string;
+  activate: boolean;
 }
 
 export interface IConfigTimesheetConversionCode {

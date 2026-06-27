@@ -4,6 +4,7 @@ import { useConfiguration } from '@serviceops/confighooks';
 import { GenericPanel } from '@serviceops/genericpanel';
 import { useStyles } from '../../styles';
 import { REOPEN_CONFIG, reopenColumns } from '../shared/ReasonCodesPanelConfig';
+import { validateReopenDuplicate } from './validateReopen';
 
 interface ReopenSectionProps {
   data?: IConfigReopenReasonCode[];
@@ -45,6 +46,7 @@ const ReopenSection = ({ data, onDataChange }: ReopenSectionProps) => {
         customColumns={reopenColumns as any}
         variant='plain'
         defaultExpanded={false}
+        validateFields={validateReopenDuplicate as never}
       />
     </div>
   );

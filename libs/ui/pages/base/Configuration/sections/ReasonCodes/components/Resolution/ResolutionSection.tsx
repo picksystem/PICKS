@@ -4,6 +4,7 @@ import { useConfiguration } from '@serviceops/confighooks';
 import { GenericPanel } from '@serviceops/genericpanel';
 import { useStyles } from '../../styles';
 import { RESOLUTION_CONFIG, resolutionColumns } from '../shared/ReasonCodesPanelConfig';
+import { validateResolutionDuplicate } from './validateResolution';
 
 interface ResolutionSectionProps {
   data?: IConfigResolutionCode[];
@@ -45,6 +46,7 @@ const ResolutionSection = ({ data, onDataChange }: ResolutionSectionProps) => {
         customColumns={resolutionColumns as any}
         variant='plain'
         defaultExpanded={false}
+        validateFields={validateResolutionDuplicate as never}
       />
     </div>
   );

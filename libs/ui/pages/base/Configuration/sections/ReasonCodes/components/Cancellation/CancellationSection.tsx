@@ -4,6 +4,7 @@ import { useConfiguration } from '@serviceops/confighooks';
 import { GenericPanel } from '@serviceops/genericpanel';
 import { useStyles } from '../../styles';
 import { CANCELLATION_CONFIG, countdownColumns } from '../shared/ReasonCodesPanelConfig';
+import { validateCancellationDuplicate } from './validateCancellation';
 
 interface CancellationSectionProps {
   data?: IConfigCancellationReasonCode[];
@@ -45,6 +46,7 @@ const CancellationSection = ({ data, onDataChange }: CancellationSectionProps) =
         customColumns={countdownColumns as any}
         variant='plain'
         defaultExpanded={false}
+        validateFields={validateCancellationDuplicate as never}
       />
     </div>
   );

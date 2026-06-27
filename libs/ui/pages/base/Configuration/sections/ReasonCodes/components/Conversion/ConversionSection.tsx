@@ -4,6 +4,7 @@ import { useConfiguration } from '@serviceops/confighooks';
 import { GenericPanel } from '@serviceops/genericpanel';
 import { useStyles } from '../../styles';
 import { CONVERSION_CONFIG, conversionColumns } from '../shared/ReasonCodesPanelConfig';
+import { validateConversionDuplicate } from './validateConversion';
 
 interface ConversionSectionProps {
   data?: IConfigConversionReasonCode[];
@@ -45,6 +46,7 @@ const ConversionSection = ({ data, onDataChange }: ConversionSectionProps) => {
         customColumns={conversionColumns as any}
         variant='plain'
         defaultExpanded={false}
+        validateFields={validateConversionDuplicate as never}
       />
     </div>
   );
