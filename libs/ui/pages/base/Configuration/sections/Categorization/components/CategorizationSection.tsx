@@ -136,7 +136,7 @@ const CategorizationSection = ({
     <GenericAccordion
       title='Categorization'
       subtitle='Manage business categories, service lines, applications, and queues'
-      icon={<AccountTreeIcon sx={{ fontSize: '1rem', color: '#fff' }} />}
+      icon={<AccountTreeIcon sx={{ fontSize: '1rem', color: ACCENT }} />}
       accent={ACCENT}
       className={classes.sectionAccordion}
     >

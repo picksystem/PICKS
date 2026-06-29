@@ -4,6 +4,7 @@ import {
   useAuthActionMutation,
   useGetAdminControlsQuery,
   useUpdateAdminControlsMutation,
+  useDeleteUserMutation,
 } from '@serviceops/services';
 import {
   useAuth,
@@ -59,6 +60,7 @@ const useUserManagement = () => {
   const [tableSearch, setTableSearch] = useState('');
   const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
   const [selectedRow, setSelectedRow] = useState<UserRow | null>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   // ── Edit dialog ───────────────────────────────────────────────────────────────
   const [editOpen, setEditOpen] = useState(false);
@@ -154,6 +156,7 @@ const useUserManagement = () => {
   const { themeName: selectedTheme, setThemeName } = useThemeContext();
   const { data: adminControlsData } = useGetAdminControlsQuery();
   const [updateAdminControls, { isLoading: isSavingControls }] = useUpdateAdminControlsMutation();
+  const [deleteUser, { isLoading: isDeletingUser }] = useDeleteUserMutation();
 
   // Load admin controls from DB on mount
   useEffect(() => {
@@ -400,6 +403,30 @@ const useUserManagement = () => {
 
   const handleCancelCreate = () => {
     setCreateOpen(false);
+  };
+
+  // ── Delete dialog ─────────────────────────────────────────────────────────────
+  const handleOpenDelete = () => {
+    setConfirmDeleteOpen(true);
+  };
+
+  const handleCloseDelete = () => {
+    setConfirmDeleteOpen(false);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!selectedRow) return;
+
+    try {
+      await deleteUser({ userId: selectedRow.id }).unwrap();
+      notify.success(`User ${selectedRow.name || selectedRow.email} deleted successfully`);
+      setSelectedRow(null);
+      fetchUsers();
+    } catch {
+      notify.error('Failed to delete user');
+    } finally {
+      setConfirmDeleteOpen(false);
+    }
   };
 
   // ── Changes log ───────────────────────────────────────────────────────────────
@@ -1081,6 +1108,11 @@ const useUserManagement = () => {
     // admin controls
     adminControlsOpen,
     setAdminControlsOpen,
+    // delete
+    confirmDeleteOpen,
+    handleOpenDelete,
+    handleCloseDelete,
+    handleDeleteUser,
     adminTwoLevel,
     handleAdminTwoLevelChange,
     adminManagerOnly,

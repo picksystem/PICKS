@@ -4,6 +4,7 @@ import { CSSObject } from 'tss-react';
 export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   container: {
     padding: theme.spacing(3),
+    position: 'relative',
     [theme.breakpoints.down('sm')]: {
       padding: theme.spacing(1.5),
     },
@@ -149,11 +150,34 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   adminControlsBtn: {
-    marginLeft: 'auto',
     flexShrink: 0,
-    [theme.breakpoints.down('md')]: {
-      marginLeft: 0,
-      width: '100%',
+  },
+
+  adminControlsWrapper: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: theme.spacing(1),
+  },
+
+  toolbarSearchField: {
+    marginLeft: 'auto',
+    width: '220px',
+    '& .MuiOutlinedInput-root': {
+      height: '34px',
+      fontSize: '0.85rem',
+      backgroundColor: theme.palette.common.white,
+      borderRadius: '6px',
+    },
+    '& .MuiInputBase-input': {
+      padding: '4px 8px',
+      fontSize: '0.85rem',
+    },
+    '& .MuiInputBase-input::placeholder': {
+      opacity: 0.7,
+    },
+    '& .MuiInputAdornment-root .MuiSvgIcon-root': {
+      fontSize: '1.1rem',
+      color: theme.palette.text.secondary,
     },
   },
 
@@ -167,5 +191,36 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     [theme.breakpoints.down('sm')]: {
       display: 'none',
     },
+  },
+
+  sectionAccordion: {
+    marginBottom: theme.spacing(2),
+  },
+
+  actionToolbar: {
+    marginBottom: theme.spacing(2),
+    [theme.breakpoints.down('sm')]: {
+      marginBottom: theme.spacing(1.5),
+    },
+  },
+
+  toolbarButtons: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: theme.spacing(0.5),
+    alignItems: 'center',
+    padding: 8,
+    [theme.breakpoints.down('sm')]: {
+      flexDirection: 'column' as const,
+      alignItems: 'stretch',
+      gap: theme.spacing(0.75),
+      '& > span': { width: '100%' },
+      '& .MuiButton-root': { width: '100%', justifyContent: 'flex-start' },
+    },
+  },
+
+  tablePaper: {
+    borderRadius: theme.shape.borderRadius,
+    overflowX: 'auto' as const,
   },
 });

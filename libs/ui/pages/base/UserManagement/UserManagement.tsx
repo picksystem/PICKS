@@ -2,23 +2,14 @@ import {
   Box,
   Loader,
   DataTable,
-  Typography,
   Button,
-  Grid,
-  Tabs,
-  Tab,
-  Paper,
   Divider,
-  Link,
   Tooltip,
   TextField,
-  PageHeader,
+  DeleteIcon,
 } from '@serviceops/component';
 import { InputAdornment } from '@mui/material';
 import GroupIcon from '@mui/icons-material/Group';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
-import PersonIcon from '@mui/icons-material/Person';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import EditIcon from '@mui/icons-material/Edit';
@@ -30,6 +21,14 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import BadgeIcon from '@mui/icons-material/Badge';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import TuneIcon from '@mui/icons-material/Tune';
+import EditNoteIcon from '@mui/icons-material/EditNote';
+import ClearIcon from '@mui/icons-material/Clear';
+import { GenericAccordion } from '@serviceops/genericaccordion';
+import { GenericToolbar } from '@serviceops/generictoolbar';
+import { GenericPanel } from '@serviceops/genericpanel';
+import { IAuthUser } from '@serviceops/interfaces';
+import { UserRow } from './types/userManagement.types';
+import { FIELD_CONFIG_TABLE, FIELD_CONFIG_COLUMNS } from './components/fieldConfig.config';
 import useUserManagement from './hooks/useUserManagement';
 import AdminControlsDialog from './dialogs/AdminControlsDialog/AdminControlsDialog';
 import EditUserDialog from './dialogs/EditUserDialog/EditUserDialog';
@@ -40,31 +39,32 @@ import ConsultantProfileDialog from './dialogs/ConsultantProfileDialog/Consultan
 import ChangeProfileDialog from './dialogs/ChangeProfileDialog/ChangeProfileDialog';
 import TempPasswordDialog from './dialogs/TempPasswordDialog/TempPasswordDialog';
 import ResetPasswordDialog from './dialogs/ResetPasswordDialog/ResetPasswordDialog';
+import { ConfigDeleteDialog } from '@serviceops/configdialogs';
 import { useStyles } from './styles';
-import TabPanel from './components/TabPanel';
+
+const ACCENT = '#0369a1';
+
+const DEFAULT_FIELDS = [
+  { date: '', day: '', calendarWeek: '', calendarMonth: '', control: 'Date' },
+  { date: '', day: '', calendarWeek: '', calendarMonth: '', control: 'Day' },
+  { date: '', day: '', calendarWeek: '', calendarMonth: '', control: 'Calendar week' },
+  { date: '', day: '', calendarWeek: '', calendarMonth: '', control: 'Calendar month' },
+  { date: '', day: '', calendarWeek: '', calendarMonth: '', control: 'Control' },
+];
 
 const UserManagement = () => {
   const { classes } = useStyles();
 
   const {
-    // table
     allUsers,
-    admins,
-    consultants,
     isLoading,
-    isMobile,
-    tabValue,
-    setTabValue,
     tableSearch,
     setTableSearch,
     selectedRow,
     setSelectedRow,
     handleRowClick,
     columns,
-    getTableData,
-    draftRow,
     currentUser,
-    // edit
     editOpen,
     setEditOpen,
     editForm,
@@ -75,7 +75,6 @@ const UserManagement = () => {
     setAdminNotes,
     handleOpenEdit,
     handleSaveEdit,
-    // create
     createOpen,
     isOpenedAsDraft,
     setIsOpenedAsDraft,
@@ -94,7 +93,6 @@ const UserManagement = () => {
     handleSaveDraft,
     handleCancelCreate,
     reqError,
-    // changes log
     changesLogOpen,
     setChangesLogOpen,
     changeLog,
@@ -127,13 +125,10 @@ const UserManagement = () => {
     handleLogSort,
     clearLogFilters,
     handleExportCsv,
-    // login data
     loginDataOpen,
     setLoginDataOpen,
-    // consultant profile
     consultantProfileOpen,
     setConsultantProfileOpen,
-    // change profile
     changeProfileOpen,
     setChangeProfileOpen,
     changeProfileRole,
@@ -154,7 +149,6 @@ const UserManagement = () => {
     handleOpenChangeProfile,
     handleChangeProfileSubmit,
     handleSaveChangeProfile,
-    // temp password
     tempPwOpen,
     setTempPwOpen,
     isGeneratingTempPw,
@@ -170,7 +164,6 @@ const UserManagement = () => {
     setTempPwNote,
     handleOpenTempPw,
     handleGenerateTempPw,
-    // reset password
     resetPwOpen,
     setResetPwOpen,
     newPassword,
@@ -196,9 +189,12 @@ const UserManagement = () => {
     setResetPwErrors,
     handleOpenResetPw,
     handleResetPassword,
-    // admin controls
     adminControlsOpen,
     setAdminControlsOpen,
+    confirmDeleteOpen,
+    handleOpenDelete,
+    handleCloseDelete,
+    handleDeleteUser,
     adminTwoLevel,
     handleAdminTwoLevelChange,
     adminManagerOnly,
@@ -227,339 +223,312 @@ const UserManagement = () => {
   const isDraft = (sel?.id as unknown as number) === -1;
   const isConsultant = !isDraft && sel?.role === 'consultant';
 
-  return (
-    <Grid className={classes.container}>
-      {/* ── Page header ── */}
-      <PageHeader
-        title='User Management'
-        description='View and manage all users across different roles in the system.'
-        className={classes.pageHeader}
-      />
+  const getTableDataFn = (users: IAuthUser[], startFrom = 1): UserRow[] =>
+    users.map((u, i) => ({ ...u, sno: startFrom + i }));
 
-      {/* ── Tabs + Search ── */}
-      <Box className={classes.tabsBox}>
-        <Tabs
-          value={tabValue}
-          onChange={(_, v) => {
-            setTabValue(v);
-            setTableSearch('');
-          }}
-          variant='scrollable'
-          scrollButtons='auto'
-          allowScrollButtonsMobile
-          sx={{ flex: 1 }}
-        >
-          <Tab
-            icon={<GroupIcon />}
-            iconPosition='start'
-            label={isMobile ? undefined : `All Users (${allUsers.length})`}
-            title={`All Users (${allUsers.length})`}
-          />
-          <Tab
-            icon={<AdminPanelSettingsIcon />}
-            iconPosition='start'
-            label={isMobile ? undefined : `Admins (${admins.length})`}
-            title={`Admins (${admins.length})`}
-          />
-          <Tab
-            icon={<BusinessCenterIcon />}
-            iconPosition='start'
-            label={isMobile ? undefined : `Consultants (${consultants.length})`}
-            title={`Consultants (${consultants.length})`}
-          />
-          <Tab
-            icon={<PersonIcon />}
-            iconPosition='start'
-            label={
-              isMobile ? undefined : `Users (${allUsers.filter((u) => u.role === 'user').length})`
-            }
-            title={`Users (${allUsers.filter((u) => u.role === 'user').length})`}
-          />
-        </Tabs>
-        <TextField
-          placeholder='Search...'
-          value={tableSearch}
-          onChange={(e) => setTableSearch(e.target.value)}
-          className={classes.tabsSearchField}
-          slotProps={{
-            input: {
-              endAdornment: (
-                <InputAdornment position='end'>
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
+  const tableData = getTableDataFn(allUsers);
+  const filteredTableData = tableSearch
+    ? tableData.filter((row) =>
+        Object.values(row).some(
+          (val) =>
+            val !== null &&
+            val !== undefined &&
+            String(val).toLowerCase().includes(tableSearch.toLowerCase()),
+        ),
+      )
+    : tableData;
+
+  return (
+    <Box className={classes.container}>
+      <Box className={classes.adminControlsWrapper}>
+        <Tooltip title='Approval settings & page styles'>
+          <Button
+            size='small'
+            variant={adminControlsOpen ? 'outlined' : 'contained'}
+            color='primary'
+            startIcon={<TuneIcon />}
+            onClick={() => setAdminControlsOpen(true)}
+            className={classes.adminControlsBtn}
+          >
+            Admin Controls
+          </Button>
+        </Tooltip>
       </Box>
 
-      {/* ── Action toolbar ── */}
-      <Paper variant='outlined' className={classes.toolbar}>
-        <Box className={classes.toolbarStack}>
-          {/* Create — hidden when any row is selected */}
-          {!sel && (
-            <Tooltip title='Create new user'>
-              <Button
-                size='small'
-                variant='contained'
-                startIcon={<AddIcon />}
-                onClick={handleOpenNew}
+      <GenericAccordion
+        title='User Management'
+        subtitle='View and manage all users across different roles in the system'
+        icon={<GroupIcon sx={{ fontSize: '1rem', color: '#fff' }} />}
+        accent={ACCENT}
+        className={classes.sectionAccordion}
+      >
+        <GenericToolbar className={classes.actionToolbar}>
+          <Box className={classes.toolbarButtons}>
+            {!sel && (
+              <Tooltip title='Create new user'>
+                <Button
+                  size='small'
+                  variant='contained'
+                  startIcon={<AddIcon />}
+                  onClick={handleOpenNew}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  Add New User
+                </Button>
+              </Tooltip>
+            )}
+
+            {isDraft && draftValues && (
+              <Tooltip title='Open saved draft'>
+                <Button
+                  size='small'
+                  variant='contained'
+                  color='info'
+                  startIcon={<ScheduleIcon />}
+                  onClick={handleOpenDraft}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  Open Draft
+                </Button>
+              </Tooltip>
+            )}
+
+            {sel && (
+              <Tooltip title={!isDraft ? 'Edit selected user' : 'Cannot edit a draft row'}>
+                <span>
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    startIcon={<EditIcon />}
+                    disabled={isDraft}
+                    onClick={handleOpenEdit}
+                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    Edit
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
+
+            {sel && <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />}
+
+            {sel && (
+              <Tooltip title='Delete selected user'>
+                <span>
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    color='error'
+                    startIcon={<DeleteIcon />}
+                    onClick={handleOpenDelete}
+                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    Delete
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
+
+            {sel && (
+              <Box
+                component='span'
+                sx={{
+                  display: { xs: 'none', sm: 'block' },
+                  width: '1px',
+                  height: '20px',
+                  bgcolor: 'divider',
+                  mx: 0.75,
+                  alignSelf: 'center',
+                }}
+              />
+            )}
+
+            {sel && (
+              <Tooltip title='Clear selection'>
+                <Button
+                  size='small'
+                  variant='outlined'
+                  startIcon={<ClearIcon />}
+                  onClick={() => setSelectedRow(null)}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  Clear
+                </Button>
+              </Tooltip>
+            )}
+
+            {sel && isConsultant && (
+              <Tooltip title='View consultant profile'>
+                <span>
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    startIcon={<BadgeIcon />}
+                    onClick={() => setConsultantProfileOpen(true)}
+                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    Consultant Profile
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
+
+            {sel && (
+              <Tooltip
+                title={
+                  !isDraft ? 'Change user role / profile' : 'Cannot change profile for a draft'
+                }
               >
-                <span className={classes.buttonLabel}>CREATE NEW USER</span>
-              </Button>
-            </Tooltip>
-          )}
+                <span>
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    startIcon={<ManageAccountsIcon />}
+                    disabled={isDraft}
+                    onClick={handleOpenChangeProfile}
+                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    Change Profile
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
 
-          {/* Open Draft — visible only when the draft row is selected */}
-          {isDraft && draftValues && (
-            <Tooltip title='Open saved draft'>
-              <Button
-                size='small'
-                variant='contained'
-                color='info'
-                startIcon={<ScheduleIcon />}
-                onClick={handleOpenDraft}
+            {sel && <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />}
+
+            {sel && (
+              <Tooltip title={!isDraft ? 'View change history' : 'No change history for a draft'}>
+                <span>
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    startIcon={<HistoryIcon />}
+                    disabled={isDraft}
+                    onClick={handleOpenChangesLog}
+                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    Changes Log
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
+
+            {sel && (
+              <Tooltip title={!isDraft ? 'View login activity' : 'No login data for a draft'}>
+                <span>
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    startIcon={<LoginIcon />}
+                    disabled={isDraft}
+                    onClick={() => setLoginDataOpen(true)}
+                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    Login Data
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
+
+            {sel && <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />}
+
+            {sel && (
+              <Tooltip
+                title={
+                  !isDraft ? 'Generate and email a temporary password' : 'Not available for a draft'
+                }
               >
-                <span className={classes.buttonLabel}>Open Draft</span>
-              </Button>
-            </Tooltip>
-          )}
+                <span>
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    color='warning'
+                    startIcon={<KeyIcon />}
+                    disabled={isDraft}
+                    onClick={handleOpenTempPw}
+                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    Generate Temp Password
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
 
-          {/* Edit */}
-          <Tooltip
-            title={
-              sel && !isDraft
-                ? 'Edit selected user'
-                : isDraft
-                  ? 'Cannot edit a draft row'
-                  : 'Select a user first'
-            }
-          >
-            <span>
-              <Button
-                size='small'
-                variant='outlined'
-                startIcon={<EditIcon />}
-                disabled={!sel || isDraft}
-                onClick={handleOpenEdit}
+            {sel && (
+              <Tooltip
+                title={!isDraft ? 'Manually reset user password' : 'Not available for a draft'}
               >
-                <span className={classes.buttonLabel}>Edit</span>
-              </Button>
-            </span>
-          </Tooltip>
+                <span>
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    color='error'
+                    startIcon={<LockResetIcon />}
+                    disabled={isDraft}
+                    onClick={handleOpenResetPw}
+                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    Reset Password
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
 
-          {!isMobile && (
-            <Divider orientation='vertical' flexItem className={classes.dividerMobile} />
-          )}
+            {!sel && (
+              <TextField
+                placeholder='Search...'
+                value={tableSearch}
+                onChange={(e) => setTableSearch(e.target.value)}
+                className={classes.toolbarSearchField}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <SearchIcon />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            )}
+          </Box>
+        </GenericToolbar>
 
-          {/* Consultant Profile */}
-          <Tooltip title={isConsultant ? 'View consultant profile' : 'Select a consultant user'}>
-            <span>
-              <Button
-                size='small'
-                variant='outlined'
-                startIcon={<BadgeIcon />}
-                disabled={!isConsultant}
-                onClick={() => setConsultantProfileOpen(true)}
-              >
-                <span className={classes.buttonLabel}>Consultant Profile</span>
-              </Button>
-            </span>
-          </Tooltip>
-
-          {/* Change Profile */}
-          <Tooltip
-            title={
-              sel && !isDraft
-                ? 'Change user role / profile'
-                : isDraft
-                  ? 'Cannot change profile for a draft'
-                  : 'Select a user first'
-            }
-          >
-            <span>
-              <Button
-                size='small'
-                variant='outlined'
-                startIcon={<ManageAccountsIcon />}
-                disabled={!sel || isDraft}
-                onClick={handleOpenChangeProfile}
-              >
-                <span className={classes.buttonLabel}>Change Profile</span>
-              </Button>
-            </span>
-          </Tooltip>
-
-          {!isMobile && (
-            <Divider orientation='vertical' flexItem className={classes.dividerMobile} />
-          )}
-
-          {/* Changes Log */}
-          <Tooltip
-            title={
-              sel && !isDraft
-                ? 'View change history'
-                : isDraft
-                  ? 'No change history for a draft'
-                  : 'Select a user first'
-            }
-          >
-            <span>
-              <Button
-                size='small'
-                variant='outlined'
-                startIcon={<HistoryIcon />}
-                disabled={!sel || isDraft}
-                onClick={handleOpenChangesLog}
-              >
-                <span className={classes.buttonLabel}>Changes Log</span>
-              </Button>
-            </span>
-          </Tooltip>
-
-          {/* Login Data */}
-          <Tooltip
-            title={
-              sel && !isDraft
-                ? 'View login activity'
-                : isDraft
-                  ? 'No login data for a draft'
-                  : 'Select a user first'
-            }
-          >
-            <span>
-              <Button
-                size='small'
-                variant='outlined'
-                startIcon={<LoginIcon />}
-                disabled={!sel || isDraft}
-                onClick={() => setLoginDataOpen(true)}
-              >
-                <span className={classes.buttonLabel}>Login Data</span>
-              </Button>
-            </span>
-          </Tooltip>
-
-          {!isMobile && (
-            <Divider orientation='vertical' flexItem className={classes.dividerMobile} />
-          )}
-
-          {/* Generate Temp Password */}
-          <Tooltip
-            title={
-              sel && !isDraft
-                ? 'Generate and email a temporary password'
-                : isDraft
-                  ? 'Not available for a draft'
-                  : 'Select a user first'
-            }
-          >
-            <span>
-              <Button
-                size='small'
-                variant='outlined'
-                color='warning'
-                startIcon={<KeyIcon />}
-                disabled={!sel || isDraft}
-                onClick={handleOpenTempPw}
-              >
-                <span className={classes.buttonLabel}>Generate Temp Password</span>
-              </Button>
-            </span>
-          </Tooltip>
-
-          {/* Reset Password */}
-          <Tooltip
-            title={
-              sel && !isDraft
-                ? 'Manually reset user password'
-                : isDraft
-                  ? 'Not available for a draft'
-                  : 'Select a user first'
-            }
-          >
-            <span>
-              <Button
-                size='small'
-                variant='outlined'
-                color='error'
-                startIcon={<LockResetIcon />}
-                disabled={!sel || isDraft}
-                onClick={handleOpenResetPw}
-              >
-                <span className={classes.buttonLabel}>Reset Password</span>
-              </Button>
-            </span>
-          </Tooltip>
-
-          {/* Admin Controls — always at far right */}
-          <Tooltip title='Approval settings & page styles'>
-            <Button
-              size='small'
-              variant={adminControlsOpen ? 'contained' : 'outlined'}
-              color='secondary'
-              startIcon={<TuneIcon />}
-              onClick={() => setAdminControlsOpen(true)}
-              className={classes.adminControlsBtn}
-            >
-              <span className={classes.buttonLabel}>Admin Controls</span>
-            </Button>
-          </Tooltip>
+        <Box className={classes.tablePaper} sx={{ boxShadow: 1, bgcolor: 'background.paper' }}>
+          <DataTable
+            columns={columns}
+            data={filteredTableData}
+            rowKey='id'
+            searchable={false}
+            initialRowsPerPage={10}
+            onRowClick={handleRowClick}
+            activeRowKey={selectedRow?.id as number}
+          />
         </Box>
+      </GenericAccordion>
 
-        {/* Selection indicator */}
-        {sel && (
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            className={classes.selectionIndicator}
-          >
-            Selected: <strong>{sel.name}</strong> ({sel.email}) &nbsp;·&nbsp;
-            <Link component='button' variant='caption' onClick={() => setSelectedRow(null)}>
-              Clear
-            </Link>
-          </Typography>
-        )}
-      </Paper>
-
-      {/* ── Tab panels with DataTable ── */}
-      {[allUsers, admins, consultants, allUsers.filter((u) => u.role === 'user')].map(
-        (list, idx) => {
-          const tableData =
-            idx === 0 && draftRow
-              ? [{ ...draftRow, sno: 1 }, ...getTableData(list, 2)]
-              : getTableData(list);
-          const filteredData = tableSearch
-            ? tableData.filter((row) =>
-                Object.values(row).some(
-                  (val) =>
-                    val !== null &&
-                    val !== undefined &&
-                    String(val).toLowerCase().includes(tableSearch.toLowerCase()),
-                ),
-              )
-            : tableData;
-          return (
-            <TabPanel key={idx} value={tabValue} index={idx}>
-              <Box className={classes.tableContainer}>
-                <DataTable
-                  columns={columns}
-                  data={filteredData}
-                  rowKey='id'
-                  searchable={false}
-                  initialRowsPerPage={10}
-                  onRowClick={handleRowClick}
-                  activeRowKey={selectedRow?.id as number}
-                />
-              </Box>
-            </TabPanel>
-          );
-        },
-      )}
-
-      {/* ════════════════════════════════════════════════════════════════
-          DIALOGS
-      ════════════════════════════════════════════════════════════════ */}
+      <GenericAccordion
+        title='Field Configurations'
+        subtitle='Define field metadata, types, lengths, and validation rules'
+        icon={<EditNoteIcon sx={{ fontSize: '1rem', color: '#fff' }} />}
+        accent={ACCENT}
+        className={classes.sectionAccordion}
+      >
+        <GenericPanel
+          config={FIELD_CONFIG_TABLE}
+          data={DEFAULT_FIELDS.map((field, index) => ({
+            id: String(index + 1),
+            ...field,
+          }))}
+          onSave={(data) => {
+            console.log('Field configurations saved:', data);
+          }}
+          customColumns={FIELD_CONFIG_COLUMNS as unknown as never}
+          variant='standard'
+          enableSuccessMessage
+          hideHeader
+        />
+      </GenericAccordion>
 
       <AdminControlsDialog
         open={adminControlsOpen}
@@ -728,7 +697,16 @@ const UserManagement = () => {
         isResetting={isResettingPw}
         onReset={handleResetPassword}
       />
-    </Grid>
+
+      <ConfigDeleteDialog
+        open={confirmDeleteOpen}
+        onClose={handleCloseDelete}
+        onConfirm={handleDeleteUser}
+        entityName='User'
+        itemName={selectedRow?.name || selectedRow?.email || ''}
+        confirmLabel='Delete'
+      />
+    </Box>
   );
 };
 
