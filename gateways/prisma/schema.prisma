@@ -571,6 +571,17 @@ model AdminConfiguration {
   updatedAt DateTime @updatedAt
 }
 
+model FieldConfiguration {
+  id            Int      @id @default(autoincrement())
+  date          String
+  day           String
+  calendarWeek  String
+  calendarMonth String
+  control       String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 // USER API Models
 
 model UserDashboard {

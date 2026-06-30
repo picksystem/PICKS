@@ -6,6 +6,9 @@ export * from './auth.forgotpassword.interface';
 // Admin interfaces
 export * from './admin';
 
+// Base interfaces
+export * from './base';
+
 // User interfaces
 export * from './user';
 

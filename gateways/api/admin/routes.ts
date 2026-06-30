@@ -7,6 +7,7 @@ import serviceRequestRoutes from './ServiceRequest/ServiceRequest.routes';
 import advisoryRequestRoutes from './AdvisoryRequest/AdvisoryRequest.routes';
 import ticketRoutes from './Ticket/Ticket.routes';
 import configurationRoutes from './Configuration/Configuration.routes';
+import fieldConfigurationRoutes from './FieldConfiguration/FieldConfiguration.routes';
 import { ADMIN_PATHS } from '@serviceops/constants';
 
 const router = Router();
@@ -18,5 +19,6 @@ router.use(`/${ADMIN_PATHS.SERVICE_REQUESTS}`, serviceRequestRoutes);
 router.use(`/${ADMIN_PATHS.ADVISORY_REQUESTS}`, advisoryRequestRoutes);
 router.use(`/${ADMIN_PATHS.TICKETS}`, ticketRoutes);
 router.use(`/${ADMIN_PATHS.CONFIGURATION}`, configurationRoutes);
+router.use(`/${ADMIN_PATHS.FIELD_CONFIGURATIONS}`, fieldConfigurationRoutes);
 
 export default router;

@@ -3,3 +3,4 @@ export * from './ticketType';
 export * from './incident';
 export * from './serviceRequest';
 export * from './advisoryRequest';
+export * from './fieldConfiguration';

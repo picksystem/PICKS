@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import {
@@ -15,10 +15,24 @@ import {
   FormControlLabel,
   Switch,
   Grid,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
 } from '@serviceops/component';
-import { Dialog, DialogContent, DialogActions, FormControl, InputLabel } from '@mui/material';
+import {
+  Dialog,
+  DialogContent,
+  DialogActions,
+  InputAdornment,
+  alpha,
+  ListItemButton,
+  FormControl,
+} from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from './styles';
 import { EditUserDialogProps } from './util';
@@ -33,6 +47,10 @@ import {
   getTzDisplay,
   fmtDateTimeUser,
 } from '../../utils/userManagement.utils';
+import {
+  RichTextEditor,
+  parseRichText,
+} from '@serviceops/pages/base/Configuration/shared/RichTextEditor';
 
 const EditUserDialog = ({
   open,
@@ -48,6 +66,86 @@ const EditUserDialog = ({
   const { classes } = useStyles();
   const reqError = useFieldError();
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  // Custom searchable dropdown for Role
+  const [roleInputValue, setRoleInputValue] = useState('');
+  const [roleOpen, setRoleOpen] = useState(false);
+  const roleContainerRef = useRef<HTMLDivElement>(null);
+
+  const roleOptions = [
+    { value: 'user', label: 'User' },
+    { value: 'consultant', label: 'Consultant' },
+    { value: 'admin', label: 'Admin' },
+  ];
+
+  useEffect(() => {
+    if (!editForm.role) {
+      setRoleInputValue('');
+    } else {
+      const match = roleOptions.find((opt) => opt.value === editForm.role);
+      setRoleInputValue(match?.label ?? '');
+    }
+  }, [editForm.role]);
+
+  const filteredRoleOptions = roleOptions.filter(
+    (opt) =>
+      !roleInputValue.trim() || opt.label.toLowerCase().includes(roleInputValue.toLowerCase()),
+  );
+
+  const handleRoleSelect = (roleValue: string) => {
+    const match = roleOptions.find((opt) => opt.value === roleValue);
+    setRoleInputValue(match?.label ?? '');
+    setRoleOpen(false);
+    onFormChange((p) => ({ ...p, role: roleValue }));
+  };
+
+  const handleRoleClear = () => {
+    setRoleInputValue('');
+    setRoleOpen(false);
+    onFormChange((p) => ({ ...p, role: '' }));
+  };
+
+  // RichTextEditor state for Reason for Access
+  const [richTextReason, setRichTextReason] = useState(() =>
+    editForm.reasonForAccess ? parseRichText(editForm.reasonForAccess) : { segments: [] },
+  );
+
+  useEffect(() => {
+    if (editForm.reasonForAccess) {
+      setRichTextReason(parseRichText(editForm.reasonForAccess));
+    } else {
+      setRichTextReason({ segments: [] });
+    }
+  }, [editForm.reasonForAccess]);
+
+  const handleReasonChange = (value: {
+    segments: Array<{ text: string; bold?: boolean; italic?: boolean; underline?: boolean }>;
+  }) => {
+    setRichTextReason(value);
+    const text = value.segments.map((s) => s.text).join('\n');
+    onFormChange((p) => ({ ...p, reasonForAccess: text }));
+  };
+
+  // RichTextEditor state for Admin Notes
+  const [richTextAdminNotes, setRichTextAdminNotes] = useState(() =>
+    editForm.adminNotes ? parseRichText(editForm.adminNotes) : { segments: [] },
+  );
+
+  useEffect(() => {
+    if (editForm.adminNotes) {
+      setRichTextAdminNotes(parseRichText(editForm.adminNotes));
+    } else {
+      setRichTextAdminNotes({ segments: [] });
+    }
+  }, [editForm.adminNotes]);
+
+  const handleAdminNotesChange = (value: {
+    segments: Array<{ text: string; bold?: boolean; italic?: boolean; underline?: boolean }>;
+  }) => {
+    setRichTextAdminNotes(value);
+    const text = value.segments.map((s) => s.text).join('\n');
+    onFormChange((p) => ({ ...p, adminNotes: text }));
+  };
 
   // Reset touched state when dialog closes
   useEffect(() => {
@@ -251,14 +349,82 @@ const EditUserDialog = ({
             </Typography>
           </Grid>
           <Grid size={{ xs: 6 }}>
-            <FormControl fullWidth size='small' disabled>
-              <InputLabel>Role</InputLabel>
-              <Select value={editForm.role} label='Role'>
-                <MenuItem value='user'>User</MenuItem>
-                <MenuItem value='consultant'>Consultant</MenuItem>
-                <MenuItem value='admin'>Admin</MenuItem>
-              </Select>
-            </FormControl>
+            <Box ref={roleContainerRef}>
+              <Box sx={{ position: 'relative' }}>
+                <TextField
+                  label='Role'
+                  placeholder='Search role...'
+                  value={roleInputValue}
+                  onChange={(e) => {
+                    setRoleInputValue(e.target.value);
+                    setRoleOpen(true);
+                  }}
+                  onFocus={() => !editForm.role && setRoleOpen(true)}
+                  onBlur={() => {
+                    setTimeout(() => setRoleOpen(false), 200);
+                  }}
+                  disabled
+                  fullWidth
+                  size='small'
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                          </Box>
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+                {roleOpen && (
+                  <Paper
+                    elevation={4}
+                    sx={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      zIndex: 1300,
+                      mt: 0,
+                      maxHeight: 200,
+                      overflow: 'auto',
+                    }}
+                  >
+                    <List dense disablePadding>
+                      {filteredRoleOptions.map((opt) => {
+                        const isActive = opt.value === editForm.role;
+                        return (
+                          <ListItem key={opt.value} disablePadding>
+                            <ListItemButton
+                              onClick={() => handleRoleSelect(opt.value)}
+                              sx={{
+                                py: 1,
+                                px: 1.5,
+                                bgcolor: isActive ? alpha('#0369a1', 0.08) : 'transparent',
+                                '&:hover': {
+                                  bgcolor: alpha('#0369a1', 0.12),
+                                },
+                              }}
+                            >
+                              <ListItemText
+                                primary={opt.label}
+                                primaryTypographyProps={{
+                                  fontSize: '0.84rem',
+                                  fontWeight: isActive ? 700 : 400,
+                                  noWrap: true,
+                                }}
+                              />
+                            </ListItemButton>
+                          </ListItem>
+                        );
+                      })}
+                    </List>
+                  </Paper>
+                )}
+              </Box>
+            </Box>
           </Grid>
           <Grid size={{ xs: 6 }}>
             <FormControlLabel
@@ -309,7 +475,6 @@ const EditUserDialog = ({
           </Grid>
           <Grid size={{ xs: 6 }}>
             <FormControl fullWidth size='small'>
-              <InputLabel>Timezone</InputLabel>
               <Select
                 value={editForm.timezone}
                 label='Timezone'
@@ -328,7 +493,6 @@ const EditUserDialog = ({
           </Grid>
           <Grid size={{ xs: 3 }}>
             <FormControl fullWidth size='small'>
-              <InputLabel>Date Format</InputLabel>
               <Select
                 value={editForm.dateFormat}
                 label='Date Format'
@@ -344,7 +508,6 @@ const EditUserDialog = ({
           </Grid>
           <Grid size={{ xs: 3 }}>
             <FormControl fullWidth size='small'>
-              <InputLabel>Time Format</InputLabel>
               <Select
                 value={editForm.timeFormat}
                 label='Time Format'
@@ -360,7 +523,6 @@ const EditUserDialog = ({
           </Grid>
           <Grid size={{ xs: 4 }}>
             <FormControl fullWidth size='small'>
-              <InputLabel>Language</InputLabel>
               <Select
                 value={editForm.language}
                 label='Language'
@@ -376,7 +538,6 @@ const EditUserDialog = ({
           </Grid>
           <Grid size={{ xs: 4 }}>
             <FormControl fullWidth size='small'>
-              <InputLabel>Working Calendar</InputLabel>
               <Select
                 value={editForm.slaWorkingCalendar}
                 label='Working Calendar'
@@ -395,7 +556,6 @@ const EditUserDialog = ({
           </Grid>
           <Grid size={{ xs: 4 }}>
             <FormControl fullWidth size='small'>
-              <InputLabel>Leave Calendar</InputLabel>
               <Select
                 value={editForm.slaExceptionGroup}
                 label='Leave Calendar'
@@ -446,29 +606,36 @@ const EditUserDialog = ({
             <Divider />
           </Grid>
           <Grid size={{ xs: 12 }}>
-            <TextField
-              label='Reason for Access'
-              fullWidth
-              size='small'
+            <Typography variant='caption' fontWeight={600} color='text.primary' sx={{ mb: 0.5 }}>
+              Reason for Access
+            </Typography>
+            <RichTextEditor
+              value={richTextReason}
+              onChange={handleReasonChange}
+              accent='#0369a1'
+              title='Reason'
+              placeholder='Describe why this user needs access'
               required
-              multiline
-              minRows={2}
-              value={editForm.reasonForAccess}
-              onChange={(e) => onFormChange((p) => ({ ...p, reasonForAccess: e.target.value }))}
-              onBlur={() => touch('reasonForAccess')}
               error={touched.reasonForAccess && !!errors.reasonForAccess}
-              helperText={reqError(touched.reasonForAccess, errors.reasonForAccess)}
+              showFooterActions={false}
             />
+            {touched.reasonForAccess && errors.reasonForAccess && (
+              <Typography variant='caption' color='error' sx={{ mt: 0.5, display: 'block' }}>
+                {reqError(touched.reasonForAccess, errors.reasonForAccess)}
+              </Typography>
+            )}
           </Grid>
           <Grid size={{ xs: 12 }}>
-            <TextField
-              label='Admin Notes'
-              fullWidth
-              size='small'
-              multiline
-              minRows={2}
-              value={editForm.adminNotes}
-              onChange={(e) => onFormChange((p) => ({ ...p, adminNotes: e.target.value }))}
+            <Typography variant='caption' fontWeight={600} color='text.primary' sx={{ mb: 0.5 }}>
+              Admin Notes
+            </Typography>
+            <RichTextEditor
+              value={richTextAdminNotes}
+              onChange={handleAdminNotesChange}
+              accent='#0369a1'
+              title='Internal Note'
+              placeholder='Add notes about this user (optional)'
+              showFooterActions={false}
             />
           </Grid>
         </Grid>

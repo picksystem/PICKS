@@ -10,6 +10,10 @@ import {
   Select,
   MenuItem,
   Grid,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
 } from '@serviceops/component';
 import {
   Dialog,
@@ -20,7 +24,9 @@ import {
   InputLabel,
   InputAdornment,
   FormHelperText,
+  ListItemButton,
   Stack,
+  alpha,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import PersonIcon from '@mui/icons-material/Person';
@@ -30,6 +36,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import { useStyles } from './styles';
 import { CreateUserDialogProps } from './util';
 import { useNotification } from '@serviceops/hooks';
@@ -46,6 +54,11 @@ import {
   clearNewUserDraft,
   DRAFT_DAYS,
 } from '../../utils/userManagement.utils';
+import {
+  RichTextEditor,
+  parseRichText,
+} from '@serviceops/pages/base/Configuration/shared/RichTextEditor';
+import { useState, useRef, useEffect } from 'react';
 
 const CreateUserDialog = ({
   open,
@@ -69,6 +82,85 @@ const CreateUserDialog = ({
   const { classes } = useStyles();
   const notify = useNotification();
 
+  // Custom searchable dropdown for Role
+  const [roleInputValue, setRoleInputValue] = useState('');
+  const [roleOpen, setRoleOpen] = useState(false);
+  const roleContainerRef = useRef<HTMLDivElement>(null);
+
+  const roleOptions = [
+    { value: 'user', label: 'User' },
+    { value: 'consultant', label: 'Consultant' },
+    { value: 'admin', label: 'Admin' },
+  ];
+
+  useEffect(() => {
+    if (!createFormik.values.role) {
+      setRoleInputValue('');
+    } else {
+      const match = roleOptions.find((opt) => opt.value === createFormik.values.role);
+      setRoleInputValue(match?.label ?? '');
+    }
+  }, [createFormik.values.role]);
+
+  const filteredRoleOptions = roleOptions.filter(
+    (opt) =>
+      !roleInputValue.trim() || opt.label.toLowerCase().includes(roleInputValue.toLowerCase()),
+  );
+
+  const handleRoleSelect = (roleValue: string) => {
+    const match = roleOptions.find((opt) => opt.value === roleValue);
+    setRoleInputValue(match?.label ?? '');
+    setRoleOpen(false);
+    createFormik.setFieldValue('role', roleValue);
+  };
+
+  const handleRoleClear = () => {
+    setRoleInputValue('');
+    setRoleOpen(false);
+    createFormik.setFieldValue('role', '');
+  };
+
+  // Parse adminNotes for RichTextEditor
+  const [richTextAdminNotes, setRichTextAdminNotes] = useState(() =>
+    adminNotes ? parseRichText(adminNotes) : { segments: [] },
+  );
+
+  useEffect(() => {
+    if (adminNotes) {
+      setRichTextAdminNotes(parseRichText(adminNotes));
+    }
+  }, [adminNotes]);
+
+  const handleAdminNotesChange = (value: {
+    segments: Array<{ text: string; bold?: boolean; italic?: boolean; underline?: boolean }>;
+  }) => {
+    setRichTextAdminNotes(value);
+    // Serialize to plain text for storage
+    const text = value.segments.map((s) => s.text).join('\n');
+    setAdminNotes(text);
+  };
+
+  // Parse reasonForAccess for RichTextEditor
+  const [richTextReason, setRichTextReason] = useState(() =>
+    createFormik.values.reasonForAccess
+      ? parseRichText(createFormik.values.reasonForAccess)
+      : { segments: [] },
+  );
+
+  useEffect(() => {
+    if (createFormik.values.reasonForAccess) {
+      setRichTextReason(parseRichText(createFormik.values.reasonForAccess));
+    }
+  }, [createFormik.values.reasonForAccess]);
+
+  const handleReasonChange = (value: {
+    segments: Array<{ text: string; bold?: boolean; italic?: boolean; underline?: boolean }>;
+  }) => {
+    setRichTextReason(value);
+    const text = value.segments.map((s) => s.text).join('\n');
+    createFormik.setFieldValue('reasonForAccess', text);
+  };
+
   return (
     <Dialog
       open={open}
@@ -80,10 +172,6 @@ const CreateUserDialog = ({
       {/* Header */}
       <Box className={classes.header}>
         <Box className={classes.badgeRow}>
-          <AddIcon className={classes.badgeIcon} />
-          <Typography variant='caption' fontWeight={700} className={classes.badgeLabel}>
-            New User
-          </Typography>
           {draftMeta && isOpenedAsDraft && (
             <Chip
               label='Draft Restored'
@@ -307,16 +395,16 @@ const CreateUserDialog = ({
               />
             </Grid>
             <Grid size={{ xs: 6 }}>
-              <TextField
-                id='reasonForAccess'
-                name='reasonForAccess'
-                label='Reason for Access (Optional)'
-                fullWidth
-                size='small'
+              <Typography variant='caption' fontWeight={600} color='text.primary' sx={{ mb: 0.5 }}>
+                Reason for Access
+              </Typography>
+              <RichTextEditor
+                value={richTextReason}
+                onChange={handleReasonChange}
+                accent='#0369a1'
+                title='Reason'
                 placeholder='Describe why this user needs access'
-                value={createFormik.values.reasonForAccess}
-                onChange={createFormik.handleChange}
-                onBlur={createFormik.handleBlur}
+                showFooterActions={false}
               />
             </Grid>
           </Grid>
@@ -330,7 +418,6 @@ const CreateUserDialog = ({
           <Grid container spacing={2} sx={{ mb: 2 }}>
             <Grid size={{ xs: 6 }}>
               <FormControl fullWidth size='small'>
-                <InputLabel>Timezone</InputLabel>
                 <Select
                   name='timezone'
                   value={createFormik.values.timezone}
@@ -349,7 +436,6 @@ const CreateUserDialog = ({
             </Grid>
             <Grid size={{ xs: 6 }}>
               <FormControl fullWidth size='small'>
-                <InputLabel>Language</InputLabel>
                 <Select
                   name='language'
                   value={createFormik.values.language}
@@ -367,7 +453,6 @@ const CreateUserDialog = ({
             </Grid>
             <Grid size={{ xs: 6 }}>
               <FormControl fullWidth size='small'>
-                <InputLabel>Date Format</InputLabel>
                 <Select
                   name='dateFormat'
                   value={createFormik.values.dateFormat}
@@ -385,7 +470,6 @@ const CreateUserDialog = ({
             </Grid>
             <Grid size={{ xs: 6 }}>
               <FormControl fullWidth size='small'>
-                <InputLabel>Time Format</InputLabel>
                 <Select
                   name='timeFormat'
                   value={createFormik.values.timeFormat}
@@ -403,7 +487,6 @@ const CreateUserDialog = ({
             </Grid>
             <Grid size={{ xs: 6 }}>
               <FormControl fullWidth size='small'>
-                <InputLabel>Working Calendar</InputLabel>
                 <Select
                   name='slaWorkingCalendar'
                   value={createFormik.values.slaWorkingCalendar}
@@ -422,7 +505,6 @@ const CreateUserDialog = ({
             </Grid>
             <Grid size={{ xs: 6 }}>
               <FormControl fullWidth size='small'>
-                <InputLabel>Leave Calendar</InputLabel>
                 <Select
                   name='slaExceptionGroup'
                   value={createFormik.values.slaExceptionGroup}
@@ -551,34 +633,96 @@ const CreateUserDialog = ({
           <Typography variant='subtitle1' fontWeight={600} color='primary' sx={{ mb: 1.5 }}>
             Role Selection
           </Typography>
-          <FormControl
-            fullWidth
-            size='small'
-            error={createFormik.touched.role && Boolean(createFormik.errors.role)}
-            sx={{ mb: 1.5 }}
-          >
-            <InputLabel id='create-role-label' required>
-              Role
-            </InputLabel>
-            <Select
-              labelId='create-role-label'
-              id='role'
-              name='role'
-              value={createFormik.values.role}
-              label='Role'
-              onChange={createFormik.handleChange}
-              onBlur={createFormik.handleBlur}
-            >
-              <MenuItem value='user'>User</MenuItem>
-              <MenuItem value='consultant'>Consultant</MenuItem>
-              <MenuItem value='admin'>Admin</MenuItem>
-            </Select>
-            {reqError(createFormik.touched.role, createFormik.errors.role as string) && (
-              <FormHelperText>
-                {reqError(createFormik.touched.role, createFormik.errors.role as string)}
-              </FormHelperText>
-            )}
-          </FormControl>
+          <Box ref={roleContainerRef}>
+            <Box sx={{ position: 'relative' }}>
+              <TextField
+                label='Role'
+                placeholder='Search role...'
+                value={roleInputValue}
+                onChange={(e) => {
+                  setRoleInputValue(e.target.value);
+                  setRoleOpen(true);
+                }}
+                onFocus={() => !createFormik.values.role && setRoleOpen(true)}
+                onBlur={() => {
+                  setTimeout(() => setRoleOpen(false), 200);
+                }}
+                required
+                error={createFormik.touched.role && Boolean(createFormik.errors.role)}
+                helperText={reqError(createFormik.touched.role, createFormik.errors.role as string)}
+                fullWidth
+                size='small'
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          {roleInputValue ? (
+                            <ClearIcon
+                              onClick={handleRoleClear}
+                              sx={{
+                                fontSize: 18,
+                                color: 'text.secondary',
+                                cursor: 'pointer',
+                                '&:hover': { color: 'text.primary' },
+                              }}
+                            />
+                          ) : (
+                            <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                          )}
+                        </Box>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+              {roleOpen && (
+                <Paper
+                  elevation={4}
+                  sx={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    zIndex: 1300,
+                    mt: 0,
+                    maxHeight: 200,
+                    overflow: 'auto',
+                  }}
+                >
+                  <List dense disablePadding>
+                    {filteredRoleOptions.map((opt) => {
+                      const isActive = opt.value === createFormik.values.role;
+                      return (
+                        <ListItem key={opt.value} disablePadding>
+                          <ListItemButton
+                            onClick={() => handleRoleSelect(opt.value)}
+                            sx={{
+                              py: 1,
+                              px: 1.5,
+                              bgcolor: isActive ? alpha('#0369a1', 0.08) : 'transparent',
+                              '&:hover': {
+                                bgcolor: alpha('#0369a1', 0.12),
+                              },
+                            }}
+                          >
+                            <ListItemText
+                              primary={opt.label}
+                              primaryTypographyProps={{
+                                fontSize: '0.84rem',
+                                fontWeight: isActive ? 700 : 400,
+                                noWrap: true,
+                              }}
+                            />
+                          </ListItemButton>
+                        </ListItem>
+                      );
+                    })}
+                  </List>
+                </Paper>
+              )}
+            </Box>
+          </Box>
 
           <Alert severity='success' sx={{ mt: 1 }}>
             Admin-created users are <strong>activated immediately</strong>. A welcome email with
@@ -589,13 +733,13 @@ const CreateUserDialog = ({
             <Typography variant='subtitle1' fontWeight={600} color='primary' sx={{ mb: 1.5 }}>
               Admin Notes
             </Typography>
-            <TextField
-              multiline
-              rows={3}
-              fullWidth
-              placeholder='Add notes about this approval or rejection (optional)'
-              value={adminNotes}
-              onChange={(e) => setAdminNotes(e.target.value)}
+            <RichTextEditor
+              value={richTextAdminNotes}
+              onChange={handleAdminNotesChange}
+              accent='#0369a1'
+              title='Internal Note'
+              placeholder='Add notes about this user (optional)'
+              showFooterActions={false}
             />
           </Box>
         </form>

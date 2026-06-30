@@ -40,6 +40,6 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 export const baseApi = createApi({
   reducerPath: 'baseApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['AdminControls', 'TicketType', 'Configuration'],
+  tagTypes: ['AdminControls', 'TicketType', 'Configuration', 'FieldConfigurations'],
   endpoints: () => ({}), // intentionally empty - endpoints added by injectEndpoints
 });

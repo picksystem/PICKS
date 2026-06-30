@@ -6,3 +6,4 @@ export * from './PrismaIncidentGateway';
 export * from './InMemoryIncidentGateway';
 export * from './PrismaServiceRequestGateway';
 export * from './PrismaAdvisoryRequestGateway';
+export * from './PrismaFieldConfigurationGateway';

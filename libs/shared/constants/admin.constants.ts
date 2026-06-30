@@ -12,4 +12,5 @@ export enum ADMIN_PATHS {
   ADVISORY_REQUESTS = 'advisory-requests',
   TICKETS = 'tickets',
   CONFIGURATION = 'configuration',
+  FIELD_CONFIGURATIONS = 'field-configurations',
 }
