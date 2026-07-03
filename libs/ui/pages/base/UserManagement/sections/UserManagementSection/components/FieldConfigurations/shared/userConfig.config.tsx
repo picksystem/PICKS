@@ -1,17 +1,14 @@
 import { Column } from '@serviceops/component';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import GroupIcon from '@mui/icons-material/Group';
-import WatchLaterIcon from '@mui/icons-material/WatchLater';
-import LinkIcon from '@mui/icons-material/Link';
+import EditIcon from '@mui/icons-material/Edit';
 import type {
-  IConfigWorkLocation,
   IConfigWorkLocationWorkingTime,
-  IConfigWorkLocationShift,
-  IConfigWorkLocationAssociatedProfile,
-  IConfigWorkLocationAssociation,
+  IConfigComposedWorkingTime,
+  IConfigWorkingCalendar,
+  IConfigHolidayCalendar,
+  IConfigWorkingDayTemplate,
 } from '@serviceops/interfaces';
-import { mkCell, mkDescCell } from '@serviceops/configutils';
+import { mkCell } from '@serviceops/configutils';
 import type { TableConfig } from '@serviceops/genericpanel';
 
 // ── Column Definitions ─────────────────────────────────────────────────────────
@@ -23,24 +20,37 @@ export const workingTimeColumns: Column<IConfigWorkLocationWorkingTime>[] = [
   { id: 'endTime', label: 'End Time', minWidth: 100, format: mkCell() },
 ];
 
-// ── Table Configs ───────────────────────────────────────────────────────────────
+export const composedWorkingTimeColumns: Column<IConfigComposedWorkingTime>[] = [
+  { id: 'fromDate', label: 'From Date', minWidth: 130, format: mkCell(true) },
+  { id: 'toDate', label: 'To Date', minWidth: 130, format: mkCell() },
+  { id: 'workingCalendar', label: 'Working Calendar', minWidth: 180, format: mkCell() },
+  { id: 'holidayCalendar', label: 'Holiday Calendar', minWidth: 180, format: mkCell() },
+  { id: 'workingTimeTemplate', label: 'Working Time Template', minWidth: 200, format: mkCell() },
+];
 
-export const WORKING_TIME_CONFIG: TableConfig = {
-  title: 'Working Times',
-  subtitle: 'Configure working hours for each day of the week per location',
+export const COMPOSED_WORKING_TIME_CONFIG: TableConfig = {
+  title: 'Compose Working Times',
+  subtitle: 'Define working time compositions with date ranges and calendar assignments',
   accent: '#0369a1',
-  icon: <AccessTimeIcon sx={{ fontSize: '1.1rem' }} />,
-  entity: 'Working Time',
+  icon: <EditIcon sx={{ fontSize: '1.1rem' }} />,
+  entity: 'Composed Working Time',
   fields: [
+    { name: 'fromDate', label: 'From Date', required: true, type: 'date' },
+    { name: 'toDate', label: 'To Date', required: true, type: 'date' },
     {
-      name: 'workLocationName',
-      label: 'Work Location',
+      name: 'workingCalendar',
+      label: 'Working Calendar',
       required: true,
-      bold: true,
-      type: 'workLocationSearch',
     },
-    { name: 'dayOfWeek', label: 'Day of Week', required: true, bold: true },
-    { name: 'startTime', label: 'Start Time', required: true, type: 'time' },
-    { name: 'endTime', label: 'End Time', required: true, type: 'time' },
+    {
+      name: 'holidayCalendar',
+      label: 'Holiday Calendar',
+      required: true,
+    },
+    {
+      name: 'workingTimeTemplate',
+      label: 'Working Time Template',
+      required: true,
+    },
   ],
 };

@@ -1,5 +1,5 @@
 import { Column } from '@serviceops/component';
-import EditNoteIcon from '@mui/icons-material/EditNote';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { mkCell } from '@serviceops/configutils';
 import type { TableConfig } from '@serviceops/genericpanel';
 import type { IConfigField } from '../FieldConfigurations/FieldConfigurationsSection.types';
@@ -13,11 +13,11 @@ export const FIELD_CONFIG_COLUMNS: Column<IConfigField>[] = [
 ];
 
 export const FIELD_CONFIG_TABLE: TableConfig = {
-  title: 'Field Configuration',
+  title: 'Working Times',
   subtitle: 'Define field metadata',
   accent: '#0369a1',
-  icon: <EditNoteIcon sx={{ fontSize: '1.1rem' }} />,
-  entity: 'Field Configuration',
+  icon: <AccessTimeIcon sx={{ fontSize: '1.1rem' }} />,
+  entity: 'Working Time',
   fields: [
     { name: 'date', label: 'Date', required: true, type: 'date' },
     { name: 'day', label: 'Day' },

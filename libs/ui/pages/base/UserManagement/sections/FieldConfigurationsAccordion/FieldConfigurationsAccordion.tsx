@@ -24,19 +24,19 @@ type ActiveView = 'fieldConfigurations' | 'workingTimes';
 
 const VIEW_CONFIG: Record<ActiveView, { label: string; icon: React.ReactNode }> = {
   fieldConfigurations: {
-    label: 'Field Configurations',
-    icon: <EditNoteIcon sx={{ fontSize: '1rem' }} />,
-  },
-  workingTimes: {
     label: 'Working Times',
     icon: <AccessTimeIcon sx={{ fontSize: '1rem' }} />,
+  },
+  workingTimes: {
+    label: 'Compose Working Times',
+    icon: <EditNoteIcon sx={{ fontSize: '1rem' }} />,
   },
 };
 
 const FieldConfigurationsAccordion = () => {
   const { success, error: showError } = useNotification();
   const [fieldConfigurations, setFieldConfigurations] = useState<IConfigField[]>([]);
-  const [activeView, setActiveView] = useState<ActiveView>('workingTimes');
+  const [activeView, setActiveView] = useState<ActiveView>('fieldConfigurations');
 
   const { data: apiFieldConfigurations, isLoading } = useGetFieldConfigurationsQuery();
 

@@ -1,15 +1,18 @@
-import { useState, useEffect } from 'react';
-import { IConfigWorkLocationWorkingTime } from '@serviceops/interfaces';
+import { useState, useEffect, useCallback } from 'react';
+import { IConfigComposedWorkingTime } from '@serviceops/interfaces';
 import { GenericPanel } from '@serviceops/genericpanel';
-import { WORKING_TIME_CONFIG, workingTimeColumns } from '../shared/userConfig.config';
+import {
+  COMPOSED_WORKING_TIME_CONFIG,
+  composedWorkingTimeColumns,
+} from '../shared/userConfig.config';
 
 interface WorkingTimesSectionProps {
-  data?: IConfigWorkLocationWorkingTime[];
-  onDataChange?: (data: IConfigWorkLocationWorkingTime[]) => void;
+  data?: IConfigComposedWorkingTime[];
+  onDataChange?: (data: IConfigComposedWorkingTime[]) => void;
 }
 
 const WorkingTimesSection = ({ data, onDataChange }: WorkingTimesSectionProps) => {
-  const [rows, setRows] = useState<IConfigWorkLocationWorkingTime[]>([]);
+  const [rows, setRows] = useState<IConfigComposedWorkingTime[]>([]);
 
   useEffect(() => {
     if (data !== undefined) {
@@ -17,20 +20,24 @@ const WorkingTimesSection = ({ data, onDataChange }: WorkingTimesSectionProps) =
     }
   }, [data]);
 
-  const handleSave = (next: IConfigWorkLocationWorkingTime[]) => {
-    setRows(next);
-    if (onDataChange) {
-      onDataChange(next);
-    }
-  };
+  const handleSave = useCallback(
+    (next: unknown[]) => {
+      setRows(next as IConfigComposedWorkingTime[]);
+      if (onDataChange) {
+        onDataChange(next as IConfigComposedWorkingTime[]);
+      }
+    },
+    [onDataChange],
+  );
 
   return (
     <GenericPanel
-      config={WORKING_TIME_CONFIG}
-      data={rows}
+      config={COMPOSED_WORKING_TIME_CONFIG}
+      data={rows as unknown as Record<string, unknown>[]}
       onSave={handleSave}
-      customColumns={workingTimeColumns as any}
+      customColumns={composedWorkingTimeColumns as unknown as never}
       variant='standard'
+      enableSuccessMessage
     />
   );
 };
