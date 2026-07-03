@@ -58,6 +58,7 @@ const useUserManagement = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [tabValue, setTabValue] = useState(0);
   const [tableSearch, setTableSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
   const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
   const [selectedRow, setSelectedRow] = useState<UserRow | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
@@ -961,6 +962,8 @@ const useUserManagement = () => {
     setTabValue,
     tableSearch,
     setTableSearch,
+    roleFilter,
+    setRoleFilter,
     togglingIds,
     selectedRow,
     setSelectedRow,

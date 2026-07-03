@@ -14,6 +14,7 @@ export { default as TestScripts } from './TestScripts';
 export { default as SideNav } from './SideNav';
 export { default as CreateTicket } from './CreateTicket';
 export { default as UserManagement } from './UserManagement';
+export { default as ClientsAndProjects } from './ClientsAndProjects';
 export { default as RoleRequests } from './RoleRequests';
 export { default as Profile } from './Profile';
 export { default as IncidentDetail } from './IncidentDetail';

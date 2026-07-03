@@ -758,6 +758,31 @@ export interface IConfigShiftConsultant {
   application: string;
 }
 
+export interface IConfigFieldConfiguration {
+  id: string;
+  date: string;
+  day: string;
+  calendarWeek: string;
+  calendarMonth: string;
+  control: string;
+}
+
+export interface IConfigTimesheetPeriodEntry {
+  id: string;
+  fromDate: string;
+  toDate: string;
+  timesheetPeriodId: string;
+  timesheetPeriodStatus: string;
+}
+
+export interface IConfigUpdateTimesheetPeriodEntry {
+  id: string;
+  fromDate: string;
+  toDate: string;
+  timesheetPeriodType: string;
+  workingCalendar: string;
+}
+
 export interface IConfigCalendars {
   workingDayTemplates: IConfigWorkingDayTemplate[];
   holidayCalendars: IConfigHolidayCalendar[];
@@ -782,6 +807,23 @@ export interface IConfigReasonCodes {
   conversionReasonCodes: IConfigConversionReasonCode[];
 }
 
+export interface IConfigUserConsultantProfile {
+  id: string;
+  consultantName: string;
+  application: string;
+  consultantRole?: string;
+  shortDescription: string;
+  activeFromDate: string;
+  activeToDate: string;
+  isActive: boolean;
+  workLocation: string;
+  workingCalendar: string;
+  holidayCalendar: string;
+  leadConsultant: string;
+  manager: string;
+  internalNote?: string;
+}
+
 export interface IConfigConsultantProfile {
   id: string;
   consultantName: string;
@@ -792,6 +834,57 @@ export interface IConfigConsultantProfile {
   holidayCalendar: string;
   leadConsultant: string;
   manager: string;
+}
+
+export interface IConfigUserConsultantRole {
+  id: string;
+  application: string;
+  consultantRole: string;
+  shortDescription: string;
+  description?: string;
+  internalNote?: string;
+  isActive: boolean;
+}
+
+export interface IConfigUserWorkLocation {
+  id: string;
+  workLocation: string;
+  shortDescription?: string;
+  description?: string;
+  street: string;
+  city: string;
+  state: string;
+  country: string;
+  postCode: string;
+  internalNote?: string;
+  isActive: boolean;
+  workingCalendar: string;
+  holidayCalendar: string;
+  timezone: string;
+  dateFormat: string;
+  timeFormat: string;
+  language: string;
+}
+
+// ── User Management page (nested) ───────────────────────────────────────────────
+
+export interface IConfigUserManagementWorkingTimes {
+  workingTimes: IConfigFieldConfiguration[];
+  composeWorkingTimes: IConfigComposedWorkingTime[];
+  timesheetPeriods: IConfigTimesheetPeriodEntry[];
+  updateTimesheetPeriods: IConfigUpdateTimesheetPeriodEntry[];
+}
+
+export interface IConfigUserManagementWorkLocations {
+  workLocations: IConfigUserWorkLocation[];
+  workingTimes: IConfigFieldConfiguration[];
+}
+
+export interface IConfigUserManagement {
+  workingTimes: IConfigUserManagementWorkingTimes;
+  consultantProfiles: IConfigUserConsultantProfile[];
+  consultantRoles: IConfigUserConsultantRole[];
+  workLocations: IConfigUserManagementWorkLocations;
 }
 
 export interface IConfigAssociatedUserProfile {
@@ -1075,6 +1168,121 @@ export interface IConfigApprovals {
   workingTimes: IConfigApprovalWorkingTime[];
 }
 
+// ── Clients and Projects page ──────────────────────────────────────────────────
+
+export interface IConfigClient {
+  id: string;
+  clientId: string;
+  clientName: string;
+  shortDescription?: string;
+  termsOfPayment?: string;
+  language?: string;
+  salesCurrency?: string;
+  lockSalesCurrency?: boolean;
+  clientBankAccount?: string;
+  paymentMethod?: string;
+  defaultAddress?: string;
+  primaryContact?: string;
+  internalNote?: string;
+}
+
+export interface IConfigProjectContract {
+  id: string;
+  contractId: string;
+  contractName: string;
+  shortDescription?: string;
+  description?: string;
+  clientId?: string;
+  clientName?: string;
+  billingAddress?: string;
+  multipleFundingSources?: boolean;
+  termsOfPayment?: string;
+  language?: string;
+  contractStartDate?: string;
+  contractEndDate?: string;
+  lockSalesCurrency?: boolean;
+  indirectCost?: string;
+  priceGroup?: string;
+  salesCurrency?: string;
+  billingFrequency?: string;
+  clientBankAccount?: string;
+  paymentMethod?: string;
+  invoiceNote?: string;
+  internalNote?: string;
+}
+
+export interface IConfigProjectExtension {
+  id: string;
+  existingEndDate?: string;
+  extensionStartDate?: string;
+  extensionEndDate?: string;
+  approvalStatus?: string;
+  approvedByClient?: string;
+  approvedByInternal?: string;
+  updateContractActualEndDate?: boolean;
+  updateProjectActualEndDate?: boolean;
+}
+
+export interface IConfigProject {
+  id: string;
+  projectId: string;
+  projectName: string;
+  shortDescription?: string;
+  contractId?: string;
+  contractName?: string;
+  clientId?: string;
+  clientName?: string;
+  createdBy?: string;
+  dateOfCreation?: string;
+  projectedStartDate?: string;
+  projectedEndDate?: string;
+  actualStartDate?: string;
+  actualEndDate?: string;
+  projectType?: string;
+  projectStatus?: string;
+  internalNote?: string;
+  allowedTransactionType?: string;
+  prePaidBlock?: boolean;
+  prePaidHours?: number;
+  prePaidHoursConsumed?: number;
+  prePaidHoursBalance?: number;
+}
+
+export interface IConfigProjectJournal {
+  id: string;
+  journalId: string;
+  transactionType?: string;
+  createdDateTime?: string;
+  createdBy?: string;
+  postingDate?: string;
+  postedBy?: string;
+  status?: string;
+  approvedBy?: string;
+  approvedDateTime?: string;
+}
+
+export interface IConfigCustomerJournal {
+  id: string;
+  journalId: string;
+  transactionType?: string;
+  createdDateTime?: string;
+  createdBy?: string;
+  postingDate?: string;
+  postedBy?: string;
+  status?: string;
+  approvedBy?: string;
+  approvedDateTime?: string;
+}
+
+export interface IConfigClientsAndProjects {
+  clients: IConfigClient[];
+  projectContracts: IConfigProjectContract[];
+  projectExtensions: IConfigProjectExtension[];
+  projects: IConfigProject[];
+  projectJournals: IConfigProjectJournal[];
+  customerJournals: IConfigCustomerJournal[];
+}
+
 // ── Root configuration document ───────────────────────────────────────────────
 
 /** Full configuration stored as a single JSON document in AdminConfiguration. */
@@ -1097,6 +1305,8 @@ export interface IConfigurationData {
   timesheets: IConfigTimesheets;
   expenses: IConfigExpenses;
   calendars: IConfigCalendars;
+  userManagement: IConfigUserManagement;
+  clientsAndProjects: IConfigClientsAndProjects;
 }
 
 export interface IConfiguration {
@@ -1699,5 +1909,27 @@ export const DEFAULT_CONFIGURATION_DATA: IConfigurationData = {
     timesheetPeriods: [],
     workingShifts: [],
     shiftConsultants: [],
+  },
+  userManagement: {
+    workingTimes: {
+      workingTimes: [],
+      composeWorkingTimes: [],
+      timesheetPeriods: [],
+      updateTimesheetPeriods: [],
+    },
+    consultantProfiles: [],
+    consultantRoles: [],
+    workLocations: {
+      workLocations: [],
+      workingTimes: [],
+    },
+  },
+  clientsAndProjects: {
+    clients: [],
+    projectContracts: [],
+    projectExtensions: [],
+    projects: [],
+    projectJournals: [],
+    customerJournals: [],
   },
 };

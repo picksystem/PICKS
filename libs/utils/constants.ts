@@ -18,6 +18,7 @@ const BasePath = {
   CREATE_TICKET: `${BASE}/create-ticket`,
   CREATE_TICKET_TYPE: `${BASE}/:type`,
   USER_MANAGEMENT: `${BASE}/user-management`,
+  CLIENTS_AND_PROJECTS: `${BASE}/clients-and-projects`,
   ROLE_REQUESTS: `${BASE}/access-requests`,
   PROFILE: `${BASE}/profile`,
   INCIDENT_DETAIL: `${BASE}/incident/:number`,

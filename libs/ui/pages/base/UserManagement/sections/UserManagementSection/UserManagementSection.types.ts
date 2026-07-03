@@ -7,6 +7,8 @@ export interface UserManagementSectionProps {
   columns: Column<AppUserRow>[];
   tableSearch: string;
   onTableSearchChange: (value: string) => void;
+  roleFilter: string;
+  onRoleFilterChange: (value: string) => void;
   selectedRow: AppUserRow | null;
   onRowSelect: (row: AppUserRow | null) => void;
   onRowClick: (row: AppUserRow) => void;

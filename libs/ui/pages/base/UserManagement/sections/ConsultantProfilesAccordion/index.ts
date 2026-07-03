@@ -1,0 +1,1 @@
+export { ConsultantProfilesAccordion } from './ConsultantProfilesAccordion';

@@ -332,6 +332,20 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
         resourceEntries: data.timesheets?.resourceEntries ?? [],
         projectCategories: data.timesheets?.projectCategories ?? [],
       },
+      userManagement: {
+        workingTimes: {
+          workingTimes: data.userManagement?.workingTimes?.workingTimes ?? [],
+          composeWorkingTimes: data.userManagement?.workingTimes?.composeWorkingTimes ?? [],
+          timesheetPeriods: data.userManagement?.workingTimes?.timesheetPeriods ?? [],
+          updateTimesheetPeriods: data.userManagement?.workingTimes?.updateTimesheetPeriods ?? [],
+        },
+        consultantProfiles: data.userManagement?.consultantProfiles ?? [],
+        consultantRoles: data.userManagement?.consultantRoles ?? [],
+        workLocations: {
+          workLocations: data.userManagement?.workLocations?.workLocations ?? [],
+          workingTimes: data.userManagement?.workLocations?.workingTimes ?? [],
+        },
+      },
     };
   }
 

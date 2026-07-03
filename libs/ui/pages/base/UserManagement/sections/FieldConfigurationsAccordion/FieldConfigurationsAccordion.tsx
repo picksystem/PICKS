@@ -1,26 +1,31 @@
 import { useEffect, useState, useCallback } from 'react';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import EventNoteIcon from '@mui/icons-material/EventNote';
+import UpdateIcon from '@mui/icons-material/Update';
 import { GenericAccordion } from '@serviceops/genericaccordion';
 import { useNotification } from '@serviceops/hooks';
 import { FieldConfigurationsSection } from '../UserManagementSection/components';
-import { WorkingTimesSection } from '../UserManagementSection/components/FieldConfigurations';
-import type { IConfigField } from '../UserManagementSection/components/FieldConfigurations/FieldConfigurationsSection.types';
-import type {
-  ICreateFieldConfigurationInput,
-  IUpdateFieldConfigurationInput,
-} from '@serviceops/interfaces';
 import {
-  useCreateFieldConfigurationMutation,
-  useDeleteFieldConfigurationMutation,
-  useGetFieldConfigurationsQuery,
-  useUpdateFieldConfigurationMutation,
+  WorkingTimesSection,
+  TimesheetPeriodsSection,
+  UpdateTimesheetPeriodsSection,
+} from '../UserManagementSection/components/FieldConfigurations';
+import type { IConfigField } from '../UserManagementSection/components/FieldConfigurations/FieldConfigurationsSection.types';
+import { IConfigFieldConfiguration, DEFAULT_CONFIGURATION_DATA } from '@serviceops/interfaces';
+import {
+  useGetConfigurationQuery,
+  useUpdateConfigurationSectionMutation,
 } from '@serviceops/services';
 import { GenericToolbar } from '@serviceops/generictoolbar';
 
 const ACCENT = '#0369a1';
 
-type ActiveView = 'fieldConfigurations' | 'workingTimes';
+type ActiveView =
+  | 'fieldConfigurations'
+  | 'workingTimes'
+  | 'timesheetPeriods'
+  | 'updateTimesheetPeriods';
 
 const VIEW_CONFIG: Record<ActiveView, { label: string; icon: React.ReactNode }> = {
   fieldConfigurations: {
@@ -31,6 +36,14 @@ const VIEW_CONFIG: Record<ActiveView, { label: string; icon: React.ReactNode }> 
     label: 'Compose Working Times',
     icon: <EditNoteIcon sx={{ fontSize: '1rem' }} />,
   },
+  timesheetPeriods: {
+    label: 'Timesheet periods',
+    icon: <EventNoteIcon sx={{ fontSize: '1rem' }} />,
+  },
+  updateTimesheetPeriods: {
+    label: 'Update timesheet periods',
+    icon: <UpdateIcon sx={{ fontSize: '1rem' }} />,
+  },
 };
 
 const FieldConfigurationsAccordion = () => {
@@ -38,64 +51,91 @@ const FieldConfigurationsAccordion = () => {
   const [fieldConfigurations, setFieldConfigurations] = useState<IConfigField[]>([]);
   const [activeView, setActiveView] = useState<ActiveView>('fieldConfigurations');
 
-  const { data: apiFieldConfigurations, isLoading } = useGetFieldConfigurationsQuery();
+  const { data: configData, isLoading } = useGetConfigurationQuery();
+  const [updateSection] = useUpdateConfigurationSectionMutation();
 
-  const [createFieldConfiguration] = useCreateFieldConfigurationMutation();
-  const [updateFieldConfiguration] = useUpdateFieldConfigurationMutation();
-  const [deleteFieldConfiguration] = useDeleteFieldConfigurationMutation();
+  const apiFieldConfigurations = configData?.data?.userManagement?.workingTimes?.workingTimes;
 
   useEffect(() => {
     if (apiFieldConfigurations !== undefined) {
-      setFieldConfigurations(apiFieldConfigurations);
+      setFieldConfigurations(apiFieldConfigurations as IConfigField[]);
     }
   }, [apiFieldConfigurations]);
+
+  const persist = useCallback(
+    (next: IConfigField[]) => {
+      const current = configData?.data?.userManagement ?? DEFAULT_CONFIGURATION_DATA.userManagement;
+      return updateSection({
+        section: 'userManagement',
+        value: {
+          ...current,
+          workingTimes: {
+            ...current.workingTimes,
+            workingTimes: next as IConfigFieldConfiguration[],
+          },
+        },
+      }).unwrap();
+    },
+    [configData, updateSection],
+  );
 
   const handleDataChange = useCallback(async (next: IConfigField[]) => {
     setFieldConfigurations(next);
   }, []);
 
   const handleCreate = useCallback(
-    async (data: ICreateFieldConfigurationInput) => {
+    async (data: Omit<IConfigField, 'id'>) => {
       try {
-        await createFieldConfiguration(data).unwrap();
+        const next = [...fieldConfigurations, { ...data, id: `${Date.now()}` }];
+        setFieldConfigurations(next);
+        await persist(next);
         success('Field Configuration created successfully');
       } catch {
         showError('Failed to create Field Configuration');
       }
     },
-    [createFieldConfiguration, success, showError],
+    [fieldConfigurations, persist, success, showError],
   );
 
   const handleUpdate = useCallback(
-    async (id: number | string, data: IUpdateFieldConfigurationInput) => {
+    async (id: number | string, data: Partial<IConfigField>) => {
       try {
-        await updateFieldConfiguration({ id, data }).unwrap();
+        const next = fieldConfigurations.map((row) => (row.id === id ? { ...row, ...data } : row));
+        setFieldConfigurations(next);
+        await persist(next);
         success('Field Configuration updated successfully');
       } catch {
         showError('Failed to update Field Configuration');
       }
     },
-    [updateFieldConfiguration, success, showError],
+    [fieldConfigurations, persist, success, showError],
   );
 
   const handleDelete = useCallback(
     async (id: number | string) => {
       try {
-        await deleteFieldConfiguration(id).unwrap();
+        const next = fieldConfigurations.filter((row) => row.id !== id);
+        setFieldConfigurations(next);
+        await persist(next);
         success('Field Configuration deleted successfully');
       } catch {
         showError('Failed to delete Field Configuration');
       }
     },
-    [deleteFieldConfiguration, success, showError],
+    [fieldConfigurations, persist, success, showError],
   );
 
-  const views: ActiveView[] = ['fieldConfigurations', 'workingTimes'];
+  const views: ActiveView[] = [
+    'fieldConfigurations',
+    'workingTimes',
+    'timesheetPeriods',
+    'updateTimesheetPeriods',
+  ];
 
   return (
     <GenericAccordion
-      title='Field Configurations'
-      subtitle='Define field metadata'
+      title='Working Times'
+      subtitle='Manage working time fields, composed schedules, and timesheet periods'
       icon={<EditNoteIcon sx={{ fontSize: '1rem', color: '#fff' }} />}
       accent={ACCENT}
       defaultExpanded={false}
@@ -121,6 +161,8 @@ const FieldConfigurationsAccordion = () => {
         />
       )}
       {activeView === 'workingTimes' && <WorkingTimesSection />}
+      {activeView === 'timesheetPeriods' && <TimesheetPeriodsSection />}
+      {activeView === 'updateTimesheetPeriods' && <UpdateTimesheetPeriodsSection />}
     </GenericAccordion>
   );
 };

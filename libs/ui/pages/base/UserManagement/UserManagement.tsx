@@ -13,6 +13,9 @@ import { ConfigDeleteDialog } from '@serviceops/configdialogs';
 import { useStyles } from './styles';
 import { UserManagementSection } from './sections/UserManagementSection';
 import { FieldConfigurationsAccordion } from './sections/FieldConfigurationsAccordion';
+import { ConsultantProfilesAccordion } from './sections/ConsultantProfilesAccordion';
+import { ConsultantRolesAccordion } from './sections/ConsultantRolesAccordion';
+import { WorkLocationsAccordion } from './sections/WorkLocationsAccordion';
 import type { UserRow } from './types/userManagement.types';
 
 const UserManagement = () => {
@@ -24,6 +27,8 @@ const UserManagement = () => {
     columns,
     tableSearch,
     setTableSearch,
+    roleFilter,
+    setRoleFilter,
     selectedRow,
     setSelectedRow,
     handleRowClick,
@@ -193,6 +198,8 @@ const UserManagement = () => {
         columns={columns}
         tableSearch={tableSearch}
         onTableSearchChange={setTableSearch}
+        roleFilter={roleFilter}
+        onRoleFilterChange={setRoleFilter}
         selectedRow={sel}
         onRowSelect={setSelectedRow as (row: UserRow | null) => void}
         onRowClick={handleRowClick as (row: UserRow) => void}
@@ -213,7 +220,21 @@ const UserManagement = () => {
         draftValues={draftValues}
       />
 
-      <FieldConfigurationsAccordion />
+      <Box sx={{ mt: 2 }}>
+        <FieldConfigurationsAccordion />
+      </Box>
+
+      <Box sx={{ mt: 2 }}>
+        <ConsultantProfilesAccordion />
+      </Box>
+
+      <Box sx={{ mt: 2 }}>
+        <ConsultantRolesAccordion />
+      </Box>
+
+      <Box sx={{ mt: 2 }}>
+        <WorkLocationsAccordion />
+      </Box>
 
       <AdminControlsDialog
         open={adminControlsOpen}

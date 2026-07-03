@@ -24,6 +24,7 @@ const {
   BaseCreateTicketPage,
   BaseCreateTicketFormPage,
   BaseUserManagementPage,
+  BaseClientsAndProjectsPage,
   BaseRoleRequestsPage,
   BaseConsultantProfilePage,
   BaseProfilePage,
@@ -192,6 +193,10 @@ const AppRoutes = () => {
                       element={<BaseCreateTicketFormPage />}
                     />
                     <Route path={BasePath.USER_MANAGEMENT} element={<BaseUserManagementPage />} />
+                    <Route
+                      path={BasePath.CLIENTS_AND_PROJECTS}
+                      element={<BaseClientsAndProjectsPage />}
+                    />
                     <Route path={BasePath.ROLE_REQUESTS} element={<BaseRoleRequestsPage />} />
                     <Route
                       path={BasePath.CONSULTANT_PROFILE}

@@ -14,6 +14,7 @@ import LocalActivityIcon from '@mui/icons-material/LocalActivity';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PeopleIcon from '@mui/icons-material/People';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
+import GroupWorkIcon from '@mui/icons-material/GroupWork';
 import { constants } from '@serviceops/utils';
 
 interface MenuItemConfig {
@@ -36,6 +37,7 @@ const adminMenuItems: MenuItemConfig[] = [
   { label: 'Time Management', icon: <MoreTimeIcon />, pathKey: 'TIME_MANAGEMENT' },
   { label: 'Reports', icon: <AssessmentIcon />, pathKey: 'REPORTS' },
   { label: 'User Management', icon: <PeopleIcon />, pathKey: 'USER_MANAGEMENT' },
+  { label: 'Clients and Projects', icon: <GroupWorkIcon />, pathKey: 'CLIENTS_AND_PROJECTS' },
   { label: 'Access Requests', icon: <AdminPanelSettingsIcon />, pathKey: 'ROLE_REQUESTS' },
   { label: 'Consultant Profiles', icon: <BusinessCenterIcon />, pathKey: 'CONSULTANT_PROFILE' },
   { label: 'Configuration', icon: <TuneIcon />, pathKey: 'CONFIGURATION' },

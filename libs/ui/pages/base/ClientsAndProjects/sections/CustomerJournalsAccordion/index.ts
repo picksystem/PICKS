@@ -1,0 +1,1 @@
+export { CustomerJournalsAccordion } from './CustomerJournalsAccordion';

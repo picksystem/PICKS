@@ -1,0 +1,1 @@
+export { ProjectContractsAccordion } from './ProjectContractsAccordion';

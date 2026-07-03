@@ -1,12 +1,16 @@
 import { Column } from '@serviceops/component';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EditIcon from '@mui/icons-material/Edit';
+import EventNoteIcon from '@mui/icons-material/EventNote';
+import UpdateIcon from '@mui/icons-material/Update';
 import type {
   IConfigWorkLocationWorkingTime,
   IConfigComposedWorkingTime,
   IConfigWorkingCalendar,
   IConfigHolidayCalendar,
   IConfigWorkingDayTemplate,
+  IConfigTimesheetPeriodEntry,
+  IConfigUpdateTimesheetPeriodEntry,
 } from '@serviceops/interfaces';
 import { mkCell } from '@serviceops/configutils';
 import type { TableConfig } from '@serviceops/genericpanel';
@@ -50,6 +54,69 @@ export const COMPOSED_WORKING_TIME_CONFIG: TableConfig = {
     {
       name: 'workingTimeTemplate',
       label: 'Working Time Template',
+      required: true,
+    },
+  ],
+};
+
+export const timesheetPeriodEntryColumns: Column<IConfigTimesheetPeriodEntry>[] = [
+  { id: 'fromDate', label: 'From Date', minWidth: 130, format: mkCell(true) },
+  { id: 'toDate', label: 'To Date', minWidth: 130, format: mkCell() },
+  { id: 'timesheetPeriodId', label: 'Timesheet Period ID', minWidth: 180, format: mkCell() },
+  {
+    id: 'timesheetPeriodStatus',
+    label: 'Timesheet Period Status',
+    minWidth: 180,
+    format: mkCell(),
+  },
+];
+
+export const TIMESHEET_PERIOD_ENTRY_CONFIG: TableConfig = {
+  title: 'Timesheet Periods',
+  subtitle: 'Define timesheet periods with date ranges and status',
+  accent: '#0369a1',
+  icon: <EventNoteIcon sx={{ fontSize: '1.1rem' }} />,
+  entity: 'Timesheet Period',
+  fields: [
+    { name: 'fromDate', label: 'From Date', required: true, type: 'date' },
+    { name: 'toDate', label: 'To Date', required: true, type: 'date' },
+    {
+      name: 'timesheetPeriodId',
+      label: 'Timesheet Period ID',
+      required: true,
+    },
+    {
+      name: 'timesheetPeriodStatus',
+      label: 'Timesheet Period Status',
+      required: true,
+    },
+  ],
+};
+
+export const updateTimesheetPeriodEntryColumns: Column<IConfigUpdateTimesheetPeriodEntry>[] = [
+  { id: 'fromDate', label: 'From Date', minWidth: 130, format: mkCell(true) },
+  { id: 'toDate', label: 'To Date', minWidth: 130, format: mkCell() },
+  { id: 'timesheetPeriodType', label: 'Timesheet Period Type', minWidth: 180, format: mkCell() },
+  { id: 'workingCalendar', label: 'Working Calendar', minWidth: 180, format: mkCell() },
+];
+
+export const UPDATE_TIMESHEET_PERIOD_ENTRY_CONFIG: TableConfig = {
+  title: 'Update Timesheet Periods',
+  subtitle: 'Update timesheet periods with date ranges, period type and calendar assignment',
+  accent: '#0369a1',
+  icon: <UpdateIcon sx={{ fontSize: '1.1rem' }} />,
+  entity: 'Timesheet Period',
+  fields: [
+    { name: 'fromDate', label: 'From Date', required: true, type: 'date' },
+    { name: 'toDate', label: 'To Date', required: true, type: 'date' },
+    {
+      name: 'timesheetPeriodType',
+      label: 'Timesheet Period Type',
+      required: true,
+    },
+    {
+      name: 'workingCalendar',
+      label: 'Working Calendar',
       required: true,
     },
   ],

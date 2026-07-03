@@ -159,7 +159,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   toolbarSearchField: {
-    marginLeft: 'auto',
+    marginLeft: theme.spacing(1),
     width: '220px',
     '& .MuiOutlinedInput-root': {
       height: '34px',
@@ -177,6 +177,34 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     '& .MuiInputAdornment-root .MuiSvgIcon-root': {
       fontSize: '1.1rem',
       color: theme.palette.text.secondary,
+    },
+  },
+
+  roleFilterField: {
+    marginLeft: 'auto',
+    width: '280px',
+    '& .MuiOutlinedInput-root': {
+      height: '34px',
+      fontSize: '0.85rem',
+      backgroundColor: theme.palette.common.white,
+      borderRadius: '6px',
+      cursor: 'pointer',
+    },
+    '& .MuiInputBase-input': {
+      padding: '4px 8px',
+      fontSize: '0.85rem',
+      cursor: 'pointer',
+    },
+    '& .MuiInputBase-input::placeholder': {
+      opacity: 0.7,
+    },
+    '& .MuiInputAdornment-root .MuiSvgIcon-root': {
+      fontSize: '1.1rem',
+      color: theme.palette.text.secondary,
+    },
+    [theme.breakpoints.down('sm')]: {
+      marginLeft: 0,
+      width: '100%',
     },
   },
 

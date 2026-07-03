@@ -65,6 +65,7 @@ const NAV_ITEMS = [
     path: `${BASE}/consultant-profiles`,
     Icon: BusinessCenterIcon,
     accent: colorAccent,
+    hidden: true,
   },
   { label: 'Approvals', path: `${BASE}/approvals`, Icon: HowToRegIcon, accent: colorAccent },
   {
@@ -72,13 +73,28 @@ const NAV_ITEMS = [
     path: `${BASE}/user-config`,
     Icon: ManageAccountsIcon,
     accent: colorAccent,
+    hidden: true,
   },
   { label: 'Templates', path: `${BASE}/templates`, Icon: FileCopyIcon, accent: colorAccent },
   { label: 'Reason Codes', path: `${BASE}/reason-codes`, Icon: CommentIcon, accent: colorAccent },
   { label: 'Calendars', path: `${BASE}/calendars`, Icon: CalendarMonthIcon, accent: colorAccent },
-  { label: 'Timesheets', path: `${BASE}/timesheets`, Icon: TuneIcon, accent: colorAccent },
-  { label: 'Expenses', path: `${BASE}/expenses`, Icon: ReceiptLongIcon, accent: colorAccent },
+  {
+    label: 'Timesheets',
+    path: `${BASE}/timesheets`,
+    Icon: TuneIcon,
+    accent: colorAccent,
+    hidden: true,
+  },
+  {
+    label: 'Expenses',
+    path: `${BASE}/expenses`,
+    Icon: ReceiptLongIcon,
+    accent: colorAccent,
+    hidden: true,
+  },
 ];
+
+const VISIBLE_NAV_ITEMS = NAV_ITEMS.filter((item) => !item.hidden);
 
 // ── Desktop inner nav list ─────────────────────────────────────────────────────
 const DesktopNavList = ({
@@ -89,7 +105,7 @@ const DesktopNavList = ({
   onNavigate: (path: string) => void;
 }) => (
   <List disablePadding sx={{ px: 0.75, py: 0.75 }}>
-    {NAV_ITEMS.map(({ label, path, Icon, accent }) => {
+    {VISIBLE_NAV_ITEMS.map(({ label, path, Icon, accent }) => {
       const isActive = activePath === path;
       return (
         <ListItem
@@ -169,7 +185,7 @@ const MobilePillNav = ({
       scrollbarWidth: 'none',
     }}
   >
-    {NAV_ITEMS.map(({ label, path, Icon, accent }) => {
+    {VISIBLE_NAV_ITEMS.map(({ label, path, Icon, accent }) => {
       const isActive = activePath === path;
       return (
         <Box

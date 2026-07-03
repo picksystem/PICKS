@@ -409,7 +409,7 @@ const createColumns = (fields: TableField[]): Column<Record<string, unknown>>[] 
 
 const createEmptyForm = (fields: TableField[]): FormData =>
   fields.reduce((acc, field) => {
-    if (field.type === 'toggle') {
+    if (field.type === 'toggle' || field.type === 'activationToggle') {
       acc[field.name] = field.defaultValue ?? false;
     } else if (field.type === 'number') {
       acc[field.name] = field.defaultValue ?? '';
@@ -819,8 +819,8 @@ export const GenericPanel = ({
     if (editingRow) {
       const values: FormData = {};
       config.fields.forEach((field) => {
-        if (field.type === 'toggle') {
-          values[field.name] = editingRow[field.name] ?? false;
+        if (field.type === 'toggle' || field.type === 'activationToggle') {
+          values[field.name] = Boolean(editingRow[field.name]);
         } else if (field.type === 'number') {
           values[field.name] = editingRow[field.name] ?? '';
         } else if (field.type === 'color') {

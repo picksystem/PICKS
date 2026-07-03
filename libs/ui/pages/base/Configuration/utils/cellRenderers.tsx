@@ -1,6 +1,7 @@
 import React from 'react';
 import { alpha } from '@mui/material';
 import { Box, Typography, Chip } from '@serviceops/component';
+import { parseRichText } from '../shared/RichTextEditor';
 
 export const mkCell =
   (bold = false) =>
@@ -73,6 +74,57 @@ export const mkActiveChip = (v: unknown): React.ReactNode => {
         }}
       />
       {on ? 'Active' : 'Inactive'}
+    </Box>
+  );
+};
+
+// Pill-style Yes/No badge for plain boolean toggle fields (not row activation)
+export const mkYesNoChip = (v: unknown): React.ReactNode => {
+  const on = Boolean(v);
+  return (
+    <Chip
+      label={on ? 'Yes' : 'No'}
+      size='small'
+      sx={{
+        height: 20,
+        fontSize: '0.68rem',
+        fontWeight: 700,
+        bgcolor: on ? alpha('#059669', 0.12) : alpha('#9ca3af', 0.12),
+        color: on ? '#059669' : '#6b7280',
+      }}
+    />
+  );
+};
+
+// Renders a serialized rich-text value (from RichTextEditor) preserving bold/italic/underline
+export const mkRichTextCell = (v: unknown): React.ReactNode => {
+  const val = v as string | undefined;
+  if (!val) return <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>—</Typography>;
+
+  const richTextValue = parseRichText(val);
+  return (
+    <Box
+      sx={{
+        fontSize: '0.8rem',
+        color: 'text.secondary',
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word',
+      }}
+    >
+      {richTextValue.segments.map((segment, index) => (
+        <Typography
+          key={index}
+          component='span'
+          sx={{
+            fontWeight: segment.bold ? 700 : 400,
+            fontStyle: segment.italic ? 'italic' : 'normal',
+            textDecoration: segment.underline ? 'underline' : 'normal',
+            display: 'inline',
+          }}
+        >
+          {segment.text}
+        </Typography>
+      ))}
     </Box>
   );
 };

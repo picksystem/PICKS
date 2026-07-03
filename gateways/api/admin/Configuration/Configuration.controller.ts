@@ -165,6 +165,8 @@ export class ConfigurationController {
       'internalNoteTemplates',
       'resolutionTemplates',
       'timeEntryTemplates',
+      'userManagement',
+      'clientsAndProjects',
     ];
     if (!validSections.includes(section)) {
       res.status(400).json({ message: `Unknown section: ${section}` });

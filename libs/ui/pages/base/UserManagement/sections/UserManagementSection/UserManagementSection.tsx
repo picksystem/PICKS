@@ -18,6 +18,7 @@ import { GenericAccordion } from '@serviceops/genericaccordion';
 import { GenericToolbar } from '@serviceops/generictoolbar';
 import type { UserManagementSectionProps } from './UserManagementSection.types';
 import { useStyles } from './styles';
+import { UserRoleFilterField } from './components/UserRoleFilterField/UserRoleFilterField';
 
 const ACCENT = '#0369a1';
 
@@ -26,6 +27,8 @@ const UserManagementSection = ({
   columns,
   tableSearch,
   onTableSearchChange,
+  roleFilter,
+  onRoleFilterChange,
   selectedRow,
   onRowSelect,
   onRowClick,
@@ -51,8 +54,11 @@ const UserManagementSection = ({
     users.map((u, i) => ({ ...u, sno: startFrom + i }));
 
   const tableData = getTableDataFn(allUsers);
+  const roleFilteredTableData = roleFilter
+    ? tableData.filter((row) => row.role === roleFilter)
+    : tableData;
   const filteredTableData = tableSearch
-    ? tableData.filter((row) =>
+    ? roleFilteredTableData.filter((row) =>
         Object.values(row).some(
           (val) =>
             val !== null &&
@@ -60,7 +66,7 @@ const UserManagementSection = ({
             String(val).toLowerCase().includes(tableSearch.toLowerCase()),
         ),
       )
-    : tableData;
+    : roleFilteredTableData;
 
   return (
     <>
@@ -284,6 +290,14 @@ const UserManagementSection = ({
                   Clear
                 </Button>
               </Tooltip>
+            )}
+
+            {!selectedRow && (
+              <UserRoleFilterField
+                value={roleFilter}
+                onChange={onRoleFilterChange}
+                className={classes.roleFilterField}
+              />
             )}
 
             {!selectedRow && (
