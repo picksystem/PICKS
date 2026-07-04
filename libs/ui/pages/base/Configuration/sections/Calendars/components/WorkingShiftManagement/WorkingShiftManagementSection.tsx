@@ -57,6 +57,7 @@ const WorkingShiftManagementSection = ({
     } else {
       saveSection('calendars', {
         workingDayTemplates: apiCAL?.workingDayTemplates ?? [],
+        workingDayTemplateTimes: apiCAL?.workingDayTemplateTimes ?? [],
         holidayCalendars: apiCAL?.holidayCalendars ?? [],
         bankHolidays: apiCAL?.bankHolidays ?? [],
         workingCalendars: apiCAL?.workingCalendars ?? [],
@@ -81,6 +82,7 @@ const WorkingShiftManagementSection = ({
     } else {
       saveSection('calendars', {
         workingDayTemplates: apiCAL?.workingDayTemplates ?? [],
+        workingDayTemplateTimes: apiCAL?.workingDayTemplateTimes ?? [],
         holidayCalendars: apiCAL?.holidayCalendars ?? [],
         bankHolidays: apiCAL?.bankHolidays ?? [],
         workingCalendars: apiCAL?.workingCalendars ?? [],

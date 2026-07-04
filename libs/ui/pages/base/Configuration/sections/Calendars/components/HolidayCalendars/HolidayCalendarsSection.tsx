@@ -51,6 +51,7 @@ const HolidayCalendarsSection = ({
     } else {
       saveSection('calendars', {
         workingDayTemplates: apiCAL?.workingDayTemplates ?? [],
+        workingDayTemplateTimes: apiCAL?.workingDayTemplateTimes ?? [],
         holidayCalendars: nextRows,
         bankHolidays: bankHolidaysFinal,
         workingCalendars: apiCAL?.workingCalendars ?? [],
@@ -73,6 +74,7 @@ const HolidayCalendarsSection = ({
     } else {
       saveSection('calendars', {
         workingDayTemplates: apiCAL?.workingDayTemplates ?? [],
+        workingDayTemplateTimes: apiCAL?.workingDayTemplateTimes ?? [],
         holidayCalendars: holidayRowsFinal,
         bankHolidays: next,
         workingCalendars: apiCAL?.workingCalendars ?? [],

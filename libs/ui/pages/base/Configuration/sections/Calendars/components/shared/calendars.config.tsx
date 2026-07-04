@@ -58,14 +58,14 @@ export const TABLE_CONFIG: Record<CalendarActiveView, TableConfig> = {
   },
   workingCalendar: {
     title: 'Working Calendars',
-    subtitle: 'Define a working calendar with holiday calendar and working day template',
+    subtitle: 'Define a working calendar with holiday calendar and working time template',
     accent: ACCENT,
     icon: <EventAvailableIcon sx={{ fontSize: '1.1rem' }} />,
     entity: 'Working Calendar',
     fields: [
       { name: 'name', label: 'Calendar Name', required: true, bold: true },
       { name: 'holidayCalendar', label: 'Holiday Calendar' },
-      { name: 'workingDayTemplate', label: 'Working Day Template' },
+      { name: 'workingDayTemplate', label: 'Working Time Template' },
     ],
   },
 };
@@ -150,7 +150,7 @@ export const bankHolidayColumns: Column<IConfigBankHoliday>[] = [
 export const workingCalendarColumns: Column<IConfigWorkingCalendar>[] = [
   { id: 'name', label: 'Calendar Name', minWidth: 180, format: mkCell(true) },
   { id: 'holidayCalendar', label: 'Holiday Calendar', minWidth: 180, format: mkCell() },
-  { id: 'workingDayTemplate', label: 'Working Day Template', minWidth: 180, format: mkCell() },
+  { id: 'workingDayTemplate', label: 'Working Time Template', minWidth: 180, format: mkCell() },
 ];
 
 export const workingTimesColumns: Column<IConfigWorkingCalendarTime>[] = [

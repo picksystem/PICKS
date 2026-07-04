@@ -160,7 +160,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   toolbarSearchField: {
     marginLeft: theme.spacing(1),
-    width: '220px',
+    width: '280px',
     '& .MuiOutlinedInput-root': {
       height: '34px',
       fontSize: '0.85rem',

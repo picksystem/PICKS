@@ -64,6 +64,7 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
     } else {
       saveSection('calendars', {
         workingDayTemplates: apiCAL?.workingDayTemplates ?? [],
+        workingDayTemplateTimes: apiCAL?.workingDayTemplateTimes ?? [],
         holidayCalendars: apiCAL?.holidayCalendars ?? [],
         bankHolidays: apiCAL?.bankHolidays ?? [],
         workingCalendars: nextRows,
@@ -83,6 +84,7 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
     setWcTimes(next);
     saveSection('calendars', {
       workingDayTemplates: apiCAL?.workingDayTemplates ?? [],
+      workingDayTemplateTimes: apiCAL?.workingDayTemplateTimes ?? [],
       holidayCalendars: apiCAL?.holidayCalendars ?? [],
       bankHolidays: apiCAL?.bankHolidays ?? [],
       workingCalendars: rowsFinal,
@@ -101,6 +103,7 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
     setComposedTimes(next);
     saveSection('calendars', {
       workingDayTemplates: apiCAL?.workingDayTemplates ?? [],
+      workingDayTemplateTimes: apiCAL?.workingDayTemplateTimes ?? [],
       holidayCalendars: apiCAL?.holidayCalendars ?? [],
       bankHolidays: apiCAL?.bankHolidays ?? [],
       workingCalendars: rowsFinal,
@@ -119,6 +122,7 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
     setWorkLocations(next);
     saveSection('calendars', {
       workingDayTemplates: apiCAL?.workingDayTemplates ?? [],
+      workingDayTemplateTimes: apiCAL?.workingDayTemplateTimes ?? [],
       holidayCalendars: apiCAL?.holidayCalendars ?? [],
       bankHolidays: apiCAL?.bankHolidays ?? [],
       workingCalendars: rowsFinal,
@@ -137,6 +141,7 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
     setConsultants(next);
     saveSection('calendars', {
       workingDayTemplates: apiCAL?.workingDayTemplates ?? [],
+      workingDayTemplateTimes: apiCAL?.workingDayTemplateTimes ?? [],
       holidayCalendars: apiCAL?.holidayCalendars ?? [],
       bankHolidays: apiCAL?.bankHolidays ?? [],
       workingCalendars: rowsFinal,

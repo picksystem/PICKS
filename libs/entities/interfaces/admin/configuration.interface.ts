@@ -649,7 +649,9 @@ export interface IConfigExpenses {
 export interface IConfigWorkingDayTemplate {
   id: string;
   name: string;
+  shortDescription?: string;
   description: string;
+  internalNote?: string;
   mondayHours: number;
   tuesdayHours: number;
   wednesdayHours: number;
@@ -657,6 +659,24 @@ export interface IConfigWorkingDayTemplate {
   fridayHours: number;
   saturdayHours: number;
   sundayHours: number;
+}
+
+export type DayOfWeek =
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday'
+  | 'saturday'
+  | 'sunday';
+
+export interface IConfigWorkingDayTemplateTime {
+  id: string;
+  workingDayTemplateId: string;
+  dayOfWeek: DayOfWeek;
+  fromTime: string;
+  toTime: string;
+  efficiency: number;
 }
 
 export interface IConfigHolidayCalendar {
@@ -785,6 +805,7 @@ export interface IConfigUpdateTimesheetPeriodEntry {
 
 export interface IConfigCalendars {
   workingDayTemplates: IConfigWorkingDayTemplate[];
+  workingDayTemplateTimes: IConfigWorkingDayTemplateTime[];
   holidayCalendars: IConfigHolidayCalendar[];
   bankHolidays: IConfigBankHoliday[];
   workingCalendars: IConfigWorkingCalendar[];
@@ -1898,6 +1919,7 @@ export const DEFAULT_CONFIGURATION_DATA: IConfigurationData = {
   },
   calendars: {
     workingDayTemplates: [],
+    workingDayTemplateTimes: [],
     holidayCalendars: [],
     bankHolidays: [],
     workingCalendars: [],

@@ -45,12 +45,16 @@ export type InitialCreateValues = {
   businessUnit: string;
   managerName: string;
   reasonForAccess: string;
+  accessFromDate: string;
+  accessToDate: string;
   timezone: string;
   dateFormat: string;
   timeFormat: string;
   language: string;
   slaWorkingCalendar: string;
   slaExceptionGroup: string;
+  application: string;
+  applicationLead: string;
   password: string;
   confirmPassword: string;
   role: string;

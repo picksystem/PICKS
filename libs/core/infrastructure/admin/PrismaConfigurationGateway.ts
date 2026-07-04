@@ -302,6 +302,7 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
       },
       calendars: {
         workingDayTemplates: data.calendars?.workingDayTemplates ?? [],
+        workingDayTemplateTimes: data.calendars?.workingDayTemplateTimes ?? [],
         holidayCalendars: data.calendars?.holidayCalendars ?? [],
         bankHolidays: data.calendars?.bankHolidays ?? [],
         workingCalendars: data.calendars?.workingCalendars ?? [],

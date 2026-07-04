@@ -10,8 +10,6 @@ import {
   Chip,
   Divider,
   TextField,
-  Select,
-  MenuItem,
   FormControlLabel,
   Switch,
   Grid,
@@ -27,7 +25,6 @@ import {
   InputAdornment,
   alpha,
   ListItemButton,
-  FormControl,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
@@ -51,6 +48,7 @@ import {
   RichTextEditor,
   parseRichText,
 } from '@serviceops/pages/base/Configuration/shared/RichTextEditor';
+import { SearchableSelectField } from '../../components';
 
 const EditUserDialog = ({
   open,
@@ -289,15 +287,6 @@ const EditUserDialog = ({
           </Grid>
           <Grid size={{ xs: 6 }}>
             <TextField
-              label='Department'
-              fullWidth
-              size='small'
-              value={editForm.department}
-              onChange={(e) => onFormChange((p) => ({ ...p, department: e.target.value }))}
-            />
-          </Grid>
-          <Grid size={{ xs: 6 }}>
-            <TextField
               label='Work Location'
               fullWidth
               size='small'
@@ -311,11 +300,11 @@ const EditUserDialog = ({
           </Grid>
           <Grid size={{ xs: 6 }}>
             <TextField
-              label='Business Unit'
+              label='Department'
               fullWidth
               size='small'
-              value={editForm.businessUnit}
-              onChange={(e) => onFormChange((p) => ({ ...p, businessUnit: e.target.value }))}
+              value={editForm.department}
+              onChange={(e) => onFormChange((p) => ({ ...p, department: e.target.value }))}
             />
           </Grid>
           <Grid size={{ xs: 6 }}>
@@ -329,6 +318,15 @@ const EditUserDialog = ({
           </Grid>
           <Grid size={{ xs: 6 }}>
             <TextField
+              label='Business Unit'
+              fullWidth
+              size='small'
+              value={editForm.businessUnit}
+              onChange={(e) => onFormChange((p) => ({ ...p, businessUnit: e.target.value }))}
+            />
+          </Grid>
+          <Grid size={{ xs: 6 }}>
+            <TextField
               label='Reporting Manager'
               fullWidth
               size='small'
@@ -338,6 +336,62 @@ const EditUserDialog = ({
               onBlur={() => touch('managerName')}
               error={touched.managerName && !!errors.managerName}
               helperText={reqError(touched.managerName, errors.managerName)}
+            />
+          </Grid>
+
+          {/* Locale */}
+          <Grid size={{ xs: 12 }}>
+            <Divider />
+            <Typography variant='subtitle2' color='primary' sx={{ mt: 1 }}>
+              Locale & Preferences
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 6 }}>
+            <SearchableSelectField
+              label='Timezone'
+              value={editForm.timezone}
+              options={TIMEZONES.map((tz) => ({ value: tz, label: getTzDisplay(tz) }))}
+              onChange={(value) => onFormChange((p) => ({ ...p, timezone: value }))}
+            />
+          </Grid>
+          <Grid size={{ xs: 6 }}>
+            <SearchableSelectField
+              label='Language'
+              value={editForm.language}
+              options={LANGUAGES}
+              onChange={(value) => onFormChange((p) => ({ ...p, language: value }))}
+            />
+          </Grid>
+          <Grid size={{ xs: 6 }}>
+            <SearchableSelectField
+              label='Date Format'
+              value={editForm.dateFormat}
+              options={DATE_FORMATS.map((f) => ({ value: f, label: f }))}
+              onChange={(value) => onFormChange((p) => ({ ...p, dateFormat: value }))}
+            />
+          </Grid>
+          <Grid size={{ xs: 6 }}>
+            <SearchableSelectField
+              label='Time Format'
+              value={editForm.timeFormat}
+              options={TIME_FORMATS.map((f) => ({ value: f, label: f }))}
+              onChange={(value) => onFormChange((p) => ({ ...p, timeFormat: value }))}
+            />
+          </Grid>
+          <Grid size={{ xs: 6 }}>
+            <SearchableSelectField
+              label='Working Calendar'
+              value={editForm.slaWorkingCalendar}
+              options={SLA_WORKING_CALENDARS.map((c) => ({ value: c, label: c }))}
+              onChange={(value) => onFormChange((p) => ({ ...p, slaWorkingCalendar: value }))}
+            />
+          </Grid>
+          <Grid size={{ xs: 6 }}>
+            <SearchableSelectField
+              label='Leave Calendar'
+              value={editForm.slaExceptionGroup}
+              options={SLA_LEAVE_CALENDARS.map((c) => ({ value: c, label: c }))}
+              onChange={(value) => onFormChange((p) => ({ ...p, slaExceptionGroup: value }))}
             />
           </Grid>
 
@@ -465,110 +519,25 @@ const EditUserDialog = ({
               slotProps={{ textField: { fullWidth: true, size: 'small' } }}
             />
           </Grid>
-
-          {/* Locale */}
           <Grid size={{ xs: 12 }}>
-            <Divider />
-            <Typography variant='subtitle2' color='primary' sx={{ mt: 1 }}>
-              Locale & Preferences
+            <Typography variant='caption' fontWeight={600} color='text.primary' sx={{ mb: 0.5 }}>
+              Reason for Access
             </Typography>
-          </Grid>
-          <Grid size={{ xs: 6 }}>
-            <FormControl fullWidth size='small'>
-              <Select
-                value={editForm.timezone}
-                label='Timezone'
-                onChange={(e) => onFormChange((p) => ({ ...p, timezone: e.target.value }))}
-              >
-                <MenuItem value=''>
-                  <em>None</em>
-                </MenuItem>
-                {TIMEZONES.map((tz) => (
-                  <MenuItem key={tz} value={tz}>
-                    {getTzDisplay(tz)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid size={{ xs: 3 }}>
-            <FormControl fullWidth size='small'>
-              <Select
-                value={editForm.dateFormat}
-                label='Date Format'
-                onChange={(e) => onFormChange((p) => ({ ...p, dateFormat: e.target.value }))}
-              >
-                {DATE_FORMATS.map((f) => (
-                  <MenuItem key={f} value={f}>
-                    {f}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid size={{ xs: 3 }}>
-            <FormControl fullWidth size='small'>
-              <Select
-                value={editForm.timeFormat}
-                label='Time Format'
-                onChange={(e) => onFormChange((p) => ({ ...p, timeFormat: e.target.value }))}
-              >
-                {TIME_FORMATS.map((f) => (
-                  <MenuItem key={f} value={f}>
-                    {f}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid size={{ xs: 4 }}>
-            <FormControl fullWidth size='small'>
-              <Select
-                value={editForm.language}
-                label='Language'
-                onChange={(e) => onFormChange((p) => ({ ...p, language: e.target.value }))}
-              >
-                {LANGUAGES.map((l) => (
-                  <MenuItem key={l.value} value={l.value}>
-                    {l.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid size={{ xs: 4 }}>
-            <FormControl fullWidth size='small'>
-              <Select
-                value={editForm.slaWorkingCalendar}
-                label='Working Calendar'
-                onChange={(e) =>
-                  onFormChange((p) => ({ ...p, slaWorkingCalendar: e.target.value }))
-                }
-              >
-                <MenuItem value=''>— Not set —</MenuItem>
-                {SLA_WORKING_CALENDARS.map((c) => (
-                  <MenuItem key={c} value={c}>
-                    {c}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid size={{ xs: 4 }}>
-            <FormControl fullWidth size='small'>
-              <Select
-                value={editForm.slaExceptionGroup}
-                label='Leave Calendar'
-                onChange={(e) => onFormChange((p) => ({ ...p, slaExceptionGroup: e.target.value }))}
-              >
-                <MenuItem value=''>— Not set —</MenuItem>
-                {SLA_LEAVE_CALENDARS.map((c) => (
-                  <MenuItem key={c} value={c}>
-                    {c}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <RichTextEditor
+              value={richTextReason}
+              onChange={handleReasonChange}
+              accent='#0369a1'
+              title='Reason'
+              placeholder='Describe why this user needs access'
+              required
+              error={touched.reasonForAccess && !!errors.reasonForAccess}
+              showFooterActions={false}
+            />
+            {touched.reasonForAccess && errors.reasonForAccess && (
+              <Typography variant='caption' color='error' sx={{ mt: 0.5, display: 'block' }}>
+                {reqError(touched.reasonForAccess, errors.reasonForAccess)}
+              </Typography>
+            )}
           </Grid>
 
           {/* Consultant fields */}
@@ -601,29 +570,9 @@ const EditUserDialog = ({
             </>
           )}
 
-          {/* Reason + Notes */}
+          {/* Admin Notes */}
           <Grid size={{ xs: 12 }}>
             <Divider />
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Typography variant='caption' fontWeight={600} color='text.primary' sx={{ mb: 0.5 }}>
-              Reason for Access
-            </Typography>
-            <RichTextEditor
-              value={richTextReason}
-              onChange={handleReasonChange}
-              accent='#0369a1'
-              title='Reason'
-              placeholder='Describe why this user needs access'
-              required
-              error={touched.reasonForAccess && !!errors.reasonForAccess}
-              showFooterActions={false}
-            />
-            {touched.reasonForAccess && errors.reasonForAccess && (
-              <Typography variant='caption' color='error' sx={{ mt: 0.5, display: 'block' }}>
-                {reqError(touched.reasonForAccess, errors.reasonForAccess)}
-              </Typography>
-            )}
           </Grid>
           <Grid size={{ xs: 12 }}>
             <Typography variant='caption' fontWeight={600} color='text.primary' sx={{ mb: 0.5 }}>

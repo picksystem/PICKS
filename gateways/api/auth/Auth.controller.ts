@@ -819,6 +819,8 @@ export class AuthController {
           language,
           slaWorkingCalendar,
           slaExceptionGroup,
+          application,
+          applicationLead,
         } = body;
 
         if (!firstName || !lastName || !email) {
@@ -863,6 +865,8 @@ export class AuthController {
             language: language || null,
             slaWorkingCalendar: slaWorkingCalendar || null,
             slaExceptionGroup: slaExceptionGroup || null,
+            application: application || null,
+            applicationLead: applicationLead || null,
             status: STATUS.ACTIVE,
             source: SOURCE.ADMIN,
             isActive: true,

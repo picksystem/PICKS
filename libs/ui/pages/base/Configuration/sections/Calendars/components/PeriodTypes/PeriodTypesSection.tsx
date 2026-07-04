@@ -54,6 +54,7 @@ const PeriodTypesSection = ({
     } else {
       saveSection('calendars', {
         workingDayTemplates: apiCAL?.workingDayTemplates ?? [],
+        workingDayTemplateTimes: apiCAL?.workingDayTemplateTimes ?? [],
         holidayCalendars: apiCAL?.holidayCalendars ?? [],
         bankHolidays: apiCAL?.bankHolidays ?? [],
         workingCalendars: apiCAL?.workingCalendars ?? [],
@@ -78,6 +79,7 @@ const PeriodTypesSection = ({
     } else {
       saveSection('calendars', {
         workingDayTemplates: apiCAL?.workingDayTemplates ?? [],
+        workingDayTemplateTimes: apiCAL?.workingDayTemplateTimes ?? [],
         holidayCalendars: apiCAL?.holidayCalendars ?? [],
         bankHolidays: apiCAL?.bankHolidays ?? [],
         workingCalendars: apiCAL?.workingCalendars ?? [],

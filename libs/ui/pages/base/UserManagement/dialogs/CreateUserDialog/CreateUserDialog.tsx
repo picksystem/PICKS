@@ -1,3 +1,5 @@
+import dayjs from 'dayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import {
   Box,
   Typography,
@@ -7,8 +9,6 @@ import {
   Divider,
   Alert,
   TextField,
-  Select,
-  MenuItem,
   Grid,
   Paper,
   List,
@@ -20,10 +20,7 @@ import {
   DialogContent,
   DialogActions,
   Avatar,
-  FormControl,
-  InputLabel,
   InputAdornment,
-  FormHelperText,
   ListItemButton,
   Stack,
   alpha,
@@ -58,6 +55,7 @@ import {
   RichTextEditor,
   parseRichText,
 } from '@serviceops/pages/base/Configuration/shared/RichTextEditor';
+import { SearchableSelectField } from '../../components';
 import { useState, useRef, useEffect } from 'react';
 
 const CreateUserDialog = ({
@@ -394,7 +392,206 @@ const CreateUserDialog = ({
                 onBlur={createFormik.handleBlur}
               />
             </Grid>
+          </Grid>
+
+          <Divider sx={{ mb: 2 }} />
+
+          {/* Locale & Calendar */}
+          <Typography variant='subtitle1' fontWeight={600} color='primary' sx={{ mb: 1.5 }}>
+            Locale & Calendar
+          </Typography>
+          <Grid container spacing={2} sx={{ mb: 2 }}>
             <Grid size={{ xs: 6 }}>
+              <SearchableSelectField
+                label='Timezone'
+                value={createFormik.values.timezone}
+                options={TIMEZONES.map((tz) => ({ value: tz, label: getTzDisplay(tz) }))}
+                onChange={(value) => createFormik.setFieldValue('timezone', value)}
+                onBlur={() => createFormik.setFieldTouched('timezone', true)}
+              />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <SearchableSelectField
+                label='Language'
+                value={createFormik.values.language}
+                options={LANGUAGES}
+                onChange={(value) => createFormik.setFieldValue('language', value)}
+                onBlur={() => createFormik.setFieldTouched('language', true)}
+              />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <SearchableSelectField
+                label='Date Format'
+                value={createFormik.values.dateFormat}
+                options={DATE_FORMATS.map((f) => ({ value: f, label: f }))}
+                onChange={(value) => createFormik.setFieldValue('dateFormat', value)}
+                onBlur={() => createFormik.setFieldTouched('dateFormat', true)}
+              />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <SearchableSelectField
+                label='Time Format'
+                value={createFormik.values.timeFormat}
+                options={TIME_FORMATS.map((f) => ({ value: f, label: TIME_FORMAT_LABELS[f] }))}
+                onChange={(value) => createFormik.setFieldValue('timeFormat', value)}
+                onBlur={() => createFormik.setFieldTouched('timeFormat', true)}
+              />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <SearchableSelectField
+                label='Working Calendar'
+                value={createFormik.values.slaWorkingCalendar}
+                options={SLA_WORKING_CALENDARS.map((c) => ({ value: c, label: c }))}
+                onChange={(value) => createFormik.setFieldValue('slaWorkingCalendar', value)}
+                onBlur={() => createFormik.setFieldTouched('slaWorkingCalendar', true)}
+              />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <SearchableSelectField
+                label='Leave Calendar'
+                value={createFormik.values.slaExceptionGroup}
+                options={SLA_LEAVE_CALENDARS.map((c) => ({ value: c, label: c }))}
+                onChange={(value) => createFormik.setFieldValue('slaExceptionGroup', value)}
+                onBlur={() => createFormik.setFieldTouched('slaExceptionGroup', true)}
+              />
+            </Grid>
+          </Grid>
+
+          <Divider sx={{ mb: 2 }} />
+
+          {/* Account & Access */}
+          <Typography variant='subtitle1' fontWeight={600} color='primary' sx={{ mb: 1.5 }}>
+            Account & Access
+          </Typography>
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid size={{ xs: 6 }}>
+              <Box ref={roleContainerRef}>
+                <Box sx={{ position: 'relative' }}>
+                  <TextField
+                    label='Role'
+                    placeholder='Search role...'
+                    value={roleInputValue}
+                    onChange={(e) => {
+                      setRoleInputValue(e.target.value);
+                      setRoleOpen(true);
+                    }}
+                    onFocus={() => !createFormik.values.role && setRoleOpen(true)}
+                    onBlur={() => {
+                      setTimeout(() => setRoleOpen(false), 200);
+                    }}
+                    required
+                    error={createFormik.touched.role && Boolean(createFormik.errors.role)}
+                    helperText={reqError(
+                      createFormik.touched.role,
+                      createFormik.errors.role as string,
+                    )}
+                    fullWidth
+                    size='small'
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position='end'>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              {roleInputValue ? (
+                                <ClearIcon
+                                  onClick={handleRoleClear}
+                                  sx={{
+                                    fontSize: 18,
+                                    color: 'text.secondary',
+                                    cursor: 'pointer',
+                                    '&:hover': { color: 'text.primary' },
+                                  }}
+                                />
+                              ) : (
+                                <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                              )}
+                            </Box>
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                  {roleOpen && (
+                    <Paper
+                      elevation={4}
+                      sx={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        zIndex: 1300,
+                        mt: 0,
+                        maxHeight: 200,
+                        overflow: 'auto',
+                      }}
+                    >
+                      <List dense disablePadding>
+                        {filteredRoleOptions.map((opt) => {
+                          const isActive = opt.value === createFormik.values.role;
+                          return (
+                            <ListItem key={opt.value} disablePadding>
+                              <ListItemButton
+                                onClick={() => handleRoleSelect(opt.value)}
+                                sx={{
+                                  py: 1,
+                                  px: 1.5,
+                                  bgcolor: isActive ? alpha('#0369a1', 0.08) : 'transparent',
+                                  '&:hover': {
+                                    bgcolor: alpha('#0369a1', 0.12),
+                                  },
+                                }}
+                              >
+                                <ListItemText
+                                  primary={opt.label}
+                                  primaryTypographyProps={{
+                                    fontSize: '0.84rem',
+                                    fontWeight: isActive ? 700 : 400,
+                                    noWrap: true,
+                                  }}
+                                />
+                              </ListItemButton>
+                            </ListItem>
+                          );
+                        })}
+                      </List>
+                    </Paper>
+                  )}
+                </Box>
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <DatePicker
+                label='Access Start Date'
+                value={
+                  createFormik.values.accessFromDate
+                    ? dayjs(createFormik.values.accessFromDate)
+                    : null
+                }
+                onChange={(newValue) =>
+                  createFormik.setFieldValue(
+                    'accessFromDate',
+                    newValue ? newValue.format('YYYY-MM-DD') : '',
+                  )
+                }
+                slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+              />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <DatePicker
+                label='Access End Date'
+                value={
+                  createFormik.values.accessToDate ? dayjs(createFormik.values.accessToDate) : null
+                }
+                onChange={(newValue) =>
+                  createFormik.setFieldValue(
+                    'accessToDate',
+                    newValue ? newValue.format('YYYY-MM-DD') : '',
+                  )
+                }
+                slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
               <Typography variant='caption' fontWeight={600} color='text.primary' sx={{ mb: 0.5 }}>
                 Reason for Access
               </Typography>
@@ -407,119 +604,12 @@ const CreateUserDialog = ({
                 showFooterActions={false}
               />
             </Grid>
-          </Grid>
-
-          <Divider sx={{ mb: 2 }} />
-
-          {/* Locale & Calendar */}
-          <Typography variant='subtitle1' fontWeight={600} color='primary' sx={{ mb: 1.5 }}>
-            Locale & Calendar
-          </Typography>
-          <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid size={{ xs: 6 }}>
-              <FormControl fullWidth size='small'>
-                <Select
-                  name='timezone'
-                  value={createFormik.values.timezone}
-                  label='Timezone'
-                  onChange={createFormik.handleChange}
-                  onBlur={createFormik.handleBlur}
-                >
-                  <MenuItem value=''>— Not set —</MenuItem>
-                  {TIMEZONES.map((tz) => (
-                    <MenuItem key={tz} value={tz}>
-                      {getTzDisplay(tz)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <FormControl fullWidth size='small'>
-                <Select
-                  name='language'
-                  value={createFormik.values.language}
-                  label='Language'
-                  onChange={createFormik.handleChange}
-                  onBlur={createFormik.handleBlur}
-                >
-                  {LANGUAGES.map((l) => (
-                    <MenuItem key={l.value} value={l.value}>
-                      {l.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <FormControl fullWidth size='small'>
-                <Select
-                  name='dateFormat'
-                  value={createFormik.values.dateFormat}
-                  label='Date Format'
-                  onChange={createFormik.handleChange}
-                  onBlur={createFormik.handleBlur}
-                >
-                  {DATE_FORMATS.map((f) => (
-                    <MenuItem key={f} value={f}>
-                      {f}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <FormControl fullWidth size='small'>
-                <Select
-                  name='timeFormat'
-                  value={createFormik.values.timeFormat}
-                  label='Time Format'
-                  onChange={createFormik.handleChange}
-                  onBlur={createFormik.handleBlur}
-                >
-                  {TIME_FORMATS.map((f) => (
-                    <MenuItem key={f} value={f}>
-                      {TIME_FORMAT_LABELS[f]}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <FormControl fullWidth size='small'>
-                <Select
-                  name='slaWorkingCalendar'
-                  value={createFormik.values.slaWorkingCalendar}
-                  label='Working Calendar'
-                  onChange={createFormik.handleChange}
-                  onBlur={createFormik.handleBlur}
-                >
-                  <MenuItem value=''>— Not set —</MenuItem>
-                  {SLA_WORKING_CALENDARS.map((c) => (
-                    <MenuItem key={c} value={c}>
-                      {c}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <FormControl fullWidth size='small'>
-                <Select
-                  name='slaExceptionGroup'
-                  value={createFormik.values.slaExceptionGroup}
-                  label='Leave Calendar'
-                  onChange={createFormik.handleChange}
-                  onBlur={createFormik.handleBlur}
-                >
-                  <MenuItem value=''>— Not set —</MenuItem>
-                  {SLA_LEAVE_CALENDARS.map((c) => (
-                    <MenuItem key={c} value={c}>
-                      {c}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+            <Grid size={{ xs: 12 }}>
+              <Alert severity='success'>
+                Admin-created users are <strong>activated immediately</strong>. A welcome email with
+                temporary credentials will be sent. The user must reset their password on first
+                login.
+              </Alert>
             </Grid>
           </Grid>
 
@@ -627,107 +717,40 @@ const CreateUserDialog = ({
             </Button>
           </Stack>
 
-          <Divider sx={{ mb: 2 }} />
-
-          {/* Role Selection */}
-          <Typography variant='subtitle1' fontWeight={600} color='primary' sx={{ mb: 1.5 }}>
-            Role Selection
-          </Typography>
-          <Box ref={roleContainerRef}>
-            <Box sx={{ position: 'relative' }}>
-              <TextField
-                label='Role'
-                placeholder='Search role...'
-                value={roleInputValue}
-                onChange={(e) => {
-                  setRoleInputValue(e.target.value);
-                  setRoleOpen(true);
-                }}
-                onFocus={() => !createFormik.values.role && setRoleOpen(true)}
-                onBlur={() => {
-                  setTimeout(() => setRoleOpen(false), 200);
-                }}
-                required
-                error={createFormik.touched.role && Boolean(createFormik.errors.role)}
-                helperText={reqError(createFormik.touched.role, createFormik.errors.role as string)}
-                fullWidth
-                size='small'
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position='end'>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          {roleInputValue ? (
-                            <ClearIcon
-                              onClick={handleRoleClear}
-                              sx={{
-                                fontSize: 18,
-                                color: 'text.secondary',
-                                cursor: 'pointer',
-                                '&:hover': { color: 'text.primary' },
-                              }}
-                            />
-                          ) : (
-                            <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
-                          )}
-                        </Box>
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-              {roleOpen && (
-                <Paper
-                  elevation={4}
-                  sx={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    zIndex: 1300,
-                    mt: 0,
-                    maxHeight: 200,
-                    overflow: 'auto',
-                  }}
-                >
-                  <List dense disablePadding>
-                    {filteredRoleOptions.map((opt) => {
-                      const isActive = opt.value === createFormik.values.role;
-                      return (
-                        <ListItem key={opt.value} disablePadding>
-                          <ListItemButton
-                            onClick={() => handleRoleSelect(opt.value)}
-                            sx={{
-                              py: 1,
-                              px: 1.5,
-                              bgcolor: isActive ? alpha('#0369a1', 0.08) : 'transparent',
-                              '&:hover': {
-                                bgcolor: alpha('#0369a1', 0.12),
-                              },
-                            }}
-                          >
-                            <ListItemText
-                              primary={opt.label}
-                              primaryTypographyProps={{
-                                fontSize: '0.84rem',
-                                fontWeight: isActive ? 700 : 400,
-                                noWrap: true,
-                              }}
-                            />
-                          </ListItemButton>
-                        </ListItem>
-                      );
-                    })}
-                  </List>
-                </Paper>
-              )}
-            </Box>
-          </Box>
-
-          <Alert severity='success' sx={{ mt: 1 }}>
-            Admin-created users are <strong>activated immediately</strong>. A welcome email with
-            temporary credentials will be sent. The user must reset their password on first login.
-          </Alert>
+          {createFormik.values.role === 'consultant' && (
+            <>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant='subtitle1' fontWeight={600} color='secondary' sx={{ mb: 1.5 }}>
+                Consultant Info
+              </Typography>
+              <Grid container spacing={2} sx={{ mb: 2 }}>
+                <Grid size={{ xs: 6 }}>
+                  <TextField
+                    id='application'
+                    name='application'
+                    label='Application'
+                    fullWidth
+                    size='small'
+                    value={createFormik.values.application}
+                    onChange={createFormik.handleChange}
+                    onBlur={createFormik.handleBlur}
+                  />
+                </Grid>
+                <Grid size={{ xs: 6 }}>
+                  <TextField
+                    id='applicationLead'
+                    name='applicationLead'
+                    label='Application Lead'
+                    fullWidth
+                    size='small'
+                    value={createFormik.values.applicationLead}
+                    onChange={createFormik.handleChange}
+                    onBlur={createFormik.handleBlur}
+                  />
+                </Grid>
+              </Grid>
+            </>
+          )}
 
           <Box>
             <Typography variant='subtitle1' fontWeight={600} color='primary' sx={{ mb: 1.5 }}>
