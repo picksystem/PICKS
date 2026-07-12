@@ -1,4 +1,3 @@
-import { Box, Button } from '@serviceops/component';
 import { ConfigFormDialog } from '@serviceops/configdialogs';
 import {
   DayOfWeek,
@@ -8,15 +7,24 @@ import {
 import { CreateWorkingTimesPanel } from './CreateWorkingTimesPanel';
 import { WORKING_DAY_TEMPLATE_TIMES_CONFIG } from './WorkingDayTemplatesSection.config';
 
+const DAY_LABELS: Record<DayOfWeek, string> = {
+  monday: 'Monday',
+  tuesday: 'Tuesday',
+  wednesday: 'Wednesday',
+  thursday: 'Thursday',
+  friday: 'Friday',
+  saturday: 'Saturday',
+  sunday: 'Sunday',
+};
+
 interface CreateWorkingTimesDialogProps {
   open: boolean;
   onClose: () => void;
   templates: IConfigWorkingDayTemplate[];
   timeBlocks: IConfigWorkingDayTemplateTime[];
   onSave: (next: IConfigWorkingDayTemplateTime[]) => void;
-  initialTemplateId?: string;
-  initialDay?: DayOfWeek;
-  initialBlockId?: string | null;
+  templateId?: string;
+  day?: DayOfWeek;
 }
 
 const CreateWorkingTimesDialog = ({
@@ -25,9 +33,8 @@ const CreateWorkingTimesDialog = ({
   templates,
   timeBlocks,
   onSave,
-  initialTemplateId,
-  initialDay,
-  initialBlockId,
+  templateId,
+  day,
 }: CreateWorkingTimesDialogProps) => {
   return (
     <ConfigFormDialog
@@ -38,31 +45,20 @@ const CreateWorkingTimesDialog = ({
       icon={WORKING_DAY_TEMPLATE_TIMES_CONFIG.icon}
       accent={WORKING_DAY_TEMPLATE_TIMES_CONFIG.accent}
       title='Working Times'
-      editTitle='Create Working Times'
+      editTitle={day ? `Create Working Times — ${DAY_LABELS[day]}` : 'Create Working Times'}
       subtitle={WORKING_DAY_TEMPLATE_TIMES_CONFIG.subtitle}
-      hideActions
       maxWidth='md'
     >
-      {open && (
+      {open && day && (
         <CreateWorkingTimesPanel
-          key={`${initialTemplateId ?? ''}-${initialDay ?? ''}-${initialBlockId ?? ''}`}
+          key={`${templateId ?? ''}-${day}`}
           templates={templates}
           timeBlocks={timeBlocks}
           onSave={onSave}
-          initialTemplateId={initialTemplateId}
-          initialDay={initialDay}
-          initialBlockId={initialBlockId}
+          initialTemplateId={templateId}
+          day={day}
         />
       )}
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <Button
-          variant='contained'
-          onClick={onClose}
-          sx={{ textTransform: 'none', bgcolor: '#2d5ebb', '&:hover': { bgcolor: '#2d5ebb' } }}
-        >
-          Done
-        </Button>
-      </Box>
     </ConfigFormDialog>
   );
 };

@@ -21,6 +21,7 @@ import {
   FormGroup,
   Checkbox,
   Collapse,
+  IconButton,
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import AddIcon from '@mui/icons-material/Add';
@@ -68,7 +69,8 @@ export interface TableField {
     | 'queueSearch'
     | 'richText'
     | 'color'
-    | 'ticketTypesActivation';
+    | 'ticketTypesActivation'
+    | 'dayWorkingTimes';
   /** For activationToggle - description shown when the toggle is ON */
   activationDescriptionActive?: string;
   /** For activationToggle - description shown when the toggle is OFF */
@@ -86,6 +88,8 @@ export interface TableField {
     country?: string;
     timezone?: string;
   };
+  /** For dayWorkingTimes - the weekday key this field represents (e.g. 'monday') */
+  day?: string;
 }
 
 export interface TableConfig {
@@ -314,6 +318,22 @@ interface GenericPanelProps {
   /** Optional ticket type columns for fields of type 'ticketTypesActivation' */
   ticketTypeColumns?: { key: string; label: string }[];
   /**
+   * Called when the pencil icon on a 'dayWorkingTimes' field is clicked.
+   * `rowId` is a stable id for the row being edited — for a brand-new row
+   * (not yet submitted) this is a generated draft id that becomes the row's
+   * real id on submit, so child records (e.g. time blocks) can be safely
+   * attached to it before the parent row is saved.
+   */
+  onDayFieldEditClick?: (params: {
+    fieldName: string;
+    day: string;
+    rowId: string;
+    label: string;
+    setValue: (hours: number) => void;
+    /** Updates every 'dayWorkingTimes' field at once, keyed by weekday. */
+    setAllValues: (hoursByDay: Record<string, number>) => void;
+  }) => void;
+  /**
    * Hide the inner panel header banner (the colored icon + title row that
    * sits above the toolbar inside the panel). Use this when the panel is
    * already wrapped in an outer `GenericAccordion` whose title is the
@@ -411,7 +431,7 @@ const createEmptyForm = (fields: TableField[]): FormData =>
   fields.reduce((acc, field) => {
     if (field.type === 'toggle' || field.type === 'activationToggle') {
       acc[field.name] = field.defaultValue ?? false;
-    } else if (field.type === 'number') {
+    } else if (field.type === 'number' || field.type === 'dayWorkingTimes') {
       acc[field.name] = field.defaultValue ?? '';
     } else if (field.type === 'color') {
       acc[field.name] = (field.defaultValue ?? '') as string;
@@ -770,6 +790,7 @@ export const GenericPanel = ({
   validate,
   validateFields,
   summaryValidator,
+  onDayFieldEditClick,
 }: GenericPanelProps) => {
   const { success, error: showError } = useNotification();
   const reqError = useFieldError();
@@ -780,6 +801,11 @@ export const GenericPanel = ({
   const [isNewDialog, setIsNewDialog] = useState(false);
   const [search, setSearch] = useState('');
   const [form, setForm] = useState<FormData>(createEmptyForm(config.fields));
+  // Stable id for the row being edited in the dialog. For a brand-new row
+  // (no id until submit) this is a draft id generated when the dialog opens,
+  // which becomes the row's real id on submit — so fields like
+  // 'dayWorkingTimes' can attach child records before the row is saved.
+  const [draftId, setDraftId] = useState<string>('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [showValidation, setShowValidation] = useState(false);
   const [ticketTypesExpanded, setTicketTypesExpanded] = useState(false);
@@ -821,7 +847,7 @@ export const GenericPanel = ({
       config.fields.forEach((field) => {
         if (field.type === 'toggle' || field.type === 'activationToggle') {
           values[field.name] = Boolean(editingRow[field.name]);
-        } else if (field.type === 'number') {
+        } else if (field.type === 'number' || field.type === 'dayWorkingTimes') {
           values[field.name] = editingRow[field.name] ?? '';
         } else if (field.type === 'color') {
           values[field.name] = String(editingRow[field.name] || '');
@@ -832,8 +858,10 @@ export const GenericPanel = ({
         }
       });
       setForm(values);
+      setDraftId(String(editingRow.id));
     } else {
       setForm(createEmptyForm(config.fields));
+      setDraftId(`draft-${Date.now()}`);
     }
     setFormErrors({});
     setShowValidation(false);
@@ -1031,7 +1059,7 @@ export const GenericPanel = ({
       return;
     }
 
-    const newId = `${Date.now()}`;
+    const newId = draftId || `${Date.now()}`;
     const updated = editingRow
       ? data.map((r) => (r.id === editingRow.id ? { ...editingRow, ...form } : r))
       : [...data, { id: newId, ...form }];
@@ -1072,6 +1100,7 @@ export const GenericPanel = ({
     validate,
     fieldErrors,
     validateForm,
+    draftId,
   ]);
 
   const handleDelete = useCallback(async () => {
@@ -1665,6 +1694,56 @@ export const GenericPanel = ({
                       </Typography>
                     )}
                   </Box>
+                );
+              }
+              if (field.type === 'dayWorkingTimes') {
+                const rawValue = form[field.name];
+                const displayValue =
+                  rawValue === undefined || rawValue === '' ? '0h' : `${Number(rawValue)}h`;
+                return (
+                  <TextField
+                    key={field.name}
+                    label={field.label}
+                    size='small'
+                    fullWidth
+                    disabled
+                    value={displayValue}
+                    InputProps={{
+                      endAdornment: (
+                        <IconButton
+                          size='small'
+                          edge='end'
+                          onClick={() =>
+                            onDayFieldEditClick?.({
+                              fieldName: field.name,
+                              day: field.day ?? '',
+                              rowId: draftId,
+                              label: field.label,
+                              setValue: (hours: number) =>
+                                handleTextFieldChange(field.name, String(hours)),
+                              setAllValues: (hoursByDay: Record<string, number>) =>
+                                setForm((prev) => {
+                                  const next = { ...prev };
+                                  config.fields.forEach((f) => {
+                                    if (
+                                      f.type === 'dayWorkingTimes' &&
+                                      f.day &&
+                                      hoursByDay[f.day] !== undefined
+                                    ) {
+                                      next[f.name] = hoursByDay[f.day];
+                                    }
+                                  });
+                                  return next;
+                                }),
+                            })
+                          }
+                          sx={{ color: config.accent }}
+                        >
+                          <EditIcon fontSize='small' />
+                        </IconButton>
+                      ),
+                    }}
+                  />
                 );
               }
               const textValue: string =

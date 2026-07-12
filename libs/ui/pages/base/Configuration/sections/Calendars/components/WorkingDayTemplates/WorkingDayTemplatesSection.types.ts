@@ -6,5 +6,3 @@ export interface WorkingDayTemplatesSectionProps {
   onDataChange?: (data: IConfigWorkingDayTemplate[]) => void;
   onWorkingTimesChange?: (data: IConfigWorkingDayTemplateTime[]) => void;
 }
-
-export type WDTActiveView = 'templates' | 'workingTimes';
