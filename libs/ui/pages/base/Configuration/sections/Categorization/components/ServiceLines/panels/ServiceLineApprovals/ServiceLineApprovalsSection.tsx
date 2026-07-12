@@ -8,9 +8,11 @@ import {
   ServiceLineApprovalFormDialog,
   ServiceLineApprovalRow,
 } from '@serviceops/pages/base/Configuration/dialogs/ServiceLineApprovalFormDialog';
+import { Box } from '@serviceops/component';
 import { useSharedUsers } from '../../../../../../hooks/useSharedUsers';
 import { SERVICE_LINE_APPROVALS_CONFIG } from '@serviceops/configcatorshared';
 import { mkCell, mkActiveChip } from '@serviceops/configutils';
+import { TableFilterField } from '../shared/TableFilterField';
 import {
   ServiceLineApprovalsSectionProps,
   FlatServiceLineApRow,
@@ -19,6 +21,8 @@ import {
 export const ServiceLineApprovalsSection = ({
   data,
   onDataChange,
+  hideHeader,
+  initialServiceLineFilter,
 }: ServiceLineApprovalsSectionProps) => {
   const { categorization: apiCat, approvals: apiApprovals } = useConfiguration();
   const { options: userOptions } = useSharedUsers();
@@ -28,6 +32,9 @@ export const ServiceLineApprovalsSection = ({
   const [editingRow, setEditingRow] = useState<FlatServiceLineApRow | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [serviceLineFilter, setServiceLineFilter] = useState(initialServiceLineFilter ?? '');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [nameFilter, setNameFilter] = useState('');
 
   useEffect(() => {
     if (data !== undefined) {
@@ -112,6 +119,46 @@ export const ServiceLineApprovalsSection = ({
     options.sort((a, b) => a.label.localeCompare(b.label));
     return options;
   }, [apiApprovals?.consultantRoles]);
+
+  // Filter dropdown options — distinct values currently present in the
+  // approvals table, so picking one always yields at least one result.
+  const serviceLineFilterOptions = useMemo(() => {
+    const seen = new Set<string>();
+    rows.forEach((r) => {
+      const v = String(r.serviceLineName ?? '').trim();
+      if (v) seen.add(v);
+    });
+    return Array.from(seen).sort((a, b) => a.localeCompare(b));
+  }, [rows]);
+
+  const roleFilterOptions = useMemo(() => {
+    const seen = new Set<string>();
+    rows.forEach((r) => {
+      const v = String(r.approverRole ?? '').trim();
+      if (v) seen.add(v);
+    });
+    return Array.from(seen).sort((a, b) => a.localeCompare(b));
+  }, [rows]);
+
+  const nameFilterOptions = useMemo(() => {
+    const seen = new Set<string>();
+    rows.forEach((r) => {
+      const v = String(r.approverName ?? '').trim();
+      if (v) seen.add(v);
+    });
+    return Array.from(seen).sort((a, b) => a.localeCompare(b));
+  }, [rows]);
+
+  const filteredRows = useMemo(
+    () =>
+      rows.filter(
+        (r) =>
+          (!serviceLineFilter || r.serviceLineName === serviceLineFilter) &&
+          (!roleFilter || r.approverRole === roleFilter) &&
+          (!nameFilter || r.approverName === nameFilter),
+      ),
+    [rows, serviceLineFilter, roleFilter, nameFilter],
+  );
 
   // Column definitions for the data table. `isActive` is rendered as a
   // readonly Switch chip (so the user can see the enable state at a
@@ -235,15 +282,38 @@ export const ServiceLineApprovalsSection = ({
         config={
           SERVICE_LINE_APPROVALS_CONFIG as unknown as Parameters<typeof GenericPanel>[0]['config']
         }
-        data={rows as unknown as Record<string, unknown>[]}
+        data={filteredRows as unknown as Record<string, unknown>[]}
         onSave={handleSave as (data: unknown[]) => void}
         customColumns={approvalColumns as unknown as undefined}
         variant='standard'
+        hideHeader={hideHeader}
         selectedRowId={selectedRowId}
         onRowSelect={setSelectedRowId}
         onNewClick={handleNewClick}
         onEditClick={handleEditClick}
         onDeleteClick={handleDeleteClick}
+        toolbarExtra={
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <TableFilterField
+              label='Service Line'
+              value={serviceLineFilter}
+              onChange={setServiceLineFilter}
+              options={serviceLineFilterOptions}
+            />
+            <TableFilterField
+              label='Approver Role'
+              value={roleFilter}
+              onChange={setRoleFilter}
+              options={roleFilterOptions}
+            />
+            <TableFilterField
+              label='Approver Name'
+              value={nameFilter}
+              onChange={setNameFilter}
+              options={nameFilterOptions}
+            />
+          </Box>
+        }
       />
 
       <ServiceLineApprovalFormDialog

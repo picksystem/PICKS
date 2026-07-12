@@ -185,11 +185,17 @@ const WorkingDayTemplatesSection = ({
       _all: unknown[],
       editingRow: Record<string, unknown> | null,
     ): string | null => {
-      const nameVal = String(form.name ?? '').trim().toLowerCase();
+      const nameVal = String(form.name ?? '')
+        .trim()
+        .toLowerCase();
       if (!nameVal) return null;
       const editingId = (editingRow?.id as string | undefined) ?? null;
       const isDuplicate = rows.some(
-        (r) => r.id !== editingId && String(r.name ?? '').trim().toLowerCase() === nameVal,
+        (r) =>
+          r.id !== editingId &&
+          String(r.name ?? '')
+            .trim()
+            .toLowerCase() === nameVal,
       );
       return isDuplicate
         ? 'Working time template already exists. Please use a different value.'

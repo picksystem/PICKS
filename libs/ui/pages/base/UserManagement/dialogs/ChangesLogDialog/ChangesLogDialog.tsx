@@ -1,10 +1,15 @@
+import { useState } from 'react';
+import dayjs from 'dayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import {
-  FormControl,
-  InputLabel,
   InputAdornment,
   TablePagination,
   Dialog,
   DialogContent,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
 } from '@mui/material';
 import {
   Loader,
@@ -14,8 +19,7 @@ import {
   IconButton,
   Chip,
   TextField,
-  Select,
-  MenuItem,
+  Paper,
   Button,
   DataTable,
   Tooltip,
@@ -24,6 +28,7 @@ import {
 import HistoryIcon from '@mui/icons-material/History';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
@@ -70,6 +75,8 @@ const ChangesLogDialog = ({
   onExportCsv,
 }: ChangesLogDialogProps) => {
   const { classes } = useStyles();
+  const [fieldOpen, setFieldOpen] = useState(false);
+  const [reasonOpen, setReasonOpen] = useState(false);
   return (
     <Dialog
       open={open}
@@ -175,8 +182,8 @@ const ChangesLogDialog = ({
       {/* Filter toolbar */}
       {logShowFilters && (
         <Box className={classes.filterToolbar}>
-          <Grid container spacing={1.5} alignItems='center'>
-            <Grid size={{ xs: 12, sm: 4 }}>
+          <Grid container spacing={1.5} alignItems='flex-start'>
+            <Grid size={{ xs: 12, sm: 2.4 }}>
               <TextField
                 size='small'
                 fullWidth
@@ -188,89 +195,233 @@ const ChangesLogDialog = ({
                 }}
                 slotProps={{
                   input: {
-                    startAdornment: (
-                      <InputAdornment position='start'>
-                        <SearchIcon className={classes.searchIcon} />
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        {logSearch ? (
+                          <ClearIcon
+                            onClick={() => onLogSearchChange('')}
+                            sx={{
+                              fontSize: 18,
+                              color: 'text.primary',
+                              cursor: 'pointer',
+                              '&:hover': { color: 'text.primary' },
+                            }}
+                          />
+                        ) : (
+                          <SearchIcon className={classes.searchIcon} />
+                        )}
                       </InputAdornment>
                     ),
-                    endAdornment: logSearch ? (
-                      <InputAdornment position='end'>
-                        <IconButton size='small' onClick={() => onLogSearchChange('')}>
-                          <CloseIcon sx={{ fontSize: '0.85rem' }} />
-                        </IconButton>
-                      </InputAdornment>
-                    ) : null,
                   },
                 }}
               />
             </Grid>
-            <Grid size={{ xs: 6, sm: 2 }}>
-              <TextField
-                size='small'
-                fullWidth
+            <Grid size={{ xs: 12, sm: 2.4 }}>
+              <DatePicker
                 label='From'
-                type='date'
-                slotProps={{ inputLabel: { shrink: true } }}
-                value={logDateFrom}
-                onChange={(e) => {
-                  onLogDateFromChange(e.target.value);
+                value={logDateFrom ? dayjs(logDateFrom) : null}
+                onChange={(newValue) => {
+                  onLogDateFromChange(newValue ? newValue.format('YYYY-MM-DD') : '');
                   onLogPageChange(0);
                 }}
+                slotProps={{ textField: { fullWidth: true, size: 'small' } }}
               />
             </Grid>
-            <Grid size={{ xs: 6, sm: 2 }}>
-              <TextField
-                size='small'
-                fullWidth
+            <Grid size={{ xs: 12, sm: 2.4 }}>
+              <DatePicker
                 label='To'
-                type='date'
-                slotProps={{ inputLabel: { shrink: true } }}
-                value={logDateTo}
-                onChange={(e) => {
-                  onLogDateToChange(e.target.value);
+                value={logDateTo ? dayjs(logDateTo) : null}
+                onChange={(newValue) => {
+                  onLogDateToChange(newValue ? newValue.format('YYYY-MM-DD') : '');
                   onLogPageChange(0);
                 }}
+                slotProps={{ textField: { fullWidth: true, size: 'small' } }}
               />
             </Grid>
-            <Grid size={{ xs: 6, sm: 2 }}>
-              <FormControl fullWidth size='small'>
-                <InputLabel>Field Changed</InputLabel>
-                <Select
-                  value={logFilterField}
+            <Grid size={{ xs: 12, sm: 2.4 }}>
+              <Box sx={{ position: 'relative' }}>
+                <TextField
                   label='Field Changed'
-                  onChange={(e) => {
-                    onLogFilterFieldChange(e.target.value);
-                    onLogPageChange(0);
+                  placeholder='All fields'
+                  value={logFilterField}
+                  onFocus={() => setFieldOpen(true)}
+                  onBlur={() => setTimeout(() => setFieldOpen(false), 150)}
+                  fullWidth
+                  size='small'
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          {logFilterField ? (
+                            <ClearIcon
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onLogFilterFieldChange('');
+                                onLogPageChange(0);
+                                setFieldOpen(false);
+                              }}
+                              sx={{
+                                fontSize: 18,
+                                color: 'text.primary',
+                                cursor: 'pointer',
+                                '&:hover': { color: 'text.primary' },
+                              }}
+                            />
+                          ) : (
+                            <SearchIcon className={classes.searchIcon} />
+                          )}
+                        </InputAdornment>
+                      ),
+                    },
                   }}
-                >
-                  <MenuItem value=''>All Fields</MenuItem>
-                  {uniqueLogFields.map((f) => (
-                    <MenuItem key={f} value={f}>
-                      {f}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  sx={{ '& .MuiOutlinedInput-root': { cursor: 'pointer' } }}
+                />
+                {fieldOpen && (
+                  <Paper
+                    elevation={4}
+                    sx={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      zIndex: 1000,
+                      mt: 0.5,
+                      maxHeight: 220,
+                      overflow: 'auto',
+                    }}
+                  >
+                    <List dense disablePadding>
+                      <ListItem disablePadding>
+                        <ListItemButton
+                          selected={!logFilterField}
+                          onClick={() => {
+                            onLogFilterFieldChange('');
+                            onLogPageChange(0);
+                            setFieldOpen(false);
+                          }}
+                          sx={{ py: 1, px: 1.5 }}
+                        >
+                          <ListItemText
+                            primary='All Fields'
+                            primaryTypographyProps={{ fontSize: '0.84rem' }}
+                          />
+                        </ListItemButton>
+                      </ListItem>
+                      {uniqueLogFields.map((f) => (
+                        <ListItem key={f} disablePadding>
+                          <ListItemButton
+                            selected={logFilterField === f}
+                            onClick={() => {
+                              onLogFilterFieldChange(f);
+                              onLogPageChange(0);
+                              setFieldOpen(false);
+                            }}
+                            sx={{ py: 1, px: 1.5 }}
+                          >
+                            <ListItemText primary={f} primaryTypographyProps={{ fontSize: '0.84rem' }} />
+                          </ListItemButton>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Paper>
+                )}
+              </Box>
             </Grid>
-            <Grid size={{ xs: 6, sm: 2 }}>
-              <FormControl fullWidth size='small'>
-                <InputLabel>Reason Code</InputLabel>
-                <Select
-                  value={logFilterReason}
+            <Grid size={{ xs: 12, sm: 2.4 }}>
+              <Box sx={{ position: 'relative' }}>
+                <TextField
                   label='Reason Code'
-                  onChange={(e) => {
-                    onLogFilterReasonChange(e.target.value);
-                    onLogPageChange(0);
+                  placeholder='All reasons'
+                  value={
+                    ROLE_CHANGE_REASON_CODES.find((r) => r.value === logFilterReason)?.label ?? ''
+                  }
+                  onFocus={() => setReasonOpen(true)}
+                  onBlur={() => setTimeout(() => setReasonOpen(false), 150)}
+                  fullWidth
+                  size='small'
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          {logFilterReason ? (
+                            <ClearIcon
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onLogFilterReasonChange('');
+                                onLogPageChange(0);
+                                setReasonOpen(false);
+                              }}
+                              sx={{
+                                fontSize: 18,
+                                color: 'text.primary',
+                                cursor: 'pointer',
+                                '&:hover': { color: 'text.primary' },
+                              }}
+                            />
+                          ) : (
+                            <SearchIcon className={classes.searchIcon} />
+                          )}
+                        </InputAdornment>
+                      ),
+                    },
                   }}
-                >
-                  <MenuItem value=''>All Reasons</MenuItem>
-                  {ROLE_CHANGE_REASON_CODES.map((r) => (
-                    <MenuItem key={r.value} value={r.value}>
-                      {r.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  sx={{ '& .MuiOutlinedInput-root': { cursor: 'pointer' } }}
+                />
+                {reasonOpen && (
+                  <Paper
+                    elevation={4}
+                    sx={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      zIndex: 1000,
+                      mt: 0.5,
+                      maxHeight: 220,
+                      overflow: 'auto',
+                    }}
+                  >
+                    <List dense disablePadding>
+                      <ListItem disablePadding>
+                        <ListItemButton
+                          selected={!logFilterReason}
+                          onClick={() => {
+                            onLogFilterReasonChange('');
+                            onLogPageChange(0);
+                            setReasonOpen(false);
+                          }}
+                          sx={{ py: 1, px: 1.5 }}
+                        >
+                          <ListItemText
+                            primary='All Reasons'
+                            primaryTypographyProps={{ fontSize: '0.84rem' }}
+                          />
+                        </ListItemButton>
+                      </ListItem>
+                      {ROLE_CHANGE_REASON_CODES.map((r) => (
+                        <ListItem key={r.value} disablePadding>
+                          <ListItemButton
+                            selected={logFilterReason === r.value}
+                            onClick={() => {
+                              onLogFilterReasonChange(r.value);
+                              onLogPageChange(0);
+                              setReasonOpen(false);
+                            }}
+                            sx={{ py: 1, px: 1.5 }}
+                          >
+                            <ListItemText
+                              primary={r.label}
+                              primaryTypographyProps={{ fontSize: '0.84rem' }}
+                            />
+                          </ListItemButton>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Paper>
+                )}
+              </Box>
             </Grid>
           </Grid>
 

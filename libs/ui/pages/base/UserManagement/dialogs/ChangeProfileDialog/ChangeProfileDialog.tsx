@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   UserAvatar,
   Box,
@@ -7,8 +8,7 @@ import {
   Chip,
   Divider,
   TextField,
-  Select,
-  MenuItem,
+  Paper,
   Grid,
 } from '@serviceops/component';
 import {
@@ -16,22 +16,26 @@ import {
   DialogContent,
   DialogActions,
   DialogTitle,
-  FormControl,
-  InputLabel,
-  FormHelperText,
-  TextField as MuiTextField,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  InputAdornment,
 } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import CloseIcon from '@mui/icons-material/Close';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
-import FormatBoldIcon from '@mui/icons-material/FormatBold';
-import FormatItalicIcon from '@mui/icons-material/FormatItalic';
-import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined';
-import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
-import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
 import { useFieldError } from '@serviceops/hooks';
+import {
+  parseRichText,
+  serializeRichText,
+  RichTextEditor,
+} from '@serviceops/pages/base/Configuration/shared/RichTextEditor';
 import { useStyles } from './styles';
 import { ROLE_CHANGE_REASON_CODES } from '../../utils/userManagement.utils';
 import { ChangeProfileDialogProps } from './util';
@@ -53,13 +57,15 @@ const ChangeProfileDialog = ({
   changeProfileErrors,
   onErrorsChange,
   isSaving,
-  noteRef,
   attachmentInputRef,
   onSubmit,
   onConfirmSave,
 }: ChangeProfileDialogProps) => {
-  const { classes } = useStyles();
+  const { classes, cx } = useStyles();
   const reqError = useFieldError();
+  const [roleOpen, setRoleOpen] = useState(false);
+  const [reasonOpen, setReasonOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   return (
     <>
@@ -137,177 +143,217 @@ const ChangeProfileDialog = ({
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
-              <FormControl fullWidth size='small' error={!!changeProfileErrors.role}>
-                <InputLabel shrink required>
-                  Change role to
-                </InputLabel>
-                <Select
-                  value={changeProfileRole}
+              <Box sx={{ position: 'relative' }}>
+                <TextField
                   label='Change role to'
-                  displayEmpty
-                  notched
-                  renderValue={(val) =>
-                    val ? (
-                      <Typography variant='body2'>
-                        {(val as string).charAt(0).toUpperCase() + (val as string).slice(1)}
-                      </Typography>
-                    ) : (
-                      <Typography variant='body2' color='text.disabled'>
-                        Select new role…
-                      </Typography>
-                    )
+                  placeholder='Select new role…'
+                  value={
+                    changeProfileRole
+                      ? changeProfileRole.charAt(0).toUpperCase() + changeProfileRole.slice(1)
+                      : ''
                   }
-                  onChange={(e) => {
-                    onRoleChange(e.target.value);
-                    onErrorsChange({ ...changeProfileErrors, role: undefined });
+                  onFocus={() => setRoleOpen(true)}
+                  onBlur={() => setTimeout(() => setRoleOpen(false), 150)}
+                  required
+                  fullWidth
+                  size='small'
+                  error={!!changeProfileErrors.role}
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          {changeProfileRole ? (
+                            <ClearIcon
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onRoleChange('');
+                                setRoleOpen(false);
+                              }}
+                              sx={{
+                                fontSize: 18,
+                                color: 'text.primary',
+                                cursor: 'pointer',
+                                '&:hover': { color: 'text.primary' },
+                              }}
+                            />
+                          ) : (
+                            <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                          )}
+                        </InputAdornment>
+                      ),
+                    },
                   }}
-                  sx={{ borderRadius: 2 }}
-                >
-                  {(['user', 'consultant', 'admin'] as const)
-                    .filter((r) => r !== selectedRow?.role)
-                    .map((r) => (
-                      <MenuItem key={r} value={r}>
-                        {r.charAt(0).toUpperCase() + r.slice(1)}
-                      </MenuItem>
-                    ))}
-                </Select>
-                {changeProfileErrors.role && (
-                  <FormHelperText sx={{ ml: 0.5 }}>
-                    {reqError(true, changeProfileErrors.role)}
-                  </FormHelperText>
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, cursor: 'pointer' } }}
+                />
+                {roleOpen && (
+                  <Paper
+                    elevation={4}
+                    sx={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      zIndex: 1000,
+                      mt: 0.5,
+                      maxHeight: 220,
+                      overflow: 'auto',
+                    }}
+                  >
+                    <List dense disablePadding>
+                      {(['user', 'consultant', 'admin'] as const)
+                        .filter((r) => r !== selectedRow?.role)
+                        .map((r) => (
+                          <ListItem key={r} disablePadding>
+                            <ListItemButton
+                              selected={changeProfileRole === r}
+                              onClick={() => {
+                                onRoleChange(r);
+                                onErrorsChange({ ...changeProfileErrors, role: undefined });
+                                setRoleOpen(false);
+                              }}
+                              sx={{ py: 1, px: 1.5 }}
+                            >
+                              <ListItemText
+                                primary={r.charAt(0).toUpperCase() + r.slice(1)}
+                                primaryTypographyProps={{ fontSize: '0.84rem' }}
+                              />
+                            </ListItemButton>
+                          </ListItem>
+                        ))}
+                    </List>
+                  </Paper>
                 )}
-              </FormControl>
+              </Box>
+              <Typography
+                variant='caption'
+                sx={{
+                  color: changeProfileErrors.role ? 'error.main' : 'transparent',
+                  fontSize: '0.75rem',
+                  mt: 0.5,
+                  ml: 1.75,
+                  display: 'block',
+                  minHeight: '1em',
+                  lineHeight: 1.66,
+                }}
+              >
+                {changeProfileErrors.role ? reqError(true, changeProfileErrors.role) : ' '}
+              </Typography>
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
-              <FormControl fullWidth size='small' error={!!changeProfileErrors.reasonCode}>
-                <InputLabel shrink required>
-                  Reason code
-                </InputLabel>
-                <Select
-                  value={changeProfileReasonCode}
+              <Box sx={{ position: 'relative' }}>
+                <TextField
                   label='Reason code'
-                  displayEmpty
-                  notched
-                  renderValue={(val) =>
-                    val ? (
-                      <Typography variant='body2'>
-                        {ROLE_CHANGE_REASON_CODES.find((r) => r.value === val)?.label ??
-                          String(val)}
-                      </Typography>
-                    ) : (
-                      <Typography variant='body2' color='text.disabled'>
-                        Select reason…
-                      </Typography>
-                    )
+                  placeholder='Select reason…'
+                  value={
+                    ROLE_CHANGE_REASON_CODES.find((r) => r.value === changeProfileReasonCode)
+                      ?.label ?? ''
                   }
-                  onChange={(e) => {
-                    onReasonCodeChange(e.target.value);
-                    onErrorsChange({ ...changeProfileErrors, reasonCode: undefined });
+                  onFocus={() => setReasonOpen(true)}
+                  onBlur={() => setTimeout(() => setReasonOpen(false), 150)}
+                  required
+                  fullWidth
+                  size='small'
+                  error={!!changeProfileErrors.reasonCode}
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          {changeProfileReasonCode ? (
+                            <ClearIcon
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onReasonCodeChange('');
+                                setReasonOpen(false);
+                              }}
+                              sx={{
+                                fontSize: 18,
+                                color: 'text.primary',
+                                cursor: 'pointer',
+                                '&:hover': { color: 'text.primary' },
+                              }}
+                            />
+                          ) : (
+                            <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                          )}
+                        </InputAdornment>
+                      ),
+                    },
                   }}
-                  sx={{ borderRadius: 2 }}
-                >
-                  {ROLE_CHANGE_REASON_CODES.map((rc) => (
-                    <MenuItem key={rc.value} value={rc.value}>
-                      {rc.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {changeProfileErrors.reasonCode && (
-                  <FormHelperText sx={{ ml: 0.5 }}>
-                    {reqError(true, changeProfileErrors.reasonCode)}
-                  </FormHelperText>
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, cursor: 'pointer' } }}
+                />
+                {reasonOpen && (
+                  <Paper
+                    elevation={4}
+                    sx={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      zIndex: 1000,
+                      mt: 0.5,
+                      maxHeight: 220,
+                      overflow: 'auto',
+                    }}
+                  >
+                    <List dense disablePadding>
+                      {ROLE_CHANGE_REASON_CODES.map((rc) => (
+                        <ListItem key={rc.value} disablePadding>
+                          <ListItemButton
+                            selected={changeProfileReasonCode === rc.value}
+                            onClick={() => {
+                              onReasonCodeChange(rc.value);
+                              onErrorsChange({ ...changeProfileErrors, reasonCode: undefined });
+                              setReasonOpen(false);
+                            }}
+                            sx={{ py: 1, px: 1.5 }}
+                          >
+                            <ListItemText
+                              primary={rc.label}
+                              primaryTypographyProps={{ fontSize: '0.84rem' }}
+                            />
+                          </ListItemButton>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Paper>
                 )}
-              </FormControl>
+              </Box>
+              <Typography
+                variant='caption'
+                sx={{
+                  color: changeProfileErrors.reasonCode ? 'error.main' : 'transparent',
+                  fontSize: '0.75rem',
+                  mt: 0.5,
+                  ml: 1.75,
+                  display: 'block',
+                  minHeight: '1em',
+                  lineHeight: 1.66,
+                }}
+              >
+                {changeProfileErrors.reasonCode
+                  ? reqError(true, changeProfileErrors.reasonCode)
+                  : ' '}
+              </Typography>
             </Grid>
           </Grid>
 
           {/* Rich-text note */}
           <Box sx={{ mt: 2.5 }}>
-            <Typography variant='body2' fontWeight={600} color='text.primary' sx={{ mb: 0.75 }}>
-              Role change note{' '}
-              <Box component='span' sx={{ color: 'error.main' }}>
-                *
-              </Box>
-            </Typography>
-
-            {/* Formatting toolbar */}
-            <Box
-              className={`${classes.formattingToolbar}${changeProfileErrors.note ? ` ${classes.formattingToolbarError}` : ''}`}
-            >
-              {[
-                { Icon: FormatBoldIcon, title: 'Bold', prefix: '**', suffix: '**' },
-                { Icon: FormatItalicIcon, title: 'Italic', prefix: '_', suffix: '_' },
-                { Icon: FormatUnderlinedIcon, title: 'Underline', prefix: '<u>', suffix: '</u>' },
-              ].map(({ Icon, title, prefix, suffix }) => (
-                <IconButton
-                  key={title}
-                  size='small'
-                  title={title}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    const ta = noteRef.current;
-                    if (!ta) return;
-                    const start = ta.selectionStart ?? 0;
-                    const end = ta.selectionEnd ?? 0;
-                    const selected = changeProfileNoteText.substring(start, end);
-                    const newVal =
-                      changeProfileNoteText.substring(0, start) +
-                      prefix +
-                      selected +
-                      suffix +
-                      changeProfileNoteText.substring(end);
-                    onNoteTextChange(newVal);
-                    onErrorsChange({ ...changeProfileErrors, note: undefined });
-                  }}
-                >
-                  <Icon fontSize='small' />
-                </IconButton>
-              ))}
-
-              <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />
-
-              {[
-                { Icon: FormatListBulletedIcon, title: 'Bullet list', insert: '\n• ' },
-                { Icon: FormatListNumberedIcon, title: 'Numbered list', insert: '\n1. ' },
-              ].map(({ Icon, title, insert }) => (
-                <IconButton
-                  key={title}
-                  size='small'
-                  title={title}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    const ta = noteRef.current;
-                    if (!ta) return;
-                    const pos = ta.selectionStart ?? changeProfileNoteText.length;
-                    const newVal =
-                      changeProfileNoteText.substring(0, pos) +
-                      insert +
-                      changeProfileNoteText.substring(pos);
-                    onNoteTextChange(newVal);
-                    onErrorsChange({ ...changeProfileErrors, note: undefined });
-                  }}
-                >
-                  <Icon fontSize='small' />
-                </IconButton>
-              ))}
-            </Box>
-
-            <MuiTextField
-              inputRef={noteRef}
-              fullWidth
-              multiline
-              minRows={5}
-              maxRows={10}
-              value={changeProfileNoteText}
-              placeholder='Describe the reason for this role change…'
-              onChange={(e) => {
-                if (e.target.value.length <= 32000) {
-                  onNoteTextChange(e.target.value);
+            <RichTextEditor
+              value={parseRichText(changeProfileNoteText)}
+              onChange={(value) => {
+                const serialized = serializeRichText(value.segments);
+                if (serialized.length <= 32000) {
+                  onNoteTextChange(serialized);
                   onErrorsChange({ ...changeProfileErrors, note: undefined });
                 }
               }}
+              showFooterActions={false}
+              title='Role change note'
+              required
               error={!!changeProfileErrors.note}
-              className={classes.noteTextarea}
             />
 
             <Box className={classes.charCountRow}>
@@ -329,6 +375,9 @@ const ChangeProfileDialog = ({
 
           {/* Attachment */}
           <Box sx={{ mt: 2, mb: 1 }}>
+            <Typography variant='body2' fontWeight={600} color='text.primary' sx={{ mb: 0.75 }}>
+              Attachment
+            </Typography>
             <input
               ref={attachmentInputRef}
               type='file'
@@ -336,25 +385,52 @@ const ChangeProfileDialog = ({
               className={classes.hiddenInput}
               onChange={(e) => onAttachmentChange(e.target.files?.[0] ?? null)}
             />
-            <Box className={classes.attachmentRow}>
-              <Button
-                variant='outlined'
-                size='small'
-                startIcon={<AttachFileIcon />}
-                onClick={() => attachmentInputRef.current?.click()}
-                sx={{ textTransform: 'none', borderRadius: 2 }}
-              >
-                {changeProfileAttachment ? changeProfileAttachment.name : 'Add attachment'}
-              </Button>
-              {changeProfileAttachment && (
+            {changeProfileAttachment ? (
+              <Box className={classes.attachmentRow}>
+                <AttachFileIcon fontSize='small' sx={{ color: 'text.secondary' }} />
+                <Typography variant='body2' sx={{ flex: 1, wordBreak: 'break-all' }}>
+                  {changeProfileAttachment.name}
+                </Typography>
                 <IconButton size='small' onClick={() => onAttachmentChange(null)}>
                   <CloseIcon fontSize='small' />
                 </IconButton>
-              )}
-              <Typography variant='caption' color='text.disabled'>
-                Optional · PDF, DOC, DOCX, PNG, JPG
-              </Typography>
-            </Box>
+              </Box>
+            ) : (
+              <Box
+                className={cx(classes.dropzone, isDragging && classes.dropzoneActive)}
+                onClick={() => attachmentInputRef.current?.click()}
+                onDragEnter={(e: React.DragEvent<HTMLDivElement>) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsDragging(true);
+                }}
+                onDragOver={(e: React.DragEvent<HTMLDivElement>) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsDragging(true);
+                }}
+                onDragLeave={(e: React.DragEvent<HTMLDivElement>) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsDragging(false);
+                }}
+                onDrop={(e: React.DragEvent<HTMLDivElement>) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsDragging(false);
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) onAttachmentChange(file);
+                }}
+              >
+                <CloudUploadIcon className={classes.dropzoneIcon} />
+                <Typography variant='body2' fontWeight={600}>
+                  {isDragging ? 'Drop file to attach' : 'Drag and drop a file, or click to browse'}
+                </Typography>
+                <Typography variant='caption' color='text.disabled'>
+                  Optional · PDF, DOC, DOCX, PNG, JPG
+                </Typography>
+              </Box>
+            )}
           </Box>
         </DialogContent>
 

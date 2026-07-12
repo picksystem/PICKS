@@ -4,6 +4,14 @@ import ChecklistIcon from '@mui/icons-material/Checklist';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import ToggleOnIcon from '@mui/icons-material/ToggleOn';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ClearIcon from '@mui/icons-material/Clear';
+import CloseIcon from '@mui/icons-material/Close';
+import { Dialog, DialogContent, IconButton } from '@mui/material';
+import { darken } from '@mui/material/styles';
+import { SearchField } from '../../../../shared/SearchField';
 import {
   IConfigServiceLine,
   IConfigBusinessCategory,
@@ -17,7 +25,14 @@ import { GenericPanel } from '@serviceops/genericpanel';
 import { GenericAccordion } from '@serviceops/genericaccordion';
 import { ConfigDeleteDialog } from '@serviceops/configdialogs';
 import { ServiceLineFormDialog } from '@serviceops/pages/base/Configuration/dialogs/ServiceLineFormDialog';
-import { CATEG_ACCENT, SERVICE_LINE_MAIN_CONFIG } from '../shared';
+import {
+  CATEG_ACCENT,
+  SERVICE_LINE_MAIN_CONFIG,
+  SERVICE_LINE_APPROVALS_CONFIG,
+  SERVICE_LINE_TIMESHEET_CONFIG,
+  SERVICE_LINE_EXPENSES_CONFIG,
+  TICKET_TYPE_TOGGLE_CONFIG,
+} from '../shared';
 import {
   ServiceLineApprovalsSection,
   ServiceLineTimesheetSection,
@@ -27,6 +42,7 @@ import {
 import { ServiceLineActiveView } from './ServiceLinesSection.types';
 import { useSharedUsers } from '../../../../hooks/useSharedUsers';
 import type { Column } from '@serviceops/component';
+import { Box, Button, Divider, Tooltip, Typography } from '@serviceops/component';
 import { mkCell, mkDescCell } from '@serviceops/configutils';
 
 interface ServiceLinesSectionProps {
@@ -63,6 +79,20 @@ const VIEW_BUTTONS: { key: ServiceLineActiveView; label: string; icon: React.Rea
   },
 ];
 
+// Header content (icon/title/subtitle/accent) for the sub-view dialog,
+// matching the gradient banner used by every Configuration page form
+// dialog (see ConfigFormDialog in @serviceops/configdialogs). Each entry
+// reuses the same TableConfig already driving that view's own GenericPanel,
+// so the dialog header and the data table underneath always agree.
+const VIEW_DIALOG_CONFIG: Partial<
+  Record<ServiceLineActiveView, { title: string; subtitle?: string; accent: string; icon: React.ReactNode }>
+> = {
+  approvals: SERVICE_LINE_APPROVALS_CONFIG,
+  timesheet: SERVICE_LINE_TIMESHEET_CONFIG,
+  expenses: SERVICE_LINE_EXPENSES_CONFIG,
+  ticketTypes: TICKET_TYPE_TOGGLE_CONFIG,
+};
+
 export const ServiceLinesSection = ({ data, onDataChange }: ServiceLinesSectionProps) => {
   const { classes } = useStyles();
   const { categorization: apiCat, saveSection } = useConfiguration();
@@ -73,6 +103,7 @@ export const ServiceLinesSection = ({ data, onDataChange }: ServiceLinesSectionP
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editingRow, setEditingRow] = useState<IConfigServiceLine | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     if (data !== undefined) {
@@ -81,6 +112,19 @@ export const ServiceLinesSection = ({ data, onDataChange }: ServiceLinesSectionP
       setRows(apiCat.serviceLines);
     }
   }, [data, apiCat]);
+
+  // The Approvals/Timesheet/Expenses/Ticket Types buttons only make sense in
+  // the context of a selected service line, so they stay hidden until a row
+  // is selected — mirroring the User Management toolbar, where the
+  // selection-only actions (Edit, Delete, Consultant Profile, etc.) are
+  // hidden until a row is selected. If the selection is cleared while one of
+  // those views is active, fall back to the main Service Lines table so the
+  // user isn't left on a view whose toolbar button just disappeared.
+  useEffect(() => {
+    if (!selectedRowId && activeView !== 'servicelines') {
+      setActiveView('servicelines');
+    }
+  }, [selectedRowId, activeView]);
 
   const handleSave = useCallback(
     (next: IConfigServiceLine[]) => {
@@ -416,6 +460,18 @@ export const ServiceLinesSection = ({ data, onDataChange }: ServiceLinesSectionP
 
   const selectedRow = rows.find((r) => r.id === selectedRowId) ?? null;
 
+  // Search box in the custom toolbar (GenericPanel's own is hidden via
+  // hideToolbar since New/Edit/Delete/Clear are driven externally) — matches
+  // the "search across every visible field" behavior used elsewhere (e.g.
+  // UserManagementSection's table search).
+  const filteredRows = search
+    ? rows.filter((row) =>
+        Object.values(row).some(
+          (val) => val !== null && val !== undefined && String(val).toLowerCase().includes(search.toLowerCase()),
+        ),
+      )
+    : rows;
+
   return (
     <GenericAccordion
       title='Service Lines'
@@ -425,28 +481,109 @@ export const ServiceLinesSection = ({ data, onDataChange }: ServiceLinesSectionP
       className={classes.sectionAccordion}
       defaultExpanded={false}
     >
-      <GenericToolbar
-        buttons={VIEW_BUTTONS.map((btn) => ({
-          key: btn.key,
-          label: btn.label,
-          icon: btn.icon,
-          isActive: activeView === btn.key,
-          onClick: () => setActiveView(btn.key),
-        }))}
-      />
+      <GenericToolbar className={classes.actionToolbar}>
+        <Box className={classes.toolbarButtons}>
+          {!selectedRowId && (
+            <Tooltip title='Create new service line'>
+              <Button
+                size='small'
+                variant='contained'
+                startIcon={<AddIcon />}
+                onClick={handleNewClick}
+                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+              >
+                Add New Service Line
+              </Button>
+            </Tooltip>
+          )}
+
+          {selectedRowId && (
+            <Tooltip title='Edit selected service line'>
+              <Button
+                size='small'
+                variant='outlined'
+                startIcon={<EditIcon />}
+                onClick={handleEditClick}
+                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+              >
+                Edit
+              </Button>
+            </Tooltip>
+          )}
+
+          {selectedRowId && (
+            <Tooltip title='Delete selected service line'>
+              <Button
+                size='small'
+                variant='outlined'
+                color='error'
+                startIcon={<DeleteIcon />}
+                onClick={handleDeleteClick}
+                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+              >
+                Delete
+              </Button>
+            </Tooltip>
+          )}
+
+          {selectedRowId && <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />}
+
+          {selectedRowId &&
+            VIEW_BUTTONS.filter((btn) => btn.key !== 'servicelines').map((btn) => (
+              <Tooltip key={btn.key} title={btn.label}>
+                <Button
+                  size='small'
+                  variant={activeView === btn.key ? 'contained' : 'outlined'}
+                  startIcon={btn.icon}
+                  onClick={() => setActiveView(btn.key)}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  {btn.label}
+                </Button>
+              </Tooltip>
+            ))}
+
+          {selectedRowId && <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />}
+
+          {selectedRowId && (
+            <Tooltip title='Clear selection'>
+              <Button
+                size='small'
+                variant='outlined'
+                startIcon={<ClearIcon />}
+                onClick={() => setSelectedRowId(null)}
+                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+              >
+                Clear
+              </Button>
+            </Tooltip>
+          )}
+
+          {!selectedRowId && (
+            // SearchField's own wrapper defaults to width: 100% (meant for
+            // standalone use), which forces it onto its own row inside a
+            // flex toolbar — the `sx` prop can't win against that class
+            // (same specificity, injection order dependent), so it's
+            // wrapped in its own flexShrink:0 Box instead, keeping it
+            // inline with the New button and pushed to the far right.
+            <Box sx={{ ml: 'auto', flexShrink: 0 }}>
+              <SearchField value={search} onChange={setSearch} className={classes.tableSearchField} />
+            </Box>
+          )}
+        </Box>
+      </GenericToolbar>
       {activeView === 'servicelines' && (
         <>
           <GenericPanel
             config={SERVICE_LINE_MAIN_CONFIG}
-            data={rows as unknown as Record<string, unknown>[]}
+            data={filteredRows as unknown as Record<string, unknown>[]}
             onSave={handleSave as (data: unknown[]) => void}
             customColumns={serviceLineColumns as unknown as undefined}
             variant='standard'
+            hideHeader
+            hideToolbar
             selectedRowId={selectedRowId}
             onRowSelect={setSelectedRowId}
-            onNewClick={handleNewClick}
-            onEditClick={handleEditClick}
-            onDeleteClick={handleDeleteClick}
           />
 
           <ServiceLineFormDialog
@@ -469,31 +606,118 @@ export const ServiceLinesSection = ({ data, onDataChange }: ServiceLinesSectionP
           />
         </>
       )}
-      {activeView === 'approvals' && (
-        <ServiceLineApprovalsSection
-          data={allApprovals}
-          onDataChange={(next) => handleSubPanelSave('approvals', next)}
-        />
-      )}
-      {activeView === 'timesheet' && (
-        <ServiceLineTimesheetSection
-          data={allTimesheets}
-          onDataChange={(next) => handleSubPanelSave('timesheetProjects', next)}
-          serviceLineOptions={serviceLineOptions}
-          projectOptions={projectOptions}
-          onTimesheetSave={handleTimesheetSaveWithMirror}
-          onTimesheetDelete={handleTimesheetDeleteWithMirror}
-        />
-      )}
-      {activeView === 'expenses' && (
-        <ServiceLineExpenseSection
-          data={allExpenses}
-          onDataChange={(next) => handleSubPanelSave('expenseProjects', next)}
-        />
-      )}
-      {activeView === 'ticketTypes' && (
-        <ServiceLineTicketTypeSection rows={rows} onTicketTypeToggle={handleTicketTypeToggle} />
-      )}
+      {/* Approvals/Timesheet/Expenses/Ticket Types open as a dialog over the
+          Service Lines table (matching the User Management "Changes Log"
+          dialog pattern) instead of swapping the inline accordion body. The
+          header mirrors every Configuration form dialog's gradient banner
+          (see ConfigFormDialog) — icon + title + subtitle on an accent
+          gradient, with a close (X) button. Each sub-panel is rendered with
+          hideHeader so its own icon+title banner doesn't duplicate this one;
+          it still keeps its normal data table + New/Edit/Delete toolbar. */}
+      <Dialog
+        open={activeView !== 'servicelines'}
+        onClose={() => setActiveView('servicelines')}
+        maxWidth={activeView === 'ticketTypes' ? 'sm' : 'xl'}
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden', maxHeight: '90vh' } }}
+      >
+        {(() => {
+          const dlgConfig = VIEW_DIALOG_CONFIG[activeView];
+          if (!dlgConfig) return null;
+          return (
+            <Box
+              sx={{
+                px: 3,
+                py: 2.5,
+                background: `linear-gradient(135deg, ${darken(dlgConfig.accent, 0.18)} 0%, ${dlgConfig.accent} 100%)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 1.75,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75 }}>
+                <Box
+                  sx={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 1.5,
+                    bgcolor: 'rgba(255,255,255,0.18)',
+                    border: '1.5px solid rgba(255,255,255,0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      color: '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {dlgConfig.icon}
+                  </Box>
+                </Box>
+                <Box>
+                  <Typography
+                    sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff', lineHeight: 1.2 }}
+                  >
+                    {dlgConfig.title}
+                  </Typography>
+                  {dlgConfig.subtitle && (
+                    <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}>
+                      {dlgConfig.subtitle}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+              <IconButton onClick={() => setActiveView('servicelines')} sx={{ color: '#fff' }}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          );
+        })()}
+        <DialogContent sx={{ p: 2.5, overflowY: 'auto' }}>
+          {activeView === 'approvals' && (
+            <ServiceLineApprovalsSection
+              data={allApprovals}
+              onDataChange={(next) => handleSubPanelSave('approvals', next)}
+              hideHeader
+              initialServiceLineFilter={selectedRow?.name}
+            />
+          )}
+          {activeView === 'timesheet' && (
+            <ServiceLineTimesheetSection
+              data={allTimesheets}
+              onDataChange={(next) => handleSubPanelSave('timesheetProjects', next)}
+              serviceLineOptions={serviceLineOptions}
+              projectOptions={projectOptions}
+              onTimesheetSave={handleTimesheetSaveWithMirror}
+              onTimesheetDelete={handleTimesheetDeleteWithMirror}
+              hideHeader
+              initialServiceLineFilter={selectedRow?.name}
+            />
+          )}
+          {activeView === 'expenses' && (
+            <ServiceLineExpenseSection
+              data={allExpenses}
+              onDataChange={(next) => handleSubPanelSave('expenseProjects', next)}
+              hideHeader
+              initialServiceLineFilter={selectedRow?.name}
+            />
+          )}
+          {activeView === 'ticketTypes' && (
+            <ServiceLineTicketTypeSection
+              rows={rows}
+              onTicketTypeToggle={handleTicketTypeToggle}
+              hideHeader
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </GenericAccordion>
   );
 };

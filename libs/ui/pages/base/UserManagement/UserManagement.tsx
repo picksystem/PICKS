@@ -112,7 +112,6 @@ const UserManagement = () => {
     changeProfileConfirmOpen,
     setChangeProfileConfirmOpen,
     isSavingProfile,
-    changeProfileNoteRef,
     attachmentInputRef,
     handleOpenChangeProfile,
     handleChangeProfileSubmit,
@@ -351,7 +350,6 @@ const UserManagement = () => {
         changeProfileErrors={changeProfileErrors}
         onErrorsChange={setChangeProfileErrors}
         isSaving={isSavingProfile}
-        noteRef={changeProfileNoteRef}
         attachmentInputRef={attachmentInputRef}
         onSubmit={handleChangeProfileSubmit}
         onConfirmSave={handleSaveChangeProfile}

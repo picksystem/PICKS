@@ -13,11 +13,15 @@ interface ServiceLineTicketTypeSectionProps {
     enabled: boolean,
     ticketTypeId: string | number,
   ) => void;
+  /** Hide the panel's own icon+title banner — use when it's already shown
+   * by an outer dialog wrapper. */
+  hideHeader?: boolean;
 }
 
 export const ServiceLineTicketTypeSection = ({
   rows,
   onTicketTypeToggle,
+  hideHeader,
 }: ServiceLineTicketTypeSectionProps) => {
   const { ticketTypes: ticketTypesData } = useSharedTicketTypes();
 
@@ -46,6 +50,7 @@ export const ServiceLineTicketTypeSection = ({
       selectedParentId={null}
       ticketTypeActivations={ticketTypeActivations}
       onToggle={onTicketTypeToggle || (() => {})}
+      hideHeader={hideHeader}
     />
   );
 };

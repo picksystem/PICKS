@@ -17,7 +17,6 @@ export interface ChangeProfileDialogProps {
   changeProfileErrors: ChangeProfileErrors;
   onErrorsChange: (e: ChangeProfileErrors) => void;
   isSaving: boolean;
-  noteRef: React.RefObject<HTMLTextAreaElement | null>;
   attachmentInputRef: React.RefObject<HTMLInputElement | null>;
   onSubmit: () => void;
   onConfirmSave: () => void;

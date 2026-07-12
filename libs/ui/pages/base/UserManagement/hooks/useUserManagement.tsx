@@ -116,7 +116,6 @@ const useUserManagement = () => {
   const [changeProfileErrors, setChangeProfileErrors] = useState<ChangeProfileErrors>({});
   const [changeProfileConfirmOpen, setChangeProfileConfirmOpen] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const changeProfileNoteRef = useRef<HTMLTextAreaElement>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
 
   // ── Generate temp password ────────────────────────────────────────────────────
@@ -1061,7 +1060,6 @@ const useUserManagement = () => {
     changeProfileConfirmOpen,
     setChangeProfileConfirmOpen,
     isSavingProfile,
-    changeProfileNoteRef,
     attachmentInputRef,
     handleOpenChangeProfile,
     handleChangeProfileSubmit,

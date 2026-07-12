@@ -20,7 +20,9 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   Stack,
+  alpha,
 } from '@mui/material';
+import type { Theme } from '@mui/material/styles';
 import LockResetIcon from '@mui/icons-material/LockReset';
 import CloseIcon from '@mui/icons-material/Close';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
@@ -31,6 +33,11 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import EmailIcon from '@mui/icons-material/Email';
+import {
+  parseRichText,
+  serializeRichText,
+  RichTextEditor,
+} from '@serviceops/pages/base/Configuration/shared/RichTextEditor';
 import { useStyles } from './styles';
 import { ResetPasswordDialogProps } from './util';
 import { useNotification, useFieldError } from '@serviceops/hooks';
@@ -328,26 +335,49 @@ const ResetPasswordDialog = ({
         <Divider sx={{ mb: 2 }} />
 
         {/* Settings */}
-        <FormControlLabel
-          control={
-            <Switch
-              checked={resetPwForceChange}
-              color='error'
-              onChange={(e) => onForceChangeChange(e.target.checked)}
-            />
-          }
-          label={
-            <Box>
-              <Typography variant='body2' fontWeight={600}>
-                Force password change on next login
+        <Box
+          sx={(theme: Theme) => ({
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            px: 2,
+            py: 1.25,
+            borderRadius: 1,
+            border: '1px solid',
+            borderColor: resetPwForceChange ? alpha(theme.palette.error.main, 0.3) : 'divider',
+            bgcolor: resetPwForceChange ? alpha(theme.palette.error.main, 0.04) : 'transparent',
+            transition: 'all 0.2s ease',
+            mb: 2,
+          })}
+        >
+          <Box>
+            <Typography variant='body2' color='error.main' fontWeight={600}>
+              Force password change on next login
+            </Typography>
+            <Typography variant='caption' color='text.secondary'>
+              User must immediately set a new password after logging in with this reset password
+            </Typography>
+          </Box>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={resetPwForceChange}
+                color='error'
+                onChange={(e) => onForceChangeChange(e.target.checked)}
+              />
+            }
+            label={
+              <Typography
+                variant='body2'
+                fontWeight={700}
+                sx={{ color: resetPwForceChange ? 'error.main' : 'text.secondary' }}
+              >
+                {resetPwForceChange ? 'On' : 'Off'}
               </Typography>
-              <Typography variant='caption' color='text.secondary'>
-                User must immediately set a new password after logging in with this reset password
-              </Typography>
-            </Box>
-          }
-          sx={{ alignItems: 'flex-start', mb: 2 }}
-        />
+            }
+            sx={{ ml: 0 }}
+          />
+        </Box>
 
         <Typography variant='body2' fontWeight={600} sx={{ mb: 1 }}>
           Notify User Via
@@ -365,20 +395,11 @@ const ResetPasswordDialog = ({
         <Divider sx={{ mb: 2 }} />
 
         {/* Reason */}
-        <Typography variant='subtitle2' fontWeight={700} sx={{ mb: 1 }}>
-          Reason{' '}
-          <Typography component='span' variant='caption' color='text.secondary'>
-            (optional – logged for compliance)
-          </Typography>
-        </Typography>
-        <TextField
-          fullWidth
-          size='small'
-          multiline
-          minRows={2}
-          placeholder='e.g. Account compromise suspected, policy enforcement…'
-          value={resetPwReason}
-          onChange={(e) => onReasonChange(e.target.value)}
+        <RichTextEditor
+          value={parseRichText(resetPwReason)}
+          onChange={(value) => onReasonChange(serializeRichText(value.segments))}
+          showFooterActions={false}
+          title='Reason'
         />
       </DialogContent>
 

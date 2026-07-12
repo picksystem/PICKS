@@ -341,6 +341,19 @@ interface GenericPanelProps {
    */
   hideHeader?: boolean;
   /**
+   * Hide the entire New/Edit/Delete/Clear + search toolbar row (both the
+   * "nothing selected" and "row selected" states). Use this when those
+   * actions are driven from an external toolbar instead (e.g. a shared
+   * `GenericToolbar` above the panel) so the buttons aren't rendered twice.
+   */
+  hideToolbar?: boolean;
+  /**
+   * Extra controls (e.g. dropdown filters) rendered in the toolbar between
+   * the New button and the search field — only shown in the "nothing
+   * selected" state, same slot as the search field sits in.
+   */
+  toolbarExtra?: React.ReactNode;
+  /**
    * Optional cross-field validator. When provided, the returned message is
    * rendered as an inline error at the bottom of the form and blocks submit
    * (greys the Submit button). Re-evaluates on every form change.
@@ -463,6 +476,9 @@ interface PanelContentProps {
   enableNewButton?: boolean;
   enableEditButton?: boolean;
   enableDeleteButton?: boolean;
+  /** Extra controls (e.g. dropdown filters) rendered between the New button
+   * and the search field, only in the "nothing selected" toolbar state. */
+  toolbarExtra?: React.ReactNode;
 }
 
 const PanelContent = memo(
@@ -479,6 +495,7 @@ const PanelContent = memo(
     enableNewButton = true,
     enableEditButton = true,
     enableDeleteButton = true,
+    toolbarExtra,
   }: PanelContentProps) => {
     const { classes } = useStyles();
     const hasSelection = selectedId !== null;
@@ -520,13 +537,23 @@ const PanelContent = memo(
                   </Tooltip>
                 </Box>
               )}
-              <Box className={classes.searchFieldContainer}>
-                <SearchField
-                  value={search}
-                  onChange={onSearchChange}
-                  isLoading={isSearchLoading}
-                  className={classes.tableSearchField}
-                />
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  alignItems: { sm: 'center' },
+                  gap: 1,
+                }}
+              >
+                {toolbarExtra}
+                <Box className={classes.searchFieldContainer}>
+                  <SearchField
+                    value={search}
+                    onChange={onSearchChange}
+                    isLoading={isSearchLoading}
+                    className={classes.tableSearchField}
+                  />
+                </Box>
               </Box>
             </Box>
           ) : (
@@ -602,6 +629,8 @@ const StandardPanel = memo(
     enableEditButton = true,
     enableDeleteButton = true,
     hideHeader = false,
+    hideToolbar = false,
+    toolbarExtra,
   }: {
     config: TableConfig;
     columns: Column<GenericData>[];
@@ -619,6 +648,8 @@ const StandardPanel = memo(
     enableEditButton?: boolean;
     enableDeleteButton?: boolean;
     hideHeader?: boolean;
+    hideToolbar?: boolean;
+    toolbarExtra?: React.ReactNode;
   }) => {
     return (
       <Box
@@ -634,23 +665,26 @@ const StandardPanel = memo(
           <PanelHeader icon={config.icon} title={config.title} accent={config.accent} />
         )}
 
-        <PanelContent
-          config={config}
-          columns={columns}
-          filtered={filtered}
-          selectedId={selectedId}
-          search={search}
-          isSearchLoading={isSearchLoading}
-          onSearchChange={onSearchChange}
-          onRowClick={onRowClick}
-          onNewClick={onNewClick}
-          onEditClick={onEditClick}
-          onDeleteClick={onDeleteClick}
-          onClearClick={onClearClick}
-          enableNewButton={enableNewButton}
-          enableEditButton={enableEditButton}
-          enableDeleteButton={enableDeleteButton}
-        />
+        {!hideToolbar && (
+          <PanelContent
+            config={config}
+            columns={columns}
+            filtered={filtered}
+            selectedId={selectedId}
+            search={search}
+            isSearchLoading={isSearchLoading}
+            onSearchChange={onSearchChange}
+            onRowClick={onRowClick}
+            onNewClick={onNewClick}
+            onEditClick={onEditClick}
+            onDeleteClick={onDeleteClick}
+            onClearClick={onClearClick}
+            enableNewButton={enableNewButton}
+            enableEditButton={enableEditButton}
+            enableDeleteButton={enableDeleteButton}
+            toolbarExtra={toolbarExtra}
+          />
+        )}
 
         <Paper elevation={0} sx={{ borderRadius: 0 }}>
           <DataTable<GenericData>
@@ -689,6 +723,8 @@ const PlainPanel = memo(
     enableNewButton = true,
     enableEditButton = true,
     enableDeleteButton = true,
+    hideToolbar = false,
+    toolbarExtra,
   }: {
     config: TableConfig;
     columns: Column<GenericData>[];
@@ -706,6 +742,8 @@ const PlainPanel = memo(
     enableNewButton?: boolean;
     enableEditButton?: boolean;
     enableDeleteButton?: boolean;
+    hideToolbar?: boolean;
+    toolbarExtra?: React.ReactNode;
   }) => {
     const { classes } = useStyles();
 
@@ -727,23 +765,26 @@ const PlainPanel = memo(
             borderColor: alpha(config.accent, 0.25),
           }}
         >
-          <PanelContent
-            config={config}
-            columns={columns}
-            filtered={filtered}
-            selectedId={selectedId}
-            search={search}
-            isSearchLoading={isSearchLoading}
-            onSearchChange={onSearchChange}
-            onRowClick={onRowClick}
-            onNewClick={onNewClick}
-            onEditClick={onEditClick}
-            onDeleteClick={onDeleteClick}
-            onClearClick={onClearClick}
-            enableNewButton={enableNewButton}
-            enableEditButton={enableEditButton}
-            enableDeleteButton={enableDeleteButton}
-          />
+          {!hideToolbar && (
+            <PanelContent
+              config={config}
+              columns={columns}
+              filtered={filtered}
+              selectedId={selectedId}
+              search={search}
+              isSearchLoading={isSearchLoading}
+              onSearchChange={onSearchChange}
+              onRowClick={onRowClick}
+              onNewClick={onNewClick}
+              onEditClick={onEditClick}
+              onDeleteClick={onDeleteClick}
+              onClearClick={onClearClick}
+              enableNewButton={enableNewButton}
+              enableEditButton={enableEditButton}
+              enableDeleteButton={enableDeleteButton}
+              toolbarExtra={toolbarExtra}
+            />
+          )}
 
           <Paper elevation={0} sx={{ borderRadius: 0 }}>
             <DataTable<GenericData>
@@ -787,6 +828,8 @@ export const GenericPanel = ({
   onDeleteClick,
   ticketTypeColumns,
   hideHeader = false,
+  hideToolbar = false,
+  toolbarExtra,
   validate,
   validateFields,
   summaryValidator,
@@ -1150,6 +1193,8 @@ export const GenericPanel = ({
       enableEditButton,
       enableDeleteButton,
       hideHeader,
+      hideToolbar,
+      toolbarExtra,
     }),
     [
       config,
@@ -1167,7 +1212,9 @@ export const GenericPanel = ({
       enableNewButton,
       enableEditButton,
       enableDeleteButton,
+      toolbarExtra,
       hideHeader,
+      hideToolbar,
     ],
   );
 

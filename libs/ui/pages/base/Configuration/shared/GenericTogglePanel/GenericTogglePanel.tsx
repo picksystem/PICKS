@@ -17,6 +17,9 @@ interface GenericTogglePanelProps {
   selectedParentId: string | null;
   ticketTypeActivations: IConfigServiceLineTicketType[] | Record<string, boolean>;
   onToggle: (ticketTypeKey: string, enabled: boolean, ticketTypeId: string | number) => void;
+  /** Hide the panel's own icon+title banner — use when it's already shown
+   * by an outer dialog wrapper. */
+  hideHeader?: boolean;
 }
 
 export const GenericTogglePanel = ({
@@ -24,6 +27,7 @@ export const GenericTogglePanel = ({
   allTicketTypeKeys,
   ticketTypeActivations,
   onToggle,
+  hideHeader,
 }: GenericTogglePanelProps) => {
   const [search, setSearch] = useState('');
 
@@ -127,16 +131,19 @@ export const GenericTogglePanel = ({
 
   return (
     <Box sx={{ mt: 1.5 }}>
-      <PanelHeader icon={config.icon} title={config.title} accent={config.accent} />
+      {!hideHeader && (
+        <PanelHeader icon={config.icon} title={config.title} accent={config.accent} />
+      )}
 
       <Paper
         elevation={1}
         sx={{
-          borderRadius: '0 0 10px 10px',
+          borderRadius: hideHeader ? '10px' : '0 0 10px 10px',
           overflow: 'hidden',
           border: '1px solid',
           borderColor: alpha(config.accent, 0.25),
-          borderTop: 'none',
+          borderTop: hideHeader ? '1px solid' : 'none',
+          borderTopColor: alpha(config.accent, 0.25),
         }}
       >
         <Box sx={{ p: 1, display: 'flex', justifyContent: 'flex-end' }}>

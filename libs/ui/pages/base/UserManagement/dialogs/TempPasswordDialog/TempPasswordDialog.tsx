@@ -1,17 +1,23 @@
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogActions,
   Avatar,
-  FormControl,
-  InputLabel,
   ToggleButtonGroup,
   ToggleButton,
+  List,
+  ListItemButton,
+  InputAdornment,
+  alpha,
 } from '@mui/material';
+import type { Theme } from '@mui/material/styles';
 import KeyIcon from '@mui/icons-material/Key';
 import CloseIcon from '@mui/icons-material/Close';
 import PeopleIcon from '@mui/icons-material/People';
 import SecurityIcon from '@mui/icons-material/Security';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import {
   UserAvatar,
   Box,
@@ -22,8 +28,7 @@ import {
   Divider,
   Alert,
   TextField,
-  Select,
-  MenuItem,
+  Paper,
   FormControlLabel,
   Switch,
   ListItem,
@@ -32,8 +37,22 @@ import {
   Checkbox,
   Grid,
 } from '@serviceops/component';
+import {
+  parseRichText,
+  serializeRichText,
+  RichTextEditor,
+} from '@serviceops/pages/base/Configuration/shared/RichTextEditor';
 import { useStyles } from './styles';
 import { TempPasswordDialogProps } from './util';
+
+const VALIDITY_OPTIONS = [
+  { value: '12h', label: '12 Hours' },
+  { value: '24h', label: '24 Hours (Recommended)' },
+  { value: '48h', label: '48 Hours' },
+  { value: '72h', label: '72 Hours' },
+  { value: '7d', label: '7 Days' },
+  { value: '30d', label: '30 Days' },
+];
 
 const TempPasswordDialog = ({
   open,
@@ -54,6 +73,7 @@ const TempPasswordDialog = ({
   onGenerate,
 }: TempPasswordDialogProps) => {
   const { classes } = useStyles();
+  const [validityOpen, setValidityOpen] = useState(false);
   return (
     <Dialog
       open={open}
@@ -194,44 +214,122 @@ const TempPasswordDialog = ({
           Password Settings
         </Typography>
         <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <FormControl fullWidth size='small'>
-              <InputLabel>Validity Period</InputLabel>
-              <Select
-                value={tempPwValidity}
+          <Grid size={{ xs: 12 }}>
+            <Box sx={{ position: 'relative' }}>
+              <TextField
                 label='Validity Period'
-                onChange={(e) => onValidityChange(e.target.value)}
-              >
-                <MenuItem value='12h'>12 Hours</MenuItem>
-                <MenuItem value='24h'>24 Hours (Recommended)</MenuItem>
-                <MenuItem value='48h'>48 Hours</MenuItem>
-                <MenuItem value='72h'>72 Hours</MenuItem>
-                <MenuItem value='7d'>7 Days</MenuItem>
-                <MenuItem value='30d'>30 Days</MenuItem>
-              </Select>
-            </FormControl>
+                value={VALIDITY_OPTIONS.find((o) => o.value === tempPwValidity)?.label ?? ''}
+                onFocus={() => setValidityOpen(true)}
+                onBlur={() => setTimeout(() => setValidityOpen(false), 150)}
+                fullWidth
+                size='small'
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        {tempPwValidity ? (
+                          <ClearIcon
+                            onClick={() => {
+                              onValidityChange('');
+                              setValidityOpen(false);
+                            }}
+                            sx={{
+                              fontSize: 20,
+                              color: 'text.secondary',
+                              cursor: 'pointer',
+                              '&:hover': { color: 'text.primary' },
+                            }}
+                          />
+                        ) : (
+                          <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                        )}
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+                sx={{ '& .MuiOutlinedInput-root': { cursor: 'pointer' } }}
+              />
+              {validityOpen && (
+                <Paper
+                  elevation={4}
+                  sx={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    zIndex: 1000,
+                    mt: 0.5,
+                    maxHeight: 220,
+                    overflow: 'auto',
+                  }}
+                >
+                  <List dense disablePadding>
+                    {VALIDITY_OPTIONS.map((o) => (
+                      <ListItem key={o.value} disablePadding>
+                        <ListItemButton
+                          selected={tempPwValidity === o.value}
+                          onClick={() => {
+                            onValidityChange(o.value);
+                            setValidityOpen(false);
+                          }}
+                          sx={{ py: 1, px: 1.5 }}
+                        >
+                          <ListItemText
+                            primary={o.label}
+                            primaryTypographyProps={{ fontSize: '0.84rem' }}
+                          />
+                        </ListItemButton>
+                      </ListItem>
+                    ))}
+                  </List>
+                </Paper>
+              )}
+            </Box>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={tempPwForceReset}
-                  color='warning'
-                  onChange={(e) => onForceResetChange(e.target.checked)}
-                />
-              }
-              label={
-                <Box>
-                  <Typography variant='body2' fontWeight={600}>
-                    Force reset on first login
+          <Grid size={{ xs: 12 }}>
+            <Box
+              sx={(theme: Theme) => ({
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                px: 2,
+                py: 1.25,
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: tempPwForceReset ? alpha(theme.palette.warning.main, 0.3) : 'divider',
+                bgcolor: tempPwForceReset ? alpha(theme.palette.warning.main, 0.04) : 'transparent',
+                transition: 'all 0.2s ease',
+              })}
+            >
+              <Box>
+                <Typography variant='body2' color='warning.main' fontWeight={600}>
+                  Force reset on first login
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  User must set a new password immediately
+                </Typography>
+              </Box>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={tempPwForceReset}
+                    color='warning'
+                    onChange={(e) => onForceResetChange(e.target.checked)}
+                  />
+                }
+                label={
+                  <Typography
+                    variant='body2'
+                    fontWeight={700}
+                    sx={{ color: tempPwForceReset ? 'warning.main' : 'text.secondary' }}
+                  >
+                    {tempPwForceReset ? 'On' : 'Off'}
                   </Typography>
-                  <Typography variant='caption' color='text.secondary'>
-                    User must set a new password immediately
-                  </Typography>
-                </Box>
-              }
-              sx={{ alignItems: 'flex-start', mt: 0.25 }}
-            />
+                }
+                sx={{ ml: 0 }}
+              />
+            </Box>
           </Grid>
         </Grid>
 
@@ -244,20 +342,11 @@ const TempPasswordDialog = ({
         <Divider sx={{ mb: 2 }} />
 
         {/* Audit note */}
-        <Typography variant='subtitle2' fontWeight={700} color='text.primary' sx={{ mb: 1 }}>
-          Audit Note{' '}
-          <Typography component='span' variant='caption' color='text.secondary'>
-            (optional)
-          </Typography>
-        </Typography>
-        <TextField
-          fullWidth
-          size='small'
-          multiline
-          minRows={2}
-          placeholder='Reason for generating a temporary password…'
-          value={tempPwNote}
-          onChange={(e) => onNoteChange(e.target.value)}
+        <RichTextEditor
+          value={parseRichText(tempPwNote)}
+          onChange={(value) => onNoteChange(serializeRichText(value.segments))}
+          showFooterActions={false}
+          title='Audit Note'
         />
       </DialogContent>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Column } from '@serviceops/component';
+import { Box, Column } from '@serviceops/component';
 import { GenericPanel } from '@serviceops/genericpanel';
 import { ConfigDeleteDialog } from '@serviceops/configdialogs';
 import { mkCell, mkActiveChip } from '@serviceops/configutils';
@@ -9,6 +9,7 @@ import {
 } from '@serviceops/pages/base/Configuration/dialogs/ServiceLineTimesheetFormDialog';
 import { SERVICE_LINE_TIMESHEET_CONFIG } from '@serviceops/configcatorshared';
 import { serviceLineTimesheetColumns } from '../../../shared/CategorizationPanelConfig';
+import { TableFilterField } from '../shared/TableFilterField';
 import {
   ServiceLineTimesheetSectionProps,
   FlatServiceLineTSRow,
@@ -21,12 +22,17 @@ export const ServiceLineTimesheetSection = ({
   projectOptions = [],
   onTimesheetSave,
   onTimesheetDelete,
+  hideHeader,
+  initialServiceLineFilter,
 }: ServiceLineTimesheetSectionProps) => {
   const [rows, setRows] = useState<FlatServiceLineTSRow[]>([]);
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [editingRow, setEditingRow] = useState<FlatServiceLineTSRow | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [serviceLineFilter, setServiceLineFilter] = useState(initialServiceLineFilter ?? '');
+  const [projectFilter, setProjectFilter] = useState('');
+  const [applicationFilter, setApplicationFilter] = useState('');
 
   useEffect(() => {
     if (data !== undefined) {
@@ -53,6 +59,46 @@ export const ServiceLineTimesheetSection = ({
   const columns: Column<FlatServiceLineTSRow>[] = useMemo(
     () => serviceLineTimesheetColumns as unknown as Column<FlatServiceLineTSRow>[],
     [],
+  );
+
+  // Filter dropdown options — distinct values currently present in the
+  // timesheet table, so picking one always yields at least one result.
+  const serviceLineFilterOptions = useMemo(() => {
+    const seen = new Set<string>();
+    rows.forEach((r) => {
+      const v = String(r.serviceLineName ?? '').trim();
+      if (v) seen.add(v);
+    });
+    return Array.from(seen).sort((a, b) => a.localeCompare(b));
+  }, [rows]);
+
+  const projectFilterOptions = useMemo(() => {
+    const seen = new Set<string>();
+    rows.forEach((r) => {
+      const v = String(r.project ?? '').trim();
+      if (v) seen.add(v);
+    });
+    return Array.from(seen).sort((a, b) => a.localeCompare(b));
+  }, [rows]);
+
+  const applicationFilterOptions = useMemo(() => {
+    const seen = new Set<string>();
+    rows.forEach((r) => {
+      const v = String(r.application ?? '').trim();
+      if (v) seen.add(v);
+    });
+    return Array.from(seen).sort((a, b) => a.localeCompare(b));
+  }, [rows]);
+
+  const filteredRows = useMemo(
+    () =>
+      rows.filter(
+        (r) =>
+          (!serviceLineFilter || r.serviceLineName === serviceLineFilter) &&
+          (!projectFilter || r.project === projectFilter) &&
+          (!applicationFilter || r.application === applicationFilter),
+      ),
+    [rows, serviceLineFilter, projectFilter, applicationFilter],
   );
 
   const handleNewClick = useCallback(() => {
@@ -154,15 +200,38 @@ export const ServiceLineTimesheetSection = ({
         config={
           SERVICE_LINE_TIMESHEET_CONFIG as unknown as Parameters<typeof GenericPanel>[0]['config']
         }
-        data={rows as unknown as Record<string, unknown>[]}
+        data={filteredRows as unknown as Record<string, unknown>[]}
         onSave={handleSave as (data: unknown[]) => void}
         customColumns={columns as unknown as undefined}
         variant='standard'
+        hideHeader={hideHeader}
         selectedRowId={selectedRowId}
         onRowSelect={setSelectedRowId}
         onNewClick={handleNewClick}
         onEditClick={handleEditClick}
         onDeleteClick={handleDeleteClick}
+        toolbarExtra={
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <TableFilterField
+              label='Service Line'
+              value={serviceLineFilter}
+              onChange={setServiceLineFilter}
+              options={serviceLineFilterOptions}
+            />
+            <TableFilterField
+              label='Project'
+              value={projectFilter}
+              onChange={setProjectFilter}
+              options={projectFilterOptions}
+            />
+            <TableFilterField
+              label='Application'
+              value={applicationFilter}
+              onChange={setApplicationFilter}
+              options={applicationFilterOptions}
+            />
+          </Box>
+        }
       />
 
       <ServiceLineTimesheetFormDialog

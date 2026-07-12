@@ -1,4 +1,4 @@
-import { Theme } from '@mui/material/styles';
+import { Theme, alpha } from '@mui/material/styles';
 import { CSSObject } from 'tss-react';
 
 export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
@@ -97,28 +97,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
       backgroundColor: theme.palette.common.white10,
     },
   },
-  formattingToolbar: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: theme.spacing(0.25),
-    paddingLeft: theme.spacing(0.75),
-    paddingRight: theme.spacing(0.75),
-    paddingTop: theme.spacing(0.25),
-    paddingBottom: theme.spacing(0.25),
-    border: '1px solid',
-    borderBottom: 0,
-    borderRadius: '8px 8px 0 0',
-    backgroundColor: theme.palette.grey[50],
-    borderColor: theme.palette.divider,
-  },
-  formattingToolbarError: {
-    borderColor: theme.palette.error.main,
-  },
-  noteTextarea: {
-    '& .MuiOutlinedInput-root': {
-      borderRadius: '0 0 8px 8px',
-    },
-  },
   charCountRow: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -128,9 +106,39 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     display: 'flex',
     alignItems: 'center',
     gap: theme.spacing(1),
+    padding: theme.spacing(1, 1.5),
+    border: `1px solid ${theme.palette.divider}`,
+    borderRadius: (theme.shape.borderRadius as number) * 2,
+    backgroundColor: theme.palette.grey[50],
   },
   hiddenInput: {
     display: 'none',
+  },
+  dropzone: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing(0.5),
+    padding: theme.spacing(2.5),
+    border: `2px dashed ${theme.palette.divider}`,
+    borderRadius: (theme.shape.borderRadius as number) * 2,
+    backgroundColor: theme.palette.grey[50],
+    cursor: 'pointer',
+    textAlign: 'center' as const,
+    transition: 'all 0.2s ease',
+    '&:hover': {
+      borderColor: theme.palette.primary.main,
+      backgroundColor: alpha(theme.palette.primary.main, 0.04),
+    },
+  },
+  dropzoneActive: {
+    borderColor: theme.palette.primary.main,
+    backgroundColor: alpha(theme.palette.primary.main, 0.06),
+  },
+  dropzoneIcon: {
+    fontSize: 28,
+    color: theme.palette.text.secondary,
   },
   actions: {
     paddingLeft: theme.spacing(3),
