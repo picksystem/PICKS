@@ -13,9 +13,10 @@ import {
 interface WorkingTimesSectionProps {
   data?: IConfigComposedWorkingTime[];
   onDataChange?: (data: IConfigComposedWorkingTime[]) => void;
+  hideHeader?: boolean;
 }
 
-const WorkingTimesSection = ({ data, onDataChange }: WorkingTimesSectionProps) => {
+const WorkingTimesSection = ({ data, onDataChange, hideHeader }: WorkingTimesSectionProps) => {
   const [rows, setRows] = useState<IConfigComposedWorkingTime[]>([]);
 
   // Fetch from Configuration API
@@ -62,6 +63,7 @@ const WorkingTimesSection = ({ data, onDataChange }: WorkingTimesSectionProps) =
       onSave={handleSave}
       customColumns={composedWorkingTimeColumns as unknown as never}
       variant='standard'
+      hideHeader={hideHeader}
       enableSuccessMessage
     />
   );

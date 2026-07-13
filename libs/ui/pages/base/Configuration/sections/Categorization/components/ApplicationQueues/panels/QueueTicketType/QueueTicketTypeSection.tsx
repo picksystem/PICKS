@@ -1,11 +1,13 @@
 import type { IConfigServiceLineTicketType, ITicketType } from '@serviceops/interfaces';
 import { useSharedTicketTypes } from '../../../../../../hooks/useSharedTicketTypes';
 import { GenericTogglePanel } from '@serviceops/generictogglepanel';
+import { QUEUE_TICKET_TYPE_CONFIG } from './QueueTicketTypeSection.config';
 import { QueueTicketTypeSectionProps } from './QueueTicketTypeSection.types';
 
 export const QueueTicketTypeSection = ({
   rows,
   onTicketTypeToggle,
+  hideHeader,
 }: QueueTicketTypeSectionProps) => {
   const { ticketTypes: ticketTypesData } = useSharedTicketTypes();
 
@@ -29,18 +31,12 @@ export const QueueTicketTypeSection = ({
 
   return (
     <GenericTogglePanel
-      config={{
-        title: 'Enable / Disable Ticket Types',
-        subtitle: 'Configure ticket type activations per queue',
-        accent: '#0369a1',
-        icon: null,
-        entity: 'Ticket Type',
-        fields: [],
-      }}
+      config={QUEUE_TICKET_TYPE_CONFIG}
       allTicketTypeKeys={allTicketTypeKeys}
       selectedParentId={null}
       ticketTypeActivations={ticketTypeActivations}
       onToggle={onTicketTypeToggle || (() => {})}
+      hideHeader={hideHeader}
     />
   );
 };

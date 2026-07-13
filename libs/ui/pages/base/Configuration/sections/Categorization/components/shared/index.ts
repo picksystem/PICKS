@@ -1,5 +1,6 @@
 export * from './types';
 export * from './CategorizationPanelConfig';
+export { TableFilterField } from './TableFilterField';
 export {
   PanelHeader,
   PanelTable,

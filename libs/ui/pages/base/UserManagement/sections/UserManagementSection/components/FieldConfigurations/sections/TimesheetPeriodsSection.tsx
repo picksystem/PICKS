@@ -13,9 +13,10 @@ import {
 interface TimesheetPeriodsSectionProps {
   data?: IConfigTimesheetPeriodEntry[];
   onDataChange?: (data: IConfigTimesheetPeriodEntry[]) => void;
+  hideHeader?: boolean;
 }
 
-const TimesheetPeriodsSection = ({ data, onDataChange }: TimesheetPeriodsSectionProps) => {
+const TimesheetPeriodsSection = ({ data, onDataChange, hideHeader }: TimesheetPeriodsSectionProps) => {
   const [rows, setRows] = useState<IConfigTimesheetPeriodEntry[]>([]);
 
   // Fetch from Configuration API
@@ -62,6 +63,7 @@ const TimesheetPeriodsSection = ({ data, onDataChange }: TimesheetPeriodsSection
       onSave={handleSave}
       customColumns={timesheetPeriodEntryColumns as unknown as never}
       variant='standard'
+      hideHeader={hideHeader}
       enableSuccessMessage
     />
   );

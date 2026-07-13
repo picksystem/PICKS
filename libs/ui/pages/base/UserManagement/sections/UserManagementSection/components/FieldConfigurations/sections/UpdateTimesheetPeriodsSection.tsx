@@ -16,11 +16,13 @@ import {
 interface UpdateTimesheetPeriodsSectionProps {
   data?: IConfigUpdateTimesheetPeriodEntry[];
   onDataChange?: (data: IConfigUpdateTimesheetPeriodEntry[]) => void;
+  hideHeader?: boolean;
 }
 
 const UpdateTimesheetPeriodsSection = ({
   data,
   onDataChange,
+  hideHeader,
 }: UpdateTimesheetPeriodsSectionProps) => {
   const [rows, setRows] = useState<IConfigUpdateTimesheetPeriodEntry[]>([]);
 
@@ -68,6 +70,7 @@ const UpdateTimesheetPeriodsSection = ({
       onSave={handleSave}
       customColumns={updateTimesheetPeriodEntryColumns as unknown as never}
       variant='standard'
+      hideHeader={hideHeader}
       enableSuccessMessage
     />
   );

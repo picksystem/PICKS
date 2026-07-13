@@ -7,6 +7,14 @@ import CodeIcon from '@mui/icons-material/Code';
 import ToggleOnIcon from '@mui/icons-material/ToggleOn';
 import AppsIcon from '@mui/icons-material/Apps';
 import StickyNote2Icon from '@mui/icons-material/StickyNote2';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ClearIcon from '@mui/icons-material/Clear';
+import CloseIcon from '@mui/icons-material/Close';
+import { Dialog, DialogContent, IconButton } from '@mui/material';
+import { darken } from '@mui/material/styles';
+import { SearchField } from '../../../../shared/SearchField';
 import {
   IConfigApplication,
   IConfigServiceLine,
@@ -17,6 +25,7 @@ import { GenericPanel } from '@serviceops/genericpanel';
 import { ConfigDeleteDialog } from '@serviceops/configdialogs';
 import { ApplicationsFormDialog } from '@serviceops/pages/base/Configuration/dialogs/ApplicationsFormDialog';
 import { useSharedUsers } from '../../../../hooks/useSharedUsers';
+import { Box, Button, Divider, Tooltip, Typography } from '@serviceops/component';
 import type { Column } from '@serviceops/component';
 import { mkCell, mkDescCell } from '@serviceops/configutils';
 import {
@@ -28,7 +37,13 @@ import {
   AppTicketTypeSection,
   AppStickyNoteSection,
 } from './panels';
-import { CATEG_ACCENT, APPLICATION_MAIN_CONFIG } from '../shared';
+import { APP_APPROVALS_CONFIG } from './panels/AppApprovals/AppApprovalsSection.config';
+import { APP_TIMESHEET_CONFIG } from './panels/AppTimesheet/AppTimesheetSection.config';
+import { APP_EXPENSES_CONFIG } from './panels/AppExpenses/AppExpensesSection.config';
+import { APP_SUPPORT_LINES_CONFIG } from './panels/AppSupportLines/AppSupportLinesSection.config';
+import { TICKET_TYPE_TOGGLE_CONFIG as APP_TICKET_TYPE_CONFIG } from './panels/AppTicketType/AppTicketTypeSection.config';
+import { APP_STICKY_NOTE_CONFIG } from './panels/AppStickyNote/AppStickyNoteSection.config';
+import { CATEG_ACCENT, APPLICATION_MAIN_CONFIG, APP_BILLING_CODES_CONFIG } from '../shared';
 import { ApplicationActiveView } from './ApplicationsSection.types';
 import { useStyles } from '../../styles';
 import { GenericAccordion } from '@serviceops/genericaccordion';
@@ -83,6 +98,33 @@ const VIEW_BUTTONS: { key: ApplicationActiveView; label: string; icon: React.Rea
   },
 ];
 
+// Header content (icon/title/subtitle/accent) for the sub-view dialog,
+// matching the gradient banner used by every Configuration page form
+// dialog (see ConfigFormDialog in @serviceops/configdialogs). Each entry
+// reuses the same TableConfig already driving that view's own GenericPanel,
+// so the dialog header and the data table underneath always agree.
+const VIEW_DIALOG_CONFIG: Partial<
+  Record<
+    ApplicationActiveView,
+    { title: string; subtitle?: string; accent: string; icon: React.ReactNode }
+  >
+> = {
+  approvals: APP_APPROVALS_CONFIG,
+  timesheet: APP_TIMESHEET_CONFIG,
+  expenses: APP_EXPENSES_CONFIG,
+  supportLines: APP_SUPPORT_LINES_CONFIG,
+  billingCodes: APP_BILLING_CODES_CONFIG,
+  ticketTypes: APP_TICKET_TYPE_CONFIG,
+  stickyNote: APP_STICKY_NOTE_CONFIG,
+};
+
+// The ticket-type toggle list and the sticky note editor don't need the
+// wide table layout the other sub-views use.
+const DIALOG_WIDTH: Partial<Record<ApplicationActiveView, 'sm' | 'md'>> = {
+  ticketTypes: 'sm',
+  stickyNote: 'md',
+};
+
 export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionProps) => {
   const { classes } = useStyles();
   const { categorization: apiCat, saveSection } = useConfiguration();
@@ -93,6 +135,7 @@ export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionP
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editingRow, setEditingRow] = useState<IConfigApplication | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     if (data !== undefined) {
@@ -101,6 +144,19 @@ export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionP
       setRows(apiCat.applications);
     }
   }, [data, apiCat]);
+
+  // The Approvals/Timesheet/Expenses/Support Lines/Billing Codes/Ticket
+  // Types/Sticky Note buttons only make sense in the context of a selected
+  // application, so they stay hidden until a row is selected — mirroring
+  // the User Management toolbar (Service Lines uses the same pattern). If
+  // the selection is cleared while one of those views is active, fall back
+  // to the main Applications table so the user isn't left on a view whose
+  // toolbar button just disappeared.
+  useEffect(() => {
+    if (!selectedRowId && activeView !== 'applications') {
+      setActiveView('applications');
+    }
+  }, [selectedRowId, activeView]);
 
   const handleSave = useCallback(
     (next: IConfigApplication[]) => {
@@ -343,6 +399,21 @@ export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionP
     handleSave(updated);
   };
 
+  const selectedRow = rows.find((r) => r.id === selectedRowId) ?? null;
+
+  // Search box in the custom toolbar (GenericPanel's own is hidden via
+  // hideToolbar since New/Edit/Delete/Clear are driven externally) — matches
+  // the "search across every visible field" behavior used elsewhere (e.g.
+  // UserManagementSection's table search).
+  const filteredRows = search
+    ? rows.filter((row) =>
+        Object.values(row).some(
+          (val) =>
+            val !== null && val !== undefined && String(val).toLowerCase().includes(search.toLowerCase()),
+        ),
+      )
+    : rows;
+
   return (
     <GenericAccordion
       title='Applications'
@@ -352,28 +423,109 @@ export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionP
       className={classes.sectionAccordion}
       defaultExpanded={false}
     >
-      <GenericToolbar
-        buttons={VIEW_BUTTONS.map((btn) => ({
-          key: btn.key,
-          label: btn.label,
-          icon: btn.icon,
-          isActive: activeView === btn.key,
-          onClick: () => setActiveView(btn.key),
-        }))}
-      />
+      <GenericToolbar className={classes.actionToolbar}>
+        <Box className={classes.toolbarButtons}>
+          {!selectedRowId && (
+            <Tooltip title='Create new application'>
+              <Button
+                size='small'
+                variant='contained'
+                startIcon={<AddIcon />}
+                onClick={handleNewClick}
+                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+              >
+                Add New Application
+              </Button>
+            </Tooltip>
+          )}
+
+          {selectedRowId && (
+            <Tooltip title='Edit selected application'>
+              <Button
+                size='small'
+                variant='outlined'
+                startIcon={<EditIcon />}
+                onClick={handleEditClick}
+                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+              >
+                Edit
+              </Button>
+            </Tooltip>
+          )}
+
+          {selectedRowId && (
+            <Tooltip title='Delete selected application'>
+              <Button
+                size='small'
+                variant='outlined'
+                color='error'
+                startIcon={<DeleteIcon />}
+                onClick={handleDeleteClick}
+                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+              >
+                Delete
+              </Button>
+            </Tooltip>
+          )}
+
+          {selectedRowId && <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />}
+
+          {selectedRowId &&
+            VIEW_BUTTONS.filter((btn) => btn.key !== 'applications').map((btn) => (
+              <Tooltip key={btn.key} title={btn.label}>
+                <Button
+                  size='small'
+                  variant={activeView === btn.key ? 'contained' : 'outlined'}
+                  startIcon={btn.icon}
+                  onClick={() => setActiveView(btn.key)}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  {btn.label}
+                </Button>
+              </Tooltip>
+            ))}
+
+          {selectedRowId && <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />}
+
+          {selectedRowId && (
+            <Tooltip title='Clear selection'>
+              <Button
+                size='small'
+                variant='outlined'
+                startIcon={<ClearIcon />}
+                onClick={() => setSelectedRowId(null)}
+                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+              >
+                Clear
+              </Button>
+            </Tooltip>
+          )}
+
+          {!selectedRowId && (
+            // SearchField's own wrapper defaults to width: 100% (meant for
+            // standalone use), which forces it onto its own row inside a
+            // flex toolbar — the `sx` prop can't win against that class
+            // (same specificity, injection order dependent), so it's
+            // wrapped in its own flexShrink:0 Box instead, keeping it
+            // inline with the New button and pushed to the far right.
+            <Box sx={{ ml: 'auto', flexShrink: 0 }}>
+              <SearchField value={search} onChange={setSearch} className={classes.tableSearchField} />
+            </Box>
+          )}
+        </Box>
+      </GenericToolbar>
       {activeView === 'applications' && (
         <>
           <GenericPanel
             config={APPLICATION_MAIN_CONFIG}
-            data={rows as unknown as Record<string, unknown>[]}
+            data={filteredRows as unknown as Record<string, unknown>[]}
             onSave={handleSave as (data: unknown[]) => void}
             customColumns={applicationColumns as unknown as undefined}
             variant='standard'
+            hideHeader
+            hideToolbar
             selectedRowId={selectedRowId}
             onRowSelect={setSelectedRowId}
-            onNewClick={handleNewClick}
-            onEditClick={handleEditClick}
-            onDeleteClick={handleDeleteClick}
           />
 
           <ApplicationsFormDialog
@@ -396,42 +548,135 @@ export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionP
           />
         </>
       )}
-      {activeView === 'approvals' && (
-        <AppApprovalsSection
-          data={allApprovals}
-          onDataChange={(next) => handleSubPanelSave('approvals', next)}
-        />
-      )}
-      {activeView === 'timesheet' && (
-        <AppTimesheetSection
-          data={allTimesheets}
-          onDataChange={(next) => handleSubPanelSave('timesheetProjects', next)}
-        />
-      )}
-      {activeView === 'expenses' && (
-        <AppExpensesSection
-          data={allExpenses}
-          onDataChange={(next) => handleSubPanelSave('expenseProjects', next)}
-        />
-      )}
-      {activeView === 'supportLines' && (
-        <AppSupportLinesSection
-          data={allSupportLines}
-          onDataChange={(next) => handleSubPanelSave('supportLines', next)}
-        />
-      )}
-      {activeView === 'billingCodes' && (
-        <AppBillingCodesSection
-          data={allBillingCodes}
-          onDataChange={(next) => handleSubPanelSave('billingCodes', next)}
-        />
-      )}
-      {activeView === 'ticketTypes' && (
-        <AppTicketTypeSection rows={rows} onTicketTypeToggle={handleTicketTypeToggle} />
-      )}
-      {activeView === 'stickyNote' && (
-        <AppStickyNoteSection rows={rows} onStickyNoteChange={handleStickyNoteChange} />
-      )}
+      {/* Approvals/Timesheet/Expenses/Support Lines/Billing Codes/Ticket
+          Types/Sticky Note open as a dialog over the Applications table
+          (matching the User Management "Changes Log" dialog pattern and the
+          Service Lines section) instead of swapping the inline accordion
+          body. The header mirrors every Configuration form dialog's
+          gradient banner (see ConfigFormDialog) — icon + title + subtitle
+          on an accent gradient, with a close (X) button. Each sub-panel is
+          rendered with hideHeader so its own icon+title banner doesn't
+          duplicate this one; it still keeps its normal data table +
+          New/Edit/Delete toolbar. */}
+      <Dialog
+        open={activeView !== 'applications'}
+        onClose={() => setActiveView('applications')}
+        maxWidth={DIALOG_WIDTH[activeView] ?? 'xl'}
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden', maxHeight: '90vh' } }}
+      >
+        {(() => {
+          const dlgConfig = VIEW_DIALOG_CONFIG[activeView];
+          if (!dlgConfig) return null;
+          return (
+            <Box
+              sx={{
+                px: 3,
+                py: 2.5,
+                background: `linear-gradient(135deg, ${darken(dlgConfig.accent, 0.18)} 0%, ${dlgConfig.accent} 100%)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 1.75,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75 }}>
+                <Box
+                  sx={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 1.5,
+                    bgcolor: 'rgba(255,255,255,0.18)',
+                    border: '1.5px solid rgba(255,255,255,0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      color: '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {dlgConfig.icon}
+                  </Box>
+                </Box>
+                <Box>
+                  <Typography
+                    sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff', lineHeight: 1.2 }}
+                  >
+                    {dlgConfig.title}
+                  </Typography>
+                  {dlgConfig.subtitle && (
+                    <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}>
+                      {dlgConfig.subtitle}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+              <IconButton onClick={() => setActiveView('applications')} sx={{ color: '#fff' }}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          );
+        })()}
+        <DialogContent sx={{ p: 2.5, overflowY: 'auto' }}>
+          {activeView === 'approvals' && (
+            <AppApprovalsSection
+              data={allApprovals}
+              onDataChange={(next) => handleSubPanelSave('approvals', next)}
+              hideHeader
+              initialApplicationFilter={selectedRow?.name}
+            />
+          )}
+          {activeView === 'timesheet' && (
+            <AppTimesheetSection
+              data={allTimesheets}
+              onDataChange={(next) => handleSubPanelSave('timesheetProjects', next)}
+              hideHeader
+              initialApplicationFilter={selectedRow?.name}
+            />
+          )}
+          {activeView === 'expenses' && (
+            <AppExpensesSection
+              data={allExpenses}
+              onDataChange={(next) => handleSubPanelSave('expenseProjects', next)}
+              hideHeader
+              initialApplicationFilter={selectedRow?.name}
+            />
+          )}
+          {activeView === 'supportLines' && (
+            <AppSupportLinesSection
+              data={allSupportLines}
+              onDataChange={(next) => handleSubPanelSave('supportLines', next)}
+              hideHeader
+              initialApplicationFilter={selectedRow?.name}
+            />
+          )}
+          {activeView === 'billingCodes' && (
+            <AppBillingCodesSection
+              data={allBillingCodes}
+              onDataChange={(next) => handleSubPanelSave('billingCodes', next)}
+              hideHeader
+              initialApplicationFilter={selectedRow?.name}
+            />
+          )}
+          {activeView === 'ticketTypes' && (
+            <AppTicketTypeSection
+              rows={rows}
+              onTicketTypeToggle={handleTicketTypeToggle}
+              hideHeader
+            />
+          )}
+          {activeView === 'stickyNote' && (
+            <AppStickyNoteSection rows={rows} onStickyNoteChange={handleStickyNoteChange} />
+          )}
+        </DialogContent>
+      </Dialog>
     </GenericAccordion>
   );
 };

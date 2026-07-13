@@ -682,7 +682,9 @@ export interface IConfigWorkingDayTemplateTime {
 export interface IConfigHolidayCalendar {
   id: string;
   name: string;
+  shortDescription?: string;
   description: string;
+  internalNote?: string;
 }
 
 export interface IConfigBankHoliday {
@@ -699,14 +701,20 @@ export interface IConfigWorkingCalendar {
   name: string;
   holidayCalendar: string;
   workingDayTemplate: string;
+  shortDescription?: string;
+  internalNote?: string;
 }
 
 export interface IConfigWorkingCalendarTime {
   id: string;
   calendarName: string;
-  dayOfWeek: string;
-  timeBlocks: IConfigTimeBlock[];
-  isWorkingDay: boolean;
+  date?: string;
+  day?: string;
+  week?: string;
+  calendarMonth?: string;
+  control?: string;
+  timesheetPeriod?: string;
+  timesheetPeriodStatus?: string;
 }
 
 export interface IConfigTimeBlock {
@@ -717,12 +725,12 @@ export interface IConfigTimeBlock {
 export interface IConfigComposedWorkingTime {
   id: string;
   calendarName: string;
-  date: string;
-  day: string;
-  startTime: string;
-  endTime: string;
-  isWorkingDay: boolean;
-  note: string;
+  fromDate?: string;
+  toDate?: string;
+  workingCalendar?: string;
+  holidayCalendar?: string;
+  workingTimeTemplate?: string;
+  timesheetPeriod?: string;
 }
 
 export interface IConfigCalendarWorkLocation {
@@ -748,10 +756,12 @@ export type TimesheetFrequency = 'weekly' | 'biweekly' | 'monthly';
 export interface IConfigPeriodType {
   id: string;
   name: string;
+  shortDescription?: string;
   description: string;
   timesheetFrequency: TimesheetFrequency;
   autoSplitWeek: boolean;
   weekStartsOn: string;
+  internalNote?: string;
 }
 
 export interface IConfigTimesheetPeriod {

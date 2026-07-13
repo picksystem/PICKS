@@ -3,8 +3,7 @@ import {
   WorkingDayTemplatesSection,
   HolidayCalendarsSection,
   WorkingCalendarsSection,
-  PeriodTypesSection,
-  WorkingShiftManagementSection,
+  TimesheetPeriodsSection,
 } from './components';
 import { ConfigurationSection } from '@serviceops/configsection';
 import { useStyles } from './styles';
@@ -18,8 +17,7 @@ const Calendars = () => {
         <WorkingDayTemplatesSection />
         <HolidayCalendarsSection />
         <WorkingCalendarsSection />
-        <PeriodTypesSection />
-        <WorkingShiftManagementSection />
+        <TimesheetPeriodsSection />
       </ConfigurationSection>
     </Box>
   );

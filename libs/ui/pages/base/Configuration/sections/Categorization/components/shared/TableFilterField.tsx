@@ -10,12 +10,14 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import ClearIcon from '@mui/icons-material/Clear';
 
 // Mirrors UserRoleFilterField (User Management's "Filter by role" field) so
-// every GenericPanel `toolbarExtra` filter across the Service Lines dialogs
-// (Approvals, Timesheet, Expenses, ...) matches that reference exactly: a
-// typeahead text field with a filter icon that opens a popover list of
-// matching options, generalized to any string-valued column. Sized to
-// match GenericPanel's own `tableSearchField` (see GenericPanel.styles.shared.ts)
-// so it always lines up with the search box next to it.
+// every GenericPanel `toolbarExtra` filter across the Categorization dialogs
+// (Service Lines' Approvals/Timesheet/Expenses, Applications' Approvals/
+// Timesheet/Expenses/Support Lines/Billing Codes, ...) matches that
+// reference exactly: a typeahead text field with a filter icon that opens a
+// popover list of matching options, generalized to any string-valued
+// column. Sized to match GenericPanel's own `tableSearchField` (see
+// GenericPanel.styles.shared.ts) so it always lines up with the search box
+// next to it.
 export interface TableFilterFieldProps {
   label: string;
   value: string;

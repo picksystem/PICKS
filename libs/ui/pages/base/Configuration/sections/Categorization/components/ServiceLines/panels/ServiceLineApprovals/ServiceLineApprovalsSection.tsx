@@ -10,9 +10,8 @@ import {
 } from '@serviceops/pages/base/Configuration/dialogs/ServiceLineApprovalFormDialog';
 import { Box } from '@serviceops/component';
 import { useSharedUsers } from '../../../../../../hooks/useSharedUsers';
-import { SERVICE_LINE_APPROVALS_CONFIG } from '@serviceops/configcatorshared';
+import { SERVICE_LINE_APPROVALS_CONFIG, TableFilterField } from '@serviceops/configcatorshared';
 import { mkCell, mkActiveChip } from '@serviceops/configutils';
-import { TableFilterField } from '../shared/TableFilterField';
 import {
   ServiceLineApprovalsSectionProps,
   FlatServiceLineApRow,

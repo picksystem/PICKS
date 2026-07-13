@@ -4,7 +4,11 @@ import { GenericTogglePanel } from '@serviceops/generictogglepanel';
 import { TICKET_TYPE_TOGGLE_CONFIG } from './AppTicketTypeSection.config';
 import { AppTicketTypeSectionProps } from './AppTicketTypeSection.types';
 
-export const AppTicketTypeSection = ({ rows, onTicketTypeToggle }: AppTicketTypeSectionProps) => {
+export const AppTicketTypeSection = ({
+  rows,
+  onTicketTypeToggle,
+  hideHeader,
+}: AppTicketTypeSectionProps) => {
   const { ticketTypes: ticketTypesData } = useSharedTicketTypes();
 
   const activeTicketTypes: { id: string | number; displayName?: string; name: string }[] =
@@ -40,6 +44,7 @@ export const AppTicketTypeSection = ({ rows, onTicketTypeToggle }: AppTicketType
           /* empty */
         })
       }
+      hideHeader={hideHeader}
     />
   );
 };

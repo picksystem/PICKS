@@ -7,9 +7,8 @@ import {
   ServiceLineTimesheetFormDialog,
   ServiceLineTimesheetRow,
 } from '@serviceops/pages/base/Configuration/dialogs/ServiceLineTimesheetFormDialog';
-import { SERVICE_LINE_TIMESHEET_CONFIG } from '@serviceops/configcatorshared';
+import { SERVICE_LINE_TIMESHEET_CONFIG, TableFilterField } from '@serviceops/configcatorshared';
 import { serviceLineTimesheetColumns } from '../../../shared/CategorizationPanelConfig';
-import { TableFilterField } from '../shared/TableFilterField';
 import {
   ServiceLineTimesheetSectionProps,
   FlatServiceLineTSRow,

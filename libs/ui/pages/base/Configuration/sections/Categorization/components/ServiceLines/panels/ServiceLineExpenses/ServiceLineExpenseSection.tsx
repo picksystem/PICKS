@@ -3,8 +3,8 @@ import { Box } from '@serviceops/component';
 import {
   SERVICE_LINE_EXPENSES_CONFIG,
   GenericPanel,
+  TableFilterField,
 } from '@serviceops/configcatorshared';
-import { TableFilterField } from '../shared/TableFilterField';
 import {
   ServiceLineExpenseSectionProps,
   FlatServiceLineEXRow,
@@ -20,8 +20,13 @@ export const ServiceLineExpenseSection = ({
   const [serviceLineFilter, setServiceLineFilter] = useState(initialServiceLineFilter ?? '');
   const [projectFilter, setProjectFilter] = useState('');
 
+  // `next` is GenericPanel's own add/edit/delete result, scoped to the
+  // *filtered* subset it was given (data={filteredRows}) — merge it back
+  // with whatever fell outside the active filters so other service lines'
+  // expense rows aren't wiped out.
   const handleSave = (next: FlatServiceLineEXRow[]) => {
-    onDataChange?.(next);
+    const untouched = rows.filter((r) => !filteredRows.some((fr) => fr.id === r.id));
+    onDataChange?.([...untouched, ...next]);
   };
 
   // Filter dropdown options — distinct values currently present in the
