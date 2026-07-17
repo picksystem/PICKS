@@ -47,12 +47,7 @@ export const EMPTY_CO_FORM = {
   effectiveTo: '',
 };
 
-export type WCActiveView =
-  | 'calendar'
-  | 'workingTimes'
-  | 'composedTimes'
-  | 'workLocations'
-  | 'consultants';
+export type WCActiveView = 'calendar' | 'workingTimes' | 'workLocations' | 'consultants';
 
 export const dayFromDate = (iso: string): string => {
   if (!iso) return '';

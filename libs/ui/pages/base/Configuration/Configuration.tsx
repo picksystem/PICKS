@@ -67,7 +67,13 @@ const NAV_ITEMS = [
     accent: colorAccent,
     hidden: true,
   },
-  { label: 'Approvals', path: `${BASE}/approvals`, Icon: HowToRegIcon, accent: colorAccent },
+  {
+    label: 'Approvals',
+    path: `${BASE}/approvals`,
+    Icon: HowToRegIcon,
+    accent: colorAccent,
+    hidden: true,
+  },
   {
     label: 'User Config',
     path: `${BASE}/user-config`,
@@ -75,7 +81,13 @@ const NAV_ITEMS = [
     accent: colorAccent,
     hidden: true,
   },
-  { label: 'Templates', path: `${BASE}/templates`, Icon: FileCopyIcon, accent: colorAccent },
+  {
+    label: 'Templates',
+    path: `${BASE}/templates`,
+    Icon: FileCopyIcon,
+    accent: colorAccent,
+    hidden: true,
+  },
   { label: 'Reason Codes', path: `${BASE}/reason-codes`, Icon: CommentIcon, accent: colorAccent },
   { label: 'Calendars', path: `${BASE}/calendars`, Icon: CalendarMonthIcon, accent: colorAccent },
   {

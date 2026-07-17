@@ -9,6 +9,8 @@ export default defineConfig({
     seed: 'npx ts-node gateways/prisma/seed.ts',
   },
   datasource: {
-    url: process.env.DATABASE_URL || 'postgresql://postgres.dcuttlufeqdmgcegvjmx:ServiceOps20267013@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres?sslmode=require',
+    url:
+      process.env.DATABASE_URL ||
+      'postgresql://postgres.dcuttlufeqdmgcegvjmx:ServiceOps20267013@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres?sslmode=require',
   },
 });

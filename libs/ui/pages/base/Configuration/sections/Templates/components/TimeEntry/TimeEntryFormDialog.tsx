@@ -7,7 +7,7 @@ import {
   Switch,
   Button,
 } from '@serviceops/component';
-import { darken, Dialog, DialogContent, DialogActions, Divider } from '@mui/material';
+import { alpha, darken, Dialog, DialogContent, DialogActions, Divider } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -15,6 +15,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import { RichTextEditor, parseRichText } from '@serviceops/richtexteditor';
 import type { IConfigTimeEntryTemplate, IConfigTimeEntryLine } from '@serviceops/interfaces';
+import { useStyles } from '../../../../styles';
 
 interface TimeEntryFormDialogProps {
   open: boolean;
@@ -69,6 +70,7 @@ export const TimeEntryFormDialog = ({
   initialData,
   accent = '#0369a1',
 }: TimeEntryFormDialogProps) => {
+  const { classes } = useStyles();
   const [form, setForm] = useState<FormState>(createEmptyForm());
   const [datePickerOpen, setDatePickerOpen] = useState(false);
 
@@ -129,6 +131,13 @@ export const TimeEntryFormDialog = ({
     handleChange('internalComment', text);
   };
 
+  const handleDescriptionChange = (value: {
+    segments: Array<{ text: string; bold?: boolean; italic?: boolean; underline?: boolean }>;
+  }) => {
+    const text = value.segments.map((s) => s.text).join('');
+    handleChange('description', text);
+  };
+
   const entry = form.entries[0] || createEmptyEntry();
 
   return (
@@ -183,30 +192,30 @@ export const TimeEntryFormDialog = ({
       <DialogContent dividers sx={{ p: 0 }}>
         <Box sx={{ px: 2.5, py: 2 }}>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-            {/* Row 1: Name, Description */}
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 2fr',
-                gap: 1.5,
-                alignItems: 'center',
-                mb: 2,
-              }}
-            >
+            {/* Row 1: Name */}
+            <Box sx={{ mb: 2 }}>
               <TextField
                 label='Name'
                 size='small'
+                fullWidth
                 value={form.name}
                 onChange={(e) => handleChange('name', e.target.value)}
                 required
                 placeholder='Enter template name'
               />
-              <TextField
-                label='Description'
-                size='small'
-                value={form.description}
-                onChange={(e) => handleChange('description', e.target.value)}
-                placeholder='Enter description'
+            </Box>
+
+            {/* Description with RichTextEditor */}
+            <Box sx={{ mb: 2 }}>
+              <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary', mb: 0.75 }}>
+                Description
+              </Typography>
+              <RichTextEditor
+                value={parseRichText(form.description)}
+                onChange={handleDescriptionChange}
+                accent={accent}
+                placeholder='Enter description...'
+                showFooterActions={false}
               />
             </Box>
 
@@ -304,27 +313,92 @@ export const TimeEntryFormDialog = ({
               />
             </Box>
 
-            {/* Footer Controls - Active & Non-billable switches */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={form.active}
-                    onChange={(e) => handleChange('active', e.target.checked)}
-                    size='small'
-                  />
-                }
-                label={<Typography sx={{ fontSize: '0.8rem' }}>Active</Typography>}
-              />
+            {/* Non Billable activation switch */}
+            <Box
+              className={classes.dialogActivationRow}
+              sx={{
+                borderColor: entry.nonBillable ? alpha(accent, 0.3) : 'divider',
+                bgcolor: entry.nonBillable ? alpha(accent, 0.04) : 'transparent',
+                mb: 1.5,
+              }}
+            >
+              <Box>
+                <Typography variant='body2' color='#0369a1' fontWeight={600}>
+                  Non Billable
+                </Typography>
+                <Typography
+                  variant='caption'
+                  color='#2687bb'
+                  className={classes.dialogActivationDescription}
+                >
+                  {entry.nonBillable
+                    ? 'This time entry is marked as non-billable'
+                    : 'This time entry is billable'}
+                </Typography>
+              </Box>
               <FormControlLabel
                 control={
                   <Switch
                     checked={entry.nonBillable}
                     onChange={(e) => handleEntryChange('nonBillable', e.target.checked)}
-                    size='small'
+                    color='success'
                   />
                 }
-                label={<Typography sx={{ fontSize: '0.8rem' }}>Non-billable</Typography>}
+                label={
+                  <Typography
+                    variant='body2'
+                    fontWeight={700}
+                    className={classes.dialogActivationLabel}
+                    sx={{ color: entry.nonBillable ? 'success.main' : 'text.secondary' }}
+                  >
+                    {entry.nonBillable ? 'Active' : 'Inactive'}
+                  </Typography>
+                }
+                className={classes.dialogActivationFormControl}
+              />
+            </Box>
+
+            {/* Active switch */}
+            <Box
+              className={classes.dialogActivationRow}
+              sx={{
+                borderColor: form.active ? alpha(accent, 0.3) : 'divider',
+                bgcolor: form.active ? alpha(accent, 0.04) : 'transparent',
+              }}
+            >
+              <Box>
+                <Typography variant='body2' color='#0369a1' fontWeight={600}>
+                  Active
+                </Typography>
+                <Typography
+                  variant='caption'
+                  color='#2687bb'
+                  className={classes.dialogActivationDescription}
+                >
+                  {form.active
+                    ? 'This time entry template is active'
+                    : 'This time entry template is inactive'}
+                </Typography>
+              </Box>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.active}
+                    onChange={(e) => handleChange('active', e.target.checked)}
+                    color='success'
+                  />
+                }
+                label={
+                  <Typography
+                    variant='body2'
+                    fontWeight={700}
+                    className={classes.dialogActivationLabel}
+                    sx={{ color: form.active ? 'success.main' : 'text.secondary' }}
+                  >
+                    {form.active ? 'Active' : 'Inactive'}
+                  </Typography>
+                }
+                className={classes.dialogActivationFormControl}
               />
             </Box>
           </LocalizationProvider>

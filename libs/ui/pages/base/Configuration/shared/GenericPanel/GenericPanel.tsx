@@ -1,4 +1,13 @@
-import React, { ReactNode, useEffect, useMemo, useState, useCallback, memo } from 'react';
+import React, {
+  ReactNode,
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+  memo,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
 import {
   Box,
   Typography,
@@ -383,6 +392,18 @@ interface GenericPanelProps {
     data: GenericData[],
     editingRow: GenericData | null,
   ) => string | null;
+}
+
+/**
+ * Imperative handle for driving the New/Edit/Delete dialogs from an external
+ * toolbar (e.g. a shared `GenericToolbar` sitting above a `hideToolbar`
+ * panel). Calling these runs GenericPanel's own default open logic as long
+ * as the matching `onNewClick`/`onEditClick`/`onDeleteClick` prop isn't set.
+ */
+export interface GenericPanelHandle {
+  openNew: () => void;
+  openEdit: () => void;
+  openDelete: () => void;
 }
 
 const createColumns = (fields: TableField[]): Column<Record<string, unknown>>[] =>
@@ -807,1025 +828,1044 @@ PlainPanel.displayName = 'PlainPanel';
 
 // ── Main GenericPanel ──────────────────────────────────────────────────────────
 
-export const GenericPanel = ({
-  config,
-  data,
-  onSave,
-  customColumns,
-  variant = 'standard',
-  defaultExpanded = true,
-  isLoading = false,
-  loaderMessage = 'Loading...',
-  enableSuccessMessage = true,
-  hideDialogActions = false,
-  enableNewButton = true,
-  enableEditButton = true,
-  enableDeleteButton = true,
-  selectedRowId,
-  onRowSelect,
-  onNewClick,
-  onEditClick,
-  onDeleteClick,
-  ticketTypeColumns,
-  hideHeader = false,
-  hideToolbar = false,
-  toolbarExtra,
-  validate,
-  validateFields,
-  summaryValidator,
-  onDayFieldEditClick,
-}: GenericPanelProps) => {
-  const { success, error: showError } = useNotification();
-  const reqError = useFieldError();
-  const { classes } = useStyles();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [editingRow, setEditingRow] = useState<GenericData | null>(null);
-  const [isNewDialog, setIsNewDialog] = useState(false);
-  const [search, setSearch] = useState('');
-  const [form, setForm] = useState<FormData>(createEmptyForm(config.fields));
-  // Stable id for the row being edited in the dialog. For a brand-new row
-  // (no id until submit) this is a draft id generated when the dialog opens,
-  // which becomes the row's real id on submit — so fields like
-  // 'dayWorkingTimes' can attach child records before the row is saved.
-  const [draftId, setDraftId] = useState<string>('');
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [showValidation, setShowValidation] = useState(false);
-  const [ticketTypesExpanded, setTicketTypesExpanded] = useState(false);
-
-  // Use controlled selection if provided, otherwise use internal state
-  const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
-  const isControlled = selectedRowId !== undefined;
-  const activeSelection = isControlled ? selectedRowId : internalSelectedId;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const activeSetSelection = isControlled
-    ? (id: string | null) => onRowSelect?.(id)
-    : setInternalSelectedId;
-
-  const selectedRow = useMemo(
-    () => data.find((r) => r.id === activeSelection),
-    [data, activeSelection],
-  );
-
-  // Reset internal selection when data changes (only for uncontrolled mode)
-  useEffect(() => {
-    if (!isControlled) {
-      setInternalSelectedId((prev) => {
-        if (prev && !data.find((r) => r.id === prev)) return null;
-        return prev;
-      });
-    }
-  }, [data, isControlled]);
-
-  // Initialize form when dialog opens; reset validation state when it closes
-  useEffect(() => {
-    if (!dialogOpen) {
-      setShowValidation(false);
-      setFormErrors({});
-      return;
-    }
-
-    if (editingRow) {
-      const values: FormData = {};
-      config.fields.forEach((field) => {
-        if (field.type === 'toggle' || field.type === 'activationToggle') {
-          values[field.name] = Boolean(editingRow[field.name]);
-        } else if (field.type === 'number' || field.type === 'dayWorkingTimes') {
-          values[field.name] = editingRow[field.name] ?? '';
-        } else if (field.type === 'color') {
-          values[field.name] = String(editingRow[field.name] || '');
-        } else if (field.type === 'ticketTypesActivation') {
-          values[field.name] = (editingRow[field.name] ?? {}) as string;
-        } else {
-          values[field.name] = String(editingRow[field.name] || '');
-        }
-      });
-      setForm(values);
-      setDraftId(String(editingRow.id));
-    } else {
-      setForm(createEmptyForm(config.fields));
-      setDraftId(`draft-${Date.now()}`);
-    }
-    setFormErrors({});
-    setShowValidation(false);
-  }, [dialogOpen, editingRow, config.fields]);
-
-  const columns = useMemo(
-    () => customColumns || createColumns(config.fields),
-
-    [config.fields, customColumns],
-  );
-
-  // Use debounce for search to prevent excessive filtering
-  const debouncedSearch = useDebounce(search, 300);
-
-  // While the user is typing, the typed value (`search`) is ahead of the
-  // debounced value used for filtering. We expose this as `isSearchLoading`
-  // so the SearchField can show a loading spinner, and swap it for a
-  // "Cancel" button once the debounce settles.
-  const isSearchLoading = search.length > 0 && search !== debouncedSearch;
-
-  const filtered = useMemo(() => {
-    if (!debouncedSearch) return data;
-    const lower = debouncedSearch.toLowerCase();
-    // Use only the configured searchable fields instead of JSON.stringify
-    const searchableKeys = config.fields.map((f) => f.name);
-    return data.filter((row) =>
-      searchableKeys.some((key) => {
-        const val = row[key];
-        return val !== null && String(val).toLowerCase().includes(lower);
-      }),
-    );
-  }, [debouncedSearch, data, config.fields]);
-
-  const handleRowClick = useCallback(
-    (row: GenericData) => {
-      activeSetSelection(activeSelection === row.id ? null : row.id);
-    },
-    [activeSelection, activeSetSelection],
-  );
-
-  const handleNewClick = useCallback(() => {
-    // Call external callback if provided
-    if (onNewClick) {
-      onNewClick();
-      return;
-    }
-    // Default behavior
-    setEditingRow(null);
-    setForm(createEmptyForm(config.fields));
-    setFormErrors({});
-    setShowValidation(false);
-    setIsNewDialog(true);
-    setDialogOpen(true);
-  }, [config.fields, onNewClick]);
-
-  const handleEditClick = useCallback(() => {
-    // Call external callback if provided
-    if (onEditClick) {
-      onEditClick();
-      return;
-    }
-    // Default behavior
-    if (activeSelection !== null && selectedRow) {
-      setEditingRow(selectedRow);
-      setIsNewDialog(false);
-      setFormErrors({});
-      setShowValidation(false);
-      setDialogOpen(true);
-    }
-  }, [activeSelection, selectedRow, onEditClick]);
-
-  const handleDeleteClick = useCallback(() => {
-    // Call external callback if provided
-    if (onDeleteClick) {
-      onDeleteClick();
-      return;
-    }
-    // Default behavior
-    if (activeSelection !== null) {
-      setDeleteOpen(true);
-    }
-  }, [activeSelection, onDeleteClick]);
-
-  const handleClearClick = useCallback(() => {
-    setShowValidation(false);
-    setFormErrors({});
-    setDialogOpen(false);
-    setTimeout(() => {
-      setEditingRow(null);
-      setIsNewDialog(false);
-      activeSetSelection(null);
-      setForm(createEmptyForm(config.fields));
-    }, 0);
-  }, [config.fields, activeSetSelection]);
-
-  // Validate required fields. Returns a map of field name -> error message.
-  const validateForm = useCallback((): Record<string, string> => {
-    const errors: Record<string, string> = {};
-    config.fields.forEach((field) => {
-      if (!field.required) return;
-      const value = form[field.name];
-      const isEmpty =
-        value === undefined ||
-        value === null ||
-        value === '' ||
-        (typeof value === 'boolean' && value === false) ||
-        (Array.isArray(value) && value.length === 0);
-      if (isEmpty) errors[field.name] = 'required';
-    });
-    return errors;
-  }, [config.fields, form]);
-
-  // Field-level validation errors (e.g. duplicate-row detection). Returns an object
-  // keyed by field name, e.g. { ticketTypeId: 'Error message', hours: 'Error message' }.
-  // Field errors render inline on the specific input with red border + helper text.
-  const fieldErrors = useMemo(
-    () => (validateFields ? validateFields(form, data, editingRow) : null),
-    [validateFields, form, data, editingRow],
-  );
-
-  // Dialog-level (summary) validation error. Returns a single composite
-  // message rendered as a top-of-dialog Alert with no per-field red borders.
-  // Used for cross-field checks (e.g. duplicate detection across multiple
-  // fields) where one consolidated message reads better than per-field errors.
-  const summaryMessage = useMemo(
-    () => (summaryValidator ? summaryValidator(form, data, editingRow) : null),
-    [summaryValidator, form, data, editingRow],
-  );
-
-  // Surface cross-field errors (e.g. duplicates) the moment they appear, so the
-  // Alert and per-field red helper text become visible without requiring the
-  // user to click Submit first. Submit is also blocked by `formIsInvalid`.
-  useEffect(() => {
-    if (fieldErrors) {
-      setShowValidation(true);
-    }
-  }, [fieldErrors]);
-
-  const handleSubmit = useCallback(async () => {
-    // For editing: check if anything actually changed
-    // For new: treat the form as having values if any field is filled
-    const hasAnyValue = Object.values(form).some(
-      (v) =>
-        v !== undefined &&
-        v !== '' &&
-        v !== false &&
-        v !== null &&
-        (Array.isArray(v) ? v.length > 0 : true),
-    );
-    const hasChanges = editingRow
-      ? config.fields.some((field) => {
-          const original = editingRow[field.name];
-          const current = form[field.name];
-          return original !== current;
-        })
-      : hasAnyValue;
-
-    // Always run required-field validation when the user attempts to submit.
-    // This prevents bypassing validation by submitting a completely empty new form.
-    const errors = validateForm();
-    const hasRequiredErrors = Object.keys(errors).length > 0;
-
-    if (hasRequiredErrors) {
-      setFormErrors(errors);
-      setShowValidation(true);
-      return;
-    }
-
-    // Keep old validate prop check for backward compatibility, but don't show a toast since
-    // field-level errors (validateFields) will already show inline. The formIsInvalid check handles blocking.
-    if (validate) {
-      const dupErr = validate(form, data, editingRow);
-      if (dupErr) {
-        return;
-      }
-    }
-
-    // Also check field-level validation errors (returned as object)
-    if (fieldErrors) {
-      return;
-    }
-
-    // No required errors, but nothing to save (e.g. user opened a row, made no
-    // changes, and clicked Submit) — close silently.
-    if (!hasChanges) {
-      setShowValidation(false);
-      setFormErrors({});
-      setDialogOpen(false);
-      setTimeout(() => {
-        setEditingRow(null);
-        activeSetSelection(null);
-        setIsNewDialog(false);
-        setForm(createEmptyForm(config.fields));
-      }, 0);
-      return;
-    }
-
-    const newId = draftId || `${Date.now()}`;
-    const updated = editingRow
-      ? data.map((r) => (r.id === editingRow.id ? { ...editingRow, ...form } : r))
-      : [...data, { id: newId, ...form }];
-
-    try {
-      await Promise.resolve(onSave(updated));
-      if (enableSuccessMessage) {
-        const message = editingRow
-          ? `${config.title} updated successfully`
-          : `${config.title} added successfully`;
-        success(message);
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save. Please try again.';
-      showError(errorMessage);
-    } finally {
-      setShowValidation(false);
-      setFormErrors({});
-      setDialogOpen(false);
-      setTimeout(() => {
-        setEditingRow(null);
-        activeSetSelection(null);
-        setIsNewDialog(false);
-        setForm(createEmptyForm(config.fields));
-      }, 0);
-    }
-  }, [
-    editingRow,
-    data,
-    form,
-    onSave,
-    config.fields,
-    config.title,
-    enableSuccessMessage,
-    success,
-    showError,
-    activeSetSelection,
-    validate,
-    fieldErrors,
-    validateForm,
-    draftId,
-  ]);
-
-  const handleDelete = useCallback(async () => {
-    try {
-      await Promise.resolve(onSave(data.filter((r) => r.id !== activeSelection)));
-      if (enableSuccessMessage) {
-        success(`${config.title} deleted successfully`);
-      }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to delete. Please try again.';
-      showError(errorMessage);
-    } finally {
-      setDeleteOpen(false);
-      setTimeout(() => {
-        activeSetSelection(null);
-        setEditingRow(null);
-      }, 0);
-    }
-  }, [
-    activeSelection,
-    data,
-    onSave,
-    config.title,
-    enableSuccessMessage,
-    success,
-    showError,
-    activeSetSelection,
-  ]);
-
-  const panelProps = useMemo(
-    () => ({
+export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
+  (
+    {
       config,
-      columns: columns as Column<GenericData>[],
-      filtered: filtered as GenericData[],
-      selectedId: activeSelection,
-      search,
-      isSearchLoading,
-      onSearchChange: setSearch,
-      onRowClick: handleRowClick,
-      onNewClick: handleNewClick,
-      onEditClick: handleEditClick,
-      onDeleteClick: handleDeleteClick,
-      onClearClick: handleClearClick,
-      defaultExpanded,
-      enableNewButton,
-      enableEditButton,
-      enableDeleteButton,
-      hideHeader,
-      hideToolbar,
+      data,
+      onSave,
+      customColumns,
+      variant = 'standard',
+      defaultExpanded = true,
+      isLoading = false,
+      loaderMessage = 'Loading...',
+      enableSuccessMessage = true,
+      hideDialogActions = false,
+      enableNewButton = true,
+      enableEditButton = true,
+      enableDeleteButton = true,
+      selectedRowId,
+      onRowSelect,
+      onNewClick,
+      onEditClick,
+      onDeleteClick,
+      ticketTypeColumns,
+      hideHeader = false,
+      hideToolbar = false,
       toolbarExtra,
-    }),
-    [
-      config,
-      columns,
-      filtered,
-      activeSelection,
-      search,
-      isSearchLoading,
-      handleRowClick,
-      handleNewClick,
-      handleEditClick,
-      handleDeleteClick,
-      handleClearClick,
-      defaultExpanded,
-      enableNewButton,
-      enableEditButton,
-      enableDeleteButton,
-      toolbarExtra,
-      hideHeader,
-      hideToolbar,
-    ],
-  );
+      validate,
+      validateFields,
+      summaryValidator,
+      onDayFieldEditClick,
+    }: GenericPanelProps,
+    ref,
+  ) => {
+    const { success, error: showError } = useNotification();
+    const reqError = useFieldError();
+    const { classes } = useStyles();
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [editingRow, setEditingRow] = useState<GenericData | null>(null);
+    const [isNewDialog, setIsNewDialog] = useState(false);
+    const [search, setSearch] = useState('');
+    const [form, setForm] = useState<FormData>(createEmptyForm(config.fields));
+    // Stable id for the row being edited in the dialog. For a brand-new row
+    // (no id until submit) this is a draft id generated when the dialog opens,
+    // which becomes the row's real id on submit — so fields like
+    // 'dayWorkingTimes' can attach child records before the row is saved.
+    const [draftId, setDraftId] = useState<string>('');
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [showValidation, setShowValidation] = useState(false);
+    const [ticketTypesExpanded, setTicketTypesExpanded] = useState(false);
 
-  // Memoized dialog close handler
-  const handleDialogClose = useCallback(() => {
-    setShowValidation(false);
-    setFormErrors({});
-    setDialogOpen(false);
-    setTimeout(() => {
-      setEditingRow(null);
-      setIsNewDialog(false);
-      activeSetSelection(null);
-      setForm(createEmptyForm(config.fields));
-    }, 0);
-  }, [config.fields, activeSetSelection]);
+    // Use controlled selection if provided, otherwise use internal state
+    const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
+    const isControlled = selectedRowId !== undefined;
+    const activeSelection = isControlled ? selectedRowId : internalSelectedId;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const activeSetSelection = isControlled
+      ? (id: string | null) => onRowSelect?.(id)
+      : setInternalSelectedId;
 
-  // Memoized toggle change handler
-  const handleToggleChange = useCallback((fieldName: string, checked: boolean) => {
-    setForm((prev) => ({ ...prev, [fieldName]: checked }));
-  }, []);
+    const selectedRow = useMemo(
+      () => data.find((r) => r.id === activeSelection),
+      [data, activeSelection],
+    );
 
-  // Memoized text field change handler
-  const handleTextFieldChange = useCallback(
-    (fieldName: string, value: string | Record<string, unknown>) => {
-      setForm((prev) => ({ ...prev, [fieldName]: value as string }));
-      if (showValidation) {
-        setFormErrors((prev) => {
-          if (!prev[fieldName]) return prev;
-          const next = { ...prev };
-          delete next[fieldName];
-          return next;
+    // Reset internal selection when data changes (only for uncontrolled mode)
+    useEffect(() => {
+      if (!isControlled) {
+        setInternalSelectedId((prev) => {
+          if (prev && !data.find((r) => r.id === prev)) return null;
+          return prev;
         });
       }
-    },
-    [showValidation],
-  );
+    }, [data, isControlled]);
 
-  // Merge form errors: required-field errors take precedence unless a field-level error exists.
-  const mergedFormErrors = useMemo(() => {
-    const base = { ...formErrors };
-    if (fieldErrors) {
-      Object.keys(fieldErrors).forEach((key) => {
-        base[key] = fieldErrors[key];
+    // Initialize form when dialog opens; reset validation state when it closes
+    useEffect(() => {
+      if (!dialogOpen) {
+        setShowValidation(false);
+        setFormErrors({});
+        return;
+      }
+
+      if (editingRow) {
+        const values: FormData = {};
+        config.fields.forEach((field) => {
+          if (field.type === 'toggle' || field.type === 'activationToggle') {
+            values[field.name] = Boolean(editingRow[field.name]);
+          } else if (field.type === 'number' || field.type === 'dayWorkingTimes') {
+            values[field.name] = editingRow[field.name] ?? '';
+          } else if (field.type === 'color') {
+            values[field.name] = String(editingRow[field.name] || '');
+          } else if (field.type === 'ticketTypesActivation') {
+            values[field.name] = (editingRow[field.name] ?? {}) as string;
+          } else {
+            values[field.name] = String(editingRow[field.name] || '');
+          }
+        });
+        setForm(values);
+        setDraftId(String(editingRow.id));
+      } else {
+        setForm(createEmptyForm(config.fields));
+        setDraftId(`draft-${Date.now()}`);
+      }
+      setFormErrors({});
+      setShowValidation(false);
+    }, [dialogOpen, editingRow, config.fields]);
+
+    const columns = useMemo(
+      () => customColumns || createColumns(config.fields),
+
+      [config.fields, customColumns],
+    );
+
+    // Use debounce for search to prevent excessive filtering
+    const debouncedSearch = useDebounce(search, 300);
+
+    // While the user is typing, the typed value (`search`) is ahead of the
+    // debounced value used for filtering. We expose this as `isSearchLoading`
+    // so the SearchField can show a loading spinner, and swap it for a
+    // "Cancel" button once the debounce settles.
+    const isSearchLoading = search.length > 0 && search !== debouncedSearch;
+
+    const filtered = useMemo(() => {
+      if (!debouncedSearch) return data;
+      const lower = debouncedSearch.toLowerCase();
+      // Use only the configured searchable fields instead of JSON.stringify
+      const searchableKeys = config.fields.map((f) => f.name);
+      return data.filter((row) =>
+        searchableKeys.some((key) => {
+          const val = row[key];
+          return val !== null && String(val).toLowerCase().includes(lower);
+        }),
+      );
+    }, [debouncedSearch, data, config.fields]);
+
+    const handleRowClick = useCallback(
+      (row: GenericData) => {
+        activeSetSelection(activeSelection === row.id ? null : row.id);
+      },
+      [activeSelection, activeSetSelection],
+    );
+
+    const handleNewClick = useCallback(() => {
+      // Call external callback if provided
+      if (onNewClick) {
+        onNewClick();
+        return;
+      }
+      // Default behavior
+      setEditingRow(null);
+      setForm(createEmptyForm(config.fields));
+      setFormErrors({});
+      setShowValidation(false);
+      setIsNewDialog(true);
+      setDialogOpen(true);
+    }, [config.fields, onNewClick]);
+
+    const handleEditClick = useCallback(() => {
+      // Call external callback if provided
+      if (onEditClick) {
+        onEditClick();
+        return;
+      }
+      // Default behavior
+      if (activeSelection !== null && selectedRow) {
+        setEditingRow(selectedRow);
+        setIsNewDialog(false);
+        setFormErrors({});
+        setShowValidation(false);
+        setDialogOpen(true);
+      }
+    }, [activeSelection, selectedRow, onEditClick]);
+
+    const handleDeleteClick = useCallback(() => {
+      // Call external callback if provided
+      if (onDeleteClick) {
+        onDeleteClick();
+        return;
+      }
+      // Default behavior
+      if (activeSelection !== null) {
+        setDeleteOpen(true);
+      }
+    }, [activeSelection, onDeleteClick]);
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        openNew: handleNewClick,
+        openEdit: handleEditClick,
+        openDelete: handleDeleteClick,
+      }),
+      [handleNewClick, handleEditClick, handleDeleteClick],
+    );
+
+    const handleClearClick = useCallback(() => {
+      setShowValidation(false);
+      setFormErrors({});
+      setDialogOpen(false);
+      setTimeout(() => {
+        setEditingRow(null);
+        setIsNewDialog(false);
+        activeSetSelection(null);
+        setForm(createEmptyForm(config.fields));
+      }, 0);
+    }, [config.fields, activeSetSelection]);
+
+    // Validate required fields. Returns a map of field name -> error message.
+    const validateForm = useCallback((): Record<string, string> => {
+      const errors: Record<string, string> = {};
+      config.fields.forEach((field) => {
+        if (!field.required) return;
+        const value = form[field.name];
+        const isEmpty =
+          value === undefined ||
+          value === null ||
+          value === '' ||
+          (typeof value === 'boolean' && value === false) ||
+          (Array.isArray(value) && value.length === 0);
+        if (isEmpty) errors[field.name] = 'required';
       });
-    }
-    return base;
-  }, [formErrors, fieldErrors]);
+      return errors;
+    }, [config.fields, form]);
 
-  // Only block submit on cross-field validation errors (e.g. duplicates). Required-field
-  // validation is intentionally NOT used to disable the button — the user must be able
-  // to click Submit and see the "Required" error hook on missing fields.
-  const formIsInvalid = useMemo(
-    () => !!fieldErrors || !!summaryMessage,
-    [fieldErrors, summaryMessage],
-  );
+    // Field-level validation errors (e.g. duplicate-row detection). Returns an object
+    // keyed by field name, e.g. { ticketTypeId: 'Error message', hours: 'Error message' }.
+    // Field errors render inline on the specific input with red border + helper text.
+    const fieldErrors = useMemo(
+      () => (validateFields ? validateFields(form, data, editingRow) : null),
+      [validateFields, form, data, editingRow],
+    );
 
-  return (
-    <>
-      {isLoading ? (
-        <Loader text={loaderMessage} />
-      ) : variant === 'plain' ? (
-        <PlainPanel {...panelProps} />
-      ) : (
-        <StandardPanel {...panelProps} />
-      )}
+    // Dialog-level (summary) validation error. Returns a single composite
+    // message rendered as a top-of-dialog Alert with no per-field red borders.
+    // Used for cross-field checks (e.g. duplicate detection across multiple
+    // fields) where one consolidated message reads better than per-field errors.
+    const summaryMessage = useMemo(
+      () => (summaryValidator ? summaryValidator(form, data, editingRow) : null),
+      [summaryValidator, form, data, editingRow],
+    );
 
-      <ConfigFormDialog
-        open={dialogOpen}
-        onClose={handleDialogClose}
-        onSubmit={handleSubmit}
-        isEdit={!isNewDialog}
-        icon={config.icon}
-        accent={config.accent}
-        title={config.entity}
-        subtitle={config.subtitle}
-        submitDisabled={formIsInvalid}
-        submitLabel={editingRow ? 'Save' : 'Submit'}
-        hideActions={hideDialogActions}
-        maxWidth='sm'
-      >
-        <LocalizationProvider>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {summaryMessage && (
-              <Alert severity='error' variant='outlined' sx={{ alignItems: 'center' }}>
-                {summaryMessage}
-              </Alert>
-            )}
-            {showValidation && fieldErrors && (
-              <Alert severity='error' variant='outlined' sx={{ alignItems: 'center' }}>
-                {Object.values(fieldErrors)[0]}
-              </Alert>
-            )}
-            {config.fields.map((field) => {
-              if (field.type === 'toggle') {
-                return (
-                  <FormControlLabel
-                    key={field.name}
-                    control={
-                      <Switch
-                        checked={form[field.name] === 'true' || form[field.name] === true}
-                        onChange={(e) => handleToggleChange(field.name, e.target.checked)}
-                      />
-                    }
-                    label={<Typography sx={{ fontSize: '0.85rem' }}>{field.label}</Typography>}
-                  />
-                );
-              }
-              if (field.type === 'activationToggle') {
-                const checked = form[field.name] === 'true' || form[field.name] === true;
-                const accent = field.activationAccent ?? '#0369a1';
-                return (
-                  <Box
-                    key={field.name}
-                    className={classes.dialogActivationRow}
-                    sx={{
-                      borderColor: checked ? alpha(accent, 0.3) : 'divider',
-                      bgcolor: checked ? alpha(accent, 0.04) : 'transparent',
-                    }}
-                  >
-                    <Box>
-                      <Typography variant='body2' color='#0369a1' fontWeight={600}>
-                        {field.label}
-                      </Typography>
-                      <Typography
-                        variant='caption'
-                        color='#2687bb'
-                        className={classes.dialogActivationDescription}
-                      >
-                        {checked
-                          ? (field.activationDescriptionActive ??
-                            'This row is active and available to users')
-                          : (field.activationDescriptionInactive ??
-                            'This row is inactive and hidden from users')}
-                      </Typography>
-                    </Box>
+    // Surface cross-field errors (e.g. duplicates) the moment they appear, so the
+    // Alert and per-field red helper text become visible without requiring the
+    // user to click Submit first. Submit is also blocked by `formIsInvalid`.
+    useEffect(() => {
+      if (fieldErrors) {
+        setShowValidation(true);
+      }
+    }, [fieldErrors]);
+
+    const handleSubmit = useCallback(async () => {
+      // For editing: check if anything actually changed
+      // For new: treat the form as having values if any field is filled
+      const hasAnyValue = Object.values(form).some(
+        (v) =>
+          v !== undefined &&
+          v !== '' &&
+          v !== false &&
+          v !== null &&
+          (Array.isArray(v) ? v.length > 0 : true),
+      );
+      const hasChanges = editingRow
+        ? config.fields.some((field) => {
+            const original = editingRow[field.name];
+            const current = form[field.name];
+            return original !== current;
+          })
+        : hasAnyValue;
+
+      // Always run required-field validation when the user attempts to submit.
+      // This prevents bypassing validation by submitting a completely empty new form.
+      const errors = validateForm();
+      const hasRequiredErrors = Object.keys(errors).length > 0;
+
+      if (hasRequiredErrors) {
+        setFormErrors(errors);
+        setShowValidation(true);
+        return;
+      }
+
+      // Keep old validate prop check for backward compatibility, but don't show a toast since
+      // field-level errors (validateFields) will already show inline. The formIsInvalid check handles blocking.
+      if (validate) {
+        const dupErr = validate(form, data, editingRow);
+        if (dupErr) {
+          return;
+        }
+      }
+
+      // Also check field-level validation errors (returned as object)
+      if (fieldErrors) {
+        return;
+      }
+
+      // No required errors, but nothing to save (e.g. user opened a row, made no
+      // changes, and clicked Submit) — close silently.
+      if (!hasChanges) {
+        setShowValidation(false);
+        setFormErrors({});
+        setDialogOpen(false);
+        setTimeout(() => {
+          setEditingRow(null);
+          activeSetSelection(null);
+          setIsNewDialog(false);
+          setForm(createEmptyForm(config.fields));
+        }, 0);
+        return;
+      }
+
+      const newId = draftId || `${Date.now()}`;
+      const updated = editingRow
+        ? data.map((r) => (r.id === editingRow.id ? { ...editingRow, ...form } : r))
+        : [...data, { id: newId, ...form }];
+
+      try {
+        await Promise.resolve(onSave(updated));
+        if (enableSuccessMessage) {
+          const message = editingRow
+            ? `${config.title} updated successfully`
+            : `${config.title} added successfully`;
+          success(message);
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to save. Please try again.';
+        showError(errorMessage);
+      } finally {
+        setShowValidation(false);
+        setFormErrors({});
+        setDialogOpen(false);
+        setTimeout(() => {
+          setEditingRow(null);
+          activeSetSelection(null);
+          setIsNewDialog(false);
+          setForm(createEmptyForm(config.fields));
+        }, 0);
+      }
+    }, [
+      editingRow,
+      data,
+      form,
+      onSave,
+      config.fields,
+      config.title,
+      enableSuccessMessage,
+      success,
+      showError,
+      activeSetSelection,
+      validate,
+      fieldErrors,
+      validateForm,
+      draftId,
+    ]);
+
+    const handleDelete = useCallback(async () => {
+      try {
+        await Promise.resolve(onSave(data.filter((r) => r.id !== activeSelection)));
+        if (enableSuccessMessage) {
+          success(`${config.title} deleted successfully`);
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to delete. Please try again.';
+        showError(errorMessage);
+      } finally {
+        setDeleteOpen(false);
+        setTimeout(() => {
+          activeSetSelection(null);
+          setEditingRow(null);
+        }, 0);
+      }
+    }, [
+      activeSelection,
+      data,
+      onSave,
+      config.title,
+      enableSuccessMessage,
+      success,
+      showError,
+      activeSetSelection,
+    ]);
+
+    const panelProps = useMemo(
+      () => ({
+        config,
+        columns: columns as Column<GenericData>[],
+        filtered: filtered as GenericData[],
+        selectedId: activeSelection,
+        search,
+        isSearchLoading,
+        onSearchChange: setSearch,
+        onRowClick: handleRowClick,
+        onNewClick: handleNewClick,
+        onEditClick: handleEditClick,
+        onDeleteClick: handleDeleteClick,
+        onClearClick: handleClearClick,
+        defaultExpanded,
+        enableNewButton,
+        enableEditButton,
+        enableDeleteButton,
+        hideHeader,
+        hideToolbar,
+        toolbarExtra,
+      }),
+      [
+        config,
+        columns,
+        filtered,
+        activeSelection,
+        search,
+        isSearchLoading,
+        handleRowClick,
+        handleNewClick,
+        handleEditClick,
+        handleDeleteClick,
+        handleClearClick,
+        defaultExpanded,
+        enableNewButton,
+        enableEditButton,
+        enableDeleteButton,
+        toolbarExtra,
+        hideHeader,
+        hideToolbar,
+      ],
+    );
+
+    // Memoized dialog close handler
+    const handleDialogClose = useCallback(() => {
+      setShowValidation(false);
+      setFormErrors({});
+      setDialogOpen(false);
+      setTimeout(() => {
+        setEditingRow(null);
+        setIsNewDialog(false);
+        activeSetSelection(null);
+        setForm(createEmptyForm(config.fields));
+      }, 0);
+    }, [config.fields, activeSetSelection]);
+
+    // Memoized toggle change handler
+    const handleToggleChange = useCallback((fieldName: string, checked: boolean) => {
+      setForm((prev) => ({ ...prev, [fieldName]: checked }));
+    }, []);
+
+    // Memoized text field change handler
+    const handleTextFieldChange = useCallback(
+      (fieldName: string, value: string | Record<string, unknown>) => {
+        setForm((prev) => ({ ...prev, [fieldName]: value as string }));
+        if (showValidation) {
+          setFormErrors((prev) => {
+            if (!prev[fieldName]) return prev;
+            const next = { ...prev };
+            delete next[fieldName];
+            return next;
+          });
+        }
+      },
+      [showValidation],
+    );
+
+    // Merge form errors: required-field errors take precedence unless a field-level error exists.
+    const mergedFormErrors = useMemo(() => {
+      const base = { ...formErrors };
+      if (fieldErrors) {
+        Object.keys(fieldErrors).forEach((key) => {
+          base[key] = fieldErrors[key];
+        });
+      }
+      return base;
+    }, [formErrors, fieldErrors]);
+
+    // Only block submit on cross-field validation errors (e.g. duplicates). Required-field
+    // validation is intentionally NOT used to disable the button — the user must be able
+    // to click Submit and see the "Required" error hook on missing fields.
+    const formIsInvalid = useMemo(
+      () => !!fieldErrors || !!summaryMessage,
+      [fieldErrors, summaryMessage],
+    );
+
+    return (
+      <>
+        {isLoading ? (
+          <Loader text={loaderMessage} />
+        ) : variant === 'plain' ? (
+          <PlainPanel {...panelProps} />
+        ) : (
+          <StandardPanel {...panelProps} />
+        )}
+
+        <ConfigFormDialog
+          open={dialogOpen}
+          onClose={handleDialogClose}
+          onSubmit={handleSubmit}
+          isEdit={!isNewDialog}
+          icon={config.icon}
+          accent={config.accent}
+          title={config.entity}
+          subtitle={config.subtitle}
+          submitDisabled={formIsInvalid}
+          submitLabel={editingRow ? 'Save' : 'Submit'}
+          hideActions={hideDialogActions}
+          maxWidth='sm'
+        >
+          <LocalizationProvider>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {summaryMessage && (
+                <Alert severity='error' variant='outlined' sx={{ alignItems: 'center' }}>
+                  {summaryMessage}
+                </Alert>
+              )}
+              {showValidation && fieldErrors && (
+                <Alert severity='error' variant='outlined' sx={{ alignItems: 'center' }}>
+                  {Object.values(fieldErrors)[0]}
+                </Alert>
+              )}
+              {config.fields.map((field) => {
+                if (field.type === 'toggle') {
+                  return (
                     <FormControlLabel
+                      key={field.name}
                       control={
                         <Switch
-                          checked={checked}
+                          checked={form[field.name] === 'true' || form[field.name] === true}
                           onChange={(e) => handleToggleChange(field.name, e.target.checked)}
-                          color='success'
                         />
                       }
-                      label={
-                        <Typography
-                          variant='body2'
-                          fontWeight={700}
-                          className={classes.dialogActivationLabel}
-                          sx={{ color: checked ? 'success.main' : 'text.secondary' }}
-                        >
-                          {checked ? 'Active' : 'Inactive'}
-                        </Typography>
-                      }
-                      className={classes.dialogActivationFormControl}
+                      label={<Typography sx={{ fontSize: '0.85rem' }}>{field.label}</Typography>}
                     />
-                  </Box>
-                );
-              }
-              if (field.type === 'ticketTypeSearch') {
-                const currentValue = (form[field.name] ?? '') as string;
-                return (
-                  <TicketTypeSearchField
-                    key={field.name}
-                    label={field.label}
-                    value={currentValue}
-                    onChange={(value) => handleTextFieldChange(field.name, value)}
-                    onSelect={(option) => {
-                      setForm((prev) => ({ ...prev, ticketTypeName: option.name }));
-                    }}
-                    required={field.required}
-                    error={Boolean(showValidation && mergedFormErrors[field.name])}
-                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
-                  />
-                );
-              }
-              if (field.type === 'workLocationSearch') {
-                const currentValue = (form[field.name] ?? '') as string;
-                return (
-                  <WorkLocationSearchField
-                    key={field.name}
-                    label={field.label}
-                    value={currentValue}
-                    onChange={(value) => handleTextFieldChange(field.name, value)}
-                    onLocationSelect={
-                      field.autoFillFields
-                        ? (location) => {
-                            if (field.autoFillFields?.city) {
-                              setForm((prev) => ({
-                                ...prev,
-                                [field.autoFillFields!.city!]: location.city,
-                              }));
-                            }
-                            if (field.autoFillFields?.state) {
-                              setForm((prev) => ({
-                                ...prev,
-                                [field.autoFillFields!.state!]: location.state,
-                              }));
-                            }
-                            if (field.autoFillFields?.country) {
-                              setForm((prev) => ({
-                                ...prev,
-                                [field.autoFillFields!.country!]: location.country,
-                              }));
-                            }
-                            if (field.autoFillFields?.timezone) {
-                              setForm((prev) => ({
-                                ...prev,
-                                [field.autoFillFields!.timezone!]: location.timezone,
-                              }));
-                            }
-                          }
-                        : undefined
-                    }
-                    required={field.required}
-                    error={Boolean(showValidation && mergedFormErrors[field.name])}
-                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
-                  />
-                );
-              }
-              if (field.type === 'serviceLineSearch') {
-                const currentValue = (form[field.name] ?? '') as string;
-                return (
-                  <ServiceLineSearchField
-                    key={field.name}
-                    label={field.label}
-                    value={currentValue}
-                    onChange={(value) => handleTextFieldChange(field.name, value)}
-                    required={field.required}
-                    error={Boolean(showValidation && mergedFormErrors[field.name])}
-                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
-                  />
-                );
-              }
-              if (field.type === 'applicationSearch') {
-                const currentValue = (form[field.name] ?? '') as string;
-                return (
-                  <ApplicationSearchField
-                    key={field.name}
-                    label={field.label}
-                    value={currentValue}
-                    onChange={(value) => handleTextFieldChange(field.name, value)}
-                    required={field.required}
-                    error={Boolean(showValidation && mergedFormErrors[field.name])}
-                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
-                  />
-                );
-              }
-              if (field.type === 'queueSearch') {
-                const currentValue = (form[field.name] ?? '') as string;
-                return (
-                  <QueueSearchField
-                    key={field.name}
-                    label={field.label}
-                    value={currentValue}
-                    onChange={(value) => handleTextFieldChange(field.name, value)}
-                    required={field.required}
-                    error={Boolean(showValidation && mergedFormErrors[field.name])}
-                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
-                  />
-                );
-              }
-              if (field.type === 'date') {
-                const currentValue = (form[field.name] ?? '') as string;
-                return (
-                  <DatePickerField
-                    key={field.name}
-                    label={field.label}
-                    value={currentValue}
-                    onChange={(value) => handleTextFieldChange(field.name, value)}
-                    required={field.required}
-                    error={Boolean(showValidation && mergedFormErrors[field.name])}
-                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
-                  />
-                );
-              }
-              if (field.type === 'datetime') {
-                const currentValue = (form[field.name] ?? '') as string;
-                return (
-                  <DateTimePickerField
-                    key={field.name}
-                    label={field.label}
-                    value={currentValue}
-                    onChange={(value) => handleTextFieldChange(field.name, value)}
-                    required={field.required}
-                    error={Boolean(showValidation && mergedFormErrors[field.name])}
-                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
-                  />
-                );
-              }
-              if (field.type === 'time') {
-                const currentValue = (form[field.name] ?? '') as string;
-                return (
-                  <TimePickerField
-                    key={field.name}
-                    label={field.label}
-                    value={currentValue}
-                    onChange={(value) => handleTextFieldChange(field.name, value)}
-                    required={field.required}
-                    error={Boolean(showValidation && mergedFormErrors[field.name])}
-                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
-                  />
-                );
-              }
-              if (field.type === 'duration') {
-                const currentValue = (form[field.name] ?? '') as string;
-                return (
-                  <DurationPickerField
-                    key={field.name}
-                    label={field.label}
-                    value={currentValue}
-                    onChange={(value) => handleTextFieldChange(field.name, value)}
-                    required={field.required}
-                    error={Boolean(showValidation && mergedFormErrors[field.name])}
-                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
-                    sx={field.sx}
-                  />
-                );
-              }
-              if (field.type === 'color') {
-                const currentValue = String(form[field.name] ?? '');
-                const isValidHex = /^#[0-9A-Fa-f]{6}$/.test(currentValue);
-                const safeValue = isValidHex ? currentValue : '#2563eb';
-                return (
-                  <TextField
-                    key={field.name}
-                    label={field.label}
-                    size='small'
-                    fullWidth
-                    required={field.required}
-                    error={Boolean(showValidation && mergedFormErrors[field.name])}
-                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
-                    value={currentValue}
-                    onChange={(e) => {
-                      const { value } = e.target;
-                      if (/^#[0-9A-Fa-f]{0,6}$/.test(value)) {
-                        handleTextFieldChange(field.name, value);
-                      }
-                    }}
-                    placeholder='#2563eb'
-                    inputProps={{
-                      style: { fontFamily: 'monospace', textTransform: 'lowercase' },
-                      maxLength: 7,
-                    }}
-                    InputProps={{
-                      endAdornment: (
-                        <Box
-                          component='input'
-                          type='color'
-                          value={safeValue}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            handleTextFieldChange(field.name, e.target.value)
-                          }
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            border: 'none',
-                            borderRadius: 1,
-                            cursor: 'pointer',
-                            padding: 0,
-                            ml: 1,
-                            backgroundColor: 'transparent',
-                            '&::-webkit-color-swatch-wrapper': { padding: 0 },
-                            '&::-webkit-color-swatch': {
-                              border: '1px solid',
-                              borderColor: 'divider',
-                              borderRadius: 5,
-                            },
-                          }}
-                        />
-                      ),
-                    }}
-                  />
-                );
-              }
-              if (field.type === 'ticketTypesActivation') {
-                const cols = ticketTypeColumns ?? [];
-                const enabledFor = (form[field.name] ?? {}) as Record<string, boolean>;
-                const getActiveCount = (): number => {
-                  if (!enabledFor || Object.keys(enabledFor).length === 0) return cols.length;
-                  return cols.filter((t) => enabledFor[t.key] ?? true).length;
-                };
-                return (
-                  <Box key={field.name}>
+                  );
+                }
+                if (field.type === 'activationToggle') {
+                  const checked = form[field.name] === 'true' || form[field.name] === true;
+                  const accent = field.activationAccent ?? '#0369a1';
+                  return (
                     <Box
+                      key={field.name}
+                      className={classes.dialogActivationRow}
                       sx={{
-                        border: '1px solid #2d5ebb',
-                        borderRadius: 2,
-                        overflow: 'hidden',
+                        borderColor: checked ? alpha(accent, 0.3) : 'divider',
+                        bgcolor: checked ? alpha(accent, 0.04) : 'transparent',
                       }}
                     >
-                      <Box
-                        onClick={() => setTicketTypesExpanded(!ticketTypesExpanded)}
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          px: 2,
-                          py: 1.5,
-                          cursor: 'pointer',
-                          bgcolor: '#f0f4f8',
-                          transition: 'background-color 0.2s',
-                        }}
-                      >
-                        <Typography
-                          variant='body2'
-                          color='#0369a1'
-                          sx={{ fontWeight: 600, fontSize: '0.85rem' }}
-                        >
-                          {field.label || 'Ticket Types Activation'}
+                      <Box>
+                        <Typography variant='body2' color='#0369a1' fontWeight={600}>
+                          {field.label}
                         </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography
+                          variant='caption'
+                          color='#2687bb'
+                          className={classes.dialogActivationDescription}
+                        >
+                          {checked
+                            ? (field.activationDescriptionActive ??
+                              'This row is active and available to users')
+                            : (field.activationDescriptionInactive ??
+                              'This row is inactive and hidden from users')}
+                        </Typography>
+                      </Box>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={checked}
+                            onChange={(e) => handleToggleChange(field.name, e.target.checked)}
+                            color='success'
+                          />
+                        }
+                        label={
                           <Typography
-                            variant='caption'
-                            color='#0369a1'
-                            sx={{ fontWeight: 500, fontSize: '0.78rem' }}
+                            variant='body2'
+                            fontWeight={700}
+                            className={classes.dialogActivationLabel}
+                            sx={{ color: checked ? 'success.main' : 'text.secondary' }}
                           >
-                            {getActiveCount()} of {cols.length} selected
+                            {checked ? 'Active' : 'Inactive'}
                           </Typography>
-                          <Radio
-                            size='small'
-                            checked={getActiveCount() === cols.length}
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) =>
-                              handleTextFieldChange(
-                                field.name,
-                                Object.fromEntries(cols.map((t) => [t.key, e.target.checked])),
-                              )
+                        }
+                        className={classes.dialogActivationFormControl}
+                      />
+                    </Box>
+                  );
+                }
+                if (field.type === 'ticketTypeSearch') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  return (
+                    <TicketTypeSearchField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      onSelect={(option) => {
+                        setForm((prev) => ({ ...prev, ticketTypeName: option.name }));
+                      }}
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
+                if (field.type === 'workLocationSearch') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  return (
+                    <WorkLocationSearchField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      onLocationSelect={
+                        field.autoFillFields
+                          ? (location) => {
+                              if (field.autoFillFields?.city) {
+                                setForm((prev) => ({
+                                  ...prev,
+                                  [field.autoFillFields!.city!]: location.city,
+                                }));
+                              }
+                              if (field.autoFillFields?.state) {
+                                setForm((prev) => ({
+                                  ...prev,
+                                  [field.autoFillFields!.state!]: location.state,
+                                }));
+                              }
+                              if (field.autoFillFields?.country) {
+                                setForm((prev) => ({
+                                  ...prev,
+                                  [field.autoFillFields!.country!]: location.country,
+                                }));
+                              }
+                              if (field.autoFillFields?.timezone) {
+                                setForm((prev) => ({
+                                  ...prev,
+                                  [field.autoFillFields!.timezone!]: location.timezone,
+                                }));
+                              }
+                            }
+                          : undefined
+                      }
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
+                if (field.type === 'serviceLineSearch') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  return (
+                    <ServiceLineSearchField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
+                if (field.type === 'applicationSearch') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  return (
+                    <ApplicationSearchField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
+                if (field.type === 'queueSearch') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  return (
+                    <QueueSearchField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
+                if (field.type === 'date') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  return (
+                    <DatePickerField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
+                if (field.type === 'datetime') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  return (
+                    <DateTimePickerField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
+                if (field.type === 'time') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  return (
+                    <TimePickerField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
+                if (field.type === 'duration') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  return (
+                    <DurationPickerField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                      sx={field.sx}
+                    />
+                  );
+                }
+                if (field.type === 'color') {
+                  const currentValue = String(form[field.name] ?? '');
+                  const isValidHex = /^#[0-9A-Fa-f]{6}$/.test(currentValue);
+                  const safeValue = isValidHex ? currentValue : '#2563eb';
+                  return (
+                    <TextField
+                      key={field.name}
+                      label={field.label}
+                      size='small'
+                      fullWidth
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                      value={currentValue}
+                      onChange={(e) => {
+                        const { value } = e.target;
+                        if (/^#[0-9A-Fa-f]{0,6}$/.test(value)) {
+                          handleTextFieldChange(field.name, value);
+                        }
+                      }}
+                      placeholder='#2563eb'
+                      inputProps={{
+                        style: { fontFamily: 'monospace', textTransform: 'lowercase' },
+                        maxLength: 7,
+                      }}
+                      InputProps={{
+                        endAdornment: (
+                          <Box
+                            component='input'
+                            type='color'
+                            value={safeValue}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                              handleTextFieldChange(field.name, e.target.value)
                             }
                             sx={{
-                              '&.Mui-checked': { color: '#0369a1' },
+                              width: 32,
+                              height: 32,
+                              border: 'none',
+                              borderRadius: 1,
+                              cursor: 'pointer',
+                              padding: 0,
+                              ml: 1,
+                              backgroundColor: 'transparent',
+                              '&::-webkit-color-swatch-wrapper': { padding: 0 },
+                              '&::-webkit-color-swatch': {
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                borderRadius: 5,
+                              },
                             }}
                           />
-                          <Typography variant='caption' sx={{ fontWeight: 500, color: '#0369a1' }}>
-                            Select All
-                          </Typography>
-                          <ExpandMoreIcon
-                            sx={{
-                              color: '#0369a1',
-                              fontSize: '1.1rem',
-                              transform: ticketTypesExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                              transition: 'transform 0.2s',
-                            }}
-                          />
-                        </Box>
-                      </Box>
-
-                      <Collapse in={ticketTypesExpanded}>
-                        <Box sx={{ px: 2, pb: 2 }}>
-                          <FormControl component='fieldset' fullWidth>
-                            <FormGroup>
-                              {cols.map((t) => {
-                                const isChecked = enabledFor?.[t.key] ?? true;
-                                return (
-                                  <Box
-                                    key={t.key}
-                                    sx={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      py: 0.75,
-                                      borderBottom: '1px solid',
-                                      borderColor: '#2d5ebb',
-                                      '&:last-child': { borderBottom: 'none' },
-                                    }}
-                                  >
-                                    <Checkbox
-                                      checked={isChecked}
-                                      onChange={(e) =>
-                                        handleTextFieldChange(field.name, {
-                                          ...enabledFor,
-                                          [t.key]: e.target.checked,
-                                        })
-                                      }
-                                      sx={{
-                                        color: '#0369a1',
-                                        '&.Mui-checked': { color: '#0369a1' },
-                                      }}
-                                    />
-                                    <Box sx={{ flex: 1 }}>
-                                      <Typography
-                                        variant='body2'
-                                        sx={{ fontWeight: 500, fontSize: '0.85rem' }}
-                                      >
-                                        {t.label}
-                                      </Typography>
-                                    </Box>
-                                  </Box>
-                                );
-                              })}
-                            </FormGroup>
-                          </FormControl>
-                        </Box>
-                      </Collapse>
-                    </Box>
-                  </Box>
-                );
-              }
-              if (field.type === 'richText') {
-                const currentValue = (form[field.name] ?? '') as string;
-                const richTextValue = parseRichText(currentValue);
-                const isError = Boolean(showValidation && mergedFormErrors[field.name]);
-                return (
-                  <Box key={field.name}>
-                    <RichTextEditor
-                      value={richTextValue}
-                      onChange={(value) =>
-                        handleTextFieldChange(field.name, serializeRichText(value.segments))
-                      }
-                      showFooterActions={false}
-                      title={field.required ? `${field.label} *` : field.label}
-                      error={isError}
+                        ),
+                      }}
                     />
-                    {field.required && (
-                      <Typography
-                        variant='caption'
+                  );
+                }
+                if (field.type === 'ticketTypesActivation') {
+                  const cols = ticketTypeColumns ?? [];
+                  const enabledFor = (form[field.name] ?? {}) as Record<string, boolean>;
+                  const getActiveCount = (): number => {
+                    if (!enabledFor || Object.keys(enabledFor).length === 0) return cols.length;
+                    return cols.filter((t) => enabledFor[t.key] ?? true).length;
+                  };
+                  return (
+                    <Box key={field.name}>
+                      <Box
                         sx={{
-                          color: isError ? '#d32f2f' : 'text.secondary',
-                          fontSize: '0.7rem',
-                          mt: 0.25,
-                          display: 'block',
-                          fontWeight: isError ? 600 : 400,
+                          border: '1px solid #2d5ebb',
+                          borderRadius: 2,
+                          overflow: 'hidden',
                         }}
                       >
-                        {reqError(showValidation, mergedFormErrors[field.name]) || ' '}
-                      </Typography>
-                    )}
-                  </Box>
-                );
-              }
-              if (field.type === 'dayWorkingTimes') {
-                const rawValue = form[field.name];
-                const displayValue =
-                  rawValue === undefined || rawValue === '' ? '0h' : `${Number(rawValue)}h`;
+                        <Box
+                          onClick={() => setTicketTypesExpanded(!ticketTypesExpanded)}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            px: 2,
+                            py: 1.5,
+                            cursor: 'pointer',
+                            bgcolor: '#f0f4f8',
+                            transition: 'background-color 0.2s',
+                          }}
+                        >
+                          <Typography
+                            variant='body2'
+                            color='#0369a1'
+                            sx={{ fontWeight: 600, fontSize: '0.85rem' }}
+                          >
+                            {field.label || 'Ticket Types Activation'}
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography
+                              variant='caption'
+                              color='#0369a1'
+                              sx={{ fontWeight: 500, fontSize: '0.78rem' }}
+                            >
+                              {getActiveCount()} of {cols.length} selected
+                            </Typography>
+                            <Radio
+                              size='small'
+                              checked={getActiveCount() === cols.length}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) =>
+                                handleTextFieldChange(
+                                  field.name,
+                                  Object.fromEntries(cols.map((t) => [t.key, e.target.checked])),
+                                )
+                              }
+                              sx={{
+                                '&.Mui-checked': { color: '#0369a1' },
+                              }}
+                            />
+                            <Typography
+                              variant='caption'
+                              sx={{ fontWeight: 500, color: '#0369a1' }}
+                            >
+                              Select All
+                            </Typography>
+                            <ExpandMoreIcon
+                              sx={{
+                                color: '#0369a1',
+                                fontSize: '1.1rem',
+                                transform: ticketTypesExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                                transition: 'transform 0.2s',
+                              }}
+                            />
+                          </Box>
+                        </Box>
+
+                        <Collapse in={ticketTypesExpanded}>
+                          <Box sx={{ px: 2, pb: 2 }}>
+                            <FormControl component='fieldset' fullWidth>
+                              <FormGroup>
+                                {cols.map((t) => {
+                                  const isChecked = enabledFor?.[t.key] ?? true;
+                                  return (
+                                    <Box
+                                      key={t.key}
+                                      sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        py: 0.75,
+                                        borderBottom: '1px solid',
+                                        borderColor: '#2d5ebb',
+                                        '&:last-child': { borderBottom: 'none' },
+                                      }}
+                                    >
+                                      <Checkbox
+                                        checked={isChecked}
+                                        onChange={(e) =>
+                                          handleTextFieldChange(field.name, {
+                                            ...enabledFor,
+                                            [t.key]: e.target.checked,
+                                          })
+                                        }
+                                        sx={{
+                                          color: '#0369a1',
+                                          '&.Mui-checked': { color: '#0369a1' },
+                                        }}
+                                      />
+                                      <Box sx={{ flex: 1 }}>
+                                        <Typography
+                                          variant='body2'
+                                          sx={{ fontWeight: 500, fontSize: '0.85rem' }}
+                                        >
+                                          {t.label}
+                                        </Typography>
+                                      </Box>
+                                    </Box>
+                                  );
+                                })}
+                              </FormGroup>
+                            </FormControl>
+                          </Box>
+                        </Collapse>
+                      </Box>
+                    </Box>
+                  );
+                }
+                if (field.type === 'richText') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  const richTextValue = parseRichText(currentValue);
+                  const isError = Boolean(showValidation && mergedFormErrors[field.name]);
+                  return (
+                    <Box key={field.name}>
+                      <RichTextEditor
+                        value={richTextValue}
+                        onChange={(value) =>
+                          handleTextFieldChange(field.name, serializeRichText(value.segments))
+                        }
+                        showFooterActions={false}
+                        title={field.required ? `${field.label} *` : field.label}
+                        error={isError}
+                      />
+                      {field.required && (
+                        <Typography
+                          variant='caption'
+                          sx={{
+                            color: isError ? '#d32f2f' : 'text.secondary',
+                            fontSize: '0.7rem',
+                            mt: 0.25,
+                            display: 'block',
+                            fontWeight: isError ? 600 : 400,
+                          }}
+                        >
+                          {reqError(showValidation, mergedFormErrors[field.name]) || ' '}
+                        </Typography>
+                      )}
+                    </Box>
+                  );
+                }
+                if (field.type === 'dayWorkingTimes') {
+                  const rawValue = form[field.name];
+                  const displayValue =
+                    rawValue === undefined || rawValue === '' ? '0h' : `${Number(rawValue)}h`;
+                  return (
+                    <TextField
+                      key={field.name}
+                      label={field.label}
+                      size='small'
+                      fullWidth
+                      disabled
+                      value={displayValue}
+                      InputProps={{
+                        endAdornment: (
+                          <IconButton
+                            size='small'
+                            edge='end'
+                            onClick={() =>
+                              onDayFieldEditClick?.({
+                                fieldName: field.name,
+                                day: field.day ?? '',
+                                rowId: draftId,
+                                label: field.label,
+                                setValue: (hours: number) =>
+                                  handleTextFieldChange(field.name, String(hours)),
+                                setAllValues: (hoursByDay: Record<string, number>) =>
+                                  setForm((prev) => {
+                                    const next = { ...prev };
+                                    config.fields.forEach((f) => {
+                                      if (
+                                        f.type === 'dayWorkingTimes' &&
+                                        f.day &&
+                                        hoursByDay[f.day] !== undefined
+                                      ) {
+                                        next[f.name] = hoursByDay[f.day];
+                                      }
+                                    });
+                                    return next;
+                                  }),
+                              })
+                            }
+                            sx={{ color: config.accent }}
+                          >
+                            <EditIcon fontSize='small' />
+                          </IconButton>
+                        ),
+                      }}
+                    />
+                  );
+                }
+                const textValue: string =
+                  typeof form[field.name] === 'boolean' ? '' : String(form[field.name] ?? '');
                 return (
                   <TextField
                     key={field.name}
                     label={field.label}
                     size='small'
                     fullWidth
-                    disabled
-                    value={displayValue}
-                    InputProps={{
-                      endAdornment: (
-                        <IconButton
-                          size='small'
-                          edge='end'
-                          onClick={() =>
-                            onDayFieldEditClick?.({
-                              fieldName: field.name,
-                              day: field.day ?? '',
-                              rowId: draftId,
-                              label: field.label,
-                              setValue: (hours: number) =>
-                                handleTextFieldChange(field.name, String(hours)),
-                              setAllValues: (hoursByDay: Record<string, number>) =>
-                                setForm((prev) => {
-                                  const next = { ...prev };
-                                  config.fields.forEach((f) => {
-                                    if (
-                                      f.type === 'dayWorkingTimes' &&
-                                      f.day &&
-                                      hoursByDay[f.day] !== undefined
-                                    ) {
-                                      next[f.name] = hoursByDay[f.day];
-                                    }
-                                  });
-                                  return next;
-                                }),
-                            })
-                          }
-                          sx={{ color: config.accent }}
-                        >
-                          <EditIcon fontSize='small' />
-                        </IconButton>
-                      ),
-                    }}
+                    required={field.required}
+                    error={Boolean(showValidation && mergedFormErrors[field.name])}
+                    helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    type={field.type === 'number' ? 'number' : 'text'}
+                    value={textValue}
+                    onChange={(e) => handleTextFieldChange(field.name, e.target.value)}
+                    multiline={field.multiline}
+                    minRows={field.minRows}
                   />
                 );
-              }
-              const textValue: string =
-                typeof form[field.name] === 'boolean' ? '' : String(form[field.name] ?? '');
-              return (
-                <TextField
-                  key={field.name}
-                  label={field.label}
-                  size='small'
-                  fullWidth
-                  required={field.required}
-                  error={Boolean(showValidation && mergedFormErrors[field.name])}
-                  helperText={reqError(showValidation, mergedFormErrors[field.name])}
-                  type={field.type === 'number' ? 'number' : 'text'}
-                  value={textValue}
-                  onChange={(e) => handleTextFieldChange(field.name, e.target.value)}
-                  multiline={field.multiline}
-                  minRows={field.minRows}
-                />
-              );
-            })}
-          </Box>
-        </LocalizationProvider>
-      </ConfigFormDialog>
+              })}
+            </Box>
+          </LocalizationProvider>
+        </ConfigFormDialog>
 
-      <ConfigDeleteDialog
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        onConfirm={handleDelete}
-        entityName={config.entity}
-        itemName={(selectedRow?.[config.fields[0].name] as string) || ''}
-      />
-    </>
-  );
-};
+        <ConfigDeleteDialog
+          open={deleteOpen}
+          onClose={() => setDeleteOpen(false)}
+          onConfirm={handleDelete}
+          entityName={config.entity}
+          itemName={(selectedRow?.[config.fields[0].name] as string) || ''}
+        />
+      </>
+    );
+  },
+);
 
 // Display names for memo debugging
 GenericPanel.displayName = 'GenericPanel';

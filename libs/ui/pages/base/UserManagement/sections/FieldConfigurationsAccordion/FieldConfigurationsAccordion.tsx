@@ -1,16 +1,24 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ClearIcon from '@mui/icons-material/Clear';
+import SearchIcon from '@mui/icons-material/Search';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import UpdateIcon from '@mui/icons-material/Update';
 import CloseIcon from '@mui/icons-material/Close';
-import { Dialog, DialogContent, IconButton } from '@mui/material';
+import { Dialog, DialogContent, IconButton, InputAdornment } from '@mui/material';
 import { darken } from '@mui/material/styles';
-import { Box, Button, Tooltip, Typography } from '@serviceops/component';
+import { Box, Button, Divider, TextField, Tooltip, Typography } from '@serviceops/component';
 import { GenericAccordion } from '@serviceops/genericaccordion';
 import { GenericToolbar } from '@serviceops/generictoolbar';
 import { useNotification } from '@serviceops/hooks';
 import { useStyles } from '../UserManagementSection/styles';
-import { FieldConfigurationsSection } from '../UserManagementSection/components';
+import {
+  FieldConfigurationsSection,
+  type FieldConfigurationsSectionHandle,
+} from '../UserManagementSection/components';
 import {
   WorkingTimesSection,
   TimesheetPeriodsSection,
@@ -69,6 +77,9 @@ const FieldConfigurationsAccordion = () => {
   const { success, error: showError } = useNotification();
   const [fieldConfigurations, setFieldConfigurations] = useState<IConfigField[]>([]);
   const [activeDialog, setActiveDialog] = useState<SubView | null>(null);
+  const [selectedFieldConfigId, setSelectedFieldConfigId] = useState<number | string | null>(null);
+  const [search, setSearch] = useState('');
+  const fieldConfigRef = useRef<FieldConfigurationsSectionHandle>(null);
 
   const { data: configData, isLoading } = useGetConfigurationQuery();
   const [updateSection] = useUpdateConfigurationSectionMutation();
@@ -80,6 +91,18 @@ const FieldConfigurationsAccordion = () => {
       setFieldConfigurations(apiFieldConfigurations as IConfigField[]);
     }
   }, [apiFieldConfigurations]);
+
+  // The sub-view buttons (Compose Working Times/Timesheet Periods/Update
+  // Timesheet Periods) only make sense in the context of a selected Working
+  // Time row, so they stay hidden until a row is selected — mirroring the
+  // Holiday Calendar toolbar's Bank Holidays button. If the selection is
+  // cleared while a sub-view dialog is open, close it so the user isn't left
+  // on a dialog whose trigger button just disappeared.
+  useEffect(() => {
+    if (!selectedFieldConfigId && activeDialog !== null) {
+      setActiveDialog(null);
+    }
+  }, [selectedFieldConfigId, activeDialog]);
 
   const persist = useCallback(
     (next: IConfigField[]) => {
@@ -144,6 +167,21 @@ const FieldConfigurationsAccordion = () => {
     [fieldConfigurations, persist, success, showError],
   );
 
+  // Search box in the custom toolbar (FieldConfigurationsSection's own
+  // GenericPanel toolbar is hidden via hideToolbar since New/Edit/Delete/
+  // Clear are driven externally) — matches HolidayCalendarsSection's
+  // "search across every visible field" behavior.
+  const filteredRows = search
+    ? fieldConfigurations.filter((row) =>
+        Object.values(row).some(
+          (val) =>
+            val !== null &&
+            val !== undefined &&
+            String(val).toLowerCase().includes(search.toLowerCase()),
+        ),
+      )
+    : fieldConfigurations;
+
   return (
     <GenericAccordion
       title='Working Times'
@@ -153,37 +191,123 @@ const FieldConfigurationsAccordion = () => {
       className={classes.sectionAccordion}
       defaultExpanded={false}
     >
-      {/* Compose Working Times/Timesheet Periods/Update Timesheet Periods open
-          as a dialog over the Working Times table (matching the Holiday
-          Calendar/Working Calendars sections' Bank Holidays/Working Times/etc.
-          sub-view dialogs) instead of swapping the inline accordion body. */}
       <GenericToolbar className={classes.actionToolbar}>
         <Box className={classes.toolbarButtons}>
-          {VIEW_BUTTONS.map((btn) => (
-            <Tooltip key={btn.key} title={btn.label}>
+          {!selectedFieldConfigId && (
+            <Tooltip title='Create new working time'>
               <Button
                 size='small'
-                variant={activeDialog === btn.key ? 'contained' : 'outlined'}
-                startIcon={btn.icon}
-                onClick={() => setActiveDialog(btn.key)}
+                variant='contained'
+                startIcon={<AddIcon />}
+                onClick={() => fieldConfigRef.current?.openNew()}
                 sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
               >
-                {btn.label}
+                Add New Working Time
               </Button>
             </Tooltip>
-          ))}
+          )}
+
+          {selectedFieldConfigId && (
+            <Tooltip title='Edit selected working time'>
+              <Button
+                size='small'
+                variant='outlined'
+                startIcon={<EditIcon />}
+                onClick={() => fieldConfigRef.current?.openEdit()}
+                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+              >
+                Edit
+              </Button>
+            </Tooltip>
+          )}
+
+          {selectedFieldConfigId && (
+            <Tooltip title='Delete selected working time'>
+              <Button
+                size='small'
+                variant='outlined'
+                color='error'
+                startIcon={<DeleteIcon />}
+                onClick={() => fieldConfigRef.current?.openDelete()}
+                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+              >
+                Delete
+              </Button>
+            </Tooltip>
+          )}
+
+          {selectedFieldConfigId && <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />}
+
+          {selectedFieldConfigId &&
+            VIEW_BUTTONS.map((btn) => (
+              <Tooltip key={btn.key} title={btn.label}>
+                <Button
+                  size='small'
+                  variant={activeDialog === btn.key ? 'contained' : 'outlined'}
+                  startIcon={btn.icon}
+                  onClick={() => setActiveDialog(btn.key)}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  {btn.label}
+                </Button>
+              </Tooltip>
+            ))}
+
+          {selectedFieldConfigId && <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />}
+
+          {selectedFieldConfigId && (
+            <Tooltip title='Clear selection'>
+              <Button
+                size='small'
+                variant='outlined'
+                startIcon={<ClearIcon />}
+                onClick={() => setSelectedFieldConfigId(null)}
+                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+              >
+                Clear
+              </Button>
+            </Tooltip>
+          )}
+
+          {!selectedFieldConfigId && (
+            <Box sx={{ ml: 'auto', flexShrink: 0 }}>
+              <TextField
+                placeholder='Search...'
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className={classes.toolbarSearchField}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <SearchIcon />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </Box>
+          )}
         </Box>
       </GenericToolbar>
 
       <FieldConfigurationsSection
-        data={fieldConfigurations}
+        ref={fieldConfigRef}
+        data={filteredRows}
         isLoading={isLoading}
         onDataChange={handleDataChange}
         onCreate={handleCreate}
         onUpdate={handleUpdate}
         onDelete={handleDelete}
+        hideToolbar
+        selectedRowId={selectedFieldConfigId}
+        onSelectedRowIdChange={setSelectedFieldConfigId}
       />
 
+      {/* Compose Working Times/Timesheet Periods/Update Timesheet Periods open
+          as a dialog over the Working Times table (matching the Holiday
+          Calendar/Working Calendars sections' Bank Holidays/Working Times/etc.
+          sub-view dialogs) instead of swapping the inline accordion body. */}
       <Dialog
         open={activeDialog !== null}
         onClose={() => setActiveDialog(null)}
@@ -238,7 +362,9 @@ const FieldConfigurationsAccordion = () => {
                       {dlgConfig.title}
                     </Typography>
                     {dlgConfig.subtitle && (
-                      <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}>
+                      <Typography
+                        sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}
+                      >
                         {dlgConfig.subtitle}
                       </Typography>
                     )}
@@ -253,7 +379,9 @@ const FieldConfigurationsAccordion = () => {
         <DialogContent sx={{ p: 2.5, overflowY: 'auto' }}>
           {activeDialog === 'composedWorkingTimes' && <WorkingTimesSection hideHeader />}
           {activeDialog === 'timesheetPeriods' && <TimesheetPeriodsSection hideHeader />}
-          {activeDialog === 'updateTimesheetPeriods' && <UpdateTimesheetPeriodsSection hideHeader />}
+          {activeDialog === 'updateTimesheetPeriods' && (
+            <UpdateTimesheetPeriodsSection hideHeader />
+          )}
         </DialogContent>
       </Dialog>
     </GenericAccordion>

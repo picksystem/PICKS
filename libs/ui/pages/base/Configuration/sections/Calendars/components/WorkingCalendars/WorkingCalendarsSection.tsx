@@ -26,6 +26,7 @@ import { GenericToolbar } from '@serviceops/generictoolbar';
 import { GenericPanel } from '@serviceops/genericpanel';
 import { ConfigDeleteDialog } from '@serviceops/configdialogs';
 import { WorkingCalendarFormDialog } from '@serviceops/pages/base/Configuration/dialogs/WorkingCalendarFormDialog';
+import { ComposeWorkingTimesFormDialog } from '@serviceops/pages/base/Configuration/dialogs/ComposeWorkingTimesFormDialog';
 import { TableFilterField } from '@serviceops/configcatorshared';
 import { Box, Button, Divider, Tooltip, Typography } from '@serviceops/component';
 import {
@@ -35,7 +36,6 @@ import {
   WORK_LOCATIONS_TABLE_CONFIG,
   CONSULTANTS_TABLE_CONFIG,
   workingCalendarColumns,
-  workingTimesColumns,
   composedTimesColumns,
   workLocationsColumns,
   consultantsColumns,
@@ -52,11 +52,6 @@ const VIEW_BUTTONS: { key: WCActiveView; label: string; icon: React.ReactNode }[
     key: 'workingTimes',
     label: 'Working Times',
     icon: <AccessTimeIcon sx={{ fontSize: '1rem' }} />,
-  },
-  {
-    key: 'composedTimes',
-    label: 'Composed Working Times',
-    icon: <EventNoteIcon sx={{ fontSize: '1rem' }} />,
   },
   {
     key: 'workLocations',
@@ -79,7 +74,6 @@ const VIEW_DIALOG_CONFIG: Partial<
   Record<WCActiveView, { title: string; subtitle?: string; accent: string; icon: React.ReactNode }>
 > = {
   workingTimes: WORKING_TIMES_TABLE_CONFIG,
-  composedTimes: COMPOSED_TIMES_TABLE_CONFIG,
   workLocations: WORK_LOCATIONS_TABLE_CONFIG,
   consultants: CONSULTANTS_TABLE_CONFIG,
 };
@@ -104,8 +98,6 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
   // Sub-view filter state — one Calendar filter per sub-view (pre-filled
   // from the selected row when the dialog opens) plus one secondary filter
   // matching that table's other categorical column.
-  const [wtCalendarFilter, setWtCalendarFilter] = useState('');
-  const [wtDayFilter, setWtDayFilter] = useState('');
   const [ctCalendarFilter, setCtCalendarFilter] = useState('');
   const [ctDayFilter, setCtDayFilter] = useState('');
   const [wlCalendarFilter, setWlCalendarFilter] = useState('');
@@ -113,6 +105,15 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
   const [coCalendarFilter, setCoCalendarFilter] = useState('');
   const [coRoleFilter, setCoRoleFilter] = useState('');
   const [coAppFilter, setCoAppFilter] = useState('');
+
+  // "Composed Working Times" opens a single-purpose Compose form dialog
+  // first (From date/To date, with Calendar/Holiday Calendar/Working Time
+  // Template shown read-only from the selected Working Calendar row) —
+  // matching a real "compose working times" action rather than a raw CRUD
+  // table. Submitting adds the resulting entry to `composedTimes` and opens
+  // the existing data table sub-view, which already carries every field the
+  // compose form collected (see composedTimesColumns).
+  const [composeDialogOpen, setComposeDialogOpen] = useState(false);
 
   const rowsFinal = data ?? rows;
 
@@ -142,6 +143,9 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
     if (!selectedRowId && activeView !== 'calendar') {
       setActiveView('calendar');
     }
+    if (!selectedRowId) {
+      setComposeDialogOpen(false);
+    }
   }, [selectedRowId, activeView]);
 
   const selectedRow = rowsFinal.find((r) => r.id === selectedRowId) ?? null;
@@ -152,9 +156,6 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
   // calendar's rows again.
   useEffect(() => {
     if (activeView === 'workingTimes') {
-      setWtCalendarFilter(selectedRow?.name ?? '');
-      setWtDayFilter('');
-    } else if (activeView === 'composedTimes') {
       setCtCalendarFilter(selectedRow?.name ?? '');
       setCtDayFilter('');
     } else if (activeView === 'workLocations') {
@@ -194,28 +195,6 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
       }
     },
     [data, onDataChange, apiCAL, saveSection, wcTimes, composedTimes, workLocations, consultants],
-  );
-
-  const handleSaveWcTimes = useCallback(
-    (next: IConfigWorkingCalendarTime[]) => {
-      setWcTimes(next);
-      saveSection('calendars', {
-        workingDayTemplates: apiCAL?.workingDayTemplates ?? [],
-        workingDayTemplateTimes: apiCAL?.workingDayTemplateTimes ?? [],
-        holidayCalendars: apiCAL?.holidayCalendars ?? [],
-        bankHolidays: apiCAL?.bankHolidays ?? [],
-        workingCalendars: rowsFinal,
-        workingCalendarTimes: next,
-        composedWorkingTimes: composedTimes,
-        calendarWorkLocations: workLocations,
-        calendarConsultants: consultants,
-        periodTypes: apiCAL?.periodTypes ?? [],
-        timesheetPeriods: apiCAL?.timesheetPeriods ?? [],
-        workingShifts: apiCAL?.workingShifts ?? [],
-        shiftConsultants: apiCAL?.shiftConsultants ?? [],
-      });
-    },
-    [apiCAL, saveSection, rowsFinal, composedTimes, workLocations, consultants],
   );
 
   const handleSaveComposedTimes = useCallback(
@@ -356,38 +335,7 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
       )
     : rowsFinal;
 
-  // ── Working Times sub-view ──────────────────────────────────────────────
-  const wtCalendarFilterOptions = useMemo(() => {
-    const seen = new Set<string>();
-    wcTimes.forEach((r) => {
-      const v = String(r.calendarName ?? '').trim();
-      if (v) seen.add(v);
-    });
-    return Array.from(seen).sort((a, b) => a.localeCompare(b));
-  }, [wcTimes]);
-  const wtDayFilterOptions = useMemo(() => {
-    const seen = new Set<string>();
-    wcTimes.forEach((r) => {
-      const v = String(r.day ?? '').trim();
-      if (v) seen.add(v);
-    });
-    return Array.from(seen).sort((a, b) => a.localeCompare(b));
-  }, [wcTimes]);
-  const filteredWcTimes = useMemo(
-    () =>
-      wcTimes.filter(
-        (r) =>
-          (!wtCalendarFilter || r.calendarName === wtCalendarFilter) &&
-          (!wtDayFilter || r.day === wtDayFilter),
-      ),
-    [wcTimes, wtCalendarFilter, wtDayFilter],
-  );
-  const handleWcTimesSave = (next: IConfigWorkingCalendarTime[]) => {
-    const untouched = wcTimes.filter((r) => !filteredWcTimes.some((fr) => fr.id === r.id));
-    handleSaveWcTimes([...untouched, ...next]);
-  };
-
-  // ── Composed Times sub-view ─────────────────────────────────────────────
+  // ── Working Times sub-view (shows composed working times) ────────────────
   const ctCalendarFilterOptions = useMemo(() => {
     const seen = new Set<string>();
     composedTimes.forEach((r) => {
@@ -419,6 +367,24 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
     );
     handleSaveComposedTimes([...untouched, ...next]);
   };
+
+  const handleComposeSubmit = useCallback(
+    ({ fromDate, toDate }: { fromDate: string; toDate: string }) => {
+      const newRow: IConfigComposedWorkingTime = {
+        id: `${Date.now()}`,
+        calendarName: selectedRow?.name ?? '',
+        fromDate,
+        toDate,
+        workingCalendar: selectedRow?.name ?? '',
+        holidayCalendar: selectedRow?.holidayCalendar ?? '',
+        workingTimeTemplate: selectedRow?.workingDayTemplate ?? '',
+      };
+      handleComposedTimesSave([...filteredComposedTimes, newRow]);
+      setComposeDialogOpen(false);
+      setActiveView('workingTimes');
+    },
+    [selectedRow, filteredComposedTimes, handleComposedTimesSave],
+  );
 
   // ── Work Locations sub-view ─────────────────────────────────────────────
   const wlCalendarFilterOptions = useMemo(() => {
@@ -549,6 +515,20 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
 
           {selectedRowId && <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />}
 
+          {selectedRowId && (
+            <Tooltip title='Compose working times for the selected calendar'>
+              <Button
+                size='small'
+                variant={composeDialogOpen ? 'contained' : 'outlined'}
+                startIcon={<EventNoteIcon sx={{ fontSize: '1rem' }} />}
+                onClick={() => setComposeDialogOpen(true)}
+                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+              >
+                Compose Working Times
+              </Button>
+            </Tooltip>
+          )}
+
           {selectedRowId &&
             VIEW_BUTTONS.filter((btn) => btn.key !== 'calendar').map((btn) => (
               <Tooltip key={btn.key} title={btn.label}>
@@ -631,18 +611,18 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
         </>
       )}
 
-      {/* Working Times/Composed Times/Work Locations/Consultants open as a
-          dialog over the Working Calendars table (matching the User
-          Management "Changes Log" dialog pattern and the Holiday
-          Calendar/Service Lines/Applications/Application Queues sections)
-          instead of swapping the inline accordion body. The header mirrors
-          every Configuration form dialog's gradient banner (see
-          ConfigFormDialog) — icon + title + subtitle on an accent
-          gradient, with a close (X) button. Each panel keeps GenericPanel's
-          own New/Edit/Delete toolbar (all four sub-views use plain text/
-          date fields, so the built-in config-driven form is enough — no
-          custom FormDialog needed), with hideHeader so its own icon+title
-          banner doesn't duplicate this one. */}
+      {/* Working Times/Work Locations/Consultants open as a dialog over the
+          Working Calendars table (matching the User Management "Changes
+          Log" dialog pattern and the Holiday Calendar/Service Lines/
+          Applications/Application Queues sections) instead of swapping the
+          inline accordion body. The header mirrors every Configuration form
+          dialog's gradient banner (see ConfigFormDialog) — icon + title +
+          subtitle on an accent gradient, with a close (X) button. Each
+          panel keeps GenericPanel's own New/Edit/Delete toolbar, with
+          hideHeader so its own icon+title banner doesn't duplicate this
+          one. "Working Times" shows the composed working times (fromDate/
+          toDate/workingCalendar/holidayCalendar/workingTimeTemplate) — the
+          Compose Working Times action dialog is what feeds this table. */}
       <Dialog
         open={activeView !== 'calendar'}
         onClose={() => setActiveView('calendar')}
@@ -714,33 +694,6 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
         <DialogContent sx={{ p: 2.5, overflowY: 'auto' }}>
           {activeView === 'workingTimes' && (
             <GenericPanel
-              config={WORKING_TIMES_TABLE_CONFIG}
-              data={filteredWcTimes as unknown as Record<string, unknown>[]}
-              onSave={handleWcTimesSave as (data: unknown[]) => void}
-              customColumns={workingTimesColumns as unknown as never}
-              variant='standard'
-              hideHeader
-              enableSuccessMessage
-              toolbarExtra={
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  <TableFilterField
-                    label='Calendar'
-                    value={wtCalendarFilter}
-                    onChange={setWtCalendarFilter}
-                    options={wtCalendarFilterOptions}
-                  />
-                  <TableFilterField
-                    label='Day of Week'
-                    value={wtDayFilter}
-                    onChange={setWtDayFilter}
-                    options={wtDayFilterOptions}
-                  />
-                </Box>
-              }
-            />
-          )}
-          {activeView === 'composedTimes' && (
-            <GenericPanel
               config={COMPOSED_TIMES_TABLE_CONFIG}
               data={filteredComposedTimes as unknown as Record<string, unknown>[]}
               onSave={handleComposedTimesSave as (data: unknown[]) => void}
@@ -749,7 +702,7 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
               hideHeader
               enableSuccessMessage
               toolbarExtra={
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
                   <TableFilterField
                     label='Calendar'
                     value={ctCalendarFilter}
@@ -828,6 +781,15 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
           )}
         </DialogContent>
       </Dialog>
+
+      <ComposeWorkingTimesFormDialog
+        open={composeDialogOpen}
+        calendarName={selectedRow?.name}
+        holidayCalendar={selectedRow?.holidayCalendar}
+        workingTimeTemplate={selectedRow?.workingDayTemplate}
+        onClose={() => setComposeDialogOpen(false)}
+        onSubmit={handleComposeSubmit}
+      />
     </GenericAccordion>
   );
 };
