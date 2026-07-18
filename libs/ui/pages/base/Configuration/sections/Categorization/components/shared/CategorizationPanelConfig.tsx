@@ -95,7 +95,15 @@ export const QUEUE_APPROVALS_CONFIG: TableConfig = {
     { name: 'approverName', label: 'Approver Name', required: true, bold: true },
     { name: 'approverRole', label: 'Approver Role' },
     { name: 'approvalOrder', label: 'Approval Order', type: 'number' },
-    { name: 'isRequired', label: 'Required', type: 'toggle', defaultValue: false },
+    {
+      name: 'isRequired',
+      label: 'Required',
+      type: 'activationToggle',
+      activationDescriptionActive: 'This approver is required for the approval flow',
+      activationDescriptionInactive: 'This approver is not required for the approval flow',
+      activationAccent: CATEG_ACCENT,
+      defaultValue: false,
+    },
   ],
 };
 
@@ -110,8 +118,16 @@ export const QUEUE_TIMESHEET_CONFIG: TableConfig = {
     { name: 'project', label: 'Project', required: true, bold: true },
     { name: 'fromDate', label: 'From Date', type: 'date' },
     { name: 'toDate', label: 'To Date', type: 'date' },
-    { name: 'activate', label: 'Activate', type: 'toggle', defaultValue: true },
     { name: 'maxHoursPerDayPerResource', label: 'Max Hours/Day', type: 'number', defaultValue: 8 },
+    {
+      name: 'activate',
+      label: 'Activation',
+      type: 'activationToggle',
+      activationDescriptionActive: 'This timesheet project is enabled',
+      activationDescriptionInactive: 'This timesheet project is disabled',
+      activationAccent: CATEG_ACCENT,
+      defaultValue: true,
+    },
   ],
 };
 
@@ -126,8 +142,16 @@ export const QUEUE_EXPENSES_CONFIG: TableConfig = {
     { name: 'project', label: 'Project', required: true, bold: true },
     { name: 'fromDate', label: 'From Date', type: 'date' },
     { name: 'toDate', label: 'To Date', type: 'date' },
-    { name: 'activate', label: 'Activate', type: 'toggle', defaultValue: true },
     { name: 'maxAmountPerDay', label: 'Max Amount/Day', type: 'number', defaultValue: 0 },
+    {
+      name: 'activate',
+      label: 'Activation',
+      type: 'activationToggle',
+      activationDescriptionActive: 'This expense project is enabled',
+      activationDescriptionInactive: 'This expense project is disabled',
+      activationAccent: CATEG_ACCENT,
+      defaultValue: true,
+    },
   ],
 };
 
@@ -159,8 +183,16 @@ export const SERVICE_LINE_TIMESHEET_CONFIG: TableConfig = {
     { name: 'application', label: 'Application' },
     { name: 'fromDate', label: 'From Date', type: 'date' },
     { name: 'toDate', label: 'To Date', type: 'date' },
-    { name: 'activate', label: 'Activate', type: 'toggle', defaultValue: true },
     { name: 'maxHoursPerDayPerResource', label: 'Max Hours/Day', type: 'number', defaultValue: 8 },
+    {
+      name: 'activate',
+      label: 'Activation',
+      type: 'activationToggle',
+      activationDescriptionActive: 'This timesheet project is enabled',
+      activationDescriptionInactive: 'This timesheet project is disabled',
+      activationAccent: CATEG_ACCENT,
+      defaultValue: true,
+    },
     { name: 'useInExpenses', label: 'Use in Expenses', type: 'toggle', defaultValue: false },
     { name: 'internalNote', label: 'Internal note' },
   ],
@@ -177,8 +209,16 @@ export const SERVICE_LINE_EXPENSES_CONFIG: TableConfig = {
     { name: 'project', label: 'Project', required: true, bold: true },
     { name: 'fromDate', label: 'From Date', type: 'date' },
     { name: 'toDate', label: 'To Date', type: 'date' },
-    { name: 'activate', label: 'Activate', type: 'toggle', defaultValue: true },
     { name: 'maxAmountPerDay', label: 'Max Amount/Day', type: 'number', defaultValue: 0 },
+    {
+      name: 'activate',
+      label: 'Activation',
+      type: 'activationToggle',
+      activationDescriptionActive: 'This expense project is enabled',
+      activationDescriptionInactive: 'This expense project is disabled',
+      activationAccent: CATEG_ACCENT,
+      defaultValue: true,
+    },
   ],
 };
 
@@ -193,8 +233,16 @@ export const APP_TIMESHEET_CONFIG: TableConfig = {
     { name: 'project', label: 'Project', required: true, bold: true },
     { name: 'fromDate', label: 'From Date', type: 'date' },
     { name: 'toDate', label: 'To Date', type: 'date' },
-    { name: 'activate', label: 'Activate', type: 'toggle', defaultValue: true },
     { name: 'maxHoursPerDayPerResource', label: 'Max Hours/Day', type: 'number', defaultValue: 8 },
+    {
+      name: 'activate',
+      label: 'Activation',
+      type: 'activationToggle',
+      activationDescriptionActive: 'This timesheet project is enabled',
+      activationDescriptionInactive: 'This timesheet project is disabled',
+      activationAccent: CATEG_ACCENT,
+      defaultValue: true,
+    },
   ],
 };
 
@@ -209,8 +257,16 @@ export const APP_EXPENSES_CONFIG: TableConfig = {
     { name: 'project', label: 'Project', required: true, bold: true },
     { name: 'fromDate', label: 'From Date', type: 'date' },
     { name: 'toDate', label: 'To Date', type: 'date' },
-    { name: 'activate', label: 'Activate', type: 'toggle', defaultValue: true },
     { name: 'maxAmountPerDay', label: 'Max Amount/Day', type: 'number', defaultValue: 0 },
+    {
+      name: 'activate',
+      label: 'Activation',
+      type: 'activationToggle',
+      activationDescriptionActive: 'This expense project is enabled',
+      activationDescriptionInactive: 'This expense project is disabled',
+      activationAccent: CATEG_ACCENT,
+      defaultValue: true,
+    },
   ],
 };
 
@@ -237,7 +293,15 @@ export const APP_BILLING_CODES_CONFIG: TableConfig = {
     { name: 'applicationName', label: 'Application', required: true, bold: true },
     { name: 'billingCode', label: 'Billing Code', required: true, bold: true },
     { name: 'billingCodeName', label: 'Billing Code Name', required: true },
-    { name: 'isActive', label: 'Active', type: 'toggle', defaultValue: true },
+    {
+      name: 'isActive',
+      label: 'Activation',
+      type: 'activationToggle',
+      activationDescriptionActive: 'This billing code is enabled',
+      activationDescriptionInactive: 'This billing code is disabled',
+      activationAccent: CATEG_ACCENT,
+      defaultValue: true,
+    },
   ],
 };
 

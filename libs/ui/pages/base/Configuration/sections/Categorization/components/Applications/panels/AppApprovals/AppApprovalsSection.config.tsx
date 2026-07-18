@@ -12,6 +12,14 @@ export const APP_APPROVALS_CONFIG: TableConfig = {
     { name: 'approverName', label: 'Approver Name', required: true, bold: true },
     { name: 'approverRole', label: 'Approver Role' },
     { name: 'approvalOrder', label: 'Approval Order', type: 'number' as const, defaultValue: 1 },
-    { name: 'isRequired', label: 'Required', type: 'toggle' as const, defaultValue: true },
+    {
+      name: 'isRequired',
+      label: 'Required',
+      type: 'activationToggle' as const,
+      activationDescriptionActive: 'This approver is required for the approval flow',
+      activationDescriptionInactive: 'This approver is not required for the approval flow',
+      activationAccent: '#0369a1',
+      defaultValue: true,
+    },
   ],
 };

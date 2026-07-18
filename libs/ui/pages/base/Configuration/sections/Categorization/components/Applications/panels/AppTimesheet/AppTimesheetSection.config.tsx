@@ -12,12 +12,20 @@ export const APP_TIMESHEET_CONFIG: TableConfig = {
     { name: 'project', label: 'Project', required: true, bold: true },
     { name: 'fromDate', label: 'From Date', type: 'date' as const },
     { name: 'toDate', label: 'To Date', type: 'date' as const },
-    { name: 'activate', label: 'Activate', type: 'toggle' as const, defaultValue: true },
     {
       name: 'maxHoursPerDayPerResource',
       label: 'Max Hours/Day',
       type: 'number' as const,
       defaultValue: 8,
+    },
+    {
+      name: 'activate',
+      label: 'Activation',
+      type: 'activationToggle' as const,
+      activationDescriptionActive: 'This timesheet project is enabled',
+      activationDescriptionInactive: 'This timesheet project is disabled',
+      activationAccent: '#0369a1',
+      defaultValue: true,
     },
   ],
 };

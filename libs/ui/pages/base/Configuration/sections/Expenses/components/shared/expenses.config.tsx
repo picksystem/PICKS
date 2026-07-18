@@ -6,11 +6,7 @@ import AppsIcon from '@mui/icons-material/Apps';
 import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
 import PersonIcon from '@mui/icons-material/Person';
 import { Column } from '@serviceops/component';
-import {
-  mkCell,
-  mkChip,
-  mkDescCell,
-} from '@serviceops/configutils';
+import { mkCell, mkChip, mkDescCell } from '@serviceops/configutils';
 import { TableConfig } from './expenses.config.types';
 
 import type {
@@ -55,6 +51,15 @@ export const EXP_PROJECT_CONFIG: TableConfig = {
     { name: 'expensesType', label: 'Expenses Type' },
     { name: 'billable', label: 'Billable' },
     { name: 'itemization', label: 'Itemization' },
+    {
+      name: 'activate',
+      label: 'Activation',
+      type: 'activationToggle',
+      activationDescriptionActive: 'This expense project is enabled',
+      activationDescriptionInactive: 'This expense project is disabled',
+      activationAccent: '#0369a1',
+      defaultValue: true,
+    },
   ],
 };
 
@@ -186,6 +191,7 @@ export const expenseProjectColumns: Column<IConfigExpenseProjectEntry>[] = [
     minWidth: 110,
     format: mkChip('#0369a1'),
   },
+  { id: 'activate', label: 'Active', minWidth: 80, format: mkChip('#0369a1') },
 ];
 
 export const expenseProjectSubCategoryColumns: Column<IConfigExpenseProjectSubCategory>[] = [

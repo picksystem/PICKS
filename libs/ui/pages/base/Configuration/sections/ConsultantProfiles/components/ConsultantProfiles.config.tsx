@@ -88,7 +88,15 @@ export const TIMESHEET_PROJECTS_CONFIG: TableConfig = {
     { name: 'fromDate', label: 'From Date', type: 'date' },
     { name: 'toDate', label: 'To Date', type: 'date' },
     { name: 'maxHoursPerDayPerResource', label: 'Max Hours/Day', type: 'number', defaultValue: 8 },
-    { name: 'activate', label: 'Activate', type: 'toggle', defaultValue: true },
+    {
+      name: 'activate',
+      label: 'Activation',
+      type: 'activationToggle',
+      activationDescriptionActive: 'This timesheet project is enabled',
+      activationDescriptionInactive: 'This timesheet project is disabled',
+      activationAccent: CP_ACCENT,
+      defaultValue: true,
+    },
   ],
 };
 
@@ -104,7 +112,15 @@ export const EXPENSE_PROJECTS_CONFIG: TableConfig = {
     { name: 'fromDate', label: 'From Date', type: 'date' },
     { name: 'toDate', label: 'To Date', type: 'date' },
     { name: 'maxAmountPerDay', label: 'Max Amount/Day', type: 'number', defaultValue: 0 },
-    { name: 'activate', label: 'Activate', type: 'toggle', defaultValue: true },
+    {
+      name: 'activate',
+      label: 'Activation',
+      type: 'activationToggle',
+      activationDescriptionActive: 'This expense project is enabled',
+      activationDescriptionInactive: 'This expense project is disabled',
+      activationAccent: CP_ACCENT,
+      defaultValue: true,
+    },
   ],
 };
 

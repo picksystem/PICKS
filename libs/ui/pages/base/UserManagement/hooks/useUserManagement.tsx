@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
+import { alpha } from '@mui/material';
 import { useThemeContext } from '@serviceops/theme';
 import {
   useAuthActionMutation,
@@ -42,7 +43,86 @@ import {
   DRAFT_DAYS,
   UM_SESSION_KEY,
 } from '../utils/userManagement.utils';
-import { Column, Chip, Switch } from '@serviceops/component';
+import { Column, Chip, Box } from '@serviceops/component';
+
+// Pill-style status badge with status dot — same visual language as
+// mkActiveChip (Configuration tables' Activation column), extended to the
+// multi-value user lifecycle status instead of a plain boolean.
+const STATUS_STYLES: Record<string, { border: string; bg: string; color: string; dot: string }> =
+  {
+    active: { border: '#16a34a', bg: '#dcfce7', color: '#15803d', dot: '#16a34a' },
+    pending_approval: { border: '#f59e0b', bg: '#fef3c7', color: '#b45309', dot: '#f59e0b' },
+    invited: { border: '#f59e0b', bg: '#fef3c7', color: '#b45309', dot: '#f59e0b' },
+    rejected: { border: '#dc2626', bg: '#fee2e2', color: '#b91c1c', dot: '#dc2626' },
+    expired: { border: '#dc2626', bg: '#fee2e2', color: '#b91c1c', dot: '#dc2626' },
+    inactive: { border: '#cbd5e1', bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' },
+    deactivated: { border: '#cbd5e1', bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' },
+    draft: { border: '#cbd5e1', bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' },
+  };
+
+const mkStatusChip = (status: string): React.ReactNode => {
+  const style = STATUS_STYLES[status] ?? STATUS_STYLES.inactive;
+  const label = status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return (
+    <Box
+      sx={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 0.75,
+        px: 1.25,
+        py: 0.4,
+        borderRadius: 999,
+        fontSize: '0.65rem',
+        fontWeight: 700,
+        letterSpacing: 0.3,
+        textTransform: 'uppercase',
+        minWidth: 96,
+        border: '1px solid',
+        borderColor: style.border,
+        bgcolor: style.bg,
+        color: style.color,
+      }}
+    >
+      <Box
+        component='span'
+        sx={{
+          width: 7,
+          height: 7,
+          borderRadius: '50%',
+          bgcolor: style.dot,
+        }}
+      />
+      {label}
+    </Box>
+  );
+};
+
+// User role chip colors — same palette as the Access Control column on
+// Configuration > Ticket Types > Ticket Types Configuration table.
+const ROLE_COLORS: Record<string, string> = {
+  admin: '#f97316', // orange
+  consultant: '#3b82f6', // blue
+  user: '#22c55e', // green
+};
+
+const mkRoleChip = (role: string): React.ReactNode => {
+  const color = ROLE_COLORS[role] ?? '#64748b';
+  return (
+    <Chip
+      label={role.charAt(0).toUpperCase() + role.slice(1)}
+      size='small'
+      sx={{
+        fontWeight: 600,
+        fontSize: '0.7rem',
+        height: 22,
+        bgcolor: alpha(color, 0.15),
+        color,
+        border: `1px solid ${alpha(color, 0.4)}`,
+      }}
+    />
+  );
+};
 
 const useUserManagement = () => {
   const [authAction] = useAuthActionMutation();
@@ -59,7 +139,6 @@ const useUserManagement = () => {
   const [tabValue, setTabValue] = useState(0);
   const [tableSearch, setTableSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
-  const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
   const [selectedRow, setSelectedRow] = useState<UserRow | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
@@ -304,31 +383,6 @@ const useUserManagement = () => {
 
   const handleRowClick = (row: UserRow) => {
     setSelectedRow((prev) => (prev?.id === row.id ? null : row));
-  };
-
-  const handleToggleAccess = async (row: UserRow, e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
-    const newVal = e.target.checked;
-    setTogglingIds((prev) => new Set(prev).add(row.id));
-    try {
-      await authAction({
-        action: newVal ? 'activate-user' : 'deactivate-user',
-        userId: row.id,
-      }).unwrap();
-      const patch = (u: IAuthUser) => (u.id === row.id ? { ...u, isActive: newVal } : u);
-      setAllUsers((p) => p.map(patch));
-      setAdmins((p) => p.map(patch));
-      setConsultants((p) => p.map(patch));
-      if (selectedRow?.id === row.id) setSelectedRow((p) => (p ? { ...p, isActive: newVal } : p));
-    } catch {
-      notify.error(`Failed to update access for ${row.name}`);
-    } finally {
-      setTogglingIds((prev) => {
-        const n = new Set(prev);
-        n.delete(row.id);
-        return n;
-      });
-    }
   };
 
   // ── Edit ──────────────────────────────────────────────────────────────────────
@@ -793,7 +847,6 @@ const useUserManagement = () => {
               style: {
                 fontWeight: 500,
                 cursor: 'pointer',
-                textDecoration: selectedRow?.id === row.id ? 'underline' : 'none',
               },
               onClick: (e: React.MouseEvent) => {
                 e.stopPropagation();
@@ -827,19 +880,7 @@ const useUserManagement = () => {
         format: (v): React.ReactNode => {
           const role = String(v || '');
           if (!role || role === '-') return '-';
-          const colorMap: Record<string, 'warning' | 'success' | 'primary'> = {
-            admin: 'warning',
-            consultant: 'success',
-            user: 'primary',
-          };
-          return (
-            <Chip
-              label={role.charAt(0).toUpperCase() + role.slice(1)}
-              color={colorMap[role] || 'default'}
-              size='small'
-              sx={{ fontWeight: 600, fontSize: '0.7rem' }}
-            />
-          );
+          return mkRoleChip(role);
         },
       },
       {
@@ -849,35 +890,8 @@ const useUserManagement = () => {
         format: (v): React.ReactNode => {
           const status = String(v || '');
           if (!status || status === '-') return '-';
-          const label = status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-          const color =
-            status === 'active' ? 'success' : status === 'inactive' ? 'default' : 'warning';
-          return (
-            <Chip
-              label={label}
-              color={color as 'success' | 'default' | 'warning'}
-              size='small'
-              variant='outlined'
-              sx={{ fontWeight: 600, fontSize: '0.7rem' }}
-            />
-          );
+          return mkStatusChip(status);
         },
-      },
-      {
-        id: 'isActive' as keyof UserRow,
-        label: 'Access',
-        minWidth: 90,
-        sortable: false,
-        format: (_v, row: UserRow): React.ReactNode => (
-          <Switch
-            size='small'
-            checked={!!row.isActive}
-            color='success'
-            disabled={togglingIds.has(row.id) || row.id === currentUser?.id}
-            onChange={(e) => handleToggleAccess(row, e)}
-            onClick={(e) => e.stopPropagation()}
-          />
-        ),
       },
       {
         id: 'accessFromDate' as keyof UserRow,
@@ -1013,12 +1027,10 @@ const useUserManagement = () => {
     setTableSearch,
     roleFilter,
     setRoleFilter,
-    togglingIds,
     selectedRow,
     setSelectedRow,
     fetchUsers,
     handleRowClick,
-    handleToggleAccess,
     columns,
     getTableData,
     draftRow,

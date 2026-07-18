@@ -120,7 +120,6 @@ export const COMPOSED_TIMES_TABLE_CONFIG: TableConfig = {
     { name: 'day', label: 'Day' },
     { name: 'startTime', label: 'Start Time', type: 'time' },
     { name: 'endTime', label: 'End Time', type: 'time' },
-    { name: 'isWorkingDay', label: 'Is Working Day', type: 'toggle', defaultValue: false },
     { name: 'note', label: 'Note' },
     { name: 'fromDate', label: 'From Date', type: 'date' },
     { name: 'toDate', label: 'To Date', type: 'date' },
@@ -128,6 +127,15 @@ export const COMPOSED_TIMES_TABLE_CONFIG: TableConfig = {
     { name: 'holidayCalendar', label: 'Holiday Calendar' },
     { name: 'workingTimeTemplate', label: 'Working Time Template' },
     { name: 'timesheetPeriod', label: 'Timesheet Period' },
+    {
+      name: 'isWorkingDay',
+      label: 'Is Working Day',
+      type: 'activationToggle',
+      activationDescriptionActive: 'This period will Is Working Day across day boundaries',
+      activationDescriptionInactive: 'This period will Is Working Day across day boundaries',
+      activationAccent: ACCENT,
+      defaultValue: false,
+    },
   ],
 };
 
@@ -247,7 +255,6 @@ export const TIMESHEET_PERIOD_CONFIG: TableConfig = {
       staticOptions: ['Weekly', 'Biweekly', 'Monthly'],
       required: true,
     },
-    { name: 'autoSplitWeek', label: 'AutoSplit Week', type: 'toggle', defaultValue: false },
     {
       name: 'weekStartsOn',
       label: 'Day Week Starts On',
@@ -255,6 +262,15 @@ export const TIMESHEET_PERIOD_CONFIG: TableConfig = {
       optionsSourceField: 'name',
     },
     { name: 'internalNote', label: 'Internal Note', type: 'richText', required: true },
+    {
+      name: 'autoSplitWeek',
+      label: 'AutoSplit Week',
+      type: 'activationToggle',
+      activationDescriptionActive: 'This period will auto-split across week boundaries',
+      activationDescriptionInactive: 'This period will not auto-split across week boundaries',
+      activationAccent: ACCENT,
+      defaultValue: false,
+    },
   ],
 };
 

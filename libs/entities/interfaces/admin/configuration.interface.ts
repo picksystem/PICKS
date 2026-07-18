@@ -560,6 +560,7 @@ export interface IConfigExpenseProjectEntry {
   expensesType: string;
   billable: string;
   itemization: string;
+  activate: boolean;
 }
 
 export interface IConfigExpenseProjectSubCategory {

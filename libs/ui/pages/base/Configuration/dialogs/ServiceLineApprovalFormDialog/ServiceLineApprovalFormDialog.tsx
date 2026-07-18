@@ -850,6 +850,26 @@ const ServiceLineApprovalFormDialog = ({
         />
       </Box>
 
+      {/* Internal note — optional rich text */}
+      <Box>
+        <Box
+          onBlur={() => setTouched((t) => ({ ...t, internalNote: true }))}
+          sx={{ borderRadius: 1 }}
+        >
+          <RichTextEditor
+            value={parseRichText(form.internalNote ?? '')}
+            onChange={(value) =>
+              updateForm((f) => ({
+                ...f,
+                internalNote: serializeRichText(value.segments),
+              }))
+            }
+            showFooterActions={false}
+            title='Internal note'
+          />
+        </Box>
+      </Box>
+
       {/* Enable — Activation row. Mirrors the `activationToggle` field
           used by the Add Approved Estimate dialog (`GenericPanel.tsx`
           ~line 1242): a bordered row that flips its background tint
@@ -904,26 +924,6 @@ const ServiceLineApprovalFormDialog = ({
           </Box>
         );
       })()}
-
-      {/* Internal note — optional rich text */}
-      <Box>
-        <Box
-          onBlur={() => setTouched((t) => ({ ...t, internalNote: true }))}
-          sx={{ borderRadius: 1 }}
-        >
-          <RichTextEditor
-            value={parseRichText(form.internalNote ?? '')}
-            onChange={(value) =>
-              updateForm((f) => ({
-                ...f,
-                internalNote: serializeRichText(value.segments),
-              }))
-            }
-            showFooterActions={false}
-            title='Internal note'
-          />
-        </Box>
-      </Box>
     </ConfigFormDialog>
   );
 };

@@ -10,6 +10,14 @@ export const APP_SUPPORT_LINES_CONFIG: TableConfig = {
   fields: [
     { name: 'applicationName', label: 'Application', required: true, bold: true },
     { name: 'queueName', label: 'Queue', required: true, bold: true },
-    { name: 'isActive', label: 'Active', type: 'toggle' as const, defaultValue: true },
+    {
+      name: 'isActive',
+      label: 'Activation',
+      type: 'activationToggle' as const,
+      activationDescriptionActive: 'This support line is enabled',
+      activationDescriptionInactive: 'This support line is disabled',
+      activationAccent: '#0369a1',
+      defaultValue: true,
+    },
   ],
 };

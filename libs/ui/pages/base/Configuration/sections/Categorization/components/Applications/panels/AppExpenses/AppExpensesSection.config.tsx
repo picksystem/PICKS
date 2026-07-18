@@ -12,7 +12,15 @@ export const APP_EXPENSES_CONFIG: TableConfig = {
     { name: 'project', label: 'Project', required: true, bold: true },
     { name: 'fromDate', label: 'From Date', type: 'date' as const },
     { name: 'toDate', label: 'To Date', type: 'date' as const },
-    { name: 'activate', label: 'Activate', type: 'toggle' as const, defaultValue: true },
     { name: 'maxAmountPerDay', label: 'Max Amount/Day', type: 'number' as const, defaultValue: 0 },
+    {
+      name: 'activate',
+      label: 'Activation',
+      type: 'activationToggle' as const,
+      activationDescriptionActive: 'This expense project is enabled',
+      activationDescriptionInactive: 'This expense project is disabled',
+      activationAccent: '#0369a1',
+      defaultValue: true,
+    },
   ],
 };

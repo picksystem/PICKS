@@ -481,19 +481,6 @@ const EditUserDialog = ({
             </Box>
           </Grid>
           <Grid size={{ xs: 6 }}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={editForm.isActive}
-                  color='success'
-                  disabled={!!(selectedRow && currentUserId === selectedRow.id)}
-                  onChange={(e) => onFormChange((p) => ({ ...p, isActive: e.target.checked }))}
-                />
-              }
-              label='Active'
-            />
-          </Grid>
-          <Grid size={{ xs: 6 }}>
             <DatePicker
               label='Access Start Date'
               value={editForm.accessFromDate ? dayjs(editForm.accessFromDate) : null}
@@ -518,6 +505,53 @@ const EditUserDialog = ({
               }
               slotProps={{ textField: { fullWidth: true, size: 'small' } }}
             />
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                px: 2,
+                py: 1.25,
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: editForm.isActive ? alpha('#0369a1', 0.3) : 'divider',
+                bgcolor: editForm.isActive ? alpha('#0369a1', 0.04) : 'transparent',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <Box>
+                <Typography variant='body2' color='#0369a1' fontWeight={600}>
+                  Access
+                </Typography>
+                <Typography variant='caption' color='#2687bb'>
+                  {editForm.isActive
+                    ? 'This user has access and can sign in'
+                    : 'This user is inactive and cannot sign in'}
+                </Typography>
+              </Box>
+              <FormControlLabel
+                sx={{ ml: 0 }}
+                control={
+                  <Switch
+                    checked={editForm.isActive}
+                    color='success'
+                    disabled={!!(selectedRow && currentUserId === selectedRow.id)}
+                    onChange={(e) => onFormChange((p) => ({ ...p, isActive: e.target.checked }))}
+                  />
+                }
+                label={
+                  <Typography
+                    variant='body2'
+                    fontWeight={700}
+                    sx={{ color: editForm.isActive ? 'success.main' : 'text.secondary' }}
+                  >
+                    {editForm.isActive ? 'Active' : 'Inactive'}
+                  </Typography>
+                }
+              />
+            </Box>
           </Grid>
           <Grid size={{ xs: 12 }}>
             <Typography variant='caption' fontWeight={600} color='text.primary' sx={{ mb: 0.5 }}>

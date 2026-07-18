@@ -61,12 +61,7 @@ interface ServiceLineTimesheetFormDialogProps {
   subtitle?: string;
 }
 
-const rangesOverlap = (
-  aFrom: string,
-  aTo: string,
-  bFrom: string,
-  bTo: string,
-): boolean => {
+const rangesOverlap = (aFrom: string, aTo: string, bFrom: string, bTo: string): boolean => {
   // Treat blank fromDate / toDate as unbounded (-∞ / +∞). Two ranges
   // conflict when they overlap by at least one day.
   const aF = aFrom || null;
@@ -74,10 +69,7 @@ const rangesOverlap = (
   const bF = bFrom || null;
   const bT = bTo || null;
   if (!aF && !aT && !bF && !bT) return true;
-  return (
-    (aF === null || bT === null || aF <= bT) &&
-    (bF === null || aT === null || bF <= aT)
-  );
+  return (aF === null || bT === null || aF <= bT) && (bF === null || aT === null || bF <= aT);
 };
 
 const ServiceLineTimesheetFormDialog = ({
@@ -140,9 +132,7 @@ const ServiceLineTimesheetFormDialog = ({
    *   Use in Expenses — No
    *   Internal note   — No
    */
-  const validateRequired = (
-    f: Partial<ServiceLineTimesheetRow>,
-  ): typeof requiredErrors => {
+  const validateRequired = (f: Partial<ServiceLineTimesheetRow>): typeof requiredErrors => {
     const errs: typeof requiredErrors = {};
     if (!String(f.serviceLineName ?? '').trim()) errs.serviceLineName = 'required';
     if (!String(f.project ?? '').trim()) errs.project = 'required';
@@ -171,9 +161,7 @@ const ServiceLineTimesheetFormDialog = ({
    * to any date and conflicts with any other open-ended row with the
    * same SL+project.
    */
-  const computeDuplicateMessage = (
-    f: Partial<ServiceLineTimesheetRow>,
-  ): string | null => {
+  const computeDuplicateMessage = (f: Partial<ServiceLineTimesheetRow>): string | null => {
     const myId = editing?.id;
     const targetSl = plainText(f.serviceLineName ?? '');
     const targetProj = plainText(f.project ?? '');
@@ -188,12 +176,7 @@ const ServiceLineTimesheetFormDialog = ({
     );
 
     const conflict = others.find((r) =>
-      rangesOverlap(
-        f.fromDate ?? '',
-        f.toDate ?? '',
-        r.fromDate ?? '',
-        r.toDate ?? '',
-      ),
+      rangesOverlap(f.fromDate ?? '', f.toDate ?? '', r.fromDate ?? '', r.toDate ?? ''),
     );
     if (!conflict) return null;
     return 'A Timesheet Project with the same Service Line, Project and date range already exists.';
@@ -265,9 +248,7 @@ const ServiceLineTimesheetFormDialog = ({
       activate: formRef.current.activate ?? true,
     });
     success(
-      editing
-        ? 'Timesheet project updated successfully'
-        : 'Timesheet project added successfully',
+      editing ? 'Timesheet project updated successfully' : 'Timesheet project added successfully',
     );
   };
 
@@ -364,9 +345,7 @@ const ServiceLineTimesheetFormDialog = ({
     [projectOptions],
   );
 
-  const [projectFiltered, setProjectFiltered] = useState<
-    { value: string; label: string }[]
-  >([]);
+  const [projectFiltered, setProjectFiltered] = useState<{ value: string; label: string }[]>([]);
 
   const handleProjectInputChange = useCallback(
     (value: string) => {
@@ -659,6 +638,107 @@ const ServiceLineTimesheetFormDialog = ({
         </Box>
       </Box>
 
+      {/* Max Hours/Day — optional numeric input (0-24, decimals allowed) */}
+      <Box>
+        <TextField
+          label='Max Hours/Day'
+          type='number'
+          size='small'
+          value={
+            form.maxHoursPerDayPerResource === undefined || form.maxHoursPerDayPerResource === null
+              ? ''
+              : String(form.maxHoursPerDayPerResource)
+          }
+          onChange={(e) => {
+            const raw = e.target.value;
+            if (raw === '') {
+              updateForm((f) => ({ ...f, maxHoursPerDayPerResource: undefined }));
+            } else {
+              const n = Number(raw);
+              updateForm((f) => ({ ...f, maxHoursPerDayPerResource: n }));
+            }
+          }}
+          onBlur={() => setTouched((t) => ({ ...t, maxHoursPerDayPerResource: true }))}
+          inputProps={{ min: 0, max: 24, step: 0.25 }}
+          error={Boolean(hoursError)}
+          helperText={hoursError}
+          fullWidth
+        />
+      </Box>
+
+      {/* Internal note — optional rich text */}
+      <Box>
+        <Box
+          onBlur={() => setTouched((t) => ({ ...t, internalNote: true }))}
+          sx={{ borderRadius: 1 }}
+        >
+          <RichTextEditor
+            value={parseRichText(form.internalNote ?? '')}
+            onChange={(value) =>
+              updateForm((f) => ({
+                ...f,
+                internalNote: serializeRichText(value.segments),
+              }))
+            }
+            showFooterActions={false}
+            title='Internal note'
+          />
+        </Box>
+      </Box>
+
+      {/* Use in Expenses — bordered Switch row, non-editable once Yes */}
+      {(() => {
+        const enabled = useInExpenses;
+        return (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              px: 2,
+              py: 1.25,
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: enabled ? alpha(SLT_ACCENT, 0.3) : 'divider',
+              bgcolor: enabled ? alpha(SLT_ACCENT, 0.04) : 'transparent',
+              transition: 'all 0.2s ease',
+              opacity: useInExpensesLocked ? 0.85 : 1,
+            }}
+          >
+            <Box>
+              <Typography variant='body2' color='#0369a1' fontWeight={600}>
+                Use in Expenses
+              </Typography>
+              <Typography variant='caption' sx={{ color: '#2687bb' }}>
+                {enabled
+                  ? "A mirror row exists in the parent service line's expense projects"
+                  : 'When enabled, a mirror row is created in expense projects'}
+              </Typography>
+            </Box>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={enabled}
+                  disabled={useInExpensesLocked}
+                  onChange={(e) => updateForm((f) => ({ ...f, useInExpenses: e.target.checked }))}
+                  color='success'
+                />
+              }
+              label={
+                <Typography
+                  variant='body2'
+                  fontWeight={700}
+                  sx={{ color: enabled ? 'success.main' : 'text.secondary' }}
+                >
+                  {enabled ? 'Yes' : 'No'}
+                </Typography>
+              }
+              sx={{ ml: 0 }}
+            />
+          </Box>
+        );
+      })()}
+
       {/* Activation — bordered Switch row */}
       {(() => {
         const enabled = form.activate ?? true;
@@ -691,9 +771,7 @@ const ServiceLineTimesheetFormDialog = ({
               control={
                 <Switch
                   checked={enabled}
-                  onChange={(e) =>
-                    updateForm((f) => ({ ...f, activate: e.target.checked }))
-                  }
+                  onChange={(e) => updateForm((f) => ({ ...f, activate: e.target.checked }))}
                   color='success'
                 />
               }
@@ -711,110 +789,6 @@ const ServiceLineTimesheetFormDialog = ({
           </Box>
         );
       })()}
-
-      {/* Max Hours/Day — optional numeric input (0-24, decimals allowed) */}
-      <Box>
-        <TextField
-          label='Max Hours/Day'
-          type='number'
-          size='small'
-          value={
-            form.maxHoursPerDayPerResource === undefined ||
-            form.maxHoursPerDayPerResource === null
-              ? ''
-              : String(form.maxHoursPerDayPerResource)
-          }
-          onChange={(e) => {
-            const raw = e.target.value;
-            if (raw === '') {
-              updateForm((f) => ({ ...f, maxHoursPerDayPerResource: undefined }));
-            } else {
-              const n = Number(raw);
-              updateForm((f) => ({ ...f, maxHoursPerDayPerResource: n }));
-            }
-          }}
-          onBlur={() => setTouched((t) => ({ ...t, maxHoursPerDayPerResource: true }))}
-          inputProps={{ min: 0, max: 24, step: 0.25 }}
-          error={Boolean(hoursError)}
-          helperText={hoursError}
-          fullWidth
-        />
-      </Box>
-
-      {/* Use in Expenses — bordered Switch row, non-editable once Yes */}
-      {(() => {
-        const enabled = useInExpenses;
-        return (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              px: 2,
-              py: 1.25,
-              borderRadius: 1,
-              border: '1px solid',
-              borderColor: enabled ? alpha(SLT_ACCENT, 0.3) : 'divider',
-              bgcolor: enabled ? alpha(SLT_ACCENT, 0.04) : 'transparent',
-              transition: 'all 0.2s ease',
-              opacity: useInExpensesLocked ? 0.85 : 1,
-            }}
-          >
-            <Box>
-              <Typography variant='body2' color='#0369a1' fontWeight={600}>
-                Use in Expenses
-              </Typography>
-              <Typography variant='caption' sx={{ color: '#2687bb' }}>
-                {enabled
-                  ? 'A mirror row exists in the parent service line\'s expense projects'
-                  : 'When enabled, a mirror row is created in expense projects'}
-              </Typography>
-            </Box>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={enabled}
-                  disabled={useInExpensesLocked}
-                  onChange={(e) =>
-                    updateForm((f) => ({ ...f, useInExpenses: e.target.checked }))
-                  }
-                  color='success'
-                />
-              }
-              label={
-                <Typography
-                  variant='body2'
-                  fontWeight={700}
-                  sx={{ color: enabled ? 'success.main' : 'text.secondary' }}
-                >
-                  {enabled ? 'Yes' : 'No'}
-                </Typography>
-              }
-              sx={{ ml: 0 }}
-            />
-          </Box>
-        );
-      })()}
-
-      {/* Internal note — optional rich text */}
-      <Box>
-        <Box
-          onBlur={() => setTouched((t) => ({ ...t, internalNote: true }))}
-          sx={{ borderRadius: 1 }}
-        >
-          <RichTextEditor
-            value={parseRichText(form.internalNote ?? '')}
-            onChange={(value) =>
-              updateForm((f) => ({
-                ...f,
-                internalNote: serializeRichText(value.segments),
-              }))
-            }
-            showFooterActions={false}
-            title='Internal note'
-          />
-        </Box>
-      </Box>
     </ConfigFormDialog>
   );
 };

@@ -79,15 +79,6 @@ export const CONSULTANT_PROFILES_TABLE: TableConfig = {
     { name: 'activeFromDate', label: 'Active From Date', required: true, type: 'date' },
     { name: 'activeToDate', label: 'Active To Date', required: true, type: 'date' },
     {
-      name: 'isActive',
-      label: 'Activation',
-      type: 'activationToggle',
-      defaultValue: true,
-      activationDescriptionActive: 'This consultant profile is active',
-      activationDescriptionInactive: 'This consultant profile is inactive',
-      activationAccent: CONSULTANT_PROFILES_ACCENT,
-    },
-    {
       name: 'workLocation',
       label: 'Work Location',
       required: true,
@@ -110,5 +101,14 @@ export const CONSULTANT_PROFILES_TABLE: TableConfig = {
     { name: 'leadConsultant', label: 'Lead Consultant', required: true, type: 'userSearch' },
     { name: 'manager', label: 'Manager', required: true, type: 'userSearch' },
     { name: 'internalNote', label: 'Internal Note', type: 'richText' },
+    {
+      name: 'isActive',
+      label: 'Activation',
+      type: 'activationToggle',
+      defaultValue: true,
+      activationDescriptionActive: 'This consultant profile is active',
+      activationDescriptionInactive: 'This consultant profile is inactive',
+      activationAccent: CONSULTANT_PROFILES_ACCENT,
+    },
   ],
 };

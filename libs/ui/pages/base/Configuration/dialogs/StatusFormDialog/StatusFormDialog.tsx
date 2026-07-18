@@ -337,12 +337,6 @@ const StatusFormDialog = ({
         accent='#0369a1'
         title={title}
         subtitle={subtitle}
-        submitDisabled={
-          !form.displayName ||
-          !plainText(form.shortDescription ?? '') ||
-          !form.bgColor ||
-          Boolean(duplicateAlert)
-        }
         submitLabel={editing ? 'Save' : 'Submit'}
         maxWidth='md'
       >
@@ -455,29 +449,6 @@ const StatusFormDialog = ({
             ),
           }}
         />
-
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
-          <ActivationRow
-            label='Status Activation'
-            description='Enable this status for use on tickets'
-            checked={form.isActive ?? true}
-            onChange={(checked) => updateForm((f) => ({ ...f, isActive: checked }))}
-          />
-          <ActivationRow
-            label='SLA Activation'
-            description='Track SLA timers for tickets in this status'
-            checked={form.slaActive ?? true}
-            onChange={(checked) => updateForm((f) => ({ ...f, slaActive: checked }))}
-          />
-          {!hideFinalStatus && (
-            <ActivationRow
-              label='Final Status'
-              description='Mark this status as a closed/final state'
-              checked={form.isFinal ?? false}
-              onChange={(checked) => updateForm((f) => ({ ...f, isFinal: checked }))}
-            />
-          )}
-        </Box>
 
         <Box>
           <RichTextEditor
@@ -597,6 +568,29 @@ const StatusFormDialog = ({
               </Box>
             </Collapse>
           </Box>
+        </Box>
+
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+          <ActivationRow
+            label='Status Activation'
+            description='Enable this status for use on tickets'
+            checked={form.isActive ?? true}
+            onChange={(checked) => updateForm((f) => ({ ...f, isActive: checked }))}
+          />
+          <ActivationRow
+            label='SLA Activation'
+            description='Track SLA timers for tickets in this status'
+            checked={form.slaActive ?? true}
+            onChange={(checked) => updateForm((f) => ({ ...f, slaActive: checked }))}
+          />
+          {!hideFinalStatus && (
+            <ActivationRow
+              label='Final Status'
+              description='Mark this status as a closed/final state'
+              checked={form.isFinal ?? false}
+              onChange={(checked) => updateForm((f) => ({ ...f, isFinal: checked }))}
+            />
+          )}
         </Box>
       </ConfigFormDialog>
     </>

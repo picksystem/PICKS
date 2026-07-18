@@ -79,15 +79,6 @@ export const WORK_LOCATIONS_TABLE: TableConfig = {
     { name: 'postCode', label: 'Post-code', required: true },
     { name: 'internalNote', label: 'Internal Note', type: 'richText' },
     {
-      name: 'isActive',
-      label: 'Activation',
-      type: 'activationToggle',
-      defaultValue: true,
-      activationDescriptionActive: 'This work location is active',
-      activationDescriptionInactive: 'This work location is inactive',
-      activationAccent: WORK_LOCATIONS_ACCENT,
-    },
-    {
       name: 'workingCalendar',
       label: 'Working Calendar',
       required: true,
@@ -103,5 +94,14 @@ export const WORK_LOCATIONS_TABLE: TableConfig = {
     { name: 'dateFormat', label: 'Date Format', required: true },
     { name: 'timeFormat', label: 'Time Format', required: true },
     { name: 'language', label: 'Language', required: true },
+    {
+      name: 'isActive',
+      label: 'Activation',
+      type: 'activationToggle',
+      defaultValue: true,
+      activationDescriptionActive: 'This work location is active',
+      activationDescriptionInactive: 'This work location is inactive',
+      activationAccent: WORK_LOCATIONS_ACCENT,
+    },
   ],
 };
