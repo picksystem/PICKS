@@ -537,11 +537,9 @@ const ApplicationsFormDialog = ({
 
   // Render a search-style user/option autocomplete. The popover is
   // anchored to the input only (not the TextField as a whole) so the
-  // list sits flush against its bottom border; the helperText row is
-  // rendered separately below to avoid the visible gap the user
-  // reported for the BC dialog. The popover closes on blur with a
-  // small delay so a click on a popover row is allowed to register
-  // before the list unmounts.
+  // list sits flush against its bottom border. The popover closes on
+  // blur with a small delay so a click on a popover row is allowed to
+  // register before the list unmounts.
   const renderSearchField = (params: {
     label: string;
     placeholder: string;
@@ -634,20 +632,21 @@ const ApplicationsFormDialog = ({
           </Paper>
         )}
       </Box>
-      <Typography
-        variant='caption'
-        sx={{
-          color: params.error ? '#d32f2f' : 'transparent',
-          fontSize: '0.75rem',
-          mt: 0.5,
-          ml: 1.75,
-          display: 'block',
-          minHeight: '1em',
-          lineHeight: 1.66,
-        }}
-      >
-        {params.error || ' '}
-      </Typography>
+      {params.error && (
+        <Typography
+          variant='caption'
+          sx={{
+            color: '#d32f2f',
+            fontSize: '0.75rem',
+            mt: 0.5,
+            ml: 1.75,
+            display: 'block',
+            lineHeight: 1.66,
+          }}
+        >
+          {params.error}
+        </Typography>
+      )}
     </Box>
   );
 
@@ -714,12 +713,7 @@ const ApplicationsFormDialog = ({
           }}
           disabled={!!editing}
           error={Boolean(nameError)}
-          helperText={
-            nameError ||
-            (editing
-              ? 'Name cannot be changed after creation'
-              : `Alpha-numeric, max ${MAX_NAME} characters`)
-          }
+          helperText={nameError}
           required
         />
       </Box>
@@ -753,7 +747,7 @@ const ApplicationsFormDialog = ({
               display: 'block',
             }}
           >
-            {shortError || `Alpha-numeric, max ${MAX_SHORT_DESC} characters. Used as tool tip.`}
+            {shortError}
           </Typography>
         </Box>
       </Box>
@@ -776,13 +770,6 @@ const ApplicationsFormDialog = ({
             showFooterActions={false}
             title='Description'
           />
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-          >
-            {`Alpha-numeric, max ${MAX_DESC} characters.`}
-          </Typography>
         </Box>
       </Box>
 
@@ -864,13 +851,6 @@ const ApplicationsFormDialog = ({
             showFooterActions={false}
             title='Internal note'
           />
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-          >
-            {`Alpha-numeric, max ${MAX_NOTE} characters.`}
-          </Typography>
         </Box>
       </Box>
     </ConfigFormDialog>

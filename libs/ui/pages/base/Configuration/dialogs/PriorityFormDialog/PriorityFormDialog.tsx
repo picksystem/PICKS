@@ -325,8 +325,7 @@ const PriorityFormDialog = ({
                 display: 'block',
               }}
             >
-              {reqError(touched.shortDescription, requiredErrors.shortDescription) ||
-                'Brief summary shown in compact views'}
+              {reqError(touched.shortDescription, requiredErrors.shortDescription)}
             </Typography>
           </Box>
         </Box>

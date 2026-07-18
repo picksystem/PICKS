@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Alert, Box, Typography, TextField, Switch } from '@serviceops/component';
 import {
   alpha,
-  Popover,
   Radio,
   FormControl,
   FormControlLabel,
@@ -10,7 +9,7 @@ import {
   Checkbox,
   Collapse,
 } from '@mui/material';
-import { RadioButtonChecked, ColorLens, Close, Check, ExpandMore } from '@mui/icons-material';
+import { RadioButtonChecked, ExpandMore } from '@mui/icons-material';
 import { useFieldError, useNotification } from '@serviceops/hooks';
 import { IConfigStatusLevel } from '@serviceops/interfaces';
 import { ConfigFormDialog } from '@serviceops/configdialogs';
@@ -45,17 +44,6 @@ const plainText = (v: string): string =>
     .toLowerCase();
 
 const STATUS_ACCENT = '#0369a1';
-
-const PRESET_COLORS = [
-  '#2563eb',
-  '#dc2626',
-  '#16a34a',
-  '#ea580c',
-  '#9333ea',
-  '#0891b2',
-  '#ca8a04',
-  '#475569',
-];
 
 interface ActivationRowProps {
   label: string;
@@ -136,8 +124,6 @@ const StatusFormDialog = ({
   // duplicate checks would miss values typed into the editor. We read this
   // ref in handleSubmit / computeDuplicateMessage to get the live value.
   const formRef = useRef<Partial<IConfigStatusLevel>>({});
-  const [colorPickerOpen, setColorPickerOpen] = useState(false);
-  const colorAnchorRef = useRef<HTMLDivElement | null>(null);
   const [ticketTypesExpanded, setTicketTypesExpanded] = useState(false);
   const [duplicateAlert, setDuplicateAlert] = useState<string | null>(null);
   // Per-field required-validation state. Touched flips true on blur (or
@@ -225,7 +211,6 @@ const StatusFormDialog = ({
 
   useEffect(() => {
     if (!open) {
-      setColorPickerOpen(false);
       setTouched({});
       setRequiredErrors({});
       return;
@@ -254,7 +239,7 @@ const StatusFormDialog = ({
           displayName: '',
           shortDescription: '',
           description: '',
-          bgColor: '#2563eb',
+          bgColor: '',
           color: '#fff',
           isActive: true,
           slaActive: true,
@@ -330,19 +315,6 @@ const StatusFormDialog = ({
     );
   };
 
-  const handleColorIconClick = () => {
-    setColorPickerOpen(true);
-  };
-
-  const handleColorPickerClose = () => {
-    setColorPickerOpen(false);
-  };
-
-  const handleColorChange = (color: string) => {
-    updateForm((f) => ({ ...f, bgColor: color }));
-    setColorPickerOpen(false);
-  };
-
   const handleColorInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     if (/^#[0-9A-Fa-f]{0,6}$/.test(value)) {
@@ -350,7 +322,9 @@ const StatusFormDialog = ({
     }
   };
 
-  const currentColor = form.bgColor || '#2563eb';
+  const currentColor = form.bgColor ?? '';
+  const isValidHexColor = /^#[0-9A-Fa-f]{6}$/.test(currentColor);
+  const safeColor = isValidHexColor ? currentColor : '#2563eb';
 
   return (
     <>
@@ -421,8 +395,7 @@ const StatusFormDialog = ({
                 display: 'block',
               }}
             >
-              {reqError(touched.shortDescription, requiredErrors.shortDescription) ||
-                'Brief summary shown in compact views'}
+              {reqError(touched.shortDescription, requiredErrors.shortDescription)}
             </Typography>
           </Box>
         </Box>
@@ -436,13 +409,6 @@ const StatusFormDialog = ({
             showFooterActions={false}
             title='Description'
           />
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-          >
-            Describe when this status should be used — optional
-          </Typography>
         </Box>
 
         <TextField
@@ -463,117 +429,32 @@ const StatusFormDialog = ({
           InputProps={{
             endAdornment: (
               <Box
-                ref={colorAnchorRef}
-                onClick={handleColorIconClick}
+                component='input'
+                type='color'
+                value={safeColor}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  updateForm((f) => ({ ...f, bgColor: e.target.value }))
+                }
                 sx={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: '50%',
-                  bgcolor: currentColor || 'transparent',
-                  border: '1px solid',
-                  borderColor: 'divider',
+                  width: 32,
+                  height: 32,
+                  border: 'none',
+                  borderRadius: 1,
                   cursor: 'pointer',
-                  flexShrink: 0,
-                  transition: 'transform 0.15s, box-shadow 0.15s',
-                  '&:hover': {
-                    transform: 'scale(1.1)',
-                    boxShadow: 1,
+                  padding: 0,
+                  ml: 1,
+                  backgroundColor: 'transparent',
+                  '&::-webkit-color-swatch-wrapper': { padding: 0 },
+                  '&::-webkit-color-swatch': {
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 5,
                   },
                 }}
-                role='button'
-                aria-label='Pick a colour'
               />
             ),
           }}
         />
-
-        <Popover
-          open={colorPickerOpen}
-          onClose={handleColorPickerClose}
-          anchorEl={colorAnchorRef.current}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-          slotProps={{
-            paper: {
-              sx: {
-                mt: 0.5,
-                p: 1.5,
-                borderRadius: 2,
-                border: '1px solid #2d5ebb',
-                boxShadow: 3,
-                minWidth: 220,
-              },
-            },
-          }}
-        >
-          <Box
-            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}
-          >
-            <Typography variant='body2' fontWeight={600} color='#0369a1'>
-              Pick a colour
-            </Typography>
-            <Close
-              onClick={handleColorPickerClose}
-              sx={{ fontSize: '1rem', cursor: 'pointer', color: 'text.secondary' }}
-            />
-          </Box>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: 1,
-              mb: 1.25,
-            }}
-          >
-            {PRESET_COLORS.map((c) => {
-              const selected = c.toLowerCase() === currentColor.toLowerCase();
-              return (
-                <Box
-                  key={c}
-                  onClick={() => handleColorChange(c)}
-                  sx={{
-                    position: 'relative',
-                    width: '100%',
-                    aspectRatio: '1 / 1',
-                    borderRadius: 1.5,
-                    bgcolor: c,
-                    cursor: 'pointer',
-                    border: '2px solid',
-                    borderColor: selected ? '#0369a1' : 'transparent',
-                    boxShadow: selected ? 2 : 0,
-                    transition: 'transform 0.15s, box-shadow 0.15s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    '&:hover': {
-                      transform: 'scale(1.08)',
-                      boxShadow: 2,
-                    },
-                  }}
-                  role='button'
-                  aria-label={`Select colour ${c}`}
-                >
-                  {selected && <Check sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-                </Box>
-              );
-            })}
-          </Box>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              pt: 1,
-              borderTop: '1px solid',
-              borderColor: 'divider',
-            }}
-          >
-            <ColorLens sx={{ color: '#0369a1', fontSize: '1.1rem' }} />
-            <Typography variant='caption' color='text.secondary' sx={{ flex: 1 }}>
-              Type a hex value in the field above
-            </Typography>
-          </Box>
-        </Popover>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
           <ActivationRow
@@ -607,13 +488,6 @@ const StatusFormDialog = ({
             showFooterActions={false}
             title='Internal note'
           />
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-          >
-            Internal note for this status (not visible to end users) — optional
-          </Typography>
         </Box>
 
         {/* Ticket Types Activation */}

@@ -1019,8 +1019,7 @@ const TicketMatrixSection = ({
                     display: 'block',
                   }}
                 >
-                  {reqError(addTouched.shortDescription, addRequiredErrors.shortDescription) ||
-                    'Brief summary shown in compact views'}
+                  {reqError(addTouched.shortDescription, addRequiredErrors.shortDescription)}
                 </Typography>
               </Box>
             </Box>
@@ -1053,8 +1052,7 @@ const TicketMatrixSection = ({
                     display: 'block',
                   }}
                 >
-                  {reqError(addTouched.description, addRequiredErrors.description) ||
-                    'Describe when this combination should be used'}
+                  {reqError(addTouched.description, addRequiredErrors.description)}
                 </Typography>
               </Box>
             </Box>
@@ -1068,13 +1066,6 @@ const TicketMatrixSection = ({
                 showFooterActions={false}
                 title='Internal note'
               />
-              <Typography
-                variant='caption'
-                color='text.secondary'
-                sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-              >
-                Internal note for this combination (not visible to end users) — optional
-              </Typography>
             </Box>
           </Box>
         </ConfigFormDialog>
@@ -1195,8 +1186,7 @@ const TicketMatrixSection = ({
                     display: 'block',
                   }}
                 >
-                  {reqError(editTouched.shortDescription, editRequiredErrors.shortDescription) ||
-                    'Brief summary shown in compact views'}
+                  {reqError(editTouched.shortDescription, editRequiredErrors.shortDescription)}
                 </Typography>
               </Box>
             </Box>
@@ -1229,8 +1219,7 @@ const TicketMatrixSection = ({
                     display: 'block',
                   }}
                 >
-                  {reqError(editTouched.description, editRequiredErrors.description) ||
-                    'Describe when this combination should be used'}
+                  {reqError(editTouched.description, editRequiredErrors.description)}
                 </Typography>
               </Box>
             </Box>
@@ -1244,13 +1233,6 @@ const TicketMatrixSection = ({
                 showFooterActions={false}
                 title='Internal note'
               />
-              <Typography
-                variant='caption'
-                color='text.secondary'
-                sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-              >
-                Internal note for this combination (not visible to end users) — optional
-              </Typography>
             </Box>
           </Box>
         </ConfigFormDialog>

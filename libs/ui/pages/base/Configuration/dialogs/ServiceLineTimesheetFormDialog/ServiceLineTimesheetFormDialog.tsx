@@ -524,20 +524,21 @@ const ServiceLineTimesheetFormDialog = ({
             </Paper>
           )}
         </Box>
-        <Typography
-          variant='caption'
-          sx={{
-            color: slError ? '#d32f2f' : 'transparent',
-            fontSize: '0.75rem',
-            mt: 0.5,
-            ml: 1.75,
-            display: 'block',
-            minHeight: '1em',
-            lineHeight: 1.66,
-          }}
-        >
-          {slError || ' '}
-        </Typography>
+        {slError && (
+          <Typography
+            variant='caption'
+            sx={{
+              color: '#d32f2f',
+              fontSize: '0.75rem',
+              mt: 0.5,
+              ml: 1.75,
+              display: 'block',
+              lineHeight: 1.66,
+            }}
+          >
+            {slError}
+          </Typography>
+        )}
       </Box>
 
       {/* Project name — required search field (existing project names) */}
@@ -623,20 +624,21 @@ const ServiceLineTimesheetFormDialog = ({
             </Paper>
           )}
         </Box>
-        <Typography
-          variant='caption'
-          sx={{
-            color: projectError ? '#d32f2f' : 'transparent',
-            fontSize: '0.75rem',
-            mt: 0.5,
-            ml: 1.75,
-            display: 'block',
-            minHeight: '1em',
-            lineHeight: 1.66,
-          }}
-        >
-          {projectError || ' '}
-        </Typography>
+        {projectError && (
+          <Typography
+            variant='caption'
+            sx={{
+              color: '#d32f2f',
+              fontSize: '0.75rem',
+              mt: 0.5,
+              ml: 1.75,
+              display: 'block',
+              lineHeight: 1.66,
+            }}
+          >
+            {projectError}
+          </Typography>
+        )}
       </Box>
 
       {/* From Date / To Date — optional date pickers */}
@@ -734,7 +736,7 @@ const ServiceLineTimesheetFormDialog = ({
           onBlur={() => setTouched((t) => ({ ...t, maxHoursPerDayPerResource: true }))}
           inputProps={{ min: 0, max: 24, step: 0.25 }}
           error={Boolean(hoursError)}
-          helperText={hoursError || ' '}
+          helperText={hoursError}
           fullWidth
         />
       </Box>
@@ -811,13 +813,6 @@ const ServiceLineTimesheetFormDialog = ({
             showFooterActions={false}
             title='Internal note'
           />
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-          >
-            {' '}
-          </Typography>
         </Box>
       </Box>
     </ConfigFormDialog>

@@ -45,16 +45,19 @@ export const COMPOSED_WORKING_TIME_CONFIG: TableConfig = {
       name: 'workingCalendar',
       label: 'Working Calendar',
       required: true,
+      type: 'workingCalendarSearch',
     },
     {
       name: 'holidayCalendar',
       label: 'Holiday Calendar',
       required: true,
+      type: 'holidayCalendarSearch',
     },
     {
       name: 'workingTimeTemplate',
       label: 'Working Time Template',
       required: true,
+      type: 'workingDayTemplateSearch',
     },
   ],
 };

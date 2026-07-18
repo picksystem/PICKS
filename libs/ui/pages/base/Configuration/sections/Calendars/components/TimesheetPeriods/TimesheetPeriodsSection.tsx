@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { IConfigPeriodType } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
 import { useConfiguration } from '@serviceops/confighooks';
@@ -47,6 +47,40 @@ const TimesheetPeriodsSection = ({ data, onDataChange }: TimesheetPeriodsSection
     }
   };
 
+  // Both "Timesheet Period" (name) and "Day Week Starts On" are marked "Not
+  // allowed" for duplicates, so each is checked independently — a row is
+  // rejected if either value already appears on another row. "Day Week
+  // Starts On" is optional, so a blank value isn't checked against other
+  // blanks. Same "already exists" dialog-level Alert pattern used by the
+  // Working Time Template / Holiday Calendar dialogs.
+  const summaryValidator = useCallback(
+    (
+      form: Record<string, unknown>,
+      _all: unknown[],
+      editingRow: Record<string, unknown> | null,
+    ): string | null => {
+      const norm = (v: unknown) =>
+        String(v ?? '')
+          .trim()
+          .toLowerCase();
+      const editingId = (editingRow?.id as string | undefined) ?? null;
+      const others = rows.filter((r) => r.id !== editingId);
+
+      const nameVal = norm(form.name);
+      if (nameVal && others.some((r) => norm(r.name) === nameVal)) {
+        return `Timesheet Period "${String(form.name ?? '')}" already exists. Please use a different name.`;
+      }
+
+      const weekStartsOnVal = norm(form.weekStartsOn);
+      if (weekStartsOnVal && others.some((r) => norm(r.weekStartsOn) === weekStartsOnVal)) {
+        return `Day Week Starts On "${String(form.weekStartsOn ?? '')}" already exists. Please use a different value.`;
+      }
+
+      return null;
+    },
+    [rows],
+  );
+
   return (
     <div className={classes.sectionAccordion}>
       <GenericPanel
@@ -57,6 +91,7 @@ const TimesheetPeriodsSection = ({ data, onDataChange }: TimesheetPeriodsSection
         variant='plain'
         defaultExpanded={false}
         enableSuccessMessage
+        summaryValidator={summaryValidator as unknown as never}
       />
     </div>
   );

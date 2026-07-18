@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -30,11 +30,16 @@ import {
   UPDATE_TIMESHEET_PERIOD_ENTRY_CONFIG,
 } from '../UserManagementSection/components/FieldConfigurations/shared/userConfig.config';
 import type { IConfigField } from '../UserManagementSection/components/FieldConfigurations/FieldConfigurationsSection.types';
-import { IConfigFieldConfiguration, DEFAULT_CONFIGURATION_DATA } from '@serviceops/interfaces';
+import {
+  IConfigFieldConfiguration,
+  IConfigComposedWorkingTime,
+  DEFAULT_CONFIGURATION_DATA,
+} from '@serviceops/interfaces';
 import {
   useGetConfigurationQuery,
   useUpdateConfigurationSectionMutation,
 } from '@serviceops/services';
+import { ComposeWorkingTimesFormDialog } from '@serviceops/pages/base/UserManagement/dialogs/ComposeWorkingTimesFormDialog';
 
 const ACCENT = '#0369a1';
 
@@ -81,10 +86,23 @@ const FieldConfigurationsAccordion = () => {
   const [search, setSearch] = useState('');
   const fieldConfigRef = useRef<FieldConfigurationsSectionHandle>(null);
 
+  // "Compose Working Times" opens a single-purpose Compose form dialog first
+  // (From date/To date/Calendar/Holiday Calendar/Working Time Template) —
+  // matching the Configuration > Calendars > Working Calendars "Compose
+  // Working Times" action — instead of dropping straight into the raw
+  // composed working times table. Submitting adds the resulting entry and
+  // opens the existing data table sub-view, which already carries every
+  // field the compose form collected.
+  const [composeDialogOpen, setComposeDialogOpen] = useState(false);
+
   const { data: configData, isLoading } = useGetConfigurationQuery();
   const [updateSection] = useUpdateConfigurationSectionMutation();
 
   const apiFieldConfigurations = configData?.data?.userManagement?.workingTimes?.workingTimes;
+  const composedWorkingTimes = useMemo(
+    () => configData?.data?.userManagement?.workingTimes?.composeWorkingTimes ?? [],
+    [configData],
+  );
 
   useEffect(() => {
     if (apiFieldConfigurations !== undefined) {
@@ -102,7 +120,50 @@ const FieldConfigurationsAccordion = () => {
     if (!selectedFieldConfigId && activeDialog !== null) {
       setActiveDialog(null);
     }
+    if (!selectedFieldConfigId) {
+      setComposeDialogOpen(false);
+    }
   }, [selectedFieldConfigId, activeDialog]);
+
+  const handleComposeSubmit = useCallback(
+    async (data: {
+      fromDate: string;
+      toDate: string;
+      workingCalendar: string;
+      holidayCalendar: string;
+      workingTimeTemplate: string;
+    }) => {
+      try {
+        const newRow: IConfigComposedWorkingTime = {
+          id: `${Date.now()}`,
+          calendarName: data.workingCalendar,
+          fromDate: data.fromDate,
+          toDate: data.toDate,
+          workingCalendar: data.workingCalendar,
+          holidayCalendar: data.holidayCalendar,
+          workingTimeTemplate: data.workingTimeTemplate,
+        };
+        const current =
+          configData?.data?.userManagement ?? DEFAULT_CONFIGURATION_DATA.userManagement;
+        await updateSection({
+          section: 'userManagement',
+          value: {
+            ...current,
+            workingTimes: {
+              ...current.workingTimes,
+              composeWorkingTimes: [...composedWorkingTimes, newRow],
+            },
+          },
+        }).unwrap();
+        setComposeDialogOpen(false);
+        setActiveDialog('composedWorkingTimes');
+        success('Working Time composed successfully');
+      } catch {
+        showError('Failed to compose Working Time');
+      }
+    },
+    [configData, updateSection, composedWorkingTimes, success, showError],
+  );
 
   const persist = useCallback(
     (next: IConfigField[]) => {
@@ -243,9 +304,21 @@ const FieldConfigurationsAccordion = () => {
               <Tooltip key={btn.key} title={btn.label}>
                 <Button
                   size='small'
-                  variant={activeDialog === btn.key ? 'contained' : 'outlined'}
+                  variant={
+                    (
+                      btn.key === 'composedWorkingTimes'
+                        ? composeDialogOpen
+                        : activeDialog === btn.key
+                    )
+                      ? 'contained'
+                      : 'outlined'
+                  }
                   startIcon={btn.icon}
-                  onClick={() => setActiveDialog(btn.key)}
+                  onClick={() =>
+                    btn.key === 'composedWorkingTimes'
+                      ? setComposeDialogOpen(true)
+                      : setActiveDialog(btn.key)
+                  }
                   sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
                 >
                   {btn.label}
@@ -384,6 +457,13 @@ const FieldConfigurationsAccordion = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <ComposeWorkingTimesFormDialog
+        open={composeDialogOpen}
+        existingComposedTimes={composedWorkingTimes}
+        onClose={() => setComposeDialogOpen(false)}
+        onSubmit={handleComposeSubmit}
+      />
     </GenericAccordion>
   );
 };

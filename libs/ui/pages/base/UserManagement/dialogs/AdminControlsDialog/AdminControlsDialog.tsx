@@ -6,16 +6,15 @@ import {
   Checkbox,
   FormControlLabel,
   TextField,
-  Accordion,
   Chip,
 } from '@serviceops/component';
 import {
   Dialog,
   DialogContent,
   DialogActions,
+  Accordion,
   AccordionSummary,
   AccordionDetails,
-  CircularProgress,
   Radio,
   RadioGroup as MUIRadioGroup,
 } from '@mui/material';
@@ -26,7 +25,6 @@ import PaletteIcon from '@mui/icons-material/Palette';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CloudDoneIcon from '@mui/icons-material/CloudDone';
 import { useStyles } from './styles';
 import { AdminControlsDialogProps } from './util';
 
@@ -51,6 +49,8 @@ const THEMES: { name: string; swatch: string; accent: string }[] = [
 const AdminControlsDialog = ({
   open,
   onClose,
+  onSave,
+  isDirty,
   adminTwoLevel,
   onAdminTwoLevelChange,
   adminManagerOnly,
@@ -59,7 +59,6 @@ const AdminControlsDialog = ({
   onAdminAdditionalApprovalChange,
   adminApprover,
   onAdminApproverChange,
-  onAdminApproverBlur,
   isSaving = false,
   pageStyles,
   onPageStyleChange,
@@ -90,26 +89,6 @@ const AdminControlsDialog = ({
           <Typography className={classes.headerSubtitle}>Workflows · Styles · Theme</Typography>
         </Box>
         <Box display='flex' alignItems='center' gap={1}>
-          {/* Auto-save indicator */}
-          {isSaving ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <CircularProgress size={13} thickness={5} sx={{ color: 'rgba(255,255,255,0.7)' }} />
-              <Typography
-                sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}
-              >
-                Saving…
-              </Typography>
-            </Box>
-          ) : (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, opacity: 0.55 }}>
-              <CloudDoneIcon sx={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.8)' }} />
-              <Typography
-                sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}
-              >
-                Auto-saved
-              </Typography>
-            </Box>
-          )}
           {activeCount > 0 && (
             <Chip label={`${activeCount} active`} size='small' className={classes.headerChip} />
           )}
@@ -213,7 +192,6 @@ const AdminControlsDialog = ({
                 placeholder='e.g. Director of IT'
                 value={adminApprover}
                 onChange={(e) => onAdminApproverChange(e.target.value)}
-                onBlur={onAdminApproverBlur}
                 helperText='This person will approve all new admin account requests'
                 sx={{ mt: 1.5 }}
               />
@@ -310,7 +288,7 @@ const AdminControlsDialog = ({
               <Box flex={1}>
                 <Typography className={classes.accordionTitle}>Theme Selection</Typography>
                 <Typography className={classes.accordionSubtitle}>
-                  Applied instantly · Synced across all sessions
+                  Choose a theme, then save to apply
                 </Typography>
               </Box>
               <Chip label={selectedTheme} size='small' className={classes.activeThemeChip} />
@@ -343,27 +321,16 @@ const AdminControlsDialog = ({
       </DialogContent>
 
       <DialogActions className={classes.dialogActions}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 'auto', pl: 0.5 }}>
-          {isSaving ? (
-            <>
-              <CircularProgress size={14} thickness={5} color='primary' />
-              <Typography variant='caption' color='text.secondary'>
-                Saving changes…
-              </Typography>
-            </>
-          ) : (
-            <Typography
-              variant='caption'
-              color='text.secondary'
-              sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-            >
-              <CloudDoneIcon sx={{ fontSize: '0.85rem', color: 'success.main' }} />
-              All changes auto-saved
-            </Typography>
-          )}
-        </Box>
-        <Button variant='contained' onClick={onClose} sx={{ borderRadius: 2 }} disabled={isSaving}>
-          Close
+        <Button onClick={onClose} variant='outlined' sx={{ borderRadius: 2 }} disabled={isSaving}>
+          Cancel
+        </Button>
+        <Button
+          variant='contained'
+          onClick={onSave}
+          disabled={isSaving || !isDirty}
+          sx={{ borderRadius: 2, px: 3 }}
+        >
+          {isSaving ? 'Saving…' : 'Save Changes'}
         </Button>
       </DialogActions>
     </Dialog>

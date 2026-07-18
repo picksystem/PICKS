@@ -170,7 +170,9 @@ const UserManagement = () => {
     handleAdminAdditionalApprovalChange,
     adminApprover,
     handleAdminApproverChange,
-    handleAdminApproverBlur,
+    handleSaveAdminControls,
+    handleCloseAdminControls,
+    isAdminControlsDirty,
     isSavingControls,
     pageStyles,
     handlePageStyleChange,
@@ -237,7 +239,9 @@ const UserManagement = () => {
 
       <AdminControlsDialog
         open={adminControlsOpen}
-        onClose={() => setAdminControlsOpen(false)}
+        onClose={handleCloseAdminControls}
+        onSave={handleSaveAdminControls}
+        isDirty={isAdminControlsDirty}
         adminTwoLevel={adminTwoLevel}
         onAdminTwoLevelChange={handleAdminTwoLevelChange}
         adminManagerOnly={adminManagerOnly}
@@ -246,7 +250,6 @@ const UserManagement = () => {
         onAdminAdditionalApprovalChange={handleAdminAdditionalApprovalChange}
         adminApprover={adminApprover}
         onAdminApproverChange={handleAdminApproverChange}
-        onAdminApproverBlur={handleAdminApproverBlur}
         isSaving={isSavingControls}
         pageStyles={pageStyles}
         onPageStyleChange={handlePageStyleChange}

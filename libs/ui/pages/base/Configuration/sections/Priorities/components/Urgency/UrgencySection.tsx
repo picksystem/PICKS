@@ -459,8 +459,7 @@ const UrgencySection = ({
                 display: 'block',
               }}
             >
-              {reqError(touched.shortDescription, requiredErrors.shortDescription) ||
-                'Brief summary shown in compact views'}
+              {reqError(touched.shortDescription, requiredErrors.shortDescription)}
             </Typography>
           </Box>
         </Box>
@@ -491,8 +490,7 @@ const UrgencySection = ({
                 display: 'block',
               }}
             >
-              {reqError(touched.description, requiredErrors.description) ||
-                'Describe when this urgency level should be used'}
+              {reqError(touched.description, requiredErrors.description)}
             </Typography>
           </Box>
         </Box>
@@ -506,13 +504,6 @@ const UrgencySection = ({
             showFooterActions={false}
             title='Internal note'
           />
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-          >
-            Internal note for this urgency level (not visible to end users) — optional
-          </Typography>
         </Box>
 
         {/* ── Ticket Types Activation ── */}

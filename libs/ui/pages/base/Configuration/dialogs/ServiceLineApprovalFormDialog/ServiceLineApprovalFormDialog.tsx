@@ -601,20 +601,21 @@ const ServiceLineApprovalFormDialog = ({
             </Paper>
           )}
         </Box>
-        <Typography
-          variant='caption'
-          sx={{
-            color: slError ? '#d32f2f' : 'transparent',
-            fontSize: '0.75rem',
-            mt: 0.5,
-            ml: 1.75,
-            display: 'block',
-            minHeight: '1em',
-            lineHeight: 1.66,
-          }}
-        >
-          {slError || ' '}
-        </Typography>
+        {slError && (
+          <Typography
+            variant='caption'
+            sx={{
+              color: '#d32f2f',
+              fontSize: '0.75rem',
+              mt: 0.5,
+              ml: 1.75,
+              display: 'block',
+              lineHeight: 1.66,
+            }}
+          >
+            {slError}
+          </Typography>
+        )}
       </Box>
 
       {/* Approver name — required search field. Sourced from User
@@ -701,20 +702,21 @@ const ServiceLineApprovalFormDialog = ({
             </Paper>
           )}
         </Box>
-        <Typography
-          variant='caption'
-          sx={{
-            color: approverNameError ? '#d32f2f' : 'transparent',
-            fontSize: '0.75rem',
-            mt: 0.5,
-            ml: 1.75,
-            display: 'block',
-            minHeight: '1em',
-            lineHeight: 1.66,
-          }}
-        >
-          {approverNameError || ' '}
-        </Typography>
+        {approverNameError && (
+          <Typography
+            variant='caption'
+            sx={{
+              color: '#d32f2f',
+              fontSize: '0.75rem',
+              mt: 0.5,
+              ml: 1.75,
+              display: 'block',
+              lineHeight: 1.66,
+            }}
+          >
+            {approverNameError}
+          </Typography>
+        )}
       </Box>
 
       {/* Approver role — required search field. Sourced from
@@ -801,20 +803,21 @@ const ServiceLineApprovalFormDialog = ({
             </Paper>
           )}
         </Box>
-        <Typography
-          variant='caption'
-          sx={{
-            color: approverRoleError ? '#d32f2f' : 'transparent',
-            fontSize: '0.75rem',
-            mt: 0.5,
-            ml: 1.75,
-            display: 'block',
-            minHeight: '1em',
-            lineHeight: 1.66,
-          }}
-        >
-          {approverRoleError || ' '}
-        </Typography>
+        {approverRoleError && (
+          <Typography
+            variant='caption'
+            sx={{
+              color: '#d32f2f',
+              fontSize: '0.75rem',
+              mt: 0.5,
+              ml: 1.75,
+              display: 'block',
+              lineHeight: 1.66,
+            }}
+          >
+            {approverRoleError}
+          </Typography>
+        )}
       </Box>
 
       {/* Approver order — required, numeric. Stored as a number; the
@@ -842,7 +845,7 @@ const ServiceLineApprovalFormDialog = ({
           onBlur={() => setTouched((t) => ({ ...t, approvalOrder: true }))}
           inputProps={{ min: 1, step: 1 }}
           error={Boolean(orderError)}
-          helperText={orderError || ' '}
+          helperText={orderError}
           required
         />
       </Box>
@@ -919,13 +922,6 @@ const ServiceLineApprovalFormDialog = ({
             showFooterActions={false}
             title='Internal note'
           />
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-          >
-            {' '}
-          </Typography>
         </Box>
       </Box>
     </ConfigFormDialog>

@@ -152,24 +152,56 @@ const useUserManagement = () => {
     signUp: 'new',
     forgotPassword: 'new',
   });
+  const [selectedTheme, setSelectedTheme] = useState(
+    () => localStorage.getItem('serivceops_selected_theme') || 'System',
+  );
+  const adminControlsSnapshotRef = useRef({
+    adminTwoLevel,
+    adminManagerOnly,
+    adminAdditionalApproval,
+    adminApprover,
+    pageStyles,
+    theme: selectedTheme,
+  });
 
-  const { themeName: selectedTheme, setThemeName } = useThemeContext();
+  const { setThemeName } = useThemeContext();
   const { data: adminControlsData } = useGetAdminControlsQuery();
   const [updateAdminControls, { isLoading: isSavingControls }] = useUpdateAdminControlsMutation();
   const [deleteUser, { isLoading: isDeletingUser }] = useDeleteUserMutation();
 
+  const isAdminControlsDirty =
+    adminControlsOpen &&
+    JSON.stringify({
+      adminTwoLevel,
+      adminManagerOnly,
+      adminAdditionalApproval,
+      adminApprover,
+      pageStyles,
+      theme: selectedTheme,
+    }) !== JSON.stringify(adminControlsSnapshotRef.current);
+
   // Load admin controls from DB on mount
   useEffect(() => {
     if (adminControlsData) {
+      const loadedPageStyles: PageStyles = {
+        signIn: (adminControlsData.signInStyle as 'old' | 'new') || 'new',
+        signUp: (adminControlsData.signUpStyle as 'old' | 'new') || 'new',
+        forgotPassword: (adminControlsData.forgotPasswordStyle as 'old' | 'new') || 'new',
+      };
       setAdminTwoLevel(adminControlsData.adminTwoLevel);
       setAdminManagerOnly(adminControlsData.adminManagerOnly);
       setAdminAdditionalApproval(adminControlsData.adminAdditionalApproval);
       setAdminApprover(adminControlsData.adminApprover ?? '');
-      setPageStyles({
-        signIn: (adminControlsData.signInStyle as 'old' | 'new') || 'new',
-        signUp: (adminControlsData.signUpStyle as 'old' | 'new') || 'new',
-        forgotPassword: (adminControlsData.forgotPasswordStyle as 'old' | 'new') || 'new',
-      });
+      setPageStyles(loadedPageStyles);
+      setSelectedTheme(adminControlsData.theme);
+      adminControlsSnapshotRef.current = {
+        adminTwoLevel: adminControlsData.adminTwoLevel,
+        adminManagerOnly: adminControlsData.adminManagerOnly,
+        adminAdditionalApproval: adminControlsData.adminAdditionalApproval,
+        adminApprover: adminControlsData.adminApprover ?? '',
+        pageStyles: loadedPageStyles,
+        theme: adminControlsData.theme,
+      };
       // Apply theme from DB if not already set in localStorage
       const storedTheme = localStorage.getItem('serivceops_selected_theme');
       if (!storedTheme || storedTheme === 'System') {
@@ -183,47 +215,65 @@ const useUserManagement = () => {
     page: 'signIn' | 'signUp' | 'forgotPassword',
     value: 'old' | 'new',
   ) => {
-    const next = { ...pageStyles, [page]: value };
-    setPageStyles(next);
-    updateAdminControls({
-      signInStyle: next.signIn,
-      signUpStyle: next.signUp,
-      forgotPasswordStyle: next.forgotPassword,
-    }).catch(() => notify.error('Failed to save layout settings'));
+    setPageStyles((prev) => ({ ...prev, [page]: value }));
   };
 
   const handleThemeChange = (theme: string) => {
-    setThemeName(theme);
-    updateAdminControls({ theme }).catch(() => notify.error('Failed to save theme'));
+    setSelectedTheme(theme);
   };
 
   const handleAdminTwoLevelChange = (v: boolean) => {
     setAdminTwoLevel(v);
-    updateAdminControls({ adminTwoLevel: v }).catch(() =>
-      notify.error('Failed to save approval settings'),
-    );
   };
 
   const handleAdminManagerOnlyChange = (v: boolean) => {
     setAdminManagerOnly(v);
-    updateAdminControls({ adminManagerOnly: v }).catch(() =>
-      notify.error('Failed to save approval settings'),
-    );
   };
 
   const handleAdminAdditionalApprovalChange = (v: boolean) => {
     setAdminAdditionalApproval(v);
-    updateAdminControls({ adminAdditionalApproval: v }).catch(() =>
-      notify.error('Failed to save approval settings'),
-    );
   };
 
   const handleAdminApproverChange = (v: string) => {
     setAdminApprover(v);
   };
 
-  const handleAdminApproverBlur = () => {
-    updateAdminControls({ adminApprover }).catch(() => notify.error('Failed to save approver'));
+  const handleSaveAdminControls = async () => {
+    try {
+      await updateAdminControls({
+        adminTwoLevel,
+        adminManagerOnly,
+        adminAdditionalApproval,
+        adminApprover,
+        signInStyle: pageStyles.signIn,
+        signUpStyle: pageStyles.signUp,
+        forgotPasswordStyle: pageStyles.forgotPassword,
+        theme: selectedTheme,
+      }).unwrap();
+      setThemeName(selectedTheme);
+      adminControlsSnapshotRef.current = {
+        adminTwoLevel,
+        adminManagerOnly,
+        adminAdditionalApproval,
+        adminApprover,
+        pageStyles,
+        theme: selectedTheme,
+      };
+      setAdminControlsOpen(false);
+    } catch {
+      notify.error('Failed to save admin controls');
+    }
+  };
+
+  const handleCloseAdminControls = () => {
+    const snapshot = adminControlsSnapshotRef.current;
+    setAdminTwoLevel(snapshot.adminTwoLevel);
+    setAdminManagerOnly(snapshot.adminManagerOnly);
+    setAdminAdditionalApproval(snapshot.adminAdditionalApproval);
+    setAdminApprover(snapshot.adminApprover);
+    setPageStyles(snapshot.pageStyles);
+    setSelectedTheme(snapshot.theme);
+    setAdminControlsOpen(false);
   };
 
   // ── Fetch ─────────────────────────────────────────────────────────────────────
@@ -1123,7 +1173,9 @@ const useUserManagement = () => {
     adminApprover,
     setAdminApprover,
     handleAdminApproverChange,
-    handleAdminApproverBlur,
+    handleSaveAdminControls,
+    handleCloseAdminControls,
+    isAdminControlsDirty,
     isSavingControls,
     pageStyles,
     handlePageStyleChange,

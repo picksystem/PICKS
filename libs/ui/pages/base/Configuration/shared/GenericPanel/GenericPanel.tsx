@@ -47,8 +47,17 @@ import { WorkLocationSearchField } from './components/WorkLocationSearchField/Wo
 import { ServiceLineSearchField } from './components/ServiceLineSearchField/ServiceLineSearchField';
 import { ApplicationSearchField } from './components/ApplicationSearchField/ApplicationSearchField';
 import { QueueSearchField } from './components/QueueSearchField/QueueSearchField';
+import { ConsultantSearchField } from './components/ConsultantSearchField/ConsultantSearchField';
+import { UserSearchField } from './components/UserSearchField/UserSearchField';
+import { ConsultantRoleSearchField } from './components/ConsultantRoleSearchField/ConsultantRoleSearchField';
+import { UserWorkLocationSearchField } from './components/UserWorkLocationSearchField/UserWorkLocationSearchField';
+import { WorkingCalendarSearchField } from './components/WorkingCalendarSearchField/WorkingCalendarSearchField';
+import { HolidayCalendarSearchField } from './components/HolidayCalendarSearchField/HolidayCalendarSearchField';
+import { WorkingDayTemplateSearchField } from './components/WorkingDayTemplateSearchField/WorkingDayTemplateSearchField';
+import { OptionsSearchField } from './components/OptionsSearchField/OptionsSearchField';
 import { SearchField } from '../SearchField';
 import { DatePickerField } from './components/DatePickerField/DatePickerField';
+import { YearPickerField } from './components/YearPickerField/YearPickerField';
 import { TimePickerField } from './components/TimePickerField/TimePickerField';
 import { DurationPickerField } from './components/DurationPickerField/DurationPickerField';
 import { DateTimePickerField } from './components/DateTimePickerField/DateTimePickerField';
@@ -65,6 +74,7 @@ export interface TableField {
   type?:
     | 'text'
     | 'date'
+    | 'year'
     | 'datetime'
     | 'time'
     | 'duration'
@@ -76,10 +86,19 @@ export interface TableField {
     | 'serviceLineSearch'
     | 'applicationSearch'
     | 'queueSearch'
+    | 'consultantSearch'
+    | 'userSearch'
+    | 'consultantRoleSearch'
+    | 'userWorkLocationSearch'
+    | 'workingCalendarSearch'
+    | 'holidayCalendarSearch'
+    | 'workingDayTemplateSearch'
+    | 'optionsSearch'
     | 'richText'
     | 'color'
     | 'ticketTypesActivation'
-    | 'dayWorkingTimes';
+    | 'dayWorkingTimes'
+    | 'computedSum';
   /** For activationToggle - description shown when the toggle is ON */
   activationDescriptionActive?: string;
   /** For activationToggle - description shown when the toggle is OFF */
@@ -99,6 +118,34 @@ export interface TableField {
   };
   /** For dayWorkingTimes - the weekday key this field represents (e.g. 'monday') */
   day?: string;
+  /** For optionsSearch - which field on the table's own rows to source the
+   * dropdown options from (defaults to 'name'). Values are deduplicated.
+   * Ignored when `staticOptions` is set. */
+  optionsSourceField?: string;
+  /** For consultantRoleSearch - which field on the same form holds the
+   * currently selected Application, used to scope the role options
+   * (defaults to 'application'). */
+  applicationField?: string;
+  /** For userWorkLocationSearch - sibling field names to auto-fill with the
+   * selected work location's defaults (still editable afterwards). */
+  workLocationAutoFillFields?: {
+    workingCalendar?: string;
+    holidayCalendar?: string;
+  };
+  /** For workingCalendarSearch - sibling field name to auto-fill with the
+   * selected working calendar's Holiday Calendar default (still editable
+   * afterwards). */
+  workingCalendarAutoFillFields?: {
+    holidayCalendar?: string;
+  };
+  /** For optionsSearch - a fixed list of choices (e.g. ['Weekly', 'Biweekly',
+   * 'Monthly']) to search/select from, instead of sourcing options from the
+   * table's own rows. */
+  staticOptions?: string[];
+  /** For computedSum - names of sibling form fields whose numeric values are
+   * added together for this field's (read-only) displayed value. Nothing is
+   * written back to `form` for this field, so it is never persisted on save. */
+  sumFields?: string[];
 }
 
 export interface TableConfig {
@@ -463,7 +510,9 @@ const createColumns = (fields: TableField[]): Column<Record<string, unknown>>[] 
 
 const createEmptyForm = (fields: TableField[]): FormData =>
   fields.reduce((acc, field) => {
-    if (field.type === 'toggle' || field.type === 'activationToggle') {
+    if (field.type === 'computedSum') {
+      return acc;
+    } else if (field.type === 'toggle' || field.type === 'activationToggle') {
       acc[field.name] = field.defaultValue ?? false;
     } else if (field.type === 'number' || field.type === 'dayWorkingTimes') {
       acc[field.name] = field.defaultValue ?? '';
@@ -941,6 +990,35 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
       [config.fields, customColumns],
     );
 
+    // Options for 'optionsSearch' fields, keyed by field name. When
+    // `staticOptions` is given, that fixed list is used as-is (e.g. Weekly/
+    // Biweekly/Monthly). Otherwise options are built from the unique values
+    // of `optionsSourceField` (default 'name') across the table's own rows,
+    // since that list is local to the table being edited rather than a
+    // shared/global lookup.
+    const optionsSearchOptionsByField = useMemo(() => {
+      const map: Record<string, { value: string; label: string }[]> = {};
+      config.fields.forEach((f) => {
+        if (f.type !== 'optionsSearch') return;
+        if (f.staticOptions) {
+          map[f.name] = f.staticOptions.map((opt) => ({ value: opt, label: opt }));
+          return;
+        }
+        const sourceField = f.optionsSourceField ?? 'name';
+        const seen = new Set<string>();
+        const opts: { value: string; label: string }[] = [];
+        data.forEach((row) => {
+          const v = String(row[sourceField] ?? '').trim();
+          if (v && !seen.has(v)) {
+            seen.add(v);
+            opts.push({ value: v, label: v });
+          }
+        });
+        map[f.name] = opts.sort((a, b) => a.label.localeCompare(b.label));
+      });
+      return map;
+    }, [config.fields, data]);
+
     // Use debounce for search to prevent excessive filtering
     const debouncedSearch = useDebounce(search, 300);
 
@@ -1332,7 +1410,7 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
           maxWidth='sm'
         >
           <LocalizationProvider>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               {summaryMessage && (
                 <Alert severity='error' variant='outlined' sx={{ alignItems: 'center' }}>
                   {summaryMessage}
@@ -1512,10 +1590,173 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
                     />
                   );
                 }
+                if (field.type === 'consultantSearch') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  return (
+                    <ConsultantSearchField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
+                if (field.type === 'userSearch') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  return (
+                    <UserSearchField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
+                if (field.type === 'consultantRoleSearch') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  const applicationValue = String(
+                    form[field.applicationField ?? 'application'] ?? '',
+                  );
+                  return (
+                    <ConsultantRoleSearchField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      applicationValue={applicationValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
+                if (field.type === 'userWorkLocationSearch') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  return (
+                    <UserWorkLocationSearchField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      onLocationSelect={
+                        field.workLocationAutoFillFields
+                          ? (defaults) => {
+                              const autoFill = field.workLocationAutoFillFields!;
+                              if (autoFill.workingCalendar) {
+                                setForm((prev) => ({
+                                  ...prev,
+                                  [autoFill.workingCalendar!]: defaults.workingCalendar,
+                                }));
+                              }
+                              if (autoFill.holidayCalendar) {
+                                setForm((prev) => ({
+                                  ...prev,
+                                  [autoFill.holidayCalendar!]: defaults.holidayCalendar,
+                                }));
+                              }
+                            }
+                          : undefined
+                      }
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
+                if (field.type === 'workingCalendarSearch') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  return (
+                    <WorkingCalendarSearchField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      onCalendarSelect={
+                        field.workingCalendarAutoFillFields
+                          ? (defaults) => {
+                              const autoFill = field.workingCalendarAutoFillFields!;
+                              if (autoFill.holidayCalendar) {
+                                setForm((prev) => ({
+                                  ...prev,
+                                  [autoFill.holidayCalendar!]: defaults.holidayCalendar,
+                                }));
+                              }
+                            }
+                          : undefined
+                      }
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
+                if (field.type === 'holidayCalendarSearch') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  return (
+                    <HolidayCalendarSearchField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
+                if (field.type === 'workingDayTemplateSearch') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  return (
+                    <WorkingDayTemplateSearchField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
+                if (field.type === 'optionsSearch') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  return (
+                    <OptionsSearchField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      options={optionsSearchOptionsByField[field.name] ?? []}
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
                 if (field.type === 'date') {
                   const currentValue = (form[field.name] ?? '') as string;
                   return (
                     <DatePickerField
+                      key={field.name}
+                      label={field.label}
+                      value={currentValue}
+                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
+                if (field.type === 'year') {
+                  const currentValue = (form[field.name] ?? '') as string;
+                  return (
+                    <YearPickerField
                       key={field.name}
                       label={field.label}
                       value={currentValue}
@@ -1750,6 +1991,22 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
                     </Box>
                   );
                 }
+                if (field.type === 'computedSum') {
+                  const total = (field.sumFields ?? []).reduce(
+                    (sum, name) => sum + (Number(form[name]) || 0),
+                    0,
+                  );
+                  return (
+                    <TextField
+                      key={field.name}
+                      label={field.label}
+                      size='small'
+                      fullWidth
+                      disabled
+                      value={`${total}h`}
+                    />
+                  );
+                }
                 if (field.type === 'richText') {
                   const currentValue = (form[field.name] ?? '') as string;
                   const richTextValue = parseRichText(currentValue);
@@ -1765,18 +2022,18 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
                         title={field.required ? `${field.label} *` : field.label}
                         error={isError}
                       />
-                      {field.required && (
+                      {field.required && isError && (
                         <Typography
                           variant='caption'
                           sx={{
-                            color: isError ? '#d32f2f' : 'text.secondary',
+                            color: '#d32f2f',
                             fontSize: '0.7rem',
                             mt: 0.25,
                             display: 'block',
-                            fontWeight: isError ? 600 : 400,
+                            fontWeight: 600,
                           }}
                         >
-                          {reqError(showValidation, mergedFormErrors[field.name]) || ' '}
+                          {reqError(showValidation, mergedFormErrors[field.name])}
                         </Typography>
                       )}
                     </Box>

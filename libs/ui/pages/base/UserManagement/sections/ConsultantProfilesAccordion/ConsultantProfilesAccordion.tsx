@@ -37,6 +37,41 @@ const ConsultantProfilesAccordion = () => {
     [configData, updateSection],
   );
 
+  // A consultant can hold multiple profiles, but not two for the same
+  // application — same "already exists" dialog-level Alert pattern used by
+  // the Working Day Templates / Business Category sections (see
+  // WorkingDayTemplatesSection.summaryValidator).
+  const summaryValidator = useCallback(
+    (
+      form: Record<string, unknown>,
+      _all: unknown[],
+      editingRow: Record<string, unknown> | null,
+    ): string | null => {
+      const consultantVal = String(form.consultantName ?? '')
+        .trim()
+        .toLowerCase();
+      const appVal = String(form.application ?? '')
+        .trim()
+        .toLowerCase();
+      if (!consultantVal || !appVal) return null;
+      const editingId = (editingRow?.id as string | undefined) ?? null;
+      const isDuplicate = rows.some(
+        (r) =>
+          r.id !== editingId &&
+          String(r.consultantName ?? '')
+            .trim()
+            .toLowerCase() === consultantVal &&
+          String(r.application ?? '')
+            .trim()
+            .toLowerCase() === appVal,
+      );
+      return isDuplicate
+        ? 'This Consultant Name and Application combination already exists. Please use a different value.'
+        : null;
+    },
+    [rows],
+  );
+
   return (
     <GenericPanel
       config={CONSULTANT_PROFILES_TABLE}
@@ -46,6 +81,7 @@ const ConsultantProfilesAccordion = () => {
       variant='plain'
       defaultExpanded={false}
       enableSuccessMessage
+      summaryValidator={summaryValidator as unknown as never}
     />
   );
 };

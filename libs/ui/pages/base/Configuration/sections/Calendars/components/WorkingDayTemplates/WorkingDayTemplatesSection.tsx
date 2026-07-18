@@ -198,7 +198,7 @@ const WorkingDayTemplatesSection = ({
             .toLowerCase() === nameVal,
       );
       return isDuplicate
-        ? 'Working time template already exists. Please use a different value.'
+        ? `Working Time Template "${String(form.name ?? '')}" already exists. Please use a different name.`
         : null;
     },
     [rows],

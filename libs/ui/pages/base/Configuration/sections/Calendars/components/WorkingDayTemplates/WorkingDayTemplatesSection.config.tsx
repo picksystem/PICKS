@@ -166,6 +166,20 @@ export const WORKING_DAY_TEMPLATE_CONFIG: TableConfig = {
       day: 'sunday',
       defaultValue: 0,
     },
+    {
+      name: 'totalWorkingHours',
+      label: 'Total working hours',
+      type: 'computedSum',
+      sumFields: [
+        'mondayHours',
+        'tuesdayHours',
+        'wednesdayHours',
+        'thursdayHours',
+        'fridayHours',
+        'saturdayHours',
+        'sundayHours',
+      ],
+    },
   ],
 };
 

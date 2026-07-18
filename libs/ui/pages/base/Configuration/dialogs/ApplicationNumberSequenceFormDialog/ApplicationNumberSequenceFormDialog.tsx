@@ -558,20 +558,21 @@ const ApplicationNumberSequenceFormDialog = ({
             </Paper>
           )}
         </Box>
-        <Typography
-          variant='caption'
-          sx={{
-            color: appError ? '#d32f2f' : 'transparent',
-            fontSize: '0.75rem',
-            mt: 0.5,
-            ml: 1.75,
-            display: 'block',
-            minHeight: '1em',
-            lineHeight: 1.66,
-          }}
-        >
-          {appError || ' '}
-        </Typography>
+        {appError && (
+          <Typography
+            variant='caption'
+            sx={{
+              color: '#d32f2f',
+              fontSize: '0.75rem',
+              mt: 0.5,
+              ml: 1.75,
+              display: 'block',
+              lineHeight: 1.66,
+            }}
+          >
+            {appError}
+          </Typography>
+        )}
       </Box>
 
       {/* Ticket type — required, drop-down sourced from the existing
@@ -681,20 +682,21 @@ const ApplicationNumberSequenceFormDialog = ({
             </Paper>
           )}
         </Box>
-        <Typography
-          variant='caption'
-          sx={{
-            color: ttError ? '#d32f2f' : 'text.secondary',
-            fontSize: '0.75rem',
-            mt: 0.5,
-            ml: 1.75,
-            display: 'block',
-            minHeight: '1em',
-            lineHeight: 1.66,
-          }}
-        >
-          {ttError || 'Drop-down from the Ticket types list.'}
-        </Typography>
+        {ttError && (
+          <Typography
+            variant='caption'
+            sx={{
+              color: '#d32f2f',
+              fontSize: '0.75rem',
+              mt: 0.5,
+              ml: 1.75,
+              display: 'block',
+              lineHeight: 1.66,
+            }}
+          >
+            {ttError}
+          </Typography>
+        )}
       </Box>
 
       {/* Number sequence Prefix — required, alpha-numeric, max 6.
@@ -720,10 +722,7 @@ const ApplicationNumberSequenceFormDialog = ({
             maxLength: MAX_PREFIX,
           }}
           error={Boolean(prefixError)}
-          helperText={
-            prefixError ||
-            `Alpha-numeric, max ${MAX_PREFIX} characters. Unique across application and ticket-type number sequences.`
-          }
+          helperText={prefixError}
           required
         />
       </Box>
@@ -752,9 +751,7 @@ const ApplicationNumberSequenceFormDialog = ({
           placeholder='3-9'
           inputProps={{ min: MIN_NUMBER_LENGTH, max: MAX_NUMBER_LENGTH }}
           error={Boolean(lengthError)}
-          helperText={
-            lengthError || `Digits only, between ${MIN_NUMBER_LENGTH} and ${MAX_NUMBER_LENGTH}.`
-          }
+          helperText={lengthError}
           required
         />
       </Box>
@@ -773,7 +770,7 @@ const ApplicationNumberSequenceFormDialog = ({
             style: { fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.5px' },
             readOnly: true,
           }}
-          helperText='Display only — derived from Number sequence Prefix and Number length.'
+          placeholder='Display only — derived from Number sequence Prefix and Number length.'
         />
       </Box>
 
@@ -795,13 +792,6 @@ const ApplicationNumberSequenceFormDialog = ({
             showFooterActions={false}
             title='Internal note'
           />
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-          >
-            {`Alpha-numeric, max ${MAX_NOTE} characters.`}
-          </Typography>
         </Box>
       </Box>
     </ConfigFormDialog>

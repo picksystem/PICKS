@@ -419,9 +419,7 @@ const ServiceLineFormDialog = ({
       )}
 
       {/* Business Category — required search field. Popover anchored to
-          the input only so the list sits flush against its bottom border;
-          helper text is rendered separately below to avoid the visible
-          gap the user reported. */}
+          the input only so the list sits flush against its bottom border. */}
       <Box>
         <Box sx={{ position: 'relative' }}>
           <TextField
@@ -504,20 +502,21 @@ const ServiceLineFormDialog = ({
             </Paper>
           )}
         </Box>
-        <Typography
-          variant='caption'
-          sx={{
-            color: bcError ? '#d32f2f' : 'transparent',
-            fontSize: '0.75rem',
-            mt: 0.5,
-            ml: 1.75,
-            display: 'block',
-            minHeight: '1em',
-            lineHeight: 1.66,
-          }}
-        >
-          {bcError || ' '}
-        </Typography>
+        {bcError && (
+          <Typography
+            variant='caption'
+            sx={{
+              color: '#d32f2f',
+              fontSize: '0.75rem',
+              mt: 0.5,
+              ml: 1.75,
+              display: 'block',
+              lineHeight: 1.66,
+            }}
+          >
+            {bcError}
+          </Typography>
+        )}
       </Box>
 
       {/* Service Line Name — required, alpha-numeric, locked after save.
@@ -536,9 +535,7 @@ const ServiceLineFormDialog = ({
           inputProps={{ style: { fontFamily: 'monospace', fontWeight: 700 } }}
           disabled={!!editing}
           error={Boolean(nameError)}
-          helperText={
-            nameError || (editing ? 'Name cannot be changed after creation' : ' ')
-          }
+          helperText={nameError || (editing ? 'Name cannot be changed after creation' : undefined)}
           required
         />
       </Box>
@@ -562,17 +559,19 @@ const ServiceLineFormDialog = ({
             required
             error={Boolean(shortError)}
           />
-          <Typography
-            variant='caption'
-            sx={{
-              color: shortError ? '#d32f2f' : 'text.secondary',
-              fontSize: '0.7rem',
-              mt: 0.5,
-              display: 'block',
-            }}
-          >
-            {shortError || ' '}
-          </Typography>
+          {shortError && (
+            <Typography
+              variant='caption'
+              sx={{
+                color: '#d32f2f',
+                fontSize: '0.7rem',
+                mt: 0.5,
+                display: 'block',
+              }}
+            >
+              {shortError}
+            </Typography>
+          )}
         </Box>
       </Box>
 
@@ -593,13 +592,6 @@ const ServiceLineFormDialog = ({
             showFooterActions={false}
             title='Description'
           />
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-          >
-            {' '}
-          </Typography>
         </Box>
       </Box>
 
@@ -687,20 +679,21 @@ const ServiceLineFormDialog = ({
             </Paper>
           )}
         </Box>
-        <Typography
-          variant='caption'
-          sx={{
-            color: managerError ? '#d32f2f' : 'transparent',
-            fontSize: '0.75rem',
-            mt: 0.5,
-            ml: 1.75,
-            display: 'block',
-            minHeight: '1em',
-            lineHeight: 1.66,
-          }}
-        >
-          {managerError || ' '}
-        </Typography>
+        {managerError && (
+          <Typography
+            variant='caption'
+            sx={{
+              color: '#d32f2f',
+              fontSize: '0.75rem',
+              mt: 0.5,
+              ml: 1.75,
+              display: 'block',
+              lineHeight: 1.66,
+            }}
+          >
+            {managerError}
+          </Typography>
+        )}
       </Box>
 
       {/* Internal note — optional */}
@@ -720,13 +713,6 @@ const ServiceLineFormDialog = ({
             showFooterActions={false}
             title='Internal note'
           />
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-          >
-            {' '}
-          </Typography>
         </Box>
       </Box>
     </ConfigFormDialog>

@@ -272,6 +272,34 @@ const HolidayCalendarsSection = ({
     handleSaveBankHolidays([...untouched, ...next]);
   };
 
+  // Only Holiday Calendar is checked for duplicates — Calendar Year, Date,
+  // Day and Holiday Detail all allow duplicates, so a given Holiday
+  // Calendar can only ever have a single Bank Holiday row. Checked against
+  // the full, unfiltered bank holiday list (not just the active filter's
+  // subset), same "already exists" dialog-level Alert pattern used by the
+  // Working Time Template / Holiday Calendar dialogs.
+  const bankHolidaySummaryValidator = useCallback(
+    (
+      form: Record<string, unknown>,
+      _all: unknown[],
+      editingRow: Record<string, unknown> | null,
+    ): string | null => {
+      const norm = (v: unknown) =>
+        String(v ?? '')
+          .trim()
+          .toLowerCase();
+      const editingId = (editingRow?.id as string | undefined) ?? null;
+      const isDuplicate = bankHolidaysState.some(
+        (r) => r.id !== editingId && norm(r.calendarName) === norm(form.calendarName),
+      );
+
+      return isDuplicate
+        ? `Bank Holiday for "${String(form.calendarName ?? '')}" already exists. Please use a different value.`
+        : null;
+    },
+    [bankHolidaysState],
+  );
+
   return (
     <GenericAccordion
       title='Holiday Calendar'
@@ -493,6 +521,7 @@ const HolidayCalendarsSection = ({
               variant='standard'
               hideHeader
               enableSuccessMessage
+              summaryValidator={bankHolidaySummaryValidator as unknown as never}
               toolbarExtra={
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                   <TableFilterField

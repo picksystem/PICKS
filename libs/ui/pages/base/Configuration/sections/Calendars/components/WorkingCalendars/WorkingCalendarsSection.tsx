@@ -117,6 +117,30 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
 
   const rowsFinal = data ?? rows;
 
+  // Options for the Working Calendar dialog's "Holiday Calendar" search
+  // field, sourced from Calendar > Holiday calendar (tab) > Holiday
+  // calendar (field) — same list HolidayCalendarsSection manages.
+  const holidayCalendarOptions = useMemo(
+    () =>
+      (apiCAL?.holidayCalendars ?? []).map((hc) => ({
+        value: hc.name ?? '',
+        label: hc.name ?? '',
+      })),
+    [apiCAL?.holidayCalendars],
+  );
+
+  // Options for the Working Calendar dialog's "Working Day Template" search
+  // field, sourced from Calendar > Working day template (tab) > Working
+  // day template (field) — same list WorkingDayTemplatesSection manages.
+  const workingDayTemplateOptions = useMemo(
+    () =>
+      (apiCAL?.workingDayTemplates ?? []).map((wdt) => ({
+        value: wdt.name ?? '',
+        label: wdt.name ?? '',
+      })),
+    [apiCAL?.workingDayTemplates],
+  );
+
   useEffect(() => {
     if (data !== undefined) {
       setRows(data);
@@ -596,6 +620,8 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
             open={dialogOpen}
             editing={editingRow}
             existingCalendars={rowsFinal}
+            holidayCalendarOptions={holidayCalendarOptions}
+            workingDayTemplateOptions={workingDayTemplateOptions}
             onClose={handleDialogClose}
             onSave={handleDialogSave}
             subtitle={TABLE_CONFIG.workingCalendar.subtitle}
@@ -787,6 +813,7 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
         calendarName={selectedRow?.name}
         holidayCalendar={selectedRow?.holidayCalendar}
         workingTimeTemplate={selectedRow?.workingDayTemplate}
+        existingComposedTimes={composedTimes}
         onClose={() => setComposeDialogOpen(false)}
         onSubmit={handleComposeSubmit}
       />

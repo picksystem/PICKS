@@ -351,7 +351,7 @@ const BusinessCategoryFormDialog = ({
         placeholder='e.g. Finance, IT Operations'
         inputProps={{ style: { fontFamily: 'monospace', fontWeight: 700 } }}
         error={Boolean(nameError)}
-        helperText={nameError || ' '}
+        helperText={nameError}
         required
       />
 
@@ -374,17 +374,19 @@ const BusinessCategoryFormDialog = ({
             required
             error={Boolean(shortError)}
           />
-          <Typography
-            variant='caption'
-            sx={{
-              color: shortError ? '#d32f2f' : 'text.secondary',
-              fontSize: '0.7rem',
-              mt: 0.5,
-              display: 'block',
-            }}
-          >
-            {shortError || ' '}
-          </Typography>
+          {shortError && (
+            <Typography
+              variant='caption'
+              sx={{
+                color: '#d32f2f',
+                fontSize: '0.7rem',
+                mt: 0.5,
+                display: 'block',
+              }}
+            >
+              {shortError}
+            </Typography>
+          )}
         </Box>
       </Box>
 
@@ -405,13 +407,6 @@ const BusinessCategoryFormDialog = ({
             showFooterActions={false}
             title='Description'
           />
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-          >
-            {' '}
-          </Typography>
         </Box>
       </Box>
 
@@ -419,10 +414,7 @@ const BusinessCategoryFormDialog = ({
           TicketTypeSearchField pattern used by Add Approved Estimate).
           The popover is anchored to a position-relative wrapper around the
           input element only (not the TextField as a whole), so the list
-          sits flush against the input's bottom border instead of dropping
-          below the helperText row. The helperText is rendered separately
-          below the popover anchor so it doesn't create the visible gap
-          the user reported. */}
+          sits flush against the input's bottom border. */}
       <Box>
         <Box sx={{ position: 'relative' }}>
           <TextField
@@ -506,24 +498,22 @@ const BusinessCategoryFormDialog = ({
           )}
         </Box>
         {/* Render the helperText outside the relative wrapper so the popover
-            can anchor to the input itself. The wrapping Box keeps the
-            helperText vertically positioned where MUI would have placed it
-            (~0.5rem below the input), reserving a stable row so the dialog
-            layout doesn't shift between error / no-error states. */}
-        <Typography
-          variant='caption'
-          sx={{
-            color: headError ? '#d32f2f' : 'transparent',
-            fontSize: '0.75rem',
-            mt: 0.5,
-            ml: 1.75,
-            display: 'block',
-            minHeight: '1em',
-            lineHeight: 1.66,
-          }}
-        >
-          {headError || ' '}
-        </Typography>
+            can anchor to the input itself. */}
+        {headError && (
+          <Typography
+            variant='caption'
+            sx={{
+              color: '#d32f2f',
+              fontSize: '0.75rem',
+              mt: 0.5,
+              ml: 1.75,
+              display: 'block',
+              lineHeight: 1.66,
+            }}
+          >
+            {headError}
+          </Typography>
+        )}
       </Box>
 
       {/* Internal note — optional */}
@@ -543,13 +533,6 @@ const BusinessCategoryFormDialog = ({
             showFooterActions={false}
             title='Internal note'
           />
-          <Typography
-            variant='caption'
-            color='text.secondary'
-            sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-          >
-            {' '}
-          </Typography>
         </Box>
       </Box>
     </ConfigFormDialog>

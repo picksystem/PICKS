@@ -113,6 +113,34 @@ const WorkLocationsAccordion = () => {
     [configData, updateSection],
   );
 
+  // Work Location is "Not allowed" for duplicates — same "already exists"
+  // dialog-level Alert pattern used by the Working Time Template / Holiday
+  // Calendar dialogs.
+  const summaryValidator = useCallback(
+    (
+      form: Record<string, unknown>,
+      _all: unknown[],
+      editingRow: Record<string, unknown> | null,
+    ): string | null => {
+      const nameVal = String(form.workLocation ?? '')
+        .trim()
+        .toLowerCase();
+      if (!nameVal) return null;
+      const editingId = (editingRow?.id as string | undefined) ?? null;
+      const isDuplicate = rows.some(
+        (r) =>
+          r.id !== editingId &&
+          String(r.workLocation ?? '')
+            .trim()
+            .toLowerCase() === nameVal,
+      );
+      return isDuplicate
+        ? `Work Location "${String(form.workLocation ?? '')}" already exists. Please use a different name.`
+        : null;
+    },
+    [rows],
+  );
+
   const persistFieldConfigurations = useCallback(
     (next: IConfigField[]) => {
       const current = configData?.data?.userManagement ?? DEFAULT_CONFIGURATION_DATA.userManagement;
@@ -312,6 +340,7 @@ const WorkLocationsAccordion = () => {
         hideToolbar
         selectedRowId={selectedWorkLocationId}
         onRowSelect={setSelectedWorkLocationId}
+        summaryValidator={summaryValidator as unknown as never}
       />
 
       {/* Working times opens as a dialog over the Work Locations table

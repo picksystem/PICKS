@@ -79,7 +79,7 @@ export const ConfigFormDialog = ({
       </Box>
 
       <DialogContent dividers sx={{ p: 0, overflowY: 'auto', maxHeight: 'calc(90vh - 140px)' }}>
-        <Box sx={{ px: 3, py: 2.5, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+        <Box sx={{ px: 3, py: 2.5, display: 'flex', flexDirection: 'column', gap: '15px' }}>
           {children}
         </Box>
       </DialogContent>

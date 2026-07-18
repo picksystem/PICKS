@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
+import { useState, useEffect, useCallback, useImperativeHandle, useMemo, forwardRef } from 'react';
 import { Box } from '@mui/material';
 import { GenericPanel } from '@serviceops/genericpanel';
 import { ConfigFormDialog, ConfigDeleteDialog } from '@serviceops/configdialogs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { TextField } from '@serviceops/component';
+import { Alert, TextField } from '@serviceops/component';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs, { Dayjs } from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
@@ -180,15 +180,32 @@ const FieldConfigurationsSection = forwardRef<
     const validateForm = useCallback((): Record<string, string> => {
       const errors: Record<string, string> = {};
       if (!form.date) errors.date = 'required';
+      if (!form.calendarMonth) errors.calendarMonth = 'required';
       if (!form.control) errors.control = 'required';
       return errors;
     }, [form]);
+
+    // Date is "Not allowed" for duplicates — Day is auto-derived 1:1 from
+    // Date, so its own uniqueness is already covered by this check (checking
+    // Day on its own would cap the table at 7 rows total, one per weekday).
+    const duplicateAlert = useMemo(() => {
+      if (!form.date) return null;
+      const editingId = editingRow?.id ?? null;
+      const isDuplicate = rows.some((r) => r.id !== editingId && r.date === form.date);
+      return isDuplicate
+        ? `A Working Time for ${form.date} already exists. Please use a different date.`
+        : null;
+    }, [form.date, rows, editingRow]);
 
     // Submit handler
     const handleSubmit = useCallback(async () => {
       const errors = validateForm();
       if (Object.keys(errors).length > 0) {
         setFormErrors(errors);
+        setShowValidation(true);
+        return;
+      }
+      if (duplicateAlert) {
         setShowValidation(true);
         return;
       }
@@ -209,7 +226,7 @@ const FieldConfigurationsSection = forwardRef<
       } catch {
         // Error handling is done in the parent component
       }
-    }, [form, editingRow, onCreate, onUpdate, validateForm, setSelectedId]);
+    }, [form, editingRow, onCreate, onUpdate, validateForm, duplicateAlert, setSelectedId]);
 
     // Delete handler
     const handleDelete = useCallback(async () => {
@@ -278,6 +295,12 @@ const FieldConfigurationsSection = forwardRef<
           submitLabel={editingRow ? 'Save' : 'Submit'}
           maxWidth='sm'
         >
+          {showValidation && duplicateAlert && (
+            <Alert severity='error' variant='outlined' sx={{ mb: 1 }}>
+              {duplicateAlert}
+            </Alert>
+          )}
+
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <DatePicker
@@ -291,7 +314,7 @@ const FieldConfigurationsSection = forwardRef<
                   textField: {
                     fullWidth: true,
                     size: 'small',
-                    error: Boolean(showValidation && formErrors.date),
+                    error: Boolean(showValidation && (formErrors.date || duplicateAlert)),
                     helperText: reqError(showValidation, formErrors.date),
                     onClick: () => !datePickerOpen && setDatePickerOpen(true),
                   },
@@ -320,9 +343,15 @@ const FieldConfigurationsSection = forwardRef<
                 value={form.calendarMonth}
                 size='small'
                 fullWidth
+                required
                 disabled
                 InputProps={{ readOnly: true }}
-                helperText='Auto-calculated from Date'
+                error={Boolean(showValidation && formErrors.calendarMonth)}
+                helperText={
+                  showValidation && formErrors.calendarMonth
+                    ? reqError(showValidation, formErrors.calendarMonth)
+                    : 'Auto-calculated from Date'
+                }
               />
               <ControlSearchField
                 label='Control'

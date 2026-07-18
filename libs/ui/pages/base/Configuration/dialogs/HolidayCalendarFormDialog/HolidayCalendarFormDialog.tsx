@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Alert, Box, TextField } from '@serviceops/component';
+import { Alert, Box, TextField, Typography } from '@serviceops/component';
 import { CalendarMonth } from '@mui/icons-material';
 import { useFieldError, useNotification } from '@serviceops/hooks';
 import { IConfigHolidayCalendar } from '@serviceops/interfaces';
 import { ConfigFormDialog } from '@serviceops/configdialogs';
+import { parseRichText, serializeRichText, RichTextEditor } from '../../shared/RichTextEditor';
 
 const HC_ACCENT = '#0369a1';
 
@@ -30,8 +31,18 @@ const HolidayCalendarFormDialog = ({
   const [form, setForm] = useState<Partial<IConfigHolidayCalendar>>({});
   const formRef = useRef<Partial<IConfigHolidayCalendar>>({});
   const [duplicateAlert, setDuplicateAlert] = useState<string | null>(null);
-  const [touched, setTouched] = useState<{ name?: boolean }>({});
-  const [requiredErrors, setRequiredErrors] = useState<{ name?: string }>({});
+  const [touched, setTouched] = useState<{
+    name?: boolean;
+    shortDescription?: boolean;
+    description?: boolean;
+    internalNote?: boolean;
+  }>({});
+  const [requiredErrors, setRequiredErrors] = useState<{
+    name?: string;
+    shortDescription?: string;
+    description?: string;
+    internalNote?: string;
+  }>({});
 
   const updateForm = useCallback(
     (
@@ -49,6 +60,9 @@ const HolidayCalendarFormDialog = ({
   const validateRequired = (f: Partial<IConfigHolidayCalendar>): typeof requiredErrors => {
     const errs: typeof requiredErrors = {};
     if (!String(f.name ?? '').trim()) errs.name = 'required';
+    if (!String(f.shortDescription ?? '').trim()) errs.shortDescription = 'required';
+    if (!String(f.description ?? '').trim()) errs.description = 'required';
+    if (!String(f.internalNote ?? '').trim()) errs.internalNote = 'required';
     return errs;
   };
 
@@ -59,7 +73,7 @@ const HolidayCalendarFormDialog = ({
       .trim()
       .toLowerCase();
     if (nameVal && others.some((c) => String(c.name ?? '').trim().toLowerCase() === nameVal)) {
-      return 'Holiday Calendar already exists. Please use a different value.';
+      return `Holiday Calendar "${String(f.name ?? '')}" already exists. Please use a different name.`;
     }
     return null;
   };
@@ -92,7 +106,7 @@ const HolidayCalendarFormDialog = ({
   const handleSubmit = () => {
     const reqErrs = validateRequired(formRef.current);
     setRequiredErrors(reqErrs);
-    setTouched({ name: true });
+    setTouched({ name: true, shortDescription: true, description: true, internalNote: true });
     if (Object.keys(reqErrs).length > 0) {
       return;
     }
@@ -108,6 +122,9 @@ const HolidayCalendarFormDialog = ({
   };
 
   const nameError = reqError(touched.name, requiredErrors.name);
+  const shortDescriptionError = reqError(touched.shortDescription, requiredErrors.shortDescription);
+  const descriptionError = reqError(touched.description, requiredErrors.description);
+  const internalNoteError = reqError(touched.internalNote, requiredErrors.internalNote);
 
   return (
     <ConfigFormDialog
@@ -138,40 +155,83 @@ const HolidayCalendarFormDialog = ({
         placeholder='e.g. UK Bank Holidays'
         inputProps={{ style: { fontWeight: 700 } }}
         error={Boolean(nameError)}
-        helperText={nameError || ' '}
+        helperText={nameError}
         required
       />
 
-      <TextField
-        label='Short Description'
-        size='small'
-        value={form.shortDescription ?? ''}
-        onChange={(e) => updateForm((f) => ({ ...f, shortDescription: e.target.value }))}
-        fullWidth
-      />
-
       <Box>
-        <TextField
-          label='Description'
-          size='small'
-          value={form.description ?? ''}
-          onChange={(e) => updateForm((f) => ({ ...f, description: e.target.value }))}
-          multiline
-          minRows={3}
-          fullWidth
+        <RichTextEditor
+          value={parseRichText(form.shortDescription ?? '')}
+          onChange={(value) => {
+            updateForm((f) => ({
+              ...f,
+              shortDescription: serializeRichText(value.segments),
+            }));
+            setTouched((t) => ({ ...t, shortDescription: true }));
+          }}
+          showFooterActions={false}
+          title='Short Description'
+          required
+          error={Boolean(shortDescriptionError)}
         />
+        {shortDescriptionError && (
+          <Typography
+            variant='caption'
+            sx={{ color: '#d32f2f', fontSize: '0.7rem', mt: 0.25, display: 'block', fontWeight: 600 }}
+          >
+            {shortDescriptionError}
+          </Typography>
+        )}
       </Box>
 
       <Box>
-        <TextField
-          label='Internal Note'
-          size='small'
-          value={form.internalNote ?? ''}
-          onChange={(e) => updateForm((f) => ({ ...f, internalNote: e.target.value }))}
-          multiline
-          minRows={2}
-          fullWidth
+        <RichTextEditor
+          value={parseRichText(form.description ?? '')}
+          onChange={(value) => {
+            updateForm((f) => ({
+              ...f,
+              description: serializeRichText(value.segments),
+            }));
+            setTouched((t) => ({ ...t, description: true }));
+          }}
+          showFooterActions={false}
+          title='Description'
+          required
+          error={Boolean(descriptionError)}
         />
+        {descriptionError && (
+          <Typography
+            variant='caption'
+            sx={{ color: '#d32f2f', fontSize: '0.7rem', mt: 0.25, display: 'block', fontWeight: 600 }}
+          >
+            {descriptionError}
+          </Typography>
+        )}
+      </Box>
+
+      <Box>
+        <RichTextEditor
+          value={parseRichText(form.internalNote ?? '')}
+          onChange={(value) => {
+            updateForm((f) => ({
+              ...f,
+              internalNote: serializeRichText(value.segments),
+            }));
+            setTouched((t) => ({ ...t, internalNote: true }));
+          }}
+          showFooterActions={false}
+          title='Internal note'
+          required
+          error={Boolean(internalNoteError)}
+        />
+        {internalNoteError && (
+          <Typography
+            variant='caption'
+            sx={{ color: '#d32f2f', fontSize: '0.7rem', mt: 0.25, display: 'block', fontWeight: 600 }}
+          >
+            {internalNoteError}
+          </Typography>
+        )}
       </Box>
     </ConfigFormDialog>
   );

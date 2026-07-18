@@ -1,0 +1,1 @@
+export { WorkingDayTemplateSearchField } from './WorkingDayTemplateSearchField';
