@@ -20,14 +20,17 @@ import SearchIcon from '@mui/icons-material/Search';
 import SortIcon from '@mui/icons-material/Sort';
 import LinkIcon from '@mui/icons-material/Link';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import ViewQuiltIcon from '@mui/icons-material/ViewQuilt';
 import TicketTypeTable from '@serviceops/configtickettypetable';
 import TicketTypeFormDialog from '@serviceops/configtickettypeformdialog';
 import { ConfigDeleteDialog } from '@serviceops/configdialogs';
 import SequenceDialog from '@serviceops/configsequencedialog';
 import { GenericAccordion } from '@serviceops/genericaccordion';
 import { GenericToolbar } from '@serviceops/generictoolbar';
+import { useNotification } from '@serviceops/hooks';
 import { useStyles } from '../../styles';
 import { useTicketTypeConfig } from './hooks';
+import { TicketTypeLayoutDialog } from '@serviceops/pages/base/Configuration/dialogs/TicketTypeLayoutDialog/TicketTypeLayoutDialog';
 
 const ACCENT = '#0369a1';
 
@@ -36,8 +39,10 @@ const TicketTypeConfigSection = () => {
   const [tableSearch, setTableSearch] = useState('');
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [sequenceOpen, setDisplaySequenceOpen] = useState(false);
+  const [layoutOpen, setLayoutOpen] = useState(false);
   const [usefulLinksAnchor, setUsefulLinksAnchor] = useState<HTMLElement | null>(null);
   const [usefulLinksOpen, setUsefulLinksOpen] = useState(false);
+  const { success } = useNotification();
 
   const handleUsefulLinksOpen = (event: React.MouseEvent<HTMLElement>) => {
     setUsefulLinksAnchor(event.currentTarget);
@@ -268,6 +273,29 @@ const TicketTypeConfigSection = () => {
                     alignSelf: 'center',
                   }}
                 />
+                <Tooltip title="Configure which fields appear on this ticket type's detail screen">
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    color='secondary'
+                    startIcon={<ViewQuiltIcon />}
+                    onClick={() => setLayoutOpen(true)}
+                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    Layout
+                  </Button>
+                </Tooltip>
+                <Box
+                  component='span'
+                  sx={{
+                    display: { xs: 'none', sm: 'block' },
+                    width: '1px',
+                    height: '20px',
+                    bgcolor: 'divider',
+                    mx: 0.75,
+                    alignSelf: 'center',
+                  }}
+                />
                 <Button
                   size='small'
                   variant='outlined'
@@ -312,6 +340,13 @@ const TicketTypeConfigSection = () => {
         tagMap={tagMap}
         onClose={closeDialog}
         onSubmit={handleSubmit}
+      />
+
+      <TicketTypeLayoutDialog
+        open={layoutOpen}
+        ticketType={selectedRow}
+        onClose={() => setLayoutOpen(false)}
+        onSave={() => success('Ticket detail screen layout saved successfully')}
       />
 
       <ConfigDeleteDialog

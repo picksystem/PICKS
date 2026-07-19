@@ -33,6 +33,7 @@ import {
   IconButton,
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import dayjs from 'dayjs';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -146,6 +147,14 @@ export interface TableField {
    * added together for this field's (read-only) displayed value. Nothing is
    * written back to `form` for this field, so it is never persisted on save. */
   sumFields?: string[];
+  /** Renders the field as a disabled, non-editable display instead of its
+   * normal interactive control. Unlike computedSum, the value IS written
+   * back to `form` (typically via `deriveFromDate`) so it's still saved. */
+  readOnly?: boolean;
+  /** Auto-derives this field's value from the sibling 'date' field whenever
+   * it changes: 'year' -> the date's calendar year, 'weekday' -> the date's
+   * full weekday name (e.g. 'Monday'), matching optionsSearch day options. */
+  deriveFromDate?: 'year' | 'weekday';
 }
 
 export interface TableConfig {
@@ -154,6 +163,8 @@ export interface TableConfig {
   accent: string;
   icon: ReactNode;
   entity: string;
+  /** Override the "Add …" dialog heading (defaults to `Add ${entity}`) */
+  newTitle?: string;
   fields: TableField[];
 }
 
@@ -1366,6 +1377,36 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
       [showValidation],
     );
 
+    // Keep any `deriveFromDate` fields (e.g. Calendar Year, Day) in sync with
+    // the form's 'date' field, so they stay correct even if the date is
+    // changed after an initial value was already derived.
+    const dateFieldName = useMemo(
+      () => config.fields.find((f) => f.type === 'date')?.name,
+      [config.fields],
+    );
+    const dateFieldValue = dateFieldName ? form[dateFieldName] : undefined;
+    useEffect(() => {
+      if (!dateFieldName) return;
+      const raw = form[dateFieldName];
+      const parsed = raw ? dayjs(raw as string) : null;
+      if (!parsed || !parsed.isValid()) return;
+
+      const updates: Partial<FormData> = {};
+      config.fields.forEach((field) => {
+        if (!field.deriveFromDate) return;
+        const derived =
+          field.deriveFromDate === 'year' ? parsed.format('YYYY') : parsed.format('dddd');
+        if (form[field.name] !== derived) {
+          updates[field.name] = derived;
+        }
+      });
+
+      if (Object.keys(updates).length > 0) {
+        setForm((prev) => ({ ...prev, ...updates }));
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dateFieldName, dateFieldValue, config.fields]);
+
     // Merge form errors: required-field errors take precedence unless a field-level error exists.
     const mergedFormErrors = useMemo(() => {
       const base = { ...formErrors };
@@ -1403,6 +1444,7 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
           icon={config.icon}
           accent={config.accent}
           title={config.entity}
+          newTitle={config.newTitle}
           subtitle={config.subtitle}
           submitDisabled={formIsInvalid}
           submitLabel={editingRow ? 'Save' : 'Submit'}
@@ -1422,6 +1464,19 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
                 </Alert>
               )}
               {config.fields.map((field) => {
+                if (field.readOnly) {
+                  return (
+                    <TextField
+                      key={field.name}
+                      label={field.label}
+                      value={(form[field.name] ?? '') as string}
+                      required={field.required}
+                      size='small'
+                      fullWidth
+                      disabled
+                    />
+                  );
+                }
                 if (field.type === 'toggle') {
                   return (
                     <FormControlLabel

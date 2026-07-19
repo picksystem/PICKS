@@ -8,10 +8,15 @@ import {
   useGetTimeEntriesQuery,
   useCreateTimeEntryMutation,
 } from '../../../../../services';
-import { useGetAllUsersMutation, showNotification } from '@serviceops/services';
+import {
+  useGetAllUsersMutation,
+  useGetTicketTypeQuery,
+  showNotification,
+} from '@serviceops/services';
 import { useAuth } from '@serviceops/hooks';
 import { useAppDispatch } from '../../../../hooks/useAppDispatch';
 import { IncidentStatus, IUpdateIncidentInput } from '@serviceops/interfaces';
+import { mergeLayoutConfig } from '@serviceops/tickettypelayout';
 import { ModalType, TimeSummaryData } from '../types/incidentDetail.types';
 import { useIncidentTimer } from './useIncidentTimer';
 import { useIncidentNavigation } from './useIncidentNavigation';
@@ -21,6 +26,7 @@ export const useIncidentDetail = () => {
   const { number } = useParams<{ number: string }>();
   const { data: incident, isLoading, error, refetch } = useGetIncidentByNumberQuery(number || '');
   const { data: allIncidents } = useGetIncidentsQuery();
+  const { data: ticketTypes } = useGetTicketTypeQuery();
   const { user, isAdmin, logout } = useAuth();
   const [updateIncident] = useUpdateIncidentMutation();
   const [createTimeEntry] = useCreateTimeEntryMutation();
@@ -71,6 +77,22 @@ export const useIncidentDetail = () => {
   const timeSummary = useMemo<TimeSummaryData>(() => {
     return calculateTimeSummary(timeEntries ?? []);
   }, [timeEntries]);
+
+  // Resolve which Admin ▸ Ticket Type record governs this incident's number
+  // prefix, so its saved Ticket Detail Screen Layout (persisted server-side
+  // on that ticket type row) is the one applied here.
+  const resolvedTicketType = useMemo(
+    () =>
+      (ticketTypes ?? []).find(
+        (t) => t.prefix && incident?.number?.toUpperCase().startsWith(t.prefix.toUpperCase()),
+      ),
+    [ticketTypes, incident?.number],
+  );
+
+  const layoutConfig = useMemo(
+    () => mergeLayoutConfig(resolvedTicketType?.layoutConfig),
+    [resolvedTicketType],
+  );
 
   // Derive unique dropdown options — merge users list with existing incident values
   const userNames = useMemo<string[]>(
@@ -443,6 +465,7 @@ export const useIncidentDetail = () => {
     isLoading,
     error,
     allIncidents,
+    layoutConfig,
     user,
     isAdmin,
     refetch,

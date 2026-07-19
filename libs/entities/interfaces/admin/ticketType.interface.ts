@@ -24,6 +24,30 @@ export enum TicketTypeEnum {
 }
 
 // ============================================
+// Ticket Detail Screen Layout - which fields the
+// Ticket Detail page shows for this ticket type, and in
+// what order. Persisted on the ticket type record itself.
+// ============================================
+export interface ITicketTypeSectionLayoutConfig {
+  selectedFields: string[];
+}
+
+export interface ITicketTypeInfoBarLayoutConfig extends ITicketTypeSectionLayoutConfig {
+  maxFields: number;
+}
+
+export interface ITicketTypeLayoutConfig {
+  infoBar: ITicketTypeInfoBarLayoutConfig;
+  sideBar: ITicketTypeSectionLayoutConfig;
+  ticketOptions: ITicketTypeSectionLayoutConfig;
+  assignment: ITicketTypeSectionLayoutConfig;
+  contactAndBilling: ITicketTypeSectionLayoutConfig;
+  reporting: ITicketTypeSectionLayoutConfig;
+  datesAndUsers: ITicketTypeSectionLayoutConfig;
+  additionalFields: ITicketTypeSectionLayoutConfig;
+}
+
+// ============================================
 // Entity Interface - Core data structure
 // ============================================
 export interface ITicketType {
@@ -39,6 +63,7 @@ export interface ITicketType {
   numberLength: number;
   displayOrder: number;
   accessControl?: string[];
+  layoutConfig?: ITicketTypeLayoutConfig | null;
 }
 
 // ============================================
@@ -56,6 +81,7 @@ export interface ICreateTicketTypeInput {
   numberLength?: number;
   displayOrder?: number;
   accessControl?: string[];
+  layoutConfig?: ITicketTypeLayoutConfig | null;
   iconKey?: string;
   tag?: string;
 }
@@ -72,6 +98,7 @@ export interface IUpdateTicketTypeInput {
   numberLength?: number;
   displayOrder?: number;
   accessControl?: string[];
+  layoutConfig?: ITicketTypeLayoutConfig | null;
   iconKey?: string;
   tag?: string;
 }

@@ -17,7 +17,8 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
-import { IIncident } from '@serviceops/interfaces';
+import { IIncident, ITicketTypeLayoutConfig } from '@serviceops/interfaces';
+import { getDefaultLayoutConfig } from '@serviceops/tickettypelayout';
 import {
   calculateSLA,
   getPriorityColor,
@@ -31,6 +32,7 @@ interface InfoRowProps {
   eta: Date | null;
   onEtaChange: (date: Date) => void;
   onPriorityClick?: () => void;
+  layoutConfig?: ITicketTypeLayoutConfig;
 }
 
 const callerAvatarSx = {
@@ -52,7 +54,23 @@ const callerAsUser = (caller: string) => {
   return { firstName: parts[0] || '?', lastName: parts[1] || '' };
 };
 
-const InfoRow = ({ classes, incident, eta, onEtaChange, onPriorityClick }: InfoRowProps) => {
+const formatDate = (value: Date | string | null | undefined): string => {
+  if (!value) return '—';
+  return new Date(value).toLocaleDateString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+};
+
+const InfoRow = ({
+  classes,
+  incident,
+  eta,
+  onEtaChange,
+  onPriorityClick,
+  layoutConfig = getDefaultLayoutConfig(),
+}: InfoRowProps) => {
   const { dueDate, slaPercent } = calculateSLA(incident.createdAt);
   const [editingEta, setEditingEta] = useState(false);
   const [callerAnchor, setCallerAnchor] = useState<HTMLElement | null>(null);
@@ -71,10 +89,11 @@ const InfoRow = ({ classes, incident, eta, onEtaChange, onPriorityClick }: InfoR
     cursor: onPriorityClick ? 'pointer' : 'default',
   };
 
-  return (
-    <Box className={classes.infoRow}>
-      {/* Affected User */}
-      <Box className={classes.infoItem}>
+  // ── Every field this ticket type can show on the info bar, keyed to match
+  // the field catalog managed from Configuration ▸ Ticket Types ▸ Layout.
+  const fieldNodes: Record<string, React.ReactNode> = {
+    affectedUser: (
+      <Box key='affectedUser' className={classes.infoItem}>
         <Typography className={classes.infoLabel}>Affected User</Typography>
         <Box
           className={classes.infoCallerBox}
@@ -159,9 +178,10 @@ const InfoRow = ({ classes, incident, eta, onEtaChange, onPriorityClick }: InfoR
           ))}
         </Popover>
       </Box>
+    ),
 
-      {/* Status */}
-      <Box className={classes.infoItem}>
+    status: (
+      <Box key='status' className={classes.infoItem}>
         <Typography className={classes.infoLabel}>Status</Typography>
         <Chip
           label={formatStatus(incident.status)}
@@ -170,9 +190,10 @@ const InfoRow = ({ classes, incident, eta, onEtaChange, onPriorityClick }: InfoR
           sx={{ height: 24, fontSize: '0.875rem' }}
         />
       </Box>
+    ),
 
-      {/* Priority (clickable chip) */}
-      <Box className={classes.infoItem}>
+    priority: (
+      <Box key='priority' className={classes.infoItem}>
         <Typography className={classes.infoLabel}>Priority</Typography>
         <Chip
           label={incident.priority || 'N/A'}
@@ -182,27 +203,31 @@ const InfoRow = ({ classes, incident, eta, onEtaChange, onPriorityClick }: InfoR
           onClick={onPriorityClick}
         />
       </Box>
+    ),
 
-      {/* Queue */}
-      <Box className={classes.infoItem}>
+    queue: (
+      <Box key='queue' className={classes.infoItem}>
         <Typography className={classes.infoLabel}>Queue</Typography>
         <Typography className={classes.infoValue}>{incident.assignmentGroup || '-'}</Typography>
       </Box>
+    ),
 
-      {/* Assigned to */}
-      <Box className={classes.infoItem}>
+    assignedTo: (
+      <Box key='assignedTo' className={classes.infoItem}>
         <Typography className={classes.infoLabel}>Assigned to</Typography>
         <Typography className={classes.infoValue}>{incident.primaryResource || '-'}</Typography>
       </Box>
+    ),
 
-      {/* Due Date */}
-      <Box className={classes.infoItem}>
+    due: (
+      <Box key='due' className={classes.infoItem}>
         <Typography className={classes.infoLabel}>Due</Typography>
         <Typography className={classes.infoValue}>{dueDate}</Typography>
       </Box>
+    ),
 
-      {/* SLA */}
-      <Box className={classes.infoItem}>
+    sla: (
+      <Box key='sla' className={classes.infoItem}>
         <Typography className={classes.infoLabel}>SLA</Typography>
         <Box className={classes.slaBar}>
           <LinearProgress
@@ -214,9 +239,10 @@ const InfoRow = ({ classes, incident, eta, onEtaChange, onPriorityClick }: InfoR
           <Typography className={classes.slaPercent}>{slaPercent}%</Typography>
         </Box>
       </Box>
+    ),
 
-      {/* ETA (editable) */}
-      <Box className={classes.infoItem}>
+    eta: (
+      <Box key='eta' className={classes.infoItem}>
         <Typography className={classes.infoLabel}>ETA</Typography>
         {editingEta ? (
           <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -243,8 +269,42 @@ const InfoRow = ({ classes, incident, eta, onEtaChange, onPriorityClick }: InfoR
           </Box>
         )}
       </Box>
-    </Box>
-  );
+    ),
+
+    client: (
+      <Box key='client' className={classes.infoItem}>
+        <Typography className={classes.infoLabel}>Client</Typography>
+        <Typography className={classes.infoValue}>{incident.client || '-'}</Typography>
+      </Box>
+    ),
+
+    clientContacts: (
+      <Box key='clientContacts' className={classes.infoItem}>
+        <Typography className={classes.infoLabel}>Client contacts</Typography>
+        <Typography className={classes.infoValue}>{incident.additionalContacts || '-'}</Typography>
+      </Box>
+    ),
+
+    created: (
+      <Box key='created' className={classes.infoItem}>
+        <Typography className={classes.infoLabel}>Created</Typography>
+        <Typography className={classes.infoValue}>{formatDate(incident.createdAt)}</Typography>
+      </Box>
+    ),
+
+    lastUpdated: (
+      <Box key='lastUpdated' className={classes.infoItem}>
+        <Typography className={classes.infoLabel}>Last updated</Typography>
+        <Typography className={classes.infoValue}>{formatDate(incident.updatedAt)}</Typography>
+      </Box>
+    ),
+  };
+
+  const visibleKeys = layoutConfig.infoBar.selectedFields
+    .filter((key) => key in fieldNodes)
+    .slice(0, layoutConfig.infoBar.maxFields);
+
+  return <Box className={classes.infoRow}>{visibleKeys.map((key) => fieldNodes[key])}</Box>;
 };
 
 export default InfoRow;

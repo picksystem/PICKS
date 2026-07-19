@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import { Box, Paper, Button } from '@serviceops/component';
+import type { SxProps, Theme } from '@mui/material';
 import { useStyles } from './styles';
 
 export interface ToolbarButton {
@@ -14,13 +15,14 @@ interface GenericToolbarProps {
   buttons?: ToolbarButton[];
   children?: ReactNode;
   className?: string;
+  sx?: SxProps<Theme>;
 }
 
-export const GenericToolbar = ({ buttons, children, className }: GenericToolbarProps) => {
+export const GenericToolbar = ({ buttons, children, className, sx }: GenericToolbarProps) => {
   const { classes } = useStyles();
 
   return (
-    <Paper variant='outlined' className={`${classes.toolbar} ${className || ''}`}>
+    <Paper variant='outlined' className={`${classes.toolbar} ${className || ''}`} sx={sx}>
       {buttons && buttons.length > 0 ? (
         <Box className={classes.buttonContainer}>
           {buttons.map((btn) => (

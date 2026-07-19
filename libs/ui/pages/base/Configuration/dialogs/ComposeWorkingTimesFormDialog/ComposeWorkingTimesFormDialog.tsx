@@ -113,7 +113,7 @@ const ComposeWorkingTimesFormDialog = ({
       title='Compose Working Times'
       editTitle='Compose Working Times'
       editSubtitle={`${holidayCalendar || ''}-${calendarName || ''}`}
-      submitLabel='Submit'
+      submitLabel='Compose Working Times'
       maxWidth='sm'
     >
       {showValidation && duplicateMessage && (

@@ -50,15 +50,31 @@ export const TABLE_CONFIG: Record<CalendarActiveView, TableConfig> = {
     accent: ACCENT,
     icon: <BeachAccessIcon sx={{ fontSize: '1.1rem' }} />,
     entity: 'Bank Holiday',
+    newTitle: 'Add Bank Holidays (Public Holidays)',
     fields: [
-      { name: 'calendarName', label: 'Holiday Calendar', required: true, bold: true },
-      { name: 'calendarYear', label: 'Calendar Year', required: true, type: 'year' },
+      {
+        name: 'calendarName',
+        label: 'Holiday Calendar',
+        required: true,
+        bold: true,
+        type: 'holidayCalendarSearch',
+      },
       { name: 'date', label: 'Date', required: true, type: 'date' },
+      {
+        name: 'calendarYear',
+        label: 'Calendar Year',
+        required: true,
+        type: 'year',
+        readOnly: true,
+        deriveFromDate: 'year',
+      },
       {
         name: 'day',
         label: 'Day',
         required: true,
         type: 'optionsSearch',
+        readOnly: true,
+        deriveFromDate: 'weekday',
         staticOptions: [
           'Monday',
           'Tuesday',

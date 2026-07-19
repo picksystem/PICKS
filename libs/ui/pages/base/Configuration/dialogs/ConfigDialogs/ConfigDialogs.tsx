@@ -22,7 +22,7 @@ export const ConfigFormDialog = ({
   maxWidth = 'sm',
   children,
 }: ConfigFormDialogProps) => {
-  const resolvedTitle = editTitle ?? (isEdit ? `Edit ${title}` : `Add ${title}`);
+  const resolvedTitle = isEdit ? (editTitle ?? `Edit ${title}`) : (newTitle ?? `Add ${title}`);
   const resolvedSubtitle = isEdit ? (editSubtitle ?? subtitle ?? '') : (subtitle ?? '');
   const resolvedSubmitLabel = submitLabel ?? (isEdit ? 'Save' : 'Submit');
 

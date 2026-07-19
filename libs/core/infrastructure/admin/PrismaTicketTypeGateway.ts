@@ -13,11 +13,14 @@ import {
 export class PrismaTicketTypeGateway implements ITicketTypeGateway {
   constructor(private readonly prisma: any) {}
 
-  // Convert accessControl string[] to JSON string for database storage
+  // Convert accessControl/layoutConfig to JSON strings for database storage
   private prepareDataForDb(data: ICreateTicketTypeInput | IUpdateTicketTypeInput): any {
     const dbData: any = { ...data };
     if (data.accessControl) {
       dbData.accessControl = JSON.stringify(data.accessControl);
+    }
+    if (data.layoutConfig) {
+      dbData.layoutConfig = JSON.stringify(data.layoutConfig);
     }
     // Remove frontend-only fields that don't exist in the database schema
     delete dbData.iconKey;
@@ -25,7 +28,7 @@ export class PrismaTicketTypeGateway implements ITicketTypeGateway {
     return dbData;
   }
 
-  // Parse accessControl JSON string back to string[] for API response
+  // Parse accessControl/layoutConfig JSON strings back to objects for API response
   private parseAccessControl(ticketType: any): ITicketType {
     const result = { ...ticketType };
     if (ticketType.accessControl) {
@@ -36,6 +39,15 @@ export class PrismaTicketTypeGateway implements ITicketTypeGateway {
       }
     } else {
       result.accessControl = [];
+    }
+    if (ticketType.layoutConfig) {
+      try {
+        result.layoutConfig = JSON.parse(ticketType.layoutConfig);
+      } catch {
+        result.layoutConfig = undefined;
+      }
+    } else {
+      result.layoutConfig = undefined;
     }
     return result;
   }

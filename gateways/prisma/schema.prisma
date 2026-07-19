@@ -154,6 +154,7 @@ model AdminTicketType {
   numberLength            Int     @default(7)
   displayOrder            Int     @default(0)
   accessControl          String  @default("") // JSON string of role array: ["admin","consultant","endUser"]
+  layoutConfig            String  @default("") // JSON string of ITicketTypeLayoutConfig (Ticket Detail Screen Layout)
 
   @@map("admin_ticket_type")
 }

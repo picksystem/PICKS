@@ -1,4 +1,5 @@
 import * as yup from 'yup';
+import type { ITicketTypeLayoutConfig } from '../interfaces/admin/ticketType.interface';
 
 /**
  * Shared validation schema for TicketType
@@ -62,6 +63,7 @@ export const CreateTicketTypeSchema = yup.object({
     .of(yup.string().required())
     .min(1, 'At least one role must be selected')
     .default(['admin', 'consultant', 'endUser']),
+  layoutConfig: yup.mixed<ITicketTypeLayoutConfig>().notRequired(),
 });
 
 /**
@@ -91,6 +93,7 @@ export const UpdateTicketTypeSchema = yup.object({
     .array()
     .of(yup.string().required())
     .min(1, 'At least one role must be selected'),
+  layoutConfig: yup.mixed<ITicketTypeLayoutConfig>().notRequired(),
 });
 
 /**

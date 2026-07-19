@@ -27,6 +27,8 @@ export class InMemoryTicketTypeGateway implements ITicketTypeGateway {
       isActive: data.isActive ?? true,
       numberLength: data.numberLength ?? 7,
       displayOrder: data.displayOrder ?? 0,
+      accessControl: data.accessControl,
+      layoutConfig: data.layoutConfig,
     };
     this.ticketTypes.push(ticketType);
     return ticketType;

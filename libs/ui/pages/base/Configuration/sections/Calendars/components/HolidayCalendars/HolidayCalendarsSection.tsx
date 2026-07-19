@@ -261,6 +261,21 @@ const HolidayCalendarsSection = ({
     [bankHolidaysState, bhCalendarFilter, bhYearFilter],
   );
 
+  // Pre-fill the Add dialog's Holiday Calendar field with the calendar this
+  // sub-view was opened from, so the user isn't asked to re-pick a value
+  // that's already implied by the selection.
+  const bankHolidayConfig = useMemo(
+    () => ({
+      ...TABLE_CONFIG.bankHoliday,
+      fields: TABLE_CONFIG.bankHoliday.fields.map((field) =>
+        field.name === 'calendarName'
+          ? { ...field, defaultValue: selectedRow?.name ?? '' }
+          : field,
+      ),
+    }),
+    [selectedRow],
+  );
+
   // `next` is GenericPanel's own add/edit/delete result, scoped to the
   // *filtered* subset it was given (data={filteredBankHolidays}) — merge
   // it back with whatever fell outside the active filters so other
@@ -514,7 +529,7 @@ const HolidayCalendarsSection = ({
         <DialogContent sx={{ p: 2.5, overflowY: 'auto' }}>
           {activeView === 'bankHolidays' && (
             <GenericPanel
-              config={TABLE_CONFIG.bankHoliday}
+              config={bankHolidayConfig}
               data={filteredBankHolidays as unknown as Record<string, unknown>[]}
               onSave={handleBankHolidaySave as (data: unknown[]) => void}
               customColumns={bankHolidayColumns as unknown as undefined}

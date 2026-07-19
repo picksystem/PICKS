@@ -38,6 +38,7 @@ const IncidentDetail = () => {
     error,
     refetch,
     isMobile,
+    layoutConfig,
     user,
     sidebarOpen,
     setSidebarOpen,
@@ -186,6 +187,7 @@ const IncidentDetail = () => {
           eta={eta}
           onEtaChange={handleEtaChange}
           onPriorityClick={() => setActiveModal('priorityChange')}
+          layoutConfig={layoutConfig}
         />
       )}
 
@@ -210,6 +212,7 @@ const IncidentDetail = () => {
           classes={classes}
           cx={cx}
           incident={incident}
+          layoutConfig={layoutConfig}
           user={user}
           sidebarOpen={sidebarOpen}
           isEditing={isEditing}

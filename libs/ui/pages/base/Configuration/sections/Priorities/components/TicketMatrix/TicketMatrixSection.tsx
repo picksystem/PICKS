@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Alert,
   Box,
@@ -539,12 +539,7 @@ const TicketMatrixSection = ({
       }
       onMatrixReset(activeTicketType, next);
     }
-    onMatrixChange(
-      activeTicketType,
-      editForm.impactId,
-      editForm.urgencyId,
-      editForm.priorityId,
-    );
+    onMatrixChange(activeTicketType, editForm.impactId, editForm.urgencyId, editForm.priorityId);
     if (onMatrixCellUpdate) {
       onMatrixCellUpdate(activeTicketType, editForm.impactId, editForm.urgencyId, {
         shortDescription: editForm.shortDescription,
@@ -674,7 +669,15 @@ const TicketMatrixSection = ({
       className={classes.sectionAccordion}
     >
       <Box>
-        <GenericToolbar buttons={ticketTypeButtons} className={classes.actionToolbar} />
+        <GenericToolbar
+          buttons={ticketTypeButtons}
+          className={classes.actionToolbar}
+          sx={{
+            border: '1px solid',
+            borderColor: alpha('#0369a1', 0.25),
+            borderRadius: '10px',
+          }}
+        />
 
         <Box
           sx={{
@@ -1008,10 +1011,7 @@ const TicketMatrixSection = ({
                 <Typography
                   variant='caption'
                   sx={{
-                    color: reqError(
-                      addTouched.shortDescription,
-                      addRequiredErrors.shortDescription,
-                    )
+                    color: reqError(addTouched.shortDescription, addRequiredErrors.shortDescription)
                       ? '#d32f2f'
                       : 'text.secondary',
                     fontSize: '0.7rem',
@@ -1037,9 +1037,7 @@ const TicketMatrixSection = ({
                   showFooterActions={false}
                   title='Description'
                   required
-                  error={Boolean(
-                    reqError(addTouched.description, addRequiredErrors.description),
-                  )}
+                  error={Boolean(reqError(addTouched.description, addRequiredErrors.description))}
                 />
                 <Typography
                   variant='caption'
@@ -1204,9 +1202,7 @@ const TicketMatrixSection = ({
                   showFooterActions={false}
                   title='Description'
                   required
-                  error={Boolean(
-                    reqError(editTouched.description, editRequiredErrors.description),
-                  )}
+                  error={Boolean(reqError(editTouched.description, editRequiredErrors.description))}
                 />
                 <Typography
                   variant='caption'
@@ -1284,13 +1280,6 @@ const TicketMatrixSection = ({
                 showFooterActions={false}
                 title='Description'
               />
-              <Typography
-                variant='caption'
-                color='text.secondary'
-                sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-              >
-                Optional notes describing why simple priorities are used for this ticket type
-              </Typography>
             </Box>
 
             <Box
