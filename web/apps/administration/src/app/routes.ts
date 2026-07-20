@@ -22,7 +22,6 @@ export const LazyMenuItems = {
   BaseUserManagementPage: lazy(() => import('@serviceops/pages/base/UserManagement')),
   BaseClientsAndProjectsPage: lazy(() => import('@serviceops/pages/base/ClientsAndProjects')),
   BaseRoleRequestsPage: lazy(() => import('@serviceops/pages/base/RoleRequests')),
-  BaseConsultantProfilePage: lazy(() => import('@serviceops/pages/base/ConsultantProfile')),
   BaseProfilePage: lazy(() => import('@serviceops/pages/base/Profile')),
   BaseIncidentDetailPage: lazy(() => import('@serviceops/pages/base/IncidentDetail')),
   BaseTicketDetailPage: lazy(() => import('@serviceops/pages/base/TicketDetail')),

@@ -20,6 +20,5 @@ export { default as Profile } from './Profile';
 export { default as IncidentDetail } from './IncidentDetail';
 export { default as TicketDetail } from './TicketDetail';
 export { default as SuggestedSolution } from './SuggestedSolution';
-export { default as ConsultantProfile } from './ConsultantProfile';
 export { default as Configuration } from './Configuration';
 export { default as NotFound } from '../../components/NotFound';

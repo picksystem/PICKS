@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Box, Column } from '@serviceops/component';
 import { GenericPanel } from '@serviceops/genericpanel';
 import { ConfigDeleteDialog } from '@serviceops/configdialogs';
-import { mkCell, mkActiveChip } from '@serviceops/configutils';
 import {
   ServiceLineTimesheetFormDialog,
   ServiceLineTimesheetRow,

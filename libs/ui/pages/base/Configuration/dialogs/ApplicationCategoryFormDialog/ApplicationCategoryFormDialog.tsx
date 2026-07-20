@@ -47,9 +47,6 @@ interface ApplicationCategoryFormDialogProps {
 // Character limits per the spec. The "Mandatory" column lists the max
 // length for alpha-numeric fields (30 / 60). Used as `inputProps.maxLength`.
 const MAX_NAME = 30;
-const MAX_SHORT_DESC = 60;
-const MAX_DESC = 60;
-const MAX_NOTE = 60;
 
 const ApplicationCategoryFormDialog = ({
   open,

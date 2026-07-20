@@ -1,4 +1,3 @@
-import { ReactNode } from 'react';
 import LinearScaleIcon from '@mui/icons-material/LinearScale';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';

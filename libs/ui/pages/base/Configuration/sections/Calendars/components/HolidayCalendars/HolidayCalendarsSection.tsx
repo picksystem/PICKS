@@ -225,7 +225,9 @@ const HolidayCalendarsSection = ({
     ? rows.filter((row) =>
         Object.values(row).some(
           (val) =>
-            val !== null && val !== undefined && String(val).toLowerCase().includes(search.toLowerCase()),
+            val !== null &&
+            val !== undefined &&
+            String(val).toLowerCase().includes(search.toLowerCase()),
         ),
       )
     : rows;
@@ -268,9 +270,7 @@ const HolidayCalendarsSection = ({
     () => ({
       ...TABLE_CONFIG.bankHoliday,
       fields: TABLE_CONFIG.bankHoliday.fields.map((field) =>
-        field.name === 'calendarName'
-          ? { ...field, defaultValue: selectedRow?.name ?? '' }
-          : field,
+        field.name === 'calendarName' ? { ...field, defaultValue: selectedRow?.name ?? '' } : field,
       ),
     }),
     [selectedRow],
@@ -410,7 +410,11 @@ const HolidayCalendarsSection = ({
             // wrapped in its own flexShrink:0 Box instead, keeping it
             // inline with the New button and pushed to the far right.
             <Box sx={{ ml: 'auto', flexShrink: 0 }}>
-              <SearchField value={search} onChange={setSearch} className={classes.tableSearchField} />
+              <SearchField
+                value={search}
+                onChange={setSearch}
+                className={classes.tableSearchField}
+              />
             </Box>
           )}
         </Box>
@@ -514,7 +518,9 @@ const HolidayCalendarsSection = ({
                     {dlgConfig.title}
                   </Typography>
                   {dlgConfig.subtitle && (
-                    <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}>
+                    <Typography
+                      sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}
+                    >
                       {dlgConfig.subtitle}
                     </Typography>
                   )}

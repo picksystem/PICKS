@@ -1,20 +1,9 @@
 import { useState, useEffect } from 'react';
-import {
-  IConfigTimesheetProjectCategory,
-  IConfigTimesheetConversionCode,
-  IConfigTimesheetCancellationCode,
-} from '@serviceops/interfaces';
+import { IConfigTimesheetProjectCategory } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
 import { useConfiguration } from '@serviceops/confighooks';
 import { GenericPanel } from '@serviceops/genericpanel';
-import {
-  PROJECT_CATEGORY_CONFIG,
-  CONVERSION_CODE_CONFIG,
-  CANCELLATION_CODE_CONFIG,
-  projectCategoryColumns,
-  conversionCodeColumns,
-  cancellationCodeColumns,
-} from '../shared';
+import { PROJECT_CATEGORY_CONFIG, projectCategoryColumns } from '../shared';
 
 interface ProjectCategorySectionProps {
   data?: IConfigTimesheetProjectCategory[];

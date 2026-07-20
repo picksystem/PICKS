@@ -235,9 +235,7 @@ const ServiceLineFormDialog = ({
     }
     setDuplicateAlert(null);
     onSave(formRef.current);
-    success(
-      editing ? 'Service line updated successfully' : 'Service line added successfully',
-    );
+    success(editing ? 'Service line updated successfully' : 'Service line added successfully');
   };
 
   const bcError = reqError(touched.businessCategoryName, requiredErrors.businessCategoryName);

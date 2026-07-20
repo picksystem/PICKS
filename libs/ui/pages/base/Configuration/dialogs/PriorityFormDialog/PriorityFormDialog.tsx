@@ -423,7 +423,9 @@ const PriorityFormDialog = ({
             },
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}
+          >
             <Typography variant='body2' fontWeight={600} color={PRIORITY_ACCENT}>
               Pick a colour
             </Typography>

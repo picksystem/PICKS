@@ -242,7 +242,7 @@ const UrgencySection = ({
         await onAdd(formRef.current);
         success('Urgency added successfully');
       }
-    } catch (err) {
+    } catch {
       showError('Failed to save urgency level. Please try again.');
     } finally {
       setDialogOpen(false);
@@ -283,7 +283,7 @@ const UrgencySection = ({
         success('Urgency deleted successfully');
         setSelectedRowId(null);
       }
-    } catch (err) {
+    } catch {
       showError('Failed to delete urgency level. Please try again.');
     } finally {
       setDeleteOpen(false);

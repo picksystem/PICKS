@@ -453,10 +453,6 @@ const ResourceSearchField = ({
     }
   };
 
-  const handleBlur = () => {
-    setTimeout(() => setIsOpen(false), 200);
-  };
-
   return (
     <Box ref={anchorRef} position='relative'>
       <TextField
@@ -530,7 +526,6 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     callerOptions,
     impactOptions,
     urgencyOptions,
-    priorityOptions,
     statusOptions,
     channelOptions,
     validationFailed,

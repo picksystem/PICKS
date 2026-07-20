@@ -5,7 +5,6 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import UpdateIcon from '@mui/icons-material/Update';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import {
   IConfigConsultantProfile,
   IConfigAssociatedUserProfile,
@@ -76,11 +75,7 @@ const VIEW_BUTTONS: { key: CPActiveView; label: string; icon: React.ReactNode }[
 
 export const ConsultantProfilesSection = ({
   profilesData,
-  rolesData,
-  assocProfilesData,
   onProfilesChange,
-  onRolesChange,
-  onAssocProfilesChange,
 }: ConsultantProfilesSectionProps) => {
   const { classes } = useStyles();
   const { consultantProfiles: api, saveSection } = useConfiguration();

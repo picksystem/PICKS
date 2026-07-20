@@ -21,7 +21,6 @@ import { useNotification } from '@serviceops/hooks';
 import { getTagOption, getTypeColor } from '../../utils/ticketTypeIcons';
 
 const ACCENT = '#0369a1';
-const FALLBACK_TAG_COLOR = '#64748b';
 
 const SequenceDialog = ({ open, ticketTypes, tagMap, onClose, onSave }: SequenceDialogProps) => {
   const [ordered, setOrdered] = useState<ITicketType[]>([]);

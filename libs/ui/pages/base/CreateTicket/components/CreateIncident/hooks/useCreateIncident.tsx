@@ -116,12 +116,6 @@ const useCreateIncident = ({ onCancel, onSuccess }: CreateIncidentProps) => {
       formik.values.impact as IncidentImpact,
       formik.values.urgency as IncidentUrgency,
     );
-    console.log('Priority calculation:', {
-      impact: formik.values.impact,
-      urgency: formik.values.urgency,
-      newPriority,
-      currentPriority: formik.values.priority,
-    });
     if (newPriority !== formik.values.priority) {
       formik.setFieldValue('priority', newPriority);
     }

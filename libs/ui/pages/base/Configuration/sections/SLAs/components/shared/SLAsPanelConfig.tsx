@@ -14,7 +14,7 @@ export const SLA_ACCENT = '#0369a1';
 // Ticket type text cell renderer (bold text instead of colored chip)
 export const ticketTypeChipCell = (
   row: { ticketTypeId: number; ticketTypeName: string },
-  ticketTypes: Array<{ id: number }>,
+  _ticketTypes: Array<{ id: number }>,
 ): React.ReactNode => {
   return (
     <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: 'text.primary' }}>

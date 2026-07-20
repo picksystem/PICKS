@@ -45,7 +45,6 @@ const TicketTemplates = () => {
     isLoading,
     error,
     advancedSequences,
-    setAdvancedSequences,
     dialogOpen,
     editingItem,
     selectedRow,

@@ -90,7 +90,15 @@ const WorkingCalendarFormDialog = ({
     const nameVal = String(f.name ?? '')
       .trim()
       .toLowerCase();
-    if (nameVal && others.some((c) => String(c.name ?? '').trim().toLowerCase() === nameVal)) {
+    if (
+      nameVal &&
+      others.some(
+        (c) =>
+          String(c.name ?? '')
+            .trim()
+            .toLowerCase() === nameVal,
+      )
+    ) {
       return `Working Calendar "${String(f.name ?? '')}" already exists. Please use a different name.`;
     }
     return null;
@@ -143,7 +151,9 @@ const WorkingCalendarFormDialog = ({
     }
     setDuplicateAlert(null);
     onSave(formRef.current);
-    success(editing ? 'Working calendar updated successfully' : 'Working calendar added successfully');
+    success(
+      editing ? 'Working calendar updated successfully' : 'Working calendar added successfully',
+    );
   };
 
   const nameError = reqError(touched.name, requiredErrors.name);
@@ -500,7 +510,13 @@ const WorkingCalendarFormDialog = ({
         {shortDescriptionError && (
           <Typography
             variant='caption'
-            sx={{ color: '#d32f2f', fontSize: '0.7rem', mt: 0.25, display: 'block', fontWeight: 600 }}
+            sx={{
+              color: '#d32f2f',
+              fontSize: '0.7rem',
+              mt: 0.25,
+              display: 'block',
+              fontWeight: 600,
+            }}
           >
             {shortDescriptionError}
           </Typography>
@@ -525,7 +541,13 @@ const WorkingCalendarFormDialog = ({
         {internalNoteError && (
           <Typography
             variant='caption'
-            sx={{ color: '#d32f2f', fontSize: '0.7rem', mt: 0.25, display: 'block', fontWeight: 600 }}
+            sx={{
+              color: '#d32f2f',
+              fontSize: '0.7rem',
+              mt: 0.25,
+              display: 'block',
+              fontWeight: 600,
+            }}
           >
             {internalNoteError}
           </Typography>

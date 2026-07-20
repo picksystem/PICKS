@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Box } from '@serviceops/component';
-import { QUEUE_APPROVALS_CONFIG, GenericPanel, TableFilterField } from '@serviceops/configcatorshared';
+import {
+  QUEUE_APPROVALS_CONFIG,
+  GenericPanel,
+  TableFilterField,
+} from '@serviceops/configcatorshared';
 import { QueueApprovalsSectionProps, FlatQueueApRow } from './QueueApprovalsSection.types';
 
 export const QueueApprovalsSection = ({

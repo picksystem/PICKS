@@ -3,10 +3,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import type { TableConfig } from '@serviceops/genericpanel';
 import type { IConfigApprovedEstimateRow } from '@serviceops/interfaces';
 import { mkActiveChip } from '@serviceops/pages/base/Configuration/utils/cellRenderers';
-import {
-  parseRichText,
-  serializeRichText,
-} from '@serviceops/pages/base/Configuration/shared/RichTextEditor';
+import { parseRichText } from '@serviceops/pages/base/Configuration/shared/RichTextEditor';
 
 export const APPROVED_ESTIMATES_ACCENT = '#0369a1';
 

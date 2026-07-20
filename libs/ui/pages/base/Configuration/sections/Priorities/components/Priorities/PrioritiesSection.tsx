@@ -88,7 +88,7 @@ const PrioritiesSection = ({
       success('Priority deleted successfully');
       setSelectedPriorityId(null);
       setSelectedPriority(null);
-    } catch (err) {
+    } catch {
       showError('Failed to delete priority. Please try again.');
     } finally {
       setDeleteOpen(false);

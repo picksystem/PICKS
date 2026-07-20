@@ -23,7 +23,7 @@ import {
   ListSubheader,
 } from '@mui/material';
 import { useFormik } from 'formik';
-import { CreateTicketTypeSchema, ITicketType } from '@serviceops/interfaces';
+import { CreateTicketTypeSchema } from '@serviceops/interfaces';
 import { useFieldError } from '@serviceops/hooks';
 import {
   TICKET_ICON_OPTIONS,

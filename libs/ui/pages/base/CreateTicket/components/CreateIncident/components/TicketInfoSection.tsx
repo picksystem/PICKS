@@ -12,7 +12,7 @@ import {
   TicketInfoSectionProps,
 } from './TicketInfoSection.tsx.util';
 
-const ClientSearchField = ({ value, callerOptions, onChange, classes }: ClientFieldProps) => {
+const ClientSearchField = ({ value, callerOptions, onChange }: ClientFieldProps) => {
   const [searchText, setSearchText] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
@@ -118,10 +118,6 @@ const UserSearchField = ({
     if (callerOptions.length > 0) {
       setIsOpen(true);
     }
-  };
-
-  const handleBlur = () => {
-    setTimeout(() => setIsOpen(false), 200);
   };
 
   return (

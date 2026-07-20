@@ -26,7 +26,6 @@ const {
   BaseUserManagementPage,
   BaseClientsAndProjectsPage,
   BaseRoleRequestsPage,
-  BaseConsultantProfilePage,
   BaseProfilePage,
   BaseIncidentDetailPage,
   BaseTicketDetailPage,
@@ -198,10 +197,6 @@ const AppRoutes = () => {
                       element={<BaseClientsAndProjectsPage />}
                     />
                     <Route path={BasePath.ROLE_REQUESTS} element={<BaseRoleRequestsPage />} />
-                    <Route
-                      path={BasePath.CONSULTANT_PROFILE}
-                      element={<BaseConsultantProfilePage />}
-                    />
                   </>
                 )}
                 <Route path={Path.NOT_FOUND} element={<NotFoundPage />} />

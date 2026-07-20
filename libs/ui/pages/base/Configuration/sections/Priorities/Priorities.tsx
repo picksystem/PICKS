@@ -235,24 +235,6 @@ const DEFAULT_URGENCIES: UrgencyLevel[] = [
   },
 ];
 
-const DEFAULT_MATRIX: ExtendedMatrixMap = {
-  high: {
-    high: { priorityId: 'critical' },
-    medium: { priorityId: 'high' },
-    low: { priorityId: 'medium' },
-  },
-  medium: {
-    high: { priorityId: 'high' },
-    medium: { priorityId: 'medium' },
-    low: { priorityId: 'low' },
-  },
-  low: {
-    high: { priorityId: 'medium' },
-    medium: { priorityId: 'low' },
-    low: { priorityId: 'planning' },
-  },
-};
-
 const Priorities = () => {
   const { classes } = useStyles();
   const { priorities: apiPriorities, ticketTypeKeys, saveSection, isLoading } = useConfiguration();

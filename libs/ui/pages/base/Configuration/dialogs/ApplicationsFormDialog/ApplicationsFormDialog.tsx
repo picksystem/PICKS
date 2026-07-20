@@ -52,9 +52,6 @@ interface ApplicationsFormDialogProps {
 // length for alpha-numeric fields (30 / 60). Used as `inputProps.maxLength`
 // and as a soft check inside the alpha-numeric plain-text normalizer.
 const MAX_NAME = 30;
-const MAX_SHORT_DESC = 60;
-const MAX_DESC = 60;
-const MAX_NOTE = 60;
 
 const ApplicationsFormDialog = ({
   open,

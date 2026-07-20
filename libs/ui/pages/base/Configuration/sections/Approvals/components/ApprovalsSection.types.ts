@@ -4,10 +4,7 @@ import {
   IConfigApprovalConsultantRole,
   IConfigApprovalWorkingTime,
 } from '@serviceops/interfaces';
-import type {
-  TableField,
-  TableConfig,
-} from '@serviceops/genericpanel';
+import type { TableField, TableConfig } from '@serviceops/genericpanel';
 
 export interface ApprovalsSectionProps {
   records?: IConfigApprovalRecord[];

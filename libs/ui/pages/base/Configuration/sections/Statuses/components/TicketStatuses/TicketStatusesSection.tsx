@@ -125,9 +125,7 @@ const TicketStatusesSection = ({ activeTicketTypeColumns }: TicketStatusesSectio
           lastSyncedIdsRef.current = new Set((next as IConfigStatusLevel[]).map((r) => r.id));
           saveSection('statuses', { items: next as IConfigStatusLevel[] });
         }}
-        customColumns={
-          ticketStatusColumns(activeTicketTypeColumns) as unknown as undefined
-        }
+        customColumns={ticketStatusColumns(activeTicketTypeColumns) as unknown as undefined}
         variant='plain'
         selectedRowId={selectedRowId}
         onRowSelect={handleRowSelect}

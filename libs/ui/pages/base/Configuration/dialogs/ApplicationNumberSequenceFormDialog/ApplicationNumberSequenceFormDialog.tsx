@@ -51,7 +51,6 @@ interface ApplicationNumberSequenceFormDialogProps {
 // Character limits per the spec. The "Mandatory" column lists the max
 // length for alpha-numeric fields (6 / 60). Used as `inputProps.maxLength`.
 const MAX_PREFIX = 6;
-const MAX_NOTE = 60;
 // Number-length is constrained to digits 3-9 per the spec. The total
 // preview length (prefix + number) must reach 15 — the "Mandatory" 15
 // cap. Used by both the live preview and validation.

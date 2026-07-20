@@ -45,10 +45,6 @@ const ResourceSearchField = ({
     }
   };
 
-  const handleBlur = () => {
-    setTimeout(() => setIsOpen(false), 200);
-  };
-
   return (
     <Box ref={anchorRef} position='relative'>
       <TextField
@@ -96,7 +92,6 @@ const PrioritySection = ({
   errors,
   impactOptions,
   urgencyOptions,
-  priorityOptions,
   statusOptions,
   onChange,
   onBlur,

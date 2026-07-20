@@ -72,7 +72,15 @@ const HolidayCalendarFormDialog = ({
     const nameVal = String(f.name ?? '')
       .trim()
       .toLowerCase();
-    if (nameVal && others.some((c) => String(c.name ?? '').trim().toLowerCase() === nameVal)) {
+    if (
+      nameVal &&
+      others.some(
+        (c) =>
+          String(c.name ?? '')
+            .trim()
+            .toLowerCase() === nameVal,
+      )
+    ) {
       return `Holiday Calendar "${String(f.name ?? '')}" already exists. Please use a different name.`;
     }
     return null;
@@ -118,7 +126,9 @@ const HolidayCalendarFormDialog = ({
     }
     setDuplicateAlert(null);
     onSave(formRef.current);
-    success(editing ? 'Holiday calendar updated successfully' : 'Holiday calendar added successfully');
+    success(
+      editing ? 'Holiday calendar updated successfully' : 'Holiday calendar added successfully',
+    );
   };
 
   const nameError = reqError(touched.name, requiredErrors.name);
@@ -177,7 +187,13 @@ const HolidayCalendarFormDialog = ({
         {shortDescriptionError && (
           <Typography
             variant='caption'
-            sx={{ color: '#d32f2f', fontSize: '0.7rem', mt: 0.25, display: 'block', fontWeight: 600 }}
+            sx={{
+              color: '#d32f2f',
+              fontSize: '0.7rem',
+              mt: 0.25,
+              display: 'block',
+              fontWeight: 600,
+            }}
           >
             {shortDescriptionError}
           </Typography>
@@ -202,7 +218,13 @@ const HolidayCalendarFormDialog = ({
         {descriptionError && (
           <Typography
             variant='caption'
-            sx={{ color: '#d32f2f', fontSize: '0.7rem', mt: 0.25, display: 'block', fontWeight: 600 }}
+            sx={{
+              color: '#d32f2f',
+              fontSize: '0.7rem',
+              mt: 0.25,
+              display: 'block',
+              fontWeight: 600,
+            }}
           >
             {descriptionError}
           </Typography>
@@ -227,7 +249,13 @@ const HolidayCalendarFormDialog = ({
         {internalNoteError && (
           <Typography
             variant='caption'
-            sx={{ color: '#d32f2f', fontSize: '0.7rem', mt: 0.25, display: 'block', fontWeight: 600 }}
+            sx={{
+              color: '#d32f2f',
+              fontSize: '0.7rem',
+              mt: 0.25,
+              display: 'block',
+              fontWeight: 600,
+            }}
           >
             {internalNoteError}
           </Typography>

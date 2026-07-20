@@ -46,7 +46,7 @@ export const useConfiguration = () => {
   const { data: config, isLoading, error } = useGetConfigurationQuery(undefined);
   const [patchSection, { isLoading: isPatchLoading }] = useUpdateConfigurationSectionMutation();
   const [putAll, { isLoading: isPutLoading }] = useUpdateConfigurationMutation();
-  const { success, error: showError } = useNotification();
+  const { error: showError } = useNotification();
 
   const data: IConfigurationData = config?.data ?? DEFAULT_CONFIGURATION_DATA;
 
@@ -54,10 +54,7 @@ export const useConfiguration = () => {
   // Exclude the reserved `__simple__` meta bucket — it's not a real ticket type.
   // Memoize to prevent recalculation on every render
   const ticketTypeKeys = useMemo(
-    () =>
-      Object.keys(data.priorities.matrices).filter(
-        (k) => k !== SIMPLE_PRIORITIES_MATRIX_KEY,
-      ),
+    () => Object.keys(data.priorities.matrices).filter((k) => k !== SIMPLE_PRIORITIES_MATRIX_KEY),
     [data.priorities.matrices],
   );
 

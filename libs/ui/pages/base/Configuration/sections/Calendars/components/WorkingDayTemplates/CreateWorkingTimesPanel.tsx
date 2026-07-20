@@ -164,8 +164,7 @@ const CreateWorkingTimesPanel = ({
       });
     });
     const untouched = timeBlocks.filter(
-      (b) =>
-        !(b.workingDayTemplateId === selectedTemplateId && copyTargets.includes(b.dayOfWeek)),
+      (b) => !(b.workingDayTemplateId === selectedTemplateId && copyTargets.includes(b.dayOfWeek)),
     );
     onSave([...untouched, ...additions]);
     setCopyAnchor(null);
@@ -328,7 +327,11 @@ const CreateWorkingTimesPanel = ({
                       onChange={(v) => handleBlockChange(block.id, { toTime: v })}
                     />
                     {error && (
-                      <Typography variant='caption' color='error' sx={{ display: 'block', mt: 0.5 }}>
+                      <Typography
+                        variant='caption'
+                        color='error'
+                        sx={{ display: 'block', mt: 0.5 }}
+                      >
                         {error}
                       </Typography>
                     )}
@@ -374,7 +377,11 @@ const CreateWorkingTimesPanel = ({
               size='small'
             />
           ))}
-          <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 1, mb: 1 }}>
+          <Typography
+            variant='caption'
+            color='text.secondary'
+            sx={{ display: 'block', mt: 1, mb: 1 }}
+          >
             This replaces the working times on each selected day.
           </Typography>
           <Button

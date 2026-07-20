@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Box } from '@serviceops/component';
-import { QUEUE_TIMESHEET_CONFIG, GenericPanel, TableFilterField } from '@serviceops/configcatorshared';
+import {
+  QUEUE_TIMESHEET_CONFIG,
+  GenericPanel,
+  TableFilterField,
+} from '@serviceops/configcatorshared';
 import { QueueTimesheetSectionProps, FlatQueueTSRow } from './QueueTimesheetSection.types';
 
 export const QueueTimesheetSection = ({

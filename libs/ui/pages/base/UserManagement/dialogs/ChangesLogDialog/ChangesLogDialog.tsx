@@ -36,7 +36,6 @@ import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { useStyles } from './styles';
 import { ChangesLogDialogProps } from './util';
-import { UserRow, ChangeLogEntry } from '../../types/userManagement.types';
 import {
   LOG_COLUMNS,
   ROLE_CHANGE_REASON_CODES,
@@ -319,7 +318,10 @@ const ChangesLogDialog = ({
                             }}
                             sx={{ py: 1, px: 1.5 }}
                           >
-                            <ListItemText primary={f} primaryTypographyProps={{ fontSize: '0.84rem' }} />
+                            <ListItemText
+                              primary={f}
+                              primaryTypographyProps={{ fontSize: '0.84rem' }}
+                            />
                           </ListItemButton>
                         </ListItem>
                       ))}

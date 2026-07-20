@@ -384,10 +384,6 @@ const TicketMatrixSection = ({
     });
   }, [allRows, debouncedSearch, impacts, urgencies, priorities]);
 
-  const handleMatrixChange = (impact: string, urgency: string, priorityId: string) => {
-    onMatrixChange(activeTicketType, impact, urgency, priorityId);
-  };
-
   const openDeleteDialog = () => {
     if (!selectedRowId) return;
     setDeleteOpen(true);

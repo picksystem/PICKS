@@ -91,29 +91,6 @@ export interface IUserChangeLog {
   createdAt: string;
 }
 
-export interface IConsultantProfile {
-  id: number;
-  userId: number;
-  application: string;
-  consultantRole: string | null;
-  slaWorkingCalendar: string | null;
-  slaExceptionCalendar: string | null;
-  leadConsultant: string | null;
-  applicationManager: string | null;
-  isPocLead: boolean;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface IConsultantRole {
-  id: number;
-  application: string;
-  roleName: string;
-  description: string | null;
-  createdAt: string;
-}
-
 export type AuthAction =
   | 'signin'
   | 'signup'
@@ -138,13 +115,6 @@ export type AuthAction =
   | 'generate-temp-password'
   | 'reset-user-password'
   | 'get-change-log'
-  | 'get-consultant-profiles'
-  | 'create-consultant-profile'
-  | 'update-consultant-profile'
-  | 'get-consultant-roles'
-  | 'create-consultant-role'
-  | 'update-consultant-role'
-  | 'delete-consultant-role'
   | 'get-login-logs'
   | 'deactivate-user'
   | 'activate-user';

@@ -89,7 +89,7 @@ export const ControlSearchField = ({
   };
 
   const displayValue = value
-    ? CONTROL_OPTIONS.find((opt) => opt.id === value)?.name ?? inputValue
+    ? (CONTROL_OPTIONS.find((opt) => opt.id === value)?.name ?? inputValue)
     : inputValue;
 
   return (

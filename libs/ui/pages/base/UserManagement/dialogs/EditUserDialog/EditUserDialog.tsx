@@ -29,7 +29,6 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
-import ClearIcon from '@mui/icons-material/Clear';
 import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from './styles';
 import { EditUserDialogProps } from './util';
@@ -95,12 +94,6 @@ const EditUserDialog = ({
     setRoleInputValue(match?.label ?? '');
     setRoleOpen(false);
     onFormChange((p) => ({ ...p, role: roleValue }));
-  };
-
-  const handleRoleClear = () => {
-    setRoleInputValue('');
-    setRoleOpen(false);
-    onFormChange((p) => ({ ...p, role: '' }));
   };
 
   // RichTextEditor state for Reason for Access

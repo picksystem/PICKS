@@ -7,10 +7,5 @@
     "types": ["jest", "node", "@testing-library/jest-dom"],
     "declaration": true
   },
-  "include": [
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "**/*.d.ts",
-    "jest.config.ts"
-  ]
+  "include": ["**/*.test.ts", "**/*.test.tsx", "**/*.d.ts", "jest.config.ts"]
 }

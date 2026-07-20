@@ -1,7 +1,7 @@
 import React from 'react';
 import { alpha } from '@mui/material';
 import { ITicketType } from '@serviceops/interfaces';
-import { Box, Typography, Chip, Tooltip, Switch, DataTable, Column } from '@serviceops/component';
+import { Box, Typography, Chip, Tooltip, DataTable, Column } from '@serviceops/component';
 import { loadTagMap, getTagOption } from '../../utils/ticketTypeIcons';
 import type { TicketTypeTableProps } from './util';
 
@@ -19,12 +19,7 @@ function buildPreview(prefix: string, length: number): string {
   return `${prefix.toUpperCase()}${num}`;
 }
 
-const TicketTypeTable = ({
-  ticketTypes,
-  selectedRowId,
-  onRowClick,
-  onToggleActive,
-}: TicketTypeTableProps) => {
+const TicketTypeTable = ({ ticketTypes, selectedRowId, onRowClick }: TicketTypeTableProps) => {
   const tagMap = loadTagMap();
 
   const getAccentColor = (type: string): string => {

@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { IConfigComposedWorkingTime } from '@serviceops/interfaces';
-import { useConfiguration } from '@serviceops/confighooks';
 import { GenericAccordion } from '@serviceops/genericaccordion';
-import { GenericToolbar } from '@serviceops/generictoolbar';
 import { GenericPanel } from '@serviceops/genericpanel';
 import {
   COMPOSED_WORKING_TIME_CONFIG,
@@ -14,11 +12,7 @@ interface ComposeWorkingTimesSectionProps {
   onDataChange?: (data: IConfigComposedWorkingTime[]) => void;
 }
 
-const ComposeWorkingTimesSection = ({
-  data,
-  onDataChange,
-}: ComposeWorkingTimesSectionProps) => {
-  const { calendars: apiCalendars } = useConfiguration();
+const ComposeWorkingTimesSection = ({ data, onDataChange }: ComposeWorkingTimesSectionProps) => {
   const [rows, setRows] = useState<IConfigComposedWorkingTime[]>([]);
 
   useEffect(() => {
@@ -80,7 +74,7 @@ const ComposeWorkingTimesSection = ({
         data={rows as unknown as Record<string, unknown>[]}
         onSave={handleSave as (data: unknown[]) => void}
         customColumns={composedWorkingTimeColumns as unknown as never}
-        variant="standard"
+        variant='standard'
         enableSuccessMessage
         summaryValidator={summaryValidator as unknown as never}
       />

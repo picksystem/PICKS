@@ -41,8 +41,7 @@ import {
 } from './panels';
 import { ServiceLineActiveView } from './ServiceLinesSection.types';
 import { useSharedUsers } from '../../../../hooks/useSharedUsers';
-import type { Column } from '@serviceops/component';
-import { Box, Button, Divider, Tooltip, Typography } from '@serviceops/component';
+import { Box, Button, Divider, Tooltip, Typography, type Column } from '@serviceops/component';
 import { mkCell, mkDescCell } from '@serviceops/configutils';
 
 interface ServiceLinesSectionProps {
@@ -85,7 +84,10 @@ const VIEW_BUTTONS: { key: ServiceLineActiveView; label: string; icon: React.Rea
 // reuses the same TableConfig already driving that view's own GenericPanel,
 // so the dialog header and the data table underneath always agree.
 const VIEW_DIALOG_CONFIG: Partial<
-  Record<ServiceLineActiveView, { title: string; subtitle?: string; accent: string; icon: React.ReactNode }>
+  Record<
+    ServiceLineActiveView,
+    { title: string; subtitle?: string; accent: string; icon: React.ReactNode }
+  >
 > = {
   approvals: SERVICE_LINE_APPROVALS_CONFIG,
   timesheet: SERVICE_LINE_TIMESHEET_CONFIG,
@@ -467,7 +469,10 @@ export const ServiceLinesSection = ({ data, onDataChange }: ServiceLinesSectionP
   const filteredRows = search
     ? rows.filter((row) =>
         Object.values(row).some(
-          (val) => val !== null && val !== undefined && String(val).toLowerCase().includes(search.toLowerCase()),
+          (val) =>
+            val !== null &&
+            val !== undefined &&
+            String(val).toLowerCase().includes(search.toLowerCase()),
         ),
       )
     : rows;
@@ -567,7 +572,11 @@ export const ServiceLinesSection = ({ data, onDataChange }: ServiceLinesSectionP
             // wrapped in its own flexShrink:0 Box instead, keeping it
             // inline with the New button and pushed to the far right.
             <Box sx={{ ml: 'auto', flexShrink: 0 }}>
-              <SearchField value={search} onChange={setSearch} className={classes.tableSearchField} />
+              <SearchField
+                value={search}
+                onChange={setSearch}
+                className={classes.tableSearchField}
+              />
             </Box>
           )}
         </Box>
@@ -668,7 +677,9 @@ export const ServiceLinesSection = ({ data, onDataChange }: ServiceLinesSectionP
                     {dlgConfig.title}
                   </Typography>
                   {dlgConfig.subtitle && (
-                    <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}>
+                    <Typography
+                      sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}
+                    >
                       {dlgConfig.subtitle}
                     </Typography>
                   )}

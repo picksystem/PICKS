@@ -1,4 +1,4 @@
-import { Box, Typography, TextField, Paper } from '@serviceops/component';
+import { Box, TextField, Paper } from '@serviceops/component';
 import { alpha } from '@mui/material';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -228,7 +228,6 @@ function getTimezoneFromCoords(lat: number, lon: number): string {
   };
 
   const city = (arguments[2] as string) || '';
-  const country = (arguments[3] as string) || '';
 
   for (const [tz, cities] of Object.entries(commonTimezones)) {
     if (

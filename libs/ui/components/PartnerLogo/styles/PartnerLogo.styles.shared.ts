@@ -1,7 +1,7 @@
 import { Theme } from '@mui/material/styles';
 import { CSSObject } from 'tss-react';
 
-export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
+export const getBaseStyles = (_theme: Theme): Record<string, CSSObject> => ({
   root: {
     display: 'inline-flex',
     alignItems: 'center',

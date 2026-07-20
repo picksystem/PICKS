@@ -1,14 +1,10 @@
 import { Column } from '@serviceops/component';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EditIcon from '@mui/icons-material/Edit';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import UpdateIcon from '@mui/icons-material/Update';
 import type {
   IConfigWorkLocationWorkingTime,
   IConfigComposedWorkingTime,
-  IConfigWorkingCalendar,
-  IConfigHolidayCalendar,
-  IConfigWorkingDayTemplate,
   IConfigTimesheetPeriodEntry,
   IConfigUpdateTimesheetPeriodEntry,
 } from '@serviceops/interfaces';

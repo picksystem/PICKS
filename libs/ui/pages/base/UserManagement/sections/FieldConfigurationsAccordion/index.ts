@@ -1,3 +1,1 @@
-export {
-  FieldConfigurationsAccordion,
-} from './FieldConfigurationsAccordion';
+export { FieldConfigurationsAccordion } from './FieldConfigurationsAccordion';

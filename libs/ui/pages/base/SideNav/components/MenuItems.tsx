@@ -13,7 +13,6 @@ import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import LocalActivityIcon from '@mui/icons-material/LocalActivity';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PeopleIcon from '@mui/icons-material/People';
-import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import GroupWorkIcon from '@mui/icons-material/GroupWork';
 import { constants } from '@serviceops/utils';
 
@@ -39,7 +38,6 @@ const adminMenuItems: MenuItemConfig[] = [
   { label: 'User Management', icon: <PeopleIcon />, pathKey: 'USER_MANAGEMENT' },
   { label: 'Clients and Projects', icon: <GroupWorkIcon />, pathKey: 'CLIENTS_AND_PROJECTS' },
   { label: 'Access Requests', icon: <AdminPanelSettingsIcon />, pathKey: 'ROLE_REQUESTS' },
-  { label: 'Consultant Profiles', icon: <BusinessCenterIcon />, pathKey: 'CONSULTANT_PROFILE' },
   { label: 'Configuration', icon: <TuneIcon />, pathKey: 'CONFIGURATION' },
 ];
 

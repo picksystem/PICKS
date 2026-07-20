@@ -10,7 +10,7 @@ export interface JobStatusCardStyleParams {
 
 export const getBaseStyles = (
   theme: Theme,
-  params: JobStatusCardStyleParams
+  params: JobStatusCardStyleParams,
 ): Record<string, CSSObject> => ({
   card: {
     marginBottom: theme.spacing(2),

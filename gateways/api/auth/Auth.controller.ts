@@ -19,9 +19,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'serivceops-jwt-secret-key';
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '24h') as jwt.SignOptions['expiresIn'];
 const APP_URL = process.env.APP_URL || 'http://localhost:4200';
 
-const MAX_FAILED_ATTEMPTS = 5;
-const LOCKOUT_DURATION_MINUTES = 30;
-
 // ─── User Status Constants ────────────────────────────────────────────────────
 const STATUS = {
   PENDING_APPROVAL: 'pending_approval',
@@ -66,13 +63,6 @@ type AuthAction =
   | 'get-change-log'
   | 'activate-user'
   | 'deactivate-user'
-  | 'get-consultant-profiles'
-  | 'create-consultant-profile'
-  | 'update-consultant-profile'
-  | 'get-consultant-roles'
-  | 'create-consultant-role'
-  | 'update-consultant-role'
-  | 'delete-consultant-role'
   | 'get-login-logs';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -161,13 +151,6 @@ export class AuthController {
         case 'get-change-log':
         case 'activate-user':
         case 'deactivate-user':
-        case 'get-consultant-profiles':
-        case 'create-consultant-profile':
-        case 'update-consultant-profile':
-        case 'get-consultant-roles':
-        case 'create-consultant-role':
-        case 'update-consultant-role':
-        case 'delete-consultant-role':
         case 'get-login-logs':
           return await this.handleAdminAction(req, res, action);
         default:
@@ -1283,101 +1266,6 @@ export class AuthController {
           take: 100,
         });
         res.json({ message: 'Login logs retrieved', data: logs });
-        break;
-      }
-
-      // ── Consultant Profiles ─────────────────────────────────────────────────
-      case 'get-consultant-profiles': {
-        const profiles = await (db as any).consultantProfile.findMany({
-          orderBy: { createdAt: 'desc' },
-        });
-        res.json({ message: 'Consultant profiles retrieved', data: profiles });
-        break;
-      }
-
-      case 'create-consultant-profile': {
-        const { data: profileData } = req.body as { data: Record<string, any> };
-        if (!profileData?.userId || !profileData?.application) {
-          res.status(400).json({ message: 'userId and application are required' });
-          return;
-        }
-        const profile = await (db as any).consultantProfile.create({ data: profileData });
-        // Mark consultant profile as updated
-        await db.user.update({
-          where: { id: profileData.userId },
-          data: { consultantProfileUpdated: true },
-        });
-        res.status(201).json({ message: 'Consultant profile created', data: profile });
-        break;
-      }
-
-      case 'update-consultant-profile': {
-        const { profileId, data: profileData } = req.body as {
-          profileId: number;
-          data: Record<string, any>;
-        };
-        if (!profileId) {
-          res.status(400).json({ message: 'profileId is required' });
-          return;
-        }
-        const profile = await (db as any).consultantProfile.update({
-          where: { id: profileId },
-          data: profileData,
-        });
-        if (profileData.userId)
-          await db.user.update({
-            where: { id: profileData.userId },
-            data: { consultantProfileUpdated: true },
-          });
-        res.json({ message: 'Consultant profile updated', data: profile });
-        break;
-      }
-
-      // ── Consultant Roles ────────────────────────────────────────────────────
-      case 'get-consultant-roles': {
-        const roles = await (db as any).consultantRole.findMany({
-          orderBy: { application: 'asc' },
-        });
-        res.json({ message: 'Consultant roles retrieved', data: roles });
-        break;
-      }
-
-      case 'create-consultant-role': {
-        const { data: roleData } = req.body as { data: Record<string, any> };
-        if (!roleData?.application || !roleData?.roleName) {
-          res.status(400).json({ message: 'application and roleName are required' });
-          return;
-        }
-        const role = await (db as any).consultantRole.create({ data: roleData });
-        res.status(201).json({ message: 'Consultant role created', data: role });
-        break;
-      }
-
-      case 'update-consultant-role': {
-        const { roleId, data: roleData } = req.body as {
-          roleId: number;
-          data: Record<string, any>;
-        };
-        if (!roleId) {
-          res.status(400).json({ message: 'roleId is required' });
-          return;
-        }
-        const role = await (db as any).consultantRole.update({
-          where: { id: roleId },
-          data: roleData,
-        });
-        res.json({ message: 'Consultant role updated', data: role });
-        break;
-      }
-
-      case 'delete-consultant-role': {
-        const { roleId } = req.body as { roleId: number };
-        if (!roleId) {
-          res.status(400).json({ message: 'roleId is required' });
-          return;
-        }
-        await (db as any).consultantRole.delete({ where: { id: roleId } });
-        res.json({ message: 'Consultant role deleted' });
         break;
       }
 

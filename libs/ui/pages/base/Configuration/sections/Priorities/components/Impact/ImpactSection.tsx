@@ -243,7 +243,7 @@ const ImpactSection = ({
         await onAdd(formRef.current);
         success('Impact added successfully');
       }
-    } catch (err) {
+    } catch {
       showError('Failed to save impact level. Please try again.');
     } finally {
       setDialogOpen(false);
@@ -283,7 +283,7 @@ const ImpactSection = ({
         success('Impact deleted successfully');
         setSelectedRowId(null);
       }
-    } catch (err) {
+    } catch {
       showError('Failed to delete impact level. Please try again.');
     } finally {
       setDeleteOpen(false);

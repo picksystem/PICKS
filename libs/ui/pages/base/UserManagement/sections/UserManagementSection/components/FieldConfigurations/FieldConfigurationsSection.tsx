@@ -37,7 +37,6 @@ const FieldConfigurationsSection = forwardRef<
   (
     {
       data: externalData,
-      isLoading,
       onDataChange,
       onCreate,
       onUpdate,
@@ -134,23 +133,6 @@ const FieldConfigurationsSection = forwardRef<
       }),
       [handleNewClick, handleEditClick, handleDeleteClick],
     );
-
-    const handleRowClick = useCallback(
-      (row: IConfigField) => {
-        setSelectedId(selectedId === row.id ? null : row.id);
-      },
-      [selectedId, setSelectedId],
-    );
-
-    const handleClearClick = useCallback(() => {
-      setSelectedId(null);
-      setEditingRow(null);
-      setIsNewDialog(false);
-      setForm({ date: '', day: '', calendarWeek: '', calendarMonth: '', control: '' });
-      setDatePickerOpen(false);
-      setFormErrors({});
-      setShowValidation(false);
-    }, [setSelectedId]);
 
     // Date change with auto-calculation
     const handleDateChange = useCallback((value: Dayjs | null) => {

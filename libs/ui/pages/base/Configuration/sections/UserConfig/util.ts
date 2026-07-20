@@ -75,7 +75,7 @@ export interface TimezoneInfo {
 export async function getTimezoneForLocation(
   lat: string,
   lon: string,
-  signal?: AbortSignal,
+  _signal?: AbortSignal,
 ): Promise<{ timezone: string; label: string; offset: string } | null> {
   const latNum = parseFloat(lat);
   const lonNum = parseFloat(lon);
@@ -364,7 +364,7 @@ export const COMMON_TIMEZONES: TimezoneOption[] = [
 
 export async function searchTimezones(
   query: string,
-  signal?: AbortSignal,
+  _signal?: AbortSignal,
 ): Promise<TimezoneOption[]> {
   const trimmed = query.trim().toLowerCase();
 

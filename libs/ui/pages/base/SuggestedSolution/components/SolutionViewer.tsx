@@ -16,9 +16,9 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import SpeedIcon from '@mui/icons-material/Speed';
 import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
-import { IncidentStatus, IIncident } from '../../../../../entities/interfaces';
+import { IncidentStatus } from '../../../../../entities/interfaces';
 import { useStyles } from '../styles';
-import { SolutionViewerProps, SolutionMatch, MatchDetailProps } from './util';
+import { SolutionViewerProps, MatchDetailProps } from './util';
 
 const getStatusStyle = (status: string) => {
   switch (status) {

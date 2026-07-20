@@ -25,8 +25,7 @@ const ConsultantRolesAccordion = () => {
     async (next: unknown[]) => {
       const newRows = next as IConfigUserConsultantRole[];
       setRows(newRows);
-      const current =
-        configData?.data?.userManagement ?? DEFAULT_CONFIGURATION_DATA.userManagement;
+      const current = configData?.data?.userManagement ?? DEFAULT_CONFIGURATION_DATA.userManagement;
       await updateSection({
         section: 'userManagement',
         value: { ...current, consultantRoles: newRows },

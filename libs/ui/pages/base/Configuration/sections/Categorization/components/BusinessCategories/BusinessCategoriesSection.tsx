@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Typography } from '@serviceops/component';
 import { IConfigBusinessCategory } from '@serviceops/interfaces';
 import { useStyles } from '../../styles';
 import { useNotification } from '@serviceops/hooks';
@@ -9,7 +8,7 @@ import { ConfigDeleteDialog } from '@serviceops/configdialogs';
 import { BusinessCategoryFormDialog } from '@serviceops/pages/base/Configuration/dialogs/BusinessCategoryFormDialog';
 import { CATEG_TABLE_CONFIG } from '../shared/CategorizationPanelConfig';
 import { useSharedUsers } from '../../../../hooks/useSharedUsers';
-import type { Column } from '@serviceops/component';
+import { Typography, type Column } from '@serviceops/component';
 import { mkCell, mkDescCell } from '@serviceops/configutils';
 
 interface BusinessCategoriesSectionProps {
@@ -20,10 +19,7 @@ interface BusinessCategoriesSectionProps {
 const BusinessCategoriesSection = ({ data, onDataChange }: BusinessCategoriesSectionProps) => {
   const { classes } = useStyles();
   const { success, error: showError } = useNotification();
-  const {
-    categorization: apiCat,
-    saveSection,
-  } = useConfiguration();
+  const { categorization: apiCat, saveSection } = useConfiguration();
   const { options: userOptions } = useSharedUsers();
 
   const [rows, setRows] = useState<IConfigBusinessCategory[]>([]);
@@ -169,7 +165,7 @@ const BusinessCategoriesSection = ({ data, onDataChange }: BusinessCategoriesSec
       handleSave(next);
       success('Business category deleted successfully');
       setSelectedRowId(null);
-    } catch (err) {
+    } catch {
       showError('Failed to delete business category. Please try again.');
     } finally {
       setDeleteOpen(false);

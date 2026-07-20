@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Column } from '@serviceops/component';
+import { Column, Box } from '@serviceops/component';
 import { IConfigServiceLine } from '@serviceops/interfaces';
 import { useConfiguration } from '@serviceops/confighooks';
 import { GenericPanel } from '@serviceops/genericpanel';
@@ -8,7 +8,6 @@ import {
   ServiceLineApprovalFormDialog,
   ServiceLineApprovalRow,
 } from '@serviceops/pages/base/Configuration/dialogs/ServiceLineApprovalFormDialog';
-import { Box } from '@serviceops/component';
 import { useSharedUsers } from '../../../../../../hooks/useSharedUsers';
 import { SERVICE_LINE_APPROVALS_CONFIG, TableFilterField } from '@serviceops/configcatorshared';
 import { mkCell, mkActiveChip } from '@serviceops/configutils';

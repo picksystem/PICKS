@@ -30,10 +30,7 @@ export interface ServiceLineTimesheetSectionProps {
    * responsible for updating the underlying `IConfigServiceLine[]`
    * because it owns the per-SL `expenseProjects` array.
    */
-  onTimesheetSave?: (data: {
-    row: FlatServiceLineTSRow;
-    previousUseInExpenses: boolean;
-  }) => void;
+  onTimesheetSave?: (data: { row: FlatServiceLineTSRow; previousUseInExpenses: boolean }) => void;
   /**
    * Mirror hook fired AFTER a timesheet row is deleted. Receives the
    * row that was just removed so the parent can drop any associated

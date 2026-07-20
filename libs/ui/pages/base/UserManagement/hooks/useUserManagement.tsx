@@ -48,17 +48,16 @@ import { Column, Chip, Box } from '@serviceops/component';
 // Pill-style status badge with status dot — same visual language as
 // mkActiveChip (Configuration tables' Activation column), extended to the
 // multi-value user lifecycle status instead of a plain boolean.
-const STATUS_STYLES: Record<string, { border: string; bg: string; color: string; dot: string }> =
-  {
-    active: { border: '#16a34a', bg: '#dcfce7', color: '#15803d', dot: '#16a34a' },
-    pending_approval: { border: '#f59e0b', bg: '#fef3c7', color: '#b45309', dot: '#f59e0b' },
-    invited: { border: '#f59e0b', bg: '#fef3c7', color: '#b45309', dot: '#f59e0b' },
-    rejected: { border: '#dc2626', bg: '#fee2e2', color: '#b91c1c', dot: '#dc2626' },
-    expired: { border: '#dc2626', bg: '#fee2e2', color: '#b91c1c', dot: '#dc2626' },
-    inactive: { border: '#cbd5e1', bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' },
-    deactivated: { border: '#cbd5e1', bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' },
-    draft: { border: '#cbd5e1', bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' },
-  };
+const STATUS_STYLES: Record<string, { border: string; bg: string; color: string; dot: string }> = {
+  active: { border: '#16a34a', bg: '#dcfce7', color: '#15803d', dot: '#16a34a' },
+  pending_approval: { border: '#f59e0b', bg: '#fef3c7', color: '#b45309', dot: '#f59e0b' },
+  invited: { border: '#f59e0b', bg: '#fef3c7', color: '#b45309', dot: '#f59e0b' },
+  rejected: { border: '#dc2626', bg: '#fee2e2', color: '#b91c1c', dot: '#dc2626' },
+  expired: { border: '#dc2626', bg: '#fee2e2', color: '#b91c1c', dot: '#dc2626' },
+  inactive: { border: '#cbd5e1', bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' },
+  deactivated: { border: '#cbd5e1', bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' },
+  draft: { border: '#cbd5e1', bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' },
+};
 
 const mkStatusChip = (status: string): React.ReactNode => {
   const style = STATUS_STYLES[status] ?? STATUS_STYLES.inactive;
@@ -246,7 +245,7 @@ const useUserManagement = () => {
   const { setThemeName } = useThemeContext();
   const { data: adminControlsData } = useGetAdminControlsQuery();
   const [updateAdminControls, { isLoading: isSavingControls }] = useUpdateAdminControlsMutation();
-  const [deleteUser, { isLoading: isDeletingUser }] = useDeleteUserMutation();
+  const [deleteUser] = useDeleteUserMutation();
 
   const isAdminControlsDirty =
     adminControlsOpen &&

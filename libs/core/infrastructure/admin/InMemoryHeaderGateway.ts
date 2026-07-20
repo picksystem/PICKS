@@ -1,4 +1,9 @@
-import { IHeaderGateway, IHeader, ICreateHeaderInput, IUpdateHeaderInput } from '@serviceops/interfaces';
+import {
+  IHeaderGateway,
+  IHeader,
+  ICreateHeaderInput,
+  IUpdateHeaderInput,
+} from '@serviceops/interfaces';
 
 /**
  * In-Memory implementation of Header Gateway

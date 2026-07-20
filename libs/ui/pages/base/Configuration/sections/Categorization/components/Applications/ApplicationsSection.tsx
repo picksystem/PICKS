@@ -25,8 +25,7 @@ import { GenericPanel } from '@serviceops/genericpanel';
 import { ConfigDeleteDialog } from '@serviceops/configdialogs';
 import { ApplicationsFormDialog } from '@serviceops/pages/base/Configuration/dialogs/ApplicationsFormDialog';
 import { useSharedUsers } from '../../../../hooks/useSharedUsers';
-import { Box, Button, Divider, Tooltip, Typography } from '@serviceops/component';
-import type { Column } from '@serviceops/component';
+import { Box, Button, Divider, Tooltip, Typography, type Column } from '@serviceops/component';
 import { mkCell, mkDescCell } from '@serviceops/configutils';
 import {
   AppApprovalsSection,
@@ -409,7 +408,9 @@ export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionP
     ? rows.filter((row) =>
         Object.values(row).some(
           (val) =>
-            val !== null && val !== undefined && String(val).toLowerCase().includes(search.toLowerCase()),
+            val !== null &&
+            val !== undefined &&
+            String(val).toLowerCase().includes(search.toLowerCase()),
         ),
       )
     : rows;
@@ -509,7 +510,11 @@ export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionP
             // wrapped in its own flexShrink:0 Box instead, keeping it
             // inline with the New button and pushed to the far right.
             <Box sx={{ ml: 'auto', flexShrink: 0 }}>
-              <SearchField value={search} onChange={setSearch} className={classes.tableSearchField} />
+              <SearchField
+                value={search}
+                onChange={setSearch}
+                className={classes.tableSearchField}
+              />
             </Box>
           )}
         </Box>
@@ -612,7 +617,9 @@ export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionP
                     {dlgConfig.title}
                   </Typography>
                   {dlgConfig.subtitle && (
-                    <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}>
+                    <Typography
+                      sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}
+                    >
                       {dlgConfig.subtitle}
                     </Typography>
                   )}

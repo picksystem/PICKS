@@ -28,7 +28,6 @@ interface TicketMatrixAccordionProps {
 }
 
 const TicketMatrixAccordion = ({
-  ticketTypeKey,
   label,
   accentColor,
   MatrixIcon,
@@ -38,8 +37,6 @@ const TicketMatrixAccordion = ({
   matrix,
   onMatrixChange,
   onMatrixReset,
-  isAccordionExpanded = false,
-  onAccordionToggle,
 }: TicketMatrixAccordionProps) => {
   const { classes } = useStyles();
   const { success } = useNotification();
@@ -164,7 +161,6 @@ const TicketMatrixAccordion = ({
       label: 'Priority',
       minWidth: 160,
       format: (_v, row): React.ReactNode => {
-        const priority = priorities.find((p) => p.id === row.priorityId);
         return (
           <FormControl size='small' sx={{ minWidth: 140 }}>
             <Select

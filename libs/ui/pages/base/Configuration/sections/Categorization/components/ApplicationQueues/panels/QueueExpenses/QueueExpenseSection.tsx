@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Box } from '@serviceops/component';
-import { QUEUE_EXPENSES_CONFIG, GenericPanel, TableFilterField } from '@serviceops/configcatorshared';
+import {
+  QUEUE_EXPENSES_CONFIG,
+  GenericPanel,
+  TableFilterField,
+} from '@serviceops/configcatorshared';
 import { QueueExpenseSectionProps, FlatQueueEXRow } from './QueueExpenseSection.types';
 
 export const QueueExpenseSection = ({

@@ -121,10 +121,8 @@ export const ConfigDeleteDialog = ({
   open,
   onClose,
   onConfirm,
-  entityName,
   itemName,
   message,
-  confirmLabel,
 }: ConfigDeleteDialogProps) => (
   <Dialog
     open={open}

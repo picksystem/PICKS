@@ -1,6 +1,12 @@
 import { Box } from '@serviceops/component';
 import { useStyles } from './styles';
-import { TicketUpdateSection, CommentSection, InternalNoteSection, ResolutionSection, TimeEntrySection } from './components';
+import {
+  TicketUpdateSection,
+  CommentSection,
+  InternalNoteSection,
+  ResolutionSection,
+  TimeEntrySection,
+} from './components';
 import { ConfigurationSection } from '@serviceops/configsection';
 
 const Templates = () => {

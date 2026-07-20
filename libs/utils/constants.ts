@@ -24,7 +24,6 @@ const BasePath = {
   INCIDENT_DETAIL: `${BASE}/incident/:number`,
   TICKET_DETAIL: `${BASE}/ticket/:number`,
   SUGGESTED_SOLUTION: `${BASE}/suggested-solution`,
-  CONSULTANT_PROFILE: `${BASE}/consultant-profile`,
   CONFIGURATION: `${BASE}/configuration`,
 };
 

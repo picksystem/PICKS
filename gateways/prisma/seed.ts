@@ -283,29 +283,6 @@ async function createTables() {
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
-    CREATE TABLE IF NOT EXISTS "ConsultantProfile" (
-      "id" SERIAL PRIMARY KEY,
-      "userId" INTEGER UNIQUE NOT NULL,
-      "application" TEXT NOT NULL,
-      "consultantRole" TEXT,
-      "slaWorkingCalendar" TEXT,
-      "slaExceptionCalendar" TEXT,
-      "leadConsultant" TEXT,
-      "applicationManager" TEXT,
-      "isPocLead" BOOLEAN NOT NULL DEFAULT false,
-      "isActive" BOOLEAN NOT NULL DEFAULT true,
-      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS "ConsultantRole" (
-      "id" SERIAL PRIMARY KEY,
-      "application" TEXT NOT NULL,
-      "roleName" TEXT NOT NULL,
-      "description" TEXT,
-      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-
     CREATE TABLE IF NOT EXISTS "LoginLog" (
       "id" SERIAL PRIMARY KEY,
       "userId" INTEGER NOT NULL,
@@ -341,13 +318,9 @@ async function clearAndSeed() {
     DELETE FROM "UserSideNav";
     DELETE FROM "LoginLog";
     DELETE FROM "UserChangeLog";
-    DELETE FROM "ConsultantProfile";
-    DELETE FROM "ConsultantRole";
     DELETE FROM "User";
     ALTER SEQUENCE "User_id_seq" RESTART WITH 1;
     ALTER SEQUENCE "UserChangeLog_id_seq" RESTART WITH 1;
-    ALTER SEQUENCE "ConsultantProfile_id_seq" RESTART WITH 1;
-    ALTER SEQUENCE "ConsultantRole_id_seq" RESTART WITH 1;
     ALTER SEQUENCE "LoginLog_id_seq" RESTART WITH 1;
     ALTER SEQUENCE "AdminIncident_id_seq" RESTART WITH 1;
     ALTER SEQUENCE "AdminIncidentComment_id_seq" RESTART WITH 1;

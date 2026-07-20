@@ -1,5 +1,4 @@
 import { Avatar } from '@mui/material';
-import type { SxProps, Theme } from '@mui/material/styles';
 import type { UserAvatarProps } from './UserAvatar.types';
 
 function getInitials(user: UserAvatarProps['user']): string {

@@ -16,7 +16,11 @@ interface TimesheetPeriodsSectionProps {
   hideHeader?: boolean;
 }
 
-const TimesheetPeriodsSection = ({ data, onDataChange, hideHeader }: TimesheetPeriodsSectionProps) => {
+const TimesheetPeriodsSection = ({
+  data,
+  onDataChange,
+  hideHeader,
+}: TimesheetPeriodsSectionProps) => {
   const [rows, setRows] = useState<IConfigTimesheetPeriodEntry[]>([]);
 
   // Fetch from Configuration API
