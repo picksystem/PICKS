@@ -10,8 +10,8 @@ import {
   Divider,
   Paper,
   Popper,
-  MenuItem,
   MenuList,
+  MenuItem,
   Alert,
   AlertTitle,
 } from '@mui/material';
@@ -34,20 +34,11 @@ import CategoryIcon from '@mui/icons-material/Category';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import FlagIcon from '@mui/icons-material/Flag';
 import HistoryIcon from '@mui/icons-material/History';
-import ReportProblemIcon from '@mui/icons-material/ReportProblem';
-import BuildIcon from '@mui/icons-material/Build';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import { Box, TextField, Select, Checkbox, Button, UploadFile } from '@serviceops/component';
+import { Box, TextField, Checkbox, Button, UploadFile } from '@serviceops/component';
 import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from './styles';
 import useCreateTicketDetail, { CreateTicketDetailProps } from './hooks/useCreateTicketDetail';
-import {
-  ClientFieldProps,
-  UserFieldProps,
-  ContactFieldProps,
-  CategoryFieldProps,
-  ResourceFieldProps,
-} from './util';
+import { getIconComponent, loadIconMap } from '../../../Configuration/utils/ticketTypeIcons';
 
 // ── Section metadata ──────────────────────────────────────────────────────────
 const SECTION_META = [
@@ -95,245 +86,8 @@ const SECTION_META = [
   },
 ];
 
-// ── Hero icons by ticket type ─────────────────────────────────────────────────
-const HERO_ICONS: Record<string, React.ElementType> = {
-  incident: ReportProblemIcon,
-  service_request: BuildIcon,
-  advisory_request: LightbulbIcon,
-};
-
-// ── Searchable Client Field Component ────────────────────────────
-const ClientSearchField = ({
-  value,
-  callerOptions,
-  onChange,
-  onBlur,
-  error,
-  errorText,
-}: ClientFieldProps) => {
-  const [searchText, setSearchText] = useState(value);
-  const [isOpen, setIsOpen] = useState(false);
-  const anchorRef = useRef<HTMLDivElement>(null);
-
-  const filteredOptions = callerOptions.filter((option) =>
-    option.label.toLowerCase().includes(searchText.toLowerCase()),
-  );
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setSearchText(newValue);
-    onChange(newValue);
-    setIsOpen(newValue.length > 0);
-  };
-
-  const handleSelectOption = (option: { value: string; label: string }) => {
-    setSearchText(option.label);
-    onChange(option.label);
-    setIsOpen(false);
-  };
-
-  const handleFocus = () => {
-    if (callerOptions.length > 0) {
-      setIsOpen(true);
-    }
-  };
-
-  const handleBlur = () => {
-    setTimeout(() => setIsOpen(false), 200);
-  };
-
-  return (
-    <Box ref={anchorRef} position='relative'>
-      <TextField
-        name='client'
-        label='Client'
-        value={searchText}
-        onChange={handleInputChange}
-        onFocus={handleFocus}
-        onBlur={onBlur || handleBlur}
-        placeholder='Search or select client'
-        icon={<SearchIcon />}
-        iconAlignment='right'
-        inputProps={{ maxLength: 50 }}
-        error={error}
-        errorText={errorText}
-        required
-      />
-      <Popper
-        open={isOpen && filteredOptions.length > 0}
-        anchorEl={anchorRef.current}
-        placement='bottom-start'
-        style={{ width: anchorRef.current?.offsetWidth, zIndex: 1000 }}
-      >
-        <Paper elevation={3}>
-          <MenuList>
-            {filteredOptions.map((option) => (
-              <MenuItem
-                key={option.value}
-                onClick={() => handleSelectOption(option)}
-                selected={searchText === option.label}
-              >
-                {option.label}
-              </MenuItem>
-            ))}
-          </MenuList>
-        </Paper>
-      </Popper>
-    </Box>
-  );
-};
-
-// ── Searchable User Field Component ──────────────────────────
-const UserSearchField = ({
-  value,
-  callerOptions,
-  onChange,
-  onBlur,
-  error,
-  errorText,
-  label,
-}: UserFieldProps) => {
-  const [searchText, setSearchText] = useState(value);
-  const [isOpen, setIsOpen] = useState(false);
-  const anchorRef = useRef<HTMLDivElement>(null);
-
-  const filteredOptions = callerOptions.filter((option) =>
-    option.label.toLowerCase().includes(searchText.toLowerCase()),
-  );
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setSearchText(newValue);
-    onChange(newValue);
-    setIsOpen(newValue.length > 0);
-  };
-
-  const handleSelectOption = (option: { value: string; label: string }) => {
-    setSearchText(option.label);
-    onChange(option.label);
-    setIsOpen(false);
-  };
-
-  const handleFocus = () => {
-    if (callerOptions.length > 0) {
-      setIsOpen(true);
-    }
-  };
-
-  return (
-    <Box ref={anchorRef} position='relative'>
-      <TextField
-        name='user'
-        label={label}
-        value={searchText}
-        onChange={handleInputChange}
-        onFocus={handleFocus}
-        onBlur={onBlur}
-        placeholder={`Search or select ${label.toLowerCase()}`}
-        icon={<SearchIcon />}
-        iconAlignment='right'
-        inputProps={{ maxLength: 50 }}
-        error={error}
-        errorText={errorText}
-        required
-      />
-      <Popper
-        open={isOpen && filteredOptions.length > 0}
-        anchorEl={anchorRef.current}
-        placement='bottom-start'
-        style={{ width: anchorRef.current?.offsetWidth, zIndex: 1000 }}
-      >
-        <Paper elevation={3}>
-          <MenuList>
-            {filteredOptions.map((option) => (
-              <MenuItem
-                key={option.value}
-                onClick={() => handleSelectOption(option)}
-                selected={searchText === option.label}
-              >
-                {option.label}
-              </MenuItem>
-            ))}
-          </MenuList>
-        </Paper>
-      </Popper>
-    </Box>
-  );
-};
-
-// ── Searchable Contact Field Component ──────────────────────────
-const ContactSearchField = ({ value, callerOptions, onChange }: ContactFieldProps) => {
-  const [searchText, setSearchText] = useState(value);
-  const [isOpen, setIsOpen] = useState(false);
-  const anchorRef = useRef<HTMLDivElement>(null);
-
-  const filteredOptions = callerOptions.filter((option) =>
-    option.label.toLowerCase().includes(searchText.toLowerCase()),
-  );
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setSearchText(newValue);
-    onChange(newValue);
-    setIsOpen(newValue.length > 0);
-  };
-
-  const handleSelectOption = (option: { value: string; label: string }) => {
-    setSearchText(option.label);
-    onChange(option.label);
-    setIsOpen(false);
-  };
-
-  const handleFocus = () => {
-    if (callerOptions.length > 0) {
-      setIsOpen(true);
-    }
-  };
-
-  const handleBlur = () => {
-    setTimeout(() => setIsOpen(false), 200);
-  };
-
-  return (
-    <Box ref={anchorRef} position='relative'>
-      <TextField
-        name='contact'
-        label='Additional Contact(s)'
-        value={searchText}
-        onChange={handleInputChange}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        placeholder='Search or select contact'
-        icon={<SearchIcon />}
-        iconAlignment='right'
-        inputProps={{ maxLength: 50 }}
-      />
-      <Popper
-        open={isOpen && filteredOptions.length > 0}
-        anchorEl={anchorRef.current}
-        placement='bottom-start'
-        style={{ width: anchorRef.current?.offsetWidth, zIndex: 1000 }}
-      >
-        <Paper elevation={3}>
-          <MenuList>
-            {filteredOptions.map((option) => (
-              <MenuItem
-                key={option.value}
-                onClick={() => handleSelectOption(option)}
-                selected={searchText === option.label}
-              >
-                {option.label}
-              </MenuItem>
-            ))}
-          </MenuList>
-        </Paper>
-      </Popper>
-    </Box>
-  );
-};
-
-// ── Searchable Category Field Component ─────────────────────────
-const CategorySearchField = ({
+// ── Shared Searchable Field ──────────────────────────────────────
+const SearchableField = ({
   value,
   options,
   onChange,
@@ -342,26 +96,51 @@ const CategorySearchField = ({
   errorText,
   label,
   required,
-}: CategoryFieldProps) => {
+  icon,
+  maxLength = 50,
+}: {
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+  onBlur?: React.FocusEventHandler;
+  error?: boolean;
+  errorText?: React.ReactNode;
+  label: string;
+  required?: boolean;
+  icon?: React.ReactNode;
+  maxLength?: number;
+}) => {
   const [searchText, setSearchText] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const filteredOptions = options.filter((option) =>
     option.label.toLowerCase().includes(searchText.toLowerCase()),
   );
 
+  useEffect(() => {
+    setSearchText(value);
+  }, [value]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setSearchText(newValue);
     onChange(newValue);
-    setIsOpen(newValue.length > 0);
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      setIsOpen(newValue.length > 0 && filteredOptions.length > 0);
+    }, 100);
   };
 
   const handleSelectOption = (option: { value: string; label: string }) => {
     setSearchText(option.label);
-    onChange(option.label);
+    onChange(option.value);
     setIsOpen(false);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
   };
 
   const handleFocus = () => {
@@ -370,8 +149,8 @@ const CategorySearchField = ({
     }
   };
 
-  const handleBlur = () => {
-    setTimeout(() => setIsOpen(false), 200);
+  const handleItemMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
   };
 
   return (
@@ -382,11 +161,11 @@ const CategorySearchField = ({
         value={searchText}
         onChange={handleInputChange}
         onFocus={handleFocus}
-        onBlur={onBlur || handleBlur}
+        onBlur={onBlur}
         placeholder={`Search or select ${label.toLowerCase()}`}
-        icon={<SearchIcon />}
+        icon={icon || <SearchIcon />}
         iconAlignment='right'
-        inputProps={{ maxLength: 80 }}
+        inputProps={{ maxLength }}
         required={required}
         error={error}
         errorText={errorText}
@@ -404,85 +183,7 @@ const CategorySearchField = ({
                 key={option.value}
                 onClick={() => handleSelectOption(option)}
                 selected={searchText === option.label}
-              >
-                {option.label}
-              </MenuItem>
-            ))}
-          </MenuList>
-        </Paper>
-      </Popper>
-    </Box>
-  );
-};
-
-// ── Searchable Resource Field Component ─────────────────────────
-const ResourceSearchField = ({
-  value,
-  options,
-  onChange,
-  onBlur,
-  error,
-  errorText,
-  label,
-  required,
-}: ResourceFieldProps) => {
-  const [searchText, setSearchText] = useState(value);
-  const [isOpen, setIsOpen] = useState(false);
-  const anchorRef = useRef<HTMLDivElement>(null);
-
-  const filteredOptions = options.filter((option) =>
-    option.label.toLowerCase().includes(searchText.toLowerCase()),
-  );
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setSearchText(newValue);
-    onChange(newValue);
-    setIsOpen(newValue.length > 0);
-  };
-
-  const handleSelectOption = (option: { value: string; label: string }) => {
-    setSearchText(option.label);
-    onChange(option.label);
-    setIsOpen(false);
-  };
-
-  const handleFocus = () => {
-    if (options.length > 0) {
-      setIsOpen(true);
-    }
-  };
-
-  return (
-    <Box ref={anchorRef} position='relative'>
-      <TextField
-        name={label.toLowerCase().replace(/\s+/g, '')}
-        label={label}
-        value={searchText}
-        onChange={handleInputChange}
-        onFocus={handleFocus}
-        onBlur={onBlur}
-        placeholder={`Search or enter ${label.toLowerCase()}`}
-        icon={<SearchIcon />}
-        iconAlignment='right'
-        inputProps={{ maxLength: 80 }}
-        error={error}
-        errorText={errorText}
-        required={required}
-      />
-      <Popper
-        open={isOpen && filteredOptions.length > 0}
-        anchorEl={anchorRef.current}
-        placement='bottom-start'
-        style={{ width: anchorRef.current?.offsetWidth, zIndex: 1000 }}
-      >
-        <Paper elevation={3}>
-          <MenuList>
-            {filteredOptions.map((option) => (
-              <MenuItem
-                key={option.value}
-                onClick={() => handleSelectOption(option)}
-                selected={searchText === option.label}
+                onMouseDown={handleItemMouseDown}
               >
                 {option.label}
               </MenuItem>
@@ -528,6 +229,11 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     urgencyOptions,
     statusOptions,
     channelOptions,
+    businessCategoryOptions,
+    serviceLineOptions,
+    applicationOptions,
+    applicationCategoryOptions,
+    applicationSubCategoryOptions,
     validationFailed,
     handleCallerChange,
     handleManualCallerUpdate,
@@ -670,7 +376,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     );
   };
 
-  const HeroIcon = HERO_ICONS[ticketType] ?? ReportProblemIcon;
+  const iconMap = loadIconMap();
   const descHasError = !!(formik.touched.description && formik.errors.description);
 
   return (
@@ -681,7 +387,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
         sx={{ background: config.heroGradient, boxShadow: `0 8px 32px ${config.heroShadow}` }}
       >
         <Box className={classes.ticketHeroIcon}>
-          <HeroIcon sx={{ fontSize: 26, color: '#fff' }} />
+          {getIconComponent(iconMap[ticketType], { fontSize: 26, color: '#fff' })}
         </Box>
         <Box sx={{ flex: 1, position: 'relative', zIndex: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
@@ -716,30 +422,32 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                 disabled
                 sx={{ '& .MuiInputBase-root': { backgroundColor: 'grey.100' } }}
               />
-              <ClientSearchField
+              <SearchableField
                 value={formik.values.client}
-                callerOptions={callerOptions}
+                options={callerOptions}
                 onChange={(value) => formik.setFieldValue('client', value)}
                 onBlur={formik.handleBlur}
                 error={!!(formik.touched.client && formik.errors.client)}
                 errorText={reqError(formik.touched.client, formik.errors.client as string)}
+                label='Client'
+                required
               />
-              <UserSearchField
+              <SearchableField
                 value={formik.values.caller}
-                callerOptions={callerOptions}
+                options={callerOptions}
                 onChange={(value) => handleCallerChange(value)}
                 onBlur={formik.handleBlur}
                 error={!!(formik.touched.caller && formik.errors.caller)}
                 errorText={reqError(formik.touched.caller, formik.errors.caller as string)}
                 label='Affected User'
+                required
               />
-              {config.showAdditionalContacts && (
-                <ContactSearchField
-                  value={formik.values.additionalContacts}
-                  callerOptions={callerOptions}
-                  onChange={(value) => formik.setFieldValue('additionalContacts', value)}
-                />
-              )}
+              <SearchableField
+                value={formik.values.additionalContacts}
+                options={callerOptions}
+                onChange={(value) => formik.setFieldValue('additionalContacts', value)}
+                label='Additional Contact(s)'
+              />
             </Box>
 
             {/* Manual caller */}
@@ -780,6 +488,42 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                       )}
                       required
                     />
+                    <SearchableField
+                      value={formik.values.callerLocation}
+                      options={[]}
+                      onChange={(value) => formik.setFieldValue('callerLocation', value)}
+                      onBlur={formik.handleBlur}
+                      error={!!(formik.touched.callerLocation && formik.errors.callerLocation)}
+                      errorText={reqError(
+                        formik.touched.callerLocation,
+                        formik.errors.callerLocation as string,
+                      )}
+                      label='Work Location'
+                      required
+                    />
+                    <SearchableField
+                      value={formik.values.callerDepartment}
+                      options={[]}
+                      onChange={(value) => formik.setFieldValue('callerDepartment', value)}
+                      onBlur={formik.handleBlur}
+                      label='Department'
+                    />
+                    <SearchableField
+                      value={formik.values.callerReportingManager}
+                      options={[]}
+                      onChange={(value) => formik.setFieldValue('callerReportingManager', value)}
+                      onBlur={formik.handleBlur}
+                      error={!!(
+                        formik.touched.callerReportingManager &&
+                        formik.errors.callerReportingManager
+                      )}
+                      errorText={reqError(
+                        formik.touched.callerReportingManager,
+                        formik.errors.callerReportingManager as string,
+                      )}
+                      label='Reporting Manager'
+                      required
+                    />
                     <TextField
                       name='callerEmail'
                       label='Work Email'
@@ -803,53 +547,6 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                       onBlur={formik.handleBlur}
                       type='tel'
                       inputProps={{ maxLength: 20 }}
-                    />
-                    <TextField
-                      name='callerLocation'
-                      label='Work Location'
-                      value={formik.values.callerLocation}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      icon={<SearchIcon />}
-                      iconAlignment='right'
-                      inputProps={{ maxLength: 50 }}
-                      error={!!(formik.touched.callerLocation && formik.errors.callerLocation)}
-                      errorText={reqError(
-                        formik.touched.callerLocation,
-                        formik.errors.callerLocation as string,
-                      )}
-                      required
-                    />
-                    <TextField
-                      name='callerDepartment'
-                      label='Department'
-                      value={formik.values.callerDepartment}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      icon={<SearchIcon />}
-                      iconAlignment='right'
-                      inputProps={{ maxLength: 50 }}
-                    />
-                    <TextField
-                      name='callerReportingManager'
-                      label='Reporting Manager'
-                      value={formik.values.callerReportingManager}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      icon={<SearchIcon />}
-                      iconAlignment='right'
-                      inputProps={{ maxLength: 50 }}
-                      error={
-                        !!(
-                          formik.touched.callerReportingManager &&
-                          formik.errors.callerReportingManager
-                        )
-                      }
-                      errorText={reqError(
-                        formik.touched.callerReportingManager,
-                        formik.errors.callerReportingManager as string,
-                      )}
-                      required
                     />
                     <Box
                       sx={{
@@ -892,9 +589,9 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
         {wrap(
           1,
           <Box className={classes.formGrid}>
-            <CategorySearchField
+            <SearchableField
               value={formik.values.businessCategory}
-              options={[]}
+              options={businessCategoryOptions}
               onChange={(value) => formik.setFieldValue('businessCategory', value)}
               onBlur={formik.handleBlur}
               error={!!(formik.touched.businessCategory && formik.errors.businessCategory)}
@@ -905,9 +602,9 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
               label='Business Category'
               required
             />
-            <CategorySearchField
+            <SearchableField
               value={formik.values.serviceLine}
-              options={[]}
+              options={serviceLineOptions}
               onChange={(value) => formik.setFieldValue('serviceLine', value)}
               onBlur={formik.handleBlur}
               error={!!(formik.touched.serviceLine && formik.errors.serviceLine)}
@@ -915,9 +612,9 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
               label='Service Line'
               required
             />
-            <CategorySearchField
+            <SearchableField
               value={formik.values.application}
-              options={[]}
+              options={applicationOptions}
               onChange={(value) => formik.setFieldValue('application', value)}
               onBlur={formik.handleBlur}
               error={!!(formik.touched.application && formik.errors.application)}
@@ -925,15 +622,15 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
               label='Application'
               required
             />
-            <CategorySearchField
+            <SearchableField
               value={formik.values.applicationCategory}
-              options={[]}
+              options={applicationCategoryOptions}
               onChange={(value) => formik.setFieldValue('applicationCategory', value)}
               label='Application Category'
             />
-            <CategorySearchField
+            <SearchableField
               value={formik.values.applicationSubCategory}
-              options={[]}
+              options={applicationSubCategoryOptions}
               onChange={(value) => formik.setFieldValue('applicationSubCategory', value)}
               label='Application Sub-Category'
             />
@@ -1115,13 +812,11 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
               }}
             >
               <Box className={classes.checkboxRow}>
-                {config.showIsMajor && (
-                  <Checkbox
-                    label='Major Ticket'
-                    checked={formik.values.isMajor}
-                    onChange={(_, checked) => formik.setFieldValue('isMajor', checked)}
-                  />
-                )}
+                <Checkbox
+                  label='Major Ticket'
+                  checked={formik.values.isMajor}
+                  onChange={(_, checked) => formik.setFieldValue('isMajor', checked)}
+                />
                 <Checkbox
                   label='Recurring Ticket'
                   checked={formik.values.isRecurring}
@@ -1171,35 +866,35 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
         {wrap(
           3,
           <Box className={classes.formGrid}>
-            <Select
-              label='Impact'
-              options={impactOptions}
+            <SearchableField
               value={formik.values.impact}
-              onChange={(e) => formik.setFieldValue('impact', e.target.value as string)}
+              options={impactOptions}
+              onChange={(value) => formik.setFieldValue('impact', value)}
               onBlur={formik.handleBlur}
-              required
               error={!!(formik.touched.impact && formik.errors.impact)}
               errorText={reqError(formik.touched.impact, formik.errors.impact as string)}
-            />
-            <Select
-              label='Urgency'
-              options={urgencyOptions}
-              value={formik.values.urgency}
-              onChange={(e) => formik.setFieldValue('urgency', e.target.value as string)}
-              onBlur={formik.handleBlur}
+              label='Impact'
               required
+            />
+            <SearchableField
+              value={formik.values.urgency}
+              options={urgencyOptions}
+              onChange={(value) => formik.setFieldValue('urgency', value)}
+              onBlur={formik.handleBlur}
               error={!!(formik.touched.urgency && formik.errors.urgency)}
               errorText={reqError(formik.touched.urgency, formik.errors.urgency as string)}
+              label='Urgency'
+              required
             />
             <TextField label='Calculated Priority' value={formik.values.priority} disabled />
-            <Select
-              label='Status'
-              options={statusOptions}
+            <SearchableField
               value={formik.values.status}
-              onChange={(e) => formik.setFieldValue('status', e.target.value as string)}
+              options={statusOptions}
+              onChange={(value) => formik.setFieldValue('status', value)}
               onBlur={formik.handleBlur}
+              label='Status'
             />
-            <ResourceSearchField
+            <SearchableField
               value={formik.values.assignmentGroup}
               options={[]}
               onChange={(value) => formik.setFieldValue('assignmentGroup', value)}
@@ -1212,7 +907,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
               label='Assignment Group'
               required
             />
-            <ResourceSearchField
+            <SearchableField
               value={formik.values.primaryResource}
               options={[]}
               onChange={(value) => formik.setFieldValue('primaryResource', value)}
@@ -1224,7 +919,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
               )}
               label='Primary Resource'
             />
-            <ResourceSearchField
+            <SearchableField
               value={formik.values.secondaryResources}
               options={[]}
               onChange={(value) => formik.setFieldValue('secondaryResources', value)}
@@ -1245,17 +940,15 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
           <Box className={classes.formGrid}>
             <TextField label='Created Date and Time' value={createdDateTime} disabled />
             <TextField label='Created' value={formik.values.createdBy} disabled />
-            {config.showChannel && (
-              <Select
-                label='Channel'
-                options={channelOptions}
-                value={formik.values.channel}
-                onChange={(e) => formik.setFieldValue('channel', e.target.value as string)}
-                onBlur={formik.handleBlur}
-                error={!!(formik.touched.channel && formik.errors.channel)}
-                errorText={reqError(formik.touched.channel, formik.errors.channel as string)}
-              />
-            )}
+            <SearchableField
+              value={formik.values.channel}
+              options={channelOptions}
+              onChange={(value) => formik.setFieldValue('channel', value)}
+              onBlur={formik.handleBlur}
+              error={!!(formik.touched.channel && formik.errors.channel)}
+              errorText={reqError(formik.touched.channel, formik.errors.channel as string)}
+              label='Channel'
+            />
           </Box>,
         )}
 

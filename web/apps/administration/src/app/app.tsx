@@ -13,6 +13,7 @@ const {
   BaseFavouritesPage,
   BaseRecentItemsPage,
   BaseIncidentManagementPage,
+  BaseTicketManagementPage,
   BaseChangeManagementPage,
   BaseProblemManagementPage,
   BaseTimeManagementPage,
@@ -180,6 +181,10 @@ const AppRoutes = () => {
                 <Route path={BasePath.SUGGESTED_SOLUTION} element={<BaseSuggestedSolutionPage />} />
                 {effectiveRole === 'admin' && (
                   <>
+                    <Route
+                      path={BasePath.TICKET_MANAGEMENT}
+                      element={<BaseTicketManagementPage />}
+                    />
                     <Route path={BasePath.TIME_MANAGEMENT} element={<BaseTimeManagementPage />} />
                     <Route path={BasePath.REPORTS} element={<BaseReportsPage />} />
                     <Route path={BasePath.TICKET_TEMPLATES} element={<BaseTicketTemplatesPage />} />

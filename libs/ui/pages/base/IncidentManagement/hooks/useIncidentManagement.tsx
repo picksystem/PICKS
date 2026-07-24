@@ -9,7 +9,10 @@ import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DraftsIcon from '@mui/icons-material/Drafts';
 import { Column } from '@serviceops/component';
-import { useGetIncidentsQuery, useGetDraftIncidentsQuery } from '@serviceops/services';
+import {
+  useGetTicketsQuery,
+  useGetDraftTicketsQuery,
+} from '@serviceops/services';
 import { IIncident } from '@serviceops/interfaces';
 import { constants } from '@serviceops/utils';
 import PriorityChip from '../components/PriorityChip';
@@ -28,21 +31,27 @@ const useIncidentManagement = () => {
     data: incidents,
     isLoading: incidentsLoading,
     error: incidentsError,
-  } = useGetIncidentsQuery();
+  } = useGetTicketsQuery({ ticketType: 'incident' });
   const {
     data: draftIncidents,
     isLoading: draftsLoading,
     error: draftsError,
-  } = useGetDraftIncidentsQuery();
+  } = useGetDraftTicketsQuery({ ticketType: 'incident' });
 
   const isLoading = incidentsLoading || draftsLoading;
   const error = incidentsError || draftsError;
 
   const allIncidents = useMemo(() => {
     const map = new Map<number, IIncident>();
-    (incidents || []).forEach((inc) => map.set(inc.id, inc));
-    (draftIncidents || []).forEach((inc) => {
-      if (!map.has(inc.id)) map.set(inc.id, inc);
+    (incidents || []).forEach((t) => {
+      if ((t as any).ticketType === 'incident') {
+        map.set(t.id, t as IIncident);
+      }
+    });
+    (draftIncidents || []).forEach((t) => {
+      if ((t as any).ticketType === 'incident' && !map.has(t.id)) {
+        map.set(t.id, t as IIncident);
+      }
     });
     return Array.from(map.values());
   }, [incidents, draftIncidents]);

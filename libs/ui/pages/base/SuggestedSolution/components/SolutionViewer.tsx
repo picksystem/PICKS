@@ -16,13 +16,12 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import SpeedIcon from '@mui/icons-material/Speed';
 import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
-import { IncidentStatus } from '../../../../../entities/interfaces';
 import { useStyles } from '../styles';
 import { SolutionViewerProps, MatchDetailProps } from './util';
 
 const getStatusStyle = (status: string) => {
   switch (status) {
-    case IncidentStatus.RESOLVED:
+    case 'resolved':
       return {
         bg: 'linear-gradient(135deg,#dcfce7,#bbf7d0)',
         color: '#15803d',
@@ -30,7 +29,7 @@ const getStatusStyle = (status: string) => {
         icon: <CheckCircleOutlineIcon sx={{ fontSize: 13 }} />,
         label: 'Resolved',
       };
-    case IncidentStatus.CLOSED:
+    case 'closed':
       return {
         bg: 'linear-gradient(135deg,#f1f5f9,#e2e8f0)',
         color: '#475569',
@@ -38,7 +37,7 @@ const getStatusStyle = (status: string) => {
         icon: <LockOutlinedIcon sx={{ fontSize: 13 }} />,
         label: 'Closed',
       };
-    case IncidentStatus.IN_PROGRESS:
+    case 'in_progress':
       return {
         bg: 'linear-gradient(135deg,#dbeafe,#bfdbfe)',
         color: '#1d4ed8',
@@ -118,7 +117,7 @@ const SolutionViewer = ({
 
         <Box className={classes.navTitleBox}>
           {current ? (
-            <Typography className={classes.navTitleText}>{current.incident.number}</Typography>
+            <Typography className={classes.navTitleText}>{current.ticket.number}</Typography>
           ) : (
             <Typography className={classes.navTitleEmpty}>
               {isLoading
@@ -166,7 +165,7 @@ const SolutionViewer = ({
           </Box>
         ) : (
           <MatchDetail
-            incident={current.incident}
+            ticket={current.ticket}
             similarity={current.similarity}
             markedUseful={markedUseful}
             onToggleUseful={onToggleUseful}
@@ -177,15 +176,14 @@ const SolutionViewer = ({
   );
 };
 
-const MatchDetail = ({ incident, similarity, markedUseful, onToggleUseful }: MatchDetailProps) => {
+const MatchDetail = ({ ticket, similarity, markedUseful, onToggleUseful }: MatchDetailProps) => {
   const { classes, cx } = useStyles();
   const matchStyle = getMatchColor(similarity);
-  const statusStyle = getStatusStyle(incident.status);
-  const priorityStyle = getPriorityStyle(incident.priority ?? '');
-  const isUseful = markedUseful.has(incident.id);
+  const statusStyle = getStatusStyle(ticket.status);
+  const priorityStyle = getPriorityStyle(ticket.priority ?? '');
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+    <Box className={classes.matchDetail}>
       {/* Score + Status banner */}
       <Box
         className={classes.scoreBanner}
@@ -195,7 +193,6 @@ const MatchDetail = ({ incident, similarity, markedUseful, onToggleUseful }: Mat
           boxShadow: `0 3px 16px ${matchStyle.color}18`,
         }}
       >
-        {/* Score circle — conic-gradient depends on similarity so stays inline */}
         <Box
           sx={{
             width: 58,
@@ -230,7 +227,7 @@ const MatchDetail = ({ incident, similarity, markedUseful, onToggleUseful }: Mat
               {statusStyle.icon}
               {statusStyle.label}
             </Box>
-            {incident.priority && (
+            {ticket.priority && (
               <Box
                 className={classes.statusChip}
                 sx={{
@@ -240,13 +237,13 @@ const MatchDetail = ({ incident, similarity, markedUseful, onToggleUseful }: Mat
                 }}
               >
                 <PriorityHighIcon sx={{ fontSize: 12 }} />
-                {incident.priority}
+                {ticket.priority}
               </Box>
             )}
           </Box>
           <Typography className={classes.scoreCreatedDate}>
             Created{' '}
-            {new Date(incident.createdAt).toLocaleDateString(undefined, {
+            {new Date(ticket.createdAt).toLocaleDateString(undefined, {
               day: 'numeric',
               month: 'short',
               year: 'numeric',
@@ -259,51 +256,51 @@ const MatchDetail = ({ incident, similarity, markedUseful, onToggleUseful }: Mat
       <Box className={classes.shortDescSection}>
         <Typography className={classes.shortDescLabel}>Short Description</Typography>
         <Typography className={classes.shortDescValue}>
-          {incident.shortDescription || '—'}
+          {ticket.shortDescription || '—'}
         </Typography>
       </Box>
 
       <Divider sx={{ mb: 1.5, borderColor: 'rgba(226,232,255,0.9)' }} />
 
       {/* Description */}
-      {incident.description && (
+      {ticket.description && (
         <Box className={classes.descCard}>
           <Box className={classes.descCardHeader}>
             <DescriptionOutlinedIcon sx={{ fontSize: 14, color: '#6366f1' }} />
             <Typography className={classes.descCardLabel}>Description</Typography>
           </Box>
           <Typography className={classes.descCardText}>
-            {stripHtml(incident.description)}
+            {stripHtml(ticket.description)}
           </Typography>
         </Box>
       )}
 
       {/* Resolution / Notes */}
-      {incident.notes && (
+      {(ticket as any).notes && (
         <Box className={classes.resCard}>
           <Box className={classes.resCardHeader}>
             <AssignmentTurnedInIcon sx={{ fontSize: 14, color: '#16a34a' }} />
             <Typography className={classes.resCardLabel}>Resolution / Notes</Typography>
           </Box>
-          <Typography className={classes.resCardText}>{incident.notes}</Typography>
+          <Typography className={classes.resCardText}>{(ticket as any).notes}</Typography>
         </Box>
       )}
 
       {/* Mark as useful */}
       <Divider sx={{ mb: 1.5, borderColor: 'rgba(226,232,255,0.9)' }} />
-      <Box className={cx(classes.markUsefulRow, isUseful && classes.markUsefulRowChecked)}>
+      <Box className={cx(classes.markUsefulRow, markedUseful.has(ticket.id) && classes.markUsefulRowChecked)}>
         <FormControlLabel
           control={
             <Checkbox
-              checked={isUseful}
-              onChange={() => onToggleUseful(incident.id)}
+              checked={markedUseful.has(ticket.id)}
+              onChange={() => onToggleUseful(ticket.id)}
               size='small'
               sx={{ color: '#94a3b8', '&.Mui-checked': { color: '#16a34a' } }}
             />
           }
           label={
             <Typography
-              className={cx(classes.markUsefulLabel, isUseful && classes.markUsefulLabelChecked)}
+              className={cx(classes.markUsefulLabel, markedUseful.has(ticket.id) && classes.markUsefulLabelChecked)}
             >
               Mark as useful
             </Typography>

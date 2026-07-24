@@ -174,10 +174,6 @@ export const TicketTypeLayoutDialog = ({
                     infoBar: { ...prev.infoBar, selectedFields: keys },
                   }))
                 }
-                maxFields={config.infoBar.maxFields}
-                onMaxFieldsChange={(value) =>
-                  setConfig((prev) => ({ ...prev, infoBar: { ...prev.infoBar, maxFields: value } }))
-                }
               />
             </AccordionDetails>
           </Accordion>

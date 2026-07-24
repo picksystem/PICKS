@@ -38,7 +38,10 @@ export function useTicketTypeConfig() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ITicketType | null>(null);
-  const [selectedRow, setSelectedRow] = useState<ITicketType | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const selectedRow =
+    (ticketTypes as ITicketType[] | undefined)?.find((item) => item.id === selectedId) ?? null;
+  const setSelectedRow = (row: ITicketType | null) => setSelectedId(row?.id ?? null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastClosedAt, setLastClosedAt] = useState(0);
   const dialogCloseRef = useRef(false);

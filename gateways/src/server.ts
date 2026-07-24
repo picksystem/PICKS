@@ -33,9 +33,11 @@ import { logger } from '@serviceops/config';
 // Prisma client for database access
 import { prisma } from '@serviceops/database';
 
-// Draft cleanup
+// Draft cleanup — use the actual gateway class (Incident.routes was deleted during migration)
 import { CleanupExpiredDraftsUseCase } from '@serviceops/core/use-cases';
-import { incidentGateway } from '../api/admin/Incident/Incident.routes';
+import { PrismaIncidentGateway } from '../../libs/core/infrastructure/admin/PrismaIncidentGateway';
+
+const incidentGateway = new PrismaIncidentGateway(prisma as any);
 
 // Server configuration
 const PORT = parseInt(process.env.PORT || '3001', 10);

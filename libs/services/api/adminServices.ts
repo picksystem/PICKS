@@ -8,37 +8,15 @@ import {
   ICreateTicketTypeInput,
   IUpdateTicketTypeInput,
   IIncident,
-  IIncidentListResponse,
-  IIncidentResponse,
-  ICreateIncidentInput,
-  IUpdateIncidentInput,
+  IServiceRequest,
+  IAdvisoryRequest,
   IIncidentComment,
-  ICommentListResponse,
-  ICommentResponse,
-  ICreateCommentInput,
   ITimeEntry,
-  ITimeEntryListResponse,
-  ITimeEntryResponse,
-  ICreateTimeEntryInput,
   IResolution,
-  IResolutionListResponse,
-  IResolutionResponse,
-  ICreateResolutionInput,
   IActivityLog,
-  IActivityLogListResponse,
   IAdminControls,
   IUpdateAdminControlsInput,
   IAdminControlsResponse,
-  IServiceRequest,
-  IServiceRequestListResponse,
-  IServiceRequestResponse,
-  ICreateServiceRequestInput,
-  IUpdateServiceRequestInput,
-  IAdvisoryRequest,
-  IAdvisoryRequestListResponse,
-  IAdvisoryRequestResponse,
-  ICreateAdvisoryRequestInput,
-  IUpdateAdvisoryRequestInput,
 } from '@serviceops/interfaces';
 import { baseApi } from './baseServices';
 
@@ -78,9 +56,36 @@ export interface ICreateTicketInput {
   draftExpiresAt?: string;
 }
 
+/** Identifies a ticket for generic sub-resource endpoints */
+export interface ITicketRef {
+  ticketType: string;
+  ticketId: number;
+}
+
+/** Params for generic list endpoints */
+export interface ITicketListParams {
+  ticketType?: string;
+}
+
+/** Params for generic get-by-id / update / delete */
+export interface ITicketIdParams {
+  ticketType: string;
+  id: number;
+}
+
+const TICKET_TYPE_SEGMENTS: Record<string, string> = {
+  incident: 'incidents',
+  service_request: 'service-requests',
+  advisory_request: 'advisory-requests',
+};
+
+const ticketTypeToSegment = (ticketType: string) => TICKET_TYPE_SEGMENTS[ticketType] ?? 'incidents';
+
 export const adminApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // Ticket Type endpoints
+    // =============================================
+    // TICKET TYPE endpoints (from configuration)
+    // =============================================
     getTicketType: builder.query<ITicketType[], void>({
       query: () => '/api/admin/ticket-type',
       transformResponse: (response: ITicketTypeListResponse) => response.data,
@@ -129,211 +134,36 @@ export const adminApi = baseApi.injectEndpoints({
       invalidatesTags: ['TicketType'],
     }),
 
-    // Incident endpoints
-    getIncidents: builder.query<IIncident[], void>({
-      query: () => '/api/admin/incidents',
-      transformResponse: (response: IIncidentListResponse) => response.data,
+    // =============================================
+    // GENERIC TICKET CRUD endpoints (dynamic by ticketType)
+    // =============================================
+
+    /** Get tickets — optionally filter by ticketType query param */
+    getTickets: builder.query<(IIncident | IServiceRequest | IAdvisoryRequest)[], ITicketListParams>({
+      query: (params) => {
+        if (params?.ticketType) {
+          return `/api/admin/tickets?ticketType=${params.ticketType}`;
+        }
+        return '/api/admin/tickets';
+      },
+      transformResponse: (response: { data: (IIncident | IServiceRequest | IAdvisoryRequest)[] }) =>
+        response.data,
+      providesTags: ['Ticket'],
     }),
-    getDraftIncidents: builder.query<IIncident[], void>({
-      query: () => '/api/admin/incidents/drafts',
-      transformResponse: (response: IIncidentListResponse) => response.data,
-    }),
-    getIncidentById: builder.query<IIncident, number | string>({
-      query: (id) => `/api/admin/incidents/${id}`,
-      transformResponse: (response: IIncidentResponse) => response.data,
-    }),
-    getIncidentByNumber: builder.query<IIncident, string>({
-      query: (number) => `/api/admin/incidents/number/${number}`,
-      transformResponse: (response: IIncidentResponse) => response.data,
-    }),
-    uploadAttachments: builder.mutation<string[], FormData>({
-      query: (formData) => ({
-        url: '/api/admin/incidents/attachments/upload',
-        method: 'POST',
-        body: formData,
-      }),
-      transformResponse: (response: { data: string[] }) => response.data,
-    }),
-    createIncident: builder.mutation<IIncident, ICreateIncidentInput>({
-      query: (body) => ({
-        url: '/api/admin/incidents',
-        method: 'POST',
-        body,
-      }),
-      transformResponse: (response: IIncidentResponse) => response.data,
-    }),
-    updateIncident: builder.mutation<
-      IIncident,
-      { id: number | string; data: IUpdateIncidentInput }
+
+    /** Get ticket by ID — requires ticketType in params */
+    getTicketById: builder.query<
+      IIncident | IServiceRequest | IAdvisoryRequest,
+      ITicketIdParams
     >({
-      query: ({ id, data }) => ({
-        url: `/api/admin/incidents/${id}`,
-        method: 'PUT',
-        body: data,
-      }),
-      transformResponse: (response: IIncidentResponse) => response.data,
-    }),
-    deleteIncident: builder.mutation<IIncident, number | string>({
-      query: (id) => ({
-        url: `/api/admin/incidents/${id}`,
-        method: 'DELETE',
-      }),
-      transformResponse: (response: IIncidentResponse) => response.data,
+      query: ({ ticketType, id }) =>
+        `/api/admin/tickets/id/${id}?ticketType=${ticketType}`,
+      transformResponse: (response: { data: IIncident | IServiceRequest | IAdvisoryRequest }) =>
+        response.data,
+      providesTags: ['Ticket'],
     }),
 
-    // Comment endpoints
-    getComments: builder.query<IIncidentComment[], number>({
-      query: (incidentId) => `/api/admin/incidents/${incidentId}/comments`,
-      transformResponse: (response: ICommentListResponse) => response.data,
-    }),
-    createComment: builder.mutation<IIncidentComment, ICreateCommentInput>({
-      query: (body) => ({
-        url: `/api/admin/incidents/${body.incidentId}/comments`,
-        method: 'POST',
-        body,
-      }),
-      transformResponse: (response: ICommentResponse) => response.data,
-    }),
-
-    // Time Entry endpoints
-    getTimeEntries: builder.query<ITimeEntry[], number>({
-      query: (incidentId) => `/api/admin/incidents/${incidentId}/time-entries`,
-      transformResponse: (response: ITimeEntryListResponse) => response.data,
-    }),
-    createTimeEntry: builder.mutation<ITimeEntry, ICreateTimeEntryInput>({
-      query: (body) => ({
-        url: `/api/admin/incidents/${body.incidentId}/time-entries`,
-        method: 'POST',
-        body,
-      }),
-      transformResponse: (response: ITimeEntryResponse) => response.data,
-    }),
-
-    // Resolution endpoints
-    getResolutions: builder.query<IResolution[], number>({
-      query: (incidentId) => `/api/admin/incidents/${incidentId}/resolutions`,
-      transformResponse: (response: IResolutionListResponse) => response.data,
-    }),
-    createResolution: builder.mutation<IResolution, ICreateResolutionInput>({
-      query: (body) => ({
-        url: `/api/admin/incidents/${body.incidentId}/resolutions`,
-        method: 'POST',
-        body,
-      }),
-      transformResponse: (response: IResolutionResponse) => response.data,
-    }),
-
-    // Activity endpoints
-    getActivities: builder.query<IActivityLog[], number>({
-      query: (incidentId) => `/api/admin/incidents/${incidentId}/activities`,
-      transformResponse: (response: IActivityLogListResponse) => response.data,
-    }),
-
-    // Service Request endpoints
-    getServiceRequests: builder.query<IServiceRequest[], void>({
-      query: () => '/api/admin/service-requests',
-      transformResponse: (response: IServiceRequestListResponse) => response.data,
-    }),
-    getDraftServiceRequests: builder.query<IServiceRequest[], void>({
-      query: () => '/api/admin/service-requests/drafts',
-      transformResponse: (response: IServiceRequestListResponse) => response.data,
-    }),
-    getServiceRequestById: builder.query<IServiceRequest, number | string>({
-      query: (id) => `/api/admin/service-requests/${id}`,
-      transformResponse: (response: IServiceRequestResponse) => response.data,
-    }),
-    getServiceRequestByNumber: builder.query<IServiceRequest, string>({
-      query: (number) => `/api/admin/service-requests/number/${number}`,
-      transformResponse: (response: IServiceRequestResponse) => response.data,
-    }),
-    uploadServiceRequestAttachments: builder.mutation<string[], FormData>({
-      query: (formData) => ({
-        url: '/api/admin/service-requests/attachments/upload',
-        method: 'POST',
-        body: formData,
-      }),
-      transformResponse: (response: { data: string[] }) => response.data,
-    }),
-    createServiceRequest: builder.mutation<IServiceRequest, ICreateServiceRequestInput>({
-      query: (body) => ({
-        url: '/api/admin/service-requests',
-        method: 'POST',
-        body,
-      }),
-      transformResponse: (response: IServiceRequestResponse) => response.data,
-    }),
-    updateServiceRequest: builder.mutation<
-      IServiceRequest,
-      { id: number | string; data: IUpdateServiceRequestInput }
-    >({
-      query: ({ id, data }) => ({
-        url: `/api/admin/service-requests/${id}`,
-        method: 'PUT',
-        body: data,
-      }),
-      transformResponse: (response: IServiceRequestResponse) => response.data,
-    }),
-    deleteServiceRequest: builder.mutation<IServiceRequest, number | string>({
-      query: (id) => ({
-        url: `/api/admin/service-requests/${id}`,
-        method: 'DELETE',
-      }),
-      transformResponse: (response: IServiceRequestResponse) => response.data,
-    }),
-
-    // Advisory Request endpoints
-    getAdvisoryRequests: builder.query<IAdvisoryRequest[], void>({
-      query: () => '/api/admin/advisory-requests',
-      transformResponse: (response: IAdvisoryRequestListResponse) => response.data,
-    }),
-    getDraftAdvisoryRequests: builder.query<IAdvisoryRequest[], void>({
-      query: () => '/api/admin/advisory-requests/drafts',
-      transformResponse: (response: IAdvisoryRequestListResponse) => response.data,
-    }),
-    getAdvisoryRequestById: builder.query<IAdvisoryRequest, number | string>({
-      query: (id) => `/api/admin/advisory-requests/${id}`,
-      transformResponse: (response: IAdvisoryRequestResponse) => response.data,
-    }),
-    getAdvisoryRequestByNumber: builder.query<IAdvisoryRequest, string>({
-      query: (number) => `/api/admin/advisory-requests/number/${number}`,
-      transformResponse: (response: IAdvisoryRequestResponse) => response.data,
-    }),
-    uploadAdvisoryRequestAttachments: builder.mutation<string[], FormData>({
-      query: (formData) => ({
-        url: '/api/admin/advisory-requests/attachments/upload',
-        method: 'POST',
-        body: formData,
-      }),
-      transformResponse: (response: { data: string[] }) => response.data,
-    }),
-    createAdvisoryRequest: builder.mutation<IAdvisoryRequest, ICreateAdvisoryRequestInput>({
-      query: (body) => ({
-        url: '/api/admin/advisory-requests',
-        method: 'POST',
-        body,
-      }),
-      transformResponse: (response: IAdvisoryRequestResponse) => response.data,
-    }),
-    updateAdvisoryRequest: builder.mutation<
-      IAdvisoryRequest,
-      { id: number | string; data: IUpdateAdvisoryRequestInput }
-    >({
-      query: ({ id, data }) => ({
-        url: `/api/admin/advisory-requests/${id}`,
-        method: 'PUT',
-        body: data,
-      }),
-      transformResponse: (response: IAdvisoryRequestResponse) => response.data,
-    }),
-    deleteAdvisoryRequest: builder.mutation<IAdvisoryRequest, number | string>({
-      query: (id) => ({
-        url: `/api/admin/advisory-requests/${id}`,
-        method: 'DELETE',
-      }),
-      transformResponse: (response: IAdvisoryRequestResponse) => response.data,
-    }),
-
-    // Unified Ticket endpoints (single API for all ticket types)
+    /** Get ticket by number — auto-detects type from prefix */
     getTicketByNumber: builder.query<
       (IIncident | IServiceRequest | IAdvisoryRequest) & { ticketType: string },
       string
@@ -342,7 +172,10 @@ export const adminApi = baseApi.injectEndpoints({
       transformResponse: (response: {
         data: (IIncident | IServiceRequest | IAdvisoryRequest) & { ticketType: string };
       }) => response.data,
+      providesTags: ['Ticket'],
     }),
+
+    /** Create ticket — ticketType in body determines the entity type */
     createTicket: builder.mutation<
       IIncident | IServiceRequest | IAdvisoryRequest,
       ICreateTicketInput
@@ -354,7 +187,52 @@ export const adminApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: { data: IIncident | IServiceRequest | IAdvisoryRequest }) =>
         response.data,
+      invalidatesTags: ['Ticket'],
     }),
+
+    /** Update ticket — ticketType + id required */
+    updateTicket: builder.mutation<
+      IIncident | IServiceRequest | IAdvisoryRequest,
+      ITicketIdParams & { data: Record<string, unknown> }
+    >({
+      query: ({ ticketType, id, data }) => ({
+        url: `/api/admin/tickets/id/${id}?ticketType=${ticketType}`,
+        method: 'PUT',
+        body: data,
+      }),
+      transformResponse: (response: { data: IIncident | IServiceRequest | IAdvisoryRequest }) =>
+        response.data,
+      invalidatesTags: ['Ticket'],
+    }),
+
+    /** Delete ticket — ticketType required */
+    deleteTicket: builder.mutation<IIncident | IServiceRequest | IAdvisoryRequest, ITicketIdParams>({
+      query: ({ ticketType, id }) => ({
+        url: `/api/admin/tickets/id/${id}?ticketType=${ticketType}`,
+        method: 'DELETE',
+      }),
+      transformResponse: (response: { data: IIncident | IServiceRequest | IAdvisoryRequest }) =>
+        response.data,
+      invalidatesTags: ['Ticket'],
+    }),
+
+    /** Get drafts — optionally filter by ticketType */
+    getDraftTickets: builder.query<
+      (IIncident | IServiceRequest | IAdvisoryRequest)[],
+      ITicketListParams
+    >({
+      query: (params) => {
+        if (params?.ticketType) {
+          return `/api/admin/tickets/drafts?ticketType=${params.ticketType}`;
+        }
+        return '/api/admin/tickets/drafts';
+      },
+      transformResponse: (response: { data: (IIncident | IServiceRequest | IAdvisoryRequest)[] }) =>
+        response.data,
+      providesTags: ['Ticket'],
+    }),
+
+    /** Upload ticket attachments */
     uploadTicketAttachments: builder.mutation<string[], FormData>({
       query: (formData) => ({
         url: '/api/admin/tickets/attachments/upload',
@@ -364,7 +242,102 @@ export const adminApi = baseApi.injectEndpoints({
       transformResponse: (response: { data: string[] }) => response.data,
     }),
 
-    // Configuration endpoints (unified configuration API)
+    // =============================================
+    // GENERIC SUB-RESOURCE endpoints (dynamic by ticketType)
+    // =============================================
+    getTicketComments: builder.query<IIncidentComment[], ITicketRef>({
+      query: ({ ticketType, ticketId }) =>
+        `/api/admin/${ticketTypeToSegment(ticketType)}/${ticketId}/comments`,
+      transformResponse: (response: { data: IIncidentComment[] }) => response.data,
+    }),
+    createTicketComment: builder.mutation<
+      IIncidentComment,
+      ITicketRef & {
+        subject: string;
+        message: string;
+        isInternal?: boolean;
+        isSelfNote?: boolean;
+        notifyAssigneesOnly?: boolean;
+        status?: string;
+        attachments?: string;
+        createdBy: string;
+      }
+    >({
+      query: ({ ticketType, ticketId, ...body }) => ({
+        url: `/api/admin/${ticketTypeToSegment(ticketType)}/${ticketId}/comments`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: { data: IIncidentComment }) => response.data,
+    }),
+
+    getTicketTimeEntries: builder.query<ITimeEntry[], ITicketRef>({
+      query: ({ ticketType, ticketId }) =>
+        `/api/admin/${ticketTypeToSegment(ticketType)}/${ticketId}/time-entries`,
+      transformResponse: (response: { data: ITimeEntry[] }) => response.data,
+    }),
+    createTicketTimeEntry: builder.mutation<
+      ITimeEntry,
+      ITicketRef & {
+        date: string;
+        hours: number;
+        minutes: number;
+        billingCode?: string;
+        activityTask?: string;
+        externalComment?: string;
+        internalComment?: string;
+        isNonBillable?: boolean;
+        attachments?: string;
+        createdBy: string;
+      }
+    >({
+      query: ({ ticketType, ticketId, ...body }) => ({
+        url: `/api/admin/${ticketTypeToSegment(ticketType)}/${ticketId}/time-entries`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: { data: ITimeEntry }) => response.data,
+    }),
+
+    getTicketResolutions: builder.query<IResolution[], ITicketRef>({
+      query: ({ ticketType, ticketId }) =>
+        `/api/admin/${ticketTypeToSegment(ticketType)}/${ticketId}/resolutions`,
+      transformResponse: (response: { data: IResolution[] }) => response.data,
+    }),
+    createTicketResolution: builder.mutation<
+      IResolution,
+      ITicketRef & {
+        application?: string;
+        category?: string;
+        subCategory?: string;
+        customerConfirmation?: boolean;
+        isRecurring?: boolean;
+        rootCauseIdentified?: boolean;
+        rootCause?: string;
+        resolutionCode: string;
+        resolution: string;
+        internalNote?: string;
+        attachments?: string;
+        createdBy: string;
+      }
+    >({
+      query: ({ ticketType, ticketId, ...body }) => ({
+        url: `/api/admin/${ticketTypeToSegment(ticketType)}/${ticketId}/resolutions`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: { data: IResolution }) => response.data,
+    }),
+
+    getTicketActivities: builder.query<IActivityLog[], ITicketRef>({
+      query: ({ ticketType, ticketId }) =>
+        `/api/admin/${ticketTypeToSegment(ticketType)}/${ticketId}/activities`,
+      transformResponse: (response: { data: IActivityLog[] }) => response.data,
+    }),
+
+    // =============================================
+    // CONFIGURATION endpoints (unified configuration API)
+    // =============================================
     getConfiguration: builder.query<IConfiguration, void>({
       query: () => '/api/admin/configuration',
       transformResponse: (response: IConfigurationResponse) => response.data,
@@ -392,7 +365,9 @@ export const adminApi = baseApi.injectEndpoints({
       invalidatesTags: ['Configuration'],
     }),
 
-    // AdminControls endpoints
+    // =============================================
+    // ADMIN CONTROLS endpoints
+    // =============================================
     getAdminControls: builder.query<IAdminControls, void>({
       query: () => '/api/admin/controls',
       transformResponse: (response: IAdminControlsResponse) => response.data,
@@ -420,48 +395,24 @@ export const {
   useUpdateTicketTypeMutation,
   useReorderTicketTypesMutation,
   useDeleteTicketTypeMutation,
-  // Incident hooks
-  useUploadAttachmentsMutation,
-  useGetIncidentsQuery,
-  useGetDraftIncidentsQuery,
-  useGetIncidentByIdQuery,
-  useGetIncidentByNumberQuery,
-  useCreateIncidentMutation,
-  useUpdateIncidentMutation,
-  useDeleteIncidentMutation,
-  // Comment hooks
-  useGetCommentsQuery,
-  useCreateCommentMutation,
-  // Time Entry hooks
-  useGetTimeEntriesQuery,
-  useCreateTimeEntryMutation,
-  // Resolution hooks
-  useGetResolutionsQuery,
-  useCreateResolutionMutation,
-  // Activity hooks
-  useGetActivitiesQuery,
-  // Service Request hooks
-  useGetServiceRequestsQuery,
-  useGetDraftServiceRequestsQuery,
-  useGetServiceRequestByIdQuery,
-  useGetServiceRequestByNumberQuery,
-  useUploadServiceRequestAttachmentsMutation,
-  useCreateServiceRequestMutation,
-  useUpdateServiceRequestMutation,
-  useDeleteServiceRequestMutation,
-  // Advisory Request hooks
-  useGetAdvisoryRequestsQuery,
-  useGetDraftAdvisoryRequestsQuery,
-  useGetAdvisoryRequestByIdQuery,
-  useGetAdvisoryRequestByNumberQuery,
-  useUploadAdvisoryRequestAttachmentsMutation,
-  useCreateAdvisoryRequestMutation,
-  useUpdateAdvisoryRequestMutation,
-  useDeleteAdvisoryRequestMutation,
-  // Unified Ticket hooks
+  // Generic Ticket CRUD hooks
+  useGetTicketsQuery,
+  useGetTicketByIdQuery,
   useGetTicketByNumberQuery,
   useCreateTicketMutation,
+  useUpdateTicketMutation,
+  useDeleteTicketMutation,
+  useGetDraftTicketsQuery,
   useUploadTicketAttachmentsMutation,
+  // Generic ticket sub-resource hooks (comments/time-entries/resolutions/activities
+  // across incident/service_request/advisory_request)
+  useGetTicketCommentsQuery,
+  useCreateTicketCommentMutation,
+  useGetTicketTimeEntriesQuery,
+  useCreateTicketTimeEntryMutation,
+  useGetTicketResolutionsQuery,
+  useCreateTicketResolutionMutation,
+  useGetTicketActivitiesQuery,
   // AdminControls hooks
   useGetAdminControlsQuery,
   useUpdateAdminControlsMutation,

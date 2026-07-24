@@ -5,6 +5,7 @@ import {
   useUploadTicketAttachmentsMutation,
   useGetAllUsersMutation,
   useUpdateUserMutation,
+  useGetTicketTypeQuery,
 } from '@serviceops/services';
 import {
   IncidentImpact,
@@ -21,13 +22,14 @@ import {
   useTicketConfig,
 } from '@serviceops/hooks';
 import { constants } from '@serviceops/utils';
+import { useConfiguration } from '@serviceops/confighooks';
+import { channelOptions, generateTicketNumber, calculatePriority, initialValues } from '../util';
 import {
-  getTicketConfig,
-  channelOptions,
-  generateTicketNumber,
-  calculatePriority,
-  initialValues,
-} from '../util';
+  getTagVisuals,
+  getTagOption,
+  loadTagMap,
+  FALLBACK_COLOR,
+} from '../../../../Configuration/utils/ticketTypeIcons';
 
 export interface CreateTicketDetailProps {
   ticketType: string;
@@ -40,9 +42,57 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   const navigate = useNavigate();
   const { BasePath } = constants;
   const notify = useNotification();
-  const config = getTicketConfig(ticketType);
+  const { data: ticketTypes } = useGetTicketTypeQuery();
+  const record = ticketTypes?.find((t) => t.type === ticketType);
+  const tagMap = loadTagMap();
+  const tagColor = getTagOption(tagMap[ticketType] ?? '')?.color ?? FALLBACK_COLOR;
+  const { gradient, glow } = getTagVisuals(tagColor);
+  const config = {
+    title: `Create ${record?.displayName || record?.name || ticketType}`,
+    prefix: record?.prefix || 'TKT',
+    numberLength: record?.numberLength || 7,
+    subtitle: record?.shortDescription || 'Fill in the details below to create a new ticket',
+    heroGradient: gradient,
+    heroShadow: glow,
+  };
   const { impactOptions, urgencyOptions, priorityOptions, statusOptions } =
     useTicketConfig(ticketType);
+  const { categorization } = useConfiguration();
+  const businessCategoryOptions = useMemo(
+    () =>
+      (categorization?.businessCategories ?? [])
+        .filter((bc) => !!bc.name)
+        .map((bc) => ({ value: bc.name, label: bc.name })),
+    [categorization?.businessCategories],
+  );
+  const serviceLineOptions = useMemo(
+    () =>
+      (categorization?.serviceLines ?? [])
+        .filter((sl) => !!sl.name)
+        .map((sl) => ({ value: sl.name, label: sl.name })),
+    [categorization?.serviceLines],
+  );
+  const applicationOptions = useMemo(
+    () =>
+      (categorization?.applications ?? [])
+        .filter((app) => !!app.name)
+        .map((app) => ({ value: app.name, label: app.name })),
+    [categorization?.applications],
+  );
+  const applicationCategoryOptions = useMemo(
+    () =>
+      (categorization?.applicationCategories ?? [])
+        .filter((ac) => !!ac.categoryName)
+        .map((ac) => ({ value: ac.categoryName, label: ac.categoryName })),
+    [categorization?.applicationCategories],
+  );
+  const applicationSubCategoryOptions = useMemo(
+    () =>
+      (categorization?.applicationSubCategories ?? [])
+        .filter((asc) => !!asc.subCategoryName)
+        .map((asc) => ({ value: asc.subCategoryName, label: asc.subCategoryName })),
+    [categorization?.applicationSubCategories],
+  );
 
   const [createTicket, { isLoading }] = useCreateTicketMutation();
   const [uploadAttachments] = useUploadTicketAttachmentsMutation();
@@ -65,7 +115,10 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   >([]);
   const [manualCallerOpen, setManualCallerOpen] = useState(false);
 
-  const ticketNumber = useMemo(() => generateTicketNumber(config.prefix), [config.prefix]);
+  const ticketNumber = useMemo(
+    () => generateTicketNumber(config.prefix, config.numberLength),
+    [config.prefix, config.numberLength],
+  );
   const createdDateTime = useMemo(() => new Date().toLocaleString(), []);
 
   useEffect(() => {
@@ -119,11 +172,21 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
 
   // Auto-calculate priority on form mount and when impact/urgency change
   useEffect(() => {
+    const { impact, urgency } = formik.values;
+    // Guard against empty strings and legacy sessionStorage values (label text like "3 - Low")
+    if (
+      !impact ||
+      !urgency ||
+      !Object.values(IncidentImpact).includes(impact as IncidentImpact) ||
+      !Object.values(IncidentUrgency).includes(urgency as IncidentUrgency)
+    ) {
+      return;
+    }
     const newPriority = calculatePriority(
-      formik.values.impact as IncidentImpact,
-      formik.values.urgency as IncidentUrgency,
+      impact as IncidentImpact,
+      urgency as IncidentUrgency,
     );
-    if (newPriority !== formik.values.priority) {
+    if (newPriority && newPriority !== formik.values.priority) {
       formik.setFieldValue('priority', newPriority);
     }
   }, [formik.values.impact, formik.values.urgency]);
@@ -362,6 +425,11 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     priorityOptions,
     statusOptions,
     channelOptions,
+    businessCategoryOptions,
+    serviceLineOptions,
+    applicationOptions,
+    applicationCategoryOptions,
+    applicationSubCategoryOptions,
     validationFailed,
     handleCallerChange,
     handleManualCallerUpdate,

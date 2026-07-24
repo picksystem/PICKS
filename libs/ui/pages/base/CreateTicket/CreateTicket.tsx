@@ -1,4 +1,4 @@
-import { alpha, darken } from '@mui/material';
+import { alpha } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { useStyles } from './styles';
@@ -10,17 +10,9 @@ import {
   getTagOption,
   loadIconMap,
   loadTagMap,
+  getTagVisuals,
+  FALLBACK_COLOR,
 } from '../Configuration/utils/ticketTypeIcons';
-
-/** Derive card visuals from priority tag color */
-function getTagVisuals(tagColor: string) {
-  const accent = tagColor;
-  const gradient = `linear-gradient(135deg, ${darken(tagColor, 0.2)} 0%, ${tagColor} 100%)`;
-  const glow = alpha(tagColor, 0.35);
-  return { accent, gradient, glow };
-}
-
-const FALLBACK_COLOR = '#64748b';
 
 const CreateTicket = () => {
   const { classes } = useStyles();

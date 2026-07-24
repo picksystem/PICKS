@@ -1,7 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { Box, Typography } from '@serviceops/component';
-import IncidentDetail from '../IncidentDetail/IncidentDetail';
-import GenericTicketDetailView from './GenericTicketDetailView';
+import TicketDetailView from './TicketDetailView';
 
 /** Detect ticket type from number prefix (e.g. INC0001234 → incident) */
 const PREFIX_TYPE_MAP: Record<string, string> = {
@@ -13,6 +12,8 @@ const PREFIX_TYPE_MAP: Record<string, string> = {
   TSK: 'task',
 };
 
+const SUPPORTED_TYPES = new Set(['incident', 'service_request', 'advisory_request']);
+
 const detectTypeFromNumber = (number?: string): string | null => {
   if (!number) return null;
   const prefix = number.match(/^([A-Z]+)/)?.[1];
@@ -20,56 +21,41 @@ const detectTypeFromNumber = (number?: string): string | null => {
 };
 
 /**
- * Unified Ticket Detail Page
- * Detects ticket type from the URL number param and renders the appropriate detail view.
- *
- * switch(ticketType) {
- *   case 'incident':          → IncidentDetail (full-featured existing component)
- *   case 'service_request':   → GenericTicketDetailView
- *   case 'advisory_request':  → GenericTicketDetailView
- *   case 'change_request':    → GenericTicketDetailView
- *   case 'problem_request':   → GenericTicketDetailView
- *   case 'task':              → GenericTicketDetailView
- *   default:                  → not-found message
- * }
+ * Unified Ticket Detail Page — one component handles every ticket type.
+ * Change Request / Problem Request / Task have no backend support yet
+ * (no data model, no API), so they show a friendly "not available" state
+ * instead of attempting to load.
  */
 const TicketDetail = () => {
   const { number } = useParams<{ number: string }>();
   const ticketType = detectTypeFromNumber(number);
 
-  switch (ticketType) {
-    case 'incident':
-      // IncidentDetail reads :number from useParams itself — no extra props needed
-      return <IncidentDetail />;
-
-    case 'service_request':
-    case 'advisory_request':
-    case 'change_request':
-    case 'problem_request':
-    case 'task':
-      return <GenericTicketDetailView ticketType={ticketType} />;
-
-    default:
-      return (
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '60vh',
-            flexDirection: 'column',
-            gap: 1,
-          }}
-        >
-          <Typography variant='h6' color='text.secondary'>
-            Unknown ticket type
-          </Typography>
-          <Typography variant='body2' color='text.disabled'>
-            Could not determine the ticket type from number: <strong>{number}</strong>
-          </Typography>
-        </Box>
-      );
+  if (ticketType && SUPPORTED_TYPES.has(ticketType)) {
+    return <TicketDetailView />;
   }
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '60vh',
+        flexDirection: 'column',
+        gap: 1,
+      }}
+    >
+      <Typography variant='h6' color='text.secondary'>
+        {ticketType ? 'Ticket type not yet available' : 'Unknown ticket type'}
+      </Typography>
+      <Typography variant='body2' color='text.disabled'>
+        {ticketType
+          ? `Detail pages for this ticket type are not yet supported.`
+          : `Could not determine the ticket type from number: `}
+        <strong>{number}</strong>
+      </Typography>
+    </Box>
+  );
 };
 
 export default TicketDetail;

@@ -2,8 +2,24 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { constants } from '@serviceops/utils';
 import { useAuth, useDebounce } from '@serviceops/hooks';
-import { useAuthActionMutation, useGetIncidentsQuery } from '@serviceops/services';
-import { IAuthUser, IIncident } from '@serviceops/interfaces';
+import { useAuthActionMutation, useGetTicketsQuery } from '@serviceops/services';
+import { IAuthUser } from '@serviceops/interfaces';
+
+type TicketType = 'incident' | 'service_request' | 'advisory_request';
+
+type Ticket = {
+  id: number;
+  number: string;
+  shortDescription: string | null;
+  status: string;
+  ticketType: TicketType;
+};
+
+const TICKET_TYPE_PATH_SEGMENT: Record<TicketType, string> = {
+  incident: 'incident',
+  service_request: 'service-request',
+  advisory_request: 'advisory-request',
+};
 
 export const useHeader = () => {
   const navigate = useNavigate();
@@ -41,13 +57,15 @@ export const useHeader = () => {
   const [ticketSearch, setTicketSearch] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
   const debouncedSearch = useDebounce(ticketSearch, 300);
-  const { data: incidents } = useGetIncidentsQuery();
+  const { data: tickets } = useGetTicketsQuery();
 
   const filteredIncidents = useMemo(() => {
-    if (!debouncedSearch || debouncedSearch.length < 2 || !incidents) return [];
+    if (!debouncedSearch || debouncedSearch.length < 2 || !tickets) return [];
     const query = debouncedSearch.toLowerCase();
-    return incidents.filter((inc) => inc.number.toLowerCase().includes(query)).slice(0, 8);
-  }, [debouncedSearch, incidents]);
+    return (tickets as Ticket[])
+      .filter((ticket) => ticket.number.toLowerCase().includes(query))
+      .slice(0, 8);
+  }, [debouncedSearch, tickets]);
 
   useEffect(() => {
     const fetchPendingRequests = async () => {
@@ -71,15 +89,16 @@ export const useHeader = () => {
   }, []);
 
   const handleSelectIncident = useCallback(
-    (incident: IIncident) => {
+    (incident: Ticket) => {
       setShowSearchResults(false);
       setTicketSearch('');
-      // Navigate to incident detail in the current mode
+      const segment = TICKET_TYPE_PATH_SEGMENT[incident.ticketType];
+      // Navigate to ticket detail in the current mode
       const detailPath = currentPath.startsWith('/app/user')
-        ? `/app/user/incident/${incident.number}`
+        ? `/app/user/${segment}/${incident.number}`
         : currentPath.startsWith('/app/consultant')
-          ? `/app/consultant/incident/${incident.number}`
-          : `/app/base/incident/${incident.number}`;
+          ? `/app/consultant/${segment}/${incident.number}`
+          : `/app/base/${segment}/${incident.number}`;
       navigate(detailPath);
     },
     [currentPath, navigate],

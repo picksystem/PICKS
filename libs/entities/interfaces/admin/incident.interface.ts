@@ -84,12 +84,14 @@ export enum ActivityType {
 }
 
 /**
- * Calculate priority based on impact and urgency matrix
+ * Calculate priority based on impact and urgency matrix.
+ * Returns undefined if either value is missing or unrecognised.
  */
 export const calculatePriority = (
   impact: IncidentImpact,
   urgency: IncidentUrgency,
-): IncidentPriority => {
+): IncidentPriority | undefined => {
+  if (!impact || !urgency) return undefined;
   const matrix: Record<IncidentImpact, Record<IncidentUrgency, IncidentPriority>> = {
     [IncidentImpact.HIGH]: {
       [IncidentUrgency.HIGH]: IncidentPriority.CRITICAL,
@@ -107,7 +109,7 @@ export const calculatePriority = (
       [IncidentUrgency.LOW]: IncidentPriority.PLANNING,
     },
   };
-  return matrix[impact][urgency];
+  return matrix[impact]?.[urgency];
 };
 
 // ============================================

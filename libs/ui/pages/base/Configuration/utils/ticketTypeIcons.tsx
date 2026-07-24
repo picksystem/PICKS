@@ -1,4 +1,5 @@
 import React from 'react';
+import { alpha, darken } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
@@ -69,6 +70,17 @@ import FlagIcon from '@mui/icons-material/Flag';
 import AssignmentLateIcon from '@mui/icons-material/AssignmentLate';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+
+/** Fallback accent color for ticket types with no tag assigned */
+export const FALLBACK_COLOR = '#64748b';
+
+/** Derive card/hero visuals (accent, gradient, glow) from a tag color */
+export function getTagVisuals(tagColor: string) {
+  const accent = tagColor;
+  const gradient = `linear-gradient(135deg, ${darken(tagColor, 0.2)} 0%, ${tagColor} 100%)`;
+  const glow = alpha(tagColor, 0.35);
+  return { accent, gradient, glow };
+}
 
 export interface TicketIconOption {
   key: string;

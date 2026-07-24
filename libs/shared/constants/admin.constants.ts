@@ -3,13 +3,10 @@ export enum ADMIN_PATHS {
   DASHBOARD = 'dashboard',
   HEADER = 'header',
   TICKET_TYPE = 'ticket-type',
-  INCIDENTS = 'incidents',
   NOT_FOUND = 'not-found',
   SIGN_IN = 'sign-in',
   ROLE_REQUESTS = 'role-requests',
   ADMIN_CONTROLS = 'controls',
-  SERVICE_REQUESTS = 'service-requests',
-  ADVISORY_REQUESTS = 'advisory-requests',
   TICKETS = 'tickets',
   CONFIGURATION = 'configuration',
 }

@@ -17,6 +17,18 @@ import {
   GetIncidentByNumberUseCase,
   GetServiceRequestByNumberUseCase,
   GetAdvisoryRequestByNumberUseCase,
+  GetAllIncidentsUseCase,
+  GetAllServiceRequestsUseCase,
+  GetAllAdvisoryRequestsUseCase,
+  GetIncidentUseCase,
+  GetServiceRequestUseCase,
+  GetAdvisoryRequestUseCase,
+  UpdateIncidentUseCase,
+  UpdateServiceRequestUseCase,
+  UpdateAdvisoryRequestUseCase,
+  DeleteIncidentUseCase,
+  DeleteServiceRequestUseCase,
+  DeleteAdvisoryRequestUseCase,
 } from '@serviceops/core/use-cases';
 
 // ── Gateways ─────────────────────────────────────────────────────────────────
@@ -38,6 +50,18 @@ const getServiceRequestByNumberUseCase = new GetServiceRequestByNumberUseCase(
 const getAdvisoryRequestByNumberUseCase = new GetAdvisoryRequestByNumberUseCase(
   advisoryRequestGateway,
 );
+const getAllIncidentsUseCase = new GetAllIncidentsUseCase(incidentGateway);
+const getAllServiceRequestsUseCase = new GetAllServiceRequestsUseCase(serviceRequestGateway);
+const getAllAdvisoryRequestsUseCase = new GetAllAdvisoryRequestsUseCase(advisoryRequestGateway);
+const getIncidentUseCase = new GetIncidentUseCase(incidentGateway);
+const getServiceRequestUseCase = new GetServiceRequestUseCase(serviceRequestGateway);
+const getAdvisoryRequestUseCase = new GetAdvisoryRequestUseCase(advisoryRequestGateway);
+const updateIncidentUseCase = new UpdateIncidentUseCase(incidentGateway);
+const updateServiceRequestUseCase = new UpdateServiceRequestUseCase(serviceRequestGateway);
+const updateAdvisoryRequestUseCase = new UpdateAdvisoryRequestUseCase(advisoryRequestGateway);
+const deleteIncidentUseCase = new DeleteIncidentUseCase(incidentGateway);
+const deleteServiceRequestUseCase = new DeleteServiceRequestUseCase(serviceRequestGateway);
+const deleteAdvisoryRequestUseCase = new DeleteAdvisoryRequestUseCase(advisoryRequestGateway);
 
 // ── Controller ────────────────────────────────────────────────────────────────
 const controller = new TicketController(
@@ -47,6 +71,18 @@ const controller = new TicketController(
   getIncidentByNumberUseCase,
   getServiceRequestByNumberUseCase,
   getAdvisoryRequestByNumberUseCase,
+  getAllIncidentsUseCase,
+  getAllServiceRequestsUseCase,
+  getAllAdvisoryRequestsUseCase,
+  getIncidentUseCase,
+  getServiceRequestUseCase,
+  getAdvisoryRequestUseCase,
+  updateIncidentUseCase,
+  updateServiceRequestUseCase,
+  updateAdvisoryRequestUseCase,
+  deleteIncidentUseCase,
+  deleteServiceRequestUseCase,
+  deleteAdvisoryRequestUseCase,
 );
 
 // ── File upload setup ─────────────────────────────────────────────────────────
@@ -85,5 +121,21 @@ router.get('/:number', controller.getByNumber);
 
 // Unified create endpoint — ticketType in body determines which entity is created
 router.post('/', controller.create);
+
+// Generic list — supports ?ticketType=incident|service_request|advisory_request
+router.get('/', controller.getAll);
+
+// Generic get by ID — ?ticketType=incident|service_request|advisory_request
+router.get('/id/:id', controller.getById);
+
+// Generic update — ticketType + data in body
+router.put('/id/:id', controller.update);
+router.patch('/id/:id', controller.update);
+
+// Generic delete — ticketType in body
+router.delete('/id/:id', controller.delete);
+
+// Generic drafts — supports ?ticketType=incident|service_request|advisory_request
+router.get('/drafts', controller.getDrafts);
 
 export default router;

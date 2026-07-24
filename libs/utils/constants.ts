@@ -6,6 +6,7 @@ const BasePath = {
   DASHBOARD: `${BASE}/dashboard`,
   FAVOURITES: `${BASE}/favourites`,
   RECENT_ITEMS: `${BASE}/recent-items`,
+  TICKET_MANAGEMENT: `${BASE}/ticket-management`,
   INCIDENT_MANAGEMENT: `${BASE}/incident-management`,
   CHANGE_MANAGEMENT: `${BASE}/change-management`,
   PROBLEM_MANAGEMENT: `${BASE}/problem-management`,

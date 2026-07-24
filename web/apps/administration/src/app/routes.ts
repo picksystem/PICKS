@@ -7,6 +7,7 @@ export const LazyMenuItems = {
   BaseFavouritesPage: lazy(() => import('@serviceops/pages/base/Favourites')),
   BaseRecentItemsPage: lazy(() => import('@serviceops/pages/base/RecentItems')),
   BaseIncidentManagementPage: lazy(() => import('@serviceops/pages/base/IncidentManagement')),
+  BaseTicketManagementPage: lazy(() => import('@serviceops/pages/base/TicketManagement')),
   BaseChangeManagementPage: lazy(() => import('@serviceops/pages/base/ChangeManagement')),
   BaseProblemManagementPage: lazy(() => import('@serviceops/pages/base/ProblemManagement')),
   BaseTimeManagementPage: lazy(() => import('@serviceops/pages/base/TimeManagement')),
@@ -23,7 +24,9 @@ export const LazyMenuItems = {
   BaseClientsAndProjectsPage: lazy(() => import('@serviceops/pages/base/ClientsAndProjects')),
   BaseRoleRequestsPage: lazy(() => import('@serviceops/pages/base/RoleRequests')),
   BaseProfilePage: lazy(() => import('@serviceops/pages/base/Profile')),
-  BaseIncidentDetailPage: lazy(() => import('@serviceops/pages/base/IncidentDetail')),
+  // Both routes render the same unified ticket detail page — one component
+  // maintains every ticket type, no per-type duplication.
+  BaseIncidentDetailPage: lazy(() => import('@serviceops/pages/base/TicketDetail')),
   BaseTicketDetailPage: lazy(() => import('@serviceops/pages/base/TicketDetail')),
   BaseSuggestedSolutionPage: lazy(() => import('@serviceops/pages/base/SuggestedSolution')),
   BaseConfigurationPage: lazy(() => import('@serviceops/pages/base/Configuration')),

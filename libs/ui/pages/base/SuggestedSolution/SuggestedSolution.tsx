@@ -2,8 +2,8 @@ import { useState, useMemo, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Alert, Button, Box } from '@serviceops/component';
-import { useGetIncidentsQuery, useCreateIncidentMutation } from '../../../../services';
-import { IncidentStatus, ICreateIncidentInput } from '../../../../entities/interfaces';
+import { useGetTicketsQuery, useCreateTicketMutation } from '../../../../services';
+import { ICreateTicketInput } from '../../../../services';
 import { constants } from '@serviceops/utils';
 import { useNotification, useDebounce } from '@serviceops/hooks';
 import { useStyles } from './styles';
@@ -42,6 +42,12 @@ const calculateSimilarity = (text1: string, text2: string): number => {
   return Math.min(100, Math.round((matchCount / union) * 100));
 };
 
+/** Build a complete ticket body with all required fields for the generic create endpoint */
+const buildTicketBody = (data: ICreateTicketInput, overrides: Partial<ICreateTicketInput> = {}): ICreateTicketInput => ({
+  ...data,
+  ...overrides,
+});
+
 const SuggestedSolution = () => {
   const { classes } = useStyles();
   const navigate = useNavigate();
@@ -49,13 +55,13 @@ const SuggestedSolution = () => {
   const { BasePath } = constants;
   const notify = useNotification();
 
-  const incidentData = location.state?.incidentData as
-    | (ICreateIncidentInput & { number: string })
+  const ticketData = location.state?.ticketData as
+    | (ICreateTicketInput & { number: string })
     | undefined;
-  const ticketNumber = incidentData?.number ?? '';
+  const ticketNumber = ticketData?.number ?? '';
 
-  const [shortDesc, setShortDesc] = useState(incidentData?.shortDescription ?? '');
-  const [issueText, setIssueText] = useState(stripHtml(incidentData?.description ?? ''));
+  const [shortDesc, setShortDesc] = useState(ticketData?.shortDescription ?? '');
+  const [issueText, setIssueText] = useState(stripHtml(ticketData?.description ?? ''));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [markedUseful, setMarkedUseful] = useState<Set<number>>(new Set());
 
@@ -71,18 +77,21 @@ const SuggestedSolution = () => {
     });
   }, []);
 
-  const { data: allIncidents = [], isLoading } = useGetIncidentsQuery();
-  const [createIncident, { isLoading: isSubmitting }] = useCreateIncidentMutation();
+  /** Fetch all tickets (returns all types); filter for resolved/closed client-side */
+  const { data: allTickets = [], isLoading } = useGetTicketsQuery();
+  const [createTicket, { isLoading: isSubmitting }] = useCreateTicketMutation();
 
   const debouncedShort = useDebounce(shortDesc, 300);
   const debouncedDesc = useDebounce(issueText, 300);
 
+  /** Client-side filter: only resolved/closed incidents */
   const resolvedIncidents = useMemo(
     () =>
-      allIncidents.filter(
-        (i) => i.status === IncidentStatus.RESOLVED || i.status === IncidentStatus.CLOSED,
+      allTickets.filter(
+        (t) => (t as any).ticketType === 'incident'
+          && (t.status === 'resolved' || t.status === 'closed'),
       ),
-    [allIncidents],
+    [allTickets],
   );
 
   const suggestedSolutions = useMemo(() => {
@@ -92,7 +101,7 @@ const SuggestedSolution = () => {
       .map((inc) => {
         const similarity = calculateSimilarity(
           query,
-          `${inc.shortDescription ?? ''} ${stripHtml(inc.description ?? '')} ${inc.notes ?? ''}`,
+          `${inc.shortDescription ?? ''} ${stripHtml(inc.description ?? '')} ${(inc as any).notes ?? ''}`,
         );
         return { incident: inc, similarity };
       })
@@ -112,9 +121,9 @@ const SuggestedSolution = () => {
   const handleCancel = () => navigate(BasePath.DASHBOARD);
 
   const handleSaveAsDraft = async () => {
-    if (!incidentData) return;
+    if (!ticketData) return;
     try {
-      await createIncident({ ...incidentData, status: IncidentStatus.DRAFT }).unwrap();
+      await createTicket(buildTicketBody(ticketData, { status: 'draft' })).unwrap();
       notify.success(`Draft ${ticketNumber} saved successfully!`);
       navigate(BasePath.DASHBOARD);
     } catch {
@@ -123,36 +132,37 @@ const SuggestedSolution = () => {
   };
 
   const handleApplyAndSubmit = async () => {
-    if (!incidentData || !selectedMatch) return;
+    if (!ticketData || !selectedMatch) return;
     try {
-      await createIncident({
-        ...incidentData,
-        status: IncidentStatus.RESOLVED,
-        notes: `[Applied from ${selectedMatch.number}] ${selectedMatch.notes || selectedMatch.description || 'Existing solution applied.'}`,
-      }).unwrap();
-      notify.success(`Incident ${ticketNumber} resolved using existing solution!`);
+      await createTicket(
+        buildTicketBody(ticketData, {
+          status: 'resolved',
+          notes: `[Applied from ${selectedMatch.number}] ${(selectedMatch as any).notes || selectedMatch.description || 'Existing solution applied.'}`,
+        }),
+      ).unwrap();
+      notify.success(`Ticket ${ticketNumber} resolved using existing solution!`);
       navigate(BasePath.INCIDENT_MANAGEMENT);
     } catch {
-      notify.error('Failed to create incident. Please try again.');
+      notify.error('Failed to create ticket. Please try again.');
     }
   };
 
-  const handleCreateIncident = async () => {
-    if (!incidentData) return;
+  const handleCreateNew = async () => {
+    if (!ticketData) return;
     try {
-      await createIncident({ ...incidentData, status: IncidentStatus.NEW }).unwrap();
-      notify.success(`Incident ${ticketNumber} created successfully!`);
+      await createTicket(buildTicketBody(ticketData, { status: 'new' })).unwrap();
+      notify.success(`Ticket ${ticketNumber} created successfully!`);
       navigate(BasePath.INCIDENT_MANAGEMENT);
     } catch {
-      notify.error('Failed to create incident. Please try again.');
+      notify.error('Failed to create ticket. Please try again.');
     }
   };
 
-  if (!incidentData) {
+  if (!ticketData) {
     return (
       <Box className={classes.container}>
         <Alert severity='warning' sx={{ borderRadius: 3 }}>
-          No incident data found. Please create an incident first.
+          No ticket data found. Please create a ticket first.
         </Alert>
         <Box sx={{ mt: 2 }}>
           <Button
@@ -209,7 +219,7 @@ const SuggestedSolution = () => {
         onBack={handleBack}
         onCancel={handleCancel}
         onSaveAsDraft={handleSaveAsDraft}
-        onCreateNew={handleCreateIncident}
+        onCreateNew={handleCreateNew}
         onApplyAndSubmit={handleApplyAndSubmit}
       />
     </Box>

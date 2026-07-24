@@ -2,6 +2,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import TuneIcon from '@mui/icons-material/Tune';
 import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import QueryBuilderIcon from '@mui/icons-material/QueryBuilder';
+import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
@@ -26,6 +27,7 @@ const adminMenuItems: MenuItemConfig[] = [
   { label: 'Dashboard', icon: <DashboardIcon />, pathKey: 'DASHBOARD' },
   { label: 'My Favourites Tickets', icon: <BookmarksIcon />, pathKey: 'FAVOURITES' },
   { label: 'Recent Items', icon: <QueryBuilderIcon />, pathKey: 'RECENT_ITEMS' },
+  { label: 'Ticket Management', icon: <ConfirmationNumberIcon />, pathKey: 'TICKET_MANAGEMENT' },
   { label: 'Incident Management', icon: <AssignmentIcon />, pathKey: 'INCIDENT_MANAGEMENT' },
   { label: 'Change Management', icon: <ChangeCircleIcon />, pathKey: 'CHANGE_MANAGEMENT' },
   { label: 'Problem Management', icon: <ReportProblemIcon />, pathKey: 'PROBLEM_MANAGEMENT' },

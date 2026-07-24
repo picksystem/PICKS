@@ -1,7 +1,5 @@
-import { IIncident } from '../../../../../entities/interfaces';
-
 export interface SolutionMatch {
-  incident: IIncident;
+  ticket: (IIncident & { ticketType: 'incident' }) | (IServiceRequest & { ticketType: 'service_request' }) | (IAdvisoryRequest & { ticketType: 'advisory_request' });
   similarity: number;
 }
 
@@ -19,7 +17,7 @@ export interface SolutionViewerProps {
 }
 
 export interface MatchDetailProps {
-  incident: IIncident;
+  ticket: SolutionMatch['ticket'];
   similarity: number;
   markedUseful: Set<number>;
   onToggleUseful: (id: number) => void;

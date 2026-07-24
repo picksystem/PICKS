@@ -2,7 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { IconButton, Typography } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import { Column } from '@serviceops/component';
-import { useGetIncidentsQuery, useGetDraftIncidentsQuery } from '@serviceops/services';
+import {
+  useGetTicketsQuery,
+  useGetDraftTicketsQuery,
+} from '@serviceops/services';
 import { IIncident } from '@serviceops/interfaces';
 import { constants } from '@serviceops/utils';
 import { IncidentRow } from '../types/Favourites.types';
@@ -18,9 +21,19 @@ import StatusChip from '../components/StatusChip';
 const useFavourites = () => {
   const { BasePath } = constants;
 
-  const { data: incidents, isLoading: incidentsLoading } = useGetIncidentsQuery();
-  const { data: draftIncidents, isLoading: draftsLoading } = useGetDraftIncidentsQuery();
+  const {
+    data: incidents,
+    isLoading: incidentsLoading,
+    error: incidentsError,
+  } = useGetTicketsQuery();
+  const {
+    data: draftIncidents,
+    isLoading: draftsLoading,
+    error: draftsError,
+  } = useGetDraftTicketsQuery();
+
   const isLoading = incidentsLoading || draftsLoading;
+  const error = incidentsError || draftsError;
 
   const [tabValue, setTabValue] = useState(0);
   const [tableSearch, setTableSearch] = useState('');
@@ -63,10 +76,14 @@ const useFavourites = () => {
 
   const favoriteIncidents = useMemo(() => {
     const map = new Map<number, IIncident>();
-    (incidents || []).forEach((inc) => map.set(inc.id, inc));
-    (draftIncidents || []).forEach((inc) => {
-      if (!map.has(inc.id)) map.set(inc.id, inc);
-    });
+    (incidents || [])
+      .filter((t) => t.ticketType === 'incident')
+      .forEach((inc) => map.set(inc.id, inc as IIncident));
+    (draftIncidents || [])
+      .filter((t) => t.ticketType === 'incident')
+      .forEach((inc) => {
+        if (!map.has(inc.id)) map.set(inc.id, inc as IIncident);
+      });
     return Array.from(map.values()).filter((inc) => favorites.has(inc.id));
   }, [incidents, draftIncidents, favorites]);
 
@@ -166,6 +183,7 @@ const useFavourites = () => {
 
   return {
     isLoading,
+    error,
     tabValue,
     setTabValue,
     tableSearch,
