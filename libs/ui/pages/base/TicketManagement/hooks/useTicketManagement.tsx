@@ -98,13 +98,13 @@ const useTicketManagement = () => {
 
   const allTickets = useMemo<TicketManagementRow[]>(() => {
     const incidentRows = dedupeById(incidents, draftIncidents).map((t) =>
-      toRow(t, 'incident', nameForType('incident', 'Incident')),
+      toRow(t as any, 'incident', nameForType('incident', 'Incident')),
     );
     const serviceRequestRows = dedupeById(serviceRequests, draftServiceRequests).map((t) =>
-      toRow(t, 'service_request', nameForType('service_request', 'Service Request')),
+      toRow(t as any, 'service_request', nameForType('service_request', 'Service Request')),
     );
     const advisoryRequestRows = dedupeById(advisoryRequests, draftAdvisoryRequests).map((t) =>
-      toRow(t, 'advisory_request', nameForType('advisory_request', 'Advisory Request')),
+      toRow(t as any, 'advisory_request', nameForType('advisory_request', 'Advisory Request')),
     );
     return [...incidentRows, ...serviceRequestRows, ...advisoryRequestRows];
     // eslint-disable-next-line react-hooks/exhaustive-deps

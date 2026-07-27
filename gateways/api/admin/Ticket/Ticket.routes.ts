@@ -2,140 +2,50 @@ import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { PrismaClient } from '@prisma/client';
-import { prisma } from '@serviceops/database';
-import { TicketController } from './Ticket.controller';
-import {
-  PrismaIncidentGateway,
-  PrismaServiceRequestGateway,
-  PrismaAdvisoryRequestGateway,
-} from '@serviceops/core/infrastructure';
-import {
-  CreateIncidentUseCase,
-  CreateServiceRequestUseCase,
-  CreateAdvisoryRequestUseCase,
-  GetIncidentByNumberUseCase,
-  GetServiceRequestByNumberUseCase,
-  GetAdvisoryRequestByNumberUseCase,
-  GetAllIncidentsUseCase,
-  GetAllServiceRequestsUseCase,
-  GetAllAdvisoryRequestsUseCase,
-  GetIncidentUseCase,
-  GetServiceRequestUseCase,
-  GetAdvisoryRequestUseCase,
-  UpdateIncidentUseCase,
-  UpdateServiceRequestUseCase,
-  UpdateAdvisoryRequestUseCase,
-  DeleteIncidentUseCase,
-  DeleteServiceRequestUseCase,
-  DeleteAdvisoryRequestUseCase,
-} from '@serviceops/core/use-cases';
+import { buildTicketRouter } from './Ticket.controller';
 
-// ── Gateways ─────────────────────────────────────────────────────────────────
-const incidentGateway = new PrismaIncidentGateway(prisma as PrismaClient);
-const serviceRequestGateway = new PrismaServiceRequestGateway(prisma as PrismaClient, null as any);
-const advisoryRequestGateway = new PrismaAdvisoryRequestGateway(
-  prisma as PrismaClient,
-  null as any,
-);
+/**
+ * Bootstraps the ticket router by reading active ticket types from the
+ * adminTicketType table and mounting all CRUD endpoints.
+ *
+ * Call this at server startup (after the DB is ready). Re-invoking it refreshes
+ * the routing map (useful for tests or hot-reload of configuration).
+ */
+export async function createTicketRouter(): Promise<Router> {
+  // File upload setup
+  const uploadDir = path.join(__dirname, '../../../../uploads/attachments');
+  if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-// ── Use Cases ─────────────────────────────────────────────────────────────────
-const createIncidentUseCase = new CreateIncidentUseCase(incidentGateway);
-const createServiceRequestUseCase = new CreateServiceRequestUseCase(serviceRequestGateway);
-const createAdvisoryRequestUseCase = new CreateAdvisoryRequestUseCase(advisoryRequestGateway);
-const getIncidentByNumberUseCase = new GetIncidentByNumberUseCase(incidentGateway);
-const getServiceRequestByNumberUseCase = new GetServiceRequestByNumberUseCase(
-  serviceRequestGateway,
-);
-const getAdvisoryRequestByNumberUseCase = new GetAdvisoryRequestByNumberUseCase(
-  advisoryRequestGateway,
-);
-const getAllIncidentsUseCase = new GetAllIncidentsUseCase(incidentGateway);
-const getAllServiceRequestsUseCase = new GetAllServiceRequestsUseCase(serviceRequestGateway);
-const getAllAdvisoryRequestsUseCase = new GetAllAdvisoryRequestsUseCase(advisoryRequestGateway);
-const getIncidentUseCase = new GetIncidentUseCase(incidentGateway);
-const getServiceRequestUseCase = new GetServiceRequestUseCase(serviceRequestGateway);
-const getAdvisoryRequestUseCase = new GetAdvisoryRequestUseCase(advisoryRequestGateway);
-const updateIncidentUseCase = new UpdateIncidentUseCase(incidentGateway);
-const updateServiceRequestUseCase = new UpdateServiceRequestUseCase(serviceRequestGateway);
-const updateAdvisoryRequestUseCase = new UpdateAdvisoryRequestUseCase(advisoryRequestGateway);
-const deleteIncidentUseCase = new DeleteIncidentUseCase(incidentGateway);
-const deleteServiceRequestUseCase = new DeleteServiceRequestUseCase(serviceRequestGateway);
-const deleteAdvisoryRequestUseCase = new DeleteAdvisoryRequestUseCase(advisoryRequestGateway);
+  const storage = multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadDir),
+    filename: (_req, file, cb) => {
+      const safeName = file.originalname.replace(/[/\\:*?"<>|]/g, '_');
+      cb(null, `${Date.now()}-${safeName}`);
+    },
+  });
 
-// ── Controller ────────────────────────────────────────────────────────────────
-const controller = new TicketController(
-  createIncidentUseCase,
-  createServiceRequestUseCase,
-  createAdvisoryRequestUseCase,
-  getIncidentByNumberUseCase,
-  getServiceRequestByNumberUseCase,
-  getAdvisoryRequestByNumberUseCase,
-  getAllIncidentsUseCase,
-  getAllServiceRequestsUseCase,
-  getAllAdvisoryRequestsUseCase,
-  getIncidentUseCase,
-  getServiceRequestUseCase,
-  getAdvisoryRequestUseCase,
-  updateIncidentUseCase,
-  updateServiceRequestUseCase,
-  updateAdvisoryRequestUseCase,
-  deleteIncidentUseCase,
-  deleteServiceRequestUseCase,
-  deleteAdvisoryRequestUseCase,
-);
+  const upload = multer({
+    storage,
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      const allowed = /pdf|doc|docx|xls|xlsx|png|jpg|jpeg|gif/i;
+      const ext = path.extname(file.originalname).slice(1);
+      cb(null, allowed.test(ext));
+    },
+  });
 
-// ── File upload setup ─────────────────────────────────────────────────────────
-const uploadDir = path.join(__dirname, '../../../../uploads/attachments');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+  const ticketsRouter = await buildTicketRouter();
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
-  filename: (_req, file, cb) => {
-    const safeName = file.originalname.replace(/[/\\:*?"<>|]/g, '_');
-    cb(null, `${Date.now()}-${safeName}`);
-  },
-});
+  // Unified file upload
+  ticketsRouter.post(
+    '/attachments/upload',
+    upload.array('files', 10),
+    (req: Request, res: Response) => {
+      const files = req.files as Express.Multer.File[];
+      const filenames = files.map((f) => f.filename);
+      res.json({ data: filenames });
+    },
+  );
 
-const upload = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    const allowed = /pdf|doc|docx|xls|xlsx|png|jpg|jpeg|gif/i;
-    const ext = path.extname(file.originalname).slice(1);
-    cb(null, allowed.test(ext));
-  },
-});
-
-const router = Router();
-
-// Unified file upload
-router.post('/attachments/upload', upload.array('files', 10), (req: Request, res: Response) => {
-  const files = req.files as Express.Multer.File[];
-  const filenames = files.map((f) => f.filename);
-  res.json({ data: filenames });
-});
-
-// Unified get by number endpoint — detects ticket type from number prefix
-router.get('/:number', controller.getByNumber);
-
-// Unified create endpoint — ticketType in body determines which entity is created
-router.post('/', controller.create);
-
-// Generic list — supports ?ticketType=incident|service_request|advisory_request
-router.get('/', controller.getAll);
-
-// Generic get by ID — ?ticketType=incident|service_request|advisory_request
-router.get('/id/:id', controller.getById);
-
-// Generic update — ticketType + data in body
-router.put('/id/:id', controller.update);
-router.patch('/id/:id', controller.update);
-
-// Generic delete — ticketType in body
-router.delete('/id/:id', controller.delete);
-
-// Generic drafts — supports ?ticketType=incident|service_request|advisory_request
-router.get('/drafts', controller.getDrafts);
-
-export default router;
+  return ticketsRouter;
+}

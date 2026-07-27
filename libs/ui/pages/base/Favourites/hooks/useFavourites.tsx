@@ -2,10 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { IconButton, Typography } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import { Column } from '@serviceops/component';
-import {
-  useGetTicketsQuery,
-  useGetDraftTicketsQuery,
-} from '@serviceops/services';
+import { useGetTicketsQuery, useGetDraftTicketsQuery } from '@serviceops/services';
 import { IIncident } from '@serviceops/interfaces';
 import { constants } from '@serviceops/utils';
 import { IncidentRow } from '../types/Favourites.types';
@@ -25,12 +22,12 @@ const useFavourites = () => {
     data: incidents,
     isLoading: incidentsLoading,
     error: incidentsError,
-  } = useGetTicketsQuery();
+  } = useGetTicketsQuery(void 0);
   const {
     data: draftIncidents,
     isLoading: draftsLoading,
     error: draftsError,
-  } = useGetDraftTicketsQuery();
+  } = useGetDraftTicketsQuery(void 0);
 
   const isLoading = incidentsLoading || draftsLoading;
   const error = incidentsError || draftsError;

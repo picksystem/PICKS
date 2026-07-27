@@ -23,7 +23,7 @@ const CreateTicketForm = () => {
   const handleBack = () => navigate(BasePath.CREATE_TICKET);
   const handleSuccess = () => navigate(BasePath.INCIDENT_MANAGEMENT);
 
-  if (!typeKey) {
+  if (!typeKey || !record) {
     return (
       <Box className={classes.container} sx={{ p: 3 }}>
         <Alert severity='error'>Invalid ticket type. Please go back and select a valid type.</Alert>

@@ -119,9 +119,14 @@ const SearchableField = ({
     option.label.toLowerCase().includes(searchText.toLowerCase()),
   );
 
+  // Resolve the value to its display label when the incoming value
+  // doesn't already match a known label (e.g. options use "3 - Low" as
+  // the label but the form stores "low" as the raw value).
+  const resolvedLabel = options.find((o) => o.value === value)?.label ?? value;
+
   useEffect(() => {
-    setSearchText(value);
-  }, [value]);
+    setSearchText(resolvedLabel);
+  }, [resolvedLabel]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -513,10 +518,12 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                       options={[]}
                       onChange={(value) => formik.setFieldValue('callerReportingManager', value)}
                       onBlur={formik.handleBlur}
-                      error={!!(
-                        formik.touched.callerReportingManager &&
-                        formik.errors.callerReportingManager
-                      )}
+                      error={
+                        !!(
+                          formik.touched.callerReportingManager &&
+                          formik.errors.callerReportingManager
+                        )
+                      }
                       errorText={reqError(
                         formik.touched.callerReportingManager,
                         formik.errors.callerReportingManager as string,

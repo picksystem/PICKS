@@ -1,3 +1,4 @@
+export * from './ticket.interface';
 export * from './header.interface';
 export * from './dashboard.interface';
 export * from './signin.interface';

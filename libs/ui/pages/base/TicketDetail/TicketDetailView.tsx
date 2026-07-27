@@ -286,9 +286,9 @@ const TicketDetailView = () => {
             activeTab={activeTab}
             onTabChange={setActiveTab}
             incident={incident}
-            comments={comments}
-            resolutions={resolutions}
-            activities={activities}
+            comments={comments as any}
+            resolutions={resolutions as any}
+            activities={activities as any}
           />
         </Box>
       </Box>

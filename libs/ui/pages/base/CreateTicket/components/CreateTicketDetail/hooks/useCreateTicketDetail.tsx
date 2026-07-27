@@ -14,6 +14,7 @@ import {
   IncidentStatus,
   ServiceRequestStatus,
   CreateIncidentSchema,
+  IAdminTicket,
 } from '@serviceops/interfaces';
 import {
   useAuth,
@@ -289,7 +290,7 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   const buildTicketData = (
     statusOverride?: IncidentStatus | ServiceRequestStatus,
     uploadedFilenames?: string[],
-  ) => ({
+  ): IAdminTicket => ({
     ticketType,
     number: ticketNumber,
     client: formik.values.client || undefined,
@@ -318,13 +319,14 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     createdBy: formik.values.createdBy,
     isRecurring: formik.values.isRecurring,
     isMajor: formik.values.isMajor,
+    isReleaseManagement: (formik.values as any).isReleaseManagement || false,
     notes: formik.values.notes || undefined,
     relatedRecords: formik.values.relatedRecords || undefined,
     attachments:
       uploadedFilenames && uploadedFilenames.length > 0
         ? JSON.stringify(uploadedFilenames)
         : undefined,
-  });
+  } as IAdminTicket);
 
   const handleBack = () => onCancel?.();
 
@@ -385,7 +387,7 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     const ticketData = {
       ...buildTicketData(IncidentStatus.DRAFT, uploadedFilenames),
       draftExpiresAt: draftExpiresAt.toISOString(),
-    };
+    } as unknown as IAdminTicket;
     try {
       await createTicket(ticketData).unwrap();
       const expiryDate = draftExpiresAt.toLocaleDateString();

@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,519 +6,134 @@ datasource db {
   provider = "postgresql"
 }
 
-// Auth Models
-
-// UserStatus: pending_approval | invited | active | inactive | deactivated | rejected | expired
-// UserSource:  signup | admin | ticket | ad
-
-model User {
-  id              Int       @id @default(autoincrement())
-  firstName       String
-  lastName        String
-  email           String    @unique
-  password        String
-  phone           String?
-  workLocation    String?
-  department      String?
-  reasonForAccess String?
-  employeeId      String?
-  businessUnit    String?
-  managerName     String?
-  dateOfBirth     String?
-  profilePicture  String?
-  name            String
-  role            String    @default("user")
-  requestedRole   String?
-  // lifecycle status
-  status          String    @default("pending_approval")
-  source          String    @default("signup")        // signup | admin | ticket | ad
-  // approval
-  reviewedBy      Int?
-  reviewedAt      DateTime?
-  adminNotes      String?
-  // invitation
-  invitationToken  String?
-  invitationExpiry DateTime?
-  // password management
-  mustResetPassword       Boolean   @default(false)
-  otp                     String?
-  otpExpiresAt            DateTime?
-  otpIsUsed               Boolean   @default(false)
-  failedLoginAttempts     Int       @default(0)
-  lockedUntil             DateTime?
-  lastLoginAt             DateTime?
-  passwordChangedAt       DateTime?
-  // access control
-  isActive                Boolean   @default(false)
-  accessFromDate          DateTime?
-  accessToDate            DateTime?
-  firstActivationDate     DateTime?
-  lastDeactivationDate    DateTime?
-  // tracking
-  lastActivityAt          DateTime?
-  // locale & preferences
-  timezone                String?
-  dateFormat              String?
-  timeFormat              String?
-  language                String?
-  // consultant fields
-  consultantProfileUpdated Boolean  @default(false)
-  slaWorkingCalendar       String?
-  slaExceptionGroup        String?
-  application              String?
-  applicationLead          String?
-  // timestamps
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-}
-
-model UserChangeLog {
-  id            Int      @id @default(autoincrement())
-  userId        Int
-  changeType    String   // field_update | role_change | access_approved | access_created | password_reset | activation | deactivation | rejection
-  fieldName     String?
-  previousValue String?
-  newValue      String?
-  changedBy     Int
-  changedByName String
-  reasonCode    String?
-  reasonNotes   String?
-  createdAt     DateTime @default(now())
-}
-
-model LoginLog {
-  id         Int       @id @default(autoincrement())
-  userId     Int
-  loginTime  DateTime  @default(now())
-  logoutTime DateTime?
-  ipAddress  String?
-  device     String?
-  userAgent  String?
-}
-
-// ADMIN API Models
-
-model AdminDashboard {
-  id   String @id @default(cuid())
-  name String
-  age  Int
-}
-
-model AdminHeader {
-  id          Int      @id @default(autoincrement())
-  ticketType  String
-  key         String   @unique
-  name        String
-  description String?
-  isActive    Boolean  @default(true)
-  app         String
-  order       Int
-}
-
-model AdminTicketType {
-  id                      Int     @id @default(autoincrement())
-  type                    String  @unique
-  name                    String
-  displayName             String  @default("")
-  displayTag              String  @default("")
-  shortDescription        String  @default("")
-  description             String  @default("")
-  prefix                  String  @default("")
-  isActive                Boolean @default(true)
-  numberLength            Int     @default(7)
-  displayOrder            Int     @default(0)
-  accessControl          String  @default("") // JSON string of role array: ["admin","consultant","endUser"]
-  layoutConfig            String  @default("") // JSON string of ITicketTypeLayoutConfig
-  model                   String?  @default("") // Prisma model name for dynamic routing
-
-  @@map("admin_ticket_type")
-}
-
-model AdminIncident {
-  id                 Int      @id @default(autoincrement())
-  number             String   @unique
-  client             String?
-  caller             String
-  callerPhone              String?
-  callerEmail              String?
-  callerLocation           String?
-  callerDepartment         String?
-  callerReportingManager   String?
-  additionalContacts String?
-  businessCategory   String?
-  serviceLine        String?
-  application        String?
-  applicationCategory    String?
-  applicationSubCategory String?
-  shortDescription   String?
-  description        String?
-  impact             String?
-  urgency            String?
-  priority           String?
-  channel            String?
-  status             String   @default("new")
-  assignmentGroup    String?
-  primaryResource    String?
-  secondaryResources String?
-  createdBy          String
-  isRecurring           Boolean   @default(false)
-  isMajor               Boolean   @default(false)
-  isReleaseManagement   Boolean   @default(false)
-  eta                   DateTime?
-  notes                 String?
-  relatedRecords     String?
-  attachments        String?
-  followers          String?
-  internalFollowers  String?
-  draftExpiresAt     DateTime?
-  // Contact & Billing
-  clientPrimaryContact   String?
-  billingCode            String?
-  approvedEstimatesHours Float?
-  estimatesDetails       String?
-  // Reporting
-  analysisSummary    String?
-  ticketSource       String?
-  // Audit timestamps (system-set when status changes)
-  resolvedAt         DateTime?
-  resolvedBy         String?
-  closedAt           DateTime?
-  closedBy           String?
-  reopenedAt         DateTime?
-  reopenedBy         String?
-  approvedAt         DateTime?
-  approvedBy         String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  comments           AdminIncidentComment[]
-  timeEntries        AdminIncidentTimeEntry[]
-  resolutions        AdminIncidentResolution[]
-  activities         AdminIncidentActivity[]
-}
-
-model AdminIncidentComment {
-  id                  Int      @id @default(autoincrement())
-  incidentId          Int
-  incident            AdminIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
-  subject             String
-  message             String
-  isInternal          Boolean  @default(false)
-  isSelfNote          Boolean  @default(false)
-  notifyAssigneesOnly Boolean  @default(false)
-  status              String?
-  attachments         String?
-  createdBy           String
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-}
-
-model AdminIncidentTimeEntry {
-  id              Int      @id @default(autoincrement())
-  incidentId      Int
-  incident        AdminIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
-  date            String
-  hours           Int
-  minutes         Int
-  billingCode     String?
-  activityTask    String?
-  externalComment String?
-  internalComment String?
-  isNonBillable   Boolean  @default(false)
-  attachments     String?
-  createdBy       String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-
-model AdminIncidentResolution {
-  id                   Int      @id @default(autoincrement())
-  incidentId           Int
-  incident             AdminIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
-  application          String?
-  category             String?
-  subCategory          String?
-  customerConfirmation Boolean  @default(false)
-  isRecurring          Boolean  @default(false)
-  rootCauseIdentified  Boolean  @default(false)
-  rootCause            String?
-  resolutionCode       String
-  resolution           String
-  internalNote         String?
-  attachments          String?
-  createdBy            String
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-}
-
-model AdminIncidentActivity {
-  id            Int      @id @default(autoincrement())
-  incidentId    Int
-  incident      AdminIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
-  activityType  String
-  description   String
-  previousValue String?
-  newValue      String?
-  performedBy   String
-  createdAt     DateTime @default(now())
-}
-
-model AdminServiceRequest {
-  id                 Int      @id @default(autoincrement())
-  number             String   @unique
-  client             String?
-  caller             String
-  callerPhone              String?
-  callerEmail              String?
-  callerLocation           String?
-  callerDepartment         String?
-  callerReportingManager   String?
-  businessCategory   String?
-  serviceLine        String?
-  application        String?
-  applicationCategory    String?
-  applicationSubCategory String?
-  shortDescription   String?
-  description        String?
-  impact             String?
-  urgency            String?
-  priority           String?
-  status             String   @default("new")
-  assignmentGroup    String?
-  primaryResource    String?
-  secondaryResources String?
-  createdBy          String
-  isRecurring           Boolean   @default(false)
-  isReleaseManagement   Boolean   @default(false)
-  eta                   DateTime?
-  notes                 String?
-  relatedRecords     String?
-  attachments        String?
-  followers          String?
-  internalFollowers  String?
-  draftExpiresAt     DateTime?
-  clientPrimaryContact   String?
-  billingCode            String?
-  approvedEstimatesHours Float?
-  estimatesDetails       String?
-  analysisSummary    String?
-  ticketSource       String?
-  resolvedAt         DateTime?
-  resolvedBy         String?
-  closedAt           DateTime?
-  closedBy           String?
-  reopenedAt         DateTime?
-  reopenedBy         String?
-  approvedAt         DateTime?
-  approvedBy         String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  comments           AdminServiceRequestComment[]
-  timeEntries        AdminServiceRequestTimeEntry[]
-  resolutions        AdminServiceRequestResolution[]
-  activities         AdminServiceRequestActivity[]
-}
-
-model AdminServiceRequestComment {
-  id                  Int      @id @default(autoincrement())
-  serviceRequestId    Int
-  serviceRequest      AdminServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
-  subject             String
-  message             String
-  isInternal          Boolean  @default(false)
-  isSelfNote          Boolean  @default(false)
-  notifyAssigneesOnly Boolean  @default(false)
-  status              String?
-  attachments         String?
-  createdBy           String
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-}
-
-model AdminServiceRequestTimeEntry {
-  id               Int      @id @default(autoincrement())
-  serviceRequestId Int
-  serviceRequest   AdminServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
-  date             String
-  hours            Int
-  minutes          Int
-  billingCode      String?
-  activityTask     String?
-  externalComment  String?
-  internalComment  String?
-  isNonBillable    Boolean  @default(false)
-  attachments      String?
-  createdBy        String
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-}
-
-model AdminServiceRequestResolution {
-  id                   Int      @id @default(autoincrement())
-  serviceRequestId     Int
-  serviceRequest       AdminServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
-  application          String?
-  category             String?
-  subCategory          String?
-  customerConfirmation Boolean  @default(false)
-  isRecurring          Boolean  @default(false)
-  rootCauseIdentified  Boolean  @default(false)
-  rootCause            String?
-  resolutionCode       String
-  resolution           String
-  internalNote         String?
-  attachments          String?
-  createdBy            String
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-}
-
-model AdminServiceRequestActivity {
-  id               Int      @id @default(autoincrement())
-  serviceRequestId Int
-  serviceRequest   AdminServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
-  activityType     String
-  description      String
-  previousValue    String?
-  newValue         String?
-  performedBy      String
-  createdAt        DateTime @default(now())
-}
-
 model AdminAdvisoryRequest {
-  id                 Int      @id @default(autoincrement())
-  number             String   @unique
-  client             String?
-  caller             String
-  callerPhone              String?
-  callerEmail              String?
-  callerLocation           String?
-  callerDepartment         String?
-  callerReportingManager   String?
-  businessCategory   String?
-  serviceLine        String?
-  application        String?
-  applicationCategory    String?
-  applicationSubCategory String?
-  shortDescription   String?
-  description        String?
-  impact             String?
-  urgency            String?
-  priority           String?
-  status             String   @default("new")
-  assignmentGroup    String?
-  primaryResource    String?
-  secondaryResources String?
-  createdBy          String
-  isRecurring           Boolean   @default(false)
-  isReleaseManagement   Boolean   @default(false)
-  eta                   DateTime?
-  notes                 String?
-  relatedRecords     String?
-  attachments        String?
-  followers          String?
-  internalFollowers  String?
-  draftExpiresAt     DateTime?
-  clientPrimaryContact   String?
-  billingCode            String?
-  approvedEstimatesHours Float?
-  estimatesDetails       String?
-  analysisSummary    String?
-  ticketSource       String?
-  resolvedAt         DateTime?
-  resolvedBy         String?
-  closedAt           DateTime?
-  closedBy           String?
-  reopenedAt         DateTime?
-  reopenedBy         String?
-  approvedAt         DateTime?
-  approvedBy         String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  comments           AdminAdvisoryRequestComment[]
-  timeEntries        AdminAdvisoryRequestTimeEntry[]
-  resolutions        AdminAdvisoryRequestResolution[]
-  activities         AdminAdvisoryRequestActivity[]
-}
-
-model AdminAdvisoryRequestComment {
-  id                  Int      @id @default(autoincrement())
-  advisoryRequestId   Int
-  advisoryRequest     AdminAdvisoryRequest @relation(fields: [advisoryRequestId], references: [id], onDelete: Cascade)
-  subject             String
-  message             String
-  isInternal          Boolean  @default(false)
-  isSelfNote          Boolean  @default(false)
-  notifyAssigneesOnly Boolean  @default(false)
-  status              String?
-  attachments         String?
-  createdBy           String
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-}
-
-model AdminAdvisoryRequestTimeEntry {
-  id                Int      @id @default(autoincrement())
-  advisoryRequestId Int
-  advisoryRequest   AdminAdvisoryRequest @relation(fields: [advisoryRequestId], references: [id], onDelete: Cascade)
-  date              String
-  hours             Int
-  minutes           Int
-  billingCode       String?
-  activityTask      String?
-  externalComment   String?
-  internalComment   String?
-  isNonBillable     Boolean  @default(false)
-  attachments       String?
-  createdBy         String
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-}
-
-model AdminAdvisoryRequestResolution {
-  id                   Int      @id @default(autoincrement())
-  advisoryRequestId    Int
-  advisoryRequest      AdminAdvisoryRequest @relation(fields: [advisoryRequestId], references: [id], onDelete: Cascade)
-  application          String?
-  category             String?
-  subCategory          String?
-  customerConfirmation Boolean  @default(false)
-  isRecurring          Boolean  @default(false)
-  rootCauseIdentified  Boolean  @default(false)
-  rootCause            String?
-  resolutionCode       String
-  resolution           String
-  internalNote         String?
-  attachments          String?
-  createdBy            String
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                             Int                              @id @default(autoincrement())
+  number                         String                           @unique
+  client                         String?
+  caller                         String
+  callerPhone                    String?
+  callerEmail                    String?
+  callerLocation                 String?
+  callerDepartment               String?
+  businessCategory               String?
+  serviceLine                    String?
+  application                    String?
+  applicationCategory            String?
+  applicationSubCategory         String?
+  shortDescription               String?
+  description                    String?
+  impact                         String?
+  urgency                        String?
+  priority                       String?
+  status                         String                           @default("new")
+  assignmentGroup                String?
+  primaryResource                String?
+  secondaryResources             String?
+  createdBy                      String
+  isRecurring                    Boolean                          @default(false)
+  isReleaseManagement            Boolean                          @default(false)
+  eta                            DateTime?
+  notes                          String?
+  relatedRecords                 String?
+  attachments                    String?
+  followers                      String?
+  internalFollowers              String?
+  draftExpiresAt                 DateTime?
+  clientPrimaryContact           String?
+  billingCode                    String?
+  approvedEstimatesHours         Float?
+  estimatesDetails               String?
+  analysisSummary                String?
+  ticketSource                   String?
+  resolvedAt                     DateTime?
+  resolvedBy                     String?
+  closedAt                       DateTime?
+  closedBy                       String?
+  reopenedAt                     DateTime?
+  reopenedBy                     String?
+  approvedAt                     DateTime?
+  approvedBy                     String?
+  createdAt                      DateTime                         @default(now())
+  updatedAt                      DateTime
+  callerReportingManager         String?
+  AdminAdvisoryRequestActivity   AdminAdvisoryRequestActivity[]
+  AdminAdvisoryRequestComment    AdminAdvisoryRequestComment[]
+  AdminAdvisoryRequestResolution AdminAdvisoryRequestResolution[]
+  AdminAdvisoryRequestTimeEntry  AdminAdvisoryRequestTimeEntry[]
 }
 
 model AdminAdvisoryRequestActivity {
-  id                Int      @id @default(autoincrement())
-  advisoryRequestId Int
-  advisoryRequest   AdminAdvisoryRequest @relation(fields: [advisoryRequestId], references: [id], onDelete: Cascade)
-  activityType      String
-  description       String
-  previousValue     String?
-  newValue          String?
-  performedBy       String
-  createdAt         DateTime @default(now())
+  id                   Int                  @id @default(autoincrement())
+  advisoryRequestId    Int
+  activityType         String
+  description          String
+  previousValue        String?
+  newValue             String?
+  performedBy          String
+  createdAt            DateTime             @default(now())
+  AdminAdvisoryRequest AdminAdvisoryRequest @relation(fields: [advisoryRequestId], references: [id], onDelete: Cascade)
 }
 
-model AdminNotFound {
-  id   String @id @default(cuid())
-  name String
-  age  Int
+model AdminAdvisoryRequestComment {
+  id                   Int                  @id @default(autoincrement())
+  advisoryRequestId    Int
+  subject              String
+  message              String
+  isInternal           Boolean              @default(false)
+  isSelfNote           Boolean              @default(false)
+  notifyAssigneesOnly  Boolean              @default(false)
+  status               String?
+  attachments          String?
+  createdBy            String
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime
+  AdminAdvisoryRequest AdminAdvisoryRequest @relation(fields: [advisoryRequestId], references: [id], onDelete: Cascade)
 }
 
-model AdminSignIn {
-  id   String @id @default(cuid())
-  name String
-  age  Int
+model AdminAdvisoryRequestResolution {
+  id                   Int                  @id @default(autoincrement())
+  advisoryRequestId    Int
+  application          String?
+  category             String?
+  subCategory          String?
+  customerConfirmation Boolean              @default(false)
+  isRecurring          Boolean              @default(false)
+  rootCauseIdentified  Boolean              @default(false)
+  rootCause            String?
+  resolutionCode       String
+  resolution           String
+  internalNote         String?
+  attachments          String?
+  createdBy            String
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime
+  AdminAdvisoryRequest AdminAdvisoryRequest @relation(fields: [advisoryRequestId], references: [id], onDelete: Cascade)
+}
+
+model AdminAdvisoryRequestTimeEntry {
+  id                   Int                  @id @default(autoincrement())
+  advisoryRequestId    Int
+  date                 String
+  hours                Int
+  minutes              Int
+  billingCode          String?
+  activityTask         String?
+  externalComment      String?
+  internalComment      String?
+  isNonBillable        Boolean              @default(false)
+  attachments          String?
+  createdBy            String
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime
+  AdminAdvisoryRequest AdminAdvisoryRequest @relation(fields: [advisoryRequestId], references: [id], onDelete: Cascade)
+}
+
+model AdminConfiguration {
+  id        Int      @id @default(autoincrement())
+  data      Json     @default("{}")
+  updatedBy Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime
 }
 
 model AdminControls {
@@ -536,92 +148,480 @@ model AdminControls {
   theme                   String   @default("System")
   updatedBy               Int?
   createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  updatedAt               DateTime
 }
 
-/// Singleton row that stores the full SerivceOps configuration document as JSON.
-/// Downstream sections (priorities, statuses, SLAs, …) reference ticket type
-/// keys from AdminTicketType so they stay in sync automatically.
-model AdminConfiguration {
-  id        Int      @id @default(autoincrement())
-  data      Json     @default("{}")
-  updatedBy Int?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model FieldConfiguration {
-  id            Int      @id @default(autoincrement())
-  date          String
-  day           String
-  calendarWeek  String
-  calendarMonth String
-  control       String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-
-// USER API Models
-
-model UserDashboard {
-  id   String @id @default(cuid())
-  name String
-  key  String
-  path String
-  app  String
-}
-
-model UserHeader {
-  id   String @id @default(cuid())
-  name String
-  key  String
-  path String
-  app  String
-}
-
-model UserNotFound {
-  id   String @id @default(cuid())
+model AdminDashboard {
+  id   String @id
   name String
   age  Int
 }
 
-model UserSideNav {
-  id   String @id @default(cuid())
-  name String
-  key  String
-  path String
-  app  String
+model AdminHeader {
+  id          Int     @id @default(autoincrement())
+  ticketType  String
+  key         String  @unique
+  name        String
+  description String?
+  isActive    Boolean @default(true)
+  app         String
+  order       Int
 }
 
-// CONSULTANT API Models
-
-model ConsultantDashboard {
-  id   String @id @default(cuid())
-  name String
-  key  String
-  path String
-  app  String
+model AdminIncident {
+  id                      Int                       @id @default(autoincrement())
+  number                  String                    @unique
+  client                  String?
+  caller                  String
+  callerPhone             String?
+  callerEmail             String?
+  callerLocation          String?
+  callerDepartment        String?
+  additionalContacts      String?
+  businessCategory        String?
+  serviceLine             String?
+  application             String?
+  applicationCategory     String?
+  applicationSubCategory  String?
+  shortDescription        String?
+  description             String?
+  impact                  String?
+  urgency                 String?
+  priority                String?
+  channel                 String?
+  status                  String                    @default("new")
+  assignmentGroup         String?
+  primaryResource         String?
+  secondaryResources      String?
+  createdBy               String
+  isRecurring             Boolean                   @default(false)
+  isMajor                 Boolean                   @default(false)
+  isReleaseManagement     Boolean                   @default(false)
+  eta                     DateTime?
+  notes                   String?
+  relatedRecords          String?
+  attachments             String?
+  followers               String?
+  internalFollowers       String?
+  draftExpiresAt          DateTime?
+  clientPrimaryContact    String?
+  billingCode             String?
+  approvedEstimatesHours  Float?
+  estimatesDetails        String?
+  analysisSummary         String?
+  ticketSource            String?
+  resolvedAt              DateTime?
+  resolvedBy              String?
+  closedAt                DateTime?
+  closedBy                String?
+  reopenedAt              DateTime?
+  reopenedBy              String?
+  approvedAt              DateTime?
+  approvedBy              String?
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime
+  callerReportingManager  String?
+  AdminIncidentActivity   AdminIncidentActivity[]
+  AdminIncidentComment    AdminIncidentComment[]
+  AdminIncidentResolution AdminIncidentResolution[]
+  AdminIncidentTimeEntry  AdminIncidentTimeEntry[]
 }
 
-model ConsultantHeader {
-  id   String @id @default(cuid())
-  name String
-  key  String
-  path String
-  app  String
+model AdminIncidentActivity {
+  id            Int           @id @default(autoincrement())
+  incidentId    Int
+  activityType  String
+  description   String
+  previousValue String?
+  newValue      String?
+  performedBy   String
+  createdAt     DateTime      @default(now())
+  AdminIncident AdminIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
 }
 
-model ConsultantNotFound {
-  id   String @id @default(cuid())
+model AdminIncidentComment {
+  id                  Int           @id @default(autoincrement())
+  incidentId          Int
+  subject             String
+  message             String
+  isInternal          Boolean       @default(false)
+  isSelfNote          Boolean       @default(false)
+  notifyAssigneesOnly Boolean       @default(false)
+  status              String?
+  attachments         String?
+  createdBy           String
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime
+  AdminIncident       AdminIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+}
+
+model AdminIncidentResolution {
+  id                   Int           @id @default(autoincrement())
+  incidentId           Int
+  application          String?
+  category             String?
+  subCategory          String?
+  customerConfirmation Boolean       @default(false)
+  isRecurring          Boolean       @default(false)
+  rootCauseIdentified  Boolean       @default(false)
+  rootCause            String?
+  resolutionCode       String
+  resolution           String
+  internalNote         String?
+  attachments          String?
+  createdBy            String
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime
+  AdminIncident        AdminIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+}
+
+model AdminIncidentTimeEntry {
+  id              Int           @id @default(autoincrement())
+  incidentId      Int
+  date            String
+  hours           Int
+  minutes         Int
+  billingCode     String?
+  activityTask    String?
+  externalComment String?
+  internalComment String?
+  isNonBillable   Boolean       @default(false)
+  attachments     String?
+  createdBy       String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime
+  AdminIncident   AdminIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+}
+
+model AdminNotFound {
+  id   String @id
   name String
   age  Int
 }
 
-model ConsultantSideNav {
-  id   String @id @default(cuid())
-  name String
-  key  String
-  path String
-  app  String
+model AdminServiceRequest {
+  id                            Int                             @id @default(autoincrement())
+  number                        String                          @unique
+  client                        String?
+  caller                        String
+  callerPhone                   String?
+  callerEmail                   String?
+  callerLocation                String?
+  callerDepartment              String?
+  businessCategory              String?
+  serviceLine                   String?
+  application                   String?
+  applicationCategory           String?
+  applicationSubCategory        String?
+  shortDescription              String?
+  description                   String?
+  impact                        String?
+  urgency                       String?
+  priority                      String?
+  status                        String                          @default("new")
+  assignmentGroup               String?
+  primaryResource               String?
+  secondaryResources            String?
+  createdBy                     String
+  isRecurring                   Boolean                         @default(false)
+  isReleaseManagement           Boolean                         @default(false)
+  eta                           DateTime?
+  notes                         String?
+  relatedRecords                String?
+  attachments                   String?
+  followers                     String?
+  internalFollowers             String?
+  draftExpiresAt                DateTime?
+  clientPrimaryContact          String?
+  billingCode                   String?
+  approvedEstimatesHours        Float?
+  estimatesDetails              String?
+  analysisSummary               String?
+  ticketSource                  String?
+  resolvedAt                    DateTime?
+  resolvedBy                    String?
+  closedAt                      DateTime?
+  closedBy                      String?
+  reopenedAt                    DateTime?
+  reopenedBy                    String?
+  approvedAt                    DateTime?
+  approvedBy                    String?
+  createdAt                     DateTime                        @default(now())
+  updatedAt                     DateTime
+  callerReportingManager        String?
+  AdminServiceRequestActivity   AdminServiceRequestActivity[]
+  AdminServiceRequestComment    AdminServiceRequestComment[]
+  AdminServiceRequestResolution AdminServiceRequestResolution[]
+  AdminServiceRequestTimeEntry  AdminServiceRequestTimeEntry[]
 }
 
+model AdminServiceRequestActivity {
+  id                  Int                 @id @default(autoincrement())
+  serviceRequestId    Int
+  activityType        String
+  description         String
+  previousValue       String?
+  newValue            String?
+  performedBy         String
+  createdAt           DateTime            @default(now())
+  AdminServiceRequest AdminServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+}
+
+model AdminServiceRequestComment {
+  id                  Int                 @id @default(autoincrement())
+  serviceRequestId    Int
+  subject             String
+  message             String
+  isInternal          Boolean             @default(false)
+  isSelfNote          Boolean             @default(false)
+  notifyAssigneesOnly Boolean             @default(false)
+  status              String?
+  attachments         String?
+  createdBy           String
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime
+  AdminServiceRequest AdminServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+}
+
+model AdminServiceRequestResolution {
+  id                   Int                 @id @default(autoincrement())
+  serviceRequestId     Int
+  application          String?
+  category             String?
+  subCategory          String?
+  customerConfirmation Boolean             @default(false)
+  isRecurring          Boolean             @default(false)
+  rootCauseIdentified  Boolean             @default(false)
+  rootCause            String?
+  resolutionCode       String
+  resolution           String
+  internalNote         String?
+  attachments          String?
+  createdBy            String
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime
+  AdminServiceRequest  AdminServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+}
+
+model AdminServiceRequestTimeEntry {
+  id                  Int                 @id @default(autoincrement())
+  serviceRequestId    Int
+  date                String
+  hours               Int
+  minutes             Int
+  billingCode         String?
+  activityTask        String?
+  externalComment     String?
+  internalComment     String?
+  isNonBillable       Boolean             @default(false)
+  attachments         String?
+  createdBy           String
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime
+  AdminServiceRequest AdminServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+}
+
+model AdminSignIn {
+  id   String @id
+  name String
+  age  Int
+}
+
+model AdminTicket {
+  id                       Int       @id @default(autoincrement())
+  ticketType               String
+  number                   String    @unique
+  client                   String?
+  caller                   String
+  callerPhone              String?
+  callerEmail              String?
+  callerLocation           String?
+  callerDepartment         String?
+  callerReportingManager   String?
+  additionalContacts       String?
+  businessCategory         String?
+  serviceLine              String?
+  application              String?
+  applicationCategory      String?
+  applicationSubCategory   String?
+  shortDescription         String?
+  description              String?
+  impact                   String?
+  urgency                  String?
+  priority                 String?
+  channel                  String?
+  status                   String    @default("new")
+  assignmentGroup          String?
+  primaryResource          String?
+  secondaryResources       String?
+  createdBy                String
+  isRecurring              Boolean   @default(false)
+  isMajor                  Boolean   @default(false)
+  notes                    String?
+  relatedRecords           String?
+  attachments              String?
+  draftExpiresAt           DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime
+  accessRequirements       String?
+  actualEndDate            DateTime?
+  actualStartDate          DateTime?
+  additionalField1         String?
+  additionalField2         String?
+  additionalField3         String?
+  additionalField4         String?
+  additionalField5         String?
+  additionalField6         String?
+  additionalField7         String?
+  additionalField8         String?
+  additionalField9         String?
+  analysisSummary          String?
+  approvedAt               DateTime?
+  approvedBy               String?
+  approvedEstimatesHours   Float?
+  backoutPlan              String?
+  billingCode              String?
+  bugDetails               String?
+  cabApprovalRequired      Boolean   @default(false)
+  cabId                    String?
+  cancellationComment      String?
+  cancellationReasonCode   String?
+  changeRiskImpactAnalysis String?
+  changeType               String?
+  clientPrimaryContact     String?
+  closedAt                 DateTime?
+  closedBy                 String?
+  conversionComment        String?
+  conversionReasonCode     String?
+  currentProcess           String?
+  customerConfirmation     Boolean   @default(false)
+  estimatesDetails         String?
+  eta                      DateTime?
+  isRecurringIssue         Boolean   @default(false)
+  justificationOfChange    String?
+  knownError               String?
+  numberOfTimesReopened    Int       @default(0)
+  priorityChangeNote       String?
+  priorityChangeReasonCode String?
+  productBugFix            Boolean   @default(false)
+  productBugId             String?
+  productOwner             String?
+  proposedEndDate          DateTime?
+  proposedProcess          String?
+  proposedStartDate        DateTime?
+  relatedTicket            Boolean   @default(false)
+  relatedTicketId          String?
+  reopenComment            String?
+  reopenReasonCode         String?
+  reopenedAt               DateTime?
+  reopenedBy               String?
+  resolution               String?
+  resolutionCode           String?
+  resolutionInternalNote   String?
+  resolvedAt               DateTime?
+  resolvedBy               String?
+  rootCause                String?
+  rootCauseAnalysis        String?
+  rootCauseCode            String?
+  rootCauseIdentified      Boolean   @default(false)
+  testCompleted            Boolean   @default(false)
+  testEvidenceRetained     String?
+  testPlan                 String?
+  testResults              String?
+  ticketConvertedFrom      String?
+  userResponse             String?
+  vendorName               String?
+  vendorTicketReference    String?
+  workAround               String?
+  workAroundRisk           String?
+
+  @@map("AdminTicket")
+}
+
+model AdminTicketType {
+  id               Int      @id @default(autoincrement())
+  type             String   @unique
+  name             String
+  displayName      String   @default("")
+  displayTag       String   @default("")
+  shortDescription String   @default("")
+  description      String   @default("")
+  prefix           String   @default("")
+  isActive         Boolean  @default(true)
+  numberLength     Int      @default(7)
+  displayOrder     Int      @default(0)
+  accessControl    String   @default("")
+  layoutConfig     String   @default("")
+
+  @@map("admin_ticket_type")
+}
+
+model AdminTicketComment {
+  id                  Int      @id @default(autoincrement())
+  ticketId            Int
+  subject             String
+  message             String
+  isInternal          Boolean  @default(false)
+  isSelfNote          Boolean  @default(false)
+  notifyAssigneesOnly Boolean  @default(false)
+  status              String?
+  attachments         String?
+  createdBy           String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime
+
+  @@map("admin_ticket_comment")
+}
+
+model AdminTicketTimeEntry {
+  id              Int      @id @default(autoincrement())
+  ticketId        Int
+  date            String
+  hours           Int
+  minutes         Int
+  billingCode     String?
+  activityTask    String?
+  externalComment String?
+  internalComment String?
+  isNonBillable   Boolean  @default(false)
+  attachments     String?
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+
+  @@map("admin_ticket_time_entry")
+}
+
+model AdminTicketResolution {
+  id                  Int       @id @default(autoincrement())
+  ticketId            Int
+  application         String?
+  category            String?
+  subCategory         String?
+  customerConfirmation Boolean   @default(false)
+  isRecurring         Boolean   @default(false)
+  rootCauseIdentified Boolean   @default(false)
+  rootCause           String?
+  resolutionCode      String
+  resolution          String
+  internalNote        String?
+  attachments         String?
+  createdBy           String
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime
+
+  @@map("admin_ticket_resolution")
+}
+
+model AdminTicketActivity {
+  id           Int      @id @default(autoincrement())
+  ticketId     Int
+  activityType String
+  description  String
+  previousValue String?
+  newValue      String?
+  performedBy  String
+  createdAt    DateTime @default(now())
+
+  @@map("admin_ticket_activity")
+}

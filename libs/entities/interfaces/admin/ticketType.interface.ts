@@ -11,23 +11,6 @@
  * - Ticket Template
  */
 
-// ============================================
-// Enum - Available Ticket Types
-// ============================================
-export enum TicketTypeEnum {
-  INCIDENT = 'incident',
-  SERVICE_REQUEST = 'service_request',
-  CHANGE_REQUEST = 'change_request',
-  PROBLEM_REQUEST = 'problem_request',
-  TASK = 'task',
-  TICKET_TEMPLATE = 'ticket_template',
-}
-
-// ============================================
-// Ticket Detail Screen Layout - which fields the
-// Ticket Detail page shows for this ticket type, and in
-// what order. Persisted on the ticket type record itself.
-// ============================================
 export interface ITicketTypeSectionLayoutConfig {
   selectedFields: string[];
 }
@@ -47,9 +30,6 @@ export interface ITicketTypeLayoutConfig {
   additionalFields: ITicketTypeSectionLayoutConfig;
 }
 
-// ============================================
-// Entity Interface - Core data structure
-// ============================================
 export interface ITicketType {
   id: number;
   type: string;
@@ -66,9 +46,6 @@ export interface ITicketType {
   layoutConfig?: ITicketTypeLayoutConfig | null;
 }
 
-// ============================================
-// Input Interfaces - For creating/updating
-// ============================================
 export interface ICreateTicketTypeInput {
   type: string;
   name: string;
@@ -103,9 +80,6 @@ export interface IUpdateTicketTypeInput {
   tag?: string;
 }
 
-// ============================================
-// Response Interfaces - API responses
-// ============================================
 export interface ITicketTypeResponse {
   message: string;
   data: ITicketType;
@@ -114,46 +88,4 @@ export interface ITicketTypeResponse {
 export interface ITicketTypeListResponse {
   message: string;
   data: ITicketType[];
-}
-
-// ============================================
-// Gateway Interface - Data access contract
-// Used by backend for Prisma/InMemory implementations
-// ============================================
-export interface IReorderTicketTypeInput {
-  id: number;
-  displayOrder: number;
-}
-
-export interface ITicketTypeGateway {
-  create(data: ICreateTicketTypeInput): Promise<ITicketType>;
-  findAll(): Promise<ITicketType[]>;
-  findById(id: number): Promise<ITicketType | null>;
-  findByType(type: string): Promise<ITicketType | null>;
-  update(id: number, data: IUpdateTicketTypeInput): Promise<ITicketType>;
-  delete(id: number): Promise<ITicketType>;
-  reorder(orders: IReorderTicketTypeInput[]): Promise<void>;
-}
-
-// ============================================
-// Use Case Interfaces - Business logic contracts
-// ============================================
-export interface ICreateTicketTypeUseCase {
-  execute(input: ICreateTicketTypeInput): Promise<ITicketType>;
-}
-
-export interface IGetTicketTypeUseCase {
-  execute(id: number): Promise<ITicketType>;
-}
-
-export interface IGetAllTicketTypesUseCase {
-  execute(): Promise<ITicketType[]>;
-}
-
-export interface IUpdateTicketTypeUseCase {
-  execute(id: number, input: IUpdateTicketTypeInput): Promise<ITicketType>;
-}
-
-export interface IDeleteTicketTypeUseCase {
-  execute(id: number): Promise<ITicketType>;
 }

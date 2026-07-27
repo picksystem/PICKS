@@ -1,4 +1,4 @@
-import { IAuthUser, IIncident } from '@serviceops/interfaces';
+import { IAuthUser } from '@serviceops/interfaces';
 
 export interface UserMenuProps {
   anchorEl: HTMLElement | null;
@@ -20,8 +20,8 @@ export interface SearchBarProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onClickAway: () => void;
   showResults: boolean;
-  incidents: IIncident[];
-  onSelectIncident: (incident: IIncident) => void;
+  incidents: any[];
+  onSelectIncident: (incident: any) => void;
   className?: string;
   wrapperClassName?: string;
   dropdownClassName?: string;

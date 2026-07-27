@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Alert, Button, Box } from '@serviceops/component';
 import { useGetTicketsQuery, useCreateTicketMutation } from '../../../../services';
-import { ICreateTicketInput } from '../../../../services';
+import { ICreateTicketInput, IAdminTicket } from '@serviceops/interfaces';
 import { constants } from '@serviceops/utils';
 import { useNotification, useDebounce } from '@serviceops/hooks';
 import { useStyles } from './styles';
@@ -43,10 +43,10 @@ const calculateSimilarity = (text1: string, text2: string): number => {
 };
 
 /** Build a complete ticket body with all required fields for the generic create endpoint */
-const buildTicketBody = (data: ICreateTicketInput, overrides: Partial<ICreateTicketInput> = {}): ICreateTicketInput => ({
+const buildTicketBody = (data: ICreateTicketInput, overrides: Partial<ICreateTicketInput> = {}): IAdminTicket => ({
   ...data,
   ...overrides,
-});
+} as IAdminTicket);
 
 const SuggestedSolution = () => {
   const { classes } = useStyles();
@@ -78,7 +78,7 @@ const SuggestedSolution = () => {
   }, []);
 
   /** Fetch all tickets (returns all types); filter for resolved/closed client-side */
-  const { data: allTickets = [], isLoading } = useGetTicketsQuery();
+  const { data: allTickets = [], isLoading } = useGetTicketsQuery(void 0);
   const [createTicket, { isLoading: isSubmitting }] = useCreateTicketMutation();
 
   const debouncedShort = useDebounce(shortDesc, 300);
@@ -103,7 +103,7 @@ const SuggestedSolution = () => {
           query,
           `${inc.shortDescription ?? ''} ${stripHtml(inc.description ?? '')} ${(inc as any).notes ?? ''}`,
         );
-        return { incident: inc, similarity };
+        return { ticket: inc, similarity };
       })
       .filter(({ similarity }) => similarity > 0)
       .sort((a, b) => b.similarity - a.similarity);
@@ -112,7 +112,7 @@ const SuggestedSolution = () => {
   const total = suggestedSolutions.length;
   const safeIndex = Math.min(currentIndex, Math.max(0, total - 1));
   const current = total > 0 ? suggestedSolutions[safeIndex] : null;
-  const selectedMatch = current?.incident ?? null;
+  const selectedMatch = current?.ticket ?? null;
   const canApply = !!selectedMatch && markedUseful.has(selectedMatch.id);
 
   const handlePrev = () => setCurrentIndex((i) => Math.max(0, i - 1));
@@ -201,7 +201,7 @@ const SuggestedSolution = () => {
 
         <SolutionViewer
           isLoading={isLoading}
-          current={current}
+          current={current as any}
           safeIndex={safeIndex}
           total={total}
           shortDesc={shortDesc}

@@ -12,78 +12,66 @@ import { errorHandler, notFoundHandler } from '@serviceops/middleware';
 
 // Import route modules
 import authRoutes from '../api/auth/Auth.routes';
-import adminRoutes from '../api/admin/routes';
 import userRoutes from '../api/user/routes';
 import consultantRoutes from '../api/consultant/routes';
-
-// Constants for route paths
+import { buildAdminRouter } from '../api/admin/routes';
 import { ADMIN_PATHS, USER_PATHS, CONSULTANT_PATHS } from '@serviceops/constants';
 
-const app = express();
+type AppDeps = {
+  ticketRouter?: express.Router;
+};
 
 /**
- * -------------------------
- * Global Middleware
- * -------------------------
+ * Creates and configures the Express application.
+ *
+ * @param deps - Optional runtime dependencies resolved after DB startup.
+ * @param deps.ticketRouter - Dynamically-built ticket router from adminTicketType table.
  */
+export function createApp({ ticketRouter }: AppDeps = {}): express.Application {
+  const app = express();
 
-// Gzip compress all responses — reduces payload size by 60-80%
-app.use(compression());
+  // Gzip compress all responses — reduces payload size by 60-80%
+  app.use(compression());
 
-// Enable CORS
-app.use(cors());
+  // Enable CORS
+  app.use(cors());
 
-// Parse incoming JSON requests
-app.use(express.json({ limit: '10mb' }));
+  // Parse incoming JSON requests
+  app.use(express.json({ limit: '10mb' }));
 
-// Serve uploaded files statically
-const uploadsDir = path.join(__dirname, '../../uploads/attachments');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-app.use('/uploads/attachments', express.static(uploadsDir));
-// Return plain 404 for missing static files (prevent API notFoundHandler JSON response)
-app.use('/uploads', (_req, res) => res.status(404).end());
+  // Serve uploaded files statically
+  const uploadsDir = path.join(__dirname, '../../uploads/attachments');
+  if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+  app.use('/uploads/attachments', express.static(uploadsDir));
+  // Return plain 404 for missing static files (prevent API notFoundHandler JSON response)
+  app.use('/uploads', (_req, res) => res.status(404).end());
 
-/**
- * -------------------------
- * API Routes
- * -------------------------
- */
+  // Auth API routes
+  app.use('/api/auth', authRoutes);
 
-// Auth API routes
-app.use('/api/auth', authRoutes);
+  // Admin API routes (includes dynamic ticket router)
+  const adminRouter = buildAdminRouter(ticketRouter);
+  app.use(`/api/${ADMIN_PATHS.ADMIN}`, adminRouter);
 
-// Admin API routes
-app.use(`/api/${ADMIN_PATHS.ADMIN}`, adminRoutes);
+  // User API routes
+  app.use(`/api/${USER_PATHS.USER}`, userRoutes);
 
-// User API routes
-app.use(`/api/${USER_PATHS.USER}`, userRoutes);
+  // Consultant API routes
+  app.use(`/api/${CONSULTANT_PATHS.CONSULTANT}`, consultantRoutes);
 
-// Consultant API routes
-app.use(`/api/${CONSULTANT_PATHS.CONSULTANT}`, consultantRoutes);
-
-/**
- * -------------------------
- * Health Check
- * -------------------------
- */
-
-app.get('/health', (_req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
+  // Health Check
+  app.get('/health', (_req, res) => {
+    res.json({
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+    });
   });
-});
 
-/**
- * -------------------------
- * Error Handling
- * -------------------------
- */
+  // Handles unknown routes (404 errors)
+  app.use(notFoundHandler);
 
-// Handles unknown routes (404 errors)
-app.use(notFoundHandler);
+  // Global error handler (must be last)
+  app.use(errorHandler);
 
-// Global error handler (must be last)
-app.use(errorHandler);
-
-export default app;
+  return app;
+}

@@ -1,3 +1,5 @@
+import { IIncident, IServiceRequest, IAdvisoryRequest } from '@serviceops/interfaces';
+
 export interface SolutionMatch {
   ticket: (IIncident & { ticketType: 'incident' }) | (IServiceRequest & { ticketType: 'service_request' }) | (IAdvisoryRequest & { ticketType: 'advisory_request' });
   similarity: number;

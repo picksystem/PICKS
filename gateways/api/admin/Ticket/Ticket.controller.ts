@@ -1,77 +1,83 @@
-import { Request, Response } from 'express';
+import { Router, Request, Response } from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { prisma } from '@serviceops/database';
 import {
-  CreateIncidentUseCase,
-  CreateServiceRequestUseCase,
-  CreateAdvisoryRequestUseCase,
-  GetIncidentByNumberUseCase,
-  GetServiceRequestByNumberUseCase,
-  GetAdvisoryRequestByNumberUseCase,
-  GetAllIncidentsUseCase,
-  GetAllServiceRequestsUseCase,
-  GetAllAdvisoryRequestsUseCase,
-  GetIncidentUseCase,
-  GetServiceRequestUseCase,
-  GetAdvisoryRequestUseCase,
-  UpdateIncidentUseCase,
-  UpdateServiceRequestUseCase,
-  UpdateAdvisoryRequestUseCase,
-  DeleteIncidentUseCase,
-  DeleteServiceRequestUseCase,
-  DeleteAdvisoryRequestUseCase,
+  TicketManagementUseCase,
+  IAddCommentInput,
+  IAddTimeEntryInput,
+  IAddResolutionInput,
+  IAddActivityInput,
 } from '@serviceops/core/use-cases';
+import { AdminTicketGateway } from '@serviceops/core/infrastructure';
 
-const TICKET_TYPE_KEYS = ['incident', 'service_request', 'advisory_request'] as const;
-type TicketTypeKey = (typeof TICKET_TYPE_KEYS)[number];
+// ── File upload setup ─────────────────────────────────────────────────────────
 
-const PREFIX_TYPE_MAP: Record<string, TicketTypeKey> = {
-  INC: 'incident',
-  SRQ: 'service_request',
-  ADV: 'advisory_request',
-};
+const uploadDir = path.join(__dirname, '../../../../uploads/attachments');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-const detectTypeFromNumber = (number: string): TicketTypeKey | null => {
-  const prefix = number?.match(/^([A-Z]+)/)?.[1];
-  return prefix ? (PREFIX_TYPE_MAP[prefix] ?? null) : null;
-};
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadDir),
+  filename: (_req, file, cb) => {
+    const safeName = file.originalname.replace(/[/\\:*?"<>|]/g, '_');
+    cb(null, `${Date.now()}-${safeName}`);
+  },
+});
 
-/**
- * Unified Ticket Controller
- * Handles all CRUD + sub-resource operations for any ticket type via a single endpoint.
- * Routes to the appropriate use case based on `ticketType` in the request body / query params / number prefix.
- */
-export class TicketController {
-  constructor(
-    // Create
-    private readonly createIncidentUseCase: CreateIncidentUseCase,
-    private readonly createServiceRequestUseCase: CreateServiceRequestUseCase,
-    private readonly createAdvisoryRequestUseCase: CreateAdvisoryRequestUseCase,
-    // Get by number
-    private readonly getIncidentByNumberUseCase: GetIncidentByNumberUseCase,
-    private readonly getServiceRequestByNumberUseCase: GetServiceRequestByNumberUseCase,
-    private readonly getAdvisoryRequestByNumberUseCase: GetAdvisoryRequestByNumberUseCase,
-    // List
-    private readonly getAllIncidentsUseCase: GetAllIncidentsUseCase,
-    private readonly getAllServiceRequestsUseCase: GetAllServiceRequestsUseCase,
-    private readonly getAllAdvisoryRequestsUseCase: GetAllAdvisoryRequestsUseCase,
-    // Get by ID
-    private readonly getIncidentUseCase: GetIncidentUseCase,
-    private readonly getServiceRequestUseCase: GetServiceRequestUseCase,
-    private readonly getAdvisoryRequestUseCase: GetAdvisoryRequestUseCase,
-    // Update
-    private readonly updateIncidentUseCase: UpdateIncidentUseCase,
-    private readonly updateServiceRequestUseCase: UpdateServiceRequestUseCase,
-    private readonly updateAdvisoryRequestUseCase: UpdateAdvisoryRequestUseCase,
-    // Delete
-    private readonly deleteIncidentUseCase: DeleteIncidentUseCase,
-    private readonly deleteServiceRequestUseCase: DeleteServiceRequestUseCase,
-    private readonly deleteAdvisoryRequestUseCase: DeleteAdvisoryRequestUseCase,
-  ) {}
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = /pdf|doc|docx|xls|xlsx|png|jpg|jpeg|gif/i;
+    const ext = path.extname(file.originalname).slice(1);
+    cb(null, allowed.test(ext));
+  },
+});
 
-  // ============================================
-  // CREATE
-  // ============================================
+// ── Dependency wiring ────────────────────────────────────────────────────────
 
-  create = async (req: Request, res: Response): Promise<void> => {
+const ticketGateway = new AdminTicketGateway(prisma as any);
+const ticketUseCase = new TicketManagementUseCase(ticketGateway);
+
+// ── Route builder ────────────────────────────────────────────────────────────
+
+export function buildTicketRouter(): Router {
+  const router = Router();
+
+  // ── Drafts ────────────────────────────────────────────────────────────────
+
+  router.get('/drafts', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const ticketType = req.query.ticketType as string | undefined;
+      const drafts = await ticketUseCase.getDrafts(ticketType ? { ticketType } : undefined);
+      res.json({ message: 'Draft tickets retrieved successfully', data: drafts });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to fetch drafts' });
+    }
+  });
+
+  // ── Get by number (prefix-based detection) ───────────────────────────────
+
+  router.get('/:number', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { number } = req.params;
+      const ticket = await ticketUseCase.getByNumber(number);
+
+      if (!ticket) {
+        res.status(404).json({ message: `Ticket not found: ${number}` });
+        return;
+      }
+
+      res.json({ message: 'OK', data: ticket });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to fetch ticket' });
+    }
+  });
+
+  // ── Create ───────────────────────────────────────────────────────────────
+
+  router.post('/', async (req: Request, res: Response): Promise<void> => {
     try {
       const { ticketType, ...data } = req.body;
 
@@ -80,111 +86,35 @@ export class TicketController {
         return;
       }
 
-      let result: unknown;
-
-      switch (ticketType) {
-        case 'incident':
-          result = await this.createIncidentUseCase.execute(data);
-          break;
-        case 'service_request':
-          result = await this.createServiceRequestUseCase.execute(data);
-          break;
-        case 'advisory_request':
-          result = await this.createAdvisoryRequestUseCase.execute(data);
-          break;
-        default:
-          res.status(400).json({ message: `Unknown ticket type: ${ticketType}` });
-          return;
-      }
-
-      res.status(201).json({ message: 'Ticket created successfully', data: result });
+      const ticket = await ticketUseCase.create({
+        ticketType,
+        ...data,
+        createdBy: data.createdBy || 'system',
+      });
+      res.status(201).json({
+        message: 'Ticket created successfully',
+        data: ticket,
+      });
     } catch (error: any) {
       res.status(500).json({ message: error.message || 'Failed to create ticket' });
     }
-  };
+  });
 
-  // ============================================
-  // GET BY NUMBER
-  // ============================================
+  // ── List all (optional ?ticketType= filter) ──────────────────────────────
 
-  getByNumber = async (req: Request, res: Response): Promise<void> => {
+  router.get('/', async (req: Request, res: Response): Promise<void> => {
     try {
-      const { number } = req.params;
-      const ticketType = detectTypeFromNumber(number);
-
-      if (!ticketType) {
-        res.status(400).json({ message: `Cannot determine ticket type from number: ${number}` });
-        return;
-      }
-
-      let result: unknown;
-
-      switch (ticketType) {
-        case 'incident':
-          result = await this.getIncidentByNumberUseCase.execute(number);
-          break;
-        case 'service_request':
-          result = await this.getServiceRequestByNumberUseCase.execute(number);
-          break;
-        case 'advisory_request':
-          result = await this.getAdvisoryRequestByNumberUseCase.execute(number);
-          break;
-        default:
-          res.status(400).json({ message: `Unknown ticket type for number: ${number}` });
-          return;
-      }
-
-      res.status(200).json({ message: 'OK', data: { ...(result as object), ticketType } });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message || 'Failed to fetch ticket' });
-    }
-  };
-
-  // ============================================
-  // LIST ALL (with optional ticketType filter)
-  // ============================================
-
-  getAll = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const ticketType = (req.query.ticketType as TicketTypeKey | undefined) || undefined;
-      let results: unknown[] = [];
-
-      if (!ticketType) {
-        // Return all tickets from all types
-        const [incidents, serviceRequests, advisoryRequests] = await Promise.all([
-          this.getAllIncidentsUseCase.execute(),
-          this.getAllServiceRequestsUseCase.execute(),
-          this.getAllAdvisoryRequestsUseCase.execute(),
-        ]);
-        results = [...incidents, ...serviceRequests, ...advisoryRequests];
-      } else {
-        switch (ticketType) {
-          case 'incident':
-            results = await this.getAllIncidentsUseCase.execute();
-            break;
-          case 'service_request':
-            results = await this.getAllServiceRequestsUseCase.execute();
-            break;
-          case 'advisory_request':
-            results = await this.getAllAdvisoryRequestsUseCase.execute();
-            break;
-          default:
-            res.status(400).json({ message: `Unknown ticket type: ${ticketType}` });
-            return;
-        }
-      }
-
-      res.json({ message: 'Tickets retrieved successfully', data: results });
+      const ticketType = req.query.ticketType as string | undefined;
+      const tickets = await ticketUseCase.getAll(ticketType ? { ticketType } : undefined);
+      res.json({ message: 'Tickets retrieved successfully', data: tickets });
     } catch (error: any) {
       res.status(500).json({ message: error.message || 'Failed to fetch tickets' });
     }
-  };
+  });
 
-  // ============================================
-  // GET BY ID
-  // ============================================
+  // ── Get / Update / Delete by ID ─────────────────────────────────────────
 
-  getById = async (req: Request, res: Response): Promise<void> => {
+  router.get('/id/:id', async (req: Request, res: Response): Promise<void> => {
     try {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) {
@@ -192,50 +122,19 @@ export class TicketController {
         return;
       }
 
-      const ticketType = (req.query.ticketType as TicketTypeKey | undefined) || undefined;
-
-      let result: unknown | null = null;
-
-      if (ticketType) {
-        switch (ticketType) {
-          case 'incident':
-            result = await this.getIncidentUseCase.execute(id);
-            break;
-          case 'service_request':
-            result = await this.getServiceRequestUseCase.execute(id);
-            break;
-          case 'advisory_request':
-            result = await this.getAdvisoryRequestUseCase.execute(id);
-            break;
-        }
-      } else {
-        // No ticketType provided — try all three
-        result =
-          (await this.getIncidentUseCase.execute(id)) ||
-          (await this.getServiceRequestUseCase.execute(id)) ||
-          (await this.getAdvisoryRequestUseCase.execute(id));
-      }
-
-      if (!result) {
+      const ticket = await ticketUseCase.getById(id);
+      if (!ticket) {
         res.status(404).json({ message: `Ticket with ID ${id} not found` });
         return;
       }
 
-      const resolvedType = ticketType || (result as any)?.__ticketType;
-      res.json({
-        message: 'Ticket retrieved successfully',
-        data: { ...(result as object), ticketType: resolvedType },
-      });
+      res.json({ message: 'Ticket retrieved successfully', data: ticket });
     } catch (error: any) {
       res.status(500).json({ message: error.message || 'Failed to fetch ticket' });
     }
-  };
+  });
 
-  // ============================================
-  // UPDATE
-  // ============================================
-
-  update = async (req: Request, res: Response): Promise<void> => {
+  router.put('/id/:id', async (req: Request, res: Response): Promise<void> => {
     try {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) {
@@ -245,39 +144,14 @@ export class TicketController {
 
       const { ticketType, ...data } = req.body;
 
-      if (!ticketType) {
-        res.status(400).json({ message: 'ticketType is required for update' });
-        return;
-      }
-
-      let result: unknown;
-
-      switch (ticketType) {
-        case 'incident':
-          result = await this.updateIncidentUseCase.execute(id, data);
-          break;
-        case 'service_request':
-          result = await this.updateServiceRequestUseCase.execute(id, data);
-          break;
-        case 'advisory_request':
-          result = await this.updateAdvisoryRequestUseCase.execute(id, data);
-          break;
-        default:
-          res.status(400).json({ message: `Unknown ticket type: ${ticketType}` });
-          return;
-      }
-
-      res.json({ message: 'Ticket updated successfully', data: result });
+      const ticket = await ticketUseCase.update(id, data as any);
+      res.json({ message: 'Ticket updated successfully', data: ticket });
     } catch (error: any) {
       res.status(500).json({ message: error.message || 'Failed to update ticket' });
     }
-  };
+  });
 
-  // ============================================
-  // DELETE
-  // ============================================
-
-  delete = async (req: Request, res: Response): Promise<void> => {
+  router.patch('/id/:id', async (req: Request, res: Response): Promise<void> => {
     try {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) {
@@ -285,78 +159,118 @@ export class TicketController {
         return;
       }
 
-      const ticketType = (req.body.ticketType || req.query.ticketType) as TicketTypeKey | undefined;
+      const { ticketType, ...data } = req.body;
 
-      if (!ticketType) {
-        res.status(400).json({ message: 'ticketType is required for delete' });
+      const ticket = await ticketUseCase.update(id, data as any);
+      res.json({ message: 'Ticket updated successfully', data: ticket });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to update ticket' });
+    }
+  });
+
+  router.delete('/id/:id', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) {
+        res.status(400).json({ message: 'Invalid ID format' });
         return;
       }
 
-      let result: unknown;
-
-      switch (ticketType) {
-        case 'incident':
-          result = await this.deleteIncidentUseCase.execute(id);
-          break;
-        case 'service_request':
-          result = await this.deleteServiceRequestUseCase.execute(id);
-          break;
-        case 'advisory_request':
-          result = await this.deleteAdvisoryRequestUseCase.execute(id);
-          break;
-        default:
-          res.status(400).json({ message: `Unknown ticket type: ${ticketType}` });
-          return;
-      }
-
-      res.json({ message: 'Ticket deleted successfully', data: result });
+      const ticket = await ticketUseCase.delete(id);
+      res.json({ message: 'Ticket deleted successfully', data: ticket });
     } catch (error: any) {
       res.status(500).json({ message: error.message || 'Failed to delete ticket' });
     }
-  };
+  });
 
-  // ============================================
-  // DRAFTS (with optional ticketType filter)
-  // ============================================
+  // ── Sub-resources ─────────────────────────────────────────────────────────
 
-  getDrafts = async (req: Request, res: Response): Promise<void> => {
+  // Comments
+  router.get('/:ticketId/comments', async (req: Request, res: Response): Promise<void> => {
     try {
-      const ticketType = (req.query.ticketType as TicketTypeKey | undefined) || undefined;
-
-      let results: unknown[] = [];
-
-      if (!ticketType) {
-        // Return all drafts from all types
-        const [incidents, serviceRequests, advisoryRequests] = await Promise.all([
-          this.getAllIncidentsUseCase.execute(),
-          this.getAllServiceRequestsUseCase.execute(),
-          this.getAllAdvisoryRequestsUseCase.execute(),
-        ]);
-        const isDraft = (t: { status?: string }) => t.status === 'draft' || t.status === 'DRAFT';
-        results = [
-          ...incidents.filter(isDraft),
-          ...serviceRequests.filter(isDraft),
-          ...advisoryRequests.filter(isDraft),
-        ];
-      } else {
-        let all: unknown[] = [];
-        switch (ticketType) {
-          case 'incident':
-            all = await this.getAllIncidentsUseCase.execute();
-            break;
-          case 'service_request':
-            all = await this.getAllServiceRequestsUseCase.execute();
-            break;
-          case 'advisory_request':
-            all = await this.getAllAdvisoryRequestsUseCase.execute();
-            break;
-        }
-        results = all.filter((t) => (t as any).status === 'draft' || (t as any).status === 'DRAFT');
-      }
-
-      res.json({ message: 'Draft tickets retrieved successfully', data: results });
+      const ticketId = parseInt(req.params.ticketId, 10);
+      const comments = await ticketUseCase.getComments(ticketId);
+      res.json({ message: 'Comments retrieved successfully', data: comments });
     } catch (error: any) {
-      res.status(500).json({ message: error.message || 'Failed to fetch drafts' });
+      res.status(500).json({ message: error.message || 'Failed to fetch comments' });
     }
-  };
+  });
+
+  router.post('/:ticketId/comments', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const ticketId = parseInt(req.params.ticketId, 10);
+      const comment = await ticketUseCase.addComment(
+        req.body as IAddCommentInput & { ticketId: number },
+      );
+      res.status(201).json({ message: 'Comment added successfully', data: comment });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to add comment' });
+    }
+  });
+
+  // Time entries
+  router.get('/:ticketId/time-entries', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const ticketId = parseInt(req.params.ticketId, 10);
+      const entries = await ticketUseCase.getTimeEntries(ticketId);
+      res.json({ message: 'Time entries retrieved successfully', data: entries });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to fetch time entries' });
+    }
+  });
+
+  router.post('/:ticketId/time-entries', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const ticketId = parseInt(req.params.ticketId, 10);
+      const entry = await ticketUseCase.addTimeEntry(
+        req.body as IAddTimeEntryInput & { ticketId: number },
+      );
+      res.status(201).json({ message: 'Time entry added successfully', data: entry });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to add time entry' });
+    }
+  });
+
+  // Resolutions
+  router.get('/:ticketId/resolutions', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const ticketId = parseInt(req.params.ticketId, 10);
+      const resolutions = await ticketUseCase.getResolutions(ticketId);
+      res.json({ message: 'Resolutions retrieved successfully', data: resolutions });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to fetch resolutions' });
+    }
+  });
+
+  router.post('/:ticketId/resolutions', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const ticketId = parseInt(req.params.ticketId, 10);
+      const resolution = await ticketUseCase.addResolution(
+        req.body as IAddResolutionInput & { ticketId: number },
+      );
+      res.status(201).json({ message: 'Resolution added successfully', data: resolution });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to add resolution' });
+    }
+  });
+
+  // Activities
+  router.get('/:ticketId/activities', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const ticketId = parseInt(req.params.ticketId, 10);
+      const activities = await ticketUseCase.getActivities(ticketId);
+      res.json({ message: 'Activities retrieved successfully', data: activities });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to fetch activities' });
+    }
+  });
+
+  // File upload
+  router.post('/attachments/upload', upload.array('files', 10), (req: Request, res: Response) => {
+    const files = req.files as Express.Multer.File[];
+    const filenames = files.map((f) => f.filename);
+    res.json({ data: filenames });
+  });
+
+  return router;
 }

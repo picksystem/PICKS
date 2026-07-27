@@ -16,6 +16,7 @@ import {
 import { useAuth } from '@serviceops/hooks';
 import { useAppDispatch } from '../../../../hooks/useAppDispatch';
 import { mergeLayoutConfig } from '@serviceops/tickettypelayout';
+import { ITimeEntry } from '@serviceops/interfaces';
 import {
   ModalType,
   TimeSummaryData,
@@ -63,18 +64,18 @@ export const useTicketDetail = () => {
       if (ticketType === 'service_request') {
         return updateServiceRequestTrigger({
           ticketType: 'service_request',
-          id: args.id,
+          id: Number(args.id),
           data: args.data,
         });
       }
       if (ticketType === 'advisory_request') {
         return updateAdvisoryRequestTrigger({
           ticketType: 'advisory_request',
-          id: args.id,
+          id: Number(args.id),
           data: args.data,
         });
       }
-      return updateIncidentTrigger({ ticketType: 'incident', id: args.id, data: args.data });
+      return updateIncidentTrigger({ ticketType: 'incident', id: Number(args.id), data: args.data });
     },
     [ticketType, updateIncidentTrigger, updateServiceRequestTrigger, updateAdvisoryRequestTrigger],
   );
@@ -128,7 +129,7 @@ export const useTicketDetail = () => {
 
   // Calculate time summary from time entries
   const timeSummary = useMemo<TimeSummaryData>(() => {
-    return calculateTimeSummary(timeEntries ?? []);
+    return calculateTimeSummary((timeEntries ?? []) as any as ITimeEntry[]);
   }, [timeEntries]);
 
   // Resolve which Admin ▸ Ticket Type record governs this ticket's number

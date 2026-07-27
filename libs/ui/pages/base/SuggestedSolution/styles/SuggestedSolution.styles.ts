@@ -200,6 +200,13 @@ export const useStyles = makeStyles()((theme) => ({
     },
   },
 
+  matchDetail: {
+    padding: theme.spacing(2),
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: theme.spacing(1.5),
+  },
+
   matchCardSelected: {
     borderColor: '#4338ca',
     borderLeftColor: '#4338ca',

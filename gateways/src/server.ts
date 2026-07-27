@@ -24,20 +24,20 @@ try {
   // env.gateway.json not found or invalid — rely on .env / system env vars
 }
 
-// Import Express app instance
-import app from './app';
-
 // Custom Winston logger
 import { logger } from '@serviceops/config';
+
+// Express app factory
+import { createApp } from './app';
 
 // Prisma client for database access
 import { prisma } from '@serviceops/database';
 
-// Draft cleanup — use the actual gateway class (Incident.routes was deleted during migration)
-import { CleanupExpiredDraftsUseCase } from '@serviceops/core/use-cases';
-import { PrismaIncidentGateway } from '../../libs/core/infrastructure/admin/PrismaIncidentGateway';
+// Build dynamic ticket router from Configuration API
+import { createTicketRouter } from '../api/admin/Ticket/Ticket.routes';
+import { CleanupExpiredDraftsUseCase, AdminTicketGateway } from '@serviceops/core';
 
-const incidentGateway = new PrismaIncidentGateway(prisma as any);
+const ticketGateway = new AdminTicketGateway(prisma as any);
 
 // Server configuration
 const PORT = parseInt(process.env.PORT || '3001', 10);
@@ -53,9 +53,9 @@ const HOST = process.env.HOST || '0.0.0.0';
 async function checkDatabaseConnection() {
   try {
     await prisma.$queryRaw`SELECT 1`;
-    logger.info('✅ Database connection established');
+    logger.info('Database connection established');
   } catch (error) {
-    logger.error('❌ Failed to connect to database:', error);
+    logger.error('Failed to connect to database:', error);
     process.exit(1); // Stop app if DB is unavailable
   }
 }
@@ -70,24 +70,29 @@ async function startServer() {
     // Verify database connectivity
     await checkDatabaseConnection();
 
+    // Build the dynamic ticket router from adminTicketType table
+    const ticketRouter = await createTicketRouter();
+
+    // Create Express app with ticket router injected
+    const app = createApp({ ticketRouter });
+
     // Start HTTP server
     const server = app.listen(PORT, HOST, () => {
       logger.info('='.repeat(60));
-      logger.info(`🚀 Unified SerivceOps Backend API Server Started`);
+      logger.info('Unified ServiceOps Backend API Server Started');
       logger.info('='.repeat(60));
-      logger.info(`📍 Server running on: http://${HOST}:${PORT}`);
-      logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-      logger.info(`📚 Swagger docs: http://localhost:${PORT}/api/docs`);
-      logger.info(`💚 Health check: http://localhost:${PORT}/health`);
+      logger.info(`Server running on: http://${HOST}:${PORT}`);
+      logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`Health check: http://localhost:${PORT}/health`);
       logger.info('='.repeat(60));
 
       // Run expired draft cleanup on startup and every 24 hours
-      const cleanupUseCase = new CleanupExpiredDraftsUseCase(incidentGateway);
+      const cleanupUseCase = new CleanupExpiredDraftsUseCase(ticketGateway);
       const runCleanup = async () => {
         try {
           const count = await cleanupUseCase.execute();
           if (count > 0) {
-            logger.info(`🗑️ Cleaned up ${count} expired draft incident(s)`);
+            logger.info(`Cleaned up ${count} expired draft incident(s)`);
           }
         } catch (error) {
           logger.error('Failed to cleanup expired drafts:', error);
@@ -114,7 +119,7 @@ async function startServer() {
           // Close Prisma DB connection
           await prisma.$disconnect();
           logger.info('Database connection closed');
-          logger.info('✅ Graceful shutdown completed');
+          logger.info('Graceful shutdown completed');
           process.exit(0);
         } catch (error) {
           logger.error('Error during shutdown:', error);

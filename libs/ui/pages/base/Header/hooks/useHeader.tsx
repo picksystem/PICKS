@@ -57,7 +57,7 @@ export const useHeader = () => {
   const [ticketSearch, setTicketSearch] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
   const debouncedSearch = useDebounce(ticketSearch, 300);
-  const { data: tickets } = useGetTicketsQuery();
+  const { data: tickets } = useGetTicketsQuery(void 0);
 
   const filteredIncidents = useMemo(() => {
     if (!debouncedSearch || debouncedSearch.length < 2 || !tickets) return [];
