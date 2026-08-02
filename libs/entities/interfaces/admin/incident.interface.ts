@@ -431,31 +431,45 @@ export interface IActivityLogListResponse {
 }
 
 // ============================================
-// Response Interfaces - API responses
-// ============================================
-export interface IIncidentResponse {
-  message: string;
-  data: IIncident;
-}
-
-export interface IIncidentListResponse {
-  message: string;
-  data: IIncident[];
-}
-
-// ============================================
-// Gateway Interface - Data access contract
+// Gateway Interface - Data access contracts
 // ============================================
 export interface IIncidentGateway {
-  create(data: ICreateIncidentInput & { number: string }): Promise<IIncident>;
+  create(input: ICreateIncidentInput): Promise<IIncident>;
   findAll(): Promise<IIncident[]>;
   findById(id: number): Promise<IIncident | null>;
   findByNumber(number: string): Promise<IIncident | null>;
   findByStatus(status: IncidentStatus): Promise<IIncident[]>;
-  update(id: number, data: IUpdateIncidentInput): Promise<IIncident>;
+  update(id: number, input: IUpdateIncidentInput): Promise<IIncident>;
   delete(id: number): Promise<IIncident>;
   getNextNumber(): Promise<string>;
   deleteExpiredDrafts(): Promise<number>;
+}
+
+export interface ICommentGateway {
+  addComment(input: ICreateCommentInput): Promise<IIncidentComment>;
+  getComments(incidentId: number): Promise<IIncidentComment[]>;
+}
+
+export interface ITimeEntryGateway {
+  addTimeEntry(input: ICreateTimeEntryInput): Promise<ITimeEntry>;
+  getTimeEntries(incidentId: number): Promise<ITimeEntry[]>;
+}
+
+export interface IResolutionGateway {
+  create(input: ICreateResolutionInput): Promise<IResolution>;
+  getResolutions(incidentId: number): Promise<IResolution[]>;
+}
+
+export interface IActivityLogGateway {
+  addActivity(input: {
+    incidentId: number;
+    activityType: ActivityType;
+    description: string;
+    previousValue?: string;
+    newValue?: string;
+    performedBy: string;
+  }): Promise<IActivityLog>;
+  getActivities(incidentId: number): Promise<IActivityLog[]>;
 }
 
 // ============================================

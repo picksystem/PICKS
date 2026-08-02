@@ -182,7 +182,7 @@ export interface IAdvisoryRequestListResponse {
 }
 
 // ============================================
-// Gateway Interface - Data access contract
+// Gateway Interface - Data access contracts
 // ============================================
 export interface IAdvisoryRequestGateway {
   create(data: ICreateAdvisoryRequestInput & { number: string }): Promise<IAdvisoryRequest>;

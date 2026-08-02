@@ -1,3 +1,2 @@
 export * from './AdminControls';
-export * from './Configuration';
-export * from './Ticket';
+export { default as ConfigurationRouter } from './Configuration/Configuration.routes';

@@ -133,7 +133,7 @@ model AdminConfiguration {
   data      Json     @default("{}")
   updatedBy Int?
   createdAt DateTime @default(now())
-  updatedAt DateTime
+  updatedAt DateTime @default(now())
 }
 
 model AdminControls {
@@ -152,7 +152,7 @@ model AdminControls {
 }
 
 model AdminDashboard {
-  id   String @id
+  id   String @id @default(cuid())
   name String
   age  Int
 }
@@ -293,8 +293,184 @@ model AdminIncidentTimeEntry {
   AdminIncident   AdminIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
 }
 
+model User {
+  id                       Int       @id @default(autoincrement())
+  firstName                String
+  lastName                 String
+  email                    String    @unique
+  password                 String
+  phone                    String?
+  workLocation             String?
+  department               String?
+  reasonForAccess          String?
+  employeeId               String?
+  businessUnit             String?
+  managerName              String?
+  dateOfBirth              String?
+  profilePicture           String?
+  name                     String
+  role                     String    @default("user")
+  requestedRole            String?
+  status                   String    @default("pending_approval")
+  source                   String    @default("signup")
+  reviewedBy               Int?
+  reviewedAt               DateTime?
+  adminNotes               String?
+  invitationToken          String?
+  invitationExpiry         DateTime?
+  mustResetPassword        Boolean   @default(false)
+  otp                      String?
+  otpExpiresAt             DateTime?
+  otpIsUsed                Boolean   @default(false)
+  failedLoginAttempts      Int       @default(0)
+  lockedUntil              DateTime?
+  lastLoginAt              DateTime?
+  passwordChangedAt        DateTime?
+  isActive                 Boolean   @default(false)
+  accessFromDate           DateTime?
+  accessToDate             DateTime?
+  firstActivationDate      DateTime?
+  lastDeactivationDate     DateTime?
+  lastActivityAt           DateTime?
+  timezone                 String?
+  dateFormat               String?
+  timeFormat               String?
+  language                 String?
+  consultantProfileUpdated Boolean   @default(false)
+  slaWorkingCalendar       String?
+  slaExceptionGroup        String?
+  application              String?
+  applicationLead          String?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  createdBy                String?
+
+  @@map("User")
+}
+
+model UserChangeLog {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  changeType    String
+  fieldName     String?
+  previousValue String?
+  newValue      String?
+  changedBy     Int
+  changedByName String
+  reasonCode    String?
+  reasonNotes   String?
+  createdAt     DateTime @default(now())
+
+  @@map("UserChangeLog")
+}
+
+model LoginLog {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  loginTime  DateTime  @default(now())
+  logoutTime DateTime?
+  ipAddress  String?
+  device     String?
+  userAgent  String?
+
+  @@map("LoginLog")
+}
+
+model ConsultantProfile {
+  id                   Int      @id @default(autoincrement())
+  userId               Int
+  application          String
+  consultantRole       String?
+  slaWorkingCalendar   String?
+  slaExceptionCalendar String?
+  leadConsultant       String?
+  applicationManager   String?
+  isPocLead            Boolean  @default(false)
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime
+
+  @@map("ConsultantProfile")
+}
+
+model ConsultantRole {
+  id          Int      @id @default(autoincrement())
+  application String
+  roleName    String
+  description String?
+  createdAt   DateTime @default(now())
+
+  @@map("ConsultantRole")
+}
+
+model UserDashboard {
+  id   String @id @default(cuid())
+  name String
+  key  String
+  path String
+  app  String
+
+  @@map("UserDashboard")
+}
+
+model UserHeader {
+  id   String @id @default(cuid())
+  name String
+  key  String
+  path String
+  app  String
+
+  @@map("UserHeader")
+}
+
+model UserSideNav {
+  id   String @id @default(cuid())
+  name String
+  key  String
+  path String
+  app  String
+
+  @@map("UserSideNav")
+}
+
+model ConsultantDashboard {
+  id   String @id @default(cuid())
+  name String
+  key  String
+  path String
+  app  String
+
+  @@map("ConsultantDashboard")
+}
+
+model ConsultantHeader {
+  id   String @id @default(cuid())
+  name String
+  key  String
+  path String
+  app  String
+
+  @@map("ConsultantHeader")
+}
+
+model ConsultantNotFound {
+  id   String @id @default(cuid())
+  name String
+  age  Int
+
+  @@map("ConsultantNotFound")
+}
+
+model UserNotFound {
+  id   String @id @default(cuid())
+  name String
+  age  Int
+
+  @@map("UserNotFound")
+}
+
 model AdminNotFound {
-  id   String @id
+  id   String @id @default(cuid())
   name String
   age  Int
 }
@@ -422,7 +598,7 @@ model AdminServiceRequestTimeEntry {
 }
 
 model AdminSignIn {
-  id   String @id
+  id   String @id @default(cuid())
   name String
   age  Int
 }
@@ -462,7 +638,7 @@ model AdminTicket {
   attachments              String?
   draftExpiresAt           DateTime?
   createdAt                DateTime  @default(now())
-  updatedAt                DateTime
+  updatedAt                DateTime  @updatedAt
   accessRequirements       String?
   actualEndDate            DateTime?
   actualStartDate          DateTime?
@@ -539,19 +715,19 @@ model AdminTicket {
 }
 
 model AdminTicketType {
-  id               Int      @id @default(autoincrement())
-  type             String   @unique
+  id               Int     @id @default(autoincrement())
+  type             String  @unique
   name             String
-  displayName      String   @default("")
-  displayTag       String   @default("")
-  shortDescription String   @default("")
-  description      String   @default("")
-  prefix           String   @default("")
-  isActive         Boolean  @default(true)
-  numberLength     Int      @default(7)
-  displayOrder     Int      @default(0)
-  accessControl    String   @default("")
-  layoutConfig     String   @default("")
+  displayName      String  @default("")
+  displayTag       String  @default("")
+  shortDescription String  @default("")
+  description      String  @default("")
+  prefix           String  @default("")
+  isActive         Boolean @default(true)
+  numberLength     Int     @default(7)
+  displayOrder     Int     @default(0)
+  accessControl    String  @default("")
+  layoutConfig     String  @default("")
 
   @@map("admin_ticket_type")
 }
@@ -593,35 +769,35 @@ model AdminTicketTimeEntry {
 }
 
 model AdminTicketResolution {
-  id                  Int       @id @default(autoincrement())
-  ticketId            Int
-  application         String?
-  category            String?
-  subCategory         String?
-  customerConfirmation Boolean   @default(false)
-  isRecurring         Boolean   @default(false)
-  rootCauseIdentified Boolean   @default(false)
-  rootCause           String?
-  resolutionCode      String
-  resolution          String
-  internalNote        String?
-  attachments         String?
-  createdBy           String
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime
+  id                   Int      @id @default(autoincrement())
+  ticketId             Int
+  application          String?
+  category             String?
+  subCategory          String?
+  customerConfirmation Boolean  @default(false)
+  isRecurring          Boolean  @default(false)
+  rootCauseIdentified  Boolean  @default(false)
+  rootCause            String?
+  resolutionCode       String
+  resolution           String
+  internalNote         String?
+  attachments          String?
+  createdBy            String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime
 
   @@map("admin_ticket_resolution")
 }
 
 model AdminTicketActivity {
-  id           Int      @id @default(autoincrement())
-  ticketId     Int
-  activityType String
-  description  String
+  id            Int      @id @default(autoincrement())
+  ticketId      Int
+  activityType  String
+  description   String
   previousValue String?
   newValue      String?
-  performedBy  String
-  createdAt    DateTime @default(now())
+  performedBy   String
+  createdAt     DateTime @default(now())
 
   @@map("admin_ticket_activity")
 }

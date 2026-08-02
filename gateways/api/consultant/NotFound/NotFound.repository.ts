@@ -17,7 +17,7 @@ export class NotFoundRepository extends BaseRepository<
   }
 
   async create(data: CreateNotFoundDto): Promise<ConsultantNotFound> {
-    return this.prisma.consultantNotFound.create({ data });
+    return this.prisma.consultantNotFound.create({ data: data as any });
   }
 
   async findAll(): Promise<ConsultantNotFound[]> {

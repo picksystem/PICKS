@@ -317,7 +317,7 @@ export class AuthController {
         timeFormat: (validatedData as any).timeFormat || null,
         slaWorkingCalendar: (validatedData as any).slaWorkingCalendar || null,
         slaExceptionGroup: (validatedData as any).slaExceptionGroup || null,
-      },
+      } as any,
     });
 
     // Notify admin (fire and forget)

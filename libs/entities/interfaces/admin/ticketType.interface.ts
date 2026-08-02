@@ -11,6 +11,15 @@
  * - Ticket Template
  */
 
+export interface ITicketTypeGateway {
+  getAll(): Promise<ITicketType[]>;
+  getById(id: number): Promise<ITicketType | null>;
+  create(input: ICreateTicketTypeInput): Promise<ITicketType>;
+  update(id: number, input: IUpdateTicketTypeInput): Promise<ITicketType>;
+  delete(id: number): Promise<void>;
+  reorder(orders: { id: number; displayOrder: number }[]): Promise<void>;
+}
+
 export interface ITicketTypeSectionLayoutConfig {
   selectedFields: string[];
 }

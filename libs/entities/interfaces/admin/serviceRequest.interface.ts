@@ -182,7 +182,7 @@ export interface IServiceRequestListResponse {
 }
 
 // ============================================
-// Gateway Interface - Data access contract
+// Gateway Interface - Data access contracts
 // ============================================
 export interface IServiceRequestGateway {
   create(data: ICreateServiceRequestInput & { number: string }): Promise<IServiceRequest>;
