@@ -28,6 +28,10 @@ export interface ITicketTypeInfoBarLayoutConfig extends ITicketTypeSectionLayout
   maxFields: number;
 }
 
+export interface ICreateTicketSectionLayoutConfig {
+  selectedFields: string[];
+}
+
 export interface ITicketTypeLayoutConfig {
   infoBar: ITicketTypeInfoBarLayoutConfig;
   sideBar: ITicketTypeSectionLayoutConfig;
@@ -37,6 +41,20 @@ export interface ITicketTypeLayoutConfig {
   reporting: ITicketTypeSectionLayoutConfig;
   datesAndUsers: ITicketTypeSectionLayoutConfig;
   additionalFields: ITicketTypeSectionLayoutConfig;
+  ticketCore: ITicketTypeSectionLayoutConfig;
+  changeManagement: ITicketTypeSectionLayoutConfig;
+  vendorBug: ITicketTypeSectionLayoutConfig;
+  changeControl: ITicketTypeSectionLayoutConfig;
+  resolutionWorkaround: ITicketTypeSectionLayoutConfig;
+  createTicket: {
+    ticketInformation: ICreateTicketSectionLayoutConfig;
+    categorization: ICreateTicketSectionLayoutConfig;
+    description: ICreateTicketSectionLayoutConfig;
+    additionalDetails: ICreateTicketSectionLayoutConfig;
+    priorityAssignment: ICreateTicketSectionLayoutConfig;
+    auditInformation: ICreateTicketSectionLayoutConfig;
+    attachments: ICreateTicketSectionLayoutConfig;
+  };
 }
 
 export interface ITicketType {

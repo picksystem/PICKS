@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { Box, IconButton, Typography, TextField, Tooltip } from '@serviceops/component';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { FieldOption } from '@serviceops/tickettypelayout';
 
 export interface FieldTransferListProps {
@@ -15,6 +17,7 @@ export interface FieldTransferListProps {
   maxFields?: number;
   onMaxFieldsChange?: (value: number) => void;
   maxFieldsLabel?: string;
+  enableDragAndDrop?: boolean;
 }
 
 const listBoxSx = {
@@ -46,6 +49,106 @@ const columnLabelSx = {
   mb: 0.75,
 };
 
+// ── Draggable wrapper for a selected field item ─────────────────
+
+interface DraggableItemProps {
+  id: string;
+  label: string;
+  isSelected: boolean;
+  onClick: () => void;
+}
+
+const DraggableItem = ({ id, label, isSelected, onClick }: DraggableItemProps) => {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id,
+    data: { fromSelected: true },
+  });
+
+  const style: React.CSSProperties = {
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+      : undefined,
+    opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 999 : undefined,
+    ...listItemSx(isSelected),
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+  };
+
+  return (
+    <Box ref={setNodeRef} sx={style} onClick={onClick}>
+      <Box
+        {...listeners}
+        {...attributes}
+        sx={{
+          cursor: 'grab',
+          display: 'flex',
+          alignItems: 'center',
+          color: 'text.secondary',
+          '&:active': { cursor: 'grabbing' },
+          '&:hover': { color: 'primary.main' },
+          flexShrink: 0,
+          touchAction: 'none',
+        }}
+      >
+        <DragIndicatorIcon fontSize='small' />
+      </Box>
+      <Typography sx={{ flex: 1, lineHeight: 1.3 }}>{label}</Typography>
+    </Box>
+  );
+};
+
+// ── Droppable remaining list ──────────────────────────────────
+
+const DroppableRemainingList = ({
+  fields,
+  highlightedKey,
+  onHighlight,
+}: {
+  fields: FieldOption[];
+  highlightedKey: string | null;
+  onHighlight: (key: string | null) => void;
+}) => {
+  const { setNodeRef, isOver } = useDroppable({ id: 'remaining-fields-drop-zone' });
+
+  return (
+    <Box
+      ref={setNodeRef}
+      sx={{
+        ...listBoxSx,
+        borderColor: isOver ? 'primary.main' : undefined,
+        bgcolor: isOver ? 'rgba(59,130,246,0.04)' : undefined,
+      }}
+    >
+      {fields.length === 0 ? (
+        <Typography sx={{ p: 1.5, fontSize: '0.8rem', color: 'text.secondary' }}>
+          No fields remaining
+        </Typography>
+      ) : (
+        fields.map((f) => (
+          <Box
+            key={f.key}
+            sx={{
+              ...listItemSx(highlightedKey === f.key),
+              cursor: 'grab',
+              '&:active': { cursor: 'grabbing' },
+              '&:hover': { bgcolor: 'action.hover' },
+            }}
+            onClick={() => {
+              onHighlight(highlightedKey === f.key ? null : f.key);
+            }}
+          >
+            <Typography>{f.label}</Typography>
+          </Box>
+        ))
+      )}
+    </Box>
+  );
+};
+
+// ── Main component ─────────────────────────────────────────────
+
 export const FieldTransferList = ({
   allFields,
   selectedKeys,
@@ -55,6 +158,7 @@ export const FieldTransferList = ({
   maxFields,
   onMaxFieldsChange,
   maxFieldsLabel = 'Maximum number of fields',
+  enableDragAndDrop = false,
 }: FieldTransferListProps) => {
   const [highlightedRemaining, setHighlightedRemaining] = useState<string | null>(null);
   const [highlightedSelected, setHighlightedSelected] = useState<string | null>(null);
@@ -93,30 +197,66 @@ export const FieldTransferList = ({
     onChange(next);
   };
 
+  const renderSelectedList = () => {
+    if (selected.length === 0) {
+      return (
+        <Box sx={listBoxSx}>
+          <Typography sx={{ p: 1.5, fontSize: '0.8rem', color: 'text.secondary' }}>
+            No fields selected
+          </Typography>
+        </Box>
+      );
+    }
+
+    if (enableDragAndDrop) {
+      return (
+        <Box sx={listBoxSx}>
+          {selected.map((f) => (
+            <DraggableItem
+              key={f.key}
+              id={f.key}
+              label={f.label}
+              isSelected={highlightedSelected === f.key}
+              onClick={() => {
+                setHighlightedSelected(f.key);
+                setHighlightedRemaining(null);
+              }}
+            />
+          ))}
+        </Box>
+      );
+    }
+
+    return (
+      <Box sx={listBoxSx}>
+        {selected.map((f) => (
+          <Box
+            key={f.key}
+            sx={listItemSx(highlightedSelected === f.key)}
+            onClick={() => {
+              setHighlightedSelected(f.key);
+              setHighlightedRemaining(null);
+            }}
+          >
+            {f.label}
+          </Box>
+        ))}
+      </Box>
+    );
+  };
+
   return (
     <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexWrap: 'wrap' }}>
       <Box sx={{ flex: '1 1 220px', minWidth: 180 }}>
         <Typography sx={columnLabelSx}>{remainingLabel}</Typography>
-        <Box sx={listBoxSx}>
-          {remaining.length === 0 ? (
-            <Typography sx={{ p: 1.5, fontSize: '0.8rem', color: 'text.secondary' }}>
-              No fields remaining
-            </Typography>
-          ) : (
-            remaining.map((f) => (
-              <Box
-                key={f.key}
-                sx={listItemSx(highlightedRemaining === f.key)}
-                onClick={() => {
-                  setHighlightedRemaining(f.key);
-                  setHighlightedSelected(null);
-                }}
-              >
-                {f.label}
-              </Box>
-            ))
-          )}
-        </Box>
+        <DroppableRemainingList
+          fields={remaining}
+          highlightedKey={highlightedRemaining}
+          onHighlight={(key) => {
+            setHighlightedRemaining(key);
+            setHighlightedSelected(null);
+          }}
+        />
       </Box>
 
       <Box
@@ -147,53 +287,36 @@ export const FieldTransferList = ({
 
       <Box sx={{ flex: '1 1 220px', minWidth: 180 }}>
         <Typography sx={columnLabelSx}>{selectedLabel}</Typography>
-        <Box sx={listBoxSx}>
-          {selected.length === 0 ? (
-            <Typography sx={{ p: 1.5, fontSize: '0.8rem', color: 'text.secondary' }}>
-              No fields selected
-            </Typography>
-          ) : (
-            selected.map((f) => (
-              <Box
-                key={f.key}
-                sx={listItemSx(highlightedSelected === f.key)}
-                onClick={() => {
-                  setHighlightedSelected(f.key);
-                  setHighlightedRemaining(null);
-                }}
-              >
-                {f.label}
-              </Box>
-            ))
-          )}
-        </Box>
+        {renderSelectedList()}
       </Box>
 
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          alignSelf: 'center',
-        }}
-      >
-        <Tooltip title='Move up'>
-          <span>
-            <IconButton size='small' onClick={moveUp} disabled={!highlightedSelected}>
-              <ArrowUpwardIcon fontSize='small' />
-            </IconButton>
-          </span>
-        </Tooltip>
-        <Tooltip title='Move down'>
-          <span>
-            <IconButton size='small' onClick={moveDown} disabled={!highlightedSelected}>
-              <ArrowDownwardIcon fontSize='small' />
-            </IconButton>
-          </span>
-        </Tooltip>
-      </Box>
+      {selectedKeys.length > 0 && (
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            alignSelf: 'center',
+          }}
+        >
+          <Tooltip title='Move up'>
+            <span>
+              <IconButton size='small' onClick={moveUp} disabled={!highlightedSelected}>
+                <ArrowUpwardIcon fontSize='small' />
+              </IconButton>
+            </span>
+          </Tooltip>
+          <Tooltip title='Move down'>
+            <span>
+              <IconButton size='small' onClick={moveDown} disabled={!highlightedSelected}>
+                <ArrowDownwardIcon fontSize='small' />
+              </IconButton>
+            </span>
+          </Tooltip>
+        </Box>
+      )}
 
       {typeof maxFields === 'number' && onMaxFieldsChange && (
         <Box sx={{ flex: '0 0 160px', minWidth: 140 }}>
