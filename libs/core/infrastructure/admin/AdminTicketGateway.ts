@@ -19,13 +19,17 @@ export class AdminTicketGateway {
   // ── Ticket CRUD ────────────────────────────────────────────────────────────
 
   async create(data: ICreateTicketInput): Promise<IAdminTicket> {
-    // Cast through any to handle the union of optional fields
-    // from the ICreateTicketInput interface — many fields are present
-    // but optional and Prisma's strict CreateInput type rejects extras.
+    const raw: any = { ...data };
+    if (raw.customFieldValues !== undefined) {
+      raw.customFieldValues = JSON.stringify(raw.customFieldValues);
+    }
     const ticket = await this.prisma.adminTicket.create({
-      data: data as any,
+      data: raw as any,
     });
-    return ticket as unknown as IAdminTicket;
+    return {
+      ...ticket,
+      customFieldValues: JSON.parse((ticket as any).customFieldValues || '{}'),
+    } as unknown as IAdminTicket;
   }
 
   async findAll(filters?: { ticketType?: string; status?: string }): Promise<IAdminTicket[]> {
@@ -33,22 +37,36 @@ export class AdminTicketGateway {
     if (filters?.ticketType) where.ticketType = filters.ticketType;
     if (filters?.status) where.status = filters.status;
 
-    return this.prisma.adminTicket.findMany({
+    const tickets = await this.prisma.adminTicket.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-    }) as unknown as Promise<IAdminTicket[]>;
+    });
+    return tickets.map((t: any) => ({
+      ...t,
+      customFieldValues: JSON.parse(t.customFieldValues || '{}'),
+    })) as unknown as IAdminTicket[];
   }
 
   async findById(id: number): Promise<IAdminTicket | null> {
-    return this.prisma.adminTicket.findUnique({
+    const ticket = await this.prisma.adminTicket.findUnique({
       where: { id },
-    }) as unknown as Promise<IAdminTicket | null>;
+    });
+    if (!ticket) return null;
+    return {
+      ...ticket,
+      customFieldValues: JSON.parse((ticket as any).customFieldValues || '{}'),
+    } as unknown as IAdminTicket;
   }
 
   async findByNumber(number: string): Promise<IAdminTicket | null> {
-    return this.prisma.adminTicket.findUnique({
+    const ticket = await this.prisma.adminTicket.findUnique({
       where: { number },
-    }) as unknown as Promise<IAdminTicket | null>;
+    });
+    if (!ticket) return null;
+    return {
+      ...ticket,
+      customFieldValues: JSON.parse((ticket as any).customFieldValues || '{}'),
+    } as unknown as IAdminTicket;
   }
 
   async update(id: number, data: Partial<ICreateTicketInput>): Promise<IAdminTicket> {
@@ -119,6 +137,7 @@ export class AdminTicketGateway {
       'changeTestCompleted',
       'changeTestEvidence',
       'timesReopened',
+      'customFieldValues',
     ];
 
     for (const field of fields) {
@@ -126,7 +145,6 @@ export class AdminTicketGateway {
         const key = field as keyof ICreateTicketInput;
         const value = data[key];
 
-        // Convert date strings to Date objects
         if (
           (key === 'dueDate' ||
             key === 'eta' ||
@@ -137,6 +155,13 @@ export class AdminTicketGateway {
           typeof value === 'string'
         ) {
           updateData[field] = new Date(value);
+        } else if (
+          field === 'customFieldValues' &&
+          value !== undefined &&
+          value !== null &&
+          typeof value === 'object'
+        ) {
+          updateData[field] = JSON.stringify(value);
         } else {
           updateData[field] = value;
         }
@@ -147,7 +172,10 @@ export class AdminTicketGateway {
       where: { id },
       data: updateData,
     });
-    return ticket as unknown as IAdminTicket;
+    return {
+      ...ticket,
+      customFieldValues: JSON.parse((ticket as any).customFieldValues || '{}'),
+    } as unknown as IAdminTicket;
   }
 
   async delete(id: number): Promise<IAdminTicket> {
@@ -163,7 +191,10 @@ export class AdminTicketGateway {
       },
       orderBy: { createdAt: 'desc' },
     });
-    return tickets as unknown as IAdminTicket[];
+    return tickets.map((t: any) => ({
+      ...t,
+      customFieldValues: JSON.parse(t.customFieldValues || '{}'),
+    })) as unknown as IAdminTicket[];
   }
 
   async count(filters?: { ticketType?: string }): Promise<number> {

@@ -108,6 +108,7 @@ export interface IAdminTicket {
   billingCode?: string | null;
   analysisSummary?: string | null;
   ticketSource?: string | null;
+  customFieldValues?: Record<string, string>;
   createdAt: Date;
   updatedAt: Date;
 }

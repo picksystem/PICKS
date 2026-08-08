@@ -20,6 +20,29 @@ export interface ITicketTypeGateway {
   reorder(orders: { id: number; displayOrder: number }[]): Promise<void>;
 }
 
+export type CustomFieldType = 'text' | 'textarea' | 'number' | 'date' | 'dropdown' | 'checkbox';
+
+export interface ICustomField {
+  id: string;
+  fieldKey: string;
+  fieldName: string;
+  fieldType: CustomFieldType;
+  path?: string;
+  dropdownOptions?: string[];
+  defaultValue?: string;
+  /**
+   * Per-ticket-type use flags. The key is the ticket type's `type`
+   * (e.g. "incident", "service_request"). A field may be enabled on
+   * one or more ticket types — they are not mutually exclusive.
+   *
+   * Special keys reserved for cross-cutting use:
+   *  - `__createTicket__` — attaches the field to the generic Create Ticket form
+   *  - `__ticketDetails__` — attaches the field to the generic Ticket Details sidebar
+   */
+  fieldUse: Record<string, boolean>;
+  displayOrder: number;
+}
+
 export interface ITicketTypeSectionLayoutConfig {
   selectedFields: string[];
 }
@@ -71,6 +94,7 @@ export interface ITicketType {
   displayOrder: number;
   accessControl?: string[];
   layoutConfig?: ITicketTypeLayoutConfig | null;
+  customFields?: ICustomField[];
 }
 
 export interface ICreateTicketTypeInput {
@@ -88,6 +112,7 @@ export interface ICreateTicketTypeInput {
   layoutConfig?: ITicketTypeLayoutConfig | null;
   iconKey?: string;
   tag?: string;
+  customFields?: ICustomField[];
 }
 
 export interface IUpdateTicketTypeInput {
@@ -105,6 +130,7 @@ export interface IUpdateTicketTypeInput {
   layoutConfig?: ITicketTypeLayoutConfig | null;
   iconKey?: string;
   tag?: string;
+  customFields?: ICustomField[];
 }
 
 export interface ITicketTypeResponse {

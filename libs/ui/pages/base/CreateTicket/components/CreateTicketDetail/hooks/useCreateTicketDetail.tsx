@@ -183,10 +183,7 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     ) {
       return;
     }
-    const newPriority = calculatePriority(
-      impact as IncidentImpact,
-      urgency as IncidentUrgency,
-    );
+    const newPriority = calculatePriority(impact as IncidentImpact, urgency as IncidentUrgency);
     if (newPriority && newPriority !== formik.values.priority) {
       formik.setFieldValue('priority', newPriority);
     }
@@ -290,43 +287,44 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   const buildTicketData = (
     statusOverride?: IncidentStatus | ServiceRequestStatus,
     uploadedFilenames?: string[],
-  ): IAdminTicket => ({
-    ticketType,
-    number: ticketNumber,
-    client: formik.values.client || undefined,
-    caller: formik.values.caller,
-    callerPhone: formik.values.callerPhone || undefined,
-    callerEmail: formik.values.callerEmail || undefined,
-    callerLocation: formik.values.callerLocation || undefined,
-    callerDepartment: formik.values.callerDepartment || undefined,
-    callerReportingManager: formik.values.callerReportingManager || undefined,
-    additionalContacts: formik.values.additionalContacts || undefined,
-    businessCategory: formik.values.businessCategory || undefined,
-    serviceLine: formik.values.serviceLine || undefined,
-    application: formik.values.application || undefined,
-    applicationCategory: formik.values.applicationCategory || undefined,
-    applicationSubCategory: formik.values.applicationSubCategory || undefined,
-    shortDescription: formik.values.shortDescription || undefined,
-    description: formik.values.description || undefined,
-    impact: (formik.values.impact as IncidentImpact) || undefined,
-    urgency: (formik.values.urgency as IncidentUrgency) || undefined,
-    priority: formik.values.priority || undefined,
-    channel: (formik.values.channel as IncidentChannel) || undefined,
-    status: statusOverride || (formik.values.status as IncidentStatus),
-    assignmentGroup: formik.values.assignmentGroup || undefined,
-    primaryResource: formik.values.primaryResource || undefined,
-    secondaryResources: formik.values.secondaryResources || undefined,
-    createdBy: formik.values.createdBy,
-    isRecurring: formik.values.isRecurring,
-    isMajor: formik.values.isMajor,
-    isReleaseManagement: (formik.values as any).isReleaseManagement || false,
-    notes: formik.values.notes || undefined,
-    relatedRecords: formik.values.relatedRecords || undefined,
-    attachments:
-      uploadedFilenames && uploadedFilenames.length > 0
-        ? JSON.stringify(uploadedFilenames)
-        : undefined,
-  } as IAdminTicket);
+  ): IAdminTicket =>
+    ({
+      ticketType,
+      number: ticketNumber,
+      client: formik.values.client || undefined,
+      caller: formik.values.caller,
+      callerPhone: formik.values.callerPhone || undefined,
+      callerEmail: formik.values.callerEmail || undefined,
+      callerLocation: formik.values.callerLocation || undefined,
+      callerDepartment: formik.values.callerDepartment || undefined,
+      callerReportingManager: formik.values.callerReportingManager || undefined,
+      additionalContacts: formik.values.additionalContacts || undefined,
+      businessCategory: formik.values.businessCategory || undefined,
+      serviceLine: formik.values.serviceLine || undefined,
+      application: formik.values.application || undefined,
+      applicationCategory: formik.values.applicationCategory || undefined,
+      applicationSubCategory: formik.values.applicationSubCategory || undefined,
+      shortDescription: formik.values.shortDescription || undefined,
+      description: formik.values.description || undefined,
+      impact: (formik.values.impact as IncidentImpact) || undefined,
+      urgency: (formik.values.urgency as IncidentUrgency) || undefined,
+      priority: formik.values.priority || undefined,
+      channel: (formik.values.channel as IncidentChannel) || undefined,
+      status: statusOverride || (formik.values.status as IncidentStatus),
+      assignmentGroup: formik.values.assignmentGroup || undefined,
+      primaryResource: formik.values.primaryResource || undefined,
+      secondaryResources: formik.values.secondaryResources || undefined,
+      createdBy: formik.values.createdBy,
+      isRecurring: formik.values.isRecurring,
+      isMajor: formik.values.isMajor,
+      isReleaseManagement: (formik.values as any).isReleaseManagement || false,
+      notes: formik.values.notes || undefined,
+      relatedRecords: formik.values.relatedRecords || undefined,
+      attachments:
+        uploadedFilenames && uploadedFilenames.length > 0
+          ? JSON.stringify(uploadedFilenames)
+          : undefined,
+    }) as IAdminTicket;
 
   const handleBack = () => onCancel?.();
 

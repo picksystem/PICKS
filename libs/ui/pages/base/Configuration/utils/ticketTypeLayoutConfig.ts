@@ -7,9 +7,28 @@ export interface FieldOption {
 
 export type { ITicketTypeLayoutConfig };
 
+// ── Custom field support ────────────────────────────────────
+
+/** Prefix applied to all custom field keys (e.g. "cf_abc123"). */
+export const CUSTOM_FIELD_PREFIX = 'cf_';
+
+/**
+ * Returns true if the given key belongs to a custom field.
+ * Custom field keys always start with {@link CUSTOM_FIELD_PREFIX}.
+ */
+export function isCustomFieldKey(key: string): boolean {
+  return key.startsWith(CUSTOM_FIELD_PREFIX);
+}
+
+/**
+ * Generates a unique field key for a new custom field.
+ */
+export function generateCustomFieldKey(id: string): string {
+  return `${CUSTOM_FIELD_PREFIX}${id}`;
+}
+
 // ─────────────────────────────────────────────────────────────
-// FIELD CATALOGS — the full set of fields that can be placed on
-// each section of the Ticket Detail screen.
+// FIELD CATALOGS
 // ─────────────────────────────────────────────────────────────
 
 // ── INFO BAR (top status strip) ──
@@ -181,12 +200,11 @@ export const DETAILS_RESOLUTION_FIELDS: FieldOption[] = [
 // ─────────────────────────────────────────────────────────────
 
 // ── TICKET INFORMATION ──
+// Only fields that have a corresponding formik field in the Create Ticket form
+// are included here. Fields used only on the Ticket Details page are excluded.
 export const CREATE_TICKET_TICKET_INFORMATION_FIELDS: FieldOption[] = [
-  { key: 'ticketTitle', label: 'Ticket title' },
-  { key: 'affectedUser', label: 'Affected user' },
-  { key: 'clients', label: 'Clients' },
-  { key: 'clientContacts', label: 'Client contacts' },
-  { key: 'caller', label: 'Caller' },
+  { key: 'client', label: 'Client' },
+  { key: 'caller', label: 'Affected User' },
   { key: 'callerFirstName', label: 'First Name' },
   { key: 'callerLastName', label: 'Last Name / Family Name' },
   { key: 'callerPhone', label: 'Phone Number' },
@@ -200,7 +218,7 @@ export const CREATE_TICKET_TICKET_INFORMATION_FIELDS: FieldOption[] = [
 // ── CATEGORIZATION ──
 export const CREATE_TICKET_CATEGORIZATION_FIELDS: FieldOption[] = [
   { key: 'businessCategory', label: 'Business category' },
-  { key: 'businessServiceLine', label: 'Business service line' },
+  { key: 'serviceLine', label: 'Service Line' },
   { key: 'application', label: 'Application' },
   { key: 'applicationCategory', label: 'Application Category' },
   { key: 'applicationSubCategory', label: 'Application Sub-category' },
@@ -208,9 +226,10 @@ export const CREATE_TICKET_CATEGORIZATION_FIELDS: FieldOption[] = [
 
 // ── DESCRIPTION ──
 export const CREATE_TICKET_DESCRIPTION_FIELDS: FieldOption[] = [
+  { key: 'shortDescription', label: 'Short Description / Title' },
   { key: 'description', label: 'Description' },
-  { key: 'impact', label: 'Impact' },
-  { key: 'urgency', label: 'Urgency' },
+  { key: 'isMajor', label: 'Major Ticket' },
+  { key: 'isRecurring', label: 'Recurring Ticket' },
 ];
 
 // ── ADDITIONAL DETAILS ──
@@ -225,25 +244,19 @@ export const CREATE_TICKET_ADDITIONAL_DETAILS_FIELDS: FieldOption[] = [
 
 // ── PRIORITY AND ASSIGNMENT ──
 export const CREATE_TICKET_PRIORITY_ASSIGNMENT_FIELDS: FieldOption[] = [
+  { key: 'impact', label: 'Impact' },
+  { key: 'urgency', label: 'Urgency' },
   { key: 'priority', label: 'Priority' },
   { key: 'status', label: 'Status' },
-  { key: 'queue', label: 'Queue' },
-  { key: 'assignedTo', label: 'Assigned to' },
-  { key: 'due', label: 'Due' },
-  { key: 'eta', label: 'ETA' },
-  { key: 'sla', label: 'SLA' },
   { key: 'assignmentGroup', label: 'Assignment Group' },
   { key: 'primaryResource', label: 'Primary Resource' },
   { key: 'secondaryResources', label: 'Secondary Resource(s)' },
-  { key: 'billingCode', label: 'Billing code' },
 ];
 
 // ── AUDIT INFORMATION ──
 export const CREATE_TICKET_AUDIT_INFORMATION_FIELDS: FieldOption[] = [
-  { key: 'created', label: 'Created' },
   { key: 'createdBy', label: 'Created by' },
-  { key: 'lastUpdated', label: 'Last updated' },
-  { key: 'updatedBy', label: 'Updated by' },
+  { key: 'channel', label: 'Channel' },
 ];
 
 // ── ATTACHMENTS ──
@@ -257,14 +270,49 @@ export const CREATE_TICKET_ATTACHMENTS_FIELDS: FieldOption[] = [
 
 const allKeys = (fields: FieldOption[]) => fields.map((f) => f.key);
 
+// Defaults: only fields that are actually rendered in the Create Ticket form
+// are pre-selected in their section. All others remain in the Remaining Fields pool.
 const defaultCreateTicketConfig = {
-  ticketInformation: { selectedFields: allKeys(CREATE_TICKET_TICKET_INFORMATION_FIELDS) },
-  categorization: { selectedFields: allKeys(CREATE_TICKET_CATEGORIZATION_FIELDS) },
-  description: { selectedFields: allKeys(CREATE_TICKET_DESCRIPTION_FIELDS) },
-  additionalDetails: { selectedFields: allKeys(CREATE_TICKET_ADDITIONAL_DETAILS_FIELDS) },
-  priorityAssignment: { selectedFields: allKeys(CREATE_TICKET_PRIORITY_ASSIGNMENT_FIELDS) },
-  auditInformation: { selectedFields: allKeys(CREATE_TICKET_AUDIT_INFORMATION_FIELDS) },
-  attachments: { selectedFields: allKeys(CREATE_TICKET_ATTACHMENTS_FIELDS) },
+  ticketInformation: {
+    selectedFields: [
+      'client',
+      'caller',
+      'additionalContacts',
+      'callerFirstName',
+      'callerLastName',
+      'callerPhone',
+      'callerEmail',
+      'callerLocation',
+      'callerDepartment',
+      'callerReportingManager',
+    ],
+  },
+  categorization: {
+    selectedFields: allKeys(CREATE_TICKET_CATEGORIZATION_FIELDS),
+  },
+  description: {
+    selectedFields: ['shortDescription', 'description', 'isMajor', 'isRecurring'],
+  },
+  additionalDetails: {
+    selectedFields: [],
+  },
+  priorityAssignment: {
+    selectedFields: [
+      'priority',
+      'status',
+      'impact',
+      'urgency',
+      'assignmentGroup',
+      'primaryResource',
+      'secondaryResources',
+    ],
+  },
+  auditInformation: {
+    selectedFields: ['createdBy', 'channel'],
+  },
+  attachments: {
+    selectedFields: ['attachments'],
+  },
 };
 
 // Mirrors the fields shown before this configuration existed, so a ticket

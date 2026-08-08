@@ -710,6 +710,7 @@ model AdminTicket {
   vendorTicketReference    String?
   workAround               String?
   workAroundRisk           String?
+  customFieldValues        String  @default("[]")
 
   @@map("AdminTicket")
 }
@@ -728,6 +729,7 @@ model AdminTicketType {
   displayOrder     Int     @default(0)
   accessControl    String  @default("")
   layoutConfig     String  @default("")
+  customFields     String  @default("[]")
 
   @@map("admin_ticket_type")
 }

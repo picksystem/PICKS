@@ -23,9 +23,13 @@ import CreateIcon from '@mui/icons-material/NoteAdd';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import AddIcon from '@mui/icons-material/Add';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { ITicketType } from '@serviceops/interfaces';
-import { useUpdateTicketTypeMutation } from '@serviceops/services';
+import { ICustomField, ITicketType } from '@serviceops/interfaces';
+import { useUpdateTicketTypeMutation, useGetTicketTypeQuery } from '@serviceops/services';
+import { useConfiguration } from '@serviceops/confighooks';
 import { useNotification } from '@serviceops/hooks';
 import {
   ITicketTypeLayoutConfig,
@@ -51,7 +55,11 @@ import {
   CREATE_TICKET_PRIORITY_ASSIGNMENT_FIELDS,
   CREATE_TICKET_AUDIT_INFORMATION_FIELDS,
   CREATE_TICKET_ATTACHMENTS_FIELDS,
+  isCustomFieldKey,
 } from '@serviceops/tickettypelayout';
+import { CustomFieldDialog } from '../CustomFieldDialog';
+
+const CUSTOM_FIELD_ACCENT = '#7c3aed';
 
 const ACCENT = '#0369a1';
 
@@ -219,9 +227,20 @@ interface PoolItemProps {
   label: string;
   onClick: () => void;
   onDragStart: (e: React.DragEvent<HTMLElement>, fieldKey: string) => void;
+  isCustom?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-const PoolItem = ({ fieldKey, label, onClick, onDragStart }: PoolItemProps) => {
+const PoolItem = ({
+  fieldKey,
+  label,
+  onClick,
+  onDragStart,
+  isCustom,
+  onEdit,
+  onDelete,
+}: PoolItemProps) => {
   return (
     <Box
       draggable
@@ -235,12 +254,53 @@ const PoolItem = ({ fieldKey, label, onClick, onDragStart }: PoolItemProps) => {
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
-        cursor: 'grab',
+        cursor: isCustom ? 'default' : 'grab',
         '&:hover': { bgcolor: 'action.hover' },
-        '&:active': { cursor: 'grabbing' },
+        '&:active': { cursor: isCustom ? 'default' : 'grabbing' },
       }}
     >
-      <Typography sx={{ flex: 1, lineHeight: 1.3 }}>{label}</Typography>
+      {isCustom ? (
+        <>
+          <DragIndicatorIcon fontSize='small' sx={{ color: 'text.secondary', flexShrink: 0 }} />
+          <Typography sx={{ flex: 1, lineHeight: 1.3 }} onPointerDown={(e) => e.stopPropagation()}>
+            {label}
+          </Typography>
+          <IconButton
+            size='small'
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit?.();
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            sx={{
+              p: 0.3,
+              flexShrink: 0,
+              opacity: 0.6,
+              '&:hover': { opacity: 1, color: CUSTOM_FIELD_ACCENT },
+            }}
+          >
+            <EditIcon sx={{ fontSize: '0.8rem' }} />
+          </IconButton>
+          <IconButton
+            size='small'
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete?.();
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            sx={{
+              p: 0.3,
+              flexShrink: 0,
+              opacity: 0.6,
+              '&:hover': { opacity: 1, color: '#d32f2f' },
+            }}
+          >
+            <DeleteOutlineIcon sx={{ fontSize: '0.8rem' }} />
+          </IconButton>
+        </>
+      ) : (
+        <Typography sx={{ flex: 1, lineHeight: 1.3 }}>{label}</Typography>
+      )}
     </Box>
   );
 };
@@ -451,6 +511,17 @@ export const TicketTypeLayoutDialog = ({
   onClose,
   onSave,
 }: TicketTypeLayoutDialogProps) => {
+  const fullConfig = useConfiguration();
+  const categorization = fullConfig.config?.data?.categorization;
+  const { data: allTicketTypes } = useGetTicketTypeQuery();
+
+  // All ticket types used to populate the Field Use checkbox list in the
+  // Custom Field dialog.
+  const ticketTypeOptions = useMemo(() => {
+    return (allTicketTypes ?? [])
+      .filter((t) => !!t.type)
+      .map((t) => ({ type: t.type, displayName: t.displayName || t.name || t.type }));
+  }, [allTicketTypes]);
   const [config, setConfig] = useState<ITicketTypeLayoutConfig>(getDefaultLayoutConfig);
   const [activeTab, setActiveTab] = useState(0);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -458,9 +529,15 @@ export const TicketTypeLayoutDialog = ({
   const [updateTicketType, { isLoading: isSaving }] = useUpdateTicketTypeMutation();
   const { error: notifyError } = useNotification();
 
+  // ── Custom field state ──────────────────────────────────────
+  const [customFields, setCustomFields] = useState<ICustomField[]>([]);
+  const [cfDialogOpen, setCfDialogOpen] = useState(false);
+  const [editingCf, setEditingCf] = useState<ICustomField | null>(null);
+
   useEffect(() => {
     if (open && ticketType) {
       setConfig(mergeLayoutConfig(ticketType.layoutConfig));
+      setCustomFields(ticketType.customFields ?? []);
       setActiveTab(0);
       setActiveId(null);
       setDragOverSection(null);
@@ -495,8 +572,17 @@ export const TicketTypeLayoutDialog = ({
         result.push(f);
       }
     }
+
+    // Append custom fields whose key is NOT in any section
+    for (const cf of customFields) {
+      if (!selectedSet.has(cf.fieldKey) && !seen.has(cf.fieldKey)) {
+        seen.add(cf.fieldKey);
+        result.push({ key: cf.fieldKey, label: cf.fieldName });
+      }
+    }
+
     return result;
-  }, [activeTab, config]);
+  }, [activeTab, config, customFields]);
 
   const sectionDefs = activeTab === 0 ? CREATE_TICKET_SECTION_DEFS : DETAILS_SECTION_DEFS;
 
@@ -638,6 +724,44 @@ export const TicketTypeLayoutDialog = ({
 
   const handlePoolItemClick = useCallback(
     (fieldKey: string) => {
+      // Custom field click — add to appropriate section based on fieldUse
+      if (isCustomFieldKey(fieldKey)) {
+        const cf = customFields.find((f) => f.fieldKey === fieldKey);
+        if (!cf || !ticketType) return;
+
+        if (activeTab === 0) {
+          // Create Ticket tab — gated by current ticket type's flag (or global __createTicket__)
+          const globalFlag = !!cf.fieldUse['__createTicket__'];
+          const perTypeFlag = !!cf.fieldUse[ticketType.type];
+          if (!globalFlag && !perTypeFlag) return;
+          const ctKey = 'additionalDetails' as CreateTicketSectionKey;
+          const currentKeys = config.createTicket[ctKey].selectedFields;
+          if (!currentKeys.includes(fieldKey)) {
+            setConfig((prev) => ({
+              ...prev,
+              createTicket: {
+                ...prev.createTicket,
+                [ctKey]: { selectedFields: [...currentKeys, fieldKey] },
+              },
+            }));
+          }
+        } else {
+          // Ticket Details tab — gated by current ticket type's flag (or global __ticketDetails__)
+          const globalFlag = !!cf.fieldUse['__ticketDetails__'];
+          const perTypeFlag = !!cf.fieldUse[ticketType.type];
+          if (!globalFlag && !perTypeFlag) return;
+          const dtKey = 'additionalFields' as DetailsSectionKey;
+          const currentKeys = config[dtKey].selectedFields;
+          if (!currentKeys.includes(fieldKey)) {
+            setConfig((prev) => ({
+              ...prev,
+              [dtKey]: { ...prev[dtKey], selectedFields: [...currentKeys, fieldKey] },
+            }));
+          }
+        }
+        return;
+      }
+
       const owningSection = sectionDefs.find((s) => s.fields.some((f) => f.key === fieldKey));
       if (!owningSection) return;
 
@@ -664,7 +788,7 @@ export const TicketTypeLayoutDialog = ({
         }));
       }
     },
-    [activeTab, sectionDefs],
+    [activeTab, sectionDefs, customFields, config],
   );
 
   const handleFieldRemove = useCallback(
@@ -721,12 +845,79 @@ export const TicketTypeLayoutDialog = ({
   const handleSave = async () => {
     if (!ticketType) return;
     try {
-      await updateTicketType({ id: ticketType.id, data: { layoutConfig: config } }).unwrap();
+      await updateTicketType({
+        id: ticketType.id,
+        data: { layoutConfig: config, customFields },
+      }).unwrap();
       onSave?.();
       onClose();
     } catch {
       notifyError('Failed to save ticket layout');
     }
+  };
+
+  // ── Custom Field handlers ──────────────────────────────────
+
+  const handleOpenAddCustomField = () => {
+    setEditingCf(null);
+    setCfDialogOpen(true);
+  };
+
+  const handleEditCustomField = (cf: ICustomField) => {
+    setEditingCf(cf);
+    setCfDialogOpen(true);
+  };
+
+  const handleDeleteCustomField = (cf: ICustomField) => {
+    if (!window.confirm(`Delete "${cf.fieldName}"? This will also remove it from any sections.`))
+      return;
+    setCustomFields((prev) => prev.filter((f) => f.id !== cf.id));
+    // Remove from any sections that reference it
+    setConfig((prev) => {
+      const next = { ...prev };
+      const allSectionDefs = activeTab === 0 ? CREATE_TICKET_SECTION_DEFS : DETAILS_SECTION_DEFS;
+      for (const s of allSectionDefs) {
+        const ctKey = s.key as CreateTicketSectionKey;
+        const dtKey = s.key as DetailsSectionKey;
+        if (activeTab === 0) {
+          const keys = next.createTicket[ctKey]?.selectedFields ?? [];
+          const filtered = keys.filter((k) => k !== cf.fieldKey);
+          if (filtered.length !== keys.length) {
+            next.createTicket = { ...next.createTicket, [ctKey]: { selectedFields: filtered } };
+          }
+        } else {
+          const dtSection = next[dtKey];
+          if (dtSection && 'maxFields' in dtSection) {
+            const keys = dtSection.selectedFields ?? [];
+            const filtered = keys.filter((k) => k !== cf.fieldKey);
+            if (filtered.length !== keys.length) {
+              next[dtKey] = { ...dtSection, selectedFields: filtered };
+            }
+          } else if (dtSection) {
+            const keys = (dtSection as { selectedFields?: string[] }).selectedFields ?? [];
+            const filtered = keys.filter((k) => k !== cf.fieldKey);
+            if (filtered.length !== keys.length) {
+              next[dtKey] = { ...dtSection, selectedFields: filtered } as any;
+            }
+          }
+        }
+      }
+      return next;
+    });
+  };
+
+  const handleSaveCustomField = (field: ICustomField) => {
+    setCustomFields((prev) => {
+      const idx = prev.findIndex((f) => f.id === field.id);
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = field;
+        return next;
+      }
+      return [...prev, field];
+    });
+    setCfDialogOpen(false);
+    setEditingCf(null);
   };
 
   // ── JSX ─────────────────────────────────────────────────────
@@ -832,7 +1023,47 @@ export const TicketTypeLayoutDialog = ({
           }}
         >
           <Box sx={{ px: 2.5, py: 2, borderBottom: '1px solid rgba(226, 232, 255, 0.6)' }}>
-            <Typography sx={columnLabelSx}>Remaining Fields</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Typography sx={columnLabelSx}>Remaining Fields</Typography>
+              <Button
+                size='small'
+                variant='contained'
+                startIcon={
+                  <Box
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 18,
+                      height: 18,
+                      borderRadius: '50%',
+                      bgcolor: 'rgba(255,255,255,0.25)',
+                      mr: 0.25,
+                    }}
+                  >
+                    <AddIcon sx={{ fontSize: '0.85rem', color: '#fff' }} />
+                  </Box>
+                }
+                onClick={handleOpenAddCustomField}
+                sx={{
+                  bgcolor: CUSTOM_FIELD_ACCENT,
+                  color: '#fff',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: '0.78rem',
+                  px: 1.5,
+                  py: 0.6,
+                  borderRadius: 1.25,
+                  boxShadow: '0 2px 8px rgba(124,58,237,0.25)',
+                  '&:hover': {
+                    bgcolor: '#6d28d9',
+                    boxShadow: '0 4px 12px rgba(124,58,237,0.35)',
+                  },
+                }}
+              >
+                Add New Field
+              </Button>
+            </Box>
           </Box>
           <Box sx={{ flex: 1, overflowY: 'auto', p: 0 }}>
             {remainingFields.length === 0 ? (
@@ -849,15 +1080,22 @@ export const TicketTypeLayoutDialog = ({
                 All fields assigned to sections
               </Box>
             ) : (
-              remainingFields.map((f) => (
-                <PoolItem
-                  key={f.key}
-                  fieldKey={f.key}
-                  label={f.label}
-                  onClick={() => handlePoolItemClick(f.key)}
-                  onDragStart={handlePoolDragStart}
-                />
-              ))
+              remainingFields.map((f) => {
+                const isCf = isCustomFieldKey(f.key);
+                const cf = isCf ? customFields.find((c) => c.fieldKey === f.key) : undefined;
+                return (
+                  <PoolItem
+                    key={f.key}
+                    fieldKey={f.key}
+                    label={f.label}
+                    onClick={() => handlePoolItemClick(f.key)}
+                    onDragStart={handlePoolDragStart}
+                    isCustom={isCf}
+                    onEdit={isCf && cf ? () => handleEditCustomField(cf) : undefined}
+                    onDelete={isCf && cf ? () => handleDeleteCustomField(cf) : undefined}
+                  />
+                );
+              })
             )}
           </Box>
         </Box>
@@ -924,6 +1162,20 @@ export const TicketTypeLayoutDialog = ({
           {isSaving ? 'Saving...' : 'Save'}
         </Button>
       </DialogActions>
+
+      {/* ── Custom Field Dialog ───────────────────────────── */}
+      <CustomFieldDialog
+        open={cfDialogOpen}
+        editing={editingCf}
+        existingFields={customFields}
+        categorization={categorization}
+        ticketTypes={ticketTypeOptions}
+        onClose={() => {
+          setCfDialogOpen(false);
+          setEditingCf(null);
+        }}
+        onSave={handleSaveCustomField}
+      />
     </Dialog>
   );
 };
