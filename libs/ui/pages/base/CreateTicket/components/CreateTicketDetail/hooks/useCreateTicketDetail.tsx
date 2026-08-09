@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   useCreateTicketMutation,
@@ -48,6 +48,8 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   const tagMap = loadTagMap();
   const tagColor = getTagOption(tagMap[ticketType] ?? '')?.color ?? FALLBACK_COLOR;
   const { gradient, glow } = getTagVisuals(tagColor);
+  const allCustomFields = record?.customFields ?? [];
+  const layoutConfig = record?.layoutConfig;
   const config = {
     title: `Create ${record?.displayName || record?.name || ticketType}`,
     prefix: record?.prefix || 'TKT',
@@ -115,6 +117,32 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     }[]
   >([]);
   const [manualCallerOpen, setManualCallerOpen] = useState(false);
+
+  // ── Custom field values ──────────────────────────────────────────────
+  const [cfValues, setCfValues] = useState<Record<string, string | boolean>>(() => {
+    const init: Record<string, string | boolean> = {};
+    for (const cf of allCustomFields) {
+      if (cf.defaultValue !== undefined) {
+        init[cf.fieldKey] = cf.defaultValue;
+      } else if (cf.fieldType === 'checkbox') {
+        init[cf.fieldKey] = false;
+      } else {
+        init[cf.fieldKey] = '';
+      }
+    }
+    return init;
+  });
+
+  const setCfValue = useCallback((key: string, value: string | boolean) => {
+    setCfValues((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const getCfValue = useCallback(
+    (key: string): string | boolean => {
+      return cfValues[key] ?? '';
+    },
+    [cfValues],
+  );
 
   const ticketNumber = useMemo(
     () => generateTicketNumber(config.prefix, config.numberLength),
@@ -324,6 +352,9 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
         uploadedFilenames && uploadedFilenames.length > 0
           ? JSON.stringify(uploadedFilenames)
           : undefined,
+      customFieldValues: Object.fromEntries(
+        Object.entries(cfValues).filter(([, v]) => v !== '' && v !== false && v !== undefined),
+      ) as Record<string, string>,
     }) as IAdminTicket;
 
   const handleBack = () => onCancel?.();
@@ -331,6 +362,19 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   const handleCancel = () => {
     formik.resetForm();
     setAttachedFiles([]);
+    setCfValues(() => {
+      const init: Record<string, string | boolean> = {};
+      for (const cf of allCustomFields) {
+        if (cf.defaultValue !== undefined) {
+          init[cf.fieldKey] = cf.defaultValue;
+        } else if (cf.fieldType === 'checkbox') {
+          init[cf.fieldKey] = false;
+        } else {
+          init[cf.fieldKey] = '';
+        }
+      }
+      return init;
+    });
     onCancel?.();
     navigate(BasePath.DASHBOARD);
   };
@@ -438,6 +482,10 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     handleCreateTicket,
     handleSaveAsDraft,
     handleSearchForSolution,
+    customFields: allCustomFields,
+    layoutConfig,
+    getCfValue,
+    setCfValue,
   };
 };
 

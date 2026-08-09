@@ -9,6 +9,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import { IIncidentComment, IResolution, IActivityLog } from '@serviceops/interfaces';
 import { useNotification } from '@serviceops/hooks';
 import { useStyles } from '../styles';
+import UpdatesSection from './UpdatesSection';
 import { TicketEntity } from '../types/ticketDetail.types';
 
 interface TabPanelProps {
@@ -118,34 +119,13 @@ const TabsSection = ({
       <Box className={classes.tabsPanelContent}>
         {/* Updates Tab */}
         <TabPanel value={activeTab} index={0} classes={classes}>
-          {comments && comments.length > 0 ? (
-            comments.map((comment) => (
-              <Box
-                key={comment.id}
-                className={cx(
-                  classes.tabsUpdateCard,
-                  comment.isInternal
-                    ? classes.tabsUpdateCardInternal
-                    : classes.tabsUpdateCardExternal,
-                )}
-              >
-                <Box className={classes.tabsUpdateCardHeader}>
-                  <Typography className={classes.tabsUpdateCardSubject}>
-                    {comment.subject}
-                  </Typography>
-                  <Typography className={classes.tabsUpdateCardTime}>
-                    {new Date(comment.createdAt).toLocaleString()}
-                  </Typography>
-                </Box>
-                <Typography className={classes.tabsUpdateCardMessage}>{comment.message}</Typography>
-                <Typography className={classes.tabsUpdateCardBy}>
-                  By: {comment.createdBy} {comment.isInternal ? '· Internal' : ''}
-                </Typography>
-              </Box>
-            ))
-          ) : (
-            <Typography className={classes.tabsEmptyText}>No updates available</Typography>
-          )}
+          <UpdatesSection
+            comments={(comments as any) ?? []}
+            incidentId={incident.id}
+            ticketType={incident.ticketType}
+            onRefresh={() => {}}
+            incident={incident}
+          />
         </TabPanel>
 
         {/* Attachments Tab */}

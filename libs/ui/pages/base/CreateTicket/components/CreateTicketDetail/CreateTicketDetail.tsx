@@ -38,6 +38,7 @@ import { Box, TextField, Checkbox, Button, UploadFile } from '@serviceops/compon
 import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from './styles';
 import useCreateTicketDetail, { CreateTicketDetailProps } from './hooks/useCreateTicketDetail';
+import CustomFieldRenderer from './CustomFieldRenderer';
 import { getIconComponent, loadIconMap } from '../../../Configuration/utils/ticketTypeIcons';
 
 // ── Section metadata ──────────────────────────────────────────────────────────
@@ -247,7 +248,32 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     handleCreateTicket,
     handleSaveAsDraft,
     handleSearchForSolution,
+    customFields,
+    layoutConfig,
+    getCfValue,
+    setCfValue,
   } = useCreateTicketDetail({ ticketType, onCancel, onSuccess });
+
+  // Map section index → layout config key for createTicket sections
+  const SECTION_LAYOUT_KEYS: string[] = [
+    'ticketInformation',
+    'categorization',
+    'description',
+    'priorityAssignment',
+    'auditInformation',
+    'attachments',
+  ];
+
+  /** Returns the custom fields assigned to a given form section index */
+  const getCustomFieldsForSection = (sectionIndex: number) => {
+    if (!layoutConfig || !customFields?.length) return [];
+    const layoutKey = SECTION_LAYOUT_KEYS[sectionIndex];
+    const sectionConfig = (layoutConfig.createTicket as any)?.[layoutKey];
+    if (!sectionConfig?.selectedFields?.length) return [];
+    return customFields
+      .filter((cf: any) => sectionConfig.selectedFields.includes(cf.fieldKey))
+      .sort((a: any, b: any) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+  };
 
   // ── Rich-text editor init ─────────────────────────────────────────────────
   useEffect(() => {
@@ -455,8 +481,22 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
               />
             </Box>
 
+            {/* Custom fields for Ticket Information section */}
+            {getCustomFieldsForSection(0).length > 0 && (
+              <Box className={classes.formGrid}>
+                {getCustomFieldsForSection(0).map((cf: any) => (
+                  <CustomFieldRenderer
+                    key={cf.id}
+                    field={cf}
+                    value={getCfValue(cf.fieldKey)}
+                    onChange={(v) => setCfValue(cf.fieldKey, v)}
+                  />
+                ))}
+              </Box>
+            )}
+
             {/* Manual caller */}
-            <Box className={classes.manualCallerSection}>
+            <Box className={classes.manualCallerSection} sx={{ mt: 2 }}>
               <Checkbox
                 label="Can't find in the list? Update manually"
                 checked={manualCallerOpen}
@@ -589,7 +629,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                 </Box>
               )}
             </Box>
-          </>,
+          </>
         )}
 
         {/* ── 2. Categorization ────────────────────────────────────────── */}
@@ -641,6 +681,14 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
               onChange={(value) => formik.setFieldValue('applicationSubCategory', value)}
               label='Application Sub-Category'
             />
+            {getCustomFieldsForSection(1).map((cf: any) => (
+              <CustomFieldRenderer
+                key={cf.id}
+                field={cf}
+                value={getCfValue(cf.fieldKey)}
+                onChange={(v) => setCfValue(cf.fieldKey, v)}
+              />
+            ))}
           </Box>,
         )}
 
@@ -866,6 +914,20 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                 }
               />
             </Box>
+
+            {/* Custom fields for Description section */}
+            {getCustomFieldsForSection(2).length > 0 && (
+              <Box className={classes.formGrid}>
+                {getCustomFieldsForSection(2).map((cf: any) => (
+                  <CustomFieldRenderer
+                    key={cf.id}
+                    field={cf}
+                    value={getCfValue(cf.fieldKey)}
+                    onChange={(v) => setCfValue(cf.fieldKey, v)}
+                  />
+                ))}
+              </Box>
+            )}
           </Box>,
         )}
 
@@ -938,6 +1000,14 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
               )}
               label='Secondary Resource(s)'
             />
+            {getCustomFieldsForSection(3).map((cf: any) => (
+              <CustomFieldRenderer
+                key={cf.id}
+                field={cf}
+                value={getCfValue(cf.fieldKey)}
+                onChange={(v) => setCfValue(cf.fieldKey, v)}
+              />
+            ))}
           </Box>,
         )}
 
@@ -956,6 +1026,14 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
               errorText={reqError(formik.touched.channel, formik.errors.channel as string)}
               label='Channel'
             />
+            {getCustomFieldsForSection(4).map((cf: any) => (
+              <CustomFieldRenderer
+                key={cf.id}
+                field={cf}
+                value={getCfValue(cf.fieldKey)}
+                onChange={(v) => setCfValue(cf.fieldKey, v)}
+              />
+            ))}
           </Box>,
         )}
 
@@ -963,6 +1041,18 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
         {wrap(
           5,
           <>
+            {getCustomFieldsForSection(5).length > 0 && (
+              <Box className={classes.formGrid}>
+                {getCustomFieldsForSection(5).map((cf: any) => (
+                  <CustomFieldRenderer
+                    key={cf.id}
+                    field={cf}
+                    value={getCfValue(cf.fieldKey)}
+                    onChange={(v) => setCfValue(cf.fieldKey, v)}
+                  />
+                ))}
+              </Box>
+            )}
             <UploadFile
               onChange={(files) =>
                 files && setAttachedFiles((prev) => [...prev, ...(Array.from(files) as File[])])

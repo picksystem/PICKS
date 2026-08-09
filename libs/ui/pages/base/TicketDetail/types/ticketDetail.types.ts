@@ -39,6 +39,8 @@ export type ModalType =
   | 'assign'
   | 'attachment'
   | 'comment'
+  | 'commentInternal'
+  | 'commentSelf'
   | 'timeEntry'
   | 'resolve'
   | null;

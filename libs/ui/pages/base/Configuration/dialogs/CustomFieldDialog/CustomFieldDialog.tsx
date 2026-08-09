@@ -30,8 +30,15 @@ import {
   Search as SearchIcon,
 } from '@mui/icons-material';
 import { useFieldError, useNotification } from '@serviceops/hooks';
-import { ICustomField, CustomFieldType, IConfigCategorization } from '@serviceops/interfaces';
+import {
+  ICustomField,
+  CustomFieldType,
+  IConfigCategorization,
+  IConfigurationData,
+} from '@serviceops/interfaces';
 import { ConfigFormDialog } from '@serviceops/configdialogs';
+import { useConfiguration } from '@serviceops/confighooks';
+import ConfigPathPicker from './ConfigPathPicker';
 import { generateCustomFieldKey } from '../../utils/ticketTypeLayoutConfig';
 
 const CF_ACCENT = '#7c3aed';
@@ -111,6 +118,9 @@ const CustomFieldDialog = ({
   const [pathOptionsOpen, setPathOptionsOpen] = useState(false);
   const [pathFiltered, setPathFiltered] = useState<PathOption[]>([]);
   const pathDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Config Path Picker dialog state
+  const [configPickerOpen, setConfigPickerOpen] = useState(false);
 
   // Field Name searchable state (mirrors path picker exactly)
   const [nameInput, setNameInput] = useState<string>('');
@@ -627,72 +637,72 @@ const CustomFieldDialog = ({
         />
       )}
 
-      <Box sx={{ mt: 1, position: 'relative' }}>
-        <TextField
-          label='Path (optional)'
-          placeholder='Search hierarchy...'
-          value={pathInput}
-          onChange={(e) => handlePathInputChange(e.target.value)}
-          onFocus={() => {
-            const next = searchPaths(pathInput);
-            setPathFiltered(next);
-            if (next.length > 0) setPathOptionsOpen(true);
-          }}
-          onBlur={() => setTimeout(() => setPathOptionsOpen(false), 200)}
-          fullWidth
-          size='small'
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position='end'>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  {pathInput ? (
-                    <ClearIcon
-                      onClick={handlePathClear}
-                      sx={{ fontSize: 18, color: 'text.primary', cursor: 'pointer' }}
-                    />
-                  ) : (
-                    <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
-                  )}
-                </Box>
-              </InputAdornment>
-            ),
-          }}
-        />
-        {pathOptionsOpen && pathFiltered.length > 0 && (
-          <Paper
-            elevation={4}
+      <Box sx={{ mt: 1 }}>
+        <Typography variant='body2' sx={{ fontWeight: 600, mb: 0.5 }}>
+          Path (optional)
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <TextField
+            placeholder='e.g. Configuration > Priorities > Incident'
+            value={pathInput}
+            onChange={(e) => handlePathInputChange(e.target.value)}
+            fullWidth
+            size='small'
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position='start'>
+                  <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                </InputAdornment>
+              ),
+              endAdornment: pathInput ? (
+                <InputAdornment position='end'>
+                  <ClearIcon
+                    onClick={handlePathClear}
+                    sx={{ fontSize: 18, color: 'text.primary', cursor: 'pointer' }}
+                  />
+                </InputAdornment>
+              ) : undefined,
+            }}
+          />
+          <Button
+            variant='contained'
+            onClick={() => setConfigPickerOpen(true)}
+            startIcon={
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 18,
+                  height: 18,
+                  borderRadius: '50%',
+                  bgcolor: 'rgba(255,255,255,0.25)',
+                  mr: 0.25,
+                }}
+              >
+                <SearchIcon sx={{ fontSize: '0.85rem', color: '#fff' }} />
+              </Box>
+            }
             sx={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              zIndex: 1000,
-              mt: 0,
-              maxHeight: 280,
-              overflow: 'auto',
+              bgcolor: CF_ACCENT,
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.78rem',
+              px: 1.5,
+              py: 0.6,
+              borderRadius: 1.25,
+              whiteSpace: 'nowrap',
+              boxShadow: '0 2px 8px rgba(124,58,237,0.25)',
+              '&:hover': {
+                bgcolor: '#6d28d9',
+                boxShadow: '0 4px 12px rgba(124,58,237,0.35)',
+              },
             }}
           >
-            <List dense disablePadding>
-              {pathFiltered.map((opt) => (
-                <ListItem key={`${opt.level}-${opt.value}`} disablePadding>
-                  <ListItemButton
-                    onClick={() => handlePathSelect(opt)}
-                    sx={{
-                      py: 1,
-                      px: 1.5,
-                      '&:hover': { bgcolor: 'rgba(124,58,237,0.08)' },
-                    }}
-                  >
-                    <ListItemText
-                      primary={opt.label}
-                      primaryTypographyProps={{ fontSize: '0.84rem', noWrap: true }}
-                    />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
-          </Paper>
-        )}
+            Browse
+          </Button>
+        </Box>
       </Box>
 
       <Box sx={{ mt: 1 }}>
@@ -781,6 +791,16 @@ const CustomFieldDialog = ({
           </Typography>
         )}
       </Box>
+
+      {/* ── Config Path Picker (opened by Path field's Browse button) ─── */}
+      <ConfigPathPicker
+        open={configPickerOpen}
+        onClose={() => setConfigPickerOpen(false)}
+        onSelect={(label, value) => {
+          setPathInput(value);
+          updateForm((f) => ({ ...f, path: value }));
+        }}
+      />
     </ConfigFormDialog>
   );
 };

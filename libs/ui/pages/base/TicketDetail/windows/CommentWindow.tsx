@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Modal,
@@ -18,6 +18,7 @@ interface CommentWindowProps {
   onClose: () => void;
   incident: TicketEntity;
   onSuccess: () => void;
+  mode?: 'comment' | 'internal' | 'self';
 }
 
 const statusOptions = Object.values(IncidentStatus).map((v) => ({
@@ -39,7 +40,7 @@ const rowSx = {
 };
 const fieldSx = { flex: 1, minWidth: 0 };
 
-const CommentWindow = ({ open, onClose, incident, onSuccess }: CommentWindowProps) => {
+const CommentWindow = ({ open, onClose, incident, onSuccess, mode = 'comment' }: CommentWindowProps) => {
   const { user } = useAuth();
   const [createComment, { isLoading }] = useCreateTicketCommentMutation();
   const [subject, setSubject] = useState('');
@@ -50,7 +51,29 @@ const CommentWindow = ({ open, onClose, incident, onSuccess }: CommentWindowProp
   const [notifyAssigneesOnly, setNotifyAssigneesOnly] = useState(false);
   const notify = useNotification();
 
-  const handleSave = async (closeAfter = false) => {
+  const modalTitle = mode === 'internal'
+    ? 'Add Internal Note'
+    : mode === 'self'
+      ? 'Add Self Note'
+      : 'Add Comment (Customer Visible)';
+
+  // Pre-set checkboxes based on mode when modal opens
+  useEffect(() => {
+    if (open) {
+      if (mode === 'internal') {
+        setIsInternal(true);
+        setIsSelfNote(false);
+      } else if (mode === 'self') {
+        setIsInternal(false);
+        setIsSelfNote(true);
+      } else {
+        setIsInternal(false);
+        setIsSelfNote(false);
+      }
+    }
+  }, [open, mode]);
+
+  const handleSave = async () => {
     if (!subject.trim()) {
       notify.error('Subject is required');
       return;
@@ -71,15 +94,12 @@ const CommentWindow = ({ open, onClose, incident, onSuccess }: CommentWindowProp
         status,
         createdBy: user?.email || '',
       }).unwrap();
-      if (closeAfter) {
-        onSuccess();
-      } else {
-        setSubject('');
-        setMessage('');
-        setIsInternal(false);
-        setIsSelfNote(false);
-        setNotifyAssigneesOnly(false);
-      }
+      setSubject('');
+      setMessage('');
+      setIsInternal(false);
+      setIsSelfNote(false);
+      setNotifyAssigneesOnly(false);
+      onSuccess();
     } catch {
       notify.error('Failed to add comment');
     }
@@ -90,17 +110,17 @@ const CommentWindow = ({ open, onClose, incident, onSuccess }: CommentWindowProp
       <Button variant='outlined' onClick={onClose}>
         Cancel
       </Button>
-      <Button variant='outlined' onClick={() => handleSave(false)} disabled={isLoading}>
+      <Button variant='outlined' onClick={handleSave} disabled={isLoading}>
         Save
       </Button>
-      <Button variant='contained' onClick={() => handleSave(true)} disabled={isLoading}>
+      <Button variant='contained' onClick={() => { handleSave(); onSuccess(); }} disabled={isLoading}>
         Save & Close
       </Button>
     </Box>
   );
 
   return (
-    <Modal open={open} onClose={onClose} title='Add Comment' maxWidth='lg' footer={footer}>
+    <Modal open={open} onClose={onClose} title={modalTitle} maxWidth='lg' footer={footer}>
       <Box sx={contentSx}>
         <Box sx={rowSx}>
           <Box sx={fieldSx}>

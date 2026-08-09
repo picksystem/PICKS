@@ -289,6 +289,7 @@ const TicketDetailView = () => {
             comments={comments as any}
             resolutions={resolutions as any}
             activities={activities as any}
+            onRefresh={refetch}
           />
         </Box>
       </Box>

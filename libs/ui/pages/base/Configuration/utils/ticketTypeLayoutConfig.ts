@@ -291,10 +291,16 @@ const defaultCreateTicketConfig = {
     selectedFields: allKeys(CREATE_TICKET_CATEGORIZATION_FIELDS),
   },
   description: {
-    selectedFields: ['shortDescription', 'description', 'isMajor', 'isRecurring'],
+    selectedFields: [
+      'shortDescription',
+      'description',
+      'isMajor',
+      'isRecurring',
+      'isReleaseManagement',
+    ],
   },
   additionalDetails: {
-    selectedFields: [],
+    selectedFields: ['notes', 'relatedRecords', 'relatedTicketId'],
   },
   priorityAssignment: {
     selectedFields: [

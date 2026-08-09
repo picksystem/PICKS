@@ -866,6 +866,19 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     fontWeight: 500,
   },
 
+  // ── UpdatesSection (rich comment feed) ─────────────────
+  updatesSection: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: 0,
+  },
+
+  commentsList: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: theme.spacing(1.5),
+  },
+
   tabsAttachmentItem: {
     display: 'flex',
     alignItems: 'center',
