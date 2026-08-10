@@ -948,54 +948,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     lineHeight: 1.7,
   },
 
-  tabsActivityList: {
-    position: 'relative' as const,
-  },
-
-  tabsActivityItem: {
-    display: 'flex',
-    gap: theme.spacing(2),
-    paddingBottom: theme.spacing(1.5),
-    paddingTop: theme.spacing(1.5),
-    borderBottom: '1px solid rgba(226,232,255,0.8)',
-    '&:first-of-type': { paddingTop: 0 },
-    '&:last-of-type': { borderBottom: 'none' },
-  },
-
-  tabsActivityDot: {
-    width: 8,
-    height: 8,
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, #4338ca, #6366f1)',
-    flexShrink: 0,
-    marginTop: theme.spacing(0.75),
-    boxShadow: '0 0 0 3px rgba(99,102,241,0.15)',
-  },
-
-  tabsActivityContent: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  tabsActivityDescription: {
-    fontSize: '0.875rem',
-    color: '#1e293b',
-    lineHeight: 1.5,
-  },
-
-  tabsActivityMeta: {
-    display: 'flex',
-    gap: theme.spacing(2),
-    marginTop: theme.spacing(0.25),
-    flexWrap: 'wrap' as const,
-  },
-
-  tabsActivityMetaText: {
-    fontSize: '0.75rem',
-    color: '#94a3b8',
-    fontWeight: 500,
-  },
-
   tabsEmptyText: {
     fontSize: '0.875rem',
     color: '#94a3b8',

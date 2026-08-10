@@ -2,11 +2,7 @@ import { useState } from 'react';
 import { Box, Loader, Typography } from '../../../components';
 import { useStyles } from './styles';
 import { useTicketDetail } from './hooks/useTicketDetail';
-import {
-  useGetTicketCommentsQuery,
-  useGetTicketResolutionsQuery,
-  useGetTicketActivitiesQuery,
-} from '../../../../services';
+import { useGetTicketCommentsQuery, useGetTicketResolutionsQuery } from '../../../../services';
 import { TicketUpdateInput } from './types/ticketDetail.types';
 import TicketHeader from './components/TicketHeader';
 import DraftExpiryBanner from './components/DraftExpiryBanner';
@@ -62,7 +58,6 @@ const TicketDetailView = () => {
     handleFollow,
     handleReviewLater,
     handleCancelIncident,
-    handleGoToActivity,
     handleMoreToolsOpen,
     handleMoreToolsClose,
     showNotification,
@@ -87,10 +82,6 @@ const TicketDetailView = () => {
     { skip: !incident },
   );
   const { data: resolutions } = useGetTicketResolutionsQuery(
-    { ticketType, ticketId: incident?.id ?? 0 },
-    { skip: !incident },
-  );
-  const { data: activities } = useGetTicketActivitiesQuery(
     { ticketType, ticketId: incident?.id ?? 0 },
     { skip: !incident },
   );
@@ -131,7 +122,6 @@ const TicketDetailView = () => {
     onTimeEntry: () => setActiveModal('timeEntry'),
     onFollow: handleFollow,
     onAttachment: () => setActiveModal('attachment'),
-    onActivity: handleGoToActivity,
     onReviewLater: handleReviewLater,
     onMoreTools: handleMoreToolsOpen,
     onSave: handleSaveEdit,
@@ -288,7 +278,6 @@ const TicketDetailView = () => {
             incident={incident}
             comments={comments as any}
             resolutions={resolutions as any}
-            activities={activities as any}
             onRefresh={refetch}
           />
         </Box>

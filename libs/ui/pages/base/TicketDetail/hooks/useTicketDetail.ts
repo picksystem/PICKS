@@ -472,10 +472,6 @@ export const useTicketDetail = () => {
     }
   }, [incident, updateTicket, refetch, dispatch]);
 
-  const handleGoToActivity = useCallback(() => {
-    setActiveTab(3);
-  }, []);
-
   const handleReviewLater = useCallback(() => {
     if (!incident) return;
     try {
@@ -562,7 +558,6 @@ export const useTicketDetail = () => {
     handleAccept,
     handleFollow,
     handleCancelIncident,
-    handleGoToActivity,
     handleReviewLater,
     handleSettingsOpen,
     handleSettingsClose,

@@ -6,7 +6,7 @@ import TableChartIcon from '@mui/icons-material/TableChart';
 import ImageIcon from '@mui/icons-material/Image';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import DownloadIcon from '@mui/icons-material/Download';
-import { IIncidentComment, IResolution, IActivityLog } from '@serviceops/interfaces';
+import { IIncidentComment, IResolution } from '@serviceops/interfaces';
 import { useNotification } from '@serviceops/hooks';
 import { useStyles } from '../styles';
 import UpdatesSection from './UpdatesSection';
@@ -31,7 +31,6 @@ interface TabsSectionProps {
   incident: TicketEntity;
   comments?: IIncidentComment[];
   resolutions?: IResolution[];
-  activities?: IActivityLog[];
   onRefresh?: () => void;
 }
 
@@ -76,10 +75,9 @@ const TabsSection = ({
   incident,
   comments,
   resolutions,
-  activities,
   onRefresh,
 }: TabsSectionProps) => {
-  const { classes, cx } = useStyles();
+  const { classes } = useStyles();
   const notify = useNotification();
 
   const handleDownload = async (filename: string, fileUrl: string) => {
@@ -115,7 +113,6 @@ const TabsSection = ({
         <Tab label='Updates' />
         <Tab label='Attachments' />
         <Tab label='Resolution' />
-        <Tab label='Activity' />
       </Tabs>
 
       <Box className={classes.tabsPanelContent}>
@@ -259,34 +256,6 @@ const TabsSection = ({
             <Typography className={classes.tabsResolutionNotesText}>
               {incident.notes || <span style={{ color: '#94a3b8' }}>No resolution notes</span>}
             </Typography>
-          )}
-        </TabPanel>
-
-        {/* Activity Tab */}
-        <TabPanel value={activeTab} index={3} classes={classes}>
-          {activities && activities.length > 0 ? (
-            <Box className={classes.tabsActivityList}>
-              {activities.map((activity) => (
-                <Box key={activity.id} className={classes.tabsActivityItem}>
-                  <Box className={classes.tabsActivityDot} />
-                  <Box className={classes.tabsActivityContent}>
-                    <Typography className={classes.tabsActivityDescription}>
-                      {activity.description}
-                    </Typography>
-                    <Box className={classes.tabsActivityMeta}>
-                      <Typography className={classes.tabsActivityMetaText}>
-                        {new Date(activity.createdAt).toLocaleString()}
-                      </Typography>
-                      <Typography className={classes.tabsActivityMetaText}>
-                        By: {activity.performedBy}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-              ))}
-            </Box>
-          ) : (
-            <Typography className={classes.tabsEmptyText}>No activity records</Typography>
           )}
         </TabPanel>
       </Box>

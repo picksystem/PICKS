@@ -1,13 +1,5 @@
 import { useState, useMemo } from 'react';
-import {
-  Box,
-  Typography,
-  TextField,
-  IconButton,
-  Checkbox,
-  Chip,
-  Tooltip,
-} from '../../../../components';
+import { Box, Typography, TextField, IconButton, Chip, Tooltip } from '../../../../components';
 import CommentWindow from '../windows/CommentWindow';
 import { Avatar } from '@mui/material';
 import {
@@ -159,8 +151,11 @@ const ActionButtonRow = ({
   const actionBtnSx = (btn: (typeof BUTTON_STYLES)[0]) => ({
     display: 'inline-flex',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: '4px',
     padding: '3px 10px',
+    height: 30,
+    minHeight: 30,
     borderRadius: '6px',
     border: `1px solid ${btn.border}`,
     background: btn.bg,
@@ -169,7 +164,7 @@ const ActionButtonRow = ({
     fontWeight: 600,
     cursor: 'pointer',
     whiteSpace: 'nowrap',
-    lineHeight: '20px',
+    lineHeight: '22px',
     transition: 'all 0.15s ease',
     '&:hover': {
       opacity: 0.85,
@@ -196,7 +191,9 @@ const ActionButtonRow = ({
         })}
 
         {/* Search field */}
-        <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+        <Box
+          sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center', height: 30 }}
+        >
           <SearchIcon
             sx={{
               position: 'absolute',
@@ -213,11 +210,31 @@ const ActionButtonRow = ({
             onChange={(e) => setSearchText(e.target.value)}
             size='small'
             sx={{
-              ...searchFieldSx,
-              width: 140,
+              width: 210,
+              height: 30,
               '& .MuiOutlinedInput-root': {
-                ...searchFieldSx['& .MuiOutlinedInput-root'],
+                height: 30,
+                borderRadius: '6px',
+                fontSize: '0.8rem',
+                backgroundColor: '#ffffff',
+                '& fieldset': {
+                  borderColor: '#cbd5e1',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#94a3b8',
+                },
+              },
+              '& .MuiInputBase-input': {
+                padding: '4px 6px',
+                fontSize: '0.8rem',
                 pl: '28px',
+              },
+              '& .MuiInputBase-input::placeholder': {
+                opacity: 0.7,
+              },
+              '& .MuiSvgIcon-root': {
+                fontSize: '1.1rem',
+                color: '#64748b',
               },
             }}
           />
@@ -242,22 +259,49 @@ const ActionButtonRow = ({
         ].map(({ label, checked, set }) => (
           <Box
             key={label}
-            sx={{ display: 'inline-flex', alignItems: 'center', gap: '3px', cursor: 'pointer' }}
             onClick={() => set(!checked)}
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+              userSelect: 'none',
+              height: 30,
+            }}
           >
-            <Checkbox
-              size='small'
-              checked={checked}
-              onChange={(e) => set(e.target.checked)}
-              sx={{ color: '#6366f1', p: '2px 0', '& .MuiSvgIcon-root': { fontSize: 16 } }}
-            />
+            <Box
+              sx={{
+                width: 16,
+                height: 16,
+                borderRadius: '3px',
+                border: checked ? 'none' : '1.5px solid #6366f1',
+                backgroundColor: checked ? '#6366f1' : 'transparent',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {checked && (
+                <svg width='10' height='10' viewBox='0 0 10 10' fill='none'>
+                  <path
+                    d='M2 5L4 7L8 3'
+                    stroke='#fff'
+                    strokeWidth='1.5'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                  />
+                </svg>
+              )}
+            </Box>
             <Typography
               sx={{
                 fontSize: '0.8rem',
                 color: '#475569',
                 fontWeight: 500,
                 whiteSpace: 'nowrap',
-                userSelect: 'none',
+                lineHeight: 1,
               }}
             >
               {label}
@@ -267,18 +311,108 @@ const ActionButtonRow = ({
 
         {/* Scroll + Filter buttons */}
         <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: '4px', ml: '4px' }}>
-          <Box sx={classes.actionButton} onClick={() => {}}>
-            <Box className={classes.iconPill}>
-              <FilterListIcon sx={{ fontSize: 14 }} />
+          <Box
+            onClick={() => {}}
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '4px',
+              height: 30,
+              minHeight: 30,
+              px: '8px',
+              borderRadius: '6px',
+              border: '1px solid #c7d2fe',
+              background: '#f5f3ff',
+              color: '#4338ca',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              lineHeight: 1,
+              transition: 'all 0.15s ease',
+              '&:hover': {
+                backgroundColor: '#ede9fe',
+                borderColor: '#a78bfa',
+              },
+            }}
+          >
+            <Box
+              sx={{
+                width: 24,
+                height: 24,
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(67,56,202,0.08)',
+              }}
+            >
+              <FilterListIcon sx={{ fontSize: 13, color: '#4338ca' }} />
             </Box>
-            <Typography className={classes.actionLabel}>Scroll to bottom</Typography>
+            <Typography
+              sx={{
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                color: '#4338ca',
+                whiteSpace: 'nowrap',
+                lineHeight: '24px',
+              }}
+            >
+              Scroll to bottom
+            </Typography>
           </Box>
 
-          <Box sx={classes.actionButton} onClick={() => {}}>
-            <Box className={classes.iconPill}>
-              <FilterListIcon sx={{ fontSize: 14 }} />
+          <Box
+            onClick={() => {}}
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '4px',
+              height: 30,
+              minHeight: 30,
+              px: '8px',
+              borderRadius: '6px',
+              border: '1px solid #c7d2fe',
+              background: '#f5f3ff',
+              color: '#4338ca',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              lineHeight: 1,
+              transition: 'all 0.15s ease',
+              '&:hover': {
+                backgroundColor: '#ede9fe',
+                borderColor: '#a78bfa',
+              },
+            }}
+          >
+            <Box
+              sx={{
+                width: 24,
+                height: 24,
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(67,56,202,0.08)',
+              }}
+            >
+              <FilterListIcon sx={{ fontSize: 13, color: '#4338ca' }} />
             </Box>
-            <Typography className={classes.actionLabel}>Filter</Typography>
+            <Typography
+              sx={{
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                color: '#4338ca',
+                whiteSpace: 'nowrap',
+                lineHeight: '24px',
+              }}
+            >
+              Filter
+            </Typography>
           </Box>
         </Box>
       </Box>

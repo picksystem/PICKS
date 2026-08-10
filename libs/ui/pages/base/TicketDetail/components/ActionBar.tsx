@@ -8,11 +8,10 @@ import {
   AccessTimeIcon,
   BookmarkIcon,
   AttachFileIcon,
-  TimelineIcon,
+  ScheduleIcon,
   MoreHorizIcon,
   SaveIcon,
   CloseIcon,
-  ScheduleIcon,
   EditIcon,
   IconButton,
 } from '../../../../components';
@@ -29,7 +28,6 @@ interface ActionBarProps {
   onTimeEntry: () => void;
   onFollow: () => void;
   onAttachment: () => void;
-  onActivity: () => void;
   onReviewLater: () => void;
   onMoreTools: (e: React.MouseEvent<HTMLElement>) => void;
   onSave: () => void;
@@ -66,7 +64,6 @@ const ActionBar = ({
   onTimeEntry,
   onFollow,
   onAttachment,
-  onActivity,
   onReviewLater,
   onMoreTools,
   onSave,
@@ -145,15 +142,6 @@ const ActionBar = ({
       ),
       label: 'Attachment',
       onClick: onAttachment,
-    },
-    {
-      icon: (
-        <IconPill color='#0891b2' classes={classes}>
-          <TimelineIcon sx={{ ...iconSx, color: '#0891b2' }} />
-        </IconPill>
-      ),
-      label: 'Activity',
-      onClick: onActivity,
     },
     {
       icon: (
@@ -250,15 +238,6 @@ const ActionBar = ({
       ),
       label: 'Attachment',
       onClick: onAttachment,
-    },
-    {
-      icon: (
-        <IconPill color='#0891b2' classes={classes}>
-          <TimelineIcon sx={{ ...iconSx, color: '#0891b2' }} />
-        </IconPill>
-      ),
-      label: 'Activity',
-      onClick: onActivity,
     },
     {
       icon: (
