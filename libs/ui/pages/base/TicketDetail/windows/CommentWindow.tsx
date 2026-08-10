@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Modal,
@@ -7,11 +7,12 @@ import {
   Button,
   UploadFile,
   TextField,
+  Typography,
 } from '../../../../components';
-import { IncidentStatus } from '@serviceops/interfaces';
 import { useCreateTicketCommentMutation } from '../../../../../services';
 import { useAuth, useNotification } from '@serviceops/hooks';
 import { TicketEntity } from '../types/ticketDetail.types';
+import { useConfiguration } from '@serviceops/confighooks';
 
 interface CommentWindowProps {
   open: boolean;
@@ -20,25 +21,6 @@ interface CommentWindowProps {
   onSuccess: () => void;
   mode?: 'comment' | 'internal' | 'self';
 }
-
-const statusOptions = Object.values(IncidentStatus).map((v) => ({
-  label: v.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-  value: v,
-}));
-
-const footerSx = {
-  display: 'flex',
-  gap: 1,
-  justifyContent: 'flex-end',
-  flexDirection: { xs: 'column' as const, sm: 'row' as const },
-};
-const contentSx = { display: 'flex', flexDirection: 'column', gap: 2 };
-const rowSx = {
-  display: 'flex',
-  gap: 2,
-  flexDirection: { xs: 'column' as const, sm: 'row' as const },
-};
-const fieldSx = { flex: 1, minWidth: 0 };
 
 const CommentWindow = ({
   open,
@@ -49,6 +31,8 @@ const CommentWindow = ({
 }: CommentWindowProps) => {
   const { user } = useAuth();
   const [createComment, { isLoading }] = useCreateTicketCommentMutation();
+  const { statuses } = useConfiguration();
+
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [status, setStatus] = useState<string>(incident.status);
@@ -64,6 +48,48 @@ const CommentWindow = ({
         ? 'Add Self Note'
         : 'Add a comment (Customer Visible)';
 
+  // Match existing checkbox styles from UpdatesSection
+  const checkboxSx = {
+    color: '#6366f1',
+    p: '2px 0',
+    '& .MuiSvgIcon-root': { fontSize: 16 },
+  };
+
+  // Match existing action button styles from UpdatesSection
+  const actionBtnSx = (border: string, bg: string, text: string) => ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    padding: '3px 10px',
+    borderRadius: '6px',
+    border: `1px solid ${border}`,
+    background: bg,
+    color: text,
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    lineHeight: '20px',
+    transition: 'all 0.15s ease',
+    '&:hover': {
+      opacity: 0.85,
+      boxShadow: `0 1px 3px ${border}40`,
+    },
+    '&.Mui-disabled': {
+      opacity: 0.5,
+    },
+  });
+
+  // Build status options dynamically from Configuration > Statuses > Ticket statuses
+  const statusOptions = statuses?.items
+    ? statuses.items
+        .filter((s) => s.isActive)
+        .map((s) => ({
+          value: s.id,
+          label: s.displayName || s.name,
+        }))
+    : [];
+
   // Pre-set checkboxes based on mode when modal opens
   useEffect(() => {
     if (open) {
@@ -77,6 +103,7 @@ const CommentWindow = ({
         setIsInternal(false);
         setIsSelfNote(false);
       }
+      setNotifyAssigneesOnly(false);
     }
   }, [open, mode]);
 
@@ -113,21 +140,21 @@ const CommentWindow = ({
   };
 
   const footer = (
-    <Box sx={footerSx}>
-      <Button variant='outlined' onClick={onClose}>
+    <Box
+      sx={{
+        display: 'flex',
+        gap: 1,
+        justifyContent: 'flex-end',
+        flexDirection: { xs: 'column', sm: 'row' },
+      }}
+    >
+      <Button onClick={onClose} sx={actionBtnSx('#6366f1', '#eef2ff', '#4338ca')}>
         Cancel
       </Button>
-      <Button variant='outlined' onClick={handleSave} disabled={isLoading}>
+      <Button onClick={handleSave} disabled={isLoading} sx={actionBtnSx('#6366f1', '#eef2ff', '#4338ca')}>
         Save
       </Button>
-      <Button
-        variant='contained'
-        onClick={() => {
-          handleSave();
-          onSuccess();
-        }}
-        disabled={isLoading}
-      >
+      <Button onClick={() => { handleSave(); onSuccess(); }} disabled={isLoading} sx={actionBtnSx('#2d5ebb', '#eef2ff', '#1e40af')}>
         Save & Close
       </Button>
     </Box>
@@ -135,9 +162,21 @@ const CommentWindow = ({
 
   return (
     <Modal open={open} onClose={onClose} title={modalTitle} maxWidth='lg' footer={footer}>
-      <Box sx={contentSx}>
-        <Box sx={rowSx}>
-          <Box sx={fieldSx}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 2,
+            flexDirection: { xs: 'column', sm: 'row' },
+          }}
+        >
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             <Select
               label='Status'
               options={statusOptions}
@@ -145,7 +184,7 @@ const CommentWindow = ({
               onChange={(val) => setStatus(val as string)}
             />
           </Box>
-          <Box sx={fieldSx}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             <Select label='Response Template' options={[]} value='' onChange={() => {}} />
           </Box>
         </Box>
@@ -171,22 +210,56 @@ const CommentWindow = ({
           required
         />
 
-        <Box sx={rowSx}>
-          <Checkbox
-            label='Internal Note'
-            checked={isInternal}
-            onChange={() => setIsInternal(!isInternal)}
-          />
-          <Checkbox
-            label='Self-note'
-            checked={isSelfNote}
-            onChange={() => setIsSelfNote(!isSelfNote)}
-          />
-          <Checkbox
-            label='Notify ticket assignees only'
-            checked={notifyAssigneesOnly}
-            onChange={() => setNotifyAssigneesOnly(!notifyAssigneesOnly)}
-          />
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 2,
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: 'center',
+          }}
+        >
+          <Box
+            sx={{ display: 'inline-flex', alignItems: 'center', gap: '3px', cursor: 'pointer' }}
+            onClick={() => setIsInternal(!isInternal)}
+          >
+            <Checkbox
+              size='small'
+              checked={isInternal}
+              onChange={() => setIsInternal(!isInternal)}
+              sx={checkboxSx}
+            />
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 500, color: '#374151' }}>
+              Internal Note
+            </Typography>
+          </Box>
+          <Box
+            sx={{ display: 'inline-flex', alignItems: 'center', gap: '3px', cursor: 'pointer' }}
+            onClick={() => setIsSelfNote(!isSelfNote)}
+          >
+            <Checkbox
+              size='small'
+              checked={isSelfNote}
+              onChange={() => setIsSelfNote(!isSelfNote)}
+              sx={checkboxSx}
+            />
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 500, color: '#374151' }}>
+              Self-note
+            </Typography>
+          </Box>
+          <Box
+            sx={{ display: 'inline-flex', alignItems: 'center', gap: '3px', cursor: 'pointer' }}
+            onClick={() => setNotifyAssigneesOnly(!notifyAssigneesOnly)}
+          >
+            <Checkbox
+              size='small'
+              checked={notifyAssigneesOnly}
+              onChange={() => setNotifyAssigneesOnly(!notifyAssigneesOnly)}
+              sx={checkboxSx}
+            />
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 500, color: '#374151' }}>
+              Notify ticket assignees only
+            </Typography>
+          </Box>
         </Box>
 
         <UploadFile onChange={() => {}} />

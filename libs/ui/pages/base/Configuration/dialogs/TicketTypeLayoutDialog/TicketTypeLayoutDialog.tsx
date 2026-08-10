@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -536,8 +536,24 @@ export const TicketTypeLayoutDialog = ({
   const [cfDialogOpen, setCfDialogOpen] = useState(false);
   const [editingCf, setEditingCf] = useState<ICustomField | null>(null);
 
+  // When RTK Query refetches after a mutation, ticketType prop gets a new
+  // object reference.  We track by id so we can detect the refetch and
+  // re-sync config/customFields without clobbering UI state (activeTab, etc.).
+  const lastSyncedRef = useRef<ITicketType | null>(null);
+
   useEffect(() => {
-    if (open && ticketType) {
+    if (!open || !ticketType) return;
+    const isNewTicketType = ticketType.id !== lastSyncedRef.current?.id;
+    const isFreshRef = !isNewTicketType && ticketType !== lastSyncedRef.current;
+
+    if (isFreshRef) {
+      // Same ticketType, fresh reference from RTK refetch — update data only
+      lastSyncedRef.current = ticketType;
+      setConfig(mergeLayoutConfig(ticketType.layoutConfig));
+      setCustomFields(ticketType.customFields ?? []);
+    } else if (isNewTicketType) {
+      // New ticketType selected — full reset
+      lastSyncedRef.current = ticketType;
       setConfig(mergeLayoutConfig(ticketType.layoutConfig));
       setCustomFields(ticketType.customFields ?? []);
       setActiveTab(0);

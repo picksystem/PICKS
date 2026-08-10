@@ -81,6 +81,7 @@ export interface IConfigStatusLevel {
   id: string;
   name: string;
   displayName: string;
+  statusType?: string;
   shortDescription?: string;
   description: string;
   color: string;
@@ -120,6 +121,7 @@ export interface IConfigSLAAdminControls {
   excludeSaturdaysAndSundays: boolean;
   excludeFridaysAndSaturdays: boolean;
   excludeFridaysOnly: boolean;
+  defaultSlaHours?: number;
   excludeSaturdaysOnly: boolean;
   excludeSundaysOnly: boolean;
   // response SLA
@@ -167,6 +169,8 @@ export interface IConfigSystem {
 export interface IConfigGeneralAdminControls {
   activateDefaultApprovedHours: boolean;
   timeEntriesEnabled: boolean;
+  autoAssignOnReopen?: boolean;
+  autoAssignOnReopenConsultantName?: string;
   changeDisplayName: {
     approved_estimates: boolean;
     estimated_hours: boolean;
