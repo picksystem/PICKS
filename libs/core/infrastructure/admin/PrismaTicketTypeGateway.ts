@@ -1,5 +1,4 @@
 import {
-  ICustomField,
   ITicketType,
   ICreateTicketTypeInput,
   IUpdateTicketTypeInput,
@@ -16,6 +15,8 @@ export class PrismaTicketTypeGateway implements ITicketTypeGateway {
     });
     return rows.map((r: any) => ({
       ...r,
+      lastUpdatedBy: r.lastUpdatedBy || '',
+      lastUpdatedAt: r.lastUpdatedAt ? new Date(r.lastUpdatedAt).toISOString() : '',
       accessControl: JSON.parse(r.accessControl || '[]'),
       layoutConfig: r.layoutConfig ? JSON.parse(r.layoutConfig) : null,
       customFields: JSON.parse(r.customFields || '[]'),
@@ -27,6 +28,8 @@ export class PrismaTicketTypeGateway implements ITicketTypeGateway {
     if (!r) return null;
     return {
       ...r,
+      lastUpdatedBy: r.lastUpdatedBy || '',
+      lastUpdatedAt: r.lastUpdatedAt ? new Date(r.lastUpdatedAt).toISOString() : '',
       accessControl: JSON.parse(r.accessControl || '[]'),
       layoutConfig: r.layoutConfig ? JSON.parse(r.layoutConfig) : null,
       customFields: JSON.parse(r.customFields || '[]'),
@@ -34,10 +37,12 @@ export class PrismaTicketTypeGateway implements ITicketTypeGateway {
   }
 
   async create(input: ICreateTicketTypeInput): Promise<ITicketType> {
-    const { accessControl, layoutConfig, customFields, ...rest } = input;
+    const { accessControl, layoutConfig, customFields, lastUpdatedBy, lastUpdatedAt, ...rest } =
+      input;
     const r = await this.db.adminTicketType.create({
       data: {
         ...rest,
+        lastUpdatedBy: lastUpdatedBy || '',
         accessControl: JSON.stringify(accessControl ?? []),
         layoutConfig: layoutConfig ? JSON.stringify(layoutConfig) : null,
         customFields: JSON.stringify(customFields ?? []),
@@ -45,6 +50,8 @@ export class PrismaTicketTypeGateway implements ITicketTypeGateway {
     });
     return {
       ...r,
+      lastUpdatedBy: r.lastUpdatedBy || '',
+      lastUpdatedAt: r.lastUpdatedAt ? new Date(r.lastUpdatedAt).toISOString() : '',
       accessControl: JSON.parse(r.accessControl || '[]'),
       layoutConfig: r.layoutConfig ? JSON.parse(r.layoutConfig) : null,
       customFields: JSON.parse(r.customFields || '[]'),
@@ -52,12 +59,13 @@ export class PrismaTicketTypeGateway implements ITicketTypeGateway {
   }
 
   async update(id: number, input: IUpdateTicketTypeInput): Promise<ITicketType> {
-    const { accessControl, layoutConfig, customFields, ...rest } = input;
+    const { accessControl, layoutConfig, customFields, lastUpdatedBy, ...rest } = input;
     const data: Record<string, unknown> = { ...rest };
     if (accessControl !== undefined) data.accessControl = JSON.stringify(accessControl);
     if (layoutConfig !== undefined)
       data.layoutConfig = layoutConfig ? JSON.stringify(layoutConfig) : null;
     if (customFields !== undefined) data.customFields = JSON.stringify(customFields);
+    if (lastUpdatedBy !== undefined) data.lastUpdatedBy = lastUpdatedBy;
 
     const r = await this.db.adminTicketType.update({
       where: { id },
@@ -65,6 +73,8 @@ export class PrismaTicketTypeGateway implements ITicketTypeGateway {
     });
     return {
       ...r,
+      lastUpdatedBy: r.lastUpdatedBy || '',
+      lastUpdatedAt: r.lastUpdatedAt ? new Date(r.lastUpdatedAt).toISOString() : '',
       accessControl: JSON.parse(r.accessControl || '[]'),
       layoutConfig: r.layoutConfig ? JSON.parse(r.layoutConfig) : null,
       customFields: JSON.parse(r.customFields || '[]'),

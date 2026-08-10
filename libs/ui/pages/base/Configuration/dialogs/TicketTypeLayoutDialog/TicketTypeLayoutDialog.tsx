@@ -191,10 +191,12 @@ function getSelectedFields(
 ): string[] {
   if (activeTab === 0) {
     const ctKey = sectionKey as CreateTicketSectionKey;
-    return config.createTicket[ctKey]?.selectedFields ?? [];
+    const sectionConfig = config.createTicket[ctKey];
+    return sectionConfig?.selectedFields ?? [];
   }
   const dtKey = sectionKey as DetailsSectionKey;
-  return config[dtKey]?.selectedFields ?? [];
+  const sectionConfig = config[dtKey];
+  return sectionConfig?.selectedFields ?? [];
 }
 
 function setSelectedFields(
@@ -520,7 +522,7 @@ export const TicketTypeLayoutDialog = ({
   const ticketTypeOptions = useMemo(() => {
     return (allTicketTypes ?? [])
       .filter((t) => !!t.type)
-      .map((t) => ({ type: t.type, displayName: t.displayName || t.name || t.type }));
+      .map((t) => ({ type: t.type, displayName: t.name || t.displayName || t.type }));
   }, [allTicketTypes]);
   const [config, setConfig] = useState<ITicketTypeLayoutConfig>(getDefaultLayoutConfig);
   const [activeTab, setActiveTab] = useState(0);
@@ -906,18 +908,29 @@ export const TicketTypeLayoutDialog = ({
     });
   };
 
-  const handleSaveCustomField = (field: ICustomField) => {
-    setCustomFields((prev) => {
-      const idx = prev.findIndex((f) => f.id === field.id);
-      if (idx >= 0) {
-        const next = [...prev];
-        next[idx] = field;
-        return next;
+  const handleSaveCustomField = async (field: ICustomField) => {
+    try {
+      // Build the updated list from the current closure value
+      const idx = customFields.findIndex((f) => f.id === field.id);
+      const updatedFields =
+        idx >= 0 ? customFields.map((f, i) => (i === idx ? field : f)) : [...customFields, field];
+
+      // Persist to the server — triggers RTK Query invalidation of 'TicketType' and
+      // 'Configuration' tags, causing any useGetTicketTypeQuery consumer to refetch.
+      if (ticketType) {
+        await updateTicketType({
+          id: ticketType.id,
+          data: { customFields: updatedFields },
+        }).unwrap();
       }
-      return [...prev, field];
-    });
-    setCfDialogOpen(false);
-    setEditingCf(null);
+
+      // Optimistic local state update after successful API response
+      setCustomFields(updatedFields);
+      setCfDialogOpen(false);
+      setEditingCf(null);
+    } catch {
+      notifyError('Failed to save custom field');
+    }
   };
 
   // ── JSX ─────────────────────────────────────────────────────

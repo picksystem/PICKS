@@ -7,13 +7,9 @@ import {
   Paper,
   IconButton,
   Button,
-  MenuItem,
 } from '@serviceops/component';
 import {
   Checkbox,
-  FormControl,
-  InputLabel,
-  Select,
   FormControlLabel,
   Stack,
   InputAdornment,
@@ -21,6 +17,7 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
+  Switch,
 } from '@mui/material';
 import {
   AddCircle,
@@ -30,14 +27,8 @@ import {
   Search as SearchIcon,
 } from '@mui/icons-material';
 import { useFieldError, useNotification } from '@serviceops/hooks';
-import {
-  ICustomField,
-  CustomFieldType,
-  IConfigCategorization,
-  IConfigurationData,
-} from '@serviceops/interfaces';
+import { ICustomField, CustomFieldType, IConfigCategorization } from '@serviceops/interfaces';
 import { ConfigFormDialog } from '@serviceops/configdialogs';
-import { useConfiguration } from '@serviceops/confighooks';
 import ConfigPathPicker from './ConfigPathPicker';
 import { generateCustomFieldKey } from '../../utils/ticketTypeLayoutConfig';
 
@@ -210,6 +201,7 @@ const CustomFieldDialog = ({
           path: editing.path,
           dropdownOptions: editing.dropdownOptions ? [...editing.dropdownOptions] : [],
           defaultValue: editing.defaultValue,
+          isRequired: editing.isRequired ?? false,
           fieldUse: { ...editing.fieldUse },
           displayOrder: editing.displayOrder,
         }
@@ -217,6 +209,7 @@ const CustomFieldDialog = ({
           fieldName: '',
           fieldType: 'text',
           dropdownOptions: [],
+          isRequired: false,
           fieldUse: { __createTicket__: true, __ticketDetails__: false, ...emptyUseFlags },
         };
     formRef.current = initial;
@@ -259,6 +252,7 @@ const CustomFieldDialog = ({
 
   const handleNameInputChange = (value: string) => {
     setNameInput(value);
+    updateForm((f) => ({ ...f, fieldName: value }));
     if (nameDebounceRef.current) clearTimeout(nameDebounceRef.current);
     nameDebounceRef.current = setTimeout(() => {
       const next = searchNames(value);
@@ -372,6 +366,7 @@ const CustomFieldDialog = ({
       dropdownOptions:
         formRef.current.fieldType === 'dropdown' ? formRef.current.dropdownOptions : undefined,
       defaultValue: formRef.current.defaultValue,
+      isRequired: formRef.current.isRequired ?? false,
       fieldUse: formRef.current.fieldUse!,
       displayOrder,
     };
@@ -703,6 +698,24 @@ const CustomFieldDialog = ({
             Browse
           </Button>
         </Box>
+      </Box>
+
+      <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+        <Typography variant='body2' sx={{ fontWeight: 600, mr: 1 }}>
+          Required
+        </Typography>
+        <Switch
+          checked={!!form.isRequired}
+          onChange={(e) => updateForm((f) => ({ ...f, isRequired: e.target.checked }))}
+          size='small'
+          sx={{
+            color: '#ccc',
+            '&.Mui-checked': { color: CF_ACCENT },
+            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+              backgroundColor: CF_ACCENT,
+            },
+          }}
+        />
       </Box>
 
       <Box sx={{ mt: 1 }}>

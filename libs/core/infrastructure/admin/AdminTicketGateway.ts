@@ -100,6 +100,7 @@ export class AdminTicketGateway {
       'secondaryResources',
       'isRecurring',
       'isMajor',
+      'isReleaseManagement',
       'notes',
       'relatedRecords',
       'attachments',

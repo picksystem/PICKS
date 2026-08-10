@@ -49,13 +49,13 @@ export const INFO_BAR_FIELDS: FieldOption[] = [
 
 // ── SIDE BAR (left navigation) ──
 export const SIDE_BAR_SECTION_FIELDS: FieldOption[] = [
-  { key: 'sideTicketInformation', label: 'Ticket information' },
-  { key: 'sideCategorization', label: 'Categorization' },
-  { key: 'sideDescription', label: 'Description' },
-  { key: 'sideAdditionalDetails', label: 'Additional details' },
-  { key: 'sidePriorityAssignment', label: 'Priority and assignment' },
-  { key: 'sideAuditInformation', label: 'Audit information' },
-  { key: 'sideAttachments', label: 'Attachments' },
+  { key: 'created', label: 'Created by' },
+  { key: 'assignment', label: 'Assignment' },
+  { key: 'ticketOptions', label: 'Ticket options' },
+  { key: 'contactAndBilling', label: 'Contact & Billing' },
+  { key: 'reporting', label: 'Reporting' },
+  { key: 'datesAndUsers', label: 'Dates & Users' },
+  { key: 'additionalFields', label: 'Additional fields' },
 ];
 
 // ── TICKET OPTIONS ──
@@ -291,16 +291,7 @@ const defaultCreateTicketConfig = {
     selectedFields: allKeys(CREATE_TICKET_CATEGORIZATION_FIELDS),
   },
   description: {
-    selectedFields: [
-      'shortDescription',
-      'description',
-      'isMajor',
-      'isRecurring',
-      'isReleaseManagement',
-    ],
-  },
-  additionalDetails: {
-    selectedFields: ['notes', 'relatedRecords', 'relatedTicketId'],
+    selectedFields: ['shortDescription', 'description', 'isMajor', 'isRecurring'],
   },
   priorityAssignment: {
     selectedFields: [
@@ -318,6 +309,9 @@ const defaultCreateTicketConfig = {
   },
   attachments: {
     selectedFields: ['attachments'],
+  },
+  additionalDetails: {
+    selectedFields: allKeys(CREATE_TICKET_ADDITIONAL_DETAILS_FIELDS),
   },
 };
 

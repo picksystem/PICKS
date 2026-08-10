@@ -57,7 +57,89 @@ export function buildTicketRouter(): Router {
     }
   });
 
-  // ── Get by number (prefix-based detection) ───────────────────────────────
+  // ── Sub-resources (must be before /:number to avoid route shadowing) ───────
+
+  // Comments
+  router.get('/:ticketId/comments', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const ticketId = parseInt(req.params.ticketId, 10);
+      const comments = await ticketUseCase.getComments(ticketId);
+      res.json({ message: 'Comments retrieved successfully', data: comments });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to fetch comments' });
+    }
+  });
+
+  router.post('/:ticketId/comments', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const ticketId = parseInt(req.params.ticketId, 10);
+      const comment = await ticketUseCase.addComment(
+        req.body as IAddCommentInput & { ticketId: number },
+      );
+      res.status(201).json({ message: 'Comment added successfully', data: comment });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to add comment' });
+    }
+  });
+
+  // Time entries
+  router.get('/:ticketId/time-entries', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const ticketId = parseInt(req.params.ticketId, 10);
+      const entries = await ticketUseCase.getTimeEntries(ticketId);
+      res.json({ message: 'Time entries retrieved successfully', data: entries });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to fetch time entries' });
+    }
+  });
+
+  router.post('/:ticketId/time-entries', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const ticketId = parseInt(req.params.ticketId, 10);
+      const entry = await ticketUseCase.addTimeEntry(
+        req.body as IAddTimeEntryInput & { ticketId: number },
+      );
+      res.status(201).json({ message: 'Time entry added successfully', data: entry });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to add time entry' });
+    }
+  });
+
+  // Resolutions
+  router.get('/:ticketId/resolutions', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const ticketId = parseInt(req.params.ticketId, 10);
+      const resolutions = await ticketUseCase.getResolutions(ticketId);
+      res.json({ message: 'Resolutions retrieved successfully', data: resolutions });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to fetch resolutions' });
+    }
+  });
+
+  router.post('/:ticketId/resolutions', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const ticketId = parseInt(req.params.ticketId, 10);
+      const resolution = await ticketUseCase.addResolution(
+        req.body as IAddResolutionInput & { ticketId: number },
+      );
+      res.status(201).json({ message: 'Resolution added successfully', data: resolution });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to add resolution' });
+    }
+  });
+
+  // Activities
+  router.get('/:ticketId/activities', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const ticketId = parseInt(req.params.ticketId, 10);
+      const activities = await ticketUseCase.getActivities(ticketId);
+      res.json({ message: 'Activities retrieved successfully', data: activities });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to fetch activities' });
+    }
+  });
+
+  // ── Get by number (legacy — matches ticket number string) ─────────────────
 
   router.get('/:number', async (req: Request, res: Response): Promise<void> => {
     try {
@@ -180,88 +262,6 @@ export function buildTicketRouter(): Router {
       res.json({ message: 'Ticket deleted successfully', data: ticket });
     } catch (error: any) {
       res.status(500).json({ message: error.message || 'Failed to delete ticket' });
-    }
-  });
-
-  // ── Sub-resources ─────────────────────────────────────────────────────────
-
-  // Comments
-  router.get('/:ticketId/comments', async (req: Request, res: Response): Promise<void> => {
-    try {
-      const ticketId = parseInt(req.params.ticketId, 10);
-      const comments = await ticketUseCase.getComments(ticketId);
-      res.json({ message: 'Comments retrieved successfully', data: comments });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message || 'Failed to fetch comments' });
-    }
-  });
-
-  router.post('/:ticketId/comments', async (req: Request, res: Response): Promise<void> => {
-    try {
-      const ticketId = parseInt(req.params.ticketId, 10);
-      const comment = await ticketUseCase.addComment(
-        req.body as IAddCommentInput & { ticketId: number },
-      );
-      res.status(201).json({ message: 'Comment added successfully', data: comment });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message || 'Failed to add comment' });
-    }
-  });
-
-  // Time entries
-  router.get('/:ticketId/time-entries', async (req: Request, res: Response): Promise<void> => {
-    try {
-      const ticketId = parseInt(req.params.ticketId, 10);
-      const entries = await ticketUseCase.getTimeEntries(ticketId);
-      res.json({ message: 'Time entries retrieved successfully', data: entries });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message || 'Failed to fetch time entries' });
-    }
-  });
-
-  router.post('/:ticketId/time-entries', async (req: Request, res: Response): Promise<void> => {
-    try {
-      const ticketId = parseInt(req.params.ticketId, 10);
-      const entry = await ticketUseCase.addTimeEntry(
-        req.body as IAddTimeEntryInput & { ticketId: number },
-      );
-      res.status(201).json({ message: 'Time entry added successfully', data: entry });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message || 'Failed to add time entry' });
-    }
-  });
-
-  // Resolutions
-  router.get('/:ticketId/resolutions', async (req: Request, res: Response): Promise<void> => {
-    try {
-      const ticketId = parseInt(req.params.ticketId, 10);
-      const resolutions = await ticketUseCase.getResolutions(ticketId);
-      res.json({ message: 'Resolutions retrieved successfully', data: resolutions });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message || 'Failed to fetch resolutions' });
-    }
-  });
-
-  router.post('/:ticketId/resolutions', async (req: Request, res: Response): Promise<void> => {
-    try {
-      const ticketId = parseInt(req.params.ticketId, 10);
-      const resolution = await ticketUseCase.addResolution(
-        req.body as IAddResolutionInput & { ticketId: number },
-      );
-      res.status(201).json({ message: 'Resolution added successfully', data: resolution });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message || 'Failed to add resolution' });
-    }
-  });
-
-  // Activities
-  router.get('/:ticketId/activities', async (req: Request, res: Response): Promise<void> => {
-    try {
-      const ticketId = parseInt(req.params.ticketId, 10);
-      const activities = await ticketUseCase.getActivities(ticketId);
-      res.json({ message: 'Activities retrieved successfully', data: activities });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message || 'Failed to fetch activities' });
     }
   });
 

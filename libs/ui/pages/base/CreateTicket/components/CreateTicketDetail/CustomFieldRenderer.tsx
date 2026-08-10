@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Box, TextField, Checkbox, Select, MenuItem, FormControl, InputLabel } from '@serviceops/component';
+import { Box, TextField, Checkbox, Select, MenuItem } from '@serviceops/component';
+import { FormControl, InputLabel, Typography } from '@mui/material';
 import { ICustomField } from '@serviceops/interfaces';
 
 export interface CustomFieldRendererProps {
@@ -45,7 +46,7 @@ const CustomFieldRenderer = ({ field, value, onChange, error, errorText }: Custo
             multiline
             rows={3}
             error={error}
-            errorText={errorText}
+                        errorText={errorText as string | undefined}
           />
         </Box>
       );
@@ -57,7 +58,7 @@ const CustomFieldRenderer = ({ field, value, onChange, error, errorText }: Custo
           onChange={(e) => onChange(e.target.value)}
           type='number'
           error={error}
-          errorText={errorText}
+                      errorText={errorText as string | undefined}
         />
       );
     case 'date':
@@ -69,7 +70,7 @@ const CustomFieldRenderer = ({ field, value, onChange, error, errorText }: Custo
           type='date'
           InputLabelProps={{ shrink: true }}
           error={error}
-          errorText={errorText}
+                      errorText={errorText as string | undefined}
         />
       );
     case 'dropdown': {
@@ -95,7 +96,7 @@ const CustomFieldRenderer = ({ field, value, onChange, error, errorText }: Custo
             }}
             placeholder={`Search or select ${field.fieldName.toLowerCase()}`}
             error={error}
-            errorText={errorText}
+                        errorText={errorText as string | undefined}
           />
           {isOpen && opts.length > 0 && (
             <Box
@@ -126,7 +127,7 @@ const CustomFieldRenderer = ({ field, value, onChange, error, errorText }: Custo
                       borderBottom: '1px solid',
                       borderColor: 'divider',
                     }}
-                    onMouseDown={(e) => e.preventDefault()}
+                    onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
                     onClick={() => handleSelect(opt)}
                   >
                     {opt}

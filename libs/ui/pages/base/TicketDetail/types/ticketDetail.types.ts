@@ -9,6 +9,7 @@ import {
 /** A ticket of any of the three types this page supports, as returned by the unified get-by-number endpoint */
 export type TicketEntity = (IIncident | IServiceRequest | IAdvisoryRequest) & {
   ticketType: string;
+  customFieldValues?: Record<string, string>;
 };
 
 /**

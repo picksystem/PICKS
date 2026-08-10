@@ -172,7 +172,7 @@ export const adminApi = baseApi.injectEndpoints({
     // GENERIC SUB-RESOURCE endpoints (dynamic by ticketType)
     // =============================================
     getTicketComments: builder.query<IAdminTicketComment[], ITicketRef>({
-      query: ({ ticketType, ticketId }) => `/api/admin/${ticketType}/tickets/${ticketId}/comments`,
+      query: ({ ticketId }) => `/api/admin/tickets/${ticketId}/comments`,
       transformResponse: (response: { data: IAdminTicketComment[] }) => response.data,
     }),
     createTicketComment: builder.mutation<
@@ -188,8 +188,8 @@ export const adminApi = baseApi.injectEndpoints({
         createdBy: string;
       }
     >({
-      query: ({ ticketType, ticketId, ...body }) => ({
-        url: `/api/admin/${ticketType}/tickets/${ticketId}/comments`,
+      query: ({ ticketId, ...body }) => ({
+        url: `/api/admin/tickets/${ticketId}/comments`,
         method: 'POST',
         body,
       }),
@@ -197,8 +197,8 @@ export const adminApi = baseApi.injectEndpoints({
     }),
 
     getTicketTimeEntries: builder.query<IAdminTicketTimeEntry[], ITicketRef>({
-      query: ({ ticketType, ticketId }) =>
-        `/api/admin/${ticketType}/tickets/${ticketId}/time-entries`,
+      query: ({ ticketId }) =>
+        `/api/admin/tickets/${ticketId}/time-entries`,
       transformResponse: (response: { data: IAdminTicketTimeEntry[] }) => response.data,
     }),
     createTicketTimeEntry: builder.mutation<
@@ -216,8 +216,8 @@ export const adminApi = baseApi.injectEndpoints({
         createdBy: string;
       }
     >({
-      query: ({ ticketType, ticketId, ...body }) => ({
-        url: `/api/admin/${ticketType}/tickets/${ticketId}/time-entries`,
+      query: ({ ticketId, ...body }) => ({
+        url: `/api/admin/tickets/${ticketId}/time-entries`,
         method: 'POST',
         body,
       }),
@@ -225,8 +225,8 @@ export const adminApi = baseApi.injectEndpoints({
     }),
 
     getTicketResolutions: builder.query<IAdminTicketResolution[], ITicketRef>({
-      query: ({ ticketType, ticketId }) =>
-        `/api/admin/${ticketType}/tickets/${ticketId}/resolutions`,
+      query: ({ ticketId }) =>
+        `/api/admin/tickets/${ticketId}/resolutions`,
       transformResponse: (response: { data: IAdminTicketResolution[] }) => response.data,
     }),
     createTicketResolution: builder.mutation<
@@ -246,8 +246,8 @@ export const adminApi = baseApi.injectEndpoints({
         createdBy: string;
       }
     >({
-      query: ({ ticketType, ticketId, ...body }) => ({
-        url: `/api/admin/${ticketType}/tickets/${ticketId}/resolutions`,
+      query: ({ ticketId, ...body }) => ({
+        url: `/api/admin/tickets/${ticketId}/resolutions`,
         method: 'POST',
         body,
       }),
@@ -255,8 +255,8 @@ export const adminApi = baseApi.injectEndpoints({
     }),
 
     getTicketActivities: builder.query<IAdminTicketActivity[], ITicketRef>({
-      query: ({ ticketType, ticketId }) =>
-        `/api/admin/${ticketType}/tickets/${ticketId}/activities`,
+      query: ({ ticketId }) =>
+        `/api/admin/tickets/${ticketId}/activities`,
       transformResponse: (response: { data: IAdminTicketActivity[] }) => response.data,
     }),
 

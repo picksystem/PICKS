@@ -710,26 +710,28 @@ model AdminTicket {
   vendorTicketReference    String?
   workAround               String?
   workAroundRisk           String?
-  customFieldValues        String  @default("[]")
+  customFieldValues        String    @default("[]")
 
   @@map("AdminTicket")
 }
 
 model AdminTicketType {
-  id               Int     @id @default(autoincrement())
-  type             String  @unique
+  id               Int      @id @default(autoincrement())
+  type             String   @unique
   name             String
-  displayName      String  @default("")
-  displayTag       String  @default("")
-  shortDescription String  @default("")
-  description      String  @default("")
-  prefix           String  @default("")
-  isActive         Boolean @default(true)
-  numberLength     Int     @default(7)
-  displayOrder     Int     @default(0)
-  accessControl    String  @default("")
-  layoutConfig     String  @default("")
-  customFields     String  @default("[]")
+  displayName      String   @default("")
+  displayTag       String   @default("")
+  shortDescription String   @default("")
+  description      String   @default("")
+  prefix           String   @default("")
+  isActive         Boolean  @default(true)
+  numberLength     Int      @default(7)
+  displayOrder     Int      @default(0)
+  accessControl    String   @default("")
+  layoutConfig     String   @default("")
+  customFields     String   @default("[]")
+  lastUpdatedAt    DateTime @default(now()) @updatedAt
+  lastUpdatedBy    String   @default("")
 
   @@map("admin_ticket_type")
 }

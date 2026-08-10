@@ -110,6 +110,7 @@ export const useTicketDetail = () => {
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState<TicketUpdateInput>({});
+  const [editCustomFieldValues, setEditCustomFieldValues] = useState<Record<string, string>>({});
 
   // Modal state
   const [activeModal, setActiveModal] = useState<ModalType>(null);
@@ -382,26 +383,30 @@ export const useTicketDetail = () => {
       shortDescription: incident.shortDescription || undefined,
       description: incident.description || undefined,
     });
+    setEditCustomFieldValues(incident.customFieldValues ?? {});
     setIsEditing(true);
   }, [incident, ticketType]);
 
   const handleCancelEditing = useCallback(() => {
     setIsEditing(false);
     setEditFormData({});
+    setEditCustomFieldValues({});
   }, []);
 
   const handleSaveEdit = useCallback(async () => {
     if (!incident) return;
     try {
-      await updateTicket({ id: incident.id, data: editFormData }).unwrap();
+      const updateData = { ...editFormData, customFieldValues: editCustomFieldValues };
+      await updateTicket({ id: incident.id, data: updateData }).unwrap();
       setIsEditing(false);
       setEditFormData({});
+      setEditCustomFieldValues({});
       dispatch(showNotification({ message: 'Ticket updated successfully', severity: 'success' }));
       refetch();
     } catch {
       dispatch(showNotification({ message: 'Failed to update ticket', severity: 'error' }));
     }
-  }, [incident, editFormData, updateTicket, refetch, dispatch]);
+  }, [incident, editFormData, editCustomFieldValues, updateTicket, refetch, dispatch]);
 
   const handleSaveAndClose = useCallback(async () => {
     await handleSaveEdit();
@@ -525,6 +530,7 @@ export const useTicketDetail = () => {
     error,
     allIncidents,
     layoutConfig,
+    resolvedTicketType,
     user,
     isAdmin,
     refetch,
@@ -541,6 +547,8 @@ export const useTicketDetail = () => {
     isEditing,
     editFormData,
     setEditFormData,
+    editCustomFieldValues,
+    setEditCustomFieldValues,
     activeModal,
     setActiveModal,
     draftRemaining,

@@ -119,7 +119,7 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   const [manualCallerOpen, setManualCallerOpen] = useState(false);
 
   // ── Custom field values ──────────────────────────────────────────────
-  const [cfValues, setCfValues] = useState<Record<string, string | boolean>>(() => {
+  const initCfValues = useCallback((): Record<string, string | boolean> => {
     const init: Record<string, string | boolean> = {};
     for (const cf of allCustomFields) {
       if (cf.defaultValue !== undefined) {
@@ -131,7 +131,27 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
       }
     }
     return init;
-  });
+  }, [allCustomFields]);
+
+  const [cfValues, setCfValues] = useState<Record<string, string | boolean>>(initCfValues);
+
+  // When allCustomFields grows (e.g., a new field is added), ensure cfValues
+  // has an entry for every current field so the renderer and submit can see it.
+  useEffect(() => {
+    setCfValues((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const cf of allCustomFields) {
+        if (!(cf.fieldKey in next)) {
+          if (cf.defaultValue !== undefined) next[cf.fieldKey] = cf.defaultValue;
+          else if (cf.fieldType === 'checkbox') next[cf.fieldKey] = false;
+          else next[cf.fieldKey] = '';
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [allCustomFields]);
 
   const setCfValue = useCallback((key: string, value: string | boolean) => {
     setCfValues((prev) => ({ ...prev, [key]: value }));
@@ -362,19 +382,7 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   const handleCancel = () => {
     formik.resetForm();
     setAttachedFiles([]);
-    setCfValues(() => {
-      const init: Record<string, string | boolean> = {};
-      for (const cf of allCustomFields) {
-        if (cf.defaultValue !== undefined) {
-          init[cf.fieldKey] = cf.defaultValue;
-        } else if (cf.fieldType === 'checkbox') {
-          init[cf.fieldKey] = false;
-        } else {
-          init[cf.fieldKey] = '';
-        }
-      }
-      return init;
-    });
+    setCfValues(initCfValues());
     onCancel?.();
     navigate(BasePath.DASHBOARD);
   };

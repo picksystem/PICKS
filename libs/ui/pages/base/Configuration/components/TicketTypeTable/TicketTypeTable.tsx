@@ -7,6 +7,23 @@ import type { TicketTypeTableProps } from './util';
 
 const FALLBACK_COLOR = '#64748b';
 
+function formatDateTime(iso?: string): string {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  } catch {
+    return '—';
+  }
+}
+
 // Access control chip colors
 const ACCESS_ROLES_CONFIG = [
   { value: 'admin', label: 'Admin', color: '#f97316' }, // orange
@@ -199,6 +216,7 @@ const TicketTypeTable = ({ ticketTypes, selectedRowId, onRowClick }: TicketTypeT
         );
       },
     },
+
     {
       id: 'shortDescription',
       label: 'Internal Note',
@@ -206,6 +224,59 @@ const TicketTypeTable = ({ ticketTypes, selectedRowId, onRowClick }: TicketTypeT
       format: (v): React.ReactNode => (
         <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>
           {String(v || '—')}
+        </Typography>
+      ),
+    },
+    {
+      id: 'lastUpdatedBy',
+      label: 'Last Updated By',
+      minWidth: 160,
+      format: (v): React.ReactNode => {
+        const name = String(v || '—');
+        return name !== '—' ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Box
+              sx={{
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                bgcolor: alpha('#0369a1', 0.12),
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <Typography
+                variant='body2'
+                sx={{ fontWeight: 700, fontSize: '0.7rem', color: '#0369a1' }}
+              >
+                {name
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')
+                  .toUpperCase()
+                  .slice(0, 2)}
+              </Typography>
+            </Box>
+            <Typography variant='body2' fontWeight={500} fontSize='0.82rem'>
+              {name}
+            </Typography>
+          </Box>
+        ) : (
+          <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>
+            —
+          </Typography>
+        );
+      },
+    },
+    {
+      id: 'lastUpdatedAt',
+      label: 'Last Updated',
+      minWidth: 160,
+      format: (v): React.ReactNode => (
+        <Typography variant='body2' color='text.secondary' fontSize='0.8rem'>
+          {formatDateTime(String(v))}
         </Typography>
       ),
     },

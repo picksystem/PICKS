@@ -33,6 +33,7 @@ export const CustomFieldRenderer = ({
           multiline={field.fieldType === 'textarea'}
           rows={field.fieldType === 'textarea' ? 3 : undefined}
           placeholder={field.defaultValue as string | undefined}
+          required={field.isRequired}
         />
       );
 
@@ -52,6 +53,7 @@ export const CustomFieldRenderer = ({
           size={size}
           fullWidth
           type='number'
+          required={field.isRequired}
         />
       );
 
@@ -65,16 +67,20 @@ export const CustomFieldRenderer = ({
           fullWidth
           type='date'
           InputLabelProps={{ shrink: true }}
+          required={field.isRequired}
         />
       );
 
     case 'dropdown':
       return (
-        <FormControl fullWidth size={size}>
-          <InputLabel id={`cf-${field.id}-label`}>{field.fieldName}</InputLabel>
+        <FormControl fullWidth size={size} required={field.isRequired}>
+          <InputLabel id={`cf-${field.id}-label`}>
+            {field.fieldName}
+            {field.isRequired && <span style={{ color: '#d32f2f' }}> *</span>}
+          </InputLabel>
           <Select
             labelId={`cf-${field.id}-label`}
-            label={field.fieldName}
+            label={field.fieldName + (field.isRequired ? ' *' : '')}
             value={(value as string) ?? ''}
             onChange={(e) => onChange(e.target.value)}
           >
@@ -92,7 +98,12 @@ export const CustomFieldRenderer = ({
         <Box>
           <FormControlLabel
             control={<Checkbox checked={!!value} onChange={(e) => onChange(e.target.checked)} />}
-            label={field.fieldName}
+            label={
+              <>
+                {field.fieldName}
+                {field.isRequired && <span style={{ color: '#d32f2f' }}> *</span>}
+              </>
+            }
           />
         </Box>
       );

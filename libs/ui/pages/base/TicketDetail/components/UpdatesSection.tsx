@@ -133,7 +133,7 @@ const emptyTextSx = {
 /* ── Action button colors ────────────────────────────────── */
 
 const BUTTON_STYLES = [
-  { label: 'Add comment (customer visible)', border: '#6366f1', bg: '#eef2ff', text: '#4338ca' },
+  { label: 'Add a comment (customer visible)', border: '#6366f1', bg: '#eef2ff', text: '#4338ca' },
   { label: 'Add internal note', border: '#d97706', bg: '#fffbeb', text: '#92400e' },
   { label: 'Add self note', border: '#059669', bg: '#ecfdf5', text: '#065f46' },
 ];

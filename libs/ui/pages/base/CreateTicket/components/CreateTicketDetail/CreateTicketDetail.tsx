@@ -629,7 +629,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                 </Box>
               )}
             </Box>
-          </>
+          </>,
         )}
 
         {/* ── 2. Categorization ────────────────────────────────────────── */}

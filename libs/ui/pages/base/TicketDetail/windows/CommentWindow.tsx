@@ -40,7 +40,13 @@ const rowSx = {
 };
 const fieldSx = { flex: 1, minWidth: 0 };
 
-const CommentWindow = ({ open, onClose, incident, onSuccess, mode = 'comment' }: CommentWindowProps) => {
+const CommentWindow = ({
+  open,
+  onClose,
+  incident,
+  onSuccess,
+  mode = 'comment',
+}: CommentWindowProps) => {
   const { user } = useAuth();
   const [createComment, { isLoading }] = useCreateTicketCommentMutation();
   const [subject, setSubject] = useState('');
@@ -51,11 +57,12 @@ const CommentWindow = ({ open, onClose, incident, onSuccess, mode = 'comment' }:
   const [notifyAssigneesOnly, setNotifyAssigneesOnly] = useState(false);
   const notify = useNotification();
 
-  const modalTitle = mode === 'internal'
-    ? 'Add Internal Note'
-    : mode === 'self'
-      ? 'Add Self Note'
-      : 'Add Comment (Customer Visible)';
+  const modalTitle =
+    mode === 'internal'
+      ? 'Add Internal Note'
+      : mode === 'self'
+        ? 'Add Self Note'
+        : 'Add a comment (Customer Visible)';
 
   // Pre-set checkboxes based on mode when modal opens
   useEffect(() => {
@@ -113,7 +120,14 @@ const CommentWindow = ({ open, onClose, incident, onSuccess, mode = 'comment' }:
       <Button variant='outlined' onClick={handleSave} disabled={isLoading}>
         Save
       </Button>
-      <Button variant='contained' onClick={() => { handleSave(); onSuccess(); }} disabled={isLoading}>
+      <Button
+        variant='contained'
+        onClick={() => {
+          handleSave();
+          onSuccess();
+        }}
+        disabled={isLoading}
+      >
         Save & Close
       </Button>
     </Box>

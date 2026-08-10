@@ -261,6 +261,7 @@ export interface ICreateTicketInput {
   changeProposedEnd?: string;
   changeActualStart?: string;
   changeActualEnd?: string;
+  customFieldValues?: Record<string, string>;
 }
 
 export interface ITicketRef {

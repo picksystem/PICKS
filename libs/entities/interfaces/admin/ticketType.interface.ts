@@ -30,6 +30,7 @@ export interface ICustomField {
   path?: string;
   dropdownOptions?: string[];
   defaultValue?: string;
+  isRequired?: boolean;
   /**
    * Per-ticket-type use flags. The key is the ticket type's `type`
    * (e.g. "incident", "service_request"). A field may be enabled on
@@ -95,6 +96,8 @@ export interface ITicketType {
   accessControl?: string[];
   layoutConfig?: ITicketTypeLayoutConfig | null;
   customFields?: ICustomField[];
+  lastUpdatedBy?: string;
+  lastUpdatedAt?: string;
 }
 
 export interface ICreateTicketTypeInput {
@@ -113,6 +116,8 @@ export interface ICreateTicketTypeInput {
   iconKey?: string;
   tag?: string;
   customFields?: ICustomField[];
+  lastUpdatedBy?: string;
+  lastUpdatedAt?: string;
 }
 
 export interface IUpdateTicketTypeInput {
@@ -131,6 +136,8 @@ export interface IUpdateTicketTypeInput {
   iconKey?: string;
   tag?: string;
   customFields?: ICustomField[];
+  lastUpdatedBy?: string;
+  lastUpdatedAt?: string;
 }
 
 export interface ITicketTypeResponse {

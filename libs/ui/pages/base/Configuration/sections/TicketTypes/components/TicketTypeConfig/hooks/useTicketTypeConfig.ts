@@ -6,7 +6,7 @@ import {
   useDeleteTicketTypeMutation,
 } from '@serviceops/services';
 import { ITicketType } from '@serviceops/interfaces';
-import { useNotification } from '@serviceops/hooks';
+import { useNotification, useAuth } from '@serviceops/hooks';
 import {
   loadIconMap,
   loadTagMap,
@@ -35,6 +35,9 @@ export function useTicketTypeConfig() {
   const [updateTicketType] = useUpdateTicketTypeMutation();
   const [deleteTicketType] = useDeleteTicketTypeMutation();
   const notify = useNotification();
+  const { user } = useAuth();
+
+  const currentUserName = user ? `${user.firstName} ${user.lastName}`.trim() : '';
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ITicketType | null>(null);
@@ -50,14 +53,12 @@ export function useTicketTypeConfig() {
   const [tagMap, setTagMap] = useState<Record<string, string>>(loadTagMap);
 
   const openAddDialog = () => {
-    // Prevent opening during submission or within 500ms after closing
     if (isSubmitting || dialogCloseRef.current || Date.now() - lastClosedAt < 500) return;
     setEditingItem(null);
     setDialogOpen(true);
   };
 
   const openEditDialog = (item: ITicketType) => {
-    // Prevent opening during submission or within 500ms after closing
     if (isSubmitting || dialogCloseRef.current || Date.now() - lastClosedAt < 500) return;
     setEditingItem(item);
     setDialogOpen(true);
@@ -73,7 +74,6 @@ export function useTicketTypeConfig() {
     setEditingItem(null);
     setSelectedRow(null);
     setLastClosedAt(Date.now());
-    // Reset the ref after a delay to prevent immediate re-open
     setTimeout(() => {
       dialogCloseRef.current = false;
     }, 500);
@@ -97,6 +97,8 @@ export function useTicketTypeConfig() {
             accessControl: values.accessControl,
             iconKey: values.iconKey,
             tag: values.tag,
+            lastUpdatedBy: currentUserName,
+            lastUpdatedAt: new Date().toISOString(),
           },
         }).unwrap();
         notify.success('Ticket type updated successfully');
@@ -114,6 +116,7 @@ export function useTicketTypeConfig() {
           accessControl: values.accessControl,
           iconKey: values.iconKey,
           tag: values.tag,
+          lastUpdatedBy: currentUserName,
         }).unwrap();
         notify.success('Ticket type created successfully');
       }
@@ -141,7 +144,7 @@ export function useTicketTypeConfig() {
 
   const handleToggleActive = async (item: ITicketType) => {
     try {
-      await updateTicketType({ id: item.id, data: { isActive: !item.isActive } }).unwrap();
+      await updateTicketType({ id: item.id, data: { isActive: !item.isActive, lastUpdatedBy: currentUserName } }).unwrap();
       notify.success(`Ticket type ${!item.isActive ? 'activated' : 'deactivated'} successfully`);
     } catch {
       notify.error('Failed to update activation status');
