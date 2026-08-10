@@ -1149,6 +1149,12 @@ export const TicketTypeLayoutDialog = ({
 
             const catalogMap = new Map(allCatalogFields.map((f) => [f.key, f]));
 
+            // Merge custom fields into the catalog so their display names
+            // resolve correctly inside sections (otherwise the raw key is used).
+            for (const cf of customFields) {
+              catalogMap.set(cf.fieldKey, { key: cf.fieldKey, label: cf.fieldName });
+            }
+
             const selectedFields = selectedKeys.map(
               (k) => catalogMap.get(k) || { key: k, label: k },
             );

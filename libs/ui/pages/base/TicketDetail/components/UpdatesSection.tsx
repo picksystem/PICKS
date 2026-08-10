@@ -1,17 +1,16 @@
 import { useState, useMemo } from 'react';
-import { Box, Typography, TextField, IconButton, Chip, Tooltip } from '../../../../components';
+import { Box, Typography, TextField, IconButton, Tooltip } from '../../../../components';
 import CommentWindow from '../windows/CommentWindow';
 import { Avatar } from '@mui/material';
 import {
   Search as SearchIcon,
   Lock as LockIcon,
   Person as PersonIcon,
-  Group as GroupIcon,
   AttachFile as AttachFileIcon,
+  Image as ImageIcon,
   Reply as ReplyIcon,
   Edit as EditIcon,
   Translate as TranslateIcon,
-  CheckCircle as CheckCircleIcon,
   ContentCopy as CopyIcon,
   PushPin as PinIcon,
   BookmarkBorder as SaveIcon,
@@ -27,6 +26,7 @@ interface UpdatesSectionProps {
   incidentId: number;
   ticketType: string;
   onRefresh: () => void;
+  onRefreshComments: () => void;
   incident: TicketEntity;
 }
 
@@ -135,11 +135,14 @@ const BUTTON_STYLES = [
 const ActionButtonRow = ({
   onOpenComment,
   classes,
+  searchText,
+  onSearchChange,
 }: {
   onOpenComment?: (mode: 'comment' | 'internal' | 'self') => void;
   classes: Record<string, string>;
+  searchText: string;
+  onSearchChange: (value: string) => void;
 }) => {
-  const [searchText, setSearchText] = useState('');
   const [filterSaved, setFilterSaved] = useState(false);
   const [showActivity, setShowActivity] = useState(false);
   const [showSystem, setShowSystem] = useState(false);
@@ -207,7 +210,7 @@ const ActionButtonRow = ({
           <TextField
             placeholder='Find text'
             value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
+            onChange={(e) => onSearchChange(e.target.value)}
             size='small'
             sx={{
               width: 210,
@@ -543,19 +546,7 @@ const FollowersList = () => {
   );
 };
 
-/* ── Comment Actions ─────────────────────────────────────── */
-
-const COMMENT_ACTIONS = [
-  { icon: <CopyIcon sx={{ fontSize: 16 }} />, tooltip: 'Copy', color: '#64748b' },
-  { icon: <PinIcon sx={{ fontSize: 16 }} />, tooltip: 'Pin', color: '#d97706' },
-  { icon: <SaveIcon sx={{ fontSize: 16 }} />, tooltip: 'Save', color: '#6366f1' },
-  { icon: <EditIcon sx={{ fontSize: 16 }} />, tooltip: 'Edit', color: '#059669' },
-  { icon: <AttachFileIcon sx={{ fontSize: 16 }} />, tooltip: 'Attachment', color: '#6366f1' },
-  { icon: <ReplyIcon sx={{ fontSize: 16 }} />, tooltip: 'Reply', color: '#059669' },
-  { icon: <TranslateIcon sx={{ fontSize: 16 }} />, tooltip: 'Translate', color: '#7c3aed' },
-];
-
-/* ── Comment Card ────────────────────────────────────────── */
+/* ── Sub-components ──────────────────────────────────────── */
 
 const CommentCard = ({ comment }: { comment: IIncidentComment }) => {
   const avatarColor = getAvatarColor(comment.createdBy);
@@ -563,37 +554,32 @@ const CommentCard = ({ comment }: { comment: IIncidentComment }) => {
 
   return (
     <Box sx={commentCardSx}>
+      {/* Header */}
       <Box sx={commentCardHeaderSx}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box sx={{ position: 'relative' }}>
-            <Avatar sx={commentAvatarSx(avatarColor)}>{initials}</Avatar>
-            <Box sx={onlineDotSx} />
-          </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Avatar sx={commentAvatarSx(avatarColor)}>{initials}</Avatar>
           <Typography sx={commentAuthorSx}>{comment.createdBy}</Typography>
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' as const }}>
-          {comment.isInternal && (
-            <Chip
-              label='Internal note'
-              size='small'
-              sx={internalNoteChipSx}
-              icon={<CheckCircleIcon sx={{ fontSize: 14, color: '#d97706' }} />}
-            />
-          )}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+          {comment.isInternal && <Typography sx={internalNoteLabelSx}>Internal note</Typography>}
           <Typography sx={commentTimestampSx}>{formatDateTime(comment.createdAt)}</Typography>
-          <Box sx={{ display: 'flex', gap: 0.25 }}>
-            {COMMENT_ACTIONS.map((action, idx) => (
-              <Tooltip key={idx} title={action.tooltip} placement='top'>
-                <IconButton size='small' sx={commentActionSx(action.color)}>
-                  {action.icon}
-                </IconButton>
-              </Tooltip>
-            ))}
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <Tooltip title='Attachment'>
+              <IconButton size='small' sx={commentActionIconSx}>
+                <AttachFileIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title='Image'>
+              <IconButton size='small' sx={commentActionIconSx}>
+                <ImageIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            </Tooltip>
           </Box>
         </Box>
       </Box>
 
+      {/* Body */}
       <Box sx={commentCardBodySx}>
         <Typography sx={commentMessageSx}>{comment.message}</Typography>
       </Box>
@@ -603,14 +589,14 @@ const CommentCard = ({ comment }: { comment: IIncidentComment }) => {
 
 const commentCardSx = {
   mb: 1.5,
-  borderRadius: '8px',
+  borderRadius: 0,
   backgroundColor: '#ffffff',
   border: '1px solid #e2e8f0',
-  borderLeft: '3px solid #6366f1',
+  borderLeft: '3px solid #e2e8f0',
   overflow: 'hidden',
   transition: 'box-shadow 0.15s ease',
   '&:hover': {
-    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
   },
 };
 
@@ -619,77 +605,61 @@ const commentCardHeaderSx = {
   alignItems: 'center',
   justifyContent: 'space-between',
   gap: 1,
-  px: 1.5,
-  pt: 1.25,
+  px: 2,
+  pt: 1.5,
   pb: 0.75,
 };
 
 const commentCardBodySx = {
-  px: 1.5,
-  pb: 1.25,
-};
-
-const onlineDotSx = {
-  width: 8,
-  height: 8,
-  borderRadius: '50%',
-  backgroundColor: '#22c55e',
-  border: '2px solid #fff',
-  position: 'absolute',
-  bottom: -1,
-  right: -1,
+  px: 2,
+  pb: 1.5,
 };
 
 const commentAvatarSx = (color: string) => ({
-  width: 30,
-  height: 30,
-  fontSize: '0.7rem',
+  width: 32,
+  height: 32,
+  fontSize: '0.72rem',
   fontWeight: 800,
   bgcolor: color,
   color: '#fff',
   fontFamily: '"Roboto Mono", monospace',
+  borderRadius: '4px',
 });
 
 const commentAuthorSx = {
-  fontSize: '0.85rem',
-  fontWeight: 700,
-  color: '#1e293b',
+  fontSize: '0.875rem',
+  fontWeight: 600,
+  color: '#374151',
+};
+
+const internalNoteLabelSx = {
+  fontSize: '0.8rem',
+  color: '#6366f1',
+  fontWeight: 600,
+  letterSpacing: '0.2px',
 };
 
 const commentTimestampSx = {
-  fontSize: '0.78rem',
+  fontSize: '0.8rem',
   color: '#64748b',
-  fontWeight: 600,
+  fontWeight: 500,
   fontFamily: '"Roboto Mono", monospace',
-  letterSpacing: '0.3px',
 };
 
-const commentActionSx = (color: string) => ({
-  p: 0.4,
+const commentActionIconSx = {
+  p: 0.5,
   color: '#94a3b8',
-  width: 26,
-  height: 26,
+  width: 28,
+  height: 28,
   '&:hover': {
-    color,
-    backgroundColor: `${color}12`,
+    color: '#475569',
+    backgroundColor: 'rgba(100,116,139,0.08)',
   },
-});
-
-const internalNoteChipSx = {
-  backgroundColor: '#fef3c7',
-  color: '#92400e',
-  fontWeight: 700,
-  fontSize: '0.68rem',
-  height: 22,
-  '& .MuiChip-icon': {
-    color: '#d97706',
-  },
-  border: '1px solid rgba(217,119,6,0.25)',
 };
 
 const commentMessageSx = {
-  fontSize: '0.85rem',
-  color: '#334155',
+  fontSize: '0.9rem',
+  color: '#374151',
   lineHeight: 1.7,
   whiteSpace: 'pre-wrap' as const,
   wordBreak: 'break-word' as const,
@@ -697,14 +667,30 @@ const commentMessageSx = {
 
 /* ── Main component ──────────────────────────────────────── */
 
-const UpdatesSection = ({ comments, incident, onRefresh }: UpdatesSectionProps) => {
+const UpdatesSection = ({
+  comments,
+  incident,
+  onRefresh,
+  onRefreshComments,
+}: UpdatesSectionProps) => {
   const { classes } = useStyles();
   const [modalMode, setModalMode] = useState<'comment' | 'internal' | 'self'>('comment');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchText, setSearchText] = useState('');
 
   const filteredComments = useMemo(() => {
-    return comments.filter((c) => !c.isSelfNote);
-  }, [comments]);
+    return comments
+      .filter((c) => !c.isSelfNote)
+      .filter((c) => {
+        if (!searchText.trim()) return true;
+        const q = searchText.toLowerCase();
+        return (
+          c.message.toLowerCase().includes(q) ||
+          c.subject.toLowerCase().includes(q) ||
+          c.createdBy.toLowerCase().includes(q)
+        );
+      });
+  }, [comments, searchText]);
 
   const handleOpenComment = (mode: 'comment' | 'internal' | 'self') => {
     setModalMode(mode);
@@ -717,11 +703,19 @@ const UpdatesSection = ({ comments, incident, onRefresh }: UpdatesSectionProps) 
     if (typeof onRefresh === 'function') {
       onRefresh();
     }
+    if (typeof onRefreshComments === 'function') {
+      onRefreshComments();
+    }
   };
 
   return (
     <Box className={classes.updatesSection}>
-      <ActionButtonRow onOpenComment={handleOpenComment} classes={classes} />
+      <ActionButtonRow
+        onOpenComment={handleOpenComment}
+        classes={classes}
+        searchText={searchText}
+        onSearchChange={setSearchText}
+      />
 
       <FollowersList />
 
@@ -735,7 +729,9 @@ const UpdatesSection = ({ comments, incident, onRefresh }: UpdatesSectionProps) 
         </Box>
       ) : (
         <Box sx={emptyStateSx}>
-          <Typography sx={emptyTextSx}>No updates available</Typography>
+          <Typography sx={emptyTextSx}>
+            {searchText.trim() ? 'No matching comments found' : 'No updates available'}
+          </Typography>
         </Box>
       )}
 

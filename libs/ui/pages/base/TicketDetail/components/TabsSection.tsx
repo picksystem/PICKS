@@ -32,6 +32,7 @@ interface TabsSectionProps {
   comments?: IIncidentComment[];
   resolutions?: IResolution[];
   onRefresh?: () => void;
+  onRefreshComments?: () => void;
 }
 
 const getFileIcon = (filename: string) => {
@@ -76,6 +77,7 @@ const TabsSection = ({
   comments,
   resolutions,
   onRefresh,
+  onRefreshComments,
 }: TabsSectionProps) => {
   const { classes } = useStyles();
   const notify = useNotification();
@@ -124,6 +126,7 @@ const TabsSection = ({
             ticketType={incident.ticketType}
             incident={incident}
             onRefresh={onRefresh ?? (() => {})}
+            onRefreshComments={onRefreshComments ?? (() => {})}
           />
         </TabPanel>
 

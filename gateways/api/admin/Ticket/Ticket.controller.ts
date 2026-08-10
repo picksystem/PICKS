@@ -73,9 +73,10 @@ export function buildTicketRouter(): Router {
   router.post('/:ticketId/comments', async (req: Request, res: Response): Promise<void> => {
     try {
       const ticketId = parseInt(req.params.ticketId, 10);
-      const comment = await ticketUseCase.addComment(
-        req.body as IAddCommentInput & { ticketId: number },
-      );
+      const comment = await ticketUseCase.addComment({
+        ...req.body,
+        ticketId,
+      } as IAddCommentInput);
       res.status(201).json({ message: 'Comment added successfully', data: comment });
     } catch (error: any) {
       res.status(500).json({ message: error.message || 'Failed to add comment' });
@@ -96,9 +97,10 @@ export function buildTicketRouter(): Router {
   router.post('/:ticketId/time-entries', async (req: Request, res: Response): Promise<void> => {
     try {
       const ticketId = parseInt(req.params.ticketId, 10);
-      const entry = await ticketUseCase.addTimeEntry(
-        req.body as IAddTimeEntryInput & { ticketId: number },
-      );
+      const entry = await ticketUseCase.addTimeEntry({
+        ...req.body,
+        ticketId,
+      } as IAddTimeEntryInput);
       res.status(201).json({ message: 'Time entry added successfully', data: entry });
     } catch (error: any) {
       res.status(500).json({ message: error.message || 'Failed to add time entry' });
@@ -119,9 +121,10 @@ export function buildTicketRouter(): Router {
   router.post('/:ticketId/resolutions', async (req: Request, res: Response): Promise<void> => {
     try {
       const ticketId = parseInt(req.params.ticketId, 10);
-      const resolution = await ticketUseCase.addResolution(
-        req.body as IAddResolutionInput & { ticketId: number },
-      );
+      const resolution = await ticketUseCase.addResolution({
+        ...req.body,
+        ticketId,
+      } as IAddResolutionInput);
       res.status(201).json({ message: 'Resolution added successfully', data: resolution });
     } catch (error: any) {
       res.status(500).json({ message: error.message || 'Failed to add resolution' });

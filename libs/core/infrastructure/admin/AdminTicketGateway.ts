@@ -19,7 +19,7 @@ export class AdminTicketGateway {
   // ── Ticket CRUD ────────────────────────────────────────────────────────────
 
   async create(data: ICreateTicketInput): Promise<IAdminTicket> {
-    const raw: any = { ...data };
+    const raw: any = { ...data, updatedAt: new Date() };
     if (raw.customFieldValues !== undefined) {
       raw.customFieldValues = JSON.stringify(raw.customFieldValues);
     }
@@ -250,6 +250,7 @@ export class AdminTicketGateway {
       isSelfNote: data.isSelfNote ?? false,
       notifyAssigneesOnly: data.notifyAssigneesOnly ?? false,
       createdBy: data.createdBy,
+      updatedAt: new Date(),
     };
     if (data.status !== undefined) commentData.status = data.status;
     if (data.attachments !== undefined) commentData.attachments = data.attachments;
@@ -285,6 +286,7 @@ export class AdminTicketGateway {
       minutes: data.minutes,
       isNonBillable: data.isNonBillable ?? false,
       createdBy: data.createdBy,
+      updatedAt: new Date(),
     };
     if (data.billingCode !== undefined) entryData.billingCode = data.billingCode;
     if (data.activityTask !== undefined) entryData.activityTask = data.activityTask;
@@ -326,6 +328,7 @@ export class AdminTicketGateway {
       resolutionCode: data.resolutionCode,
       resolution: data.resolution,
       createdBy: data.createdBy,
+      updatedAt: new Date(),
     };
     if (data.application !== undefined) resolutionData.application = data.application;
     if (data.category !== undefined) resolutionData.category = data.category;

@@ -77,7 +77,7 @@ const TicketDetailView = () => {
     businessCategoryOptions,
   } = detail;
 
-  const { data: comments } = useGetTicketCommentsQuery(
+  const { data: comments, refetch: refetchComments } = useGetTicketCommentsQuery(
     { ticketType, ticketId: incident?.id ?? 0 },
     { skip: !incident },
   );
@@ -279,6 +279,7 @@ const TicketDetailView = () => {
             comments={comments as any}
             resolutions={resolutions as any}
             onRefresh={refetch}
+            onRefreshComments={refetchComments}
           />
         </Box>
       </Box>
