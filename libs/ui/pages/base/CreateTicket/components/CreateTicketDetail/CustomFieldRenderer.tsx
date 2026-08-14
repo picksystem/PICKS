@@ -4,6 +4,7 @@ import { InputAdornment, List, ListItem, ListItemButton, ListItemText } from '@m
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import { ICustomField } from '@serviceops/interfaces';
+import { activateDropdown, deactivateDropdown } from './dropdownRegistry';
 
 export interface CustomFieldRendererProps {
   field: ICustomField;
@@ -24,14 +25,16 @@ const CustomFieldRenderer = ({
   const [isOpen, setIsOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closerRef = useRef<(() => void) | null>(null);
+  const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  if (!closerRef.current) {
+    closerRef.current = () => setIsOpen(false);
+  }
 
   useEffect(() => {
     setSearchText(value as string);
   }, [value]);
-
-  const handleClose = useCallback(() => {
-    setIsOpen(false);
-  }, []);
 
   const handleSelect = useCallback(
     (val: string) => {
@@ -42,6 +45,15 @@ const CustomFieldRenderer = ({
     },
     [onChange],
   );
+
+  const handleItemMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+  }, []);
+
+  // Clean up our slot when this field unmounts
+  useEffect(() => {
+    return () => deactivateDropdown(closerRef.current!);
+  }, []);
 
   switch (field.fieldType) {
     case 'textarea':
@@ -97,10 +109,17 @@ const CustomFieldRenderer = ({
               }, 200);
             }}
             onFocus={() => {
-              if (opts.length > 0) setIsOpen(true);
+              if (opts.length > 0) {
+                activateDropdown(closerRef.current!);
+                setIsOpen(true);
+              }
             }}
             onBlur={() => {
-              setTimeout(handleClose, 150);
+              if (blurTimerRef.current) clearTimeout(blurTimerRef.current);
+              blurTimerRef.current = setTimeout(() => {
+                deactivateDropdown(closerRef.current!);
+                setIsOpen(false);
+              }, 0);
             }}
             placeholder={`Search or select ${field.fieldName.toLowerCase()}`}
             error={error}
@@ -134,11 +153,10 @@ const CustomFieldRenderer = ({
               elevation={4}
               sx={{
                 position: 'absolute',
-                top: '100%',
+                top: 'calc(100% + 1px)',
                 left: 0,
                 right: 0,
                 zIndex: 1300,
-                mt: 0,
                 maxHeight: 240,
                 overflow: 'auto',
               }}
@@ -146,7 +164,10 @@ const CustomFieldRenderer = ({
               <List dense disablePadding>
                 {opts.map((opt) => (
                   <ListItem key={opt} disablePadding>
-                    <ListItemButton onClick={() => handleSelect(opt)}>
+                    <ListItemButton
+                      onClick={() => handleSelect(opt)}
+                      onMouseDown={handleItemMouseDown}
+                    >
                       <ListItemText
                         primary={opt}
                         primaryTypographyProps={{

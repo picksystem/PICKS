@@ -192,6 +192,9 @@ const CustomFieldDialog = ({
     setTypeOptionsOpen(false);
     setTypeInput('');
 
+    // When editing, merge in any newly-loaded ticket-type keys so the
+    // existing selections survive an async ticket-types load. When creating
+    // new, pre-populate every per-type flag from `emptyUseFlags`.
     const initial: Partial<ICustomField> = editing
       ? {
           id: editing.id,
@@ -202,7 +205,7 @@ const CustomFieldDialog = ({
           dropdownOptions: editing.dropdownOptions ? [...editing.dropdownOptions] : [],
           defaultValue: editing.defaultValue,
           isRequired: editing.isRequired ?? false,
-          fieldUse: { ...editing.fieldUse },
+          fieldUse: { ...emptyUseFlags, ...editing.fieldUse },
           displayOrder: editing.displayOrder,
         }
       : {
@@ -219,7 +222,7 @@ const CustomFieldDialog = ({
     setTypeInput(
       editing ? (FIELD_TYPES.find((ft) => ft.value === editing.fieldType)?.label ?? '') : '',
     );
-  }, [open, editing]);
+  }, [open, editing, emptyUseFlags]);
 
   const searchPaths = (query: string): PathOption[] => {
     const q = query.trim().toLowerCase();

@@ -742,43 +742,9 @@ export const TicketTypeLayoutDialog = ({
 
   const handlePoolItemClick = useCallback(
     (fieldKey: string) => {
-      // Custom field click — add to appropriate section based on fieldUse
-      if (isCustomFieldKey(fieldKey)) {
-        const cf = customFields.find((f) => f.fieldKey === fieldKey);
-        if (!cf || !ticketType) return;
-
-        if (activeTab === 0) {
-          // Create Ticket tab — gated by current ticket type's flag (or global __createTicket__)
-          const globalFlag = !!cf.fieldUse['__createTicket__'];
-          const perTypeFlag = !!cf.fieldUse[ticketType.type];
-          if (!globalFlag && !perTypeFlag) return;
-          const ctKey = 'additionalDetails' as CreateTicketSectionKey;
-          const currentKeys = config.createTicket[ctKey].selectedFields;
-          if (!currentKeys.includes(fieldKey)) {
-            setConfig((prev) => ({
-              ...prev,
-              createTicket: {
-                ...prev.createTicket,
-                [ctKey]: { selectedFields: [...currentKeys, fieldKey] },
-              },
-            }));
-          }
-        } else {
-          // Ticket Details tab — gated by current ticket type's flag (or global __ticketDetails__)
-          const globalFlag = !!cf.fieldUse['__ticketDetails__'];
-          const perTypeFlag = !!cf.fieldUse[ticketType.type];
-          if (!globalFlag && !perTypeFlag) return;
-          const dtKey = 'additionalFields' as DetailsSectionKey;
-          const currentKeys = config[dtKey].selectedFields;
-          if (!currentKeys.includes(fieldKey)) {
-            setConfig((prev) => ({
-              ...prev,
-              [dtKey]: { ...prev[dtKey], selectedFields: [...currentKeys, fieldKey] },
-            }));
-          }
-        }
-        return;
-      }
+      // Custom fields can only be placed via drag-and-drop, not by click.
+      // They still have edit/delete buttons via the PoolItem's own handlers.
+      if (isCustomFieldKey(fieldKey)) return;
 
       const owningSection = sectionDefs.find((s) => s.fields.some((f) => f.key === fieldKey));
       if (!owningSection) return;
@@ -806,7 +772,7 @@ export const TicketTypeLayoutDialog = ({
         }));
       }
     },
-    [activeTab, sectionDefs, customFields, config],
+    [activeTab, sectionDefs, config],
   );
 
   const handleFieldRemove = useCallback(

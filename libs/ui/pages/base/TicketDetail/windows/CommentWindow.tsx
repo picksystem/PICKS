@@ -24,7 +24,7 @@ interface CommentWindowProps {
   onClose: () => void;
   incident: TicketEntity;
   onSuccess: () => void;
-  mode?: 'comment' | 'internal' | 'self' | 'notify';
+  mode?: 'comment' | 'internal' | 'self' | 'notify' | 'email';
 }
 
 const CommentWindow = ({
@@ -44,6 +44,8 @@ const CommentWindow = ({
   const [isInternal, setIsInternal] = useState(false);
   const [isSelfNote, setIsSelfNote] = useState(false);
   const [notifyAssigneesOnly, setNotifyAssigneesOnly] = useState(false);
+  const [emailTo, setEmailTo] = useState('');
+  const [emailFrom, setEmailFrom] = useState('');
 
   // ── Status search field ─────────────────────────────────────────────────
   const [statusInput, setStatusInput] = useState('');
@@ -109,6 +111,8 @@ const CommentWindow = ({
       setTemplateInput('');
       setStatusOptionsOpen(false);
       setStatusFiltered([]);
+      setEmailTo('');
+      setEmailFrom('');
     }
   }, [open]);
 
@@ -125,6 +129,10 @@ const CommentWindow = ({
         setIsInternal(false);
         setIsSelfNote(false);
         setNotifyAssigneesOnly(true);
+      } else if (mode === 'email') {
+        setIsInternal(false);
+        setIsSelfNote(false);
+        setNotifyAssigneesOnly(false);
       } else {
         setIsInternal(false);
         setIsSelfNote(false);
@@ -182,7 +190,15 @@ const CommentWindow = ({
   };
 
   const dialogTitle =
-    mode === 'internal' ? 'Internal Note' : mode === 'self' ? 'Self Note' : mode === 'notify' ? 'Notify Assignees Only' : 'A Comment';
+    mode === 'internal'
+      ? 'Internal Note'
+      : mode === 'self'
+        ? 'Self Note'
+        : mode === 'notify'
+          ? 'Notify Assignees Only'
+          : mode === 'email'
+            ? 'Send Email'
+            : 'A Comment';
 
   const dialogSubtitle =
     mode === 'internal'
@@ -191,7 +207,9 @@ const CommentWindow = ({
         ? 'Add a personal note to this ticket'
         : mode === 'notify'
           ? 'Send a notification to ticket assignees only'
-          : 'Add a comment to this ticket';
+          : mode === 'email'
+            ? 'Send an email note for this ticket'
+            : 'Add a comment to this ticket';
 
   return (
     <ConfigFormDialog
@@ -305,6 +323,70 @@ const CommentWindow = ({
             required
           />
         </Box>
+
+        {/* Email-specific fields */}
+        {mode === 'email' && (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
+              p: 1.5,
+              bgcolor: '#f0f9ff',
+              borderRadius: 1,
+              border: '1px solid #bae6fd',
+            }}
+          >
+            <TextField
+              label='To'
+              placeholder='recipient@example.com'
+              value={emailTo || ''}
+              onChange={(e) => setEmailTo(e.target.value)}
+              size='small'
+              fullWidth
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position='start'>
+                    <span style={{ fontSize: '0.85rem', color: '#64748b' }}>To:</span>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              label='From'
+              value={emailFrom || user?.email || ''}
+              onChange={(e) => setEmailFrom(e.target.value)}
+              size='small'
+              fullWidth
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position='start'>
+                    <span style={{ fontSize: '0.85rem', color: '#64748b' }}>From:</span>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              label='Subject'
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              size='small'
+              fullWidth
+            />
+            <Typography
+              sx={{
+                fontSize: '0.78rem',
+                color: '#6366f1',
+                cursor: 'pointer',
+                fontWeight: 600,
+                textDecoration: 'underline',
+                '&:hover': { color: '#4f46e5' },
+              }}
+            >
+              Show email details
+            </Typography>
+          </Box>
+        )}
 
         {/* Toggle switches */}
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>

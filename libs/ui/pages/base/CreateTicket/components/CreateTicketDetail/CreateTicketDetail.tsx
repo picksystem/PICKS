@@ -9,9 +9,9 @@ import {
   IconButton,
   Divider,
   Paper,
-  Popper,
   MenuList,
   MenuItem,
+  ListItemText,
   Alert,
   AlertTitle,
   InputAdornment,
@@ -37,11 +37,12 @@ import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import FlagIcon from '@mui/icons-material/Flag';
 import HistoryIcon from '@mui/icons-material/History';
 import { Box, TextField, Checkbox, Button, UploadFile } from '@serviceops/component';
-import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from './styles';
 import useCreateTicketDetail, { CreateTicketDetailProps } from './hooks/useCreateTicketDetail';
 import CustomFieldRenderer from './CustomFieldRenderer';
 import { getIconComponent, loadIconMap } from '../../../Configuration/utils/ticketTypeIcons';
+import { activateDropdown, deactivateDropdown } from './dropdownRegistry';
+import { useFieldError } from '@serviceops/hooks';
 
 // ── Section metadata ──────────────────────────────────────────────────────────
 const SECTION_META = [
@@ -117,14 +118,16 @@ const SearchableField = ({
   const [isOpen, setIsOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closerRef = useRef<(() => void) | null>(null);
+
+  if (!closerRef.current) {
+    closerRef.current = () => setIsOpen(false);
+  }
 
   const filteredOptions = options.filter((option) =>
     option.label.toLowerCase().includes(searchText.toLowerCase()),
   );
 
-  // Resolve the value to its display label when the incoming value
-  // doesn't already match a known label (e.g. options use "3 - Low" as
-  // the label but the form stores "low" as the raw value).
   const resolvedLabel = options.find((o) => o.value === value)?.label ?? value;
 
   useEffect(() => {
@@ -159,6 +162,7 @@ const SearchableField = ({
 
   const handleFocus = () => {
     if (options.length > 0) {
+      activateDropdown(closerRef.current!);
       setIsOpen(true);
     }
   };
@@ -166,6 +170,20 @@ const SearchableField = ({
   const handleItemMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
   };
+
+  // Clean up our slot when this field unmounts
+  useEffect(() => {
+    return () => deactivateDropdown(closerRef.current!);
+  }, []);
+
+  const handleInputBlur = useCallback(
+    (e: React.FocusEvent<HTMLInputElement>) => {
+      deactivateDropdown(closerRef.current!);
+      setIsOpen(false);
+      onBlur?.(e);
+    },
+    [onBlur],
+  );
 
   return (
     <Box ref={anchorRef} position='relative'>
@@ -175,7 +193,7 @@ const SearchableField = ({
         value={searchText}
         onChange={handleInputChange}
         onFocus={handleFocus}
-        onBlur={onBlur}
+        onBlur={handleInputBlur}
         placeholder={`Search or select ${label.toLowerCase()}`}
         inputProps={{ maxLength }}
         required={required}
@@ -204,27 +222,40 @@ const SearchableField = ({
           ),
         }}
       />
-      <Popper
-        open={isOpen && filteredOptions.length > 0}
-        anchorEl={anchorRef.current}
-        placement='bottom-start'
-        style={{ width: anchorRef.current?.offsetWidth, zIndex: 1000 }}
-      >
-        <Paper elevation={3}>
-          <MenuList>
+      {isOpen && filteredOptions.length > 0 && (
+        <Paper
+          elevation={3}
+          sx={{
+            position: 'absolute',
+            top: 'calc(100% + 1px)',
+            left: 0,
+            right: 0,
+            zIndex: 1300,
+            maxHeight: 240,
+            overflow: 'auto',
+          }}
+        >
+          <MenuList dense disablePadding>
             {filteredOptions.map((option) => (
               <MenuItem
                 key={option.value}
                 onClick={() => handleSelectOption(option)}
                 selected={searchText === option.label}
                 onMouseDown={handleItemMouseDown}
+                sx={{ py: 0.75, px: 2 }}
               >
-                {option.label}
+                <ListItemText
+                  primary={option.label}
+                  primaryTypographyProps={{
+                    fontSize: '0.84rem',
+                    noWrap: true,
+                  }}
+                />
               </MenuItem>
             ))}
           </MenuList>
         </Paper>
-      </Popper>
+      )}
     </Box>
   );
 };

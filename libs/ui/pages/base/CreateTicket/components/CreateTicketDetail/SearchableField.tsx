@@ -1,7 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, TextField, Paper } from '@serviceops/component';
-import { List, ListItem, ListItemButton, ListItemText } from '@mui/material';
-import InputAdornment from '@mui/material/InputAdornment';
+import {
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  ClickAwayListener,
+  InputAdornment,
+} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 
@@ -71,6 +77,7 @@ export const SearchableField = ({
     setInputValue(opt.label ?? opt.value);
     onChange(opt.value);
     setIsOpen(false);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
   };
 
   const handleClear = () => {
@@ -79,6 +86,14 @@ export const SearchableField = ({
     setIsOpen(false);
   };
 
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  const handleItemMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+  }, []);
+
   return (
     <Box sx={{ position: 'relative' }} ref={anchorRef}>
       <TextField
@@ -86,9 +101,8 @@ export const SearchableField = ({
         value={inputValue}
         onChange={handleInputChange}
         onFocus={() => setIsOpen(true)}
-        onBlur={(e) => {
-          setTimeout(() => setIsOpen(false), 150);
-          onBlur?.(e);
+        onBlur={() => {
+          setIsOpen(false);
         }}
         inputProps={{ maxLength }}
         required={required}
@@ -121,35 +135,39 @@ export const SearchableField = ({
         }}
       />
       {isOpen && filteredOptions.length > 0 && (
-        <Paper
-          elevation={4}
-          sx={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            zIndex: 1300,
-            mt: 0,
-            maxHeight: 240,
-            overflow: 'auto',
-          }}
-        >
-          <List dense disablePadding>
-            {filteredOptions.map((opt) => (
-              <ListItem key={opt.value} disablePadding>
-                <ListItemButton onClick={() => handleSelect(opt)}>
-                  <ListItemText
-                    primary={opt.label || opt.value}
-                    primaryTypographyProps={{
-                      fontSize: '0.84rem',
-                      noWrap: true,
-                    }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </Paper>
+        <ClickAwayListener onClickAway={handleClose}>
+          <Paper
+            elevation={4}
+            sx={{
+              position: 'absolute',
+              top: 'calc(100% + 1px)',
+              left: 0,
+              right: 0,
+              zIndex: 1300,
+              maxHeight: 240,
+              overflow: 'auto',
+            }}
+          >
+            <List dense disablePadding>
+              {filteredOptions.map((opt) => (
+                <ListItem key={opt.value} disablePadding>
+                  <ListItemButton
+                    onClick={() => handleSelect(opt)}
+                    onMouseDown={handleItemMouseDown}
+                  >
+                    <ListItemText
+                      primary={opt.label || opt.value}
+                      primaryTypographyProps={{
+                        fontSize: '0.84rem',
+                        noWrap: true,
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Paper>
+        </ClickAwayListener>
       )}
     </Box>
   );

@@ -22,6 +22,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import PersonPinIcon from '@mui/icons-material/PersonPin';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import AddToPhotosIcon from '@mui/icons-material/AddToPhotos';
+import EmailIcon from '@mui/icons-material/Email';
 import TimelineCard, { TimelineActivity } from './TimelineCard';
 
 const ACTION_TYPES: { key: string; label: string; icon: React.ReactNode; color: string }[] = [
@@ -48,6 +49,12 @@ const ACTION_TYPES: { key: string; label: string; icon: React.ReactNode; color: 
     label: 'Notify ticket assignees only',
     icon: <GroupIcon fontSize='small' />,
     color: '#059669',
+  },
+  {
+    key: 'email_sent',
+    label: 'Email note',
+    icon: <EmailIcon fontSize='small' />,
+    color: '#0369a1',
   },
 ];
 

@@ -1,4 +1,5 @@
 import { Box, Typography } from '@mui/material';
+import EmailIcon from '@mui/icons-material/Email';
 
 // Types matching the existing IAdminTicketActivity interface
 export interface TimelineActivity {
@@ -61,9 +62,9 @@ type BadgeConfig = {
 
 const BADGE_CONFIG: Record<string, BadgeConfig> = {
   comment_added: { label: 'Comment', bg: '#4338ca', color: '#fff', border: '#4338ca' },
-  internal_note: { label: 'Internal note', bg: '#4338ca', color: '#fff', border: '#4338ca' },
+  internal_note: { label: 'Internal note', bg: '#4338ca', color: '#fff', border: '#d97706' },
   self_note: { label: 'Self note', bg: '#6366f1', color: '#fff', border: '#6366f1' },
-  notify_assignees: { label: 'Notify assignees', bg: '#d97706', color: '#fff', border: '#d97706' },
+  notify_assignees: { label: 'Notify assignees', bg: '#059669', color: '#fff', border: '#059669' },
   field_update: { label: 'Field changes', bg: '#374151', color: '#fff', border: '#374151' },
   email_sent: { label: 'Email Sent', bg: '#0369a1', color: '#fff', border: '#0369a1' },
   status_change: { label: 'Status change', bg: '#0891b2', color: '#fff', border: '#0891b2' },
@@ -96,9 +97,40 @@ const s = {
   systemCard: {
     padding: '10px 12px',
     backgroundColor: '#fafafa',
+    borderLeft: '4px solid #0369a1',
     border: '1px solid #e5e7eb',
     borderRadius: '6px',
     minHeight: '40px',
+    position: 'relative',
+  },
+  systemCardHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '6px',
+    paddingRight: '8px',
+  },
+  systemCardHeaderLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  systemEmailIcon: {
+    fontSize: 20,
+    color: '#0369a1',
+  },
+  systemCardHeaderTitle: {
+    fontSize: '0.88rem',
+    fontWeight: 600,
+    color: '#1f2937',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+  },
+  systemCardHeaderDate: {
+    fontSize: '0.82rem',
+    fontWeight: 500,
+    color: '#6b7280',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    whiteSpace: 'nowrap',
   },
   systemCardRow: {
     display: 'flex',
@@ -153,6 +185,7 @@ const s = {
   // Field change card
   fieldChangeCard: {
     borderBottom: '1px solid #e5e7eb',
+    borderLeft: '4px solid #374151',
     padding: '8px 12px',
     backgroundColor: '#fff',
   },
@@ -186,6 +219,7 @@ const s = {
   // Comment card
   commentCard: {
     borderBottom: '1px solid #f3f4f6',
+    borderLeft: '4px solid transparent',
     padding: '10px 0',
   },
   commentCardHeader: {
@@ -263,13 +297,28 @@ const s = {
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
-/** System / email event card (matches reference Image #1 and #3) */
+/** System / email event card (matches reference Image #1 and #2) */
 export const SystemEventCard = ({ activity }: { activity: TimelineActivity }) => {
   const { description, createdAt, emailDetails, performedBy } = activity;
 
   if (activity.isEmail && emailDetails) {
     return (
       <Box sx={s.systemCard}>
+        <Box sx={s.systemCardHeader}>
+          <Box sx={s.systemCardHeaderLeft}>
+            <EmailIcon sx={{ fontSize: 20, color: '#374151' }} />
+            <Typography sx={s.systemCardHeaderTitle}>Email sent</Typography>
+          </Box>
+          <Typography
+            sx={{
+              ...s.systemCardHeaderDate,
+              fontFamily: '"Roboto Mono", monospace',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Email Sent : {formatDateTime(createdAt)}
+          </Typography>
+        </Box>
         <Box sx={s.systemCardRow}>
           <Box sx={s.systemLabelColumn}>
             <Typography sx={s.systemLabel}>Subject:</Typography>
@@ -395,14 +444,25 @@ interface TimelineCardProps {
 }
 
 const TimelineCard = ({ activity }: TimelineCardProps) => {
+  const badge = getBadge(activity.activityType);
+  const borderColor = badge.border;
+
   // System events (email_sent, system)
   if (activity.isSystem || activity.activityType === 'email_sent') {
-    return <SystemEventCard activity={activity} />;
+    return (
+      <Box sx={{ ...s.systemCard, borderLeft: `4px solid ${borderColor}` }}>
+        <SystemEventCard activity={activity} />
+      </Box>
+    );
   }
 
   // Field changes
   if (activity.activityType === 'field_update' || activity.activityType === 'field_change') {
-    return <FieldChangeCard activity={activity} />;
+    return (
+      <Box sx={{ ...s.fieldChangeCard, borderLeft: `4px solid ${borderColor}` }}>
+        <FieldChangeCard activity={activity} />
+      </Box>
+    );
   }
 
   // All user actions (comment, internal note, self note, etc.)
@@ -412,11 +472,19 @@ const TimelineCard = ({ activity }: TimelineCardProps) => {
     activity.activityType === 'self_note' ||
     activity.activityType === 'notify_assignees'
   ) {
-    return <CommentCard activity={activity} />;
+    return (
+      <Box sx={{ ...s.commentCard, borderLeft: `4px solid ${borderColor}` }}>
+        <CommentCard activity={activity} />
+      </Box>
+    );
   }
 
-  // Default: render as comment card
-  return <CommentCard activity={activity} />;
+  // Default: render as comment card with border
+  return (
+    <Box sx={{ ...s.commentCard, borderLeft: `4px solid ${borderColor}` }}>
+      <CommentCard activity={activity} />
+    </Box>
+  );
 };
 
 export default TimelineCard;
