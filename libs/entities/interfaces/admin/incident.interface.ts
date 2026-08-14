@@ -75,12 +75,16 @@ export enum ActivityType {
   PRIORITY_CHANGE = 'priority_change',
   ASSIGNMENT_CHANGE = 'assignment_change',
   COMMENT_ADDED = 'comment_added',
+  INTERNAL_NOTE_ADDED = 'internal_note_added',
+  SELF_NOTE_ADDED = 'self_note_added',
   TIME_ENTRY_ADDED = 'time_entry_added',
   RESOLUTION_ADDED = 'resolution_added',
   ATTACHMENT_ADDED = 'attachment_added',
   FIELD_UPDATE = 'field_update',
   FOLLOW_ADDED = 'follow_added',
   ESCALATION = 'escalation',
+  EMAIL_SENT = 'email_sent',
+  NOTIFY_ASSIGNEES = 'notify_assignees',
 }
 
 /**
@@ -390,6 +394,13 @@ export interface IActivityLog {
   newValue: string | null;
   performedBy: string;
   createdAt: Date;
+  // Email-specific fields (optional)
+  emailSubject?: string | null;
+  emailFrom?: string | null;
+  emailTo?: string | null;
+  // System card display helpers (optional)
+  avatarInitials?: string | null;
+  avatarColor?: string | null;
 }
 
 // ============================================
@@ -428,6 +439,18 @@ export interface IResolutionResponse {
 export interface IActivityLogListResponse {
   message: string;
   data: IActivityLog[];
+}
+
+/**
+ * Unified timeline entry — can be either a comment or an activity log item.
+ * Used by the ticket detail page to render a single chronological timeline.
+ */
+export type ITimelineEntry =
+  | { kind: 'comment'; createdAt: Date; comment: IIncidentComment }
+  | { kind: 'activity'; createdAt: Date; activity: IActivityLog };
+
+export interface ITimelineListResponse {
+  data: ITimelineEntry[];
 }
 
 // ============================================

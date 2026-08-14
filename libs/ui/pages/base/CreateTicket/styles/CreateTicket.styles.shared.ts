@@ -135,9 +135,9 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   ticketAccentBar: {
     position: 'absolute' as const,
     top: 0,
+    bottom: 0,
     left: 0,
-    right: 0,
-    height: 4,
+    width: 4,
   },
 
   ticketIconBadge: {

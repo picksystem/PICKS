@@ -24,7 +24,7 @@ interface CommentWindowProps {
   onClose: () => void;
   incident: TicketEntity;
   onSuccess: () => void;
-  mode?: 'comment' | 'internal' | 'self';
+  mode?: 'comment' | 'internal' | 'self' | 'notify';
 }
 
 const CommentWindow = ({
@@ -121,11 +121,14 @@ const CommentWindow = ({
       } else if (mode === 'self') {
         setIsInternal(false);
         setIsSelfNote(true);
+      } else if (mode === 'notify') {
+        setIsInternal(false);
+        setIsSelfNote(false);
+        setNotifyAssigneesOnly(true);
       } else {
         setIsInternal(false);
         setIsSelfNote(false);
       }
-      setNotifyAssigneesOnly(false);
     }
   }, [open, mode]);
 
@@ -179,14 +182,16 @@ const CommentWindow = ({
   };
 
   const dialogTitle =
-    mode === 'internal' ? 'Internal Note' : mode === 'self' ? 'Self Note' : 'A Comment';
+    mode === 'internal' ? 'Internal Note' : mode === 'self' ? 'Self Note' : mode === 'notify' ? 'Notify Assignees Only' : 'A Comment';
 
   const dialogSubtitle =
     mode === 'internal'
       ? 'Add an internal note to this ticket'
       : mode === 'self'
         ? 'Add a personal note to this ticket'
-        : 'Add a comment to this ticket';
+        : mode === 'notify'
+          ? 'Send a notification to ticket assignees only'
+          : 'Add a comment to this ticket';
 
   return (
     <ConfigFormDialog

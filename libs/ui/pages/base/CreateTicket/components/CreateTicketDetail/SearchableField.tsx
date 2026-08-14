@@ -1,7 +1,9 @@
-import { useState, useRef } from 'react';
-import { Box, TextField } from '@serviceops/component';
-import { Popper, MenuList, MenuItem, Paper } from '@mui/material';
+import { useState, useEffect, useRef } from 'react';
+import { Box, TextField, Paper } from '@serviceops/component';
+import { List, ListItem, ListItemButton, ListItemText } from '@mui/material';
+import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 
 export interface SearchableFieldProps {
   value: string;
@@ -12,15 +14,16 @@ export interface SearchableFieldProps {
   errorText?: React.ReactNode;
   label: string;
   required?: boolean;
-  icon?: React.ReactNode;
   maxLength?: number;
   helperText?: string;
 }
 
 /**
  * Reusable searchable text field with a dropdown of options.
- * Used both for free-text-with-suggestions (caller/client) and as the
- * dropdown primitive for custom fields of type `dropdown`.
+ * Matches the icon behavior of the Add Approved Estimate dialog:
+ * - Shows ClearIcon (X) when the field has a value
+ * - Shows SearchIcon when the field is empty
+ * - Both icons are inside endAdornment via InputAdornment
  */
 export const SearchableField = ({
   value,
@@ -31,22 +34,32 @@ export const SearchableField = ({
   errorText,
   label,
   required,
-  icon,
   maxLength = 50,
   helperText,
 }: SearchableFieldProps) => {
-  const [searchText, setSearchText] = useState(value);
+  const [inputValue, setInputValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Sync local input state when the parent value prop changes
+  // (e.g. after formik restore from sessionStorage)
+  useEffect(() => {
+    if (!value) {
+      setInputValue('');
+      return;
+    }
+    const match = options.find((opt) => opt.value === value || opt.label === value);
+    setInputValue(match?.label ?? match?.value ?? value);
+  }, [value, options]);
+
   const filteredOptions = options.filter((option) =>
-    option.label.toLowerCase().includes(searchText.toLowerCase()),
+    option.label.toLowerCase().includes(inputValue.toLowerCase()),
   );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const next = e.target.value;
-    setSearchText(next);
+    setInputValue(next);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       onChange(next);
@@ -54,17 +67,23 @@ export const SearchableField = ({
     }, 200);
   };
 
-  const handleOptionSelect = (selected: string) => {
-    setSearchText(selected);
-    onChange(selected);
+  const handleSelect = (opt: { value: string; label: string }) => {
+    setInputValue(opt.label ?? opt.value);
+    onChange(opt.value);
+    setIsOpen(false);
+  };
+
+  const handleClear = () => {
+    setInputValue('');
+    onChange('');
     setIsOpen(false);
   };
 
   return (
     <Box sx={{ position: 'relative' }} ref={anchorRef}>
       <TextField
-        label={required ? `${label} *` : label}
-        value={searchText}
+        label={label}
+        value={inputValue}
         onChange={handleInputChange}
         onFocus={() => setIsOpen(true)}
         onBlur={(e) => {
@@ -72,24 +91,66 @@ export const SearchableField = ({
           onBlur?.(e);
         }}
         inputProps={{ maxLength }}
+        required={required}
         error={error}
         errorText={errorText}
         helperText={helperText}
-        InputProps={{
-          startAdornment: icon ?? <SearchIcon sx={{ fontSize: 18, color: 'text.secondary', mr: 0.5 }} />,
+        fullWidth
+        slotProps={{
+          input: {
+            endAdornment: (
+              <InputAdornment position='end'>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  {inputValue ? (
+                    <ClearIcon
+                      onClick={handleClear}
+                      sx={{
+                        fontSize: 18,
+                        color: 'text.secondary',
+                        cursor: 'pointer',
+                        '&:hover': { color: 'text.primary' },
+                      }}
+                    />
+                  ) : (
+                    <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                  )}
+                </Box>
+              </InputAdornment>
+            ),
+          },
         }}
       />
-      <Popper open={isOpen && filteredOptions.length > 0} anchorEl={anchorRef.current} placement='bottom-start' style={{ zIndex: 1300, width: anchorRef.current?.offsetWidth }}>
-        <Paper elevation={3} sx={{ mt: 0.5, maxHeight: 240, overflow: 'auto' }}>
-          <MenuList>
+      {isOpen && filteredOptions.length > 0 && (
+        <Paper
+          elevation={4}
+          sx={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            zIndex: 1300,
+            mt: 0,
+            maxHeight: 240,
+            overflow: 'auto',
+          }}
+        >
+          <List dense disablePadding>
             {filteredOptions.map((opt) => (
-              <MenuItem key={opt.value} onClick={() => handleOptionSelect(opt.value)}>
-                {opt.label}
-              </MenuItem>
+              <ListItem key={opt.value} disablePadding>
+                <ListItemButton onClick={() => handleSelect(opt)}>
+                  <ListItemText
+                    primary={opt.label || opt.value}
+                    primaryTypographyProps={{
+                      fontSize: '0.84rem',
+                      noWrap: true,
+                    }}
+                  />
+                </ListItemButton>
+              </ListItem>
             ))}
-          </MenuList>
+          </List>
         </Paper>
-      </Popper>
+      )}
     </Box>
   );
 };

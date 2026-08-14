@@ -16,6 +16,8 @@ import {
   BookmarkBorder as SaveIcon,
   VisibilityOff as HideIcon,
   FilterList as FilterListIcon,
+  Email as EmailIcon,
+  Groups as GroupsIcon,
 } from '@mui/icons-material';
 import { IIncidentComment } from '@serviceops/interfaces';
 import { useStyles } from '../styles';
@@ -28,6 +30,8 @@ interface UpdatesSectionProps {
   onRefresh: () => void;
   onRefreshComments: () => void;
   incident: TicketEntity;
+  /** Optional: backend activity log entries (email, field changes, etc.) */
+  activities?: ActivityCard[];
 }
 
 /* ── Helpers ─────────────────────────────────────────────── */
@@ -125,9 +129,10 @@ const emptyTextSx = {
 /* ── Action button colors ────────────────────────────────── */
 
 const BUTTON_STYLES = [
-  { label: 'Add a comment', border: '#6366f1', bg: '#eef2ff', text: '#4338ca' },
-  { label: 'Add internal note', border: '#d97706', bg: '#fffbeb', text: '#92400e' },
-  { label: 'Add self note', border: '#059669', bg: '#ecfdf5', text: '#065f46' },
+  { label: 'Add a comment', border: '#6366f1', bg: '#eef2ff', text: '#4338ca', mode: 'comment' as const },
+  { label: 'Add internal note', border: '#d97706', bg: '#fffbeb', text: '#92400e', mode: 'internal' as const },
+  { label: 'Add self note', border: '#059669', bg: '#ecfdf5', text: '#065f46', mode: 'self' as const },
+  { label: 'Notify ticket assignees only', border: '#7c3aed', bg: '#faf5ff', text: '#6b21a8', mode: 'notify' as const },
 ];
 
 /* ── Sub-components ──────────────────────────────────────── */
@@ -137,17 +142,23 @@ const ActionButtonRow = ({
   classes,
   searchText,
   onSearchChange,
+  onNotifyAssignees,
 }: {
   onOpenComment?: (mode: 'comment' | 'internal' | 'self') => void;
   classes: Record<string, string>;
   searchText: string;
   onSearchChange: (value: string) => void;
+  onNotifyAssignees: () => void;
 }) => {
   const [filterSaved, setFilterSaved] = useState(false);
   const [showActivity, setShowActivity] = useState(false);
   const [showSystem, setShowSystem] = useState(false);
 
-  const handleClick = (mode: 'comment' | 'internal' | 'self') => {
+  const handleClick = (mode: 'comment' | 'internal' | 'self' | 'notify') => {
+    if (mode === 'notify') {
+      onNotifyAssignees();
+      return;
+    }
     if (onOpenComment) onOpenComment(mode);
   };
 
@@ -179,19 +190,18 @@ const ActionButtonRow = ({
     <Box className={classes.actionButtonsRow} sx={{ alignItems: 'center' }}>
       {/* Left group — action buttons + search */}
       <Box sx={{ display: 'flex', gap: '6px', alignItems: 'center', flex: 1, flexWrap: 'wrap' }}>
-        {BUTTON_STYLES.map((btn) => {
-          const mode = btn.label.includes('internal')
-            ? ('internal' as const)
-            : btn.label.includes('self')
-              ? ('self' as const)
-              : ('comment' as const);
-          return (
-            <Box key={btn.label} onClick={() => handleClick(mode)} sx={actionBtnSx(btn)}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 700, lineHeight: 1 }}>+</span>
-              <span>{btn.label}</span>
+        {BUTTON_STYLES.map((btn) => (
+          <Box key={btn.label} onClick={() => handleClick(btn.mode)} sx={actionBtnSx(btn)}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              {btn.mode === 'notify' ? (
+                <GroupsIcon sx={{ fontSize: 14 }} />
+              ) : (
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, lineHeight: 1 }}>+</span>
+              )}
             </Box>
-          );
-        })}
+            <span>{btn.label}</span>
+          </Box>
+        ))}
 
         {/* Search field */}
         <Box
@@ -665,6 +675,335 @@ const commentMessageSx = {
   wordBreak: 'break-word' as const,
 };
 
+/* ── Activity types & System Card ────────────────────────── */
+
+type ActivityType = 'email_sent' | 'field_change' | 'comment_added' | 'internal_note' | 'self_note' | 'notify_assignees' | 'time_entry_added';
+
+interface ActivityCard {
+  id: number;
+  type: ActivityType;
+  timestamp: string;
+  description?: string;
+  previousValue?: string;
+  newValue?: string;
+  user?: string;
+  avatarInitials?: string;
+  avatarColor?: string;
+  isSystem?: boolean;
+  // Email fields
+  emailSubject?: string;
+  emailFrom?: string;
+  emailTo?: string;
+}
+
+const getActivityLabel = (type: ActivityType): string => {
+  switch (type) {
+    case 'email_sent':
+      return 'Email sent';
+    case 'field_change':
+      return 'Field changes';
+    case 'comment_added':
+      return '';
+    case 'internal_note':
+      return 'Internal note';
+    case 'self_note':
+      return 'Self note';
+    case 'notify_assignees':
+      return 'Notify ticket assignees only';
+    case 'time_entry_added':
+      return '';
+    default:
+      return '';
+  }
+};
+
+const SystemCard = ({ activity }: { activity: ActivityCard }) => {
+  const isEmail = activity.type === 'email_sent';
+  const isFieldChange = activity.type === 'field_change';
+
+  if (isEmail) {
+    return (
+      <Box sx={systemCardSx}>
+        <Box sx={systemCardHeaderSx}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: '8px', bgcolor: '#e0f2fe' }}>
+              <EmailIcon sx={{ fontSize: 18, color: '#0284c7' }} />
+            </Box>
+            <Box>
+              <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#1e293b', lineHeight: 1.3 }}>
+                Email sent
+              </Typography>
+              <Typography sx={{ fontSize: '0.78rem', color: '#64748b', lineHeight: 1.3 }}>
+                {activity.emailSubject}
+              </Typography>
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Typography sx={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500, fontFamily: '"Roboto Mono", monospace' }}>
+              Email Sent: {formatDateTime(activity.timestamp)}
+            </Typography>
+          </Box>
+        </Box>
+
+        <Box sx={systemEmailDetailsSx}>
+          {activity.emailSubject && (
+            <Box sx={systemEmailRowSx}>
+              <Typography sx={systemEmailLabelSx}>Subject:</Typography>
+              <Typography sx={systemEmailValueSx}>{activity.emailSubject}</Typography>
+            </Box>
+          )}
+          {activity.emailFrom && (
+            <Box sx={systemEmailRowSx}>
+              <Typography sx={systemEmailLabelSx}>From:</Typography>
+              <Typography sx={systemEmailValueSx}>{activity.emailFrom}</Typography>
+            </Box>
+          )}
+          {activity.emailTo && (
+            <Box sx={systemEmailRowSx}>
+              <Typography sx={systemEmailLabelSx}>To:</Typography>
+              <Typography sx={systemEmailValueSx}>{activity.emailTo}</Typography>
+            </Box>
+          )}
+          <Box sx={systemEmailRowSx}>
+            <Typography sx={{ ...systemEmailLabelSx, color: '#6366f1', cursor: 'pointer', fontWeight: 600 }}>Show email details</Typography>
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
+
+  if (isFieldChange) {
+    return (
+      <Box sx={systemCardSx}>
+        <Box sx={systemCardHeaderSx}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: '50%', bgcolor: '#f0fdf4' }}>
+              {activity.avatarInitials ? (
+                <Typography sx={{ fontSize: '0.7rem', fontWeight: 800, color: '#059669', fontFamily: '"Roboto Mono", monospace' }}>
+                  {activity.avatarInitials}
+                </Typography>
+              ) : (
+                <EditIcon sx={{ fontSize: 16, color: '#059669' }} />
+              )}
+            </Box>
+            <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#1e293b' }}>
+              {activity.user}
+            </Typography>
+          </Box>
+          <Typography sx={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500, fontFamily: '"Roboto Mono", monospace' }}>
+            Field changes: {formatDateTime(activity.timestamp)}
+          </Typography>
+        </Box>
+        <Box sx={systemFieldRowsSx}>
+          {activity.previousValue && (
+            <Box sx={systemFieldRowSx}>
+              <Typography sx={systemFieldLabelSx}>Assigned to</Typography>
+              <Typography sx={systemFieldValueSx}>{activity.previousValue}</Typography>
+            </Box>
+          )}
+          {activity.newValue && (
+            <Box sx={systemFieldRowSx}>
+              <Typography sx={systemFieldLabelSx}>State</Typography>
+              <Typography sx={systemFieldValueSx}>
+                {activity.newValue}{activity.previousValue ? ` was ${activity.previousValue}` : ''}
+              </Typography>
+            </Box>
+          )}
+          {activity.description && (
+            <Box sx={systemFieldRowSx}>
+              <Typography sx={systemFieldLabelSx}>Time Worked</Typography>
+              <Typography sx={systemFieldValueSx}>{activity.description}</Typography>
+            </Box>
+          )}
+        </Box>
+      </Box>
+    );
+  }
+
+  // Default system card (for other activity types)
+  const label = getActivityLabel(activity.type);
+  const accentColor = activity.type === 'internal_note' ? '#6366f1' : activity.type === 'notify_assignees' ? '#7c3aed' : '#64748b';
+
+  return (
+    <Box sx={systemCardSx}>
+      <Box sx={systemCardHeaderSx}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: '50%', bgcolor: `${accentColor}14` }}>
+            {activity.avatarInitials ? (
+              <Typography sx={{ fontSize: '0.7rem', fontWeight: 800, color: accentColor, fontFamily: '"Roboto Mono", monospace' }}>
+                {activity.avatarInitials}
+              </Typography>
+            ) : (
+              <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: accentColor }} />
+            )}
+          </Box>
+          <Box>
+            {activity.user && (
+              <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#1e293b', lineHeight: 1.3 }}>
+                {activity.user}
+              </Typography>
+            )}
+            {label && (
+              <Typography sx={{ fontSize: '0.78rem', color: accentColor, fontWeight: 600, lineHeight: 1.3 }}>
+                {label}
+              </Typography>
+            )}
+          </Box>
+        </Box>
+        <Typography sx={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500, fontFamily: '"Roboto Mono", monospace' }}>
+          {formatDateTime(activity.timestamp)}
+        </Typography>
+      </Box>
+      {activity.description && (
+        <Box sx={{ px: 2, pb: 1.5 }}>
+          <Typography sx={{ fontSize: '0.88rem', color: '#374151', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            {activity.description}
+          </Typography>
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+/* System card styles */
+
+const systemCardSx = {
+  mb: 1.5,
+  borderRadius: 0,
+  backgroundColor: '#ffffff',
+  border: '1px solid #e2e8f0',
+  borderLeft: '3px solid #e2e8f0',
+  overflow: 'hidden',
+  transition: 'box-shadow 0.15s ease',
+  '&:hover': {
+    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+  },
+};
+
+const systemCardHeaderSx = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 1,
+  px: 2,
+  pt: 1.5,
+  pb: 0.75,
+};
+
+const systemEmailDetailsSx = {
+  px: 2,
+  pb: 1.5,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '6px',
+};
+
+const systemEmailRowSx = {
+  display: 'flex',
+  alignItems: 'baseline',
+  gap: '8px',
+};
+
+const systemEmailLabelSx = {
+  fontSize: '0.85rem',
+  color: '#475569',
+  fontWeight: 600,
+  flexShrink: 0,
+  minWidth: 58,
+};
+
+const systemEmailValueSx = {
+  fontSize: '0.85rem',
+  color: '#1e293b',
+  lineHeight: 1.5,
+};
+
+const systemFieldRowsSx = {
+  px: 2,
+  pb: 1.5,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '4px',
+};
+
+const systemFieldRowSx = {
+  display: 'flex',
+  alignItems: 'baseline',
+  gap: '8px',
+};
+
+const systemFieldLabelSx = {
+  fontSize: '0.85rem',
+  color: '#475569',
+  fontWeight: 600,
+  flexShrink: 0,
+  minWidth: 80,
+};
+
+const systemFieldValueSx = {
+  fontSize: '0.85rem',
+  color: '#1e293b',
+  lineHeight: 1.5,
+};
+
+/* ── Demo activity data ──────────────────────────────────── */
+
+const DEMO_ACTIVITIES: ActivityCard[] = [
+  {
+    id: 1,
+    type: 'email_sent',
+    timestamp: '2026-01-07T11:45:00',
+    emailSubject: 'SESI: Inventory value cleanup- INC3913562 has been assigned to you',
+    emailFrom: 'Polaris Worldwide Service Desk',
+    emailTo: 'Vinees.Thumma@polaris.com',
+  },
+  {
+    id: 2,
+    type: 'field_change',
+    timestamp: '2026-01-09T11:40:00',
+    previousValue: 'New',
+    newValue: 'Awaiting Evidence Service',
+    user: 'Srinivas Penumalla',
+    avatarInitials: 'SP',
+  },
+  {
+    id: 3,
+    type: 'comment_added',
+    timestamp: '2026-01-09T12:15:00',
+    description: 'Working on this ticket. Will update shortly with findings.',
+    user: 'Srinivas Penumalla',
+    avatarInitials: 'SP',
+    avatarColor: '#6366f1',
+  },
+  {
+    id: 4,
+    type: 'internal_note',
+    timestamp: '2026-01-09T14:30:00',
+    description: 'Customer called in requesting escalation. Check with supervisor before responding.',
+    user: 'Admin User',
+    avatarInitials: 'AD',
+    avatarColor: '#6366f1',
+  },
+  {
+    id: 5,
+    type: 'notify_assignees',
+    timestamp: '2026-01-09T15:00:00',
+    description: 'Sent notification to all assigned team members about the priority change.',
+    user: 'Admin User',
+    avatarInitials: 'AD',
+    avatarColor: '#7c3aed',
+  },
+  {
+    id: 6,
+    type: 'self_note',
+    timestamp: '2026-08-11T01:15:02',
+    description: 'Reviewed documentation - need to check with team lead on this one',
+    user: 'Admin User',
+    avatarInitials: 'AD',
+    avatarColor: '#059669',
+  },
+];
+
 /* ── Main component ──────────────────────────────────────── */
 
 const UpdatesSection = ({
@@ -674,9 +1013,14 @@ const UpdatesSection = ({
   onRefreshComments,
 }: UpdatesSectionProps) => {
   const { classes } = useStyles();
-  const [modalMode, setModalMode] = useState<'comment' | 'internal' | 'self'>('comment');
+  const [modalMode, setModalMode] = useState<'comment' | 'internal' | 'self' | 'notify'>('comment');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
+
+  const handleNotifyAssignees = () => {
+    setModalMode('notify');
+    setIsModalOpen(true);
+  };
 
   const filteredComments = useMemo(() => {
     return comments
@@ -715,25 +1059,51 @@ const UpdatesSection = ({
         classes={classes}
         searchText={searchText}
         onSearchChange={setSearchText}
+        onNotifyAssignees={handleNotifyAssignees}
       />
 
       <FollowersList />
 
       <Box sx={dividerSx} />
 
-      {filteredComments.length > 0 ? (
-        <Box className={classes.commentsList}>
-          {filteredComments.map((comment) => (
-            <CommentCard key={comment.id} comment={comment} />
-          ))}
-        </Box>
-      ) : (
-        <Box sx={emptyStateSx}>
-          <Typography sx={emptyTextSx}>
-            {searchText.trim() ? 'No matching comments found' : 'No updates available'}
-          </Typography>
-        </Box>
-      )}
+      {/* Interleaved timeline: comments + system activity cards */}
+      {(() => {
+        // Build combined timeline
+        const timelineItems: Array<{ kind: 'comment' | 'system'; item: IIncidentComment | ActivityCard; timestamp: Date }> = [];
+
+        // Add comments
+        filteredComments.forEach((comment) => {
+          timelineItems.push({ kind: 'comment', item: comment, timestamp: new Date(comment.createdAt) });
+        });
+
+        // Add system activities (in production these would come from an IActivityLog[] prop)
+        // For now, showing the new button triggers the CommentWindow in notify mode
+        // When backend is wired, IActivityLog[] will be passed and merged here
+
+        // Sort by timestamp descending (newest first)
+        timelineItems.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+        if (timelineItems.length > 0) {
+          return (
+            <Box className={classes.commentsList}>
+              {timelineItems.map((entry, index) => {
+                if (entry.kind === 'comment') {
+                  return <CommentCard key={`comment-${entry.item.id}`} comment={entry.item as IIncidentComment} />;
+                }
+                return <SystemCard key={`activity-${entry.item.id}`} activity={entry.item as ActivityCard} />;
+              })}
+            </Box>
+          );
+        }
+
+        return (
+          <Box sx={emptyStateSx}>
+            <Typography sx={emptyTextSx}>
+              {searchText.trim() ? 'No matching updates found' : 'No updates available'}
+            </Typography>
+          </Box>
+        );
+      })()}
 
       <CommentWindow
         open={isModalOpen}

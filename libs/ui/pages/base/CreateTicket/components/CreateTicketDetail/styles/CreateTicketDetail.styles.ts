@@ -198,4 +198,123 @@ export const useStyles = makeStyles()((theme) => ({
     gap: theme.spacing(2),
     flexWrap: 'wrap' as const,
   },
+
+  // ── Timeline section ────────────────────────────────────────────────────────
+  timelineContainer: {
+    border: `1px solid ${theme.palette.divider}`,
+    borderRadius: 14,
+    backgroundColor: theme.palette.background.paper,
+    overflow: 'hidden',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+  },
+
+  timelineHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: theme.spacing(1.5, 2.5),
+    borderBottom: `1px solid ${theme.palette.divider}`,
+    backgroundColor: theme.palette.action.hover,
+  },
+
+  timelineHeaderLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1),
+  },
+
+  timelineHeaderIcon: {
+    fontSize: 20,
+    color: theme.palette.primary.main,
+  },
+
+  timelineHeaderTitle: {
+    fontSize: '0.95rem',
+    fontWeight: 700,
+    color: theme.palette.text.primary,
+  },
+
+  timelineHeaderCount: {
+    fontSize: '0.72rem',
+    fontWeight: 700,
+    color: '#fff',
+    backgroundColor: theme.palette.primary.main,
+    borderRadius: '10px',
+    padding: theme.spacing(0.125, 0.8),
+    minWidth: '20px',
+    textAlign: 'center',
+    lineHeight: '1.6',
+  },
+
+  timelineHeaderRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(0.5),
+  },
+
+  timelineCollapseBtn: {
+    width: 28,
+    height: 28,
+    color: theme.palette.text.secondary,
+    '&:hover': {
+      backgroundColor: theme.palette.action.selected,
+    },
+  },
+
+  // Action buttons row
+  timelineActionRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: theme.spacing(1),
+    padding: theme.spacing(1.5, 2.5, 0.75),
+    borderBottom: `1px solid ${theme.palette.divider}`,
+  },
+
+  // Filter row
+  timelineFilterRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1),
+    padding: theme.spacing(1, 2.5, 1),
+    borderBottom: `1px solid ${theme.palette.divider}`,
+    flexWrap: 'wrap',
+  },
+
+  timelineSearchBox: {
+    flex: '0 0 auto',
+  },
+
+  timelineToggleGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(0.5),
+    marginLeft: 'auto',
+  },
+
+  // Content area
+  timelineContent: {
+    maxHeight: '500px',
+    overflowY: 'auto',
+    padding: theme.spacing(0, 0.5),
+    '&::-webkit-scrollbar': {
+      width: '6px',
+    },
+    '&::-webkit-scrollbar-track': {
+      background: theme.palette.action.hover,
+    },
+    '&::-webkit-scrollbar-thumb': {
+      background: theme.palette.action.disabled,
+      borderRadius: '3px',
+    },
+  },
+
+  timelineEmpty: {
+    padding: theme.spacing(4, 2),
+    textAlign: 'center',
+  },
+
+  timelineEmptyText: {
+    fontSize: '0.85rem',
+    color: theme.palette.text.disabled,
+  },
 }));

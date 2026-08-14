@@ -2,7 +2,7 @@ import { alpha } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { useStyles } from './styles';
-import { Box, Button, Loader, Typography, Chip } from '@serviceops/component';
+import { Box, Button, Loader, Typography, Chip, Tooltip } from '@serviceops/component';
 import useCreateTicket from './hooks/useCreateTicket';
 import { useGetTicketTypeQuery } from '../../../../services';
 import {
@@ -67,85 +67,87 @@ const CreateTicket = () => {
             const tag = tagMap[t.type] ?? '';
             const ticketTypeName = t.name;
             const creationPageDisplayText = t.displayName;
+            const creationPageDisplayTag = t.displayTag;
             const displayTag = tag;
 
             return (
-              <Box
-                key={t.type}
-                className={classes.ticketCard}
-                onClick={() => setSelectedType(t.type)}
-                sx={{
-                  border: isSelected ? `1.5px solid ${accent}` : '1.5px solid transparent',
-                  boxShadow: isSelected
-                    ? `0 0 0 3px ${glow}, 0 8px 32px rgba(0,0,0,0.12)`
-                    : '0 2px 8px rgba(0,0,0,0.06)',
-                  background: isSelected
-                    ? `linear-gradient(160deg, ${alpha(accent, 0.06)} 0%, transparent 60%)`
-                    : undefined,
-                  '&:hover': {
-                    boxShadow: isSelected
-                      ? `0 0 0 3px ${glow}, 0 12px 40px rgba(0,0,0,0.16)`
-                      : `0 8px 32px ${alpha(accent, 0.22)}`,
-                    transform: 'translateY(-4px)',
-                  },
-                }}
-              >
-                {/* Top accent bar */}
-                <Box className={classes.ticketAccentBar} sx={{ background: gradient }} />
-
-                {/* Selected checkmark */}
-                {isSelected && (
-                  <CheckCircleIcon
-                    sx={{ position: 'absolute', top: 12, right: 12, color: accent, fontSize: 20 }}
-                  />
-                )}
-
-                {/* Icon + title row */}
-                <Box className={classes.ticketCardHeader}>
-                  <Box
-                    className={classes.ticketIconBadge}
-                    sx={{ background: gradient, boxShadow: `0 6px 18px ${glow}` }}
-                  >
-                    {getIconComponent(iconKey, { fontSize: 24, color: '#fff' })}
-                  </Box>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography className={classes.ticketCardTitle}>{ticketTypeName}</Typography>
-                    {displayTag && (
-                      <Chip
-                        label={displayTag}
-                        size='small'
-                        className={classes.ticketTag}
-                        sx={{
-                          mt: 0.5,
-                          background: alpha(accent, 0.1),
-                          color: accent,
-                          border: `1px solid ${alpha(accent, 0.25)}`,
-                          fontWeight: 600,
-                          fontSize: '0.65rem',
-                        }}
-                      />
-                    )}
-                  </Box>
-                </Box>
-
-                {/* Creation page display text */}
-                <Typography
+              <Tooltip key={t.type} title={t.description} placement='right' arrow>
+                <Box
+                  className={classes.ticketCard}
+                  onClick={() => setSelectedType(t.type)}
                   sx={{
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    color: accent,
-                    mb: 0.75,
-                    lineHeight: 1.3,
+                    border: isSelected ? `1.5px solid ${accent}` : '1.5px solid transparent',
+                    boxShadow: isSelected
+                      ? `0 0 0 3px ${glow}, 0 8px 32px rgba(0,0,0,0.12)`
+                      : '0 2px 8px rgba(0,0,0,0.06)',
+                    background: isSelected
+                      ? `linear-gradient(160deg, ${alpha(accent, 0.06)} 0%, transparent 60%)`
+                      : undefined,
+                    '&:hover': {
+                      boxShadow: isSelected
+                        ? `0 0 0 3px ${glow}, 0 12px 40px rgba(0,0,0,0.16)`
+                        : `0 8px 32px ${alpha(accent, 0.22)}`,
+                      transform: 'translateY(-4px)',
+                    },
                   }}
                 >
-                  {creationPageDisplayText}
-                </Typography>
+                  {/* Accent bar (left border) */}
+                  <Box className={classes.ticketAccentBar} sx={{ background: gradient }} />
 
-                {/* Description */}
-                <Typography className={classes.ticketCardDesc}>
-                  {t.shortDescription || '—'}
-                </Typography>
-              </Box>
+                  {/* Selected checkmark */}
+                  {isSelected && (
+                    <CheckCircleIcon
+                      sx={{ position: 'absolute', top: 12, right: 12, color: accent, fontSize: 20 }}
+                    />
+                  )}
+
+                  {/* Icon + title row */}
+                  <Box className={classes.ticketCardHeader}>
+                    <Box
+                      className={classes.ticketIconBadge}
+                      sx={{ background: gradient, boxShadow: `0 6px 18px ${glow}` }}
+                    >
+                      {getIconComponent(iconKey, { fontSize: 24, color: '#fff' })}
+                    </Box>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography className={classes.ticketCardTitle}>{ticketTypeName}</Typography>
+                      {displayTag && (
+                        <Chip
+                          label={displayTag}
+                          size='small'
+                          className={classes.ticketTag}
+                          sx={{
+                            mt: 0.5,
+                            background: alpha(accent, 0.1),
+                            color: accent,
+                            border: `1px solid ${alpha(accent, 0.25)}`,
+                            fontWeight: 600,
+                            fontSize: '0.65rem',
+                          }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+
+                  {/* Creation page display text */}
+                  <Typography
+                    sx={{
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      color: accent,
+                      mb: 0.75,
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {creationPageDisplayTag}
+                  </Typography>
+
+                  {/* Description */}
+                  <Typography className={classes.ticketCardDesc}>
+                    {creationPageDisplayText}
+                  </Typography>
+                </Box>
+              </Tooltip>
             );
           })}
         </Box>

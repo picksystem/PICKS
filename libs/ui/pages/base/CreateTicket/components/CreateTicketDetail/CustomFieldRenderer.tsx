@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Box, TextField, Checkbox, Select, MenuItem } from '@serviceops/component';
-import { FormControl, InputLabel, Typography } from '@mui/material';
+import { Box, TextField, Checkbox, Paper } from '@serviceops/component';
+import { InputAdornment, List, ListItem, ListItemButton, ListItemText } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import { ICustomField } from '@serviceops/interfaces';
 
 export interface CustomFieldRendererProps {
@@ -11,7 +13,13 @@ export interface CustomFieldRendererProps {
   errorText?: string | React.ReactNode;
 }
 
-const CustomFieldRenderer = ({ field, value, onChange, error, errorText }: CustomFieldRendererProps) => {
+const CustomFieldRenderer = ({
+  field,
+  value,
+  onChange,
+  error,
+  errorText,
+}: CustomFieldRendererProps) => {
   const [searchText, setSearchText] = useState(value as string);
   const [isOpen, setIsOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
@@ -46,7 +54,7 @@ const CustomFieldRenderer = ({ field, value, onChange, error, errorText }: Custo
             multiline
             rows={3}
             error={error}
-                        errorText={errorText as string | undefined}
+            errorText={errorText as string | undefined}
           />
         </Box>
       );
@@ -58,7 +66,7 @@ const CustomFieldRenderer = ({ field, value, onChange, error, errorText }: Custo
           onChange={(e) => onChange(e.target.value)}
           type='number'
           error={error}
-                      errorText={errorText as string | undefined}
+          errorText={errorText as string | undefined}
         />
       );
     case 'date':
@@ -70,7 +78,7 @@ const CustomFieldRenderer = ({ field, value, onChange, error, errorText }: Custo
           type='date'
           InputLabelProps={{ shrink: true }}
           error={error}
-                      errorText={errorText as string | undefined}
+          errorText={errorText as string | undefined}
         />
       );
     case 'dropdown': {
@@ -96,44 +104,61 @@ const CustomFieldRenderer = ({ field, value, onChange, error, errorText }: Custo
             }}
             placeholder={`Search or select ${field.fieldName.toLowerCase()}`}
             error={error}
-                        errorText={errorText as string | undefined}
+            errorText={errorText as string | undefined}
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position='end'>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      {searchText ? (
+                        <ClearIcon
+                          onClick={() => handleSelect('')}
+                          sx={{
+                            fontSize: 18,
+                            color: 'text.secondary',
+                            cursor: 'pointer',
+                            '&:hover': { color: 'text.primary' },
+                          }}
+                        />
+                      ) : (
+                        <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                      )}
+                    </Box>
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
           {isOpen && opts.length > 0 && (
-            <Box
+            <Paper
+              elevation={4}
               sx={{
                 position: 'absolute',
                 top: '100%',
                 left: 0,
                 right: 0,
                 zIndex: 1300,
-                mt: 0.5,
+                mt: 0,
                 maxHeight: 240,
                 overflow: 'auto',
-                background: 'background.paper',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-                borderRadius: 1,
               }}
             >
-              {opts
-                .filter((o) => o.toLowerCase().includes(searchText.toLowerCase()))
-                .map((opt) => (
-                  <Box
-                    key={opt}
-                    sx={{
-                      px: 2,
-                      py: 1,
-                      cursor: 'pointer',
-                      '&:hover': { backgroundColor: 'action.hover' },
-                      borderBottom: '1px solid',
-                      borderColor: 'divider',
-                    }}
-                    onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
-                    onClick={() => handleSelect(opt)}
-                  >
-                    {opt}
-                  </Box>
+              <List dense disablePadding>
+                {opts.map((opt) => (
+                  <ListItem key={opt} disablePadding>
+                    <ListItemButton onClick={() => handleSelect(opt)}>
+                      <ListItemText
+                        primary={opt}
+                        primaryTypographyProps={{
+                          fontSize: '0.84rem',
+                          noWrap: true,
+                        }}
+                      />
+                    </ListItemButton>
+                  </ListItem>
                 ))}
-            </Box>
+              </List>
+            </Paper>
           )}
         </Box>
       );

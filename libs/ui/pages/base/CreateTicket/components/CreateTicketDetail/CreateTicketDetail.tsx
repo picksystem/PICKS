@@ -507,21 +507,15 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                 onChange={(value) => formik.setFieldValue('additionalContacts', value)}
                 label='Additional Contact(s)'
               />
+              {getCustomFieldsForSection(0).map((cf: any) => (
+                <CustomFieldRenderer
+                  key={cf.id}
+                  field={cf}
+                  value={getCfValue(cf.fieldKey)}
+                  onChange={(v) => setCfValue(cf.fieldKey, v)}
+                />
+              ))}
             </Box>
-
-            {/* Custom fields for Ticket Information section */}
-            {getCustomFieldsForSection(0).length > 0 && (
-              <Box className={classes.formGrid}>
-                {getCustomFieldsForSection(0).map((cf: any) => (
-                  <CustomFieldRenderer
-                    key={cf.id}
-                    field={cf}
-                    value={getCfValue(cf.fieldKey)}
-                    onChange={(v) => setCfValue(cf.fieldKey, v)}
-                  />
-                ))}
-              </Box>
-            )}
 
             {/* Manual caller */}
             <Box className={classes.manualCallerSection} sx={{ mt: 2 }}>
