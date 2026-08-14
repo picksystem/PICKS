@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   IconButton,
@@ -592,6 +592,17 @@ const getNameInitials = (nameOrEmail: string): string => {
   return parts[0][0].toUpperCase();
 };
 
+// ── Draggable sidebar sections ─────────────────────────────────
+
+const SIDEBAR_SECTION_ORDER: string[] = [
+  'assignment',
+  'ticketOptions',
+  'contactAndBilling',
+  'reporting',
+  'datesAndUsers',
+  'additionalFields',
+];
+
 // ── Main Component ─────────────────────────────────────────────────────────
 
 const Sidebar = ({
@@ -616,6 +627,9 @@ const Sidebar = ({
   layoutConfig = getDefaultLayoutConfig(),
 }: SidebarProps) => {
   const isSectionVisible = (key: string) => layoutConfig.sideBar.selectedFields.includes(key);
+
+  // ── DnD state for sidebar section ordering ────────────────────
+  const [sidebarSectionOrder, setSidebarSectionOrder] = useState<string[]>(SIDEBAR_SECTION_ORDER);
 
   const createdByMatchesUser =
     user?.email && incident.createdBy

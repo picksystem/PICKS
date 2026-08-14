@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { Box, Typography, TextField, IconButton, Tooltip } from '../../../../components';
+import { Box, Typography, TextField, IconButton, Tooltip, EditIcon } from '../../../../components';
 import CommentWindow from '../windows/CommentWindow';
 import { Avatar } from '@mui/material';
 import {
@@ -8,12 +8,6 @@ import {
   Person as PersonIcon,
   AttachFile as AttachFileIcon,
   Image as ImageIcon,
-  Reply as ReplyIcon,
-  Edit as EditIcon,
-  Translate as TranslateIcon,
-  ContentCopy as CopyIcon,
-  PushPin as PinIcon,
-  BookmarkBorder as SaveIcon,
   VisibilityOff as HideIcon,
   FilterList as FilterListIcon,
   Email as EmailIcon,
@@ -68,46 +62,6 @@ const formatDateTime = (date: Date | string): string => {
 };
 
 /* ── Styles ──────────────────────────────────────────────── */
-
-const actionButtonSx = {
-  borderColor: '#c7d2fe',
-  color: '#4338ca',
-  backgroundColor: '#f5f3ff',
-  textTransform: 'none' as const,
-  fontWeight: 600,
-  fontSize: '0.78rem',
-  px: 1.5,
-  py: 0.6,
-  borderRadius: '8px',
-  minHeight: 34,
-  whiteSpace: 'nowrap',
-  '&:hover': {
-    backgroundColor: '#ede9fe',
-    borderColor: '#a78bfa',
-  },
-};
-
-const searchFieldSx = {
-  width: 170,
-  '& .MuiOutlinedInput-root': {
-    borderRadius: '8px',
-    fontSize: '0.82rem',
-    height: 34,
-    '& fieldset': {
-      borderColor: '#cbd5e1',
-    },
-    '&:hover fieldset': {
-      borderColor: '#94a3b8',
-    },
-  },
-};
-
-const toggleLabelSx = {
-  fontSize: '0.8rem',
-  color: '#64748b',
-  fontWeight: 500,
-  cursor: 'pointer',
-};
 
 const dividerSx = {
   height: 1,
@@ -177,7 +131,6 @@ const ActionButtonRow = ({
   onOpenEmail,
   filterSaved,
   showActivity,
-  showSystem,
   onToggleFilterSaved,
   onToggleShowActivity,
   onScrollToBottom,
@@ -315,8 +268,18 @@ const ActionButtonRow = ({
       >
         {/* Checkbox toggles */}
         {[
-          { label: 'Filter Saved comments', checked: filterSaved, onToggle: onToggleFilterSaved, always: false },
-          { label: 'Show activity log', checked: showActivity, onToggle: onToggleShowActivity, always: false },
+          {
+            label: 'Filter Saved comments',
+            checked: filterSaved,
+            onToggle: onToggleFilterSaved,
+            always: false,
+          },
+          {
+            label: 'Show activity log',
+            checked: showActivity,
+            onToggle: onToggleShowActivity,
+            always: false,
+          },
           { label: 'Show system notes', checked: true, onToggle: () => {}, always: true },
         ].map(({ label, checked, onToggle, always }) => (
           <Box
