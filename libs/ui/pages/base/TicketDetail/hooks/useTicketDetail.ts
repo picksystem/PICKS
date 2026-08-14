@@ -75,7 +75,11 @@ export const useTicketDetail = () => {
           data: args.data,
         });
       }
-      return updateIncidentTrigger({ ticketType: 'incident', id: Number(args.id), data: args.data });
+      return updateIncidentTrigger({
+        ticketType: 'incident',
+        id: Number(args.id),
+        data: args.data,
+      });
     },
     [ticketType, updateIncidentTrigger, updateServiceRequestTrigger, updateAdvisoryRequestTrigger],
   );
@@ -134,7 +138,7 @@ export const useTicketDetail = () => {
   }, [timeEntries]);
 
   // Resolve which Admin ▸ Ticket Type record governs this ticket's number
-  // prefix, so its saved Ticket Detail Screen Layout (persisted server-side
+  // prefix, so its saved Ticket Screen Layout (persisted server-side
   // on that ticket type row) is the one applied here.
   const resolvedTicketType = useMemo(
     () =>

@@ -991,7 +991,7 @@ export const TicketTypeLayoutDialog = ({
         </Box>
         <Box>
           <Typography sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff', lineHeight: 1.2 }}>
-            Ticket Detail Screen Layout
+            Ticket Screen Layout
           </Typography>
           <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}>
             {ticketType

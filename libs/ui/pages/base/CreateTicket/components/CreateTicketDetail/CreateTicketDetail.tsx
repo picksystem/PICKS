@@ -14,11 +14,13 @@ import {
   MenuItem,
   Alert,
   AlertTitle,
+  InputAdornment,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CancelIcon from '@mui/icons-material/Cancel';
+import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import ErrorIcon from '@mui/icons-material/Error';
@@ -142,6 +144,12 @@ const SearchableField = ({
     }, 100);
   };
 
+  const handleClear = () => {
+    setSearchText('');
+    onChange('');
+    setIsOpen(false);
+  };
+
   const handleSelectOption = (option: { value: string; label: string }) => {
     setSearchText(option.label);
     onChange(option.value);
@@ -169,12 +177,32 @@ const SearchableField = ({
         onFocus={handleFocus}
         onBlur={onBlur}
         placeholder={`Search or select ${label.toLowerCase()}`}
-        icon={icon || <SearchIcon />}
-        iconAlignment='right'
         inputProps={{ maxLength }}
         required={required}
         error={error}
         errorText={errorText}
+        InputProps={{
+          startAdornment: icon ? (
+            <InputAdornment position='start'>{icon}</InputAdornment>
+          ) : undefined,
+          endAdornment: (
+            <InputAdornment position='end'>
+              {searchText ? (
+                <IconButton
+                  size='small'
+                  edge='end'
+                  aria-label='Clear search'
+                  onClick={handleClear}
+                  sx={{ p: 0.5, color: 'text.secondary' }}
+                >
+                  <CloseIcon sx={{ fontSize: '1.2rem' }} />
+                </IconButton>
+              ) : (
+                <SearchIcon sx={{ fontSize: '1.2rem', color: 'text.secondary' }} />
+              )}
+            </InputAdornment>
+          ),
+        }}
       />
       <Popper
         open={isOpen && filteredOptions.length > 0}

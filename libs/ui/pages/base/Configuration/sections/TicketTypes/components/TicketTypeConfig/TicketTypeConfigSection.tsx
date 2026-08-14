@@ -346,7 +346,7 @@ const TicketTypeConfigSection = () => {
         open={layoutOpen}
         ticketType={selectedRow}
         onClose={() => setLayoutOpen(false)}
-        onSave={() => success('Ticket detail screen layout saved successfully')}
+        onSave={() => success('Ticket screen layout saved successfully')}
       />
 
       <ConfigDeleteDialog
