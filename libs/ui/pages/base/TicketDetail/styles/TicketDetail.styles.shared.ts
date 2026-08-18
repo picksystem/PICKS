@@ -794,8 +794,8 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     '& .MuiOutlinedInput-root': { borderRadius: '10px' },
   },
 
-  descriptionDescField: {
-    '& .MuiOutlinedInput-root': { borderRadius: '10px' },
+  descriptionRichTextEditor: {
+    marginTop: theme.spacing(0.5),
   },
 
   // Tabs Section

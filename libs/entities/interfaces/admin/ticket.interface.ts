@@ -121,6 +121,7 @@ export interface IAdminTicketComment {
   isInternal: boolean;
   isSelfNote: boolean;
   notifyAssigneesOnly: boolean;
+  isEmail?: boolean;
   status?: string | null;
   attachments?: string | null;
   createdBy: string;

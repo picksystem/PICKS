@@ -574,6 +574,7 @@ const FollowersList = () => {
 /* ── Sub-components ──────────────────────────────────────── */
 
 const getCommentBorderColor = (comment: IIncidentComment): string => {
+  if (comment.isEmail) return '#0891b2';
   if (comment.isInternal) return '#d97706';
   if (comment.isSelfNote) return '#059669';
   return '#6366f1';
@@ -599,6 +600,9 @@ const CommentCard = ({ comment }: { comment: IIncidentComment }) => {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+          {comment.isEmail && (
+            <Typography sx={{ ...internalNoteLabelSx, color: '#0369a1' }}>Email</Typography>
+          )}
           {comment.isInternal && (
             <Typography sx={{ ...internalNoteLabelSx, color: '#d97706' }}>Internal note</Typography>
           )}

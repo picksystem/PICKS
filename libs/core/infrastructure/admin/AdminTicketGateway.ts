@@ -238,6 +238,7 @@ export class AdminTicketGateway {
     isInternal?: boolean;
     isSelfNote?: boolean;
     notifyAssigneesOnly?: boolean;
+    isEmail?: boolean;
     status?: string;
     attachments?: string;
     createdBy: string;
@@ -249,6 +250,7 @@ export class AdminTicketGateway {
       isInternal: data.isInternal ?? false,
       isSelfNote: data.isSelfNote ?? false,
       notifyAssigneesOnly: data.notifyAssigneesOnly ?? false,
+      isEmail: data.isEmail ?? false,
       createdBy: data.createdBy,
       updatedAt: new Date(),
     };

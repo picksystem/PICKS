@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Box, Button, TextField, Typography, Switch } from '../../../../components';
+import { Box, Button, TextField, Typography, Switch, Modal } from '../../../../components';
 import { alpha, darken, Paper, InputAdornment } from '@mui/material';
 import {
   Comment as CommentIcon,
@@ -10,14 +10,13 @@ import { useCreateTicketCommentMutation } from '../../../../../services';
 import { useAuth, useNotification } from '@serviceops/hooks';
 import { TicketEntity } from '../types/ticketDetail.types';
 import { useConfiguration } from '@serviceops/confighooks';
-import { ConfigFormDialog } from '@serviceops/configdialogs';
 import {
   parseRichText,
   serializeRichText,
   RichTextEditor,
 } from '../../../../pages/base/Configuration/shared/RichTextEditor';
 
-const COMMENT_ACCENT = '#0369a1';
+const COMMENT_ACCENT = '#2d5ebb';
 
 interface CommentWindowProps {
   open: boolean;
@@ -175,6 +174,7 @@ const CommentWindow = ({
         isInternal,
         isSelfNote,
         notifyAssigneesOnly,
+        isEmail: mode === 'email',
         status: statusValue || incident.status,
         createdBy: user?.email || '',
       }).unwrap();
@@ -211,22 +211,82 @@ const CommentWindow = ({
             ? 'Send an email note for this ticket'
             : 'Add a comment to this ticket';
 
+  const footer = (
+    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+      <Button variant='outlined' onClick={onClose}>
+        Cancel
+      </Button>
+      <Button variant='contained' onClick={handleSave} disabled={isLoading}>
+        Save
+      </Button>
+    </Box>
+  );
+
+  const fieldBaseSx = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 1.5,
+      bgcolor: alpha('#2d5ebb', 0.03),
+      '& fieldset': {
+        borderColor: alpha(COMMENT_ACCENT, 0.3),
+        borderWidth: 1.5,
+      },
+      '&:hover fieldset': {
+        borderColor: COMMENT_ACCENT,
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: COMMENT_ACCENT,
+        borderWidth: 2,
+      },
+      '&.Mui-error fieldset': {
+        borderColor: '#d32f2f',
+      },
+    },
+  };
+
   return (
-    <ConfigFormDialog
+    <Modal
       open={open}
       onClose={onClose}
-      onSubmit={handleSave}
-      isEdit={false}
-      icon={<CommentIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-      accent={COMMENT_ACCENT}
-      title={dialogTitle}
-      subtitle={dialogSubtitle}
-      submitDisabled={false}
-      submitLabel='Save'
-      hideActions
+      headerBackground={`linear-gradient(135deg, ${darken(COMMENT_ACCENT, 0.18)} 0%, ${COMMENT_ACCENT} 100%)`}
+      headerTextColor='#fff'
+      title={
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box
+            sx={{
+              width: 38,
+              height: 38,
+              borderRadius: 1.5,
+              bgcolor: 'rgba(255,255,255,0.18)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <CommentIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />
+          </Box>
+          <Box>
+            <Typography
+              sx={{ fontSize: '1.1rem', fontWeight: 600, lineHeight: 1.3, color: '#fff' }}
+            >
+              {dialogTitle}
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: '0.78rem',
+                color: 'rgba(255,255,255,0.85)',
+                lineHeight: 1.3,
+              }}
+            >
+              {dialogSubtitle}
+            </Typography>
+          </Box>
+        </Box>
+      }
+      footer={footer}
       maxWidth='sm'
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
         {/* Status — search-style field */}
         <Box sx={{ position: 'relative' }}>
           <TextField
@@ -246,6 +306,7 @@ const CommentWindow = ({
             onBlur={() => setTimeout(() => setStatusOptionsOpen(false), 200)}
             fullWidth
             size='small'
+            sx={fieldBaseSx}
             slotProps={{
               input: {
                 endAdornment: searchAdornment(statusInput.length > 0, handleStatusClear),
@@ -296,6 +357,7 @@ const CommentWindow = ({
           onChange={(e) => handleTemplateInputChange(e.target.value)}
           fullWidth
           size='small'
+          sx={fieldBaseSx}
           slotProps={{
             input: {
               endAdornment: searchAdornment(templateInput.length > 0, handleTemplateClear),
@@ -303,7 +365,7 @@ const CommentWindow = ({
           }}
         />
 
-        {/* Subject — required */}
+        {/* Subject — required (hidden in email mode; shown inside email section) */}
         <TextField
           label='Subject'
           required
@@ -311,6 +373,10 @@ const CommentWindow = ({
           onChange={(e) => setSubject(e.target.value)}
           size='small'
           fullWidth
+          sx={{
+            ...fieldBaseSx,
+            display: mode === 'email' ? 'none' : 'block',
+          }}
         />
 
         {/* Message — RichTextEditor */}
@@ -324,19 +390,28 @@ const CommentWindow = ({
           />
         </Box>
 
-        {/* Email-specific fields */}
+        {/* Email section — always expanded, no toggle */}
         {mode === 'email' && (
           <Box
             sx={{
               display: 'flex',
               flexDirection: 'column',
-              gap: 1,
-              p: 1.5,
+              gap: 2,
+              p: 2.5,
               bgcolor: '#f0f9ff',
-              borderRadius: 1,
+              borderRadius: 1.5,
               border: '1px solid #bae6fd',
             }}
           >
+            <TextField
+              label='Subject'
+              required
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              size='small'
+              fullWidth
+              sx={fieldBaseSx}
+            />
             <TextField
               label='To'
               placeholder='recipient@example.com'
@@ -344,6 +419,7 @@ const CommentWindow = ({
               onChange={(e) => setEmailTo(e.target.value)}
               size='small'
               fullWidth
+              sx={fieldBaseSx}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position='start'>
@@ -358,6 +434,7 @@ const CommentWindow = ({
               onChange={(e) => setEmailFrom(e.target.value)}
               size='small'
               fullWidth
+              sx={fieldBaseSx}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position='start'>
@@ -366,25 +443,6 @@ const CommentWindow = ({
                 ),
               }}
             />
-            <TextField
-              label='Subject'
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              size='small'
-              fullWidth
-            />
-            <Typography
-              sx={{
-                fontSize: '0.78rem',
-                color: '#6366f1',
-                cursor: 'pointer',
-                fontWeight: 600,
-                textDecoration: 'underline',
-                '&:hover': { color: '#4f46e5' },
-              }}
-            >
-              Show email details
-            </Typography>
           </Box>
         )}
 
@@ -451,7 +509,7 @@ const CommentWindow = ({
           onClick={() => document.querySelector<HTMLInputElement>('.comment-upload-input')?.click()}
           sx={{
             border: '2px dashed #ccc',
-            borderRadius: 1,
+            borderRadius: 1.5,
             p: '24px 16px',
             textAlign: 'center',
             cursor: 'pointer',
@@ -471,67 +529,21 @@ const CommentWindow = ({
           <Button
             variant='contained'
             sx={{
-              bgcolor: '#2d5ebb',
-              '&:hover': { bgcolor: '#1e40af' },
+              bgcolor: COMMENT_ACCENT,
+              '&:hover': { bgcolor: darken(COMMENT_ACCENT, 0.15) },
               textTransform: 'none',
               px: 2.5,
               py: 0.5,
               fontSize: '0.8rem',
               fontWeight: 600,
+              borderRadius: 1.5,
             }}
           >
             CHOOSE FILE
           </Button>
         </Box>
-
-        {/* Action Buttons */}
-        <Box
-          sx={{
-            display: 'flex',
-            gap: 1,
-            justifyContent: 'flex-end',
-            flexDirection: { xs: 'column', sm: 'row' },
-            pt: 2,
-            mt: 1,
-            borderTop: '1px solid',
-            borderColor: 'divider',
-          }}
-        >
-          <Button
-            onClick={onClose}
-            variant='outlined'
-            sx={{
-              textTransform: 'none',
-              width: { xs: '100%', sm: 'auto' },
-              borderColor: alpha(COMMENT_ACCENT, 0.4),
-              color: darken(COMMENT_ACCENT, 0.15),
-              '&:hover': {
-                borderColor: COMMENT_ACCENT,
-                bgcolor: alpha(COMMENT_ACCENT, 0.04),
-              },
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={isLoading}
-            variant='contained'
-            sx={{
-              textTransform: 'none',
-              width: { xs: '100%', sm: 'auto' },
-              bgcolor: COMMENT_ACCENT,
-              '&:hover': { bgcolor: darken(COMMENT_ACCENT, 0.15) },
-              '&.Mui-disabled': {
-                bgcolor: alpha(COMMENT_ACCENT, 0.4),
-              },
-            }}
-          >
-            Save
-          </Button>
-        </Box>
       </Box>
-    </ConfigFormDialog>
+    </Modal>
   );
 };
 

@@ -1,6 +1,48 @@
 import { TextField, Typography, Box } from '../../../../components';
+import { RichTextEditor } from '../../Configuration/shared/RichTextEditor';
 import { useStyles } from '../styles';
 import { TicketEntity, TicketUpdateInput } from '../types/ticketDetail.types';
+
+/* ------------------------------------------------------------------ */
+/*  Helpers: convert between plain-text/HTML and the RichTextValue    */
+/*  segment format the editor expects.                                */
+/* ------------------------------------------------------------------ */
+
+const escapeHtml = (text: string): string =>
+  text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+/** Strip HTML tags → plain text */
+const htmlToPlainText = (html: string): string => {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent?.trim() ?? '';
+};
+
+/** Build a RichTextValue from a plain-text or HTML string */
+const toRichTextValue = (raw: string | undefined | null): any => {
+  if (!raw) return { segments: [] };
+
+  // If it already contains HTML tags, extract the text and treat each
+  // non-empty line as its own plain segment.
+  const text = raw.includes('<') ? htmlToPlainText(raw) : raw;
+
+  const segments = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((line) => ({ text: line }) as { text: string });
+
+  return { segments };
+};
+
+/** Convert RichTextValue back to a plain-text string for storage */
+const richTextValueToString = (value: any): string =>
+  value.segments?.map((s: any) => s.text).join('\n') ?? '';
 
 interface DescriptionSectionProps {
   incident: TicketEntity;
@@ -17,6 +59,14 @@ const DescriptionSection = ({
 }: DescriptionSectionProps) => {
   const { classes } = useStyles();
 
+  // Memoise the RichTextValue so the editor only re-initialises when the
+  // *source* string actually changes (not on every parent render).
+  const richTextValue = toRichTextValue(editFormData.description ?? incident.description);
+
+  const handleDescriptionChange = (value: any) => {
+    onEditFormChange({ description: richTextValueToString(value) });
+  };
+
   return (
     <Box className={classes.descriptionCard}>
       <Box className={classes.descriptionCardHeader}>
@@ -26,23 +76,24 @@ const DescriptionSection = ({
         {isEditing ? (
           <>
             <TextField
-              label='Short Description'
+              label='Short Description *'
               fullWidth
               size='small'
+              required
               value={editFormData.shortDescription ?? incident.shortDescription ?? ''}
               onChange={(e) => onEditFormChange({ shortDescription: e.target.value })}
               className={classes.descriptionTextField}
             />
-            <TextField
-              label='Description'
-              fullWidth
-              multiline
-              rows={4}
-              size='small'
-              value={editFormData.description ?? incident.description ?? ''}
-              onChange={(e) => onEditFormChange({ description: e.target.value })}
-              className={classes.descriptionDescField}
-            />
+            <Box className={classes.descriptionRichTextEditor}>
+              <RichTextEditor
+                value={richTextValue}
+                onChange={handleDescriptionChange}
+                title='Description *'
+                placeholder='Describe the issue in detail...'
+                showFooterActions={false}
+                required
+              />
+            </Box>
           </>
         ) : (
           <>

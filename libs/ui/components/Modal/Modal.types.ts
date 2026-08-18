@@ -10,4 +10,7 @@ export interface DSModalProps {
   disableBackdropClick?: boolean;
   disableEscapeKeyDown?: boolean;
   keepMounted?: boolean;
+  headerBackground?: string;
+  headerTextColor?: string;
+  hideHeader?: boolean;
 }

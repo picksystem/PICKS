@@ -293,6 +293,7 @@ export interface IIncidentComment {
   isInternal: boolean;
   isSelfNote: boolean;
   notifyAssigneesOnly: boolean;
+  isEmail: boolean;
   status: IncidentStatus;
   attachments: string | null;
   createdBy: string;
@@ -307,6 +308,7 @@ export interface ICreateCommentInput {
   isInternal?: boolean;
   isSelfNote?: boolean;
   notifyAssigneesOnly?: boolean;
+  isEmail?: boolean;
   status?: IncidentStatus;
   attachments?: string;
   createdBy: string;

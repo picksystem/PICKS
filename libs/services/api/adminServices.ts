@@ -183,6 +183,7 @@ export const adminApi = baseApi.injectEndpoints({
         isInternal?: boolean;
         isSelfNote?: boolean;
         notifyAssigneesOnly?: boolean;
+        isEmail?: boolean;
         status?: string;
         attachments?: string;
         createdBy: string;
@@ -197,8 +198,7 @@ export const adminApi = baseApi.injectEndpoints({
     }),
 
     getTicketTimeEntries: builder.query<IAdminTicketTimeEntry[], ITicketRef>({
-      query: ({ ticketId }) =>
-        `/api/admin/tickets/${ticketId}/time-entries`,
+      query: ({ ticketId }) => `/api/admin/tickets/${ticketId}/time-entries`,
       transformResponse: (response: { data: IAdminTicketTimeEntry[] }) => response.data,
     }),
     createTicketTimeEntry: builder.mutation<
@@ -225,8 +225,7 @@ export const adminApi = baseApi.injectEndpoints({
     }),
 
     getTicketResolutions: builder.query<IAdminTicketResolution[], ITicketRef>({
-      query: ({ ticketId }) =>
-        `/api/admin/tickets/${ticketId}/resolutions`,
+      query: ({ ticketId }) => `/api/admin/tickets/${ticketId}/resolutions`,
       transformResponse: (response: { data: IAdminTicketResolution[] }) => response.data,
     }),
     createTicketResolution: builder.mutation<
@@ -255,8 +254,7 @@ export const adminApi = baseApi.injectEndpoints({
     }),
 
     getTicketActivities: builder.query<IAdminTicketActivity[], ITicketRef>({
-      query: ({ ticketId }) =>
-        `/api/admin/tickets/${ticketId}/activities`,
+      query: ({ ticketId }) => `/api/admin/tickets/${ticketId}/activities`,
       transformResponse: (response: { data: IAdminTicketActivity[] }) => response.data,
     }),
 

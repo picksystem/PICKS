@@ -9,6 +9,7 @@ import {
   useSensors,
   useDraggable,
   DragOverlay,
+  closestCenter,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -16,6 +17,7 @@ import {
   useSortable,
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Box, Button, Typography, Tabs, Tab, IconButton } from '@serviceops/component';
 import { Dialog, DialogActions, alpha } from '@mui/material';
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt';
@@ -374,9 +376,9 @@ const SortableFieldItem = ({ fieldKey, label, onClick }: SortableFieldItemProps)
   );
 };
 
-// ── Section Drop Zone ────────────────────────────────────────
+// ── Sortable Section Card (dnd-kit) ─────────────────────────
 
-interface SectionDropZoneProps {
+interface SortableSectionCardProps {
   title: string;
   sectionKey: string;
   selectedFields: { key: string; label: string }[];
@@ -389,7 +391,7 @@ interface SectionDropZoneProps {
   onDrop: (e: React.DragEvent<HTMLElement>) => void;
 }
 
-const SectionDropZone = ({
+const SortableSectionCard = ({
   title,
   sectionKey,
   selectedFields,
@@ -400,9 +402,21 @@ const SectionDropZone = ({
   onDragOver,
   onDragLeave,
   onDrop,
-}: SectionDropZoneProps) => {
+}: SortableSectionCardProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: sectionKey,
+  });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.35 : 1,
+  };
+
   return (
     <Box
+      ref={setNodeRef}
+      style={style}
       data-section-key={sectionKey}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
@@ -418,19 +432,38 @@ const SectionDropZone = ({
     >
       <Box
         sx={{
-          px: 2,
-          py: 1.2,
+          px: 1,
+          py: 1,
           bgcolor: alpha(ACCENT, 0.06),
           display: 'flex',
           alignItems: 'center',
-          gap: 1,
+          gap: 0.5,
           borderBottom: selectedFields.length > 0 ? '1px solid rgba(226, 232, 255, 0.6)' : 'none',
+          cursor: isDragging ? 'grabbing' : 'default',
         }}
       >
+        <Box
+          {...attributes}
+          {...listeners}
+          aria-label={`Drag to reorder ${title}`}
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            cursor: 'grab',
+            color: 'text.secondary',
+            '&:hover': { color: 'text.primary' },
+            '&:active': { cursor: 'grabbing' },
+            touchAction: 'none',
+            px: 0.5,
+          }}
+          title='Drag to reorder section'
+        >
+          <DragIndicatorIcon sx={{ fontSize: '1.1rem' }} />
+        </Box>
         <ExpandMoreIcon sx={{ fontSize: '1rem', color: 'text.secondary' }} />
         <Typography sx={{ fontWeight: 700, fontSize: '0.82rem', flex: 1 }}>{title}</Typography>
         {selectedFields.length > 0 && (
-          <Typography sx={{ fontSize: '0.7rem', color: 'text.secondary' }}>
+          <Typography sx={{ fontSize: '0.7rem', color: 'text.secondary', pr: 1 }}>
             {selectedFields.length} field{selectedFields.length !== 1 ? 's' : ''}
           </Typography>
         )}
@@ -528,6 +561,7 @@ export const TicketTypeLayoutDialog = ({
   const [activeTab, setActiveTab] = useState(0);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [dragOverSection, setDragOverSection] = useState<string | null>(null);
+  const [sectionOrder, setSectionOrder] = useState<string[]>([]);
   const [updateTicketType, { isLoading: isSaving }] = useUpdateTicketTypeMutation();
   const { error: notifyError } = useNotification();
 
@@ -561,6 +595,32 @@ export const TicketTypeLayoutDialog = ({
       setDragOverSection(null);
     }
   }, [open, ticketType]);
+
+  const sectionDefs = activeTab === 0 ? CREATE_TICKET_SECTION_DEFS : DETAILS_SECTION_DEFS;
+
+  // Reset section order when tab changes
+  useEffect(() => {
+    setSectionOrder(sectionDefs.map((s) => s.key));
+  }, [activeTab, sectionDefs]);
+
+  // Ordered list of section defs based on user reordering.
+  // We cast through any[] to avoid TypeScript narrowing sectionDefs
+  // (a conditional union) to never[] inside useMemo callbacks.
+  const orderedSectionDefs = useMemo(() => {
+    const allDefs = sectionDefs as any[];
+    if (sectionOrder.length === 0) return allDefs;
+    const map = new Map<string, any>();
+    for (const s of allDefs) map.set(s.key, s);
+    const ordered: any[] = [];
+    for (const key of sectionOrder) {
+      const s = map.get(key);
+      if (s) ordered.push(s);
+    }
+    for (const s of allDefs) {
+      if (!ordered.includes(s)) ordered.push(s);
+    }
+    return ordered;
+  }, [sectionDefs as any, sectionOrder]);
 
   // ── Compute remaining fields ───────────────────────────────
 
@@ -601,8 +661,6 @@ export const TicketTypeLayoutDialog = ({
 
     return result;
   }, [activeTab, config, customFields]);
-
-  const sectionDefs = activeTab === 0 ? CREATE_TICKET_SECTION_DEFS : DETAILS_SECTION_DEFS;
 
   // ── HTML5 Native Drag Handlers ─────────────────────────────
 
@@ -667,7 +725,6 @@ export const TicketTypeLayoutDialog = ({
         }
       } else if (sourceType === 'item') {
         // Section → Section: move or remove
-        // Find source section
         let sourceSectionKey: string | null = null;
         for (const s of sectionDefs) {
           const keys = getSelectedFields(config, activeTab, s.key);
@@ -678,9 +735,8 @@ export const TicketTypeLayoutDialog = ({
         }
         if (!sourceSectionKey) return;
 
-        if (sourceSectionKey === targetSectionKey) return; // same section, no-op
+        if (sourceSectionKey === targetSectionKey) return;
 
-        // Remove from source
         const sourceKeys = getSelectedFields(config, activeTab, sourceSectionKey);
         const updatedSource = sourceKeys.filter((k: string) => k !== sourceFieldKey);
         const targetKeys = getSelectedFields(config, activeTab, targetSectionKey);
@@ -724,7 +780,6 @@ export const TicketTypeLayoutDialog = ({
       setActiveId(null);
 
       if (sourceType === 'item') {
-        // Remove from whichever section it's in
         for (const section of sectionDefs) {
           const keys = getSelectedFields(config, activeTab, section.key);
           if (keys.includes(sourceFieldKey)) {
@@ -738,12 +793,37 @@ export const TicketTypeLayoutDialog = ({
     [activeTab, config, sectionDefs],
   );
 
+  // ── Section reorder handlers (dnd-kit) ──────────────────────
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleSectionDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+
+      setSectionOrder((prev) => {
+        const baseOrder = prev.length > 0 ? prev : sectionDefs.map((s) => s.key);
+        const oldIdx = baseOrder.indexOf(active.id as string);
+        const newIdx = baseOrder.indexOf(over.id as string);
+        if (oldIdx === -1 || newIdx === -1) return baseOrder;
+        const next = [...baseOrder];
+        const [moved] = next.splice(oldIdx, 1);
+        next.splice(newIdx, 0, moved);
+        return next;
+      });
+    },
+    [sectionDefs],
+  );
+
   // ── Click handlers ──────────────────────────────────────────
 
   const handlePoolItemClick = useCallback(
     (fieldKey: string) => {
       // Custom fields can only be placed via drag-and-drop, not by click.
-      // They still have edit/delete buttons via the PoolItem's own handlers.
       if (isCustomFieldKey(fieldKey)) return;
 
       const owningSection = sectionDefs.find((s) => s.fields.some((f) => f.key === fieldKey));
@@ -856,7 +936,6 @@ export const TicketTypeLayoutDialog = ({
     if (!window.confirm(`Delete "${cf.fieldName}"? This will also remove it from any sections.`))
       return;
     setCustomFields((prev) => prev.filter((f) => f.id !== cf.id));
-    // Remove from any sections that reference it
     setConfig((prev) => {
       const next = { ...prev };
       const allSectionDefs = activeTab === 0 ? CREATE_TICKET_SECTION_DEFS : DETAILS_SECTION_DEFS;
@@ -892,13 +971,10 @@ export const TicketTypeLayoutDialog = ({
 
   const handleSaveCustomField = async (field: ICustomField) => {
     try {
-      // Build the updated list from the current closure value
       const idx = customFields.findIndex((f) => f.id === field.id);
       const updatedFields =
         idx >= 0 ? customFields.map((f, i) => (i === idx ? field : f)) : [...customFields, field];
 
-      // Persist to the server — triggers RTK Query invalidation of 'TicketType' and
-      // 'Configuration' tags, causing any useGetTicketTypeQuery consumer to refetch.
       if (ticketType) {
         await updateTicketType({
           id: ticketType.id,
@@ -906,7 +982,6 @@ export const TicketTypeLayoutDialog = ({
         }).unwrap();
       }
 
-      // Optimistic local state update after successful API response
       setCustomFields(updatedFields);
       setCfDialogOpen(false);
       setEditingCf(null);
@@ -1095,7 +1170,7 @@ export const TicketTypeLayoutDialog = ({
           </Box>
         </Box>
 
-        {/* ── Right Panel: Section Drop Zones ─────────────── */}
+        {/* ── Right Panel: Section Drop Zones (reorderable) ──────── */}
         <Box
           sx={{
             flex: 1,
@@ -1105,42 +1180,51 @@ export const TicketTypeLayoutDialog = ({
             bgcolor: alpha('#f8faff', 1),
           }}
         >
-          {sectionDefs.map((section) => {
-            const selectedKeys = getSelectedFields(config, activeTab, section.key);
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleSectionDragEnd}
+          >
+            <SortableContext
+              items={orderedSectionDefs.map((s) => s.key)}
+              strategy={verticalListSortingStrategy}
+            >
+              {orderedSectionDefs.map((section) => {
+                const selectedKeys = getSelectedFields(config, activeTab, section.key);
 
-            const allCatalogFields =
-              activeTab === 0
-                ? CREATE_TICKET_SECTION_DEFS.flatMap((s) => s.fields)
-                : DETAILS_SECTION_DEFS.flatMap((s) => s.fields);
+                const allCatalogFields =
+                  activeTab === 0
+                    ? CREATE_TICKET_SECTION_DEFS.flatMap((s) => s.fields)
+                    : DETAILS_SECTION_DEFS.flatMap((s) => s.fields);
 
-            const catalogMap = new Map(allCatalogFields.map((f) => [f.key, f]));
+                const catalogMap = new Map(allCatalogFields.map((f) => [f.key, f]));
 
-            // Merge custom fields into the catalog so their display names
-            // resolve correctly inside sections (otherwise the raw key is used).
-            for (const cf of customFields) {
-              catalogMap.set(cf.fieldKey, { key: cf.fieldKey, label: cf.fieldName });
-            }
+                for (const cf of customFields) {
+                  catalogMap.set(cf.fieldKey, { key: cf.fieldKey, label: cf.fieldName });
+                }
 
-            const selectedFields = selectedKeys.map(
-              (k) => catalogMap.get(k) || { key: k, label: k },
-            );
+                const selectedFields = selectedKeys.map(
+                  (k) => catalogMap.get(k) || { key: k, label: k },
+                );
 
-            return (
-              <SectionDropZone
-                key={section.key}
-                title={section.title}
-                sectionKey={section.key}
-                selectedFields={selectedFields}
-                onFieldRemove={handleFieldRemove}
-                onFieldMoveUp={moveSectionFieldUp}
-                onFieldMoveDown={moveSectionFieldDown}
-                isDragOver={dragOverSection === section.key}
-                onDragOver={(e) => handleSectionDragOver(e, section.key)}
-                onDragLeave={handleSectionDragLeave}
-                onDrop={(e) => handleSectionDrop(e, section.key)}
-              />
-            );
-          })}
+                return (
+                  <SortableSectionCard
+                    key={section.key}
+                    title={section.title}
+                    sectionKey={section.key}
+                    selectedFields={selectedFields}
+                    onFieldRemove={handleFieldRemove}
+                    onFieldMoveUp={moveSectionFieldUp}
+                    onFieldMoveDown={moveSectionFieldDown}
+                    isDragOver={dragOverSection === section.key}
+                    onDragOver={(e) => handleSectionDragOver(e, section.key)}
+                    onDragLeave={handleSectionDragLeave}
+                    onDrop={(e) => handleSectionDrop(e, section.key)}
+                  />
+                );
+              })}
+            </SortableContext>
+          </DndContext>
         </Box>
       </Box>
 

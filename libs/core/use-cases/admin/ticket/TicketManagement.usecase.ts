@@ -24,6 +24,7 @@ export interface IAddCommentInput {
   isInternal?: boolean;
   isSelfNote?: boolean;
   notifyAssigneesOnly?: boolean;
+  isEmail?: boolean;
   status?: string;
   attachments?: string;
   createdBy: string;
