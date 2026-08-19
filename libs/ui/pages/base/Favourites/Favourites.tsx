@@ -7,34 +7,44 @@ import {
   PageHeader,
   Typography,
 } from '../../../components';
-import { InputAdornment, Tabs, Tab } from '@mui/material';
+import { InputAdornment } from '@mui/material';
 import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import SearchIcon from '@mui/icons-material/Search';
 import { useStyles } from './styles';
 import useFavourites from './hooks/useFavourites';
-import TabPanel from './components/TabPanel';
-import { IncidentRow } from './types/Favourites.types';
+import { TicketTypeFilterField } from './components/TicketTypeFilterField';
+import { FavouriteRow } from './types/Favourites.types';
 
 const Favourites = () => {
   const { classes } = useStyles();
   const {
     isLoading,
-    tabValue,
-    setTabValue,
-    tableSearch,
-    setTableSearch,
-    tabData,
+    error,
+    selectedTicketType,
+    setSelectedTicketType,
+    ticketTypeOptions,
+    filteredList,
     columns,
     openIncident,
     getFilteredData,
-    TICKET_TABS,
-    EMPTY_MESSAGES,
+    tableSearch,
+    setTableSearch,
   } = useFavourites();
 
   if (isLoading) {
     return (
       <Box className={classes.container}>
         <Loader />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box className={classes.container}>
+        <Typography color='error' variant='body2'>
+          Failed to load tickets
+        </Typography>
       </Box>
     );
   }
@@ -48,21 +58,13 @@ const Favourites = () => {
       />
 
       <Box className={classes.tabsBox}>
-        <Tabs
-          value={tabValue}
-          onChange={(_, v) => {
-            setTabValue(v);
-            setTableSearch('');
-          }}
-          variant='scrollable'
-          scrollButtons='auto'
-          allowScrollButtonsMobile
-          className={classes.tabsFlex}
-        >
-          {TICKET_TABS.map(({ label, icon }) => (
-            <Tab key={label} icon={icon} iconPosition='start' label={label} title={label} />
-          ))}
-        </Tabs>
+        <Box sx={{ marginLeft: 'auto' }} className={classes.filterField}>
+          <TicketTypeFilterField
+            value={selectedTicketType}
+            options={ticketTypeOptions}
+            onChange={setSelectedTicketType}
+          />
+        </Box>
         <TextField
           placeholder='Search...'
           value={tableSearch}
@@ -80,34 +82,32 @@ const Favourites = () => {
         />
       </Box>
 
-      {tabData.map((list, idx) => (
-        <TabPanel key={idx} value={tabValue} index={idx}>
-          {getFilteredData(list).length === 0 ? (
-            <Box className={classes.emptyState}>
-              <BookmarksIcon className={classes.emptyIcon} />
-              <Typography variant='h6' color='text.secondary'>
-                {tableSearch ? 'No matching tickets' : EMPTY_MESSAGES[idx]}
+      <Box className={classes.tableContainer}>
+        {filteredList.length === 0 ? (
+          <Box className={classes.emptyState}>
+            <BookmarksIcon className={classes.emptyIcon} />
+            <Typography variant='h6' color='text.secondary'>
+              {selectedTicketType
+                ? 'No favourite tickets for this type'
+                : 'No favourite tickets yet'}
+            </Typography>
+            {!selectedTicketType && (
+              <Typography variant='body2' color='text.disabled' className={classes.emptySubtext}>
+                Star tickets to add them here.
               </Typography>
-              {idx >= 2 && !tableSearch && (
-                <Typography variant='body2' color='text.disabled' className={classes.emptySubtext}>
-                  Favorites for this ticket type will appear here once available.
-                </Typography>
-              )}
-            </Box>
-          ) : (
-            <Box className={classes.tableContainer}>
-              <DataTable
-                columns={columns}
-                data={getFilteredData(list)}
-                rowKey='id'
-                searchable={false}
-                initialRowsPerPage={10}
-                onRowClick={(row) => openIncident((row as IncidentRow).number)}
-              />
-            </Box>
-          )}
-        </TabPanel>
-      ))}
+            )}
+          </Box>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={getFilteredData(filteredList)}
+            rowKey='id'
+            searchable={false}
+            initialRowsPerPage={10}
+            onRowClick={(row) => openIncident((row as FavouriteRow).number)}
+          />
+        )}
+      </Box>
     </Grid>
   );
 };

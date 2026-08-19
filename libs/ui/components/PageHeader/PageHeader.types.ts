@@ -8,9 +8,12 @@ export interface PageHeaderProps {
     onClick: () => void;
     icon?: React.ReactNode;
   };
+  icon?: React.ReactNode;
   sx?: SxProps<Theme>;
   titleSx?: SxProps<Theme>;
   descriptionSx?: SxProps<Theme>;
   className?: string;
   titleClassName?: string;
+  descriptionClassName?: string;
+  iconClassName?: string;
 }

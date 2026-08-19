@@ -1,5 +1,7 @@
-import React, { useMemo, useState } from 'react';
-import { Typography } from '@mui/material';
+import React, { useEffect, useMemo, useState } from 'react';
+import { IconButton, Typography } from '@mui/material';
+import StarIcon from '@mui/icons-material/Star';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
 import { Column } from '@serviceops/component';
 import {
   useGetTicketsQuery,
@@ -12,7 +14,7 @@ import PriorityChip from '../components/PriorityChip';
 import StatusChip from '../components/StatusChip';
 import TicketTypeChip from '../components/TicketTypeChip';
 import { TicketManagementRow } from '../types/TicketManagement.types';
-import { getFilteredData as filterData } from '../utils/TicketManagement.utils';
+import { FAVORITES_KEY, getFilteredData as filterData } from '../utils/TicketManagement.utils';
 
 const dedupeById = (primary: IAdminTicket[] = [], drafts: IAdminTicket[] = []): IAdminTicket[] => {
   const map = new Map<number, IAdminTicket>();
@@ -47,7 +49,7 @@ const useTicketManagement = () => {
     data: allTicketsRaw,
     isLoading: ticketsLoading,
     error: ticketsError,
-    refetch: refetchTickets,
+    refetch: _refetchTickets,
   } = useGetTicketsQuery(undefined, {
     refetchOnFocus: true,
     refetchOnReconnect: true,
@@ -58,7 +60,7 @@ const useTicketManagement = () => {
   const {
     data: allDraftsRaw,
     isLoading: draftsLoading,
-    refetch: refetchDrafts,
+    refetch: _refetchDrafts,
   } = useGetDraftTicketsQuery(undefined, {
     refetchOnFocus: true,
     refetchOnReconnect: true,
@@ -81,6 +83,7 @@ const useTicketManagement = () => {
     const drafts = (allDraftsRaw || []) as IAdminTicket[];
     const merged = dedupeById(primary, drafts);
     return merged.map((t) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const raw = (t as any).customFieldValues;
       let parsed: Record<string, string> = {};
       if (raw === null || raw === '') {
@@ -123,6 +126,29 @@ const useTicketManagement = () => {
   const allRows = useMemo<TicketManagementRow[]>(() => {
     return allTickets.map((t) => toRow(t, typeNameByKey.get(t.ticketType) ?? t.ticketType));
   }, [allTickets, typeNameByKey]);
+
+  const [favorites, setFavorites] = useState<Set<number>>(() => {
+    try {
+      const stored = localStorage.getItem(FAVORITES_KEY);
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify([...favorites]));
+  }, [favorites]);
+
+  const toggleFavorite = (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      // eslint-disable-next-line no-unused-expressions
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
 
   const [selectedTicketType, setSelectedTicketType] = useState('');
 
@@ -228,6 +254,22 @@ const useTicketManagement = () => {
               year: 'numeric',
             })
           : '-',
+    },
+    {
+      id: 'favorite' as keyof TicketManagementRow,
+      label: 'Favorite',
+      minWidth: 50,
+      align: 'center',
+      sortable: false,
+      format: (_v, row: TicketManagementRow): React.ReactNode => (
+        <IconButton size='small' onClick={(e) => toggleFavorite(row.id, e)}>
+          {favorites.has(row.id) ? (
+            <StarIcon sx={{ color: '#faaf00', fontSize: 18 }} />
+          ) : (
+            <StarBorderIcon sx={{ fontSize: 18, color: 'text.disabled' }} />
+          )}
+        </IconButton>
+      ),
     },
   ];
 

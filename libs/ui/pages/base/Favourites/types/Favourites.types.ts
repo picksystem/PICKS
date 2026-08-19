@@ -1,3 +1,16 @@
-import { IIncident } from '../../../../../entities/interfaces';
+export type TicketKind = string;
 
-export type IncidentRow = IIncident & { sno: number };
+export interface FavouriteRow {
+  rowId: string;
+  sno: number;
+  id: number;
+  number: string;
+  ticketType: TicketKind;
+  ticketTypeName: string;
+  shortDescription: string | null;
+  caller: string;
+  priority: string | null;
+  status: string;
+  assignmentGroup: string | null;
+  createdAt: Date;
+}

@@ -1,5 +1,7 @@
 import { TicketManagementRow } from '../types/TicketManagement.types';
 
+export const FAVORITES_KEY = 'serivceops_favorite_tickets';
+
 export const getTableData = (list: TicketManagementRow[]): TicketManagementRow[] =>
   list.map((row, i) => ({ ...row, sno: i + 1 }));
 

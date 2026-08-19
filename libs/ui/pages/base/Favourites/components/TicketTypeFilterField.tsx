@@ -78,7 +78,9 @@ export const TicketTypeFilterField = ({
           setInputValue(e.target.value);
           handleInputChange(e.target.value);
         }}
-        onBlur={() => setOpen(false)}
+        onBlur={() => {
+          setTimeout(() => setOpen(false), 200);
+        }}
         onFocus={() => {
           const next = buildOptions(inputValue);
           setFilteredOptions(next);

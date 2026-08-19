@@ -1,38 +1,77 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { IconButton, Typography } from '@mui/material';
-import StarIcon from '@mui/icons-material/Star';
 import { Column } from '@serviceops/component';
-import { useGetTicketsQuery, useGetDraftTicketsQuery } from '@serviceops/services';
-import { IIncident } from '@serviceops/interfaces';
-import { constants } from '@serviceops/utils';
-import { IncidentRow } from '../types/Favourites.types';
+import StarIcon from '@mui/icons-material/Star';
 import {
-  FAVORITES_KEY,
-  TICKET_TABS,
-  EMPTY_MESSAGES,
-  getFilteredData as filterData,
-} from '../utils/Favourites.utils';
+  useGetTicketsQuery,
+  useGetDraftTicketsQuery,
+  useGetTicketTypeQuery,
+} from '@serviceops/services';
+import { IAdminTicket, ITicketType } from '@serviceops/interfaces';
+import { constants } from '@serviceops/utils';
+import { FavouriteRow } from '../types/Favourites.types';
 import PriorityChip from '../components/PriorityChip';
 import StatusChip from '../components/StatusChip';
+import TicketTypeChip from '../components/TicketTypeChip';
+import { FAVORITES_KEY, getFilteredData as filterData } from '../utils/Favourites.utils';
+
+const dedupeById = (primary: IAdminTicket[] = [], drafts: IAdminTicket[] = []): IAdminTicket[] => {
+  const map = new Map<number, IAdminTicket>();
+  primary.forEach((item) => map.set(item.id, item));
+  drafts.forEach((item) => {
+    if (!map.has(item.id)) map.set(item.id, item);
+  });
+  return Array.from(map.values()).sort((a, b) => b.id - a.id);
+};
+
+const toRow = (ticket: IAdminTicket, ticketTypeName: string): FavouriteRow => ({
+  rowId: `${ticket.ticketType}-${ticket.id}`,
+  sno: 0,
+  id: ticket.id,
+  number: ticket.number,
+  ticketType: ticket.ticketType,
+  ticketTypeName,
+  shortDescription: ticket.shortDescription ?? null,
+  caller: ticket.caller ?? '',
+  priority: ticket.priority ?? null,
+  status: ticket.status ?? null,
+  assignmentGroup: ticket.assignmentGroup ?? null,
+  createdAt: ticket.createdAt,
+});
 
 const useFavourites = () => {
   const { BasePath } = constants;
 
   const {
-    data: incidents,
-    isLoading: incidentsLoading,
-    error: incidentsError,
-  } = useGetTicketsQuery(void 0);
+    data: allTicketsRaw,
+    isLoading: ticketsLoading,
+    error: ticketsError,
+  } = useGetTicketsQuery(undefined, {
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+    pollingInterval: 30000,
+  });
+
   const {
-    data: draftIncidents,
+    data: allDraftsRaw,
     isLoading: draftsLoading,
     error: draftsError,
-  } = useGetDraftTicketsQuery(void 0);
+  } = useGetDraftTicketsQuery(undefined, {
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+    pollingInterval: 30000,
+  });
 
-  const isLoading = incidentsLoading || draftsLoading;
-  const error = incidentsError || draftsError;
+  const {
+    data: ticketTypesRaw,
+    isLoading: ticketTypesLoading,
+    error: ticketTypesError,
+  } = useGetTicketTypeQuery();
 
-  const [tabValue, setTabValue] = useState(0);
+  const isLoading = ticketsLoading || draftsLoading || ticketTypesLoading;
+  const error = ticketsError || draftsError || ticketTypesError;
+
+  const [selectedTicketType, setSelectedTicketType] = useState('');
   const [tableSearch, setTableSearch] = useState('');
 
   const [favorites, setFavorites] = useState<Set<number>>(() => {
@@ -71,18 +110,75 @@ const useFavourites = () => {
     });
   };
 
-  const favoriteIncidents = useMemo(() => {
-    const map = new Map<number, IIncident>();
-    (incidents || [])
-      .filter((t) => t.ticketType === 'incident')
-      .forEach((inc) => map.set(inc.id, inc as IIncident));
-    (draftIncidents || [])
-      .filter((t) => t.ticketType === 'incident')
-      .forEach((inc) => {
-        if (!map.has(inc.id)) map.set(inc.id, inc as IIncident);
-      });
-    return Array.from(map.values()).filter((inc) => favorites.has(inc.id));
-  }, [incidents, draftIncidents, favorites]);
+  // Merge primary tickets + drafts, coerce customFieldValues, sort newest-first
+  const allTickets = useMemo(() => {
+    const primary = (allTicketsRaw || []) as IAdminTicket[];
+    const drafts = (allDraftsRaw || []) as IAdminTicket[];
+    const merged = dedupeById(primary, drafts);
+    return merged.map((t) => {
+      const raw = (t as any).customFieldValues;
+      let parsed: Record<string, string> = {};
+      if (raw === null || raw === '') {
+        parsed = {};
+      } else if (typeof raw === 'string') {
+        try {
+          const obj = JSON.parse(raw);
+          parsed =
+            typeof obj === 'object' && obj !== null
+              ? Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, String(v)]))
+              : {};
+        } catch {
+          parsed = {};
+        }
+      } else if (typeof raw === 'object') {
+        parsed = Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, String(v)]));
+      }
+      return { ...(t as IAdminTicket), customFieldValues: parsed };
+    });
+  }, [allTicketsRaw, allDraftsRaw]);
+
+  // Map ticket type keys to display names
+  const typeNameByKey = useMemo(() => {
+    const map = new Map<string, string>();
+    (ticketTypesRaw || []).forEach((tt: ITicketType) => map.set(tt.type, tt.name));
+    return map;
+  }, [ticketTypesRaw]);
+
+  // Active ticket types sorted by displayOrder
+  const ticketTypes = useMemo(
+    () =>
+      (ticketTypesRaw || [])
+        .filter((tt) => tt.isActive)
+        .slice()
+        .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)),
+    [ticketTypesRaw],
+  );
+
+  // Convert all tickets to rows
+  const allRows = useMemo(() => {
+    return allTickets.map((t) => toRow(t, typeNameByKey.get(t.ticketType) ?? t.ticketType));
+  }, [allTickets, typeNameByKey]);
+
+  // Filter by favorites
+  const favoriteRows = useMemo(() => {
+    return allRows.filter((r) => favorites.has(r.id));
+  }, [allRows, favorites]);
+
+  // Filter by selected ticket type
+  const filteredList = useMemo<FavouriteRow[]>(() => {
+    if (!selectedTicketType) return favoriteRows;
+    return favoriteRows.filter((r) => r.ticketType === selectedTicketType);
+  }, [favoriteRows, selectedTicketType]);
+
+  // Build dropdown options from active ticket types
+  const ticketTypeOptions = useMemo(
+    () =>
+      ticketTypes.map((tt) => ({
+        value: tt.type,
+        label: tt.name,
+      })),
+    [ticketTypes],
+  );
 
   const openIncident = (number: string) => {
     window.open(
@@ -91,9 +187,7 @@ const useFavourites = () => {
     );
   };
 
-  const tabData: IIncident[][] = [favoriteIncidents, favoriteIncidents, [], [], [], [], []];
-
-  const columns: Column<IncidentRow>[] = [
+  const columns: Column<FavouriteRow>[] = [
     { id: 'sno', label: 'S.No', minWidth: 60, align: 'center', sortable: false },
     {
       id: 'number',
@@ -105,7 +199,7 @@ const useFavourites = () => {
           component='span'
           onClick={(e) => {
             e.stopPropagation();
-            openIncident((row as IncidentRow).number);
+            openIncident((row as FavouriteRow).number);
           }}
           sx={{
             color: 'primary.main',
@@ -116,6 +210,15 @@ const useFavourites = () => {
         >
           {String(v || '-')}
         </Typography>
+      ),
+    },
+    {
+      id: 'ticketTypeName',
+      label: 'Ticket Type',
+      minWidth: 150,
+      align: 'center',
+      format: (_v, row): React.ReactNode => (
+        <TicketTypeChip type={row.ticketType} name={row.ticketTypeName} />
       ),
     },
     {
@@ -163,12 +266,12 @@ const useFavourites = () => {
           : '-',
     },
     {
-      id: 'favorite' as keyof IncidentRow,
+      id: 'favorite' as keyof FavouriteRow,
       label: 'Remove',
       minWidth: 80,
       align: 'center',
       sortable: false,
-      format: (_v, row: IncidentRow): React.ReactNode => (
+      format: (_v, row: FavouriteRow): React.ReactNode => (
         <IconButton size='small' onClick={(e) => removeFavorite(row.id, e)}>
           <StarIcon sx={{ color: '#faaf00', fontSize: 18 }} />
         </IconButton>
@@ -176,21 +279,22 @@ const useFavourites = () => {
     },
   ];
 
-  const getFilteredData = (list: IIncident[]) => filterData(list, tableSearch);
+  const getFilteredData = (list: FavouriteRow[]) => filterData(list, tableSearch);
 
   return {
     isLoading,
     error,
-    tabValue,
-    setTabValue,
-    tableSearch,
-    setTableSearch,
-    tabData,
+    selectedTicketType,
+    setSelectedTicketType,
+    ticketTypeOptions,
+    filteredList,
+    favoriteRows,
+    ticketTypes,
     columns,
     openIncident,
     getFilteredData,
-    TICKET_TABS,
-    EMPTY_MESSAGES,
+    tableSearch,
+    setTableSearch,
   };
 };
 

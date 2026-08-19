@@ -14,32 +14,22 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   pageHeader: {
     marginBottom: theme.spacing(2.5),
-    background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #0369a1 100%)',
+    backgroundColor: '#ffffff',
     borderRadius: 12,
-    padding: theme.spacing(3, 3.5),
+    padding: theme.spacing(2.5, 3),
     position: 'relative',
+    border: '1px solid #e5e7eb',
     overflow: 'hidden',
     '&::before': {
       content: '""',
       position: 'absolute',
-      top: -60,
-      right: -60,
-      width: 240,
-      height: 240,
-      borderRadius: '50%',
-      background: 'rgba(255,255,255,0.05)',
-      pointerEvents: 'none',
-    },
-    '&::after': {
-      content: '""',
-      position: 'absolute',
-      bottom: -40,
-      left: '30%',
-      width: 160,
-      height: 160,
-      borderRadius: '50%',
-      background: 'rgba(255,255,255,0.04)',
-      pointerEvents: 'none',
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: 4,
+      backgroundColor: '#2563eb',
+      borderTopLeftRadius: 12,
+      borderBottomLeftRadius: 12,
     },
     [theme.breakpoints.down('sm')]: {
       padding: theme.spacing(2),
@@ -63,14 +53,14 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   title: {
     fontWeight: 700,
-    color: '#fff',
+    color: '#1e293b',
     [theme.breakpoints.down('sm')]: {
       fontSize: '1.2rem',
     },
   },
 
   description: {
-    color: 'rgba(255,255,255,0.75)',
+    color: '#64748b',
     marginTop: theme.spacing(0.5),
     fontSize: '0.875rem',
     position: 'relative',

@@ -171,8 +171,8 @@ export class AdminTicketGateway {
 
     for (const field of fields) {
       if (field in data) {
-        const key = field as keyof ICreateTicketInput;
-        const value = data[key];
+        const key = field as string;
+        const value = (data as any)[key];
 
         if (
           (key === 'actualEndDate' ||
