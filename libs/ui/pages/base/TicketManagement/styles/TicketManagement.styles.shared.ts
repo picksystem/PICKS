@@ -74,19 +74,30 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   tabsBox: {
-    borderBottom: `1px solid ${theme.palette.divider}`,
-    marginBottom: theme.spacing(2),
     display: 'flex',
+    justifyContent: 'flex-end',
     alignItems: 'center',
+    gap: theme.spacing(1.5),
+    marginBottom: theme.spacing(2),
   },
 
   tabsFlex: {
     flex: 1,
   },
 
+  filterField: {
+    width: '260px',
+    '& .MuiOutlinedInput-root': {
+      height: '34px',
+      fontSize: '0.85rem',
+      backgroundColor: theme.palette.common.white,
+      borderRadius: '6px',
+    },
+    '& .MuiInputBase-input': { padding: '4px 8px', fontSize: '0.85rem' },
+    '& .MuiInputBase-input::placeholder': { opacity: 0.7 },
+  },
+
   searchField: {
-    marginLeft: theme.spacing(2),
-    flexShrink: 0,
     width: '220px',
     '& .MuiOutlinedInput-root': {
       height: '34px',

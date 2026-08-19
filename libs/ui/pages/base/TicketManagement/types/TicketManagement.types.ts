@@ -1,4 +1,4 @@
-export type TicketKind = 'incident' | 'service_request' | 'advisory_request';
+export type TicketKind = string;
 
 export interface TicketManagementRow {
   rowId: string;

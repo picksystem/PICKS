@@ -20,6 +20,8 @@ export class AdminTicketGateway {
 
   async create(data: ICreateTicketInput): Promise<IAdminTicket> {
     const raw: any = { ...data, updatedAt: new Date() };
+    // Remove fields not present in the AdminTicket schema
+    delete raw.isReleaseManagement;
     if (raw.customFieldValues !== undefined) {
       raw.customFieldValues = JSON.stringify(raw.customFieldValues);
     }
@@ -100,45 +102,71 @@ export class AdminTicketGateway {
       'secondaryResources',
       'isRecurring',
       'isMajor',
-      'isReleaseManagement',
       'notes',
       'relatedRecords',
       'attachments',
-      'followers',
-      'internalFollowers',
       'clientPrimaryContact',
       'billingCode',
       'analysisSummary',
-      'ticketSource',
       'cancellationReasonCode',
       'cancellationComment',
       'reopenReasonCode',
       'reopenComment',
-      'convertedFrom',
       'conversionReasonCode',
       'conversionComment',
       'changeType',
-      'changeJustification',
-      'changeCurrentProcess',
-      'changeProposedProcess',
-      'changeRiskAnalysis',
-      'changeBackoutPlan',
-      'changeTestPlan',
-      'changeTestResults',
-      'changeAccessRequirements',
-      'changeProductOwner',
-      'changeKnownError',
-      'changeProductBugFix',
-      'changeProductBugId',
-      'changeVendorName',
-      'changeBugDetails',
-      'changeVendorTicketRef',
-      'changeCabRequired',
-      'changeCabId',
-      'changeTestCompleted',
-      'changeTestEvidence',
-      'timesReopened',
+      'justificationOfChange',
+      'currentProcess',
+      'proposedProcess',
+      'changeRiskImpactAnalysis',
+      'backoutPlan',
+      'testPlan',
+      'testResults',
+      'accessRequirements',
+      'productOwner',
+      'knownError',
+      'productBugFix',
+      'productBugId',
+      'vendorName',
+      'bugDetails',
+      'vendorTicketReference',
+      'cabApprovalRequired',
+      'cabId',
+      'testCompleted',
+      'testEvidenceRetained',
+      'numberOfTimesReopened',
       'customFieldValues',
+      // date / datetime fields
+      'actualEndDate',
+      'actualStartDate',
+      'approvedAt',
+      'approvedBy',
+      'approvedEstimatesHours',
+      'closedAt',
+      'closedBy',
+      'eta',
+      'proposedEndDate',
+      'proposedStartDate',
+      'reopenedAt',
+      'reopenedBy',
+      'resolvedAt',
+      'resolvedBy',
+      // boolean / misc fields
+      'additionalField1',
+      'additionalField2',
+      'additionalField3',
+      'additionalField4',
+      'additionalField5',
+      'additionalField6',
+      'additionalField7',
+      'additionalField8',
+      'additionalField9',
+      'cabApprovalRequired',
+      'customerConfirmation',
+      'isRecurringIssue',
+      'relatedTicket',
+      'rootCauseIdentified',
+      'testCompleted',
     ];
 
     for (const field of fields) {
@@ -147,12 +175,15 @@ export class AdminTicketGateway {
         const value = data[key];
 
         if (
-          (key === 'dueDate' ||
+          (key === 'actualEndDate' ||
+            key === 'actualStartDate' ||
+            key === 'approvedAt' ||
+            key === 'closedAt' ||
             key === 'eta' ||
-            key === 'changeProposedStart' ||
-            key === 'changeProposedEnd' ||
-            key === 'changeActualStart' ||
-            key === 'changeActualEnd') &&
+            key === 'proposedEndDate' ||
+            key === 'proposedStartDate' ||
+            key === 'reopenedAt' ||
+            key === 'resolvedAt') &&
           typeof value === 'string'
         ) {
           updateData[field] = new Date(value);

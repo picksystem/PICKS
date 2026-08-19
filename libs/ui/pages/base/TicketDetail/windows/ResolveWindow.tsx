@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Button, TextField, Paper } from '../../../../components';
 import { alpha, darken, InputAdornment } from '@mui/material';
-import { Search as SearchIcon, Clear as ClearIcon, CloudUploadOutlined as CloudUploadOutlinedIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
+import {
+  Search as SearchIcon,
+  Clear as ClearIcon,
+  CloudUploadOutlined as CloudUploadOutlinedIcon,
+  CheckCircle as CheckCircleIcon,
+} from '@mui/icons-material';
 import { ResolutionCode } from '@serviceops/interfaces';
 import { useCreateTicketResolutionMutation } from '../../../../../services';
 import { useAuth, useNotification } from '@serviceops/hooks';
@@ -44,12 +49,14 @@ const ResolveWindow = ({
   const isLoading = resLoading || updLoading;
 
   // ── Build options from configuration ──────────────────────────────────────
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const statusList = statuses?.items
     ? statuses.items
         .filter((s) => s.isActive)
         .map((s) => ({ id: String(s.id), label: s.displayName || s.name }))
     : [];
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const templateList = resolutionTemplates?.items
     ? resolutionTemplates.items
         .filter((t) => t.active)
@@ -417,7 +424,15 @@ const ResolveWindow = ({
         </Box>
 
         {/* Checkboxes */}
-        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 3, alignItems: 'center', flexWrap: 'wrap' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            gap: 3,
+            alignItems: 'center',
+            flexWrap: 'wrap',
+          }}
+        >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
             <Box
               component='input'
@@ -428,7 +443,12 @@ const ResolveWindow = ({
             />
             <label
               htmlFor='customer-confirmation'
-              style={{ fontSize: '0.85rem', color: '#374151', cursor: 'pointer', whiteSpace: 'nowrap' }}
+              style={{
+                fontSize: '0.85rem',
+                color: '#374151',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
             >
               Customer Confirmation
             </label>
@@ -443,7 +463,12 @@ const ResolveWindow = ({
             />
             <label
               htmlFor='recurring-issue'
-              style={{ fontSize: '0.85rem', color: '#374151', cursor: 'pointer', whiteSpace: 'nowrap' }}
+              style={{
+                fontSize: '0.85rem',
+                color: '#374151',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
             >
               Recurring Issue
             </label>
@@ -458,7 +483,12 @@ const ResolveWindow = ({
             />
             <label
               htmlFor='root-cause'
-              style={{ fontSize: '0.85rem', color: '#374151', cursor: 'pointer', whiteSpace: 'nowrap' }}
+              style={{
+                fontSize: '0.85rem',
+                color: '#374151',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
             >
               Root Cause Identified
             </label>
@@ -576,7 +606,9 @@ const ResolveWindow = ({
 
           {/* File Upload */}
           <Box
-            onClick={() => document.querySelector<HTMLInputElement>('.resolve-upload-input')?.click()}
+            onClick={() =>
+              document.querySelector<HTMLInputElement>('.resolve-upload-input')?.click()
+            }
             sx={{
               border: '2px dashed #d1d5db',
               borderRadius: '4px',

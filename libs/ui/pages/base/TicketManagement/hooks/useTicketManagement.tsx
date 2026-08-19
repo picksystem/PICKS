@@ -1,142 +1,146 @@
 import React, { useMemo, useState } from 'react';
 import { Typography } from '@mui/material';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { Column } from '@serviceops/component';
 import {
   useGetTicketsQuery,
   useGetDraftTicketsQuery,
   useGetTicketTypeQuery,
 } from '@serviceops/services';
-import { IIncident, IServiceRequest, IAdvisoryRequest, ITicketType } from '@serviceops/interfaces';
+import { IAdminTicket, ITicketType } from '@serviceops/interfaces';
 import { constants } from '@serviceops/utils';
 import PriorityChip from '../components/PriorityChip';
 import StatusChip from '../components/StatusChip';
 import TicketTypeChip from '../components/TicketTypeChip';
-import { TicketKind, TicketManagementRow } from '../types/TicketManagement.types';
+import { TicketManagementRow } from '../types/TicketManagement.types';
 import { getFilteredData as filterData } from '../utils/TicketManagement.utils';
 
-const dedupeById = <T extends { id: number }>(primary: T[] = [], drafts: T[] = []): T[] => {
-  const map = new Map<number, T>();
+const dedupeById = (primary: IAdminTicket[] = [], drafts: IAdminTicket[] = []): IAdminTicket[] => {
+  const map = new Map<number, IAdminTicket>();
   primary.forEach((item) => map.set(item.id, item));
   drafts.forEach((item) => {
     if (!map.has(item.id)) map.set(item.id, item);
   });
-  return Array.from(map.values());
+  return Array.from(map.values()).sort((a, b) => b.id - a.id);
 };
 
-const toRow = (
-  ticket: IIncident | IServiceRequest | IAdvisoryRequest,
-  ticketType: TicketKind,
-  ticketTypeName: string,
-): TicketManagementRow => ({
-  rowId: `${ticketType}-${ticket.id}`,
+const toRow = (ticket: IAdminTicket, ticketTypeName: string): TicketManagementRow => ({
+  rowId: `${ticket.ticketType}-${ticket.id}`,
   sno: 0,
   id: ticket.id,
   number: ticket.number,
-  ticketType,
+  ticketType: ticket.ticketType,
   ticketTypeName,
-  shortDescription: ticket.shortDescription,
-  caller: ticket.caller,
-  priority: ticket.priority,
-  status: ticket.status,
-  assignmentGroup: ticket.assignmentGroup,
+  shortDescription: ticket.shortDescription ?? null,
+  caller: ticket.caller ?? null,
+  priority: ticket.priority ?? null,
+  status: ticket.status ?? null,
+  assignmentGroup: ticket.assignmentGroup ?? null,
   createdAt: ticket.createdAt,
 });
 
 const useTicketManagement = () => {
   const { BasePath } = constants;
 
+  // Fetch ALL tickets — no type filter, so every ticket type (task, change, demo, etc.)
+  // is included. The API endpoint returns all types when ticketType is not provided.
   const {
-    data: incidents,
-    isLoading: incidentsLoading,
-    error: incidentsError,
-  } = useGetTicketsQuery({ ticketType: 'incident' });
-  const { data: draftIncidents, isLoading: draftIncidentsLoading } =
-    useGetDraftTicketsQuery({ ticketType: 'incident' });
+    data: allTicketsRaw,
+    isLoading: ticketsLoading,
+    error: ticketsError,
+    refetch: refetchTickets,
+  } = useGetTicketsQuery(undefined, {
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+    pollingInterval: 30000,
+  });
 
+  // Fetch ALL drafts — no type filter
   const {
-    data: serviceRequests,
-    isLoading: serviceRequestsLoading,
-    error: serviceRequestsError,
-  } = useGetTicketsQuery({ ticketType: 'service_request' });
-  const { data: draftServiceRequests, isLoading: draftServiceRequestsLoading } =
-    useGetDraftTicketsQuery({ ticketType: 'service_request' });
+    data: allDraftsRaw,
+    isLoading: draftsLoading,
+    refetch: refetchDrafts,
+  } = useGetDraftTicketsQuery(undefined, {
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+    pollingInterval: 30000,
+  });
 
-  const {
-    data: advisoryRequests,
-    isLoading: advisoryRequestsLoading,
-    error: advisoryRequestsError,
-  } = useGetTicketsQuery({ ticketType: 'advisory_request' });
-  const { data: draftAdvisoryRequests, isLoading: draftAdvisoryRequestsLoading } =
-    useGetDraftTicketsQuery({ ticketType: 'advisory_request' });
-
+  // Fetch ticket type definitions for tab labels
   const {
     data: ticketTypesRaw,
     isLoading: ticketTypesLoading,
     error: ticketTypesError,
   } = useGetTicketTypeQuery();
 
-  const isLoading =
-    incidentsLoading ||
-    draftIncidentsLoading ||
-    serviceRequestsLoading ||
-    draftServiceRequestsLoading ||
-    advisoryRequestsLoading ||
-    draftAdvisoryRequestsLoading ||
-    ticketTypesLoading;
+  const isLoading = ticketsLoading || draftsLoading || ticketTypesLoading;
+  const error = ticketsError || ticketTypesError;
 
-  const error = incidentsError || serviceRequestsError || advisoryRequestsError || ticketTypesError;
+  // Merge primary tickets + drafts, safely coerce customFieldValues
+  const allTickets = useMemo<IAdminTicket[]>(() => {
+    const primary = (allTicketsRaw || []) as IAdminTicket[];
+    const drafts = (allDraftsRaw || []) as IAdminTicket[];
+    const merged = dedupeById(primary, drafts);
+    return merged.map((t) => {
+      const raw = (t as any).customFieldValues;
+      let parsed: Record<string, string> = {};
+      if (raw === null || raw === '') {
+        parsed = {};
+      } else if (typeof raw === 'string') {
+        try {
+          const obj = JSON.parse(raw);
+          parsed =
+            typeof obj === 'object' && obj !== null
+              ? Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, String(v)]))
+              : {};
+        } catch {
+          parsed = {};
+        }
+      } else if (typeof raw === 'object') {
+        parsed = Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, String(v)]));
+      }
+      return { ...(t as IAdminTicket), customFieldValues: parsed };
+    });
+  }, [allTicketsRaw, allDraftsRaw]);
 
+  // Map ticket type keys to display names
   const typeNameByKey = useMemo(() => {
     const map = new Map<string, string>();
     (ticketTypesRaw || []).forEach((tt: ITicketType) => map.set(tt.type, tt.name));
     return map;
   }, [ticketTypesRaw]);
 
-  const nameForType = (type: TicketKind, fallback: string) => typeNameByKey.get(type) ?? fallback;
-
-  const allTickets = useMemo<TicketManagementRow[]>(() => {
-    const incidentRows = dedupeById(incidents, draftIncidents).map((t) =>
-      toRow(t as any, 'incident', nameForType('incident', 'Incident')),
-    );
-    const serviceRequestRows = dedupeById(serviceRequests, draftServiceRequests).map((t) =>
-      toRow(t as any, 'service_request', nameForType('service_request', 'Service Request')),
-    );
-    const advisoryRequestRows = dedupeById(advisoryRequests, draftAdvisoryRequests).map((t) =>
-      toRow(t as any, 'advisory_request', nameForType('advisory_request', 'Advisory Request')),
-    );
-    return [...incidentRows, ...serviceRequestRows, ...advisoryRequestRows];
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    incidents,
-    draftIncidents,
-    serviceRequests,
-    draftServiceRequests,
-    advisoryRequests,
-    draftAdvisoryRequests,
-    typeNameByKey,
-  ]);
-
+  // Active ticket types sorted by displayOrder
   const ticketTypes = useMemo(
     () =>
       (ticketTypesRaw || [])
         .filter((tt) => tt.isActive)
         .slice()
-        .sort((a, b) => a.displayOrder - b.displayOrder),
+        .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)),
     [ticketTypesRaw],
   );
 
-  const [tabValue, setTabValue] = useState(0);
-  const [tableSearch, setTableSearch] = useState('');
+  // Convert tickets to rows
+  const allRows = useMemo<TicketManagementRow[]>(() => {
+    return allTickets.map((t) => toRow(t, typeNameByKey.get(t.ticketType) ?? t.ticketType));
+  }, [allTickets, typeNameByKey]);
 
-  const tabLists = useMemo<TicketManagementRow[][]>(
-    () => [
-      allTickets,
-      ...ticketTypes.map((tt) => allTickets.filter((t) => t.ticketType === tt.type)),
-    ],
-    [allTickets, ticketTypes],
+  const [selectedTicketType, setSelectedTicketType] = useState('');
+
+  // Build dropdown options from active ticket types
+  const ticketTypeOptions = useMemo(
+    () =>
+      ticketTypes.map((tt) => ({
+        value: tt.type,
+        label: tt.name,
+      })),
+    [ticketTypes],
   );
+
+  // Filter the ticket list based on the selected ticket type (or show all)
+  const filteredList = useMemo<TicketManagementRow[]>(() => {
+    if (!selectedTicketType) return allRows;
+    return allRows.filter((r) => r.ticketType === selectedTicketType);
+  }, [allRows, selectedTicketType]);
 
   const openTicket = (number: string) => {
     window.open(
@@ -145,16 +149,7 @@ const useTicketManagement = () => {
     );
   };
 
-  const tabLabels = useMemo(
-    () => [
-      { label: `All (${tabLists[0].length})`, icon: <AssignmentIcon /> },
-      ...ticketTypes.map((tt, i) => ({
-        label: `${tt.name} (${tabLists[i + 1].length})`,
-        icon: <ConfirmationNumberIcon />,
-      })),
-    ],
-    [tabLists, ticketTypes],
-  );
+  const [tableSearch, setTableSearch] = useState('');
 
   const columns: Column<TicketManagementRow>[] = [
     { id: 'sno', label: 'S.No', minWidth: 60, align: 'center', sortable: false },
@@ -241,16 +236,17 @@ const useTicketManagement = () => {
   return {
     isLoading,
     error,
-    tabValue,
-    setTabValue,
-    tableSearch,
-    setTableSearch,
-    tabLists,
-    tabLabels,
+    selectedTicketType,
+    setSelectedTicketType,
+    ticketTypeOptions,
+    filteredList,
+    allRows,
     ticketTypes,
     columns,
     openTicket,
     getFilteredData,
+    tableSearch,
+    setTableSearch,
   };
 };
 

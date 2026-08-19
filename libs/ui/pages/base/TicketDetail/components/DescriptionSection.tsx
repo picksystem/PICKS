@@ -8,15 +8,6 @@ import { TicketEntity, TicketUpdateInput } from '../types/ticketDetail.types';
 /*  segment format the editor expects.                                */
 /* ------------------------------------------------------------------ */
 
-const escapeHtml = (text: string): string =>
-  text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-
-/** Strip HTML tags → plain text */
 const htmlToPlainText = (html: string): string => {
   const tmp = document.createElement('div');
   tmp.innerHTML = html;
@@ -24,7 +15,7 @@ const htmlToPlainText = (html: string): string => {
 };
 
 /** Build a RichTextValue from a plain-text or HTML string */
-const toRichTextValue = (raw: string | undefined | null): any => {
+const toRichTextValue = (raw: string | undefined | null): { segments: { text: string }[] } => {
   if (!raw) return { segments: [] };
 
   // If it already contains HTML tags, extract the text and treat each
@@ -41,8 +32,8 @@ const toRichTextValue = (raw: string | undefined | null): any => {
 };
 
 /** Convert RichTextValue back to a plain-text string for storage */
-const richTextValueToString = (value: any): string =>
-  value.segments?.map((s: any) => s.text).join('\n') ?? '';
+const richTextValueToString = (value: { segments?: { text: string }[] }): string =>
+  value.segments?.map((s) => s.text).join('\n') ?? '';
 
 interface DescriptionSectionProps {
   incident: TicketEntity;
@@ -63,7 +54,7 @@ const DescriptionSection = ({
   // *source* string actually changes (not on every parent render).
   const richTextValue = toRichTextValue(editFormData.description ?? incident.description);
 
-  const handleDescriptionChange = (value: any) => {
+  const handleDescriptionChange = (value: { segments?: { text: string }[] }) => {
     onEditFormChange({ description: richTextValueToString(value) });
   };
 
@@ -76,7 +67,7 @@ const DescriptionSection = ({
         {isEditing ? (
           <>
             <TextField
-              label='Short Description *'
+              label='Short Description'
               fullWidth
               size='small'
               required
@@ -88,7 +79,7 @@ const DescriptionSection = ({
               <RichTextEditor
                 value={richTextValue}
                 onChange={handleDescriptionChange}
-                title='Description *'
+                title='Description'
                 placeholder='Describe the issue in detail...'
                 showFooterActions={false}
                 required

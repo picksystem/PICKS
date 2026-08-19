@@ -5,34 +5,34 @@ import {
   Grid,
   Typography,
   TextField,
-  Tabs,
-  Tab,
   PageHeader,
 } from '@serviceops/component';
 import { InputAdornment } from '@mui/material';
-import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import SearchIcon from '@mui/icons-material/Search';
 import { useStyles } from './styles';
 import useTicketManagement from './hooks/useTicketManagement';
-import TabPanel from './components/TabPanel';
 import { TicketManagementRow } from './types/TicketManagement.types';
+import { TicketTypeFilterField } from './components/TicketTypeFilterField';
 
 const TicketManagement = () => {
   const { classes } = useStyles();
   const {
     isLoading,
     error,
-    tabValue,
-    setTabValue,
-    tableSearch,
-    setTableSearch,
-    tabLists,
-    tabLabels,
-    ticketTypes,
+    selectedTicketType,
+    setSelectedTicketType,
+    ticketTypeOptions,
+    filteredList,
     columns,
     openTicket,
     getFilteredData,
+    tableSearch,
+    setTableSearch,
   } = useTicketManagement();
+
+  // The hook's RTK Query options (refetchOnFocus: true, pollingInterval: 30000)
+  // automatically refresh data when the tab regains focus or after 30 seconds,
+  // ensuring newly submitted tickets appear without a manual page reload.
 
   if (isLoading)
     return (
@@ -60,23 +60,15 @@ const TicketManagement = () => {
       />
 
       <Box className={classes.tabsBox}>
-        <Tabs
-          value={tabValue}
-          onChange={(_, v) => {
-            setTabValue(v);
-            setTableSearch('');
-          }}
-          variant='scrollable'
-          scrollButtons='auto'
-          allowScrollButtonsMobile
-          className={classes.tabsFlex}
-        >
-          {tabLabels.map(({ label, icon }) => (
-            <Tab key={label} icon={icon} iconPosition='start' label={label} title={label} />
-          ))}
-        </Tabs>
+        <Box sx={{ marginLeft: 'auto' }} className={classes.filterField}>
+          <TicketTypeFilterField
+            value={selectedTicketType}
+            options={ticketTypeOptions}
+            onChange={setSelectedTicketType}
+          />
+        </Box>
         <TextField
-          placeholder='Search...'
+          placeholder='Search tickets...'
           value={tableSearch}
           onChange={(e) => setTableSearch(e.target.value)}
           className={classes.searchField}
@@ -92,33 +84,24 @@ const TicketManagement = () => {
         />
       </Box>
 
-      {tabLists.map((list, idx) => (
-        <TabPanel key={idx} value={tabValue} index={idx}>
-          {getFilteredData(list).length === 0 ? (
-            <Box className={classes.emptyState}>
-              <ConfirmationNumberIcon className={classes.emptyIcon} />
-              <Typography variant='h6' color='text.secondary'>
-                {tableSearch
-                  ? 'No matching tickets'
-                  : idx === 0
-                    ? 'No tickets found'
-                    : `No ${ticketTypes[idx - 1]?.name ?? 'matching'} tickets`}
-              </Typography>
-            </Box>
-          ) : (
-            <Box className={classes.tableContainer}>
-              <DataTable
-                columns={columns}
-                data={getFilteredData(list)}
-                rowKey='rowId'
-                searchable={false}
-                initialRowsPerPage={10}
-                onRowClick={(row) => openTicket((row as TicketManagementRow).number)}
-              />
-            </Box>
-          )}
-        </TabPanel>
-      ))}
+      <Box className={classes.tableContainer}>
+        {filteredList.length === 0 ? (
+          <Box className={classes.emptyState}>
+            <Typography variant='h6' color='text.secondary'>
+              {selectedTicketType ? 'No tickets found for this type' : 'No tickets found'}
+            </Typography>
+          </Box>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={getFilteredData(filteredList)}
+            rowKey='rowId'
+            searchable={false}
+            initialRowsPerPage={10}
+            onRowClick={(row) => openTicket((row as TicketManagementRow).number)}
+          />
+        )}
+      </Box>
     </Grid>
   );
 };
