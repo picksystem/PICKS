@@ -18,7 +18,7 @@ const {
   BaseProblemManagementPage,
   BaseTimeManagementPage,
   BaseReportsPage,
-  BaseTicketTemplatesPage,
+  BaseTicketTypesConfigPage,
   BaseCabRequestPage,
   BaseKnowledgeBasePage,
   BaseTestScriptsPage,
@@ -187,7 +187,7 @@ const AppRoutes = () => {
                     />
                     <Route path={BasePath.TIME_MANAGEMENT} element={<BaseTimeManagementPage />} />
                     <Route path={BasePath.REPORTS} element={<BaseReportsPage />} />
-                    <Route path={BasePath.TICKET_TEMPLATES} element={<BaseTicketTemplatesPage />} />
+                    <Route path={BasePath.TICKET_TEMPLATES} element={<BaseTicketTypesConfigPage />} />
                     <Route path={BasePath.CAB_REQUEST} element={<BaseCabRequestPage />} />
                     <Route path={BasePath.KNOWLEDGE_BASE} element={<BaseKnowledgeBasePage />} />
                     <Route path={BasePath.TEST_SCRIPTS} element={<BaseTestScriptsPage />} />
