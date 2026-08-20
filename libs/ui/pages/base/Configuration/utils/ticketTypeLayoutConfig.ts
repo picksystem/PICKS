@@ -129,7 +129,7 @@ export const DETAILS_CORE_FIELDS: FieldOption[] = [
   { key: 'impact', label: 'Impact' },
   { key: 'urgency', label: 'Urgency' },
   { key: 'priorityChangeReasonCode', label: 'Priority change reason code' },
-  { key: 'priorityChangeNote', label: 'Priority change note' },
+  { key: 'priorityChangeNote', label: 'Internal note' },
   { key: 'cancellationReasonCode', label: 'Cancellation reason code' },
   { key: 'cancellationComment', label: 'Cancellation comment' },
   { key: 'reopenReasonCode', label: 'Reopen reason code' },

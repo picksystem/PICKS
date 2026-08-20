@@ -5,6 +5,8 @@ import {
   Comment as CommentIcon,
   Search as SearchIcon,
   Clear as ClearIcon,
+  CloudUploadOutlined as CloudUploadOutlinedIcon,
+  DeleteOutline as DeleteOutlineIcon,
 } from '@mui/icons-material';
 import { useCreateTicketCommentMutation } from '../../../../../services';
 import { useAuth, useNotification } from '@serviceops/hooks';
@@ -16,7 +18,7 @@ import {
   RichTextEditor,
 } from '../../../../pages/base/Configuration/shared/RichTextEditor';
 
-const COMMENT_ACCENT = '#2d5ebb';
+const COMMENT_ACCENT = '#0369a1';
 
 interface CommentWindowProps {
   open: boolean;
@@ -45,6 +47,7 @@ const CommentWindow = ({
   const [notifyAssigneesOnly, setNotifyAssigneesOnly] = useState(false);
   const [emailTo, setEmailTo] = useState('');
   const [emailFrom, setEmailFrom] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
 
   // ── Status search field ─────────────────────────────────────────────────
   const [statusInput, setStatusInput] = useState('');
@@ -112,6 +115,7 @@ const CommentWindow = ({
       setStatusFiltered([]);
       setEmailTo('');
       setEmailFrom('');
+      setFiles([]);
     }
   }, [open]);
 
@@ -198,7 +202,7 @@ const CommentWindow = ({
           ? 'Notify Assignees Only'
           : mode === 'email'
             ? 'Send Email'
-            : 'A Comment';
+            : 'Add a Comment';
 
   const dialogSubtitle =
     mode === 'internal'
@@ -510,13 +514,14 @@ const CommentWindow = ({
           sx={{
             border: '2px dashed #ccc',
             borderRadius: 1.5,
-            p: '24px 16px',
+            p: '16px 16px',
             textAlign: 'center',
             cursor: 'pointer',
             transition: 'border-color 0.2s',
+            bgcolor: alpha(COMMENT_ACCENT, 0.02),
             '&:hover': {
               borderColor: COMMENT_ACCENT,
-              bgcolor: alpha(COMMENT_ACCENT, 0.02),
+              bgcolor: alpha(COMMENT_ACCENT, 0.04),
             },
           }}
         >
@@ -524,16 +529,23 @@ const CommentWindow = ({
             type='file'
             className='comment-upload-input'
             style={{ display: 'none' }}
-            onChange={() => {}}
+            onChange={(e) => {
+              const selected = Array.from(e.target.files || []);
+              setFiles((prev) => [...prev, ...selected]);
+            }}
           />
+          <Box sx={{ mb: 0.75 }}>
+            <CloudUploadOutlinedIcon sx={{ fontSize: 24, color: '#9ca3af' }} />
+          </Box>
           <Button
             variant='contained'
+            size='small'
             sx={{
               bgcolor: COMMENT_ACCENT,
               '&:hover': { bgcolor: darken(COMMENT_ACCENT, 0.15) },
               textTransform: 'none',
-              px: 2.5,
-              py: 0.5,
+              px: 3,
+              py: 0.75,
               fontSize: '0.8rem',
               fontWeight: 600,
               borderRadius: 1.5,
@@ -542,6 +554,68 @@ const CommentWindow = ({
             CHOOSE FILE
           </Button>
         </Box>
+
+        {/* Attached files */}
+        {files.length > 0 && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151' }}>
+              Attached Files ({files.length})
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+              {files.map((file, index) => (
+                <Box
+                  key={`${file.name}-${index}`}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 1,
+                    p: 1,
+                    borderRadius: 1.5,
+                    border: '1px solid #e5e7eb',
+                    bgcolor: alpha(COMMENT_ACCENT, 0.04),
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0, flex: 1 }}>
+                    <CloudUploadOutlinedIcon sx={{ fontSize: '1.1rem', color: COMMENT_ACCENT }} />
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                      <Typography
+                        sx={{
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          color: '#1e293b',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {file.name}
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.7rem', color: '#64748b' }}>
+                        {(file.size / 1024).toFixed(1)} KB
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box
+                    onClick={() => setFiles((prev) => prev.filter((_, i) => i !== index))}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      p: 0.5,
+                      borderRadius: 1,
+                      color: '#dc2626',
+                      '&:hover': { bgcolor: 'rgba(220, 38, 38, 0.08)' },
+                    }}
+                  >
+                    <DeleteOutlineIcon sx={{ fontSize: '1.1rem' }} />
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
       </Box>
     </Modal>
   );

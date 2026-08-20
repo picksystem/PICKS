@@ -8,6 +8,11 @@ import {
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import { ResolutionCode } from '@serviceops/interfaces';
+import {
+  parseRichText,
+  serializeRichText,
+  RichTextEditor,
+} from '../../../../pages/base/Configuration/shared/RichTextEditor';
 import { useCreateTicketResolutionMutation } from '../../../../../services';
 import { useAuth, useNotification } from '@serviceops/hooks';
 import { TicketEntity, UpdateTicketFn } from '../types/ticketDetail.types';
@@ -212,7 +217,7 @@ const ResolveWindow = ({
   }, [open]);
 
   // ── Save handler ──────────────────────────────────────────────────────────
-  const handleSave = async (closeAfter = false) => {
+  const handleSave = async () => {
     if (!resolutionCode) {
       notify.error('Resolution code is required');
       return;
@@ -245,7 +250,6 @@ const ResolveWindow = ({
       }).unwrap();
 
       onSuccess();
-      if (closeAfter) onClose();
     } catch {
       notify.error('Failed to resolve ticket');
     } finally {
@@ -257,7 +261,7 @@ const ResolveWindow = ({
     <ConfigFormDialog
       open={open}
       onClose={onClose}
-      onSubmit={() => handleSave(true)}
+      onSubmit={() => handleSave()}
       isEdit={false}
       icon={<CheckCircleIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
       accent={RESOLVE_ACCENT}
@@ -582,26 +586,21 @@ const ResolveWindow = ({
           }}
         >
           {/* Resolution */}
-          <TextField
-            label='Resolution'
-            value={resolution}
-            onChange={(e) => setResolution(e.target.value)}
-            multiline
-            minRows={4}
-            size='small'
-            fullWidth
+          <RichTextEditor
+            value={{ segments: parseRichText(resolution).segments }}
+            onChange={(value) => setResolution(serializeRichText(value.segments))}
+            showFooterActions={false}
+            title='Resolution'
             required
           />
 
           {/* Internal Note */}
-          <TextField
-            label='Internal Note'
-            value={internalNote}
-            onChange={(e) => setInternalNote(e.target.value)}
-            multiline
-            minRows={4}
-            size='small'
-            fullWidth
+          <RichTextEditor
+            value={{ segments: parseRichText(internalNote).segments }}
+            onChange={(value) => setInternalNote(serializeRichText(value.segments))}
+            showFooterActions={false}
+            title='Internal Note'
+            required={false}
           />
 
           {/* File Upload */}
@@ -681,7 +680,7 @@ const ResolveWindow = ({
             Cancel
           </Button>
           <Button
-            onClick={() => handleSave(false)}
+            onClick={() => handleSave()}
             disabled={isLoading}
             variant='contained'
             sx={{
@@ -695,22 +694,6 @@ const ResolveWindow = ({
             }}
           >
             Save
-          </Button>
-          <Button
-            onClick={() => handleSave(true)}
-            disabled={isLoading}
-            variant='contained'
-            sx={{
-              textTransform: 'none',
-              width: { xs: '100%', sm: 'auto' },
-              bgcolor: RESOLVE_ACCENT,
-              '&:hover': { bgcolor: darken(RESOLVE_ACCENT, 0.15) },
-              '&.Mui-disabled': {
-                bgcolor: alpha(RESOLVE_ACCENT, 0.4),
-              },
-            }}
-          >
-            Save & Close
           </Button>
         </Box>
       </Box>

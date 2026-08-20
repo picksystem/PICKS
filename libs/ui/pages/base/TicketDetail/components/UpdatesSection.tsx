@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Box, Typography, TextField, IconButton, Tooltip, EditIcon } from '../../../../components';
 import CommentWindow from '../windows/CommentWindow';
 import { Avatar } from '@mui/material';
@@ -6,12 +6,16 @@ import {
   Search as SearchIcon,
   Lock as LockIcon,
   Person as PersonIcon,
-  AttachFile as AttachFileIcon,
-  Image as ImageIcon,
   VisibilityOff as HideIcon,
   FilterList as FilterListIcon,
   Email as EmailIcon,
   Groups as GroupsIcon,
+  ContentCopy as CopyIcon,
+  PushPin as PinIcon,
+  Bookmark as BookmarkIcon,
+  Save as SaveIcon,
+  Close as CloseIcon,
+  Check as CheckIcon,
 } from '@mui/icons-material';
 import { IIncidentComment } from '@serviceops/interfaces';
 import { useStyles } from '../styles';
@@ -550,22 +554,6 @@ const FollowersList = () => {
         <Typography sx={{ fontSize: '0.85rem', color: '#1e293b', fontWeight: 600 }}>
           Srinivas Penumalla
         </Typography>
-        <IconButton
-          size='small'
-          sx={{
-            p: 0.4,
-            color: '#6366f1',
-            backgroundColor: 'rgba(99,102,241,0.08)',
-            border: '1px solid rgba(99,102,241,0.25)',
-            borderRadius: '6px',
-            width: 28,
-            height: 28,
-            '&:hover': { backgroundColor: 'rgba(99,102,241,0.15)' },
-          }}
-          title='Add internal follower'
-        >
-          <PersonIcon sx={{ fontSize: 16 }} />
-        </IconButton>
       </Box>
     </Box>
   );
@@ -580,10 +568,105 @@ const getCommentBorderColor = (comment: IIncidentComment): string => {
   return '#6366f1';
 };
 
-const CommentCard = ({ comment }: { comment: IIncidentComment }) => {
+const CommentCard = ({
+  comment,
+  isPinned,
+  isSaved,
+  onCopy,
+  onPin,
+  onSave,
+  onEditSave,
+}: {
+  comment: IIncidentComment;
+  isPinned?: boolean;
+  isSaved?: boolean;
+  onCopy?: () => void;
+  onPin?: () => void;
+  onSave?: () => void;
+  onEditSave?: (newMessage: string) => void;
+}) => {
   const avatarColor = getAvatarColor(comment.createdBy);
   const initials = getInitials(comment.createdBy);
   const borderColor = getCommentBorderColor(comment);
+
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState(comment.message);
+  // Edit window starts from comment.createdAt
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const elapsed = Date.now() - new Date(comment.createdAt).getTime();
+    return Math.max(0, Math.floor((60000 - elapsed) / 1000));
+  });
+  const [hasChanges, setHasChanges] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const isEditAvailable = timeLeft > 0;
+
+  // Countdown the edit window
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => (prev > 1 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = null;
+    };
+  }, [timeLeft]);
+
+  // Auto-cancel editing if window expires
+  useEffect(() => {
+    if (editing && timeLeft <= 0) {
+      setEditing(false);
+      setEditValue(comment.message);
+      setHasChanges(false);
+    }
+  }, [editing, timeLeft, comment.message]);
+
+  const handleEditClick = () => {
+    if (!isEditAvailable) return;
+    setEditValue(comment.message);
+    setEditing(true);
+    setHasChanges(false);
+  };
+
+  const handleSave = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setEditing(false);
+    setHasChanges(false);
+    if (editValue.trim() !== comment.message && onEditSave) {
+      onEditSave(editValue.trim());
+    }
+  };
+
+  const handleCancel = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setEditing(false);
+    setEditValue(comment.message);
+    setHasChanges(false);
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(comment.message);
+      onCopy?.();
+    } catch {
+      // clipboard unavailable — silently fail
+    }
+  };
 
   return (
     <Box
@@ -599,7 +682,7 @@ const CommentCard = ({ comment }: { comment: IIncidentComment }) => {
           <Typography sx={commentAuthorSx}>{comment.createdBy}</Typography>
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           {comment.isEmail && (
             <Typography sx={{ ...internalNoteLabelSx, color: '#0369a1' }}>Email</Typography>
           )}
@@ -614,25 +697,162 @@ const CommentCard = ({ comment }: { comment: IIncidentComment }) => {
               Notify assignees
             </Typography>
           )}
-          <Typography sx={commentTimestampSx}>{formatDateTime(comment.createdAt)}</Typography>
-          <Box sx={{ display: 'flex', gap: 0.5 }}>
-            <Tooltip title='Attachment'>
-              <IconButton size='small' sx={commentActionIconSx}>
-                <AttachFileIcon sx={{ fontSize: 16 }} />
-              </IconButton>
+
+          {/* Action icons */}
+          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+            <Tooltip title='Copy'>
+              <Box component='span' sx={commentActionIconSx} onClick={handleCopy}>
+                <CopyIcon sx={{ fontSize: 15 }} />
+              </Box>
             </Tooltip>
-            <Tooltip title='Image'>
-              <IconButton size='small' sx={commentActionIconSx}>
-                <ImageIcon sx={{ fontSize: 16 }} />
-              </IconButton>
+            <Tooltip title={isPinned ? 'Unpin' : 'Pin'}>
+              <Box component='span' sx={commentActionIconSx} onClick={onPin}>
+                <PinIcon
+                  sx={{
+                    fontSize: 15,
+                    color: isPinned ? '#059669' : '#94a3b8',
+                  }}
+                />
+              </Box>
+            </Tooltip>
+            <Tooltip title={isSaved ? 'Unsave' : 'Save'}>
+              <Box component='span' sx={commentActionIconSx} onClick={onSave}>
+                <BookmarkIcon
+                  sx={{
+                    fontSize: 15,
+                    color: isSaved ? '#d97706' : '#94a3b8',
+                  }}
+                />
+              </Box>
+            </Tooltip>
+            <Tooltip
+              title={isEditAvailable ? `Edit (${timeLeft}s left)` : 'Edit time expired'}
+              placement='top'
+            >
+              <Box
+                component='span'
+                sx={{
+                  ...commentActionIconSx,
+                  opacity: isEditAvailable ? 1 : 0.35,
+                  cursor: isEditAvailable ? 'pointer' : 'not-allowed',
+                }}
+                onClick={handleEditClick}
+              >
+                <EditIcon sx={{ fontSize: 15, color: isEditAvailable ? '#475569' : '#94a3b8' }} />
+              </Box>
             </Tooltip>
           </Box>
+
+          <Typography sx={commentTimestampSx}>{formatDateTime(comment.createdAt)}</Typography>
         </Box>
       </Box>
 
       {/* Body */}
       <Box sx={commentCardBodySx}>
-        <Typography sx={commentMessageSx}>{comment.message}</Typography>
+        {editing ? (
+          <Box sx={{ position: 'relative' }}>
+            <TextField
+              data-comment-edit={String(comment.id)}
+              multiline
+              minRows={2}
+              maxRows={8}
+              value={editValue}
+              onChange={(e) => {
+                setEditValue(e.target.value);
+                setHasChanges(e.target.value.trim() !== comment.message);
+              }}
+              fullWidth
+              size='small'
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 1,
+                  bgcolor: '#f8fafc',
+                  fontSize: '0.9rem',
+                  lineHeight: 1.6,
+                  '& fieldset': {
+                    borderColor: '#d1d5db',
+                    borderWidth: 1.5,
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#94a3b8',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#059669',
+                    borderWidth: 2,
+                  },
+                },
+              }}
+            />
+            {/* Edit toolbar */}
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                mt: 1,
+                gap: 1,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: '0.72rem',
+                  fontWeight: 500,
+                  color: timeLeft <= 15 ? '#ef4444' : '#64748b',
+                  fontFamily: '"Roboto Mono", monospace',
+                }}
+              >
+                Editing window: {timeLeft}s remaining
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 0.5 }}>
+                <Tooltip title={hasChanges ? 'Save changes' : 'Save (no changes)'}>
+                  <Box
+                    component='span'
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      p: 0.5,
+                      borderRadius: 1,
+                      cursor: 'pointer',
+                      color: hasChanges ? '#059669' : '#cbd5e1',
+                      bgcolor: hasChanges ? 'rgba(5,150,105,0.08)' : 'transparent',
+                      '&:hover': {
+                        color: '#059699',
+                        bgcolor: 'rgba(5,150,105,0.12)',
+                      },
+                    }}
+                    onClick={handleSave}
+                  >
+                    <SaveIcon sx={{ fontSize: 16 }} />
+                  </Box>
+                </Tooltip>
+                <Tooltip title='Cancel'>
+                  <Box
+                    component='span'
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      p: 0.5,
+                      borderRadius: 1,
+                      cursor: 'pointer',
+                      color: '#94a3b8',
+                      '&:hover': {
+                        color: '#dc2626',
+                        bgcolor: 'rgba(220,38,38,0.08)',
+                      },
+                    }}
+                    onClick={handleCancel}
+                  >
+                    <CloseIcon sx={{ fontSize: 16 }} />
+                  </Box>
+                </Tooltip>
+              </Box>
+            </Box>
+          </Box>
+        ) : (
+          <Typography sx={commentMessageSx}>{comment.message}</Typography>
+        )}
       </Box>
     </Box>
   );
@@ -692,19 +912,19 @@ const internalNoteLabelSx = {
 
 const commentTimestampSx = {
   fontSize: '0.8rem',
-  color: '#64748b',
+  color: '#475569',
   fontWeight: 500,
   fontFamily: '"Roboto Mono", monospace',
 };
 
 const commentActionIconSx = {
-  p: 0.5,
-  color: '#94a3b8',
+  p: 0.4,
+  color: '#64748b',
   width: 28,
   height: 28,
   '&:hover': {
-    color: '#475569',
-    backgroundColor: 'rgba(100,116,139,0.08)',
+    color: '#334155',
+    backgroundColor: 'rgba(100,116,139,0.12)',
   },
 };
 
@@ -1170,6 +1390,8 @@ const UpdatesSection = ({
   const [filterSaved, setFilterSaved] = useState(false);
   const [showActivity, setShowActivity] = useState(false);
   const [showSystem] = useState(true);
+  const [pinnedCommentIds, setPinnedCommentIds] = useState<Set<number>>(new Set());
+  const [savedCommentIds, setSavedCommentIds] = useState<Set<number>>(new Set());
   const commentsListRef = useRef<HTMLDivElement>(null);
 
   const handleNotifyAssignees = () => {
@@ -1188,6 +1410,24 @@ const UpdatesSection = ({
 
   const handleFilterToggle = () => {
     setFilterSaved((prev) => !prev);
+  };
+
+  const handlePinComment = (commentId: number) => {
+    setPinnedCommentIds((prev) => {
+      const next = new Set(prev);
+      // eslint-disable-next-line no-unused-expressions
+      next.has(commentId) ? next.delete(commentId) : next.add(commentId);
+      return next;
+    });
+  };
+
+  const handleSaveComment = (commentId: number) => {
+    setSavedCommentIds((prev) => {
+      const next = new Set(prev);
+      // eslint-disable-next-line no-unused-expressions
+      next.has(commentId) ? next.delete(commentId) : next.add(commentId);
+      return next;
+    });
   };
 
   const filteredComments = useMemo(() => {
@@ -1251,8 +1491,8 @@ const UpdatesSection = ({
 
         // Add comments
         const displayComments = filteredComments.filter((comment) => {
-          // "Filter Saved comments" — hide draft/saved comments when enabled
-          if (filterSaved) return comment.status !== 'draft';
+          // "Filter Saved comments" — when enabled, show only saved comments
+          if (filterSaved) return savedCommentIds.has(comment.id);
           return true;
         });
 
@@ -1279,18 +1519,36 @@ const UpdatesSection = ({
           });
         }
 
-        // Sort by timestamp descending (newest first)
-        timelineItems.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+        // Sort by timestamp descending (newest first), but pinned comments always come first
+        timelineItems.sort((a, b) => {
+          const aPinned =
+            a.kind === 'comment' && pinnedCommentIds.has((a.item as IIncidentComment).id);
+          const bPinned =
+            b.kind === 'comment' && pinnedCommentIds.has((b.item as IIncidentComment).id);
+          if (aPinned && !bPinned) return -1;
+          if (!aPinned && bPinned) return 1;
+          return b.timestamp.getTime() - a.timestamp.getTime();
+        });
 
         if (timelineItems.length > 0) {
           return (
             <Box ref={commentsListRef} className={classes.commentsList}>
               {timelineItems.map((entry, index) => {
                 if (entry.kind === 'comment') {
+                  const c = entry.item as IIncidentComment;
                   return (
                     <CommentCard
-                      key={`comment-${entry.item.id}`}
-                      comment={entry.item as IIncidentComment}
+                      key={`comment-${c.id}`}
+                      comment={c}
+                      isPinned={pinnedCommentIds.has(c.id)}
+                      isSaved={savedCommentIds.has(c.id)}
+                      onCopy={undefined}
+                      onPin={() => handlePinComment(c.id)}
+                      onSave={() => handleSaveComment(c.id)}
+                      onEditSave={(newMessage) => {
+                        // Local update — in real app, call the edit API
+                        console.log('Edit comment', c.id, newMessage);
+                      }}
                     />
                   );
                 }

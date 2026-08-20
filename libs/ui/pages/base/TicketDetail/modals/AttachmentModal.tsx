@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { Box, Typography, Button, Modal } from '../../../../components';
 import { alpha, darken } from '@mui/material';
+import {
+  CloudUploadOutlined as CloudUploadOutlinedIcon,
+  DeleteOutline as DeleteOutlineIcon,
+} from '@mui/icons-material';
 import { useNotification } from '@serviceops/hooks';
 import { useUploadTicketAttachmentsMutation } from '../../../../../services';
 import { TicketEntity, UpdateTicketFn } from '../types/ticketDetail.types';
 
-const ATTACHMENT_ACCENT = '#2d5ebb';
+const ATTACHMENT_ACCENT = '#0369a1';
 
 interface AttachmentModalProps {
   open: boolean;
@@ -22,7 +26,7 @@ const AttachmentModal = ({
   onUpdateTicket,
   onSuccess,
 }: AttachmentModalProps) => {
-  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const notify = useNotification();
   const [uploadAttachments, { isLoading: isUploading }] = useUploadTicketAttachmentsMutation();
 
@@ -35,15 +39,14 @@ const AttachmentModal = ({
   })();
 
   const handleSubmit = async () => {
-    if (!selectedFiles || selectedFiles.length === 0) {
+    if (selectedFiles.length === 0) {
       notify.error('Please select at least one file');
       return;
     }
     try {
       const formData = new FormData();
-      Array.from(selectedFiles).forEach((f) => formData.append('files', f));
+      selectedFiles.forEach((f) => formData.append('files', f));
 
-      // Upload files to backend — gets back server-renamed filenames (e.g. "1755504000000-report.pdf")
       const uploadedFilenames = await uploadAttachments(formData).unwrap();
 
       const allAttachments = [...existingAttachments, ...uploadedFilenames];
@@ -51,7 +54,7 @@ const AttachmentModal = ({
         id: incident.id,
         data: { attachments: JSON.stringify(allAttachments) },
       }).unwrap();
-      setSelectedFiles(null);
+      setSelectedFiles([]);
       onSuccess();
     } catch {
       notify.error('Failed to upload attachments');
@@ -59,12 +62,16 @@ const AttachmentModal = ({
   };
 
   const handleClose = () => {
-    setSelectedFiles(null);
+    setSelectedFiles([]);
     onClose();
   };
 
-  const handleFileChange = (files: FileList | null) => {
-    setSelectedFiles(files);
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { files } = event.target;
+    if (files && files.length > 0) {
+      setSelectedFiles((prev) => [...prev, ...Array.from(files)]);
+    }
+    event.target.value = '';
   };
 
   const footer = (
@@ -87,7 +94,7 @@ const AttachmentModal = ({
       </Button>
       <Button
         onClick={handleSubmit}
-        disabled={!selectedFiles || selectedFiles.length === 0 || isUploading}
+        disabled={selectedFiles.length === 0 || isUploading}
         variant='contained'
         sx={{
           textTransform: 'none',
@@ -104,8 +111,45 @@ const AttachmentModal = ({
     </>
   );
 
+  const AttachmentIcon = CloudUploadOutlinedIcon;
+
+  const title = (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+      <Box
+        sx={{
+          width: 38,
+          height: 38,
+          borderRadius: 1.5,
+          bgcolor: 'rgba(255,255,255,0.18)',
+          border: '1px solid rgba(255,255,255,0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <AttachmentIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />
+      </Box>
+      <Box>
+        <Typography sx={{ fontSize: '1.1rem', fontWeight: 600, lineHeight: 1.3, color: '#fff' }}>
+          Attachments
+        </Typography>
+        <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.85)', lineHeight: 1.3 }}>
+          Upload and manage ticket attachments
+        </Typography>
+      </Box>
+    </Box>
+  );
+
   return (
-    <Modal open={open} onClose={handleClose} title='Attachments' footer={footer} maxWidth='sm'>
+    <Modal
+      open={open}
+      onClose={handleClose}
+      title={title}
+      headerTextColor='#fff'
+      footer={footer}
+      maxWidth='sm'
+      headerBackground={`linear-gradient(135deg, ${darken(ATTACHMENT_ACCENT, 0.18)} 0%, ${ATTACHMENT_ACCENT} 100%)`}
+    >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         {existingAttachments.length > 0 && (
           <Box>
@@ -135,9 +179,10 @@ const AttachmentModal = ({
               textAlign: 'center',
               cursor: 'pointer',
               transition: 'border-color 0.2s',
+              bgcolor: alpha(ATTACHMENT_ACCENT, 0.02),
               '&:hover': {
                 borderColor: ATTACHMENT_ACCENT,
-                bgcolor: alpha(ATTACHMENT_ACCENT, 0.02),
+                bgcolor: alpha(ATTACHMENT_ACCENT, 0.04),
               },
             }}
           >
@@ -146,24 +191,93 @@ const AttachmentModal = ({
               className='attachment-upload-input'
               multiple
               style={{ display: 'none' }}
-              onChange={(event) => handleFileChange(event.target.files)}
+              onChange={handleFileChange}
             />
+            <Box sx={{ mb: 0.75 }}>
+              <CloudUploadOutlinedIcon sx={{ fontSize: 24, color: '#9ca3af' }} />
+            </Box>
             <Button
               variant='contained'
+              size='small'
               sx={{
-                bgcolor: '#2d5ebb',
-                '&:hover': { bgcolor: '#1e40af' },
+                bgcolor: ATTACHMENT_ACCENT,
+                '&:hover': { bgcolor: darken(ATTACHMENT_ACCENT, 0.15) },
                 textTransform: 'none',
-                px: 2.5,
-                py: 0.5,
+                px: 3,
+                py: 0.75,
                 fontSize: '0.8rem',
                 fontWeight: 600,
+                borderRadius: 1.5,
               }}
             >
               CHOOSE FILE
             </Button>
           </Box>
         </Box>
+
+        {/* Attached files */}
+        {selectedFiles.length > 0 && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151' }}>
+              Attached Files ({selectedFiles.length})
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+              {selectedFiles.map((file, index) => (
+                <Box
+                  key={`${file.name}-${index}`}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 1,
+                    p: 1,
+                    borderRadius: 1.5,
+                    border: '1px solid #e5e7eb',
+                    bgcolor: alpha(ATTACHMENT_ACCENT, 0.04),
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0, flex: 1 }}>
+                    <CloudUploadOutlinedIcon
+                      sx={{ fontSize: '1.1rem', color: ATTACHMENT_ACCENT }}
+                    />
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                      <Typography
+                        sx={{
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          color: '#1e293b',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {file.name}
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.7rem', color: '#64748b' }}>
+                        {(file.size / 1024).toFixed(1)} KB
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box
+                    onClick={() => setSelectedFiles((prev) => prev.filter((_, i) => i !== index))}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      p: 0.5,
+                      borderRadius: 1,
+                      color: '#dc2626',
+                      '&:hover': { bgcolor: 'rgba(220, 38, 38, 0.08)' },
+                    }}
+                  >
+                    <DeleteOutlineIcon sx={{ fontSize: '1.1rem' }} />
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
       </Box>
     </Modal>
   );

@@ -1,7 +1,11 @@
 import { useState } from 'react';
-import { Box, Modal, Button, TextField } from '../../../../components';
+import { Box, Modal, Button, TextField, Typography } from '../../../../components';
+import { Person as PersonIcon } from '@mui/icons-material';
+import { alpha, darken } from '@mui/material';
 import { useNotification } from '@serviceops/hooks';
 import { TicketEntity, UpdateTicketFn } from '../types/ticketDetail.types';
+
+const ASSIGN_ACCENT = '#0369a1';
 
 interface AssignModalProps {
   open: boolean;
@@ -55,15 +59,75 @@ const AssignModal = ({ open, onClose, incident, onUpdateTicket, onSuccess }: Ass
     </Box>
   );
 
+  const fieldBaseSx = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 1.5,
+      bgcolor: alpha(ASSIGN_ACCENT, 0.03),
+      '& fieldset': {
+        borderColor: alpha(ASSIGN_ACCENT, 0.3),
+        borderWidth: 1.5,
+      },
+      '&:hover fieldset': {
+        borderColor: ASSIGN_ACCENT,
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: ASSIGN_ACCENT,
+        borderWidth: 2,
+      },
+    },
+  };
+
   return (
-    <Modal open={open} onClose={onClose} title='Assign Ticket' maxWidth='sm' footer={footer}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Modal
+      open={open}
+      onClose={onClose}
+      headerBackground={`linear-gradient(135deg, ${darken(ASSIGN_ACCENT, 0.18)} 0%, ${ASSIGN_ACCENT} 100%)`}
+      headerTextColor='#fff'
+      title={
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box
+            sx={{
+              width: 38,
+              height: 38,
+              borderRadius: 1.5,
+              bgcolor: 'rgba(255,255,255,0.18)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <PersonIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />
+          </Box>
+          <Box>
+            <Typography
+              sx={{ fontSize: '1.1rem', fontWeight: 600, lineHeight: 1.3, color: '#fff' }}
+            >
+              Assign Ticket
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: '0.78rem',
+                color: 'rgba(255,255,255,0.85)',
+                lineHeight: 1.3,
+              }}
+            >
+              Assign this ticket to a resource and group
+            </Typography>
+          </Box>
+        </Box>
+      }
+      footer={footer}
+      maxWidth='sm'
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
         <TextField
           label='Application'
           value={application}
           onChange={(e) => setApplication(e.target.value)}
           size='small'
           fullWidth
+          sx={fieldBaseSx}
         />
 
         <TextField
@@ -72,6 +136,7 @@ const AssignModal = ({ open, onClose, incident, onUpdateTicket, onSuccess }: Ass
           onChange={(e) => setAssignmentGroup(e.target.value)}
           size='small'
           fullWidth
+          sx={fieldBaseSx}
         />
 
         <TextField
@@ -81,6 +146,7 @@ const AssignModal = ({ open, onClose, incident, onUpdateTicket, onSuccess }: Ass
           size='small'
           fullWidth
           required
+          sx={fieldBaseSx}
         />
 
         <TextField
@@ -89,6 +155,7 @@ const AssignModal = ({ open, onClose, incident, onUpdateTicket, onSuccess }: Ass
           onChange={(e) => setSecondaryResources(e.target.value)}
           size='small'
           fullWidth
+          sx={fieldBaseSx}
         />
       </Box>
     </Modal>

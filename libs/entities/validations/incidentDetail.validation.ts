@@ -25,7 +25,7 @@ export const PriorityChangeSchema = yup.object({
     .required('Priority change reason is required'),
   note: yup
     .string()
-    .required('Priority change note is required')
+    .required('Internal note is required')
     .max(500, 'Note must be 500 characters or less'),
   attachment: yup.string(),
 });
