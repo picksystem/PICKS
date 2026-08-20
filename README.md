@@ -218,7 +218,6 @@ SerivceOps/
 │   │   │   │   ├── ConsultantProfile/
 │   │   │   │   ├── KnowledgeBase/
 │   │   │   │   ├── TestScripts/
-│   │   │   │   ├── TicketTypesConfig/
 │   │   │   │   ├── SuggestedSolution/
 │   │   │   │   ├── TimeManagement/
 │   │   │   │   ├── Reports/

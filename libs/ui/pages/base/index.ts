@@ -8,7 +8,7 @@ export { default as ChangeManagement } from './ChangeManagement';
 export { default as ProblemManagement } from './ProblemManagement';
 export { default as TimeManagement } from './TimeManagement';
 export { default as Reports } from './Reports';
-export { default as TicketTypesConfig } from './TicketTypesConfig';
+export { default as TicketBundle } from './TicketBundle';
 export { default as CabRequest } from './CabRequest';
 export { default as KnowledgeBase } from './KnowledgeBase';
 export { default as TestScripts } from './TestScripts';

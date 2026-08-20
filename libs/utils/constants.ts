@@ -12,7 +12,7 @@ const BasePath = {
   PROBLEM_MANAGEMENT: `${BASE}/problem-management`,
   TIME_MANAGEMENT: `${BASE}/time-management`,
   REPORTS: `${BASE}/reports`,
-  TICKET_TEMPLATES: `${BASE}/ticket-templates`,
+  TICKET_TEMPLATES: `${BASE}/ticket-bundle`,
   CAB_REQUEST: `${BASE}/cab-request`,
   KNOWLEDGE_BASE: `${BASE}/knowledge-base`,
   TEST_SCRIPTS: `${BASE}/test-scripts`,

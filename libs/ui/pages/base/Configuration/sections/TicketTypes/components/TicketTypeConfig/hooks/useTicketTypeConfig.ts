@@ -144,7 +144,10 @@ export function useTicketTypeConfig() {
 
   const handleToggleActive = async (item: ITicketType) => {
     try {
-      await updateTicketType({ id: item.id, data: { isActive: !item.isActive, lastUpdatedBy: currentUserName } }).unwrap();
+      await updateTicketType({
+        id: item.id,
+        data: { isActive: !item.isActive, lastUpdatedBy: currentUserName },
+      }).unwrap();
       notify.success(`Ticket type ${!item.isActive ? 'activated' : 'deactivated'} successfully`);
     } catch {
       notify.error('Failed to update activation status');

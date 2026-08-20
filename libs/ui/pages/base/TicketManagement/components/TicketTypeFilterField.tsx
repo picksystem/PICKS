@@ -62,6 +62,12 @@ export const TicketTypeFilterField = ({
     onChange(option.value);
   };
 
+  const handleItemMouseDown = (e: React.MouseEvent) => {
+    // Prevent the TextField from losing focus before the click registers.
+    // Without this, onBlur closes the dropdown and the onClick never fires.
+    e.preventDefault();
+  };
+
   const handleClear = () => {
     setInputValue('');
     setFilteredOptions(options);
@@ -130,6 +136,7 @@ export const TicketTypeFilterField = ({
               <ListItem key={option.value} disablePadding>
                 <ListItemButton
                   selected={option.value === value}
+                  onMouseDown={handleItemMouseDown}
                   onClick={() => handleSelect(option)}
                   sx={{
                     py: 1,

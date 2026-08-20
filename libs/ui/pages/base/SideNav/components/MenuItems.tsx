@@ -31,7 +31,7 @@ const adminMenuItems: MenuItemConfig[] = [
   { label: 'Incident Management', icon: <AssignmentIcon />, pathKey: 'INCIDENT_MANAGEMENT' },
   { label: 'Change Management', icon: <ChangeCircleIcon />, pathKey: 'CHANGE_MANAGEMENT' },
   { label: 'Problem Management', icon: <ReportProblemIcon />, pathKey: 'PROBLEM_MANAGEMENT' },
-  { label: 'Ticket Templates', icon: <LocalActivityIcon />, pathKey: 'TICKET_TEMPLATES' },
+  { label: 'Ticket Bundle', icon: <LocalActivityIcon />, pathKey: 'TICKET_TEMPLATES' },
   { label: 'Knowledge Base', icon: <LibraryBooksIcon />, pathKey: 'KNOWLEDGE_BASE' },
   { label: 'Cab Request', icon: <HowToRegIcon />, pathKey: 'CAB_REQUEST' },
   { label: 'Test Scripts', icon: <ListIcon />, pathKey: 'TEST_SCRIPTS' },
