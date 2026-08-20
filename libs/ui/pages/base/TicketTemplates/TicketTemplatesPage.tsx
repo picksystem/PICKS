@@ -1,17 +1,8 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { constants } from '@serviceops/utils';
+import TicketTemplates from './TicketTemplates';
 
-/** TicketTemplates has moved into Configuration → Ticket Types. */
+/** Wrapper page for Ticket Templates. */
 const TicketTemplatesPage = () => {
-  const navigate = useNavigate();
-  const { BasePath } = constants;
-
-  useEffect(() => {
-    navigate(BasePath.CONFIGURATION, { replace: true });
-  }, [navigate, BasePath.CONFIGURATION]);
-
-  return null;
+  return <TicketTemplates />;
 };
 
 export default TicketTemplatesPage;

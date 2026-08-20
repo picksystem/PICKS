@@ -68,18 +68,11 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   tabsBox: {
-    borderBottom: `1px solid ${theme.palette.divider}`,
-    marginBottom: theme.spacing(2),
     display: 'flex',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    [theme.breakpoints.down('sm')]: {
-      flexDirection: 'column' as const,
-      alignItems: 'stretch',
-    },
-  },
-
-  tabsFlex: {
-    flex: 1,
+    gap: theme.spacing(1.5),
+    marginBottom: theme.spacing(2),
   },
 
   searchField: {

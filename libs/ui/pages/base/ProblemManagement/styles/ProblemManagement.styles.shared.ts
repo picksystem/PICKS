@@ -48,25 +48,80 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   title: {
-    fontWeight: 700,
+    fontWeight: 800,
     color: '#1e293b',
-    marginBottom: theme.spacing(3),
     [theme.breakpoints.down('sm')]: {
-      fontSize: '1.5rem',
+      fontSize: '1.2rem',
     },
   },
 
   description: {
     color: '#64748b',
-    fontSize: '1rem',
-    lineHeight: 1.6,
-    [theme.breakpoints.down('sm')]: {
-      fontSize: '0.875rem',
-      lineHeight: 1.4,
+    marginTop: theme.spacing(0.5),
+    fontSize: '0.875rem',
+    position: 'relative',
+    zIndex: 1,
+  },
+
+  tabsBox: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: theme.spacing(1.5),
+    marginBottom: theme.spacing(2),
+  },
+
+  filterField: {
+    width: '260px',
+    '& .MuiOutlinedInput-root': {
+      height: '34px',
+      fontSize: '0.85rem',
+      backgroundColor: theme.palette.common.white,
+      borderRadius: '6px',
     },
-    [theme.breakpoints.between('sm', 'md')]: {
-      fontSize: '0.9rem',
-      lineHeight: 1.5,
+    '& .MuiInputBase-input': { padding: '4px 8px', fontSize: '0.85rem' },
+    '& .MuiInputBase-input::placeholder': { opacity: 0.7 },
+  },
+
+  searchField: {
+    width: '220px',
+    '& .MuiOutlinedInput-root': {
+      height: '34px',
+      fontSize: '0.85rem',
+      backgroundColor: theme.palette.common.white,
+      borderRadius: '6px',
     },
+    '& .MuiInputBase-input': { padding: '4px 8px', fontSize: '0.85rem' },
+    '& .MuiInputBase-input::placeholder': { opacity: 0.7 },
+    '& .MuiInputAdornment-root .MuiSvgIcon-root': {
+      fontSize: '1.1rem',
+      color: theme.palette.text.secondary,
+    },
+  },
+
+  emptyState: {
+    textAlign: 'center' as const,
+    paddingTop: theme.spacing(8),
+    paddingBottom: theme.spacing(8),
+    border: '2px dashed',
+    borderColor: theme.palette.divider,
+    borderRadius: (theme.shape.borderRadius as number) * 3,
+    marginTop: theme.spacing(2),
+  },
+
+  emptyIcon: {
+    fontSize: '48px !important',
+    color: `${theme.palette.text.disabled} !important`,
+    marginBottom: `${theme.spacing(1)}!important`,
+  },
+
+  emptySubtext: {
+    marginTop: theme.spacing(1),
+  },
+
+  tableContainer: {
+    backgroundColor: theme.palette.background.paper,
+    borderRadius: theme.shape.borderRadius,
+    overflowX: 'auto' as const,
   },
 });

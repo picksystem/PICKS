@@ -1,17 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Column, Chip, Typography, Button, Tab, Link } from '@serviceops/component';
+import { Column, Chip, Typography, Button, Link } from '@serviceops/component';
 import { Stack } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
-import PendingActionsIcon from '@mui/icons-material/PendingActions';
-import GroupIcon from '@mui/icons-material/Group';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
 import { useAuthActionMutation } from '@serviceops/services';
 import { useNotification } from '@serviceops/hooks';
 import { IAuthUser } from '@serviceops/interfaces';
 import { RoleRequestRow, ActionType } from '../types/roleRequests.types';
-import { getFilteredData, getTabLists } from '../utils/roleRequests.utils';
+import { getFilteredData } from '../utils/roleRequests.utils';
 
 export const useRoleRequests = () => {
   const [authAction] = useAuthActionMutation();
@@ -19,7 +15,6 @@ export const useRoleRequests = () => {
 
   const [requests, setRequests] = useState<IAuthUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [tabValue, setTabValue] = useState(0);
   const [tableSearch, setTableSearch] = useState('');
   const [actionInProgress, setActionInProgress] = useState<number | null>(null);
   const [detailUser, setDetailUser] = useState<IAuthUser | null>(null);
@@ -46,14 +41,6 @@ export const useRoleRequests = () => {
     fetchRequests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const {
-    all: allRequests,
-    pending: pendingRequests,
-    approved: approvedRequests,
-    rejected: rejectedRequests,
-  } = getTabLists(requests);
-  const tabLists = [allRequests, pendingRequests, approvedRequests, rejectedRequests];
 
   const handleConfirmAction = async () => {
     if (!actionTarget) return;
@@ -216,40 +203,13 @@ export const useRoleRequests = () => {
     },
   ];
 
-  const tabs = (
-    <>
-      <Tab
-        icon={<GroupIcon />}
-        iconPosition='start'
-        label={`All Requests (${allRequests.length})`}
-      />
-      <Tab
-        icon={<PendingActionsIcon />}
-        iconPosition='start'
-        label={`Pending (${pendingRequests.length})`}
-      />
-      <Tab
-        icon={<CheckCircleIcon />}
-        iconPosition='start'
-        label={`Approved (${approvedRequests.length})`}
-      />
-      <Tab
-        icon={<CancelIcon />}
-        iconPosition='start'
-        label={`Rejected (${rejectedRequests.length})`}
-      />
-    </>
-  );
+  const getFilteredRequests = () => getFilteredData(requests, tableSearch);
 
   return {
     isLoading,
-    tabValue,
-    setTabValue,
     tableSearch,
     setTableSearch,
-    tabLists,
     columns,
-    tabs,
     detailUser,
     setDetailUser,
     actionTarget,
@@ -259,10 +219,6 @@ export const useRoleRequests = () => {
     handleOpenAction,
     handleCloseAction,
     setActionNotes,
-    getFilteredData: (list: IAuthUser[]) => getFilteredData(list, tableSearch),
-    allRequests,
-    pendingRequests,
-    approvedRequests,
-    rejectedRequests,
+    getFilteredData: getFilteredRequests,
   };
 };

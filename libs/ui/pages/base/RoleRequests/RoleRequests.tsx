@@ -1,12 +1,4 @@
-import {
-  Box,
-  Loader,
-  DataTable,
-  Typography,
-  Tabs,
-  TextField,
-  PageHeader,
-} from '@serviceops/component';
+import { Box, Loader, DataTable, Typography, TextField, PageHeader } from '@serviceops/component';
 import { InputAdornment } from '@mui/material';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import SearchIcon from '@mui/icons-material/Search';
@@ -15,19 +7,14 @@ import { useStyles } from './styles';
 import { useRoleRequests } from './hooks/useRoleRequests';
 import DetailDialog from './dialogs/DetailDialog/DetailDialog';
 import ActionDialog from './dialogs/ActionDialog/ActionDialog';
-import TabPanel from './components/TabPanel';
 
 const RoleRequests = () => {
   const { classes } = useStyles();
   const {
     isLoading,
-    tabValue,
-    setTabValue,
     tableSearch,
     setTableSearch,
-    tabLists,
     columns,
-    tabs,
     detailUser,
     setDetailUser,
     actionTarget,
@@ -57,23 +44,10 @@ const RoleRequests = () => {
         className={classes.pageHeader}
       />
 
-      {/* ── Tabs + Search ── */}
+      {/* ── Search ── */}
       <Box className={classes.tabsBox}>
-        <Tabs
-          value={tabValue}
-          onChange={(_, v) => {
-            setTabValue(v);
-            setTableSearch('');
-          }}
-          variant='scrollable'
-          scrollButtons='auto'
-          allowScrollButtonsMobile
-          className={classes.tabsFlex}
-        >
-          {tabs}
-        </Tabs>
         <TextField
-          placeholder='Search...'
+          placeholder='Search access requests...'
           value={tableSearch}
           onChange={(e) => setTableSearch(e.target.value)}
           className={classes.searchField}
@@ -89,38 +63,26 @@ const RoleRequests = () => {
         />
       </Box>
 
-      {/* ── Tab panels ── */}
-      {tabLists.map((list, idx) => (
-        <TabPanel key={idx} value={tabValue} index={idx}>
-          {getFilteredData(list).length === 0 ? (
-            <Box className={classes.emptyState}>
-              <HowToRegIcon className={classes.emptyIcon} />
-              <Typography variant='h6' color='text.secondary'>
-                {tableSearch
-                  ? 'No matching requests'
-                  : idx === 1
-                    ? 'No pending requests'
-                    : idx === 2
-                      ? 'No approved requests'
-                      : idx === 3
-                        ? 'No rejected requests'
-                        : 'No access requests found'}
-              </Typography>
-            </Box>
-          ) : (
-            <Box className={classes.tableContainer}>
-              <DataTable
-                columns={columns}
-                data={getFilteredData(list)}
-                rowKey='id'
-                searchable={false}
-                initialRowsPerPage={10}
-                onRowClick={(row) => setDetailUser(row as IAuthUser)}
-              />
-            </Box>
-          )}
-        </TabPanel>
-      ))}
+      {/* ── Table ── */}
+      {getFilteredData().length === 0 ? (
+        <Box className={classes.emptyState}>
+          <HowToRegIcon className={classes.emptyIcon} />
+          <Typography variant='h6' color='text.secondary'>
+            {tableSearch ? 'No matching requests' : 'No access requests found'}
+          </Typography>
+        </Box>
+      ) : (
+        <Box className={classes.tableContainer}>
+          <DataTable
+            columns={columns}
+            data={getFilteredData()}
+            rowKey='id'
+            searchable={false}
+            initialRowsPerPage={10}
+            onRowClick={(row) => setDetailUser(row as IAuthUser)}
+          />
+        </Box>
+      )}
 
       <DetailDialog
         detailUser={detailUser}

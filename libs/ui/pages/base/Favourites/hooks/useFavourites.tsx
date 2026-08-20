@@ -13,7 +13,11 @@ import { FavouriteRow } from '../types/Favourites.types';
 import PriorityChip from '../components/PriorityChip';
 import StatusChip from '../components/StatusChip';
 import TicketTypeChip from '../components/TicketTypeChip';
-import { FAVORITES_KEY, getFilteredData as filterData } from '../utils/Favourites.utils';
+import {
+  FAVORITES_KEY as FAVORITES_INCIDENTS_KEY,
+  getFilteredData as filterData,
+} from '../utils/Favourites.utils';
+import { FAVORITES_KEY as FAVORITES_TICKETS_KEY } from '../../TicketManagement/utils/TicketManagement.utils';
 
 const dedupeById = (primary: IAdminTicket[] = [], drafts: IAdminTicket[] = []): IAdminTicket[] => {
   const map = new Map<number, IAdminTicket>();
@@ -74,23 +78,24 @@ const useFavourites = () => {
   const [selectedTicketType, setSelectedTicketType] = useState('');
   const [tableSearch, setTableSearch] = useState('');
 
-  const [favorites, setFavorites] = useState<Set<number>>(() => {
+  const readFavorites = (): Set<number> => {
     try {
-      const stored = localStorage.getItem(FAVORITES_KEY);
-      return stored ? new Set(JSON.parse(stored)) : new Set();
+      const merged = new Set<number>();
+      const incidents = localStorage.getItem(FAVORITES_INCIDENTS_KEY);
+      const tickets = localStorage.getItem(FAVORITES_TICKETS_KEY);
+      if (incidents) JSON.parse(incidents).forEach((id: number) => merged.add(id));
+      if (tickets) JSON.parse(tickets).forEach((id: number) => merged.add(id));
+      return merged;
     } catch {
       return new Set();
     }
-  });
+  };
+
+  const [favorites, setFavorites] = useState<Set<number>>(() => readFavorites());
 
   useEffect(() => {
     const handleStorage = () => {
-      try {
-        const stored = localStorage.getItem(FAVORITES_KEY);
-        setFavorites(stored ? new Set(JSON.parse(stored)) : new Set());
-      } catch {
-        // ignore
-      }
+      setFavorites(readFavorites());
     };
     window.addEventListener('storage', handleStorage);
     const interval = setInterval(handleStorage, 1000);
@@ -105,7 +110,17 @@ const useFavourites = () => {
     setFavorites((prev) => {
       const next = new Set(prev);
       next.delete(id);
-      localStorage.setItem(FAVORITES_KEY, JSON.stringify([...next]));
+      localStorage.removeItem(FAVORITES_INCIDENTS_KEY);
+      const inc = localStorage.getItem(FAVORITES_INCIDENTS_KEY);
+      if (inc) {
+        const arr = JSON.parse(inc).filter((v: number) => v !== id);
+        localStorage.setItem(FAVORITES_INCIDENTS_KEY, JSON.stringify(arr));
+      }
+      const tix = localStorage.getItem(FAVORITES_TICKETS_KEY);
+      if (tix) {
+        const arr = JSON.parse(tix).filter((v: number) => v !== id);
+        localStorage.setItem(FAVORITES_TICKETS_KEY, JSON.stringify(arr));
+      }
       return next;
     });
   };
