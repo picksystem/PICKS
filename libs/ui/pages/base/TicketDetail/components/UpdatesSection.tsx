@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Box, Typography, TextField, IconButton, Tooltip, EditIcon } from '../../../../components';
 import CommentWindow from '../windows/CommentWindow';
-import { Avatar } from '@mui/material';
+import { Avatar, InputAdornment } from '@mui/material';
 import {
   Search as SearchIcon,
   Lock as LockIcon,
@@ -9,17 +9,17 @@ import {
   VisibilityOff as HideIcon,
   FilterList as FilterListIcon,
   Email as EmailIcon,
-  Groups as GroupsIcon,
   ContentCopy as CopyIcon,
   PushPin as PinIcon,
   Bookmark as BookmarkIcon,
   Save as SaveIcon,
   Close as CloseIcon,
-  Check as CheckIcon,
+  KeyboardArrowDown as ArrowDownIcon,
 } from '@mui/icons-material';
 import { IIncidentComment } from '@serviceops/interfaces';
 import { useStyles } from '../styles';
 import { TicketEntity } from '../types/ticketDetail.types';
+import { useUpdateTicketCommentMutation } from '@serviceops/services';
 
 interface UpdatesSectionProps {
   comments: IIncidentComment[];
@@ -108,20 +108,6 @@ const BUTTON_STYLES = [
     text: '#065f46',
     mode: 'self' as const,
   },
-  {
-    label: 'Email note',
-    border: '#0369a1',
-    bg: '#e0f2fe',
-    text: '#0369a1',
-    mode: 'email' as const,
-  },
-  {
-    label: 'Notify ticket assignees only',
-    border: '#7c3aed',
-    bg: '#faf5ff',
-    text: '#6b21a8',
-    mode: 'notify' as const,
-  },
 ];
 
 /* ── Sub-components ──────────────────────────────────────── */
@@ -131,12 +117,12 @@ const ActionButtonRow = ({
   classes,
   searchText,
   onSearchChange,
-  onNotifyAssignees,
-  onOpenEmail,
   filterSaved,
   showActivity,
+  showSystem,
   onToggleFilterSaved,
   onToggleShowActivity,
+  onToggleShowSystem,
   onScrollToBottom,
   onToggleFilter,
 }: {
@@ -144,25 +130,16 @@ const ActionButtonRow = ({
   classes: Record<string, string>;
   searchText: string;
   onSearchChange: (value: string) => void;
-  onNotifyAssignees: () => void;
-  onOpenEmail?: () => void;
   filterSaved: boolean;
   showActivity: boolean;
   showSystem: boolean;
   onToggleFilterSaved: () => void;
   onToggleShowActivity: () => void;
+  onToggleShowSystem: () => void;
   onScrollToBottom: () => void;
   onToggleFilter: () => void;
 }) => {
-  const handleClick = (mode: 'comment' | 'internal' | 'self' | 'notify' | 'email') => {
-    if (mode === 'notify') {
-      onNotifyAssignees();
-      return;
-    }
-    if (mode === 'email') {
-      onOpenEmail?.();
-      return;
-    }
+  const handleClick = (mode: 'comment' | 'internal' | 'self') => {
     if (onOpenComment) onOpenComment(mode);
   };
 
@@ -197,67 +174,11 @@ const ActionButtonRow = ({
         {BUTTON_STYLES.map((btn) => (
           <Box key={btn.label} onClick={() => handleClick(btn.mode)} sx={actionBtnSx(btn)}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              {btn.mode === 'notify' ? (
-                <GroupsIcon sx={{ fontSize: 14 }} />
-              ) : btn.mode === 'email' ? (
-                <EmailIcon sx={{ fontSize: 14 }} />
-              ) : (
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, lineHeight: 1 }}>+</span>
-              )}
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, lineHeight: 1 }}>+</span>
             </Box>
             <span>{btn.label}</span>
           </Box>
         ))}
-
-        {/* Search field */}
-        <Box
-          sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center', height: 30 }}
-        >
-          <SearchIcon
-            sx={{
-              position: 'absolute',
-              left: 8,
-              fontSize: 16,
-              color: '#94a3b8',
-              zIndex: 1,
-              pointerEvents: 'none',
-            }}
-          />
-          <TextField
-            placeholder='Find text'
-            value={searchText}
-            onChange={(e) => onSearchChange(e.target.value)}
-            size='small'
-            sx={{
-              width: 210,
-              height: 30,
-              '& .MuiOutlinedInput-root': {
-                height: 30,
-                borderRadius: '6px',
-                fontSize: '0.8rem',
-                backgroundColor: '#ffffff',
-                '& fieldset': {
-                  borderColor: '#cbd5e1',
-                },
-                '&:hover fieldset': {
-                  borderColor: '#94a3b8',
-                },
-              },
-              '& .MuiInputBase-input': {
-                padding: '4px 6px',
-                fontSize: '0.8rem',
-                pl: '28px',
-              },
-              '& .MuiInputBase-input::placeholder': {
-                opacity: 0.7,
-              },
-              '& .MuiSvgIcon-root': {
-                fontSize: '1.1rem',
-                color: '#64748b',
-              },
-            }}
-          />
-        </Box>
       </Box>
 
       {/* Right group — toggles & actions */}
@@ -284,7 +205,12 @@ const ActionButtonRow = ({
             onToggle: onToggleShowActivity,
             always: false,
           },
-          { label: 'Show system notes', checked: true, onToggle: () => {}, always: true },
+          {
+            label: 'Show system notes',
+            checked: showSystem,
+            onToggle: onToggleShowSystem,
+            always: false,
+          },
         ].map(({ label, checked, onToggle, always }) => (
           <Box
             key={label}
@@ -343,57 +269,30 @@ const ActionButtonRow = ({
 
         {/* Scroll + Filter buttons */}
         <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: '4px', ml: '4px' }}>
-          <Box
-            onClick={onScrollToBottom}
-            sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '4px',
-              height: 30,
-              minHeight: 30,
-              px: '8px',
-              borderRadius: '6px',
-              border: '1px solid #c7d2fe',
-              background: '#f5f3ff',
-              color: '#4338ca',
-              fontSize: '0.78rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              lineHeight: 1,
-              transition: 'all 0.15s ease',
-              '&:hover': {
-                backgroundColor: '#ede9fe',
-                borderColor: '#a78bfa',
-              },
-            }}
-          >
+          <Tooltip title='Scroll to bottom'>
             <Box
+              onClick={onScrollToBottom}
               sx={{
-                width: 24,
-                height: 24,
-                borderRadius: '6px',
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'rgba(67,56,202,0.08)',
-              }}
-            >
-              <FilterListIcon sx={{ fontSize: 13, color: '#4338ca' }} />
-            </Box>
-            <Typography
-              sx={{
-                fontSize: '0.78rem',
-                fontWeight: 600,
+                width: 30,
+                height: 30,
+                borderRadius: '6px',
+                border: '1px solid #c7d2fe',
+                background: '#f5f3ff',
                 color: '#4338ca',
-                whiteSpace: 'nowrap',
-                lineHeight: '24px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                '&:hover': {
+                  backgroundColor: '#ede9fe',
+                  borderColor: '#a78bfa',
+                },
               }}
             >
-              Scroll to bottom
-            </Typography>
-          </Box>
+              <ArrowDownIcon sx={{ fontSize: 18, color: '#4338ca' }} />
+            </Box>
+          </Tooltip>
 
           <Box
             onClick={onToggleFilter}
@@ -446,6 +345,24 @@ const ActionButtonRow = ({
               Filter
             </Typography>
           </Box>
+
+          {/* Search field */}
+          <TextField
+            placeholder='Search'
+            value={searchText}
+            onChange={(e) => onSearchChange(e.target.value)}
+            size='small'
+            className={classes.searchField}
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position='end'>
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
         </Box>
       </Box>
     </Box>
@@ -534,23 +451,6 @@ const FollowersList = () => {
         <FollowerIconButton active onClick={() => {}} title='Toggle follower visibility'>
           <PersonIcon sx={{ fontSize: 15 }} />
         </FollowerIconButton>
-        <Box
-          sx={{
-            width: 28,
-            height: 28,
-            borderRadius: '50%',
-            backgroundColor: '#6366f1',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '0.75rem',
-            fontWeight: 700,
-            fontFamily: '"Roboto Mono", monospace',
-          }}
-        >
-          S
-        </Box>
         <Typography sx={{ fontSize: '0.85rem', color: '#1e293b', fontWeight: 600 }}>
           Srinivas Penumalla
         </Typography>
@@ -1376,6 +1276,7 @@ const DEMO_ACTIVITIES: ActivityCard[] = [
 
 const UpdatesSection = ({
   comments,
+  incidentId,
   incident,
   onRefresh,
   onRefreshComments,
@@ -1389,19 +1290,25 @@ const UpdatesSection = ({
   const [searchText, setSearchText] = useState('');
   const [filterSaved, setFilterSaved] = useState(false);
   const [showActivity, setShowActivity] = useState(false);
-  const [showSystem] = useState(true);
-  const [pinnedCommentIds, setPinnedCommentIds] = useState<Set<number>>(new Set());
-  const [savedCommentIds, setSavedCommentIds] = useState<Set<number>>(new Set());
+  const [showSystem, setShowSystem] = useState(false);
+  const [optimisticState, setOptimisticState] = useState<
+    Record<number, { isPinned?: boolean; isSaved?: boolean }>
+  >({});
+  const [updateComment] = useUpdateTicketCommentMutation();
   const commentsListRef = useRef<HTMLDivElement>(null);
 
-  const handleNotifyAssignees = () => {
-    setModalMode('notify');
-    setIsModalOpen(true);
+  const getCommentPinState = (commentId: number): boolean => {
+    if (optimisticState[commentId]?.isPinned !== undefined)
+      return optimisticState[commentId].isPinned!;
+    const c = comments.find((cm) => cm.id === commentId);
+    return c?.isPinned ?? false;
   };
 
-  const handleOpenEmail = () => {
-    setModalMode('email');
-    setIsModalOpen(true);
+  const getCommentSaveState = (commentId: number): boolean => {
+    if (optimisticState[commentId]?.isSaved !== undefined)
+      return optimisticState[commentId].isSaved!;
+    const c = comments.find((cm) => cm.id === commentId);
+    return c?.isSaved ?? false;
   };
 
   const handleScrollToBottom = () => {
@@ -1413,21 +1320,37 @@ const UpdatesSection = ({
   };
 
   const handlePinComment = (commentId: number) => {
-    setPinnedCommentIds((prev) => {
-      const next = new Set(prev);
-      // eslint-disable-next-line no-unused-expressions
-      next.has(commentId) ? next.delete(commentId) : next.add(commentId);
-      return next;
-    });
+    const current = getCommentPinState(commentId);
+    const next = !current;
+    setOptimisticState((prev) => ({
+      ...prev,
+      [commentId]: { ...prev[commentId], isPinned: next },
+    }));
+    updateComment({ ticketId: incidentId, commentId, isPinned: next })
+      .unwrap()
+      .catch(() => {
+        setOptimisticState((prev) => ({
+          ...prev,
+          [commentId]: { ...prev[commentId], isPinned: current },
+        }));
+      });
   };
 
   const handleSaveComment = (commentId: number) => {
-    setSavedCommentIds((prev) => {
-      const next = new Set(prev);
-      // eslint-disable-next-line no-unused-expressions
-      next.has(commentId) ? next.delete(commentId) : next.add(commentId);
-      return next;
-    });
+    const current = getCommentSaveState(commentId);
+    const next = !current;
+    setOptimisticState((prev) => ({
+      ...prev,
+      [commentId]: { ...prev[commentId], isSaved: next },
+    }));
+    updateComment({ ticketId: incidentId, commentId, isSaved: next })
+      .unwrap()
+      .catch(() => {
+        setOptimisticState((prev) => ({
+          ...prev,
+          [commentId]: { ...prev[commentId], isSaved: current },
+        }));
+      });
   };
 
   const filteredComments = useMemo(() => {
@@ -1465,13 +1388,12 @@ const UpdatesSection = ({
         classes={classes}
         searchText={searchText}
         onSearchChange={setSearchText}
-        onNotifyAssignees={handleNotifyAssignees}
-        onOpenEmail={handleOpenEmail}
         filterSaved={filterSaved}
         showActivity={showActivity}
         showSystem={showSystem}
         onToggleFilterSaved={() => setFilterSaved((prev) => !prev)}
         onToggleShowActivity={() => setShowActivity((prev) => !prev)}
+        onToggleShowSystem={() => setShowSystem((prev) => !prev)}
         onScrollToBottom={handleScrollToBottom}
         onToggleFilter={handleFilterToggle}
       />
@@ -1492,14 +1414,15 @@ const UpdatesSection = ({
         // Add comments
         const displayComments = filteredComments.filter((comment) => {
           // "Filter Saved comments" — when enabled, show only saved comments
-          if (filterSaved) return savedCommentIds.has(comment.id);
+          if (filterSaved) return getCommentSaveState(comment.id);
           return true;
         });
 
         displayComments.forEach((comment) => {
-          // "Show system notes" — hide internal and self notes when disabled
-          const isSystemNote = comment.isInternal || comment.isSelfNote;
-          if (isSystemNote && !showSystem) return;
+          // "Show system notes" — when checked, only show internal/self notes
+          const isSystemNote =
+            comment.isInternal || comment.isSelfNote || comment.notifyAssigneesOnly;
+          if (showSystem && !isSystemNote) return;
 
           timelineItems.push({
             kind: 'comment',
@@ -1522,9 +1445,9 @@ const UpdatesSection = ({
         // Sort by timestamp descending (newest first), but pinned comments always come first
         timelineItems.sort((a, b) => {
           const aPinned =
-            a.kind === 'comment' && pinnedCommentIds.has((a.item as IIncidentComment).id);
+            a.kind === 'comment' && getCommentPinState((a.item as IIncidentComment).id);
           const bPinned =
-            b.kind === 'comment' && pinnedCommentIds.has((b.item as IIncidentComment).id);
+            b.kind === 'comment' && getCommentPinState((b.item as IIncidentComment).id);
           if (aPinned && !bPinned) return -1;
           if (!aPinned && bPinned) return 1;
           return b.timestamp.getTime() - a.timestamp.getTime();
@@ -1533,15 +1456,15 @@ const UpdatesSection = ({
         if (timelineItems.length > 0) {
           return (
             <Box ref={commentsListRef} className={classes.commentsList}>
-              {timelineItems.map((entry, index) => {
+              {timelineItems.map((entry, _index) => {
                 if (entry.kind === 'comment') {
                   const c = entry.item as IIncidentComment;
                   return (
                     <CommentCard
                       key={`comment-${c.id}`}
                       comment={c}
-                      isPinned={pinnedCommentIds.has(c.id)}
-                      isSaved={savedCommentIds.has(c.id)}
+                      isPinned={getCommentPinState(c.id)}
+                      isSaved={getCommentSaveState(c.id)}
                       onCopy={undefined}
                       onPin={() => handlePinComment(c.id)}
                       onSave={() => handleSaveComment(c.id)}

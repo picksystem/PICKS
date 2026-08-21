@@ -122,6 +122,8 @@ export interface IAdminTicketComment {
   isSelfNote: boolean;
   notifyAssigneesOnly: boolean;
   isEmail?: boolean;
+  isPinned: boolean;
+  isSaved: boolean;
   status?: string | null;
   attachments?: string | null;
   createdBy: string;
@@ -299,6 +301,7 @@ export interface IAdminTicketGateway {
     createdBy: string;
   }): Promise<IAdminTicketComment>;
   getComments(ticketId: number): Promise<IAdminTicketComment[]>;
+  updateComment(id: number, data: { isPinned?: boolean; isSaved?: boolean }): Promise<IAdminTicketComment>;
   addTimeEntry(data: {
     ticketId: number;
     date: string;

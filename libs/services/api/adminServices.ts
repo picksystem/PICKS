@@ -174,9 +174,19 @@ export const adminApi = baseApi.injectEndpoints({
     getTicketComments: builder.query<IAdminTicketComment[], ITicketRef>({
       query: ({ ticketId }) => `/api/admin/tickets/${ticketId}/comments`,
       transformResponse: (response: { data: IAdminTicketComment[] }) => response.data,
-      providesTags: (result, _err, { ticketId }) => [
-        { type: 'TicketComments', id: ticketId },
-      ],
+      providesTags: (result, _err, { ticketId }) => [{ type: 'TicketComments', id: ticketId }],
+    }),
+    updateTicketComment: builder.mutation<
+      IAdminTicketComment,
+      { ticketId: number; commentId: number; isPinned?: boolean; isSaved?: boolean }
+    >({
+      query: ({ ticketId, commentId, ...body }) => ({
+        url: `/api/admin/tickets/${ticketId}/comments/${commentId}`,
+        method: 'PATCH',
+        body,
+      }),
+      transformResponse: (response: { data: IAdminTicketComment }) => response.data,
+      invalidatesTags: (result, _err, { ticketId }) => [{ type: 'TicketComments', id: ticketId }],
     }),
     createTicketComment: builder.mutation<
       IAdminTicketComment,
@@ -198,15 +208,16 @@ export const adminApi = baseApi.injectEndpoints({
         body,
       }),
       transformResponse: (response: { data: IAdminTicketComment }) => response.data,
-      invalidatesTags: (result, _err, { ticketId }) => [{ type: 'TicketComments', id: ticketId }, 'Ticket'],
+      invalidatesTags: (result, _err, { ticketId }) => [
+        { type: 'TicketComments', id: ticketId },
+        'Ticket',
+      ],
     }),
 
     getTicketTimeEntries: builder.query<IAdminTicketTimeEntry[], ITicketRef>({
       query: ({ ticketId }) => `/api/admin/tickets/${ticketId}/time-entries`,
       transformResponse: (response: { data: IAdminTicketTimeEntry[] }) => response.data,
-      providesTags: (result, _err, { ticketId }) => [
-        { type: 'TicketTimeEntries', id: ticketId },
-      ],
+      providesTags: (result, _err, { ticketId }) => [{ type: 'TicketTimeEntries', id: ticketId }],
     }),
     createTicketTimeEntry: builder.mutation<
       IAdminTicketTimeEntry,
@@ -229,15 +240,16 @@ export const adminApi = baseApi.injectEndpoints({
         body,
       }),
       transformResponse: (response: { data: IAdminTicketTimeEntry }) => response.data,
-      invalidatesTags: (result, _err, { ticketId }) => [{ type: 'TicketTimeEntries', id: ticketId }, 'Ticket'],
+      invalidatesTags: (result, _err, { ticketId }) => [
+        { type: 'TicketTimeEntries', id: ticketId },
+        'Ticket',
+      ],
     }),
 
     getTicketResolutions: builder.query<IAdminTicketResolution[], ITicketRef>({
       query: ({ ticketId }) => `/api/admin/tickets/${ticketId}/resolutions`,
       transformResponse: (response: { data: IAdminTicketResolution[] }) => response.data,
-      providesTags: (result, _err, { ticketId }) => [
-        { type: 'TicketResolutions', id: ticketId },
-      ],
+      providesTags: (result, _err, { ticketId }) => [{ type: 'TicketResolutions', id: ticketId }],
     }),
     createTicketResolution: builder.mutation<
       IAdminTicketResolution,
@@ -343,6 +355,7 @@ export const {
   // across incident/service_request/advisory_request)
   useGetTicketCommentsQuery,
   useCreateTicketCommentMutation,
+  useUpdateTicketCommentMutation,
   useGetTicketTimeEntriesQuery,
   useCreateTicketTimeEntryMutation,
   useGetTicketResolutionsQuery,

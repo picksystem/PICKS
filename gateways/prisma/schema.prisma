@@ -744,12 +744,12 @@ model AdminTicketComment {
   isInternal          Boolean  @default(false)
   isSelfNote          Boolean  @default(false)
   notifyAssigneesOnly Boolean  @default(false)
-  isEmail             Boolean  @default(false)
   status              String?
   attachments         String?
   createdBy           String
   createdAt           DateTime @default(now())
   updatedAt           DateTime
+  isEmail             Boolean  @default(false)
 
   @@map("admin_ticket_comment")
 }

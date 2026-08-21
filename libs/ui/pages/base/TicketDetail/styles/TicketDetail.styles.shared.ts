@@ -1177,4 +1177,20 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   mobileTimerWrapper: {
     marginBottom: theme.spacing(1.5),
   },
+
+  searchField: {
+    width: '220px',
+    '& .MuiOutlinedInput-root': {
+      height: '34px',
+      fontSize: '0.85rem',
+      backgroundColor: theme.palette.common.white,
+      borderRadius: '6px',
+    },
+    '& .MuiInputBase-input': { padding: '4px 8px', fontSize: '0.85rem' },
+    '& .MuiInputBase-input::placeholder': { opacity: 0.7 },
+    '& .MuiInputAdornment-root .MuiSvgIcon-root': {
+      fontSize: '1.1rem',
+      color: theme.palette.text.secondary,
+    },
+  },
 });

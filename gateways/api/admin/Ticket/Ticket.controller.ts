@@ -83,6 +83,20 @@ export function buildTicketRouter(): Router {
     }
   });
 
+  router.patch(
+    '/:ticketId/comments/:commentId',
+    async (req: Request, res: Response): Promise<void> => {
+      try {
+        const commentId = parseInt(req.params.commentId, 10);
+        const { isPinned, isSaved } = req.body as { isPinned?: boolean; isSaved?: boolean };
+        const comment = await ticketUseCase.updateComment(commentId, { isPinned, isSaved });
+        res.json({ message: 'Comment updated successfully', data: comment });
+      } catch (error: any) {
+        res.status(500).json({ message: error.message || 'Failed to update comment' });
+      }
+    },
+  );
+
   // Time entries
   router.get('/:ticketId/time-entries', async (req: Request, res: Response): Promise<void> => {
     try {

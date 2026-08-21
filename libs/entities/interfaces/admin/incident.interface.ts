@@ -294,6 +294,8 @@ export interface IIncidentComment {
   isSelfNote: boolean;
   notifyAssigneesOnly: boolean;
   isEmail: boolean;
+  isPinned: boolean;
+  isSaved: boolean;
   status: IncidentStatus;
   attachments: string | null;
   createdBy: string;

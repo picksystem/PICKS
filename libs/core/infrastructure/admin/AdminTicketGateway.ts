@@ -299,6 +299,21 @@ export class AdminTicketGateway {
     }) as unknown as Promise<IAdminTicketComment[]>;
   }
 
+  async updateComment(
+    id: number,
+    data: { isPinned?: boolean; isSaved?: boolean },
+  ): Promise<IAdminTicketComment> {
+    const comment = await this.prisma.adminTicketComment.update({
+      where: { id },
+      data: {
+        ...(data.isPinned !== undefined && { isPinned: data.isPinned }),
+        ...(data.isSaved !== undefined && { isSaved: data.isSaved }),
+        updatedAt: new Date(),
+      },
+    });
+    return comment as unknown as Promise<IAdminTicketComment>;
+  }
+
   async addTimeEntry(data: {
     ticketId: number;
     date: string;

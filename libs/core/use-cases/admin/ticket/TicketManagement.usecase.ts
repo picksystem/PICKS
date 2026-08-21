@@ -145,6 +145,13 @@ export class TicketManagementUseCase {
     return this.ticketGateway.getComments(ticketId);
   }
 
+  async updateComment(
+    commentId: number,
+    data: { isPinned?: boolean; isSaved?: boolean },
+  ): Promise<IAdminTicketComment> {
+    return this.ticketGateway.updateComment(commentId, data);
+  }
+
   async addTimeEntry(input: IAddTimeEntryInput): Promise<IAdminTicketTimeEntry> {
     const ticket = await this.ticketGateway.findById(input.ticketId);
     if (!ticket) {
