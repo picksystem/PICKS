@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -9,7 +9,7 @@ import {
   Button,
 } from '../../../../components';
 import CommentWindow from '../windows/CommentWindow';
-import { Avatar, InputAdornment } from '@mui/material';
+import { Avatar, InputAdornment, alpha } from '@mui/material';
 import {
   Search as SearchIcon,
   Lock as LockIcon,
@@ -23,15 +23,18 @@ import {
   KeyboardArrowDown as ArrowDownIcon,
   Clear as ClearIcon,
 } from '@mui/icons-material';
-import { IIncidentComment } from '@serviceops/interfaces';
+import { IConfigStatusLevel, IIncidentComment } from '@serviceops/interfaces';
 import { useStyles } from '../styles';
 import { TicketEntity } from '../types/ticketDetail.types';
+import { formatStatus } from '../utils/ticketDetail.utils';
+import { useConfiguration } from '@serviceops/confighooks';
 import { useUpdateTicketCommentMutation } from '@serviceops/services';
 import {
   parseRichText,
   RichTextEditor,
   serializeRichText,
 } from '../../Configuration/shared/RichTextEditor';
+import { CommentTypeFilterField } from './CommentTypeFilterField';
 
 interface UpdatesSectionProps {
   comments: IIncidentComment[];
@@ -137,6 +140,9 @@ const ActionButtonRow = ({
   onToggleShowSystem,
   onScrollToBottom,
   onToggleFilter,
+  commentTypeFilter,
+  onCommentTypeFilterChange,
+  commentTypeOptions,
 }: {
   onOpenComment?: (mode: 'comment' | 'internal' | 'self') => void;
   classes: Record<string, string>;
@@ -150,6 +156,9 @@ const ActionButtonRow = ({
   onToggleShowSystem: () => void;
   onScrollToBottom: () => void;
   onToggleFilter: () => void;
+  commentTypeFilter: string;
+  onCommentTypeFilterChange: (value: string) => void;
+  commentTypeOptions: { value: string; label: string }[];
 }) => {
   const handleClick = (mode: 'comment' | 'internal' | 'self') => {
     if (onOpenComment) onOpenComment(mode);
@@ -305,93 +314,49 @@ const ActionButtonRow = ({
               <ArrowDownIcon sx={{ fontSize: 18, color: '#4338ca' }} />
             </Box>
           </Tooltip>
-
-          <Box
-            onClick={onToggleFilter}
-            sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '4px',
-              height: 30,
-              minHeight: 30,
-              px: '8px',
-              borderRadius: '6px',
-              border: '1px solid #c7d2fe',
-              background: '#f5f3ff',
-              color: '#4338ca',
-              fontSize: '0.78rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              lineHeight: 1,
-              transition: 'all 0.15s ease',
-              '&:hover': {
-                backgroundColor: '#ede9fe',
-                borderColor: '#a78bfa',
-              },
-            }}
-          >
-            <Box
-              sx={{
-                width: 24,
-                height: 24,
-                borderRadius: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'rgba(67,56,202,0.08)',
-              }}
-            >
-              <FilterListIcon sx={{ fontSize: 13, color: '#4338ca' }} />
-            </Box>
-            <Typography
-              sx={{
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                color: '#4338ca',
-                whiteSpace: 'nowrap',
-                lineHeight: '24px',
-              }}
-            >
-              Filter
-            </Typography>
-          </Box>
-
-          {/* Search field */}
-          <TextField
-            placeholder='Search'
-            value={searchText}
-            onChange={(e) => onSearchChange(e.target.value)}
-            size='small'
-            className={classes.searchField}
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position='end'>
-                    <Box
-                      component='span'
-                      onClick={searchText ? onSearchChange.bind(null, '') : undefined}
-                      sx={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: searchText ? 'pointer' : 'default',
-                        lineHeight: 1,
-                      }}
-                    >
-                      {searchText ? (
-                        <ClearIcon sx={{ fontSize: 18, color: '#475569' }} />
-                      ) : (
-                        <SearchIcon sx={{ fontSize: 18, color: '#94a3b8' }} />
-                      )}
-                    </Box>
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
         </Box>
+
+        {/* Comment type filter dropdown — matches search field styling */}
+        <CommentTypeFilterField
+          value={commentTypeFilter}
+          options={commentTypeOptions}
+          onChange={onCommentTypeFilterChange}
+          className={classes.searchField}
+        />
+
+        {/* Search field */}
+        <TextField
+          placeholder='Search'
+          value={searchText}
+          onChange={(e) => onSearchChange(e.target.value)}
+          size='small'
+          className={classes.searchField}
+          slotProps={{
+            input: {
+              endAdornment: (
+                <InputAdornment position='end'>
+                  <Box
+                    component='span'
+                    onClick={searchText ? onSearchChange.bind(null, '') : undefined}
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: searchText ? 'pointer' : 'default',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {searchText ? (
+                      <ClearIcon sx={{ fontSize: 18, color: '#475569' }} />
+                    ) : (
+                      <SearchIcon sx={{ fontSize: 18, color: '#94a3b8' }} />
+                    )}
+                  </Box>
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
       </Box>
     </Box>
   );
@@ -504,6 +469,8 @@ const CommentCard = ({
   onPin,
   onSave,
   onEditSave,
+  configStatusesItems,
+  ticketStatus,
 }: {
   comment: IIncidentComment;
   isPinned?: boolean;
@@ -512,6 +479,8 @@ const CommentCard = ({
   onPin?: () => void;
   onSave?: () => void;
   onEditSave?: (newMessage: string) => void;
+  configStatusesItems?: IConfigStatusLevel[];
+  ticketStatus?: string;
 }) => {
   const avatarColor = getAvatarColor(comment.createdBy);
   const initials = getInitials(comment.createdBy);
@@ -626,11 +595,71 @@ const CommentCard = ({
     >
       {/* Header */}
       <Box sx={commentCardHeaderSx}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Avatar sx={commentAvatarSx(avatarColor)}>{initials}</Avatar>
-          <Typography sx={commentAuthorSx}>{comment.createdBy}</Typography>
+        {/* Left side — vertical stack */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          {/* Row 1: Avatar + User name */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Avatar sx={commentAvatarSx(avatarColor)}>{initials}</Avatar>
+            <Typography sx={commentAuthorSx}>{comment.createdBy}</Typography>
+          </Box>
+
+          {/* Row 2: Status — dynamic colored text from Configuration > Statuses */}
+          {(() => {
+            const rawStatus = comment.status || ticketStatus || '';
+            if (!rawStatus) return null;
+            const cfg = configStatusesItems?.find(
+              (s) => s.id === rawStatus || s.name === rawStatus,
+            );
+            const statusColor = cfg?.bgColor || '#64748b';
+            return (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pl: '44px', pt: 0.5 }}>
+                <Typography
+                  sx={{
+                    fontSize: '0.8rem',
+                    color: '#1e293b',
+                    fontWeight: 600,
+                  }}
+                >
+                  Status:
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: '0.8rem',
+                    color: statusColor,
+                    fontWeight: 700,
+                  }}
+                >
+                  {formatStatus(rawStatus)}
+                </Typography>
+              </Box>
+            );
+          })()}
+
+          {/* Row 3: comment */}
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, pl: '44px', pt: 1 }}>
+            <Typography
+              sx={{
+                fontSize: '0.82rem',
+                color: '#1e293b',
+                fontWeight: 700,
+                lineHeight: 1.5,
+              }}
+            >
+              Comment:
+            </Typography>
+
+            <Typography
+              sx={{
+                fontSize: '0.82rem',
+                color: '#1e293b',
+              }}
+            >
+              {comment.message}
+            </Typography>
+          </Box>
         </Box>
 
+        {/* Right side — unchanged */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
           {/* Type labels — original style preserved */}
           {comment.isEmail && (
@@ -737,9 +766,7 @@ const CommentCard = ({
               </Button>
             </Box>
           </Box>
-        ) : (
-          <Typography sx={commentMessageSx}>{displayMessage}</Typography>
-        )}
+        ) : null}
       </Box>
     </Box>
   );
@@ -766,11 +793,11 @@ const commentCardBodySx = {
 
 const commentCardHeaderSx = {
   display: 'flex',
-  alignItems: 'center',
+  alignItems: 'flex-start',
   justifyContent: 'space-between',
-  gap: 1,
+  gap: 5,
   px: 2,
-  pt: 1.5,
+  pt: 2,
   pb: 0.75,
 };
 
@@ -1285,6 +1312,7 @@ const UpdatesSection = ({
   activities,
 }: UpdatesSectionProps) => {
   const { classes } = useStyles();
+  const { statuses: configStatuses } = useConfiguration();
   const [modalMode, setModalMode] = useState<'comment' | 'internal' | 'self' | 'notify' | 'email'>(
     'comment',
   );
@@ -1293,6 +1321,7 @@ const UpdatesSection = ({
   const [filterSaved, setFilterSaved] = useState(false);
   const [showActivity, setShowActivity] = useState(false);
   const [showSystem, setShowSystem] = useState(false);
+  const [commentTypeFilter, setCommentTypeFilter] = useState('');
   const [optimisticState, setOptimisticState] = useState<
     Record<number, { isPinned?: boolean; isSaved?: boolean }>
   >({});
@@ -1320,6 +1349,17 @@ const UpdatesSection = ({
   const handleFilterToggle = () => {
     setFilterSaved((prev) => !prev);
   };
+
+  const commentTypeOptions = useMemo(() => {
+    const opts: { value: string; label: string }[] = [
+      { value: 'comment', label: 'Comments' },
+      { value: 'email', label: 'Email' },
+      { value: 'internal', label: 'Internal note' },
+      { value: 'self_note', label: 'Self note' },
+      { value: 'notify_assignees', label: 'Notify assignees' },
+    ];
+    return opts;
+  }, []);
 
   const handlePinComment = (commentId: number) => {
     const current = getCommentPinState(commentId);
@@ -1394,6 +1434,9 @@ const UpdatesSection = ({
         onToggleShowSystem={() => setShowSystem((prev) => !prev)}
         onScrollToBottom={handleScrollToBottom}
         onToggleFilter={handleFilterToggle}
+        commentTypeFilter={commentTypeFilter}
+        onCommentTypeFilterChange={setCommentTypeFilter}
+        commentTypeOptions={commentTypeOptions}
       />
 
       <FollowersList />
@@ -1413,15 +1456,43 @@ const UpdatesSection = ({
         const displayComments = filteredComments.filter((comment) => {
           // "Filter Saved comments" — when enabled, show only saved comments
           if (filterSaved) return getCommentSaveState(comment.id);
+          // "Show system notes" — when checked, only show internal/self/notify notes
+          if (showSystem) {
+            const isSystemNote =
+              comment.isInternal || comment.isSelfNote || comment.notifyAssigneesOnly;
+            if (!isSystemNote) return false;
+          }
+          // "Comment type filter" — filter by comment type
+          if (commentTypeFilter) {
+            switch (commentTypeFilter) {
+              case 'email':
+                if (!comment.isEmail) return false;
+                break;
+              case 'internal':
+                if (!comment.isInternal) return false;
+                break;
+              case 'self_note':
+                if (!comment.isSelfNote) return false;
+                break;
+              case 'notify_assignees':
+                if (!comment.notifyAssigneesOnly) return false;
+                break;
+              case 'comment':
+              default:
+                if (
+                  comment.isEmail ||
+                  comment.isInternal ||
+                  comment.isSelfNote ||
+                  comment.notifyAssigneesOnly
+                )
+                  return false;
+                break;
+            }
+          }
           return true;
         });
 
         displayComments.forEach((comment) => {
-          // "Show system notes" — when checked, only show internal/self notes
-          const isSystemNote =
-            comment.isInternal || comment.isSelfNote || comment.notifyAssigneesOnly;
-          if (showSystem && !isSystemNote) return;
-
           timelineItems.push({
             kind: 'comment',
             item: comment,
@@ -1463,6 +1534,8 @@ const UpdatesSection = ({
                       comment={c}
                       isPinned={getCommentPinState(c.id)}
                       isSaved={getCommentSaveState(c.id)}
+                      configStatusesItems={configStatuses?.items}
+                      ticketStatus={incident.status}
                       onCopy={undefined}
                       onPin={() => handlePinComment(c.id)}
                       onSave={() => handleSaveComment(c.id)}
