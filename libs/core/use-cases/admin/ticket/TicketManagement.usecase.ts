@@ -147,7 +147,7 @@ export class TicketManagementUseCase {
 
   async updateComment(
     commentId: number,
-    data: { isPinned?: boolean; isSaved?: boolean },
+    data: { message?: string; isPinned?: boolean; isSaved?: boolean },
   ): Promise<IAdminTicketComment> {
     return this.ticketGateway.updateComment(commentId, data);
   }

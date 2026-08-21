@@ -1,5 +1,13 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { Box, Typography, TextField, IconButton, Tooltip, EditIcon } from '../../../../components';
+import {
+  Box,
+  Typography,
+  IconButton,
+  Tooltip,
+  EditIcon,
+  TextField,
+  Button,
+} from '../../../../components';
 import CommentWindow from '../windows/CommentWindow';
 import { Avatar, InputAdornment } from '@mui/material';
 import {
@@ -12,14 +20,17 @@ import {
   ContentCopy as CopyIcon,
   PushPin as PinIcon,
   Bookmark as BookmarkIcon,
-  Save as SaveIcon,
-  Close as CloseIcon,
   KeyboardArrowDown as ArrowDownIcon,
 } from '@mui/icons-material';
 import { IIncidentComment } from '@serviceops/interfaces';
 import { useStyles } from '../styles';
 import { TicketEntity } from '../types/ticketDetail.types';
 import { useUpdateTicketCommentMutation } from '@serviceops/services';
+import {
+  parseRichText,
+  RichTextEditor,
+  serializeRichText,
+} from '../../Configuration/shared/RichTextEditor';
 
 interface UpdatesSectionProps {
   comments: IIncidentComment[];
@@ -376,7 +387,7 @@ const FollowerIconButton = ({
   children,
 }: {
   active: boolean;
-  onClick: () => void;
+  onClick?: () => void;
   title: string;
   children: React.ReactNode;
 }) => (
@@ -414,14 +425,14 @@ const FollowersList = () => {
         p: '14px 16px',
         backgroundColor: '#ffffff',
         borderRadius: '10px',
-        border: '1px solid #e2e8f0',
+        border: '0.5px solid #91b8f7',
         flexWrap: 'wrap',
         gap: 1,
       }}
     >
       {/* Left — Followers list */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-        <Typography sx={{ fontSize: '0.85rem', color: '#475569', fontWeight: 600, mr: 0.25 }}>
+        <Typography sx={{ fontSize: '0.95rem', color: '#0f172a', fontWeight: 700, mr: 0.25 }}>
           Followers list
         </Typography>
         <FollowerIconButton
@@ -429,29 +440,29 @@ const FollowersList = () => {
           onClick={() => setLock1(!lock1)}
           title={lock1 ? 'Unlock' : 'Lock'}
         >
-          <LockIcon sx={{ fontSize: 15 }} />
+          <LockIcon sx={{ fontSize: 17 }} />
         </FollowerIconButton>
         <FollowerIconButton
           active={person1}
           onClick={() => setPerson1(!person1)}
           title='Toggle follower visibility'
         >
-          {person1 ? <PersonIcon sx={{ fontSize: 15 }} /> : <HideIcon sx={{ fontSize: 15 }} />}
+          {person1 ? <PersonIcon sx={{ fontSize: 17 }} /> : <HideIcon sx={{ fontSize: 17 }} />}
         </FollowerIconButton>
       </Box>
 
       {/* Right — Internal followers list */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-        <Typography sx={{ fontSize: '0.85rem', color: '#475569', fontWeight: 600, mr: 0.25 }}>
+        <Typography sx={{ fontSize: '0.95rem', color: '#0f172a', fontWeight: 700, mr: 0.25 }}>
           Internal followers list
         </Typography>
-        <FollowerIconButton active={false} onClick={() => {}} title='Lock'>
-          <LockIcon sx={{ fontSize: 15 }} />
+        <FollowerIconButton active={false} title='Lock'>
+          <LockIcon sx={{ fontSize: 17 }} />
         </FollowerIconButton>
-        <FollowerIconButton active onClick={() => {}} title='Toggle follower visibility'>
-          <PersonIcon sx={{ fontSize: 15 }} />
+        <FollowerIconButton active title='Toggle follower visibility'>
+          <PersonIcon sx={{ fontSize: 17 }} />
         </FollowerIconButton>
-        <Typography sx={{ fontSize: '0.85rem', color: '#1e293b', fontWeight: 600 }}>
+        <Typography sx={{ fontSize: '0.95rem', color: '#0f172a', fontWeight: 700 }}>
           Srinivas Penumalla
         </Typography>
       </Box>
@@ -491,77 +502,98 @@ const CommentCard = ({
 
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(comment.message);
-  // Edit window starts from comment.createdAt
-  const [timeLeft, setTimeLeft] = useState(() => {
-    const elapsed = Date.now() - new Date(comment.createdAt).getTime();
-    return Math.max(0, Math.floor((60000 - elapsed) / 1000));
-  });
+  const [displayMessage, setDisplayMessage] = useState(comment.message);
   const [hasChanges, setHasChanges] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const isEditAvailable = timeLeft > 0;
+  // Compute remaining edit window based on creation time (59s window)
+  const computeRemaining = () => {
+    const elapsed = Date.now() - new Date(comment.createdAt).getTime();
+    return Math.max(0, 59 - Math.floor(elapsed / 1000));
+  };
 
-  // Countdown the edit window
+  const [countdown, setCountdown] = useState(() => computeRemaining());
+  const isEditAvailable = countdown > 0;
+
+  // Sync local display with incoming prop when refetch returns new data
   useEffect(() => {
-    if (timeLeft <= 0) {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
+    setDisplayMessage(comment.message);
+  }, [comment.message]);
+
+  const clearTimer = () => {
+    const id = timerRef.current;
+    if (id !== null) {
+      clearInterval(id);
+      timerRef.current = null;
+    }
+  };
+
+  // Countdown every 1s — pause while editing so user has unlimited editing time
+  useEffect(() => {
+    if (editing) return; // don't tick while user is editing
+
+    if (countdown <= 0) {
+      clearTimer();
       return;
     }
 
     timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => (prev > 1 ? prev - 1 : 0));
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearTimer();
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      timerRef.current = null;
+      clearTimer();
     };
-  }, [timeLeft]);
+  }, [countdown, editing]);
 
-  // Auto-cancel editing if window expires
+  // Auto-cancel editing if countdown expires while editing
+  // (only matters if countdown was already 0 before user entered edit mode,
+  // or if countdown hits 0 after re-entering edit with time remaining)
   useEffect(() => {
-    if (editing && timeLeft <= 0) {
+    if (editing && countdown <= 0) {
       setEditing(false);
-      setEditValue(comment.message);
+      setEditValue(displayMessage);
       setHasChanges(false);
     }
-  }, [editing, timeLeft, comment.message]);
+  }, [editing, countdown, displayMessage]);
 
   const handleEditClick = () => {
     if (!isEditAvailable) return;
-    setEditValue(comment.message);
+    setEditValue(displayMessage);
     setEditing(true);
     setHasChanges(false);
   };
 
-  const handleSave = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    setEditing(false);
+  const handleSave = async () => {
+    clearTimer();
     setHasChanges(false);
-    if (editValue.trim() !== comment.message && onEditSave) {
-      onEditSave(editValue.trim());
+    const newMessage = editValue.trim();
+    if (newMessage !== displayMessage && onEditSave) {
+      setDisplayMessage(newMessage); // optimistic update
+      setEditing(false);
+      await onEditSave(newMessage);
+    } else {
+      setEditing(false);
     }
   };
 
   const handleCancel = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+    clearTimer();
+    setCountdown(computeRemaining());
     setEditing(false);
-    setEditValue(comment.message);
+    setEditValue(displayMessage);
     setHasChanges(false);
   };
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(comment.message);
+      await navigator.clipboard.writeText(displayMessage);
       onCopy?.();
     } catch {
       // clipboard unavailable — silently fail
@@ -582,7 +614,8 @@ const CommentCard = ({
           <Typography sx={commentAuthorSx}>{comment.createdBy}</Typography>
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+          {/* Type labels — original style preserved */}
           {comment.isEmail && (
             <Typography sx={{ ...internalNoteLabelSx, color: '#0369a1' }}>Email</Typography>
           )}
@@ -598,19 +631,19 @@ const CommentCard = ({
             </Typography>
           )}
 
-          {/* Action icons */}
-          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+          {/* Action icons — pushed to the right corner, larger & bold */}
+          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
             <Tooltip title='Copy'>
               <Box component='span' sx={commentActionIconSx} onClick={handleCopy}>
-                <CopyIcon sx={{ fontSize: 15 }} />
+                <CopyIcon sx={{ fontSize: 20, fontWeight: 700 }} />
               </Box>
             </Tooltip>
             <Tooltip title={isPinned ? 'Unpin' : 'Pin'}>
               <Box component='span' sx={commentActionIconSx} onClick={onPin}>
                 <PinIcon
                   sx={{
-                    fontSize: 15,
-                    color: isPinned ? '#059669' : '#94a3b8',
+                    fontSize: 20,
+                    color: isPinned ? '#059669' : '#334155',
                   }}
                 />
               </Box>
@@ -619,14 +652,14 @@ const CommentCard = ({
               <Box component='span' sx={commentActionIconSx} onClick={onSave}>
                 <BookmarkIcon
                   sx={{
-                    fontSize: 15,
-                    color: isSaved ? '#d97706' : '#94a3b8',
+                    fontSize: 20,
+                    color: isSaved ? '#d97706' : '#334155',
                   }}
                 />
               </Box>
             </Tooltip>
             <Tooltip
-              title={isEditAvailable ? `Edit (${timeLeft}s left)` : 'Edit time expired'}
+              title={isEditAvailable ? `Edit (${countdown}s left)` : 'Edit time expired'}
               placement='top'
             >
               <Box
@@ -638,7 +671,7 @@ const CommentCard = ({
                 }}
                 onClick={handleEditClick}
               >
-                <EditIcon sx={{ fontSize: 15, color: isEditAvailable ? '#475569' : '#94a3b8' }} />
+                <EditIcon sx={{ fontSize: 20, color: isEditAvailable ? '#1e293b' : '#94a3b8' }} />
               </Box>
             </Tooltip>
           </Box>
@@ -651,107 +684,44 @@ const CommentCard = ({
       <Box sx={commentCardBodySx}>
         {editing ? (
           <Box sx={{ position: 'relative' }}>
-            <TextField
-              data-comment-edit={String(comment.id)}
-              multiline
-              minRows={2}
-              maxRows={8}
-              value={editValue}
-              onChange={(e) => {
-                setEditValue(e.target.value);
-                setHasChanges(e.target.value.trim() !== comment.message);
+            <RichTextEditor
+              value={parseRichText(editValue)}
+              onChange={(value) => {
+                const serialized = serializeRichText(value.segments);
+                setEditValue(serialized);
+                setHasChanges(serialized.trim() !== displayMessage);
               }}
-              fullWidth
-              size='small'
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 1,
-                  bgcolor: '#f8fafc',
-                  fontSize: '0.9rem',
-                  lineHeight: 1.6,
-                  '& fieldset': {
-                    borderColor: '#d1d5db',
-                    borderWidth: 1.5,
-                  },
-                  '&:hover fieldset': {
-                    borderColor: '#94a3b8',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#059669',
-                    borderWidth: 2,
-                  },
-                },
-              }}
+              showFooterActions={false}
+              title='Edit Internal Comment'
+              accent='#059669'
+              required
             />
             {/* Edit toolbar */}
             <Box
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
+                justifyContent: 'flex-end',
                 mt: 1,
                 gap: 1,
               }}
             >
-              <Typography
-                sx={{
-                  fontSize: '0.72rem',
-                  fontWeight: 500,
-                  color: timeLeft <= 15 ? '#ef4444' : '#64748b',
-                  fontFamily: '"Roboto Mono", monospace',
-                }}
+              <Button variant='outlined' onClick={handleCancel} size='small'>
+                Cancel
+              </Button>
+              <Button
+                variant='contained'
+                onClick={handleSave}
+                size='small'
+                disabled={!hasChanges}
+                sx={{ bgcolor: '#2563eb', '&:hover': { bgcolor: '#1d4ed8' } }}
               >
-                Editing window: {timeLeft}s remaining
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 0.5 }}>
-                <Tooltip title={hasChanges ? 'Save changes' : 'Save (no changes)'}>
-                  <Box
-                    component='span'
-                    sx={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      p: 0.5,
-                      borderRadius: 1,
-                      cursor: 'pointer',
-                      color: hasChanges ? '#059669' : '#cbd5e1',
-                      bgcolor: hasChanges ? 'rgba(5,150,105,0.08)' : 'transparent',
-                      '&:hover': {
-                        color: '#059699',
-                        bgcolor: 'rgba(5,150,105,0.12)',
-                      },
-                    }}
-                    onClick={handleSave}
-                  >
-                    <SaveIcon sx={{ fontSize: 16 }} />
-                  </Box>
-                </Tooltip>
-                <Tooltip title='Cancel'>
-                  <Box
-                    component='span'
-                    sx={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      p: 0.5,
-                      borderRadius: 1,
-                      cursor: 'pointer',
-                      color: '#94a3b8',
-                      '&:hover': {
-                        color: '#dc2626',
-                        bgcolor: 'rgba(220,38,38,0.08)',
-                      },
-                    }}
-                    onClick={handleCancel}
-                  >
-                    <CloseIcon sx={{ fontSize: 16 }} />
-                  </Box>
-                </Tooltip>
-              </Box>
+                Save
+              </Button>
             </Box>
           </Box>
         ) : (
-          <Typography sx={commentMessageSx}>{comment.message}</Typography>
+          <Typography sx={commentMessageSx}>{displayMessage}</Typography>
         )}
       </Box>
     </Box>
@@ -771,6 +741,12 @@ const commentCardSx = {
   },
 };
 
+const commentCardBodySx = {
+  px: 7.5,
+  pt: 2,
+  pb: 1.5,
+};
+
 const commentCardHeaderSx = {
   display: 'flex',
   alignItems: 'center',
@@ -779,11 +755,6 @@ const commentCardHeaderSx = {
   px: 2,
   pt: 1.5,
   pb: 0.75,
-};
-
-const commentCardBodySx = {
-  px: 2,
-  pb: 1.5,
 };
 
 const commentAvatarSx = (color: string) => ({
@@ -818,13 +789,27 @@ const commentTimestampSx = {
 };
 
 const commentActionIconSx = {
-  p: 0.4,
-  color: '#64748b',
-  width: 28,
-  height: 28,
+  p: 0,
+  width: 34,
+  height: 34,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: '8px',
+  border: '1px solid #1e293b',
+  backgroundColor: '#ffffff',
+  color: '#0f172a',
+  boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+  transition: 'all 0.15s ease',
+  cursor: 'pointer',
   '&:hover': {
-    color: '#334155',
-    backgroundColor: 'rgba(100,116,139,0.12)',
+    backgroundColor: '#f1f5f9',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+    transform: 'translateY(-1px)',
+  },
+  '&:active': {
+    transform: 'translateY(0)',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
   },
 };
 
@@ -1215,7 +1200,7 @@ const systemFieldValueSx = {
 
 /* ── Demo activity data ──────────────────────────────────── */
 
-const DEMO_ACTIVITIES: ActivityCard[] = [
+const _DEMO_ACTIVITIES: ActivityCard[] = [
   {
     id: 1,
     type: 'email_sent',
@@ -1468,9 +1453,18 @@ const UpdatesSection = ({
                       onCopy={undefined}
                       onPin={() => handlePinComment(c.id)}
                       onSave={() => handleSaveComment(c.id)}
-                      onEditSave={(newMessage) => {
-                        // Local update — in real app, call the edit API
-                        console.log('Edit comment', c.id, newMessage);
+                      onEditSave={async (newMessage) => {
+                        const c = entry.item as IIncidentComment;
+                        try {
+                          await updateComment({
+                            ticketId: incidentId,
+                            commentId: c.id,
+                            message: newMessage,
+                          }).unwrap();
+                          await onRefreshComments();
+                        } catch {
+                          console.error('Failed to update comment', c.id);
+                        }
                       }}
                     />
                   );

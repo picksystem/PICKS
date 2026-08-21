@@ -178,7 +178,13 @@ export const adminApi = baseApi.injectEndpoints({
     }),
     updateTicketComment: builder.mutation<
       IAdminTicketComment,
-      { ticketId: number; commentId: number; isPinned?: boolean; isSaved?: boolean }
+      {
+        ticketId: number;
+        commentId: number;
+        message?: string;
+        isPinned?: boolean;
+        isSaved?: boolean;
+      }
     >({
       query: ({ ticketId, commentId, ...body }) => ({
         url: `/api/admin/tickets/${ticketId}/comments/${commentId}`,

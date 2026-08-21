@@ -87,6 +87,8 @@ model AdminAdvisoryRequestComment {
   createdBy            String
   createdAt            DateTime             @default(now())
   updatedAt            DateTime
+  isPinned             Boolean              @default(false)
+  isSaved              Boolean              @default(false)
   AdminAdvisoryRequest AdminAdvisoryRequest @relation(fields: [advisoryRequestId], references: [id], onDelete: Cascade)
 }
 
@@ -252,6 +254,8 @@ model AdminIncidentComment {
   createdBy           String
   createdAt           DateTime      @default(now())
   updatedAt           DateTime
+  isPinned            Boolean       @default(false)
+  isSaved             Boolean       @default(false)
   AdminIncident       AdminIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
 }
 
@@ -556,6 +560,8 @@ model AdminServiceRequestComment {
   createdBy           String
   createdAt           DateTime            @default(now())
   updatedAt           DateTime
+  isPinned            Boolean             @default(false)
+  isSaved             Boolean             @default(false)
   AdminServiceRequest AdminServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
 }
 
@@ -750,6 +756,8 @@ model AdminTicketComment {
   createdAt           DateTime @default(now())
   updatedAt           DateTime
   isEmail             Boolean  @default(false)
+  isPinned            Boolean  @default(false)
+  isSaved             Boolean  @default(false)
 
   @@map("admin_ticket_comment")
 }

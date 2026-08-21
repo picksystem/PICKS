@@ -389,7 +389,17 @@ const CommentWindow = ({
             value={{ segments: parseRichText(message).segments }}
             onChange={(value) => setMessage(serializeRichText(value.segments))}
             showFooterActions={false}
-            title='Message'
+            title={
+              mode === 'internal'
+                ? 'Internal Comment'
+                : mode === 'self'
+                  ? 'Self Comment'
+                  : mode === 'notify'
+                    ? 'Notify Assignees Comment'
+                    : mode === 'email'
+                      ? 'Email Comment'
+                      : 'Comment'
+            }
             required
           />
         </Box>

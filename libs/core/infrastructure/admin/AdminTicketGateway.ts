@@ -301,15 +301,17 @@ export class AdminTicketGateway {
 
   async updateComment(
     id: number,
-    data: { isPinned?: boolean; isSaved?: boolean },
+    data: { message?: string; isPinned?: boolean; isSaved?: boolean },
   ): Promise<IAdminTicketComment> {
+    const prismaData: any = {
+      ...(data.message !== undefined && { message: data.message }),
+      ...(data.isPinned !== undefined && { isPinned: data.isPinned }),
+      ...(data.isSaved !== undefined && { isSaved: data.isSaved }),
+      updatedAt: new Date(),
+    };
     const comment = await this.prisma.adminTicketComment.update({
       where: { id },
-      data: {
-        ...(data.isPinned !== undefined && { isPinned: data.isPinned }),
-        ...(data.isSaved !== undefined && { isSaved: data.isSaved }),
-        updatedAt: new Date(),
-      },
+      data: prismaData,
     });
     return comment as unknown as Promise<IAdminTicketComment>;
   }

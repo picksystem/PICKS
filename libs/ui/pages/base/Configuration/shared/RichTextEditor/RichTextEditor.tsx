@@ -329,6 +329,9 @@ const RichTextEditor = ({
             isFocusedRef.current = false;
             handleSave();
           }}
+          onInput={() => {
+            handleSave();
+          }}
           sx={{
             p: '4px 10px',
             minHeight: 60,
