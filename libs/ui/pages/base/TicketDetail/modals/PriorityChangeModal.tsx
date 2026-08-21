@@ -1,19 +1,12 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
-import { Box, Modal, Button, Alert, Typography, TextField, Paper } from '../../../../components';
+import { useState, useMemo } from 'react';
+import { Box, Modal, Button, Alert, Typography, TextField } from '../../../../components';
 import {
   WarningAmber as WarningAmberIcon,
-  Search as SearchIcon,
-  Clear as ClearIcon,
   CloudUploadOutlined as CloudUploadOutlinedIcon,
   DeleteOutline as DeleteOutlineIcon,
 } from '@mui/icons-material';
-import { alpha, darken, InputAdornment } from '@mui/material';
-import {
-  IncidentImpact,
-  IncidentUrgency,
-  PriorityChangeReasonCode,
-  calculatePriority,
-} from '@serviceops/interfaces';
+import { alpha, darken } from '@mui/material';
+import { IncidentImpact, IncidentUrgency, calculatePriority } from '@serviceops/interfaces';
 import { useUploadTicketAttachmentsMutation } from '../../../../../services';
 import { useNotification } from '@serviceops/hooks';
 import { TicketEntity, UpdateTicketFn } from '../types/ticketDetail.types';
@@ -22,6 +15,9 @@ import {
   serializeRichText,
   RichTextEditor,
 } from '../../../../pages/base/Configuration/shared/RichTextEditor';
+import { ImpactSearchField } from '../../../../pages/base/Configuration/shared/GenericPanel/components/ImpactSearchField/ImpactSearchField';
+import { UrgencySearchField } from '../../../../pages/base/Configuration/shared/GenericPanel/components/UrgencySearchField/UrgencySearchField';
+import { ReasonCodeSearchField } from '../../../../pages/base/Configuration/shared/GenericPanel/components/ReasonCodeSearchField/ReasonCodeSearchField';
 
 const PRIORITY_ACCENT = '#2d5ebb';
 
@@ -32,21 +28,6 @@ interface PriorityChangeModalProps {
   onUpdateTicket: UpdateTicketFn;
   onSuccess: () => void;
 }
-
-const impactOptions = Object.values(IncidentImpact).map((v) => ({
-  label: v.charAt(0).toUpperCase() + v.slice(1),
-  value: v,
-}));
-
-const urgencyOptions = Object.values(IncidentUrgency).map((v) => ({
-  label: v.charAt(0).toUpperCase() + v.slice(1),
-  value: v,
-}));
-
-const reasonCodeOptions = Object.values(PriorityChangeReasonCode).map((v) => ({
-  label: v.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-  value: v,
-}));
 
 const PriorityChangeModal = ({
   open,
@@ -64,142 +45,12 @@ const PriorityChangeModal = ({
   const [files, setFiles] = useState<File[]>([]);
   const notify = useNotification();
 
-  // ── Search field state ──────────────────────────────────────────────────
-  const [impactInput, setImpactInput] = useState('');
-  const [impactOpen, setImpactOpen] = useState(false);
-  const impactDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const [urgencyInput, setUrgencyInput] = useState('');
-  const [urgencyOpen, setUrgencyOpen] = useState(false);
-  const urgencyDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const [reasonCodeInput, setReasonCodeInput] = useState('');
-  const [reasonCodeOpen, setReasonCodeOpen] = useState(false);
-  const reasonCodeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // ── Filtered options ────────────────────────────────────────────────────
-  const [impactFiltered, setImpactFiltered] = useState(impactOptions);
-  const [urgencyFiltered, setUrgencyFiltered] = useState(urgencyOptions);
-  const [reasonCodeFiltered, setReasonCodeFiltered] = useState(reasonCodeOptions);
-
   const calculatedPriority = useMemo(() => {
     if (newImpact && newUrgency) {
       return calculatePriority(newImpact as IncidentImpact, newUrgency as IncidentUrgency);
     }
     return incident.priority || '';
   }, [newImpact, newUrgency, incident.priority]);
-
-  // ── Sync input text when dialog opens ───────────────────────────────────
-  useMemo(() => {
-    if (open) {
-      const impactMatch = impactOptions.find((o) => o.value === newImpact);
-      setImpactInput(impactMatch?.label ?? '');
-      setImpactFiltered(impactOptions);
-
-      const urgencyMatch = urgencyOptions.find((o) => o.value === newUrgency);
-      setUrgencyInput(urgencyMatch?.label ?? '');
-      setUrgencyFiltered(urgencyOptions);
-
-      const reasonMatch = reasonCodeOptions.find((o) => o.value === reasonCode);
-      setReasonCodeInput(reasonMatch?.label ?? '');
-      setReasonCodeFiltered(reasonCodeOptions);
-    }
-  }, [open]);
-
-  // ── Search handlers (matching Comment dialog pattern) ───────────────────
-  const handleImpactInputChange = useCallback((value: string) => {
-    setImpactInput(value);
-    if (impactDebounceRef.current) clearTimeout(impactDebounceRef.current);
-    impactDebounceRef.current = setTimeout(() => {
-      const q = value.trim().toLowerCase();
-      const next = q
-        ? impactOptions.filter((o) => o.label.toLowerCase().includes(q))
-        : impactOptions;
-      setImpactFiltered(next);
-      setImpactOpen(next.length > 0);
-    }, 150);
-  }, []);
-
-  const handleUrgencyInputChange = useCallback((value: string) => {
-    setUrgencyInput(value);
-    if (urgencyDebounceRef.current) clearTimeout(urgencyDebounceRef.current);
-    urgencyDebounceRef.current = setTimeout(() => {
-      const q = value.trim().toLowerCase();
-      const next = q
-        ? urgencyOptions.filter((o) => o.label.toLowerCase().includes(q))
-        : urgencyOptions;
-      setUrgencyFiltered(next);
-      setUrgencyOpen(next.length > 0);
-    }, 150);
-  }, []);
-
-  const handleReasonCodeInputChange = useCallback((value: string) => {
-    setReasonCodeInput(value);
-    if (reasonCodeDebounceRef.current) clearTimeout(reasonCodeDebounceRef.current);
-    reasonCodeDebounceRef.current = setTimeout(() => {
-      const q = value.trim().toLowerCase();
-      const next = q
-        ? reasonCodeOptions.filter((o) => o.label.toLowerCase().includes(q))
-        : reasonCodeOptions;
-      setReasonCodeFiltered(next);
-      setReasonCodeOpen(next.length > 0);
-    }, 150);
-  }, []);
-
-  const handleImpactSelect = useCallback((opt: { value: string; label: string }) => {
-    setImpactInput(opt.label);
-    setNewImpact(opt.value);
-    setImpactOpen(false);
-    setImpactFiltered(impactOptions);
-  }, []);
-
-  const handleUrgencySelect = useCallback((opt: { value: string; label: string }) => {
-    setUrgencyInput(opt.label);
-    setNewUrgency(opt.value);
-    setUrgencyOpen(false);
-    setUrgencyFiltered(urgencyOptions);
-  }, []);
-
-  const handleReasonCodeSelect = useCallback((opt: { value: string; label: string }) => {
-    setReasonCodeInput(opt.label);
-    setReasonCode(opt.value);
-    setReasonCodeOpen(false);
-    setReasonCodeFiltered(reasonCodeOptions);
-  }, []);
-
-  const handleImpactClear = useCallback(() => {
-    setImpactInput('');
-    setNewImpact('');
-    setImpactFiltered(impactOptions);
-  }, []);
-
-  const handleUrgencyClear = useCallback(() => {
-    setUrgencyInput('');
-    setNewUrgency('');
-    setUrgencyFiltered(urgencyOptions);
-  }, []);
-
-  const handleReasonCodeClear = useCallback(() => {
-    setReasonCodeInput('');
-    setReasonCode('');
-    setReasonCodeFiltered(reasonCodeOptions);
-  }, []);
-
-  // ── Search adornment (SearchIcon / ClearIcon) ───────────────────────────
-  const searchAdornment = (hasValue: boolean, onClear: () => void, onOpen: () => void) => (
-    <InputAdornment position='end'>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-        {hasValue ? (
-          <ClearIcon
-            onClick={onClear}
-            sx={{ fontSize: 18, color: 'text.secondary', cursor: 'pointer' }}
-          />
-        ) : (
-          <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
-        )}
-      </Box>
-    </InputAdornment>
-  );
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selected = event.target.files;
@@ -368,130 +219,20 @@ const PriorityChangeModal = ({
         />
 
         {/* Impact — searchable */}
-        <Box sx={{ position: 'relative' }}>
-          <TextField
-            label='Impact'
-            placeholder='Search...'
-            value={impactInput}
-            onChange={(e) => handleImpactInputChange(e.target.value)}
-            onFocus={() => {
-              const q = impactInput.trim().toLowerCase();
-              const next = q
-                ? impactOptions.filter((o) => o.label.toLowerCase().includes(q))
-                : impactOptions;
-              setImpactFiltered(next);
-              if (next.length > 0) setImpactOpen(true);
-            }}
-            onBlur={() => setTimeout(() => setImpactOpen(false), 200)}
-            fullWidth
-            size='small'
-            sx={fieldBaseSx}
-            slotProps={{
-              input: {
-                endAdornment: searchAdornment(impactInput.length > 0, handleImpactClear, () => {}),
-              },
-            }}
-          />
-          {impactOpen && impactFiltered.length > 0 && (
-            <Paper
-              elevation={4}
-              sx={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                zIndex: 1000,
-                mt: 0,
-                maxHeight: 280,
-                overflow: 'auto',
-              }}
-            >
-              {impactFiltered.map((opt) => (
-                <Box
-                  key={opt.value}
-                  onClick={() => handleImpactSelect(opt)}
-                  sx={{
-                    px: 1.5,
-                    py: 1,
-                    cursor: 'pointer',
-                    fontSize: '0.84rem',
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    '&:last-child': { borderBottom: 'none' },
-                    '&:hover': { bgcolor: alpha(PRIORITY_ACCENT, 0.08) },
-                  }}
-                >
-                  {opt.label}
-                </Box>
-              ))}
-            </Paper>
-          )}
-        </Box>
+        <ImpactSearchField
+          label='Impact'
+          value={newImpact}
+          onChange={setNewImpact}
+          sx={fieldBaseSx}
+        />
 
         {/* Urgency — searchable */}
-        <Box sx={{ position: 'relative' }}>
-          <TextField
-            label='Urgency'
-            placeholder='Search...'
-            value={urgencyInput}
-            onChange={(e) => handleUrgencyInputChange(e.target.value)}
-            onFocus={() => {
-              const q = urgencyInput.trim().toLowerCase();
-              const next = q
-                ? urgencyOptions.filter((o) => o.label.toLowerCase().includes(q))
-                : urgencyOptions;
-              setUrgencyFiltered(next);
-              if (next.length > 0) setUrgencyOpen(true);
-            }}
-            onBlur={() => setTimeout(() => setUrgencyOpen(false), 200)}
-            fullWidth
-            size='small'
-            sx={fieldBaseSx}
-            slotProps={{
-              input: {
-                endAdornment: searchAdornment(
-                  urgencyInput.length > 0,
-                  handleUrgencyClear,
-                  () => {},
-                ),
-              },
-            }}
-          />
-          {urgencyOpen && urgencyFiltered.length > 0 && (
-            <Paper
-              elevation={4}
-              sx={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                zIndex: 1000,
-                mt: 0,
-                maxHeight: 280,
-                overflow: 'auto',
-              }}
-            >
-              {urgencyFiltered.map((opt) => (
-                <Box
-                  key={opt.value}
-                  onClick={() => handleUrgencySelect(opt)}
-                  sx={{
-                    px: 1.5,
-                    py: 1,
-                    cursor: 'pointer',
-                    fontSize: '0.84rem',
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    '&:last-child': { borderBottom: 'none' },
-                    '&:hover': { bgcolor: alpha(PRIORITY_ACCENT, 0.08) },
-                  }}
-                >
-                  {opt.label}
-                </Box>
-              ))}
-            </Paper>
-          )}
-        </Box>
+        <UrgencySearchField
+          label='Urgency'
+          value={newUrgency}
+          onChange={setNewUrgency}
+          sx={fieldBaseSx}
+        />
 
         {/* Calculated Priority */}
         <TextField
@@ -504,69 +245,13 @@ const PriorityChangeModal = ({
         />
 
         {/* Priority Change Reason Code — searchable */}
-        <Box sx={{ position: 'relative' }}>
-          <TextField
-            label='Priority Change Reason Code'
-            placeholder='Search...'
-            value={reasonCodeInput}
-            onChange={(e) => handleReasonCodeInputChange(e.target.value)}
-            onFocus={() => {
-              const q = reasonCodeInput.trim().toLowerCase();
-              const next = q
-                ? reasonCodeOptions.filter((o) => o.label.toLowerCase().includes(q))
-                : reasonCodeOptions;
-              setReasonCodeFiltered(next);
-              if (next.length > 0) setReasonCodeOpen(true);
-            }}
-            onBlur={() => setTimeout(() => setReasonCodeOpen(false), 200)}
-            fullWidth
-            size='small'
-            sx={fieldBaseSx}
-            slotProps={{
-              input: {
-                endAdornment: searchAdornment(
-                  reasonCodeInput.length > 0,
-                  handleReasonCodeClear,
-                  () => {},
-                ),
-              },
-            }}
-          />
-          {reasonCodeOpen && reasonCodeFiltered.length > 0 && (
-            <Paper
-              elevation={4}
-              sx={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                zIndex: 1000,
-                mt: 0,
-                maxHeight: 280,
-                overflow: 'auto',
-              }}
-            >
-              {reasonCodeFiltered.map((opt) => (
-                <Box
-                  key={opt.value}
-                  onClick={() => handleReasonCodeSelect(opt)}
-                  sx={{
-                    px: 1.5,
-                    py: 1,
-                    cursor: 'pointer',
-                    fontSize: '0.84rem',
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    '&:last-child': { borderBottom: 'none' },
-                    '&:hover': { bgcolor: alpha(PRIORITY_ACCENT, 0.08) },
-                  }}
-                >
-                  {opt.label}
-                </Box>
-              ))}
-            </Paper>
-          )}
-        </Box>
+        <ReasonCodeSearchField
+          label='Priority Change Reason Code'
+          value={reasonCode}
+          onChange={setReasonCode}
+          required
+          sx={fieldBaseSx}
+        />
 
         {/* Priority Change Note — RichTextEditor */}
         <RichTextEditor

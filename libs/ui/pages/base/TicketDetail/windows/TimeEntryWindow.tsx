@@ -23,6 +23,7 @@ import {
   RichTextEditor,
 } from '../../../../pages/base/Configuration/shared/RichTextEditor';
 import { DurationPickerField } from '../../../../pages/base/Configuration/shared/GenericPanel/components/DurationPickerField/DurationPickerField';
+import { ProjectSearchField } from '../../../../pages/base/Configuration/shared/GenericPanel/components/ProjectSearchField/ProjectSearchField';
 
 const TIME_ENTRY_ACCENT = '#0369a1';
 
@@ -362,12 +363,10 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
           />
 
           {/* Billing Code */}
-          <TextField
+          <ProjectSearchField
             label='Billing Code'
             value={billingCode}
-            onChange={(e) => setBillingCode(e.target.value)}
-            size='small'
-            fullWidth
+            onChange={setBillingCode}
             sx={fieldBaseSx}
           />
 

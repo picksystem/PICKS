@@ -4,6 +4,8 @@ import { Person as PersonIcon } from '@mui/icons-material';
 import { alpha, darken } from '@mui/material';
 import { useNotification } from '@serviceops/hooks';
 import { TicketEntity, UpdateTicketFn } from '../types/ticketDetail.types';
+import { ApplicationSearchField } from '../../Configuration/shared/GenericPanel/components/ApplicationSearchField';
+import { QueueSearchField } from '../../Configuration/shared/GenericPanel/components/QueueSearchField';
 
 const ASSIGN_ACCENT = '#0369a1';
 
@@ -121,22 +123,18 @@ const AssignModal = ({ open, onClose, incident, onUpdateTicket, onSuccess }: Ass
       maxWidth='sm'
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-        <TextField
+        <ApplicationSearchField
           label='Application'
           value={application}
-          onChange={(e) => setApplication(e.target.value)}
-          size='small'
-          fullWidth
-          sx={fieldBaseSx}
+          onChange={setApplication}
+          required={false}
         />
 
-        <TextField
-          label='Assignment Group'
+        <QueueSearchField
+          label='Queue'
           value={assignmentGroup}
-          onChange={(e) => setAssignmentGroup(e.target.value)}
-          size='small'
-          fullWidth
-          sx={fieldBaseSx}
+          onChange={setAssignmentGroup}
+          required={false}
         />
 
         <TextField

@@ -18,6 +18,9 @@ import { useAuth, useNotification } from '@serviceops/hooks';
 import { TicketEntity, UpdateTicketFn } from '../types/ticketDetail.types';
 import { ConfigFormDialog } from '@serviceops/configdialogs';
 import { useConfiguration } from '@serviceops/confighooks';
+import { CategorySearchField } from '../../Configuration/shared/GenericPanel/components/CategorySearchField/CategorySearchField';
+import { SubCategorySearchField } from '../../Configuration/shared/GenericPanel/components/SubCategorySearchField/SubCategorySearchField';
+import { ResolutionCodeSearchField } from '../../Configuration/shared/GenericPanel/components/ResolutionCodeSearchField/ResolutionCodeSearchField';
 
 const RESOLVE_ACCENT = '#0369a1';
 
@@ -37,7 +40,7 @@ const ResolveWindow = ({
   onSuccess,
 }: ResolveWindowProps) => {
   const { user } = useAuth();
-  const { statuses, resolutionTemplates, reasonCodes } = useConfiguration();
+  const { statuses, resolutionTemplates } = useConfiguration();
   const [createResolution, { isLoading: resLoading }] = useCreateTicketResolutionMutation();
   const [updLoading, setUpdLoading] = useState(false);
   const [category, setCategory] = useState('');
@@ -67,18 +70,6 @@ const ResolveWindow = ({
         .filter((t) => t.active)
         .map((t) => ({ id: String(t.id), label: t.name }))
     : [];
-
-  const resolutionCodeList = reasonCodes?.resolutionCodes
-    ? reasonCodes.resolutionCodes
-        .filter((r) => r.activate)
-        .map((r) => ({
-          id: r.name,
-          label: r.name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-        }))
-    : Object.values(ResolutionCode).map((v) => ({
-        id: v,
-        label: v.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-      }));
 
   // ── Status search ─────────────────────────────────────────────────────────
   const [statusInput, setStatusInput] = useState('');
@@ -146,42 +137,6 @@ const ResolveWindow = ({
     setTemplateFiltered([]);
   }, []);
 
-  // ── Resolution Code search ─────────────────────────────────────────────────
-  const [resCodeInput, setResCodeInput] = useState('');
-  const [resCodeOptionsOpen, setResCodeOptionsOpen] = useState(false);
-  const [resCodeFiltered, setResCodeFiltered] = useState<{ id: string; label: string }[]>([]);
-  const resCodeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleResCodeInputChange = useCallback(
-    (value: string) => {
-      setResCodeInput(value);
-      if (resCodeDebounceRef.current) clearTimeout(resCodeDebounceRef.current);
-      resCodeDebounceRef.current = setTimeout(() => {
-        const q = value.trim().toLowerCase();
-        const next = q
-          ? resolutionCodeList.filter((o) => o.label.toLowerCase().includes(q))
-          : resolutionCodeList;
-        setResCodeFiltered(next);
-        setResCodeOptionsOpen(next.length > 0);
-      }, 150);
-    },
-    [resolutionCodeList],
-  );
-
-  const handleResCodeSelect = useCallback((opt: { id: string; label: string }) => {
-    setResCodeInput(opt.label);
-    setResolutionCode(opt.id);
-    setResCodeOptionsOpen(false);
-    setResCodeFiltered([]);
-  }, []);
-
-  const handleResCodeClear = useCallback(() => {
-    setResCodeInput('');
-    setResolutionCode('');
-    setResCodeOptionsOpen(false);
-    setResCodeFiltered([]);
-  }, []);
-
   // ── Search icon adornment ──────────────────────────────────────────────────
   const searchAdornment = (hasValue: boolean, onClear: () => void) => (
     <InputAdornment position='end'>
@@ -203,7 +158,6 @@ const ResolveWindow = ({
     if (open) {
       setStatusInput('');
       setTemplateInput('');
-      setResCodeInput('');
       setResolutionCode('');
       setCategory('');
       setSubCategory('');
@@ -408,21 +362,19 @@ const ResolveWindow = ({
         {/* Category & Sub-category row */}
         <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <TextField
+            <CategorySearchField
               label='Category'
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              size='small'
-              fullWidth
+              onChange={setCategory}
+              required={false}
             />
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <TextField
+            <SubCategorySearchField
               label='Sub-category'
               value={subCategory}
-              onChange={(e) => setSubCategory(e.target.value)}
-              size='small'
-              fullWidth
+              onChange={setSubCategory}
+              required={false}
             />
           </Box>
         </Box>
@@ -514,64 +466,12 @@ const ResolveWindow = ({
         )}
 
         {/* Resolution Code — searchable dropdown */}
-        <Box sx={{ position: 'relative' }}>
-          <TextField
-            label='Resolution Code'
-            placeholder='Search resolution codes...'
-            value={resCodeInput}
-            onChange={(e) => handleResCodeInputChange(e.target.value)}
-            onFocus={() => {
-              const q = resCodeInput.trim().toLowerCase();
-              const next = q
-                ? resolutionCodeList.filter((o) => o.label.toLowerCase().includes(q))
-                : resolutionCodeList;
-              setResCodeFiltered(next);
-              if (next.length > 0) setResCodeOptionsOpen(true);
-            }}
-            onBlur={() => setTimeout(() => setResCodeOptionsOpen(false), 200)}
-            size='small'
-            fullWidth
-            slotProps={{
-              input: {
-                endAdornment: searchAdornment(resCodeInput.length > 0, handleResCodeClear),
-              },
-            }}
-          />
-          {resCodeOptionsOpen && resCodeFiltered.length > 0 && (
-            <Paper
-              elevation={4}
-              sx={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                zIndex: 1000,
-                mt: 0,
-                maxHeight: 280,
-                overflow: 'auto',
-              }}
-            >
-              {resCodeFiltered.map((opt) => (
-                <Box
-                  key={opt.id}
-                  onClick={() => handleResCodeSelect(opt)}
-                  sx={{
-                    px: 1.5,
-                    py: 1,
-                    cursor: 'pointer',
-                    fontSize: '0.84rem',
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    '&:last-child': { borderBottom: 'none' },
-                    '&:hover': { bgcolor: alpha(RESOLVE_ACCENT, 0.08) },
-                  }}
-                >
-                  {opt.label}
-                </Box>
-              ))}
-            </Paper>
-          )}
-        </Box>
+        <ResolutionCodeSearchField
+          label='Resolution Code'
+          value={resolutionCode}
+          onChange={setResolutionCode}
+          required
+        />
 
         {/* Resolution, Internal Note & File Upload in dashed border container */}
         <Box

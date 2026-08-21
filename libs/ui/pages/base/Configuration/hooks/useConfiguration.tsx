@@ -24,6 +24,7 @@ import {
   IConfigTimesheets,
   IConfigExpenses,
   IConfigCalendars,
+  IConfigClientsAndProjects,
   DEFAULT_CONFIGURATION_DATA,
   SIMPLE_PRIORITIES_MATRIX_KEY,
 } from '@serviceops/interfaces';
@@ -112,6 +113,7 @@ export const useConfiguration = () => {
     timeEntryTemplates: data.timeEntryTemplates as IConfigTimeEntryTemplates,
     userConfig: data.userConfig as IConfigUserConfig,
     reasonCodes: data.reasonCodes as IConfigReasonCodes,
+    clientsAndProjects: data.clientsAndProjects as IConfigClientsAndProjects,
     timesheets: data.timesheets as IConfigTimesheets,
     expenses: data.expenses as IConfigExpenses,
     calendars: data.calendars as IConfigCalendars,

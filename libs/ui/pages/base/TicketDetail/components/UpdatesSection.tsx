@@ -677,6 +677,8 @@ const CommentCard = ({
             </Typography>
           )}
 
+          <Typography sx={commentTimestampSx}>{formatDateTime(comment.createdAt)}</Typography>
+
           {/* Action icons — pushed to the right corner, larger & bold */}
           <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
             <Tooltip title='Copy'>
@@ -721,8 +723,6 @@ const CommentCard = ({
               </Box>
             </Tooltip>
           </Box>
-
-          <Typography sx={commentTimestampSx}>{formatDateTime(comment.createdAt)}</Typography>
         </Box>
       </Box>
 
