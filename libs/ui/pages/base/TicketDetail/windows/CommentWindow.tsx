@@ -40,7 +40,6 @@ const CommentWindow = ({
   const { statuses } = useConfiguration();
   const notify = useNotification();
 
-  const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [isInternal, setIsInternal] = useState(false);
   const [isSelfNote, setIsSelfNote] = useState(false);
@@ -106,7 +105,6 @@ const CommentWindow = ({
   // ── Reset fields when dialog opens ──────────────────────────────────────
   useEffect(() => {
     if (open) {
-      setSubject('');
       setMessage('');
       setStatusInput('');
       setStatusValue('');
@@ -161,10 +159,6 @@ const CommentWindow = ({
 
   // ── Save handler ────────────────────────────────────────────────────────
   const handleSave = async () => {
-    if (!subject.trim()) {
-      notify.error('Subject is required');
-      return;
-    }
     if (!message.trim()) {
       notify.error('Message is required');
       return;
@@ -173,7 +167,6 @@ const CommentWindow = ({
       await createComment({
         ticketType: incident.ticketType,
         ticketId: incident.id,
-        subject,
         message,
         isInternal,
         isSelfNote,
@@ -182,7 +175,6 @@ const CommentWindow = ({
         status: statusValue || incident.status,
         createdBy: user?.email || '',
       }).unwrap();
-      setSubject('');
       setMessage('');
       setIsInternal(false);
       setIsSelfNote(false);
@@ -369,20 +361,6 @@ const CommentWindow = ({
           }}
         />
 
-        {/* Subject — required (hidden in email mode; shown inside email section) */}
-        <TextField
-          label='Subject'
-          required
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          size='small'
-          fullWidth
-          sx={{
-            ...fieldBaseSx,
-            display: mode === 'email' ? 'none' : 'block',
-          }}
-        />
-
         {/* Message — RichTextEditor */}
         <Box>
           <RichTextEditor
@@ -417,15 +395,6 @@ const CommentWindow = ({
               border: '1px solid #bae6fd',
             }}
           >
-            <TextField
-              label='Subject'
-              required
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              size='small'
-              fullWidth
-              sx={fieldBaseSx}
-            />
             <TextField
               label='To'
               placeholder='recipient@example.com'

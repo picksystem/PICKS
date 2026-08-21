@@ -197,7 +197,6 @@ export const adminApi = baseApi.injectEndpoints({
     createTicketComment: builder.mutation<
       IAdminTicketComment,
       ITicketRef & {
-        subject: string;
         message: string;
         isInternal?: boolean;
         isSelfNote?: boolean;

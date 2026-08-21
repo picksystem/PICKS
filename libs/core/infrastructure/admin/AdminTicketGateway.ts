@@ -264,7 +264,6 @@ export class AdminTicketGateway {
 
   async addComment(data: {
     ticketId: number;
-    subject: string;
     message: string;
     isInternal?: boolean;
     isSelfNote?: boolean;
@@ -276,7 +275,6 @@ export class AdminTicketGateway {
   }): Promise<IAdminTicketComment> {
     const commentData: any = {
       ticketId: data.ticketId,
-      subject: data.subject,
       message: data.message,
       isInternal: data.isInternal ?? false,
       isSelfNote: data.isSelfNote ?? false,

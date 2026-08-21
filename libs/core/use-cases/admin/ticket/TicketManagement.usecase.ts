@@ -19,7 +19,6 @@ export interface IGetDraftsInput {
 
 export interface IAddCommentInput {
   ticketId: number;
-  subject: string;
   message: string;
   isInternal?: boolean;
   isSelfNote?: boolean;
@@ -132,7 +131,7 @@ export class TicketManagementUseCase {
     await this.ticketGateway.addActivity({
       ticketId: input.ticketId,
       activityType: 'comment_added',
-      description: `Comment added: ${input.subject}`,
+      description: `Comment added`,
       performedBy: input.createdBy,
       previousValue: undefined,
       newValue: String(comment.id),

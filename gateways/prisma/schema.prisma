@@ -77,7 +77,7 @@ model AdminAdvisoryRequestActivity {
 model AdminAdvisoryRequestComment {
   id                   Int                  @id @default(autoincrement())
   advisoryRequestId    Int
-  subject              String
+  subject              String?
   message              String
   isInternal           Boolean              @default(false)
   isSelfNote           Boolean              @default(false)
@@ -244,7 +244,7 @@ model AdminIncidentActivity {
 model AdminIncidentComment {
   id                  Int           @id @default(autoincrement())
   incidentId          Int
-  subject             String
+  subject             String??
   message             String
   isInternal          Boolean       @default(false)
   isSelfNote          Boolean       @default(false)
@@ -550,7 +550,7 @@ model AdminServiceRequestActivity {
 model AdminServiceRequestComment {
   id                  Int                 @id @default(autoincrement())
   serviceRequestId    Int
-  subject             String
+  subject             String??
   message             String
   isInternal          Boolean             @default(false)
   isSelfNote          Boolean             @default(false)
@@ -745,7 +745,7 @@ model AdminTicketType {
 model AdminTicketComment {
   id                  Int      @id @default(autoincrement())
   ticketId            Int
-  subject             String
+  subject             String?
   message             String
   isInternal          Boolean  @default(false)
   isSelfNote          Boolean  @default(false)

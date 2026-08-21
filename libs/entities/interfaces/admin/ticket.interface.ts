@@ -291,7 +291,6 @@ export interface IAdminTicketGateway {
   // Sub-resources
   addComment(data: {
     ticketId: number;
-    subject: string;
     message: string;
     isInternal?: boolean;
     isSelfNote?: boolean;
@@ -301,7 +300,10 @@ export interface IAdminTicketGateway {
     createdBy: string;
   }): Promise<IAdminTicketComment>;
   getComments(ticketId: number): Promise<IAdminTicketComment[]>;
-  updateComment(id: number, data: { message?: string; isPinned?: boolean; isSaved?: boolean }): Promise<IAdminTicketComment>;
+  updateComment(
+    id: number,
+    data: { message?: string; isPinned?: boolean; isSaved?: boolean },
+  ): Promise<IAdminTicketComment>;
   addTimeEntry(data: {
     ticketId: number;
     date: string;

@@ -21,6 +21,7 @@ import {
   PushPin as PinIcon,
   Bookmark as BookmarkIcon,
   KeyboardArrowDown as ArrowDownIcon,
+  Clear as ClearIcon,
 } from '@mui/icons-material';
 import { IIncidentComment } from '@serviceops/interfaces';
 import { useStyles } from '../styles';
@@ -368,7 +369,23 @@ const ActionButtonRow = ({
               input: {
                 endAdornment: (
                   <InputAdornment position='end'>
-                    <SearchIcon />
+                    <Box
+                      component='span'
+                      onClick={searchText ? onSearchChange.bind(null, '') : undefined}
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: searchText ? 'pointer' : 'default',
+                        lineHeight: 1,
+                      }}
+                    >
+                      {searchText ? (
+                        <ClearIcon sx={{ fontSize: 18, color: '#475569' }} />
+                      ) : (
+                        <SearchIcon sx={{ fontSize: 18, color: '#94a3b8' }} />
+                      )}
+                    </Box>
                   </InputAdornment>
                 ),
               },
@@ -1342,11 +1359,7 @@ const UpdatesSection = ({
     return comments.filter((c) => {
       if (!searchText.trim()) return true;
       const q = searchText.toLowerCase();
-      return (
-        c.message.toLowerCase().includes(q) ||
-        c.subject.toLowerCase().includes(q) ||
-        c.createdBy.toLowerCase().includes(q)
-      );
+      return c.message.toLowerCase().includes(q) || c.createdBy.toLowerCase().includes(q);
     });
   }, [comments, searchText]);
 
