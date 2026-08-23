@@ -280,6 +280,8 @@ const TicketDetailView = () => {
             resolutions={resolutions as any}
             onRefresh={refetch}
             onRefreshComments={refetchComments}
+            onUpdateTicket={updateTicket}
+            onAddResolution={() => setActiveModal('resolve')}
           />
         </Box>
       </Box>

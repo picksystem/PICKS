@@ -1,29 +1,10 @@
-import { Box, Tabs, Tab, Typography, Tooltip } from '../../../../components';
-import { IconButton } from '@mui/material';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import DescriptionIcon from '@mui/icons-material/Description';
-import TableChartIcon from '@mui/icons-material/TableChart';
-import ImageIcon from '@mui/icons-material/Image';
-import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
-import DownloadIcon from '@mui/icons-material/Download';
+import { Box, Tabs, Tab } from '../../../../components';
+import AttachmentsSection from './AttachmentsSection';
+import ResolutionSection from './ResolutionSection';
 import { IIncidentComment, IResolution } from '@serviceops/interfaces';
-import { useNotification } from '@serviceops/hooks';
 import { useStyles } from '../styles';
 import UpdatesSection from './UpdatesSection';
-import { TicketEntity } from '../types/ticketDetail.types';
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-  classes: Record<string, string>;
-}
-
-const TabPanel = ({ children, value, index, classes }: TabPanelProps) => (
-  <div role='tabpanel' hidden={value !== index}>
-    {value === index && <Box className={classes.tabPanel}>{children}</Box>}
-  </div>
-);
+import { TicketEntity, UpdateTicketFn } from '../types/ticketDetail.types';
 
 interface TabsSectionProps {
   activeTab: number;
@@ -33,20 +14,16 @@ interface TabsSectionProps {
   resolutions?: IResolution[];
   onRefresh?: () => void;
   onRefreshComments?: () => void;
+  onUpdateTicket?: UpdateTicketFn;
+  onAddResolution?: () => void;
 }
 
-const getFileIcon = (filename: string) => {
-  const ext = filename.split('.').pop()?.toLowerCase() ?? '';
-  if (ext === 'pdf')
-    return { icon: <PictureAsPdfIcon sx={{ fontSize: 22 }} />, color: '#dc2626', bg: '#fef2f2' };
-  if (['doc', 'docx'].includes(ext))
-    return { icon: <DescriptionIcon sx={{ fontSize: 22 }} />, color: '#1d4ed8', bg: '#eff6ff' };
-  if (['xls', 'xlsx'].includes(ext))
-    return { icon: <TableChartIcon sx={{ fontSize: 22 }} />, color: '#15803d', bg: '#f0fdf4' };
-  if (['png', 'jpg', 'jpeg', 'gif'].includes(ext))
-    return { icon: <ImageIcon sx={{ fontSize: 22 }} />, color: '#7c3aed', bg: '#f5f3ff' };
-  return { icon: <InsertDriveFileIcon sx={{ fontSize: 22 }} />, color: '#64748b', bg: '#f8faff' };
-};
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+  classes: Record<string, string>;
+}
 
 const tabsSx = {
   minHeight: 44,
@@ -70,6 +47,12 @@ const tabsSx = {
   },
 };
 
+const TabPanel = ({ children, value, index, classes }: TabPanelProps) => (
+  <div role='tabpanel' hidden={value !== index}>
+    {value === index && <Box className={classes.tabPanel}>{children}</Box>}
+  </div>
+);
+
 const TabsSection = ({
   activeTab,
   onTabChange,
@@ -78,30 +61,10 @@ const TabsSection = ({
   resolutions,
   onRefresh,
   onRefreshComments,
+  onUpdateTicket,
+  onAddResolution,
 }: TabsSectionProps) => {
   const { classes } = useStyles();
-  const notify = useNotification();
-
-  const handleDownload = async (filename: string, fileUrl: string) => {
-    try {
-      const res = await fetch(fileUrl);
-      if (!res.ok) {
-        notify.error(`File "${filename}" is not available on the server.`);
-        return;
-      }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch {
-      notify.error(`Failed to download "${filename}". Please try again.`);
-    }
-  };
 
   return (
     <Box className={classes.tabsSectionCard}>
@@ -132,134 +95,16 @@ const TabsSection = ({
 
         {/* Attachments Tab */}
         <TabPanel value={activeTab} index={1} classes={classes}>
-          {incident.attachments ? (
-            (() => {
-              try {
-                const attachments = JSON.parse(incident.attachments);
-                if (Array.isArray(attachments) && attachments.length > 0) {
-                  return attachments.map((att: string, idx: number) => {
-                    // Strip the leading timestamp prefix (e.g. "1740876543210-") for display only.
-                    // The full server filename (att) is still used for the download URL.
-                    const displayName = att.replace(/^\d{10,}-/, '');
-                    const { icon, color, bg } = getFileIcon(displayName);
-                    const ext = displayName.split('.').pop()?.toUpperCase() ?? 'FILE';
-                    return (
-                      <Box
-                        key={idx}
-                        className={classes.tabsAttachmentItem}
-                        sx={{ justifyContent: 'space-between' }}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
-                          <Box
-                            sx={{
-                              width: 38,
-                              height: 38,
-                              borderRadius: '10px',
-                              background: bg,
-                              border: `1px solid ${color}30`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0,
-                              color,
-                            }}
-                          >
-                            {icon}
-                          </Box>
-                          <Box sx={{ minWidth: 0 }}>
-                            <Typography
-                              className={classes.tabsAttachmentText}
-                              sx={{
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {displayName}
-                            </Typography>
-                            <Typography
-                              sx={{
-                                fontSize: '0.7rem',
-                                color: '#94a3b8',
-                                fontWeight: 600,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px',
-                              }}
-                            >
-                              {ext}
-                            </Typography>
-                          </Box>
-                        </Box>
-                        <Tooltip title={`Download ${displayName}`}>
-                          <span>
-                            <IconButton
-                              size='small'
-                              onClick={() =>
-                                handleDownload(
-                                  displayName,
-                                  `http://localhost:3001/uploads/attachments/${encodeURIComponent(att)}`,
-                                )
-                              }
-                              sx={{
-                                color,
-                                background: bg,
-                                border: `1px solid ${color}30`,
-                                borderRadius: '8px',
-                                width: 32,
-                                height: 32,
-                                flexShrink: 0,
-                                '&:hover': { background: `${color}15` },
-                              }}
-                            >
-                              <DownloadIcon sx={{ fontSize: 16 }} />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                      </Box>
-                    );
-                  });
-                }
-                return <Typography className={classes.tabsEmptyText}>No attachments</Typography>;
-              } catch {
-                return <Typography className={classes.tabsEmptyText}>No attachments</Typography>;
-              }
-            })()
-          ) : (
-            <Typography className={classes.tabsEmptyText}>No attachments</Typography>
-          )}
+          <AttachmentsSection
+            incident={incident}
+            onUpdateTicket={onUpdateTicket ?? (() => ({ unwrap: async () => {} }))}
+            onRefresh={onRefresh ?? (() => {})}
+          />
         </TabPanel>
 
         {/* Resolution Tab */}
         <TabPanel value={activeTab} index={2} classes={classes}>
-          {resolutions && resolutions.length > 0 ? (
-            resolutions.map((res) => (
-              <Box key={res.id} className={classes.tabsResolutionCard}>
-                <Box className={classes.tabsResolutionMeta}>
-                  <Typography className={classes.tabsResolutionMetaLabel}>
-                    Code: {res.resolutionCode.replace(/_/g, ' ')}
-                  </Typography>
-                  {res.category && (
-                    <Typography className={classes.tabsResolutionMetaLabel}>
-                      Category: {res.category}
-                    </Typography>
-                  )}
-                </Box>
-                <Typography className={classes.tabsResolutionText}>{res.resolution}</Typography>
-                {res.rootCause && (
-                  <Typography className={classes.tabsResolutionRootCause}>
-                    Root Cause: {res.rootCause}
-                  </Typography>
-                )}
-                <Typography className={classes.tabsResolutionBy}>
-                  By: {res.createdBy} · {new Date(res.createdAt).toLocaleString()}
-                </Typography>
-              </Box>
-            ))
-          ) : (
-            <Typography className={classes.tabsResolutionNotesText}>
-              {incident.notes || <span style={{ color: '#94a3b8' }}>No resolution notes</span>}
-            </Typography>
-          )}
+          <ResolutionSection resolutions={resolutions ?? []} onAddResolution={onAddResolution} />
         </TabPanel>
       </Box>
     </Box>
