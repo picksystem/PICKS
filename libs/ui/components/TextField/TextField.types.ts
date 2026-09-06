@@ -35,5 +35,6 @@ export interface DSTextFieldProps {
     formHelperText?: Record<string, unknown>;
   };
   autoFocus?: boolean;
-  inputRef?: React.RefObject<HTMLInputElement>;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
+  onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
 }

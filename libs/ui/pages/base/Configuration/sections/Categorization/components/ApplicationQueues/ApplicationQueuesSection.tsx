@@ -376,6 +376,7 @@ export const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueu
 
   return (
     <GenericAccordion
+      id='application-queues'
       title='Application Queues'
       subtitle='Configure queues with associated approvals, timesheets, and expenses'
       icon={<HeadsetMicIcon sx={{ fontSize: '1rem' }} />}

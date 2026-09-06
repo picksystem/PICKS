@@ -82,6 +82,7 @@ const AdminControlsSection = ({
       accent='#0369a1'
       defaultExpanded
       className={classes.sectionAccordion}
+      id='general-admin-controls'
     >
       <Box
         sx={{

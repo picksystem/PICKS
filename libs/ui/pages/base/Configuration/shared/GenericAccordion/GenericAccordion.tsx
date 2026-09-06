@@ -5,6 +5,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useStyles } from './styles';
 
 interface GenericAccordionProps {
+  id?: string;
   title: string;
   subtitle: string;
   icon: ReactNode;
@@ -15,6 +16,7 @@ interface GenericAccordionProps {
 }
 
 export const GenericAccordion = ({
+  id,
   title,
   subtitle,
   icon,
@@ -27,6 +29,7 @@ export const GenericAccordion = ({
 
   return (
     <Accordion
+      id={id}
       defaultExpanded={defaultExpanded}
       className={`${classes.accordion} ${className || ''}`}
       elevation={0}

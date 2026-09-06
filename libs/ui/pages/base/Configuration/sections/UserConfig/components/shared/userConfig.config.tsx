@@ -60,6 +60,7 @@ export const WORK_LOCATION_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <LocationOnIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Work Location',
+  accordionId: 'user-work-locations',
   fields: [
     {
       name: 'workLocation',
@@ -87,6 +88,7 @@ export const WORKING_TIME_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <AccessTimeIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Working Time',
+  accordionId: 'user-working-times',
   fields: [
     {
       name: 'workLocationName',
@@ -107,6 +109,7 @@ export const ASSOCIATED_PROFILE_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <GroupIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Associated Consultant Profile',
+  accordionId: 'user-associated-profiles',
   fields: [
     {
       name: 'workLocationName',
@@ -126,6 +129,7 @@ export const SHIFT_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <WatchLaterIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Shift',
+  accordionId: 'user-shift-management',
   fields: [
     {
       name: 'workLocationName',
@@ -147,6 +151,7 @@ export const ASSOCIATION_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <LinkIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Work Location Association',
+  accordionId: 'user-work-location-associations',
   fields: [
     {
       name: 'workLocationName',

@@ -67,6 +67,7 @@ const URGENCY_CONFIG = {
   accent: '#0369a1',
   icon: <Speed sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Urgency Level',
+  accordionId: 'urgency-levels',
   fields: [
     { name: 'displayName', label: 'Urgency', required: true, bold: true },
     { name: 'shortDescription', label: 'Short Description', type: 'richText' as const },
@@ -371,7 +372,7 @@ const UrgencySection = ({
   );
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='urgency-levels' className={classes.sectionAccordion}>
       <GenericPanel
         config={URGENCY_CONFIG}
         data={items as unknown as Record<string, unknown>[]}

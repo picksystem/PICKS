@@ -90,6 +90,7 @@ export const QUEUE_APPROVALS_CONFIG: TableConfig = {
   accent: CATEG_ACCENT,
   icon: <ChecklistIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Queue Approver',
+    accordionId: 'queue-approvals',
   fields: [
     { name: 'queueName', label: 'Queue', required: true, bold: true },
     { name: 'approverName', label: 'Approver Name', required: true, bold: true },
@@ -113,6 +114,7 @@ export const QUEUE_TIMESHEET_CONFIG: TableConfig = {
   accent: CATEG_ACCENT,
   icon: <AccessTimeIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Timesheet Project',
+    accordionId: 'app-add-timesheet-projects',
   fields: [
     { name: 'queueName', label: 'Queue', required: true, bold: true },
     { name: 'project', label: 'Project', required: true, bold: true },
@@ -137,6 +139,7 @@ export const QUEUE_EXPENSES_CONFIG: TableConfig = {
   accent: CATEG_ACCENT,
   icon: <ReceiptLongIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Expense Project',
+    accordionId: 'app-add-expenses-projects',
   fields: [
     { name: 'queueName', label: 'Queue', required: true, bold: true },
     { name: 'project', label: 'Project', required: true, bold: true },
@@ -162,6 +165,7 @@ export const SERVICE_LINE_APPROVALS_CONFIG: TableConfig = {
   accent: CATEG_ACCENT,
   icon: <ChecklistIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Service Line Approver',
+    accordionId: 'service-line-approvals',
   fields: [
     { name: 'serviceLineName', label: 'Service Line', required: true, bold: true },
     { name: 'approverName', label: 'Approver Name', required: true, bold: true },
@@ -276,6 +280,7 @@ export const APP_SUPPORT_LINES_CONFIG: TableConfig = {
   accent: CATEG_ACCENT,
   icon: <HeadsetMicIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Support Line',
+    accordionId: 'support-lines',
   fields: [
     { name: 'applicationName', label: 'Application', required: true, bold: true },
     { name: 'queueName', label: 'Queue', required: true, bold: true },
@@ -289,6 +294,7 @@ export const APP_BILLING_CODES_CONFIG: TableConfig = {
   accent: CATEG_ACCENT,
   icon: <CodeIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Billing Code',
+    accordionId: 'billing-codes',
   fields: [
     { name: 'applicationName', label: 'Application', required: true, bold: true },
     { name: 'billingCode', label: 'Billing Code', required: true, bold: true },
@@ -311,6 +317,7 @@ export const TICKET_TYPE_TOGGLE_CONFIG: TableConfig = {
   accent: CATEG_ACCENT,
   icon: <ToggleOnIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Ticket Type',
+    accordionId: 'ticket-type-toggles',
   fields: [
     { name: 'ticketTypeName', label: 'Ticket Type', required: true, bold: true },
     { name: 'isActive', label: 'Active', type: 'toggle', defaultValue: true },
@@ -332,6 +339,7 @@ export const CATEG_TABLE_CONFIG: Record<CategSubView, TableConfig> = {
     accent: CATEG_ACCENT,
     icon: <AccountTreeIcon sx={{ fontSize: '1.1rem' }} />,
     entity: 'Business Category',
+    accordionId: 'business-categories',
     fields: [
       { name: 'name', label: 'Business Category Name', required: true, bold: true },
       { name: 'shortDescription', label: 'Short Description', required: true },
@@ -346,6 +354,7 @@ export const CATEG_TABLE_CONFIG: Record<CategSubView, TableConfig> = {
     accent: CATEG_ACCENT,
     icon: <FolderSpecialIcon sx={{ fontSize: '1.1rem' }} />,
     entity: 'Application Category',
+    accordionId: 'application-categories',
     fields: [
       { name: 'applicationName', label: 'Application', required: true, bold: true },
       { name: 'categoryName', label: 'Application category', required: true, bold: true },
@@ -360,6 +369,7 @@ export const CATEG_TABLE_CONFIG: Record<CategSubView, TableConfig> = {
     accent: CATEG_ACCENT,
     icon: <SubdirectoryArrowRightIcon sx={{ fontSize: '1.1rem' }} />,
     entity: 'Application Sub-Category',
+    accordionId: 'application-sub-categories',
     fields: [
       {
         name: 'applicationCategoryName',
@@ -379,6 +389,7 @@ export const CATEG_TABLE_CONFIG: Record<CategSubView, TableConfig> = {
     accent: CATEG_ACCENT,
     icon: <NumbersIcon sx={{ fontSize: '1.1rem' }} />,
     entity: 'Number Sequence',
+    accordionId: 'application-number-sequences',
     fields: [
       { name: 'applicationName', label: 'Application', required: true, bold: true },
       { name: 'ticketTypeName', label: 'Ticket type', required: true, bold: true },
@@ -563,6 +574,7 @@ export const SERVICE_LINE_MAIN_CONFIG: TableConfig = {
   accent: CATEG_ACCENT,
   icon: <LinearScaleIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Service Line',
+    accordionId: 'service-lines',
   fields: [
     { name: 'businessCategoryName', label: 'Business Category', required: true, bold: true },
     { name: 'name', label: 'Service Line Name', required: true, bold: true },
@@ -578,6 +590,7 @@ export const APPLICATION_MAIN_CONFIG: TableConfig = {
   accent: CATEG_ACCENT,
   icon: <AppsIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Application',
+    accordionId: 'applications',
   fields: [
     { name: 'serviceLineName', label: 'Service line', required: true, bold: true },
     { name: 'name', label: 'Application name', required: true, bold: true },
@@ -597,6 +610,7 @@ export const APPLICATION_QUEUE_MAIN_CONFIG: TableConfig = {
   accent: CATEG_ACCENT,
   icon: <HeadsetMicIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Application Queue',
+    accordionId: 'application-queues',
   fields: [
     { name: 'applicationName', label: 'Application', required: true, bold: true },
     { name: 'name', label: 'Queue Name', required: true, bold: true },

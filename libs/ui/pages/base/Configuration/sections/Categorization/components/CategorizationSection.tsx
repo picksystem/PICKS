@@ -68,6 +68,20 @@ const CategorizationSection = ({
   const { categorization: api, saveSection } = useConfiguration();
 
   const [activeView, setActiveView] = useState<CategorizationActiveView>('businessCategory');
+
+  // Listen for tab-switch events from the sidebar
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      console.log('[CategorizationSection] ← config:switch-tab event received:', detail);
+      if (detail?.tab) {
+        setActiveView(detail.tab);
+      }
+    };
+    window.addEventListener('config:switch-tab', handler as EventListener);
+    return () =>
+      window.removeEventListener('config:switch-tab', handler as EventListener);
+  }, []);
   const [businessCategories, setBusinessCategories] = useState<IConfigBusinessCategory[]>([]);
   const [serviceLines, setServiceLines] = useState<IConfigServiceLine[]>([]);
   const [applications, setApplications] = useState<IConfigApplication[]>([]);
@@ -134,6 +148,7 @@ const CategorizationSection = ({
 
   return (
     <GenericAccordion
+      id='categorization'
       title='Categorization'
       subtitle='Manage business categories, service lines, applications, and queues'
       icon={<AccountTreeIcon sx={{ fontSize: '1rem', color: ACCENT }} />}
@@ -151,60 +166,74 @@ const CategorizationSection = ({
       />
 
       {activeView === 'businessCategory' && (
-        <BusinessCategoriesSection
-          data={businessCategories}
-          onDataChange={(next) => {
-            setBusinessCategories(next);
-            saveAll('businessCategories', next);
-          }}
-        />
+        <div id='business-categories'>
+          <BusinessCategoriesSection
+            data={businessCategories}
+            onDataChange={(next) => {
+              setBusinessCategories(next);
+              saveAll('businessCategories', next);
+            }}
+          />
+        </div>
       )}
       {activeView === 'serviceLine' && (
-        <ServiceLinesSection
-          data={serviceLines}
-          businessCategories={businessCategories}
-          onDataChange={(next) => {
-            setServiceLines(next);
-            saveAll('serviceLines', next);
-          }}
-        />
+        <div id='service-lines'>
+          <ServiceLinesSection
+            data={serviceLines}
+            businessCategories={businessCategories}
+            onDataChange={(next) => {
+              setServiceLines(next);
+              saveAll('serviceLines', next);
+            }}
+          />
+        </div>
       )}
       {activeView === 'application' && (
-        <ApplicationsSection
-          data={applications}
-          serviceLines={serviceLines}
-          onDataChange={(next) => {
-            setApplications(next);
-            saveAll('applications', next);
-          }}
-        />
+        <div id='applications'>
+          <ApplicationsSection
+            data={applications}
+            serviceLines={serviceLines}
+            onDataChange={(next) => {
+              setApplications(next);
+              saveAll('applications', next);
+            }}
+          />
+        </div>
       )}
       {activeView === 'applicationQueue' && (
-        <ApplicationQueuesSection
-          data={queues}
-          onDataChange={(next) => {
-            setQueues(next);
-            saveAll('queues', next);
-          }}
-        />
+        <div id='application-queues'>
+          <ApplicationQueuesSection
+            data={queues}
+            onDataChange={(next) => {
+              setQueues(next);
+              saveAll('queues', next);
+            }}
+          />
+        </div>
       )}
       {activeView === 'applicationCategory' && (
-        <ApplicationCategoriesSection
-          data={api?.applicationCategories ?? []}
-          onDataChange={(next) => saveAll('applicationCategories', next)}
-        />
+        <div id='application-categories'>
+          <ApplicationCategoriesSection
+            data={api?.applicationCategories ?? []}
+            onDataChange={(next) => saveAll('applicationCategories', next)}
+          />
+        </div>
       )}
       {activeView === 'applicationSubCategory' && (
-        <ApplicationSubCategoriesSection
-          data={api?.applicationSubCategories ?? []}
-          onDataChange={(next) => saveAll('applicationSubCategories', next)}
-        />
+        <div id='application-sub-categories'>
+          <ApplicationSubCategoriesSection
+            data={api?.applicationSubCategories ?? []}
+            onDataChange={(next) => saveAll('applicationSubCategories', next)}
+          />
+        </div>
       )}
       {activeView === 'applicationNumberSequence' && (
-        <ApplicationNumberSequencesSection
-          data={api?.applicationNumberSequences ?? []}
-          onDataChange={(next) => saveAll('applicationNumberSequences', next)}
-        />
+        <div id='application-number-sequences'>
+          <ApplicationNumberSequencesSection
+            data={api?.applicationNumberSequences ?? []}
+            onDataChange={(next) => saveAll('applicationNumberSequences', next)}
+          />
+        </div>
       )}
     </GenericAccordion>
   );

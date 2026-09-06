@@ -90,7 +90,7 @@ const DueDatesSection = ({
   );
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='due-dates' className={classes.sectionAccordion}>
       <GenericPanel
         config={readonlyConfig}
         data={displayRows}

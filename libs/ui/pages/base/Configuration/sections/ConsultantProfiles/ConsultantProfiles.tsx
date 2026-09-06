@@ -45,6 +45,7 @@ const ConsultantProfiles = () => {
         />
 
         <GenericAccordion
+          id='consultant-profile-roles'
           title='Define Consultant Roles'
           subtitle='Define roles available for consultant assignments'
           icon={<ManageAccountsIcon sx={{ fontSize: '1rem', color: '#fff' }} />}

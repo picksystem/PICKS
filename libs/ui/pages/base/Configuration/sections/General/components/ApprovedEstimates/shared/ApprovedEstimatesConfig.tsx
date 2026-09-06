@@ -156,6 +156,7 @@ export const APPROVED_ESTIMATES_CONFIG: TableConfig = {
   accent: APPROVED_ESTIMATES_ACCENT,
   icon: <AccessTimeIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Approved Estimate',
+  accordionId: 'approved-estimates',
   fields: [
     {
       name: 'ticketTypeId',

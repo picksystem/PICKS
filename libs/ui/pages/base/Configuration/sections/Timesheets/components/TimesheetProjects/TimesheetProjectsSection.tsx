@@ -165,6 +165,7 @@ export const TimesheetProjectsSection = ({ data, onDataChange }: TimesheetProjec
 
   return (
     <GenericAccordion
+      id='timesheet-projects'
       title='Timesheet Projects'
       subtitle='Define timesheet project entries with their types and transition details'
       icon={<AccessTimeIcon sx={{ fontSize: '1rem' }} />}

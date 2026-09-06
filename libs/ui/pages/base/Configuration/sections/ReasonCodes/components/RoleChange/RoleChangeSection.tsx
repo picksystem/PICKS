@@ -38,7 +38,7 @@ const RoleChangeSection = ({ data, onDataChange }: RoleChangeSectionProps) => {
   };
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='role-change' className={classes.sectionAccordion}>
       <GenericPanel
         config={ROLE_CHANGE_CONFIG}
         data={rows}

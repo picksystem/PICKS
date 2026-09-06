@@ -229,7 +229,7 @@ const PrioritiesSection = ({
   const selectedPriority = priorities.find((p) => p.id === selectedPriorityId) ?? null;
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='priority-levels' className={classes.sectionAccordion}>
       <GenericPanel
         config={PRIORITY_TABLE_CONFIG}
         data={priorities as unknown as Record<string, unknown>[]}

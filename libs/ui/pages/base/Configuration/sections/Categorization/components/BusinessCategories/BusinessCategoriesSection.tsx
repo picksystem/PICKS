@@ -175,7 +175,7 @@ const BusinessCategoriesSection = ({ data, onDataChange }: BusinessCategoriesSec
   const selectedRow = rows.find((r) => r.id === selectedRowId) ?? null;
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='business-categories' className={classes.sectionAccordion}>
       <GenericPanel
         config={CATEG_TABLE_CONFIG.businessCategory}
         data={rows as unknown as Record<string, unknown>[]}

@@ -27,6 +27,7 @@ const SLASettingsSection = ({
 
   return (
     <Accordion
+      id='sla-admin-controls'
       defaultExpanded
       className={classes.sectionAccordion}
       elevation={0}

@@ -90,7 +90,7 @@ const ResolutionSLASection = ({
   );
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='resolution-sla' className={classes.sectionAccordion}>
       <GenericPanel
         config={readonlyConfig}
         data={displayRows}

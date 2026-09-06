@@ -54,6 +54,7 @@ export const TIME_LOGS_ACTIVATION_CONFIG: TableConfig = {
   accent: SLA_ACCENT,
   icon: <AvTimerIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Time Log Activation',
+  accordionId: 'time-logs-activation',
   fields: [
     {
       name: 'ticketTypeId',
@@ -90,6 +91,7 @@ export const ETA_ACTIVATION_CONFIG: TableConfig = {
   accent: SLA_ACCENT,
   icon: <ScheduleIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'ETA Activation',
+  accordionId: 'eta-activation',
   fields: [
     {
       name: 'ticketTypeId',
@@ -126,6 +128,7 @@ export const DUE_DATES_CONFIG: TableConfig = {
   accent: SLA_ACCENT,
   icon: <DateRangeIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Due Date',
+  accordionId: 'due-dates',
   fields: [
     {
       name: 'ticketTypeId',
@@ -168,6 +171,7 @@ export const RESOLUTION_SLA_CONFIG: TableConfig = {
   accent: SLA_ACCENT,
   icon: <AssignmentTurnedInIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Resolution SLA',
+  accordionId: 'resolution-sla',
   fields: [
     {
       name: 'ticketTypeId',
@@ -210,6 +214,7 @@ export const RESPONSE_ACK_SLA_CONFIG: TableConfig = {
   accent: SLA_ACCENT,
   icon: <MarkEmailReadIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Response / Ack SLA',
+  accordionId: 'response-ack-sla',
   fields: [
     {
       name: 'ticketTypeId',

@@ -34,7 +34,7 @@ const InternalNoteSection = ({ data, onDataChange }: InternalNoteSectionProps) =
   };
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='internal-note-template' className={classes.sectionAccordion}>
       <GenericPanel
         config={INTERNAL_NOTE_CONFIG}
         data={rows}

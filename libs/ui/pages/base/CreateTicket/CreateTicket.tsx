@@ -46,14 +46,53 @@ const CreateTicket = () => {
       {/* ── Scrollable content ───────────────────────────────────────────── */}
       <Box className={classes.scrollContent}>
         {/* ── Hero header ─────────────────────────────────────────────────── */}
-        <Box className={classes.heroHeader}>
-          <Box className={classes.heroIconWrap}>
-            <ConfirmationNumberIcon sx={{ fontSize: 28, color: '#fff' }} />
+        <Box
+          className={classes.heroHeader}
+          sx={{
+            borderLeft: selected
+              ? `5px solid ${getVisuals(selected.type).accent}`
+              : '5px solid #2563eb',
+            background: '#ffffff',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+            border: selected ? '1px solid #e5e7eb' : '1px solid #e5e7eb',
+          }}
+        >
+          <Box
+            className={classes.heroIconWrap}
+            sx={
+              selected
+                ? {
+                    background: getVisuals(selected.type).gradient,
+                    border: '1px solid rgba(255,255,255,0.25)',
+                    boxShadow: `0 6px 18px ${getVisuals(selected.type).glow}`,
+                  }
+                : {
+                    background: '#2563eb',
+                    border: '1px solid rgba(255,255,255,0.25)',
+                    boxShadow: '0 2px 8px rgba(37,99,235,0.35)',
+                  }
+            }
+          >
+            {selected ? (
+              getIconComponent(iconMap[selected.type], { fontSize: 26, color: '#fff' })
+            ) : (
+              <ConfirmationNumberIcon sx={{ fontSize: 28, color: '#fff' }} />
+            )}
           </Box>
-          <Box>
-            <Typography className={classes.heroTitle}>Create a New Ticket</Typography>
-            <Typography className={classes.heroSubtitle}>
-              Choose the ticket type that best describes your request
+          <Box sx={{ flex: 1, position: 'relative', zIndex: 1 }}>
+            <Typography
+              className={classes.heroTitle}
+              sx={{ color: selected ? getVisuals(selected.type).accent : '#1e293b' }}
+            >
+              {selected ? selected.name : 'Create a New Ticket'}
+            </Typography>
+            <Typography
+              className={classes.heroSubtitle}
+              sx={{ color: selected ? getVisuals(selected.type).accent : '#64748b', opacity: 0.8 }}
+            >
+              {selected
+                ? selected.displayName || selected.name
+                : 'Choose the ticket type that best describes your request'}
             </Typography>
           </Box>
         </Box>

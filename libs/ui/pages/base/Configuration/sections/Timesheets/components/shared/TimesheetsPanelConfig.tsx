@@ -44,6 +44,7 @@ export const TIMESHEET_PROJECT_MAIN_CONFIG: TableConfig = {
   accent: TS_ACCENT,
   icon: <AccessTimeIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Timesheet Project',
+  accordionId: 'timesheet-projects',
   fields: [
     { name: 'name', label: 'Project Name', required: true, bold: true },
     { name: 'description', label: 'Description' },
@@ -58,6 +59,7 @@ export const SERVICE_LINE_CONFIG: TableConfig = {
   accent: TS_ACCENT,
   icon: <LayersIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Service Line Entry',
+  accordionId: 'add-to-service-line',
   fields: [
     { name: 'serviceLine', label: 'Service Line', required: true, bold: true },
     { name: 'project', label: 'Project', required: true, bold: true },
@@ -74,6 +76,7 @@ export const APPLICATION_CONFIG: TableConfig = {
   accent: TS_ACCENT,
   icon: <AppsIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Application Entry',
+  accordionId: 'add-to-application',
   fields: [
     { name: 'application', label: 'Application', required: true, bold: true },
     { name: 'project', label: 'Project', required: true, bold: true },
@@ -90,6 +93,7 @@ export const QUEUE_CONFIG: TableConfig = {
   accent: TS_ACCENT,
   icon: <HeadsetMicIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Queue Entry',
+  accordionId: 'add-to-queue',
   fields: [
     { name: 'queue', label: 'Queue', required: true, bold: true },
     { name: 'project', label: 'Project', required: true, bold: true },
@@ -106,6 +110,7 @@ export const RESOURCE_CONFIG: TableConfig = {
   accent: TS_ACCENT,
   icon: <PersonIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Resource Entry',
+  accordionId: 'add-to-resource',
   fields: [
     { name: 'resource', label: 'Resource', required: true, bold: true },
     { name: 'project', label: 'Project', required: true, bold: true },
@@ -122,6 +127,7 @@ export const CONVERSION_CODE_CONFIG: TableConfig = {
   accent: TS_ACCENT,
   icon: <PlaylistAddIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Conversion Code',
+  accordionId: 'conversion-codes',
   fields: [
     { name: 'name', label: 'Reason Code Name', required: true, bold: true },
     { name: 'description', label: 'Description' },
@@ -136,6 +142,7 @@ export const CANCELLATION_CODE_CONFIG: TableConfig = {
   accent: TS_ACCENT,
   icon: <PlaylistRemoveIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Cancellation Code',
+  accordionId: 'cancellation-codes',
   fields: [
     { name: 'name', label: 'Reason Code Name', required: true, bold: true },
     { name: 'description', label: 'Description' },
@@ -150,6 +157,7 @@ export const PROJECT_CATEGORY_CONFIG: TableConfig = {
   accent: TS_ACCENT,
   icon: <CategoryIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Project Category',
+  accordionId: 'project-categories',
   fields: [
     { name: 'project', label: 'Project', required: true, bold: true },
     { name: 'name', label: 'Category Name', required: true, bold: true },

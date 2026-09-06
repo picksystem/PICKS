@@ -38,7 +38,7 @@ const ReopenSection = ({ data, onDataChange }: ReopenSectionProps) => {
   };
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='reopen' className={classes.sectionAccordion}>
       <GenericPanel
         config={REOPEN_CONFIG}
         data={rows}

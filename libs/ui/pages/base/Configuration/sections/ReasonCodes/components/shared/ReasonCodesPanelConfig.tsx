@@ -98,6 +98,7 @@ export const PRIORITY_CHANGE_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <CommentIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Priority Change Reason Code',
+    accordionId: 'priority-change',
   fields: [
     {
       name: 'name',
@@ -132,6 +133,7 @@ export const ROLE_CHANGE_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <ManageAccountsIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Role Change Reason Code',
+    accordionId: 'role-change',
   fields: [
     {
       name: 'name',
@@ -166,6 +168,7 @@ export const RESOLUTION_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <CheckCircleOutlineIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Resolution Code',
+    accordionId: 'resolution',
   fields: [
     {
       name: 'name',
@@ -200,6 +203,7 @@ export const CANCELLATION_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <CancelOutlinedIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Cancellation Reason Code',
+    accordionId: 'cancellation',
   fields: [
     {
       name: 'name',
@@ -234,6 +238,7 @@ export const REOPEN_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <LockOpenIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Reopen Reason Code',
+    accordionId: 'reopen',
   fields: [
     {
       name: 'name',
@@ -268,6 +273,7 @@ export const CONVERSION_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <AutoFixHighIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Conversion Reason Code',
+    accordionId: 'conversion',
   fields: [
     {
       name: 'name',

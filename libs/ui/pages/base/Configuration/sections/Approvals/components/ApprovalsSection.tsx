@@ -35,6 +35,20 @@ const ApprovalsSection = ({
   const { approvals: api, saveSection } = useConfiguration();
 
   const [activeView, setActiveView] = useState<ActiveView>('records');
+
+  // Listen for tab-switch events from the sidebar / ConfigPathPicker
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { detail } = e as CustomEvent;
+      console.log('[ApprovalsSection] ← config:switch-tab event received:', detail);
+      if (detail?.tab) {
+        setActiveView(detail.tab as ActiveView);
+      }
+    };
+    window.addEventListener('config:switch-tab', handler as EventListener);
+    return () => window.removeEventListener('config:switch-tab', handler as EventListener);
+  }, []);
+
   const [records, setRecords] = useState<IConfigApprovalRecord[]>([]);
   const [assocUsers, setAssocUsers] = useState<IConfigApprovalAssocUserProfile[]>([]);
   const [consultantRoles, setConsultantRoles] = useState<IConfigApprovalConsultantRole[]>([]);
@@ -90,6 +104,7 @@ const ApprovalsSection = ({
 
   return (
     <GenericAccordion
+      id='approvals'
       title={AccordionData.name}
       subtitle={AccordionData.description}
       icon={<HowToRegIcon sx={{ fontSize: '1rem' }} />}
@@ -107,40 +122,48 @@ const ApprovalsSection = ({
       />
 
       {activeView === 'records' && (
-        <ApprovalRecordsSection
-          data={records}
-          onDataChange={(next) => {
-            setRecords(next);
-            saveAll('records', next);
-          }}
-        />
+        <div id='approval-records'>
+          <ApprovalRecordsSection
+            data={records}
+            onDataChange={(next) => {
+              setRecords(next);
+              saveAll('records', next);
+            }}
+          />
+        </div>
       )}
       {activeView === 'userProfile' && (
-        <UserProfilesSection
-          data={assocUsers}
-          onDataChange={(next) => {
-            setAssocUsers(next);
-            saveAll('assocUserProfiles', next);
-          }}
-        />
+        <div id='user-profiles'>
+          <UserProfilesSection
+            data={assocUsers}
+            onDataChange={(next) => {
+              setAssocUsers(next);
+              saveAll('assocUserProfiles', next);
+            }}
+          />
+        </div>
       )}
       {activeView === 'consultantRoles' && (
-        <ConsultantRolesSection
-          data={consultantRoles}
-          onDataChange={(next) => {
-            setConsultantRoles(next);
-            saveAll('consultantRoles', next);
-          }}
-        />
+        <div id='consultant-roles'>
+          <ConsultantRolesSection
+            data={consultantRoles}
+            onDataChange={(next) => {
+              setConsultantRoles(next);
+              saveAll('consultantRoles', next);
+            }}
+          />
+        </div>
       )}
       {activeView === 'workingTimes' && (
-        <ApprovalWorkingTimesSection
-          data={workingTimes}
-          onDataChange={(next) => {
-            setWorkingTimes(next);
-            saveAll('workingTimes', next);
-          }}
-        />
+        <div id='approval-working-times'>
+          <ApprovalWorkingTimesSection
+            data={workingTimes}
+            onDataChange={(next) => {
+              setWorkingTimes(next);
+              saveAll('workingTimes', next);
+            }}
+          />
+        </div>
       )}
     </GenericAccordion>
   );

@@ -57,6 +57,7 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     subtitle: record?.shortDescription || 'Fill in the details below to create a new ticket',
     heroGradient: gradient,
     heroShadow: glow,
+    heroAccent: tagColor,
   };
   const { impactOptions, urgencyOptions, priorityOptions, statusOptions } =
     useTicketConfig(ticketType);

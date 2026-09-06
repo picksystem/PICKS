@@ -24,6 +24,7 @@ export const CONSULTANT_PROFILES_CONFIG: TableConfig = {
   accent: CP_ACCENT,
   icon: <BusinessCenterIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Consultant Profile',
+    accordionId: 'consultant-profiles',
   fields: [
     { name: 'consultantName', label: 'Consultant Name', required: true, bold: true },
     { name: 'applicationName', label: 'Application' },
@@ -41,6 +42,7 @@ export const USER_PROFILES_CONFIG: TableConfig = {
   accent: CP_ACCENT,
   icon: <PersonIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'User Profile',
+    accordionId: 'associated-user-profiles',
   fields: [
     { name: 'userId', label: 'User ID' },
     { name: 'userName', label: 'User Name', required: true, bold: true },
@@ -55,6 +57,7 @@ export const WORKING_TIMES_CONFIG: TableConfig = {
   accent: CP_ACCENT,
   icon: <AccessTimeIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Working Time',
+    accordionId: 'cp-working-times',
   fields: [
     { name: 'consultantName', label: 'Consultant Name' },
     { name: 'startTime', label: 'Start Time', defaultValue: '09:00', type: 'time', bold: true },
@@ -69,6 +72,7 @@ export const WORKING_SHIFTS_CONFIG: TableConfig = {
   accent: CP_ACCENT,
   icon: <UpdateIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Working Shift',
+    accordionId: 'working-shifts',
   fields: [
     { name: 'consultantName', label: 'Consultant Name' },
     { name: 'shiftName', label: 'Shift Name', required: true, bold: true },
@@ -82,6 +86,7 @@ export const TIMESHEET_PROJECTS_CONFIG: TableConfig = {
   accent: CP_ACCENT,
   icon: <ReceiptLongIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Timesheet Project',
+    accordionId: 'cp-timesheet-projects',
   fields: [
     { name: 'project', label: 'Project', required: true, bold: true },
     { name: 'application', label: 'Application' },
@@ -106,6 +111,7 @@ export const EXPENSE_PROJECTS_CONFIG: TableConfig = {
   accent: CP_ACCENT,
   icon: <AttachMoneyIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Expense Project',
+    accordionId: 'cp-expense-projects',
   fields: [
     { name: 'project', label: 'Project', required: true, bold: true },
     { name: 'application', label: 'Application' },
@@ -130,6 +136,7 @@ export const CONSULTANT_ROLES_CONFIG: TableConfig = {
   accent: CP_ACCENT,
   icon: <GroupAddIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Consultant Role',
+    accordionId: 'consultant-profile-roles',
   fields: [
     { name: 'roleName', label: 'Role Name', required: true, bold: true },
     { name: 'description', label: 'Description' },
@@ -142,6 +149,7 @@ export const ASSOC_CONSULTANT_PROFILES_CONFIG: TableConfig = {
   accent: CP_ACCENT,
   icon: <GroupAddIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Consultant Profile Association',
+    accordionId: 'associated-consultant-profiles',
   fields: [
     { name: 'application', label: 'Application', required: true, bold: true },
     { name: 'roleName', label: 'Role Name', required: true, bold: true },

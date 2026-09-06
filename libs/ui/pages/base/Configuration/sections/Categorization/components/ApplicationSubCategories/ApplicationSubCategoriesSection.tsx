@@ -137,7 +137,7 @@ const ApplicationSubCategoriesSection = ({
   const selectedRow = rows.find((r) => r.id === selectedRowId) ?? null;
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='application-sub-categories' className={classes.sectionAccordion}>
       <GenericPanel
         config={CATEG_TABLE_CONFIG.applicationSubCategory}
         data={rows as unknown as Record<string, unknown>[]}

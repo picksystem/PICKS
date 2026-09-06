@@ -116,7 +116,7 @@ const TicketStatusesSection = ({ activeTicketTypeColumns }: TicketStatusesSectio
   }, []);
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='ticket-statuses' className={classes.sectionAccordion}>
       <GenericPanel
         config={TICKET_STATUSES_CONFIG}
         data={rows}

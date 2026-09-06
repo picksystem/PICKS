@@ -87,7 +87,7 @@ const TimeLogsActivationSection = ({
   );
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='time-logs-activation' className={classes.sectionAccordion}>
       <GenericPanel
         config={readonlyConfig}
         data={displayRows}

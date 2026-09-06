@@ -68,6 +68,7 @@ const IMPACT_CONFIG = {
   accent: '#0369a1',
   icon: <Whatshot sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Impact Level',
+  accordionId: 'impact-levels',
   fields: [
     { name: 'displayName', label: 'Impact', required: true, bold: true },
     { name: 'shortDescription', label: 'Short Description', type: 'richText' as const },
@@ -374,7 +375,7 @@ const ImpactSection = ({
   );
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='impact-levels' className={classes.sectionAccordion}>
       <GenericPanel
         config={IMPACT_CONFIG}
         data={items as unknown as Record<string, unknown>[]}

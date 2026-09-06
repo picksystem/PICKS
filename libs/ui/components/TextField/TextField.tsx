@@ -15,6 +15,7 @@ const TextField: React.FC<DSTextFieldProps> = ({
   onChange,
   onBlur,
   onFocus,
+  onKeyDown,
   disabled,
   required,
   type,
@@ -65,6 +66,7 @@ const TextField: React.FC<DSTextFieldProps> = ({
       onChange={onChange}
       onBlur={onBlur}
       onFocus={onFocus}
+      onKeyDown={onKeyDown}
       disabled={disabled}
       required={required}
       type={type}

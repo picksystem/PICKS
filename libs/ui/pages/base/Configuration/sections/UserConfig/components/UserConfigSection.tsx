@@ -59,6 +59,21 @@ const UserConfigSection = () => {
   const { classes } = useStyles();
   const { userConfig: apiUC, saveSection } = useConfiguration();
   const [activeView, setActiveView] = useState<UserConfigActiveView>('workLocations');
+
+  // Listen for tab-switch events from the sidebar
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      console.log('[UserConfigSection] ← config:switch-tab event received:', detail);
+      if (detail?.tab) {
+        setActiveView(detail.tab);
+      }
+    };
+    window.addEventListener('config:switch-tab', handler as EventListener);
+    return () =>
+      window.removeEventListener('config:switch-tab', handler as EventListener);
+  }, []);
+
   const [workLocations, setWorkLocations] = useState<IConfigWorkLocation[]>([]);
   const [workingTimes, setWorkingTimes] = useState<IConfigWorkLocationWorkingTime[]>([]);
   const [associatedProfiles, setAssociatedProfiles] = useState<
@@ -108,6 +123,7 @@ const UserConfigSection = () => {
 
   return (
     <GenericAccordion
+      id='user-config'
       title='User Configuration'
       subtitle='Define work locations and configure their regional, time and calendar settings'
       icon={<LocationOnIcon sx={{ fontSize: '1rem', color: '#fff' }} />}
@@ -125,49 +141,59 @@ const UserConfigSection = () => {
       />
 
       {activeView === 'workLocations' && (
-        <WorkLocationsSection
-          data={workLocations}
-          onDataChange={(next) => {
-            setWorkLocations(next);
-            saveAll('workLocations', next);
-          }}
-        />
+        <div id='user-work-locations'>
+          <WorkLocationsSection
+            data={workLocations}
+            onDataChange={(next) => {
+              setWorkLocations(next);
+              saveAll('workLocations', next);
+            }}
+          />
+        </div>
       )}
       {activeView === 'workingTimes' && (
-        <WorkingTimesSection
-          data={workingTimes}
-          onDataChange={(next) => {
-            setWorkingTimes(next);
-            saveAll('workingTimes', next);
-          }}
-        />
+        <div id='user-working-times'>
+          <WorkingTimesSection
+            data={workingTimes}
+            onDataChange={(next) => {
+              setWorkingTimes(next);
+              saveAll('workingTimes', next);
+            }}
+          />
+        </div>
       )}
       {activeView === 'associatedProfiles' && (
-        <AssociatedProfilesSection
-          data={associatedProfiles}
-          onDataChange={(next) => {
-            setAssociatedProfiles(next);
-            saveAll('associatedProfiles', next);
-          }}
-        />
+        <div id='user-associated-profiles'>
+          <AssociatedProfilesSection
+            data={associatedProfiles}
+            onDataChange={(next) => {
+              setAssociatedProfiles(next);
+              saveAll('associatedProfiles', next);
+            }}
+          />
+        </div>
       )}
       {activeView === 'shifts' && (
-        <ShiftsSection
-          data={shifts}
-          onDataChange={(next) => {
-            setShifts(next);
-            saveAll('shifts', next);
-          }}
-        />
+        <div id='user-shift-management'>
+          <ShiftsSection
+            data={shifts}
+            onDataChange={(next) => {
+              setShifts(next);
+              saveAll('shifts', next);
+            }}
+          />
+        </div>
       )}
       {activeView === 'associations' && (
-        <AssociationsSection
-          data={associations}
-          onDataChange={(next) => {
-            setAssociations(next);
-            saveAll('workLocationAssociations', next);
-          }}
-        />
+        <div id='user-work-location-associations'>
+          <AssociationsSection
+            data={associations}
+            onDataChange={(next) => {
+              setAssociations(next);
+              saveAll('workLocationAssociations', next);
+            }}
+          />
+        </div>
       )}
     </GenericAccordion>
   );

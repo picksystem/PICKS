@@ -197,6 +197,7 @@ const TicketMatrixAccordion = ({
 
   return (
     <GenericAccordion
+      id={`ticket-matrix-${label.toLowerCase().replace(/\s+/g, '-')}`}
       title={`${label} Based on Impact and Urgency`}
       subtitle='Configure priority mappings for this ticket type'
       icon={<MatrixIcon sx={{ fontSize: '1rem' }} />}

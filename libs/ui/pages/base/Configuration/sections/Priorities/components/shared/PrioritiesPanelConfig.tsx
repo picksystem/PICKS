@@ -14,6 +14,7 @@ export const PRIORITY_TABLE_CONFIG = {
   accent: PRIORITY_ACCENT,
   icon: <PriorityHighIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Priority',
+  accordionId: 'priority-levels',
   fields: [
     { name: 'name', label: 'Priority', required: true, bold: true },
     {
@@ -40,6 +41,7 @@ export const IMPACT_TABLE_CONFIG = {
   accent: PRIORITY_ACCENT,
   icon: <WhatshotIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Impact Level',
+  accordionId: 'impact-levels',
   fields: [
     { name: 'displayName', label: 'Display Name', required: true, bold: true },
     { name: 'shortDescription', label: 'Short Description' },
@@ -57,6 +59,7 @@ export const URGENCY_TABLE_CONFIG = {
   accent: PRIORITY_ACCENT,
   icon: <SpeedIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Urgency Level',
+  accordionId: 'urgency-levels',
   fields: [
     { name: 'displayName', label: 'Display Name', required: true, bold: true },
     { name: 'shortDescription', label: 'Short Description' },

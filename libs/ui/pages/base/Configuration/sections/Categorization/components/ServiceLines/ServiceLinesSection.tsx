@@ -479,6 +479,7 @@ export const ServiceLinesSection = ({ data, onDataChange }: ServiceLinesSectionP
 
   return (
     <GenericAccordion
+      id='service-lines'
       title='Service Lines'
       subtitle='Configure service lines with associated approvals, timesheets, and expenses'
       icon={<LinearScaleIcon sx={{ fontSize: '1rem' }} />}

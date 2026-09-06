@@ -122,7 +122,7 @@ const ReleaseCycleStatusesSection = ({
   }, []);
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='release-cycle-statuses' className={classes.sectionAccordion}>
       <GenericPanel
         config={RELEASE_CYCLE_STATUSES_CONFIG}
         data={rows}

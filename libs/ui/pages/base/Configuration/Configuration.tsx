@@ -1,6 +1,14 @@
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
-import { List, ListItem, ListItemIcon, ListItemText, alpha } from '@mui/material';
+import React, { lazy, Suspense } from 'react';
+import {
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Collapse,
+  alpha,
+  ListItemButton,
+} from '@mui/material';
 import { Box, Typography, Loader } from '@serviceops/component';
 import TuneIcon from '@mui/icons-material/Tune';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -17,6 +25,7 @@ import CommentIcon from '@mui/icons-material/Comment';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { useCollapse, useDevice } from '@serviceops/hooks';
+import { getAccordionDescriptorsForPath, TAB_TARGETS } from './config/accordionDescriptors';
 
 // Lazy load all sections for better performance
 const General = lazy(() => import('./sections/General'));
@@ -35,10 +44,10 @@ const SLAs = lazy(() => import('./sections/SLAs'));
 const Timesheets = lazy(() => import('./sections/Timesheets'));
 
 const BASE = '/app/admin/configuration';
-const INNER_NAV_WIDTH = 220;
+const INNER_NAV_WIDTH = 240;
 const colorAccent = '#2563eb';
 
-const NAV_ITEMS = [
+export const NAV_ITEMS = [
   { label: 'Admin Controls', path: `${BASE}/general`, Icon: SettingsIcon, accent: colorAccent },
   {
     label: 'Ticket Types',
@@ -106,70 +115,131 @@ const NAV_ITEMS = [
   },
 ];
 
-const VISIBLE_NAV_ITEMS = NAV_ITEMS.filter((item) => !item.hidden);
+export const VISIBLE_NAV_ITEMS = NAV_ITEMS.filter((item) => !item.hidden);
 
 // ── Desktop inner nav list ─────────────────────────────────────────────────────
 const DesktopNavList = ({
   activePath,
   onNavigate,
+  onAccordionClick,
+  expandedPage,
+  onTogglePage,
 }: {
   activePath: string;
   onNavigate: (path: string) => void;
+  onAccordionClick: (accordionId: string) => void;
+  expandedPage: string | null;
+  onTogglePage: (path: string) => void;
 }) => (
-  <List disablePadding sx={{ px: 0.75, py: 0.75 }}>
+  <List disablePadding sx={{ px: 0.5, py: 0.5 }}>
     {VISIBLE_NAV_ITEMS.map(({ label, path, Icon, accent }) => {
       const isActive = activePath === path;
+      const isExpanded = expandedPage === path;
+      const accordions = getAccordionDescriptorsForPath(path);
+
       return (
-        <ListItem
-          key={path}
-          onClick={() => onNavigate(path)}
-          sx={{
-            borderRadius: 1.5,
-            mb: 0.25,
-            px: 1.25,
-            py: 0.875,
-            cursor: 'pointer',
-            transition: 'all 0.18s ease',
-            color: isActive ? accent : 'text.secondary',
-            bgcolor: isActive ? alpha(accent, 0.1) : 'transparent',
-            borderLeft: isActive ? `3px solid ${accent}` : '3px solid transparent',
-            '&:hover': {
-              bgcolor: isActive ? alpha(accent, 0.1) : 'action.hover',
-              color: isActive ? accent : 'text.primary',
-            },
-          }}
-        >
-          <ListItemIcon
+        <Box key={path} sx={{ mb: 0.25 }}>
+          <ListItemButton
+            onClick={() => {
+              if (accordions.length > 0) {
+                onTogglePage(path);
+              }
+              onNavigate(path);
+            }}
             sx={{
-              minWidth: 'auto',
-              mr: 1.25,
-              color: 'inherit',
-              '& .MuiSvgIcon-root': { fontSize: '1.1rem' },
+              borderRadius: 1.5,
+              px: 1.25,
+              py: 0.75,
+              transition: 'all 0.18s ease',
+              color: isActive ? accent : 'text.secondary',
+              bgcolor: isActive ? alpha(accent, 0.1) : 'transparent',
+              borderLeft: isActive ? `3px solid ${accent}` : '3px solid transparent',
+              '&:hover': {
+                bgcolor: isActive ? alpha(accent, 0.1) : 'action.hover',
+                color: isActive ? accent : 'text.primary',
+              },
             }}
           >
-            <Icon fontSize='small' />
-          </ListItemIcon>
-          <ListItemText
-            primary={label}
-            primaryTypographyProps={{
-              fontSize: '0.82rem',
-              fontWeight: isActive ? 700 : 500,
-              noWrap: true,
-            }}
-          />
-          {isActive && (
-            <Box
+            <ListItemIcon
               sx={{
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                bgcolor: accent,
-                flexShrink: 0,
-                ml: 0.5,
+                minWidth: 'auto',
+                mr: 1.25,
+                color: 'inherit',
+                '& .MuiSvgIcon-root': { fontSize: '1.1rem' },
+              }}
+            >
+              <Icon fontSize='small' />
+            </ListItemIcon>
+            <ListItemText
+              primary={label}
+              primaryTypographyProps={{
+                fontSize: '0.82rem',
+                fontWeight: isActive ? 700 : 500,
+                noWrap: true,
               }}
             />
-          )}
-        </ListItem>
+            {isActive && (
+              <Box
+                sx={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  bgcolor: accent,
+                  flexShrink: 0,
+                  ml: 0.5,
+                }}
+              />
+            )}
+          </ListItemButton>
+
+          {/* Accordion sub-items */}
+          <Collapse in={isExpanded} timeout='auto' unmountOnExit>
+            <List disablePadding sx={{ pl: 3, pr: 0.5 }}>
+              {accordions.map((acc) => (
+                <ListItemButton
+                  key={acc.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAccordionClick(acc.id);
+                  }}
+                  sx={{
+                    borderRadius: 1,
+                    py: 0.5,
+                    px: 1.5,
+                    mb: 0.25,
+                    transition: 'all 0.15s ease',
+                    color: 'text.secondary',
+                    '&:hover': {
+                      bgcolor: alpha(accent, 0.08),
+                      color: accent,
+                    },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 5,
+                      height: 5,
+                      borderRadius: '50%',
+                      bgcolor: 'divider',
+                      flexShrink: 0,
+                      mr: 1.5,
+                      transition: 'background-color 0.15s ease',
+                    }}
+                    className='accordion-sub-dot'
+                  />
+                  <ListItemText
+                    primary={acc.label}
+                    primaryTypographyProps={{
+                      fontSize: '0.76rem',
+                      fontWeight: 500,
+                      noWrap: true,
+                    }}
+                  />
+                </ListItemButton>
+              ))}
+            </List>
+          </Collapse>
+        </Box>
       );
     })}
   </List>
@@ -264,6 +334,52 @@ const ConfigRoutes = () => (
   </Suspense>
 );
 
+// ── Accordion scroll helper ────────────────────────────────────────────────────
+
+const scrollToAccordion = (accordionId: string) => {
+  console.log('[Configuration] ▶ scrollToAccordion called:', accordionId);
+
+  // Check if this is a tab-based accordion
+  const tabTarget = TAB_TARGETS[accordionId];
+  if (tabTarget) {
+    console.log('[Configuration]   → tab-based, dispatching config:switch-tab →', tabTarget);
+    // Navigate to the page if not already there
+    setTimeout(() => {
+      window.dispatchEvent(
+        new CustomEvent('config:switch-tab', {
+          detail: { tab: tabTarget.tab, accordionId },
+        }),
+      );
+    }, 50);
+  }
+
+  // Small delay so the page is rendered before we scroll
+  setTimeout(
+    () => {
+      const el = document.getElementById(accordionId);
+      if (!el) return;
+
+      // Find the nearest MUI Accordion wrapper — GenericAccordion renders
+      // <Accordion id={...}> directly, and raw SLA accordions also use id.
+      const accordionRoot = (el.closest('.MuiAccordion-root') as HTMLElement) || el;
+
+      accordionRoot.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      // If the accordion is collapsed, click the summary to expand it
+      const summary = accordionRoot.querySelector(
+        '.MuiAccordionSummary-root',
+      ) as HTMLElement | null;
+      if (summary) {
+        const isExpanded = accordionRoot.getAttribute('aria-expanded') === 'true';
+        if (!isExpanded) {
+          summary.click();
+        }
+      }
+    },
+    tabTarget ? 200 : 150,
+  );
+};
+
 // ── Main component ─────────────────────────────────────────────────────────────
 const Configuration = () => {
   const navigate = useNavigate();
@@ -283,10 +399,30 @@ const Configuration = () => {
         : 200
       : collapsed
         ? 72
-        : 250;
+        : INNER_NAV_WIDTH;
 
   const isMobileLayout = isXS || isSM;
   const activePath = location.pathname;
+  const [expandedPage, setExpandedPage] = React.useState<string | null>(null);
+
+  const handlePageNavigate = React.useCallback(
+    (path: string) => {
+      if (activePath !== path) {
+        navigate(path);
+      }
+      // Toggle accordion sub-items
+      setExpandedPage((prev) => (prev === path ? null : path));
+    },
+    [navigate, activePath],
+  );
+
+  const handleAccordionClick = React.useCallback((accordionId: string) => {
+    scrollToAccordion(accordionId);
+  }, []);
+
+  const handleTogglePage = React.useCallback((path: string) => {
+    setExpandedPage((prev) => (prev === path ? null : path));
+  }, []);
 
   return (
     <Box
@@ -367,13 +503,19 @@ const Configuration = () => {
               '&::-webkit-scrollbar-thumb': { background: 'rgba(0,0,0,0.12)', borderRadius: 4 },
             }}
           >
-            <DesktopNavList activePath={activePath} onNavigate={(p) => navigate(p)} />
+            <DesktopNavList
+              activePath={activePath}
+              onNavigate={handlePageNavigate}
+              onAccordionClick={handleAccordionClick}
+              expandedPage={expandedPage}
+              onTogglePage={handleTogglePage}
+            />
           </Box>
         )}
 
         {/* Mobile: horizontal scrollable pills */}
         {isMobileLayout && (
-          <MobilePillNav activePath={activePath} onNavigate={(p) => navigate(p)} />
+          <MobilePillNav activePath={activePath} onNavigate={handlePageNavigate} />
         )}
 
         {/* Content */}

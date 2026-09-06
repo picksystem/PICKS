@@ -33,7 +33,7 @@ const ResponseAckSLASection = ({ displayRows, onDataChange }: ResponseAckSLASect
   );
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='response-ack-sla' className={classes.sectionAccordion}>
       <GenericPanel
         config={RESPONSE_ACK_SLA_CONFIG}
         data={displayRows as unknown as Record<string, unknown>[]}

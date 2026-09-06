@@ -103,6 +103,7 @@ const TicketTypeConfigSection = () => {
   return (
     <>
       <GenericAccordion
+        id='ticket-type-configuration'
         title='Ticket Type Configuration'
         subtitle='Activate prefixes, numbering, and display settings for each ticket type'
         icon={<ConfirmationNumberIcon sx={{ fontSize: '1rem', color: '#fff' }} />}
@@ -345,6 +346,7 @@ const TicketTypeConfigSection = () => {
       <TicketTypeLayoutDialog
         open={layoutOpen}
         ticketType={selectedRow}
+        ticketTypes={ticketTypes || []}
         onClose={() => setLayoutOpen(false)}
         onSave={() => success('Ticket screen layout saved successfully')}
       />

@@ -34,7 +34,7 @@ const TicketUpdateSection = ({ data, onDataChange }: TicketUpdateSectionProps) =
   };
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='ticket-update-template' className={classes.sectionAccordion}>
       <GenericPanel
         config={TICKET_UPDATE_CONFIG}
         data={rows}

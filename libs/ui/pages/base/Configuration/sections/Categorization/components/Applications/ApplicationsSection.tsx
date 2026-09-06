@@ -417,6 +417,7 @@ export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionP
 
   return (
     <GenericAccordion
+      id='applications'
       title='Applications'
       subtitle='Manage applications linked to service lines and configure their specific settings'
       icon={<AppsIcon sx={{ fontSize: '1rem' }} />}

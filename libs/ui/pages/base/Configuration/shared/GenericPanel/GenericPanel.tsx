@@ -165,6 +165,8 @@ export interface TableConfig {
   entity: string;
   /** Override the "Add …" dialog heading (defaults to `Add ${entity}`) */
   newTitle?: string;
+  /** Optional DOM id used as accordion anchor for sidebar navigation */
+  accordionId?: string;
   fields: TableField[];
 }
 
@@ -830,6 +832,7 @@ const PlainPanel = memo(
 
     return (
       <GenericAccordion
+        id={config.accordionId}
         title={config.title}
         subtitle={config.subtitle}
         icon={config.icon}

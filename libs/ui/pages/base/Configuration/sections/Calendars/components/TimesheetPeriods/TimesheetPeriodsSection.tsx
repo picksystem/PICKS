@@ -82,7 +82,7 @@ const TimesheetPeriodsSection = ({ data, onDataChange }: TimesheetPeriodsSection
   );
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='timesheet-periods' className={classes.sectionAccordion}>
       <GenericPanel
         config={TIMESHEET_PERIOD_CONFIG}
         data={rows as unknown as Record<string, unknown>[]}

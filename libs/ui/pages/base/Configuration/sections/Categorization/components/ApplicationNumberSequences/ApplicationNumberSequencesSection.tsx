@@ -152,7 +152,7 @@ const ApplicationNumberSequencesSection = ({
   const selectedRow = rows.find((r) => r.id === selectedRowId) ?? null;
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='application-number-sequences' className={classes.sectionAccordion}>
       <GenericPanel
         config={CATEG_TABLE_CONFIG.applicationNumberSequence}
         data={rows as unknown as Record<string, unknown>[]}

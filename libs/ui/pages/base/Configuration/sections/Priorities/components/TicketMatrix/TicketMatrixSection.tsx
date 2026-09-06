@@ -663,6 +663,7 @@ const TicketMatrixSection = ({
       accent='#0369a1'
       defaultExpanded={false}
       className={classes.sectionAccordion}
+      id='priority-matrix'
     >
       <Box>
         <GenericToolbar

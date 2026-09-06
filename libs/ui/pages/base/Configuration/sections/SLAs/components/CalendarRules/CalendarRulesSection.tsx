@@ -62,6 +62,7 @@ const CalendarRulesSection = ({ ctrl, onUpdate }: CalendarRulesSectionProps) => 
 
   return (
     <Accordion
+      id='calendar-rules'
       className={classes.sectionAccordion}
       elevation={0}
       sx={{ border: '1px solid rgba(0, 0, 0, 0.12)', borderRadius: '12px !important' }}

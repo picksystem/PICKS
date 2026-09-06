@@ -38,7 +38,7 @@ const PriorityChangeSection = ({ data, onDataChange }: PriorityChangeSectionProp
   };
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='priority-change' className={classes.sectionAccordion}>
       <GenericPanel
         config={PRIORITY_CHANGE_CONFIG}
         data={rows}

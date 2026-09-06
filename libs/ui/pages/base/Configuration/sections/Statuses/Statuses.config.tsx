@@ -90,6 +90,7 @@ export const TICKET_STATUSES_CONFIG: TableConfig = {
   accent: STATUS_ACCENT,
   icon: <RadioButtonCheckedIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Status',
+  accordionId: 'ticket-statuses',
   fields: [
     { name: 'displayName', label: 'Status Name', required: true, bold: true },
     { name: 'description', label: 'Description' },

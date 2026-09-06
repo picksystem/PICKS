@@ -1,177 +1,38 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
-  DndContext,
-  DragEndEvent,
-  DragStartEvent,
-  PointerSensor,
-  KeyboardSensor,
-  useSensor,
-  useSensors,
-  useDraggable,
-  DragOverlay,
-  closestCenter,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  useSortable,
-  sortableKeyboardCoordinates,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { Box, Button, Typography, Tabs, Tab, IconButton } from '@serviceops/component';
-import { Dialog, DialogActions, alpha } from '@mui/material';
+  Box,
+  Typography,
+  Tabs,
+  Tab,
+  TextField,
+  Button,
+  IconButton,
+  Tooltip,
+  Checkbox,
+  FormControlLabel,
+  Switch,
+} from '@serviceops/component';
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt';
 import CreateIcon from '@mui/icons-material/NoteAdd';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import AddIcon from '@mui/icons-material/Add';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { ICustomField, ITicketType } from '@serviceops/interfaces';
-import { useUpdateTicketTypeMutation, useGetTicketTypeQuery } from '@serviceops/services';
-import { useConfiguration } from '@serviceops/confighooks';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import EditIcon from '@mui/icons-material/Edit';
+import { alpha, Dialog, DialogActions } from '@mui/material';
+import { ITicketType, ICustomField } from '@serviceops/interfaces';
 import { useNotification } from '@serviceops/hooks';
-import {
-  ITicketTypeLayoutConfig,
-  getDefaultLayoutConfig,
-  mergeLayoutConfig,
-  INFO_BAR_FIELDS,
-  SIDE_BAR_SECTION_FIELDS,
-  TICKET_OPTIONS_FIELDS,
-  ASSIGNMENT_FIELDS,
-  CONTACT_AND_BILLING_FIELDS,
-  REPORTING_FIELDS,
-  DATES_AND_USERS_FIELDS,
-  ADDITIONAL_FIELDS_FIELDS,
-  DETAILS_CORE_FIELDS,
-  DETAILS_CHANGE_FIELDS,
-  DETAILS_VENDOR_FIELDS,
-  DETAILS_CAB_FIELDS,
-  DETAILS_RESOLUTION_FIELDS,
-  CREATE_TICKET_TICKET_INFORMATION_FIELDS,
-  CREATE_TICKET_CATEGORIZATION_FIELDS,
-  CREATE_TICKET_DESCRIPTION_FIELDS,
-  CREATE_TICKET_ADDITIONAL_DETAILS_FIELDS,
-  CREATE_TICKET_PRIORITY_ASSIGNMENT_FIELDS,
-  CREATE_TICKET_AUDIT_INFORMATION_FIELDS,
-  CREATE_TICKET_ATTACHMENTS_FIELDS,
-  isCustomFieldKey,
-} from '@serviceops/tickettypelayout';
-import { CustomFieldDialog } from '../CustomFieldDialog';
+import { CustomFieldFormDialog } from '../CustomFieldFormDialog';
 
-const CUSTOM_FIELD_ACCENT = '#7c3aed';
+// ── Types ──────────────────────────────────────────────────────────
 
-const ACCENT = '#0369a1';
-
-// ── Section key types ────────────────────────────────────────
-
-type DetailsSectionKey =
-  | 'infoBar'
-  | 'sideBar'
-  | 'ticketOptions'
-  | 'assignment'
-  | 'contactAndBilling'
-  | 'reporting'
-  | 'datesAndUsers'
-  | 'additionalFields'
-  | 'ticketCore'
-  | 'changeManagement'
-  | 'vendorBug'
-  | 'changeControl'
-  | 'resolutionWorkaround';
-
-type CreateTicketSectionKey =
-  | 'ticketInformation'
-  | 'categorization'
-  | 'description'
-  | 'additionalDetails'
-  | 'priorityAssignment'
-  | 'auditInformation'
-  | 'attachments';
-
-// ── Section definitions ──────────────────────────────────────
-
-const DETAILS_SECTION_DEFS: {
-  key: DetailsSectionKey;
+type Section = {
+  id: string;
   title: string;
-  fields: { key: string; label: string }[];
-}[] = [
-  { key: 'infoBar', title: 'Ticket info bar', fields: INFO_BAR_FIELDS },
-  { key: 'sideBar', title: 'Side bar', fields: SIDE_BAR_SECTION_FIELDS },
-  { key: 'ticketOptions', title: 'Ticket Options', fields: TICKET_OPTIONS_FIELDS },
-  { key: 'assignment', title: 'Side-tab Assignment', fields: ASSIGNMENT_FIELDS },
-  {
-    key: 'contactAndBilling',
-    title: 'Side tab-Contact and Billing',
-    fields: CONTACT_AND_BILLING_FIELDS,
-  },
-  { key: 'reporting', title: 'Side tab-Reporting', fields: REPORTING_FIELDS },
-  { key: 'datesAndUsers', title: 'Side tab-Date and users', fields: DATES_AND_USERS_FIELDS },
-  {
-    key: 'additionalFields',
-    title: 'Side tab-Additional fields',
-    fields: ADDITIONAL_FIELDS_FIELDS,
-  },
-  {
-    key: 'ticketCore',
-    title: 'Ticket core fields',
-    fields: DETAILS_CORE_FIELDS,
-  },
-  {
-    key: 'changeManagement',
-    title: 'Change / Release management',
-    fields: DETAILS_CHANGE_FIELDS,
-  },
-  {
-    key: 'vendorBug',
-    title: 'Vendor & bug tracking',
-    fields: DETAILS_VENDOR_FIELDS,
-  },
-  {
-    key: 'changeControl',
-    title: 'Change control (CAB)',
-    fields: DETAILS_CAB_FIELDS,
-  },
-  {
-    key: 'resolutionWorkaround',
-    title: 'Resolution & workarounds',
-    fields: DETAILS_RESOLUTION_FIELDS,
-  },
-];
+  fields: string[];
+};
 
-const CREATE_TICKET_SECTION_DEFS: {
-  key: CreateTicketSectionKey;
-  title: string;
-  fields: { key: string; label: string }[];
-}[] = [
-  {
-    key: 'ticketInformation',
-    title: 'Ticket Information',
-    fields: CREATE_TICKET_TICKET_INFORMATION_FIELDS,
-  },
-  { key: 'categorization', title: 'Categorization', fields: CREATE_TICKET_CATEGORIZATION_FIELDS },
-  { key: 'description', title: 'Description', fields: CREATE_TICKET_DESCRIPTION_FIELDS },
-  {
-    key: 'additionalDetails',
-    title: 'Additional details',
-    fields: CREATE_TICKET_ADDITIONAL_DETAILS_FIELDS,
-  },
-  {
-    key: 'priorityAssignment',
-    title: 'Priority and assignment',
-    fields: CREATE_TICKET_PRIORITY_ASSIGNMENT_FIELDS,
-  },
-  {
-    key: 'auditInformation',
-    title: 'Audit information',
-    fields: CREATE_TICKET_AUDIT_INFORMATION_FIELDS,
-  },
-  { key: 'attachments', title: 'Attachments', fields: CREATE_TICKET_ATTACHMENTS_FIELDS },
-];
+type TabId = 'createTicket' | 'ticketDetails';
 
-// ── Layout constants ─────────────────────────────────────────
+// ── Constants ──────────────────────────────────────────────────────
 
 const POOL_PANEL_WIDTH = 320;
 
@@ -184,813 +45,280 @@ const columnLabelSx = {
   mb: 1,
 };
 
-// ── Helpers ──────────────────────────────────────────────────
-
-function getSelectedFields(
-  config: ITicketTypeLayoutConfig,
-  activeTab: number,
-  sectionKey: string,
-): string[] {
-  if (activeTab === 0) {
-    const ctKey = sectionKey as CreateTicketSectionKey;
-    const sectionConfig = config.createTicket[ctKey];
-    return sectionConfig?.selectedFields ?? [];
-  }
-  const dtKey = sectionKey as DetailsSectionKey;
-  const sectionConfig = config[dtKey];
-  return sectionConfig?.selectedFields ?? [];
-}
-
-function setSelectedFields(
-  prev: ITicketTypeLayoutConfig,
-  activeTab: number,
-  sectionKey: string,
-  keys: string[],
-): ITicketTypeLayoutConfig {
-  if (activeTab === 0) {
-    const ctKey = sectionKey as CreateTicketSectionKey;
-    return {
-      ...prev,
-      createTicket: {
-        ...prev.createTicket,
-        [ctKey]: { selectedFields: keys },
-      },
-    };
-  }
-  const dtKey = sectionKey as DetailsSectionKey;
-  return {
-    ...prev,
-    [dtKey]: { ...prev[dtKey], selectedFields: keys },
-  };
-}
-
-// ── Pool Item (draggable from remaining) ─────────────────────
-
-interface PoolItemProps {
-  fieldKey: string;
-  label: string;
-  onClick: () => void;
-  onDragStart: (e: React.DragEvent<HTMLElement>, fieldKey: string) => void;
-  isCustom?: boolean;
-  onEdit?: () => void;
-  onDelete?: () => void;
-}
-
-const PoolItem = ({
-  fieldKey,
-  label,
-  onClick,
-  onDragStart,
-  isCustom,
-  onEdit,
-  onDelete,
-}: PoolItemProps) => {
-  return (
-    <Box
-      draggable
-      onDragStart={(e: React.DragEvent<HTMLElement>) => onDragStart(e, fieldKey)}
-      onClick={onClick}
-      sx={{
-        px: 1.5,
-        py: 0.9,
-        fontSize: '0.85rem',
-        borderBottom: '1px solid rgba(226, 232, 255, 0.6)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        cursor: isCustom ? 'default' : 'grab',
-        '&:hover': { bgcolor: 'action.hover' },
-        '&:active': { cursor: isCustom ? 'default' : 'grabbing' },
-      }}
-    >
-      {isCustom ? (
-        <>
-          <DragIndicatorIcon fontSize='small' sx={{ color: 'text.secondary', flexShrink: 0 }} />
-          <Typography sx={{ flex: 1, lineHeight: 1.3 }} onPointerDown={(e) => e.stopPropagation()}>
-            {label}
-          </Typography>
-          <IconButton
-            size='small'
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit?.();
-            }}
-            onPointerDown={(e) => e.stopPropagation()}
-            sx={{
-              p: 0.3,
-              flexShrink: 0,
-              opacity: 0.6,
-              '&:hover': { opacity: 1, color: CUSTOM_FIELD_ACCENT },
-            }}
-          >
-            <EditIcon sx={{ fontSize: '0.8rem' }} />
-          </IconButton>
-          <IconButton
-            size='small'
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete?.();
-            }}
-            onPointerDown={(e) => e.stopPropagation()}
-            sx={{
-              p: 0.3,
-              flexShrink: 0,
-              opacity: 0.6,
-              '&:hover': { opacity: 1, color: '#d32f2f' },
-            }}
-          >
-            <DeleteOutlineIcon sx={{ fontSize: '0.8rem' }} />
-          </IconButton>
-        </>
-      ) : (
-        <Typography sx={{ flex: 1, lineHeight: 1.3 }}>{label}</Typography>
-      )}
-    </Box>
-  );
-};
-
-// ── Sortable Section Item ────────────────────────────────────
-
-interface SortableFieldItemProps {
-  fieldKey: string;
-  label: string;
-  onClick: () => void;
-}
-
-const SortableFieldItem = ({ fieldKey, label, onClick }: SortableFieldItemProps) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: `item-${fieldKey}`,
-  });
-
-  const style: React.CSSProperties = {
-    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-    transition,
-    opacity: isDragging ? 0.4 : 1,
-    position: isDragging ? 'relative' : undefined,
-    zIndex: isDragging ? 9999 : undefined,
-  };
-
-  return (
-    <Box ref={setNodeRef} sx={style}>
-      <Box
-        {...listeners}
-        {...attributes}
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          px: 1.5,
-          py: 0.9,
-          cursor: 'grab',
-          '&:active': { cursor: 'grabbing' },
-          touchAction: 'none',
-        }}
-      >
-        <DragIndicatorIcon
-          fontSize='small'
-          sx={{ color: 'text.secondary', mr: 1, flexShrink: 0 }}
-        />
-        <Box sx={{ flex: 1 }}>
-          <Typography
-            sx={{
-              fontSize: '0.85rem',
-              lineHeight: 1.3,
-              borderBottom: '1px solid rgba(226, 232, 255, 0.6)',
-              pb: 0.9,
-            }}
-          >
-            {label}
-          </Typography>
-        </Box>
-        <IconButton
-          size='small'
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick();
-          }}
-          sx={{ p: 0.3, flexShrink: 0, opacity: 0.5, '&:hover': { opacity: 1 } }}
-        >
-          <ExpandMoreIcon sx={{ fontSize: '0.85rem', transform: 'rotate(180deg)' }} />
-        </IconButton>
-      </Box>
-    </Box>
-  );
-};
-
-// ── Sortable Section Card (dnd-kit) ─────────────────────────
-
-interface SortableSectionCardProps {
-  title: string;
-  sectionKey: string;
-  selectedFields: { key: string; label: string }[];
-  onFieldRemove: (key: string) => void;
-  onFieldMoveUp: (key: string) => void;
-  onFieldMoveDown: (key: string) => void;
-  isDragOver: boolean;
-  onDragOver: (e: React.DragEvent<HTMLElement>) => void;
-  onDragLeave: () => void;
-  onDrop: (e: React.DragEvent<HTMLElement>) => void;
-}
-
-const SortableSectionCard = ({
-  title,
-  sectionKey,
-  selectedFields,
-  onFieldRemove,
-  onFieldMoveUp,
-  onFieldMoveDown,
-  isDragOver,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-}: SortableSectionCardProps) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: sectionKey,
-  });
-
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.35 : 1,
-  };
-
-  return (
-    <Box
-      ref={setNodeRef}
-      style={style}
-      data-section-key={sectionKey}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
-      sx={{
-        border: `1.5px solid ${isDragOver ? ACCENT : 'rgba(226, 232, 255, 0.9)'}`,
-        borderRadius: '10px',
-        mb: 1.5,
-        bgcolor: isDragOver ? alpha(ACCENT, 0.04) : 'background.paper',
-        transition: 'border-color 0.15s, background-color 0.15s',
-        overflow: 'hidden',
-      }}
-    >
-      <Box
-        sx={{
-          px: 1,
-          py: 1,
-          bgcolor: alpha(ACCENT, 0.06),
-          display: 'flex',
-          alignItems: 'center',
-          gap: 0.5,
-          borderBottom: selectedFields.length > 0 ? '1px solid rgba(226, 232, 255, 0.6)' : 'none',
-          cursor: isDragging ? 'grabbing' : 'default',
-        }}
-      >
-        <Box
-          {...attributes}
-          {...listeners}
-          aria-label={`Drag to reorder ${title}`}
-          sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            cursor: 'grab',
-            color: 'text.secondary',
-            '&:hover': { color: 'text.primary' },
-            '&:active': { cursor: 'grabbing' },
-            touchAction: 'none',
-            px: 0.5,
-          }}
-          title='Drag to reorder section'
-        >
-          <DragIndicatorIcon sx={{ fontSize: '1.1rem' }} />
-        </Box>
-        <ExpandMoreIcon sx={{ fontSize: '1rem', color: 'text.secondary' }} />
-        <Typography sx={{ fontWeight: 700, fontSize: '0.82rem', flex: 1 }}>{title}</Typography>
-        {selectedFields.length > 0 && (
-          <Typography sx={{ fontSize: '0.7rem', color: 'text.secondary', pr: 1 }}>
-            {selectedFields.length} field{selectedFields.length !== 1 ? 's' : ''}
-          </Typography>
-        )}
-      </Box>
-
-      {selectedFields.length === 0 ? (
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            py: 2.5,
-            color: 'text.disabled',
-            fontSize: '0.8rem',
-          }}
-        >
-          <Typography>Drop fields here</Typography>
-        </Box>
-      ) : (
-        <SortableContext
-          items={selectedFields.map((f) => `item-${f.key}`)}
-          strategy={verticalListSortingStrategy}
-        >
-          {selectedFields.map((f, idx) => (
-            <Box key={f.key} sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box sx={{ flex: 1 }}>
-                <SortableFieldItem
-                  fieldKey={f.key}
-                  label={f.label}
-                  onClick={() => onFieldRemove(f.key)}
-                />
-              </Box>
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  pr: 0.5,
-                  pt: 0.5,
-                }}
-              >
-                <IconButton
-                  size='small'
-                  onClick={() => onFieldMoveUp(f.key)}
-                  disabled={idx === 0}
-                  sx={{ p: 0.3 }}
-                >
-                  <ArrowUpwardIcon sx={{ fontSize: '0.75rem' }} />
-                </IconButton>
-                <IconButton
-                  size='small'
-                  onClick={() => onFieldMoveDown(f.key)}
-                  disabled={idx === selectedFields.length - 1}
-                  sx={{ p: 0.3 }}
-                >
-                  <ArrowDownwardIcon sx={{ fontSize: '0.75rem' }} />
-                </IconButton>
-              </Box>
-            </Box>
-          ))}
-        </SortableContext>
-      )}
-    </Box>
-  );
-};
-
-// ── Props ────────────────────────────────────────────────────
+// ── Props ──────────────────────────────────────────────────────────
 
 export interface TicketTypeLayoutDialogProps {
   open: boolean;
   ticketType: ITicketType | null;
+  /** All ticket types so the Add Custom Field dialog can show per-type checkboxes. */
+  ticketTypes?: ITicketType[];
   onClose: () => void;
   onSave?: () => void;
 }
 
-// ── Component ────────────────────────────────────────────────
+// ── Component ──────────────────────────────────────────────────────
 
 export const TicketTypeLayoutDialog = ({
   open,
   ticketType,
+  ticketTypes = [],
   onClose,
   onSave,
 }: TicketTypeLayoutDialogProps) => {
-  const fullConfig = useConfiguration();
-  const categorization = fullConfig.config?.data?.categorization;
-  const { data: allTicketTypes } = useGetTicketTypeQuery();
-
-  // All ticket types used to populate the Field Use checkbox list in the
-  // Custom Field dialog.
-  const ticketTypeOptions = useMemo(() => {
-    return (allTicketTypes ?? [])
-      .filter((t) => !!t.type)
-      .map((t) => ({ type: t.type, displayName: t.name || t.displayName || t.type }));
-  }, [allTicketTypes]);
-  const [config, setConfig] = useState<ITicketTypeLayoutConfig>(getDefaultLayoutConfig);
-  const [activeTab, setActiveTab] = useState(0);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [dragOverSection, setDragOverSection] = useState<string | null>(null);
-  const [sectionOrder, setSectionOrder] = useState<string[]>([]);
-  const [updateTicketType, { isLoading: isSaving }] = useUpdateTicketTypeMutation();
+  const [activeTab, setActiveTab] = useState<TabId>('createTicket');
   const { error: notifyError } = useNotification();
 
-  // ── Custom field state ──────────────────────────────────────
-  const [customFields, setCustomFields] = useState<ICustomField[]>([]);
-  const [cfDialogOpen, setCfDialogOpen] = useState(false);
-  const [editingCf, setEditingCf] = useState<ICustomField | null>(null);
+  // New field dialog
+  const [addFieldDialogOpen, setAddFieldDialogOpen] = useState(false);
 
-  // When RTK Query refetches after a mutation, ticketType prop gets a new
-  // object reference.  We track by id so we can detect the refetch and
-  // re-sync config/customFields without clobbering UI state (activeTab, etc.).
-  const lastSyncedRef = useRef<ITicketType | null>(null);
+  // Section title input
+  const [newSectionTitle, setNewSectionTitle] = useState('');
+  const [showSectionInput, setShowSectionInput] = useState(false);
+
+  // Field type dropdown anchor
+  const [fieldTypeAnchor, setFieldTypeAnchor] = useState<null | HTMLElement>(null);
+  const [showFieldTypeDropdown, setShowFieldTypeDropdown] = useState(false);
+
+  // Sections per tab - start empty, user builds from scratch
+  const [sections, setSections] = useState<Record<TabId, Section[]>>({
+    createTicket: [],
+    ticketDetails: [],
+  });
+
+  // Available fields per tab
+  const [availableFields, setAvailableFields] = useState<Record<TabId, string[]>>({
+    createTicket: [],
+    ticketDetails: [],
+  });
+
+  // Edit mode for field names
+  const [editingField, setEditingField] = useState<{ name: string; temp: string } | null>(null);
+  const fieldInputRef = useRef<HTMLInputElement>(null);
+
+  // Edit mode for section titles
+  const [editingSection, setEditingSection] = useState<{ id: string; temp: string } | null>(null);
+  const sectionTitleInputRef = useRef<HTMLInputElement>(null);
+
+  const currentSections = sections[activeTab] ?? [];
+  const currentAvailable = availableFields[activeTab] ?? [];
+
+  // All fields currently assigned across all sections
+  const assignedFields = useMemo(() => currentSections.flatMap((s) => s.fields), [currentSections]);
+
+  // Auto-focus inline edit inputs
+  useEffect(() => {
+    if (editingField && fieldInputRef.current) {
+      fieldInputRef.current.focus();
+      fieldInputRef.current.select();
+    }
+  }, [editingField]);
 
   useEffect(() => {
-    if (!open || !ticketType) return;
-    const isNewTicketType = ticketType.id !== lastSyncedRef.current?.id;
-    const isFreshRef = !isNewTicketType && ticketType !== lastSyncedRef.current;
-
-    if (isFreshRef) {
-      // Same ticketType, fresh reference from RTK refetch — update data only
-      lastSyncedRef.current = ticketType;
-      setConfig(mergeLayoutConfig(ticketType.layoutConfig));
-      setCustomFields(ticketType.customFields ?? []);
-    } else if (isNewTicketType) {
-      // New ticketType selected — full reset
-      lastSyncedRef.current = ticketType;
-      setConfig(mergeLayoutConfig(ticketType.layoutConfig));
-      setCustomFields(ticketType.customFields ?? []);
-      setActiveTab(0);
-      setActiveId(null);
-      setDragOverSection(null);
+    if (showSectionInput && sectionTitleInputRef.current) {
+      sectionTitleInputRef.current.focus();
+      sectionTitleInputRef.current.select();
     }
-  }, [open, ticketType]);
+  }, [showSectionInput]);
 
-  const sectionDefs = activeTab === 0 ? CREATE_TICKET_SECTION_DEFS : DETAILS_SECTION_DEFS;
+  // ── Field Handlers ───────────────────────────────────────────────
 
-  // Reset section order when tab changes
-  useEffect(() => {
-    setSectionOrder(sectionDefs.map((s) => s.key));
-  }, [activeTab, sectionDefs]);
+  const handleSaveCustomField = useCallback(
+    (field: ICustomField) => {
+      // Determine which tabs this field applies to based on the Field Use flags.
+      // The `__createTicket__` and `__ticketDetails__` keys in field.fieldUse drive visibility.
+      const tabsToUpdate: TabId[] = [];
+      if (field.fieldUse?.__createTicket__) tabsToUpdate.push('createTicket');
+      if (field.fieldUse?.__ticketDetails__) tabsToUpdate.push('ticketDetails');
+      // If neither flag is set (shouldn't happen — the dialog requires at least one),
+      // fall back to the currently active tab so the field doesn't disappear silently.
+      if (tabsToUpdate.length === 0) tabsToUpdate.push(activeTab);
 
-  // Ordered list of section defs based on user reordering.
-  // We cast through any[] to avoid TypeScript narrowing sectionDefs
-  // (a conditional union) to never[] inside useMemo callbacks.
-  const orderedSectionDefs = useMemo(() => {
-    const allDefs = sectionDefs as any[];
-    if (sectionOrder.length === 0) return allDefs;
-    const map = new Map<string, any>();
-    for (const s of allDefs) map.set(s.key, s);
-    const ordered: any[] = [];
-    for (const key of sectionOrder) {
-      const s = map.get(key);
-      if (s) ordered.push(s);
-    }
-    for (const s of allDefs) {
-      if (!ordered.includes(s)) ordered.push(s);
-    }
-    return ordered;
-  }, [sectionDefs as any, sectionOrder]);
-
-  // ── Compute remaining fields ───────────────────────────────
-
-  const remainingFields = useMemo(() => {
-    let fields: { key: string; label: string }[];
-    let sectionDefsList: { key: string; fields: { key: string; label: string }[] }[];
-
-    if (activeTab === 0) {
-      fields = CREATE_TICKET_SECTION_DEFS.flatMap((s) => s.fields);
-      sectionDefsList = CREATE_TICKET_SECTION_DEFS.map((s) => ({ key: s.key, fields: s.fields }));
-    } else {
-      fields = DETAILS_SECTION_DEFS.flatMap((s) => s.fields);
-      sectionDefsList = DETAILS_SECTION_DEFS.map((s) => ({ key: s.key, fields: s.fields }));
-    }
-
-    const selectedSet = new Set<string>();
-    for (const section of sectionDefsList) {
-      const keys = getSelectedFields(config, activeTab, section.key);
-      keys.forEach((k: string) => selectedSet.add(k));
-    }
-
-    const seen = new Set<string>();
-    const result: { key: string; label: string }[] = [];
-    for (const f of fields) {
-      if (!selectedSet.has(f.key) && !seen.has(f.key)) {
-        seen.add(f.key);
-        result.push(f);
-      }
-    }
-
-    // Append custom fields whose key is NOT in any section
-    for (const cf of customFields) {
-      if (!selectedSet.has(cf.fieldKey) && !seen.has(cf.fieldKey)) {
-        seen.add(cf.fieldKey);
-        result.push({ key: cf.fieldKey, label: cf.fieldName });
-      }
-    }
-
-    return result;
-  }, [activeTab, config, customFields]);
-
-  // ── HTML5 Native Drag Handlers ─────────────────────────────
-
-  const handlePoolDragStart = useCallback((e: React.DragEvent<HTMLElement>, fieldKey: string) => {
-    setActiveId(`pool-${fieldKey}`);
-    e.dataTransfer.setData('text/plain', `pool:${fieldKey}`);
-    e.dataTransfer.effectAllowed = 'move';
-    // Required for Firefox
-    if (e.dataTransfer.setDragImage) {
-      const empty = document.createElement('div');
-      document.body.appendChild(empty);
-      e.dataTransfer.setDragImage(empty, 0, 0);
-      setTimeout(() => document.body.removeChild(empty), 0);
-    }
-  }, []);
-
-  const handleSectionDragOver = useCallback(
-    (e: React.DragEvent<HTMLElement>, sectionKey: string) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      setDragOverSection(sectionKey);
-    },
-    [],
-  );
-
-  const handleSectionDragLeave = useCallback(() => {
-    setDragOverSection(null);
-  }, []);
-
-  const handleSectionDrop = useCallback(
-    (e: React.DragEvent<HTMLElement>, targetSectionKey: string) => {
-      e.preventDefault();
-      setDragOverSection(null);
-
-      const raw = e.dataTransfer.getData('text/plain');
-      if (!raw) return;
-
-      const [sourceType, sourceFieldKey] = raw.split(':');
-      setActiveId(null);
-
-      if (sourceType === 'pool') {
-        // Pool → Section: add field
-        if (activeTab === 0) {
-          const ctKey = targetSectionKey as CreateTicketSectionKey;
-          const currentKeys = config.createTicket[ctKey].selectedFields;
-          if (currentKeys.includes(sourceFieldKey)) return;
-          setConfig((prev) => ({
-            ...prev,
-            createTicket: {
-              ...prev.createTicket,
-              [ctKey]: { selectedFields: [...currentKeys, sourceFieldKey] },
-            },
-          }));
-        } else {
-          const dtKey = targetSectionKey as DetailsSectionKey;
-          const currentKeys = config[dtKey].selectedFields;
-          if (currentKeys.includes(sourceFieldKey)) return;
-          setConfig((prev) => ({
-            ...prev,
-            [dtKey]: { ...prev[dtKey], selectedFields: [...currentKeys, sourceFieldKey] },
-          }));
-        }
-      } else if (sourceType === 'item') {
-        // Section → Section: move or remove
-        let sourceSectionKey: string | null = null;
-        for (const s of sectionDefs) {
-          const keys = getSelectedFields(config, activeTab, s.key);
-          if (keys.includes(sourceFieldKey)) {
-            sourceSectionKey = s.key;
-            break;
+      // Add field name to the available pool for each applicable tab
+      setAvailableFields((prev) => {
+        const next = { ...prev };
+        for (const tab of tabsToUpdate) {
+          if (!next[tab].includes(field.fieldName)) {
+            next[tab] = [...next[tab], field.fieldName];
           }
         }
-        if (!sourceSectionKey) return;
-
-        if (sourceSectionKey === targetSectionKey) return;
-
-        const sourceKeys = getSelectedFields(config, activeTab, sourceSectionKey);
-        const updatedSource = sourceKeys.filter((k: string) => k !== sourceFieldKey);
-        const targetKeys = getSelectedFields(config, activeTab, targetSectionKey);
-
-        if (activeTab === 0) {
-          setConfig((prev) => {
-            const next = setSelectedFields(prev, activeTab, sourceSectionKey!, updatedSource);
-            return setSelectedFields(next, activeTab, targetSectionKey, [
-              ...targetKeys,
-              sourceFieldKey,
-            ]);
-          });
-        } else {
-          setConfig((prev) => {
-            const next = setSelectedFields(prev, activeTab, sourceSectionKey!, updatedSource);
-            return setSelectedFields(next, activeTab, targetSectionKey, [
-              ...targetKeys,
-              sourceFieldKey,
-            ]);
-          });
-        }
-      }
-    },
-    [activeTab, config, sectionDefs],
-  );
-
-  // Pool area drop handler: removes field from its section
-  const handlePoolDragOver = useCallback((e: React.DragEvent<HTMLElement>) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  }, []);
-
-  const handlePoolDrop = useCallback(
-    (e: React.DragEvent<HTMLElement>) => {
-      e.preventDefault();
-      setDragOverSection(null);
-      const raw = e.dataTransfer.getData('text/plain');
-      if (!raw) return;
-
-      const [sourceType, sourceFieldKey] = raw.split(':');
-      setActiveId(null);
-
-      if (sourceType === 'item') {
-        for (const section of sectionDefs) {
-          const keys = getSelectedFields(config, activeTab, section.key);
-          if (keys.includes(sourceFieldKey)) {
-            const updated = keys.filter((k: string) => k !== sourceFieldKey);
-            setConfig((prev) => setSelectedFields(prev, activeTab, section.key, updated));
-            return;
-          }
-        }
-      }
-    },
-    [activeTab, config, sectionDefs],
-  );
-
-  // ── Section reorder handlers (dnd-kit) ──────────────────────
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
-
-  const handleSectionDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (!over || active.id === over.id) return;
-
-      setSectionOrder((prev) => {
-        const baseOrder = prev.length > 0 ? prev : sectionDefs.map((s) => s.key);
-        const oldIdx = baseOrder.indexOf(active.id as string);
-        const newIdx = baseOrder.indexOf(over.id as string);
-        if (oldIdx === -1 || newIdx === -1) return baseOrder;
-        const next = [...baseOrder];
-        const [moved] = next.splice(oldIdx, 1);
-        next.splice(newIdx, 0, moved);
         return next;
       });
-    },
-    [sectionDefs],
-  );
 
-  // ── Click handlers ──────────────────────────────────────────
-
-  const handlePoolItemClick = useCallback(
-    (fieldKey: string) => {
-      // Custom fields can only be placed via drag-and-drop, not by click.
-      if (isCustomFieldKey(fieldKey)) return;
-
-      const owningSection = sectionDefs.find((s) => s.fields.some((f) => f.key === fieldKey));
-      if (!owningSection) return;
-
-      if (activeTab === 0) {
-        const ctKey = owningSection.key as CreateTicketSectionKey;
-        setConfig((prev) => ({
-          ...prev,
-          createTicket: {
-            ...prev.createTicket,
-            [ctKey]: {
-              ...prev.createTicket[ctKey],
-              selectedFields: [...prev.createTicket[ctKey].selectedFields, fieldKey],
-            },
-          },
-        }));
-      } else {
-        const dtKey = owningSection.key as DetailsSectionKey;
-        setConfig((prev) => ({
-          ...prev,
-          [dtKey]: {
-            ...prev[dtKey],
-            selectedFields: [...prev[dtKey].selectedFields, fieldKey],
-          },
-        }));
-      }
-    },
-    [activeTab, sectionDefs, config],
-  );
-
-  const handleFieldRemove = useCallback(
-    (fieldKey: string) => {
-      for (const section of sectionDefs) {
-        const keys = getSelectedFields(config, activeTab, section.key);
-
-        if (keys.includes(fieldKey)) {
-          const updated = keys.filter((k: string) => k !== fieldKey);
-          setConfig((prev) => setSelectedFields(prev, activeTab, section.key, updated));
-          return;
+      // Create a default section for the new field in each applicable tab
+      const sectionId = `section_${Date.now()}`;
+      setSections((prev) => {
+        const next = { ...prev };
+        for (const tab of tabsToUpdate) {
+          next[tab] = [
+            ...next[tab],
+            { id: `${sectionId}_${tab}`, title: field.fieldName, fields: [] },
+          ];
         }
-      }
+        return next;
+      });
+
+      setAddFieldDialogOpen(false);
     },
-    [activeTab, config, sectionDefs],
+    [activeTab],
   );
 
-  const moveSectionFieldUp = useCallback(
-    (fieldKey: string) => {
-      for (const section of sectionDefs) {
-        const keys = getSelectedFields(config, activeTab, section.key);
-
-        const idx = keys.indexOf(fieldKey);
-        if (idx > 0) {
-          const next = [...keys];
-          [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
-          setConfig((prev) => setSelectedFields(prev, activeTab, section.key, next));
-          return;
-        }
-      }
+  const handleRemoveField = useCallback(
+    (fieldName: string) => {
+      setAvailableFields((prev) => ({
+        ...prev,
+        [activeTab]: prev[activeTab].filter((f) => f !== fieldName),
+      }));
+      setSections((prev) => ({
+        ...prev,
+        [activeTab]: prev[activeTab].map((s) => ({
+          ...s,
+          fields: s.fields.filter((f) => f !== fieldName),
+        })),
+      }));
     },
-    [activeTab, config, sectionDefs],
+    [activeTab],
   );
 
-  const moveSectionFieldDown = useCallback(
-    (fieldKey: string) => {
-      for (const section of sectionDefs) {
-        const keys = getSelectedFields(config, activeTab, section.key);
+  const handleEditFieldStart = useCallback((fieldName: string) => {
+    setEditingField({ name: fieldName, temp: fieldName });
+  }, []);
 
-        const idx = keys.indexOf(fieldKey);
-        if (idx >= 0 && idx < keys.length - 1) {
-          const next = [...keys];
-          [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
-          setConfig((prev) => setSelectedFields(prev, activeTab, section.key, next));
-          return;
-        }
-      }
+  const handleEditFieldSave = useCallback(() => {
+    if (!editingField) return;
+
+    const newName = editingField.temp.trim();
+    if (!newName) {
+      setEditingField(null);
+      return;
+    }
+
+    // Check duplicate (exclude the current field being edited)
+    const allExisting = [
+      ...assignedFields.filter((f) => f !== editingField.name),
+      ...currentAvailable.filter((f) => f !== editingField.name),
+    ];
+    if (allExisting.includes(newName)) {
+      notifyError('This field name already exists');
+      return;
+    }
+
+    // Update field name in available fields
+    setAvailableFields((prev) => ({
+      ...prev,
+      [activeTab]: prev[activeTab].map((f) => (f === editingField.name ? newName : f)),
+    }));
+
+    // Update field name in all sections
+    setSections((prev) => ({
+      ...prev,
+      [activeTab]: prev[activeTab].map((s) => ({
+        ...s,
+        fields: s.fields.map((f) => (f === editingField.name ? newName : f)),
+      })),
+    }));
+
+    setEditingField(null);
+  }, [editingField, activeTab, assignedFields, currentAvailable, notifyError]);
+
+  const handleEditFieldCancel = useCallback(() => {
+    setEditingField(null);
+  }, []);
+
+  // ── Section Handlers ─────────────────────────────────────────────
+
+  const handleAddSectionWithTitle = useCallback(
+    (title: string) => {
+      const id = `section_${Date.now()}`;
+      setSections((prev) => ({
+        ...prev,
+        [activeTab]: [...prev[activeTab], { id, title, fields: [] }],
+      }));
     },
-    [activeTab, config, sectionDefs],
+    [activeTab],
   );
 
-  // ── Save ────────────────────────────────────────────────────
+  const handleRemoveSection = useCallback(
+    (sectionId: string) => {
+      setSections((prev) => ({
+        ...prev,
+        [activeTab]: prev[activeTab].filter((s) => s.id !== sectionId),
+      }));
+    },
+    [activeTab],
+  );
+
+  const handleEditSectionTitleStart = useCallback((sectionId: string, title: string) => {
+    setEditingSection({ id: sectionId, temp: title });
+  }, []);
+
+  const handleUpdateSectionTitle = useCallback(
+    (sectionId: string, title: string) => {
+      setSections((prev) => ({
+        ...prev,
+        [activeTab]: prev[activeTab].map((s) => (s.id === sectionId ? { ...s, title } : s)),
+      }));
+    },
+    [activeTab],
+  );
+
+  const handleEditSectionTitleSave = useCallback(() => {
+    if (!editingSection) return;
+
+    const newTitle = editingSection.temp.trim();
+    if (newTitle) {
+      handleUpdateSectionTitle(editingSection.id, newTitle);
+    }
+    setEditingSection(null);
+  }, [editingSection, handleUpdateSectionTitle]);
+
+  const handleEditSectionTitleCancel = useCallback(() => {
+    setEditingSection(null);
+  }, []);
+
+  // ── Section Field Handlers ───────────────────────────────────────
+
+  const handleAddFieldToSection = useCallback(
+    (sectionId: string, fieldName: string) => {
+      if (!fieldName) return;
+      setAvailableFields((prev) => ({
+        ...prev,
+        [activeTab]: prev[activeTab].filter((f) => f !== fieldName),
+      }));
+      setSections((prev) => ({
+        ...prev,
+        [activeTab]: prev[activeTab].map((s) =>
+          s.id === sectionId ? { ...s, fields: [...s.fields, fieldName] } : s,
+        ),
+      }));
+    },
+    [activeTab],
+  );
+
+  const handleRemoveFieldFromSection = useCallback(
+    (sectionId: string, fieldName: string) => {
+      setSections((prev) => ({
+        ...prev,
+        [activeTab]: prev[activeTab].map((s) =>
+          s.id === sectionId ? { ...s, fields: s.fields.filter((f) => f !== fieldName) } : s,
+        ),
+      }));
+    },
+    [activeTab],
+  );
+
+  // ── Save ─────────────────────────────────────────────────────────
 
   const handleSave = async () => {
-    if (!ticketType) return;
-    try {
-      await updateTicketType({
-        id: ticketType.id,
-        data: { layoutConfig: config, customFields },
-      }).unwrap();
-      onSave?.();
-      onClose();
-    } catch {
-      notifyError('Failed to save ticket layout');
-    }
+    const payload = {
+      createTicket: activeTab === 'createTicket' ? sections.createTicket : undefined,
+      ticketDetails: activeTab === 'ticketDetails' ? sections.ticketDetails : undefined,
+    };
+    console.warn('Saving layout:', payload);
+    onSave?.();
+    onClose();
   };
 
-  // ── Custom Field handlers ──────────────────────────────────
-
-  const handleOpenAddCustomField = () => {
-    setEditingCf(null);
-    setCfDialogOpen(true);
-  };
-
-  const handleEditCustomField = (cf: ICustomField) => {
-    setEditingCf(cf);
-    setCfDialogOpen(true);
-  };
-
-  const handleDeleteCustomField = (cf: ICustomField) => {
-    if (!window.confirm(`Delete "${cf.fieldName}"? This will also remove it from any sections.`))
-      return;
-    setCustomFields((prev) => prev.filter((f) => f.id !== cf.id));
-    setConfig((prev) => {
-      const next = { ...prev };
-      const allSectionDefs = activeTab === 0 ? CREATE_TICKET_SECTION_DEFS : DETAILS_SECTION_DEFS;
-      for (const s of allSectionDefs) {
-        const ctKey = s.key as CreateTicketSectionKey;
-        const dtKey = s.key as DetailsSectionKey;
-        if (activeTab === 0) {
-          const keys = next.createTicket[ctKey]?.selectedFields ?? [];
-          const filtered = keys.filter((k) => k !== cf.fieldKey);
-          if (filtered.length !== keys.length) {
-            next.createTicket = { ...next.createTicket, [ctKey]: { selectedFields: filtered } };
-          }
-        } else {
-          const dtSection = next[dtKey];
-          if (dtSection && 'maxFields' in dtSection) {
-            const keys = dtSection.selectedFields ?? [];
-            const filtered = keys.filter((k) => k !== cf.fieldKey);
-            if (filtered.length !== keys.length) {
-              next[dtKey] = { ...dtSection, selectedFields: filtered };
-            }
-          } else if (dtSection) {
-            const keys = (dtSection as { selectedFields?: string[] }).selectedFields ?? [];
-            const filtered = keys.filter((k) => k !== cf.fieldKey);
-            if (filtered.length !== keys.length) {
-              next[dtKey] = { ...dtSection, selectedFields: filtered } as any;
-            }
-          }
-        }
-      }
-      return next;
-    });
-  };
-
-  const handleSaveCustomField = async (field: ICustomField) => {
-    try {
-      const idx = customFields.findIndex((f) => f.id === field.id);
-      const updatedFields =
-        idx >= 0 ? customFields.map((f, i) => (i === idx ? field : f)) : [...customFields, field];
-
-      if (ticketType) {
-        await updateTicketType({
-          id: ticketType.id,
-          data: { customFields: updatedFields },
-        }).unwrap();
-      }
-
-      setCustomFields(updatedFields);
-      setCfDialogOpen(false);
-      setEditingCf(null);
-    } catch {
-      notifyError('Failed to save custom field');
-    }
-  };
-
-  // ── JSX ─────────────────────────────────────────────────────
+  // ── JSX ───────────────────────────────────────────────────────────
 
   return (
     <Dialog
@@ -998,18 +326,17 @@ export const TicketTypeLayoutDialog = ({
       onClose={onClose}
       maxWidth='lg'
       fullWidth
-      disableEscapeKeyDown
-      disableRestoreFocus
-      disableEnforceFocus
-      TransitionProps={{ unmountOnExit: true }}
-      PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}
+      slotProps={{
+        transition: { unmountOnExit: true },
+        paper: { sx: { borderRadius: 3, overflow: 'hidden' } },
+      }}
     >
-      {/* ── Header ──────────────────────────────────────────── */}
+      {/* Header */}
       <Box
         sx={{
           px: 3,
           py: 2.5,
-          background: ACCENT,
+          background: '#0369a1',
           display: 'flex',
           alignItems: 'center',
           gap: 1.75,
@@ -1035,22 +362,16 @@ export const TicketTypeLayoutDialog = ({
             Ticket Screen Layout
           </Typography>
           <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}>
-            {ticketType
-              ? `Choose which fields appear on the ${ticketType.displayName || ticketType.name} screen`
-              : ''}
+            {ticketType ? `Configure fields for ${ticketType.displayName || ticketType.name}` : ''}
           </Typography>
         </Box>
       </Box>
 
-      {/* ── Tabs ────────────────────────────────────────────── */}
+      {/* Tabs */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs
           value={activeTab}
-          onChange={(_, newValue) => {
-            setActiveTab(newValue);
-            setActiveId(null);
-            setDragOverSection(null);
-          }}
+          onChange={(_, v) => setActiveTab(v)}
           variant='fullWidth'
           sx={{ px: 2 }}
         >
@@ -1069,7 +390,7 @@ export const TicketTypeLayoutDialog = ({
         </Tabs>
       </Box>
 
-      {/* ── Two-column layout ───────────────────────────────── */}
+      {/* Two-column layout */}
       <Box
         sx={{
           display: 'flex',
@@ -1078,10 +399,8 @@ export const TicketTypeLayoutDialog = ({
           overflow: 'hidden',
         }}
       >
-        {/* ── Left Panel: Remaining Fields ───────────────── */}
+        {/* Left Panel: New Fields */}
         <Box
-          onDragOver={handlePoolDragOver}
-          onDrop={handlePoolDrop}
           sx={{
             width: { xs: '100%', md: `${POOL_PANEL_WIDTH}px` },
             minWidth: { xs: 0, md: `${POOL_PANEL_WIDTH}px` },
@@ -1092,51 +411,39 @@ export const TicketTypeLayoutDialog = ({
             bgcolor: 'background.paper',
           }}
         >
-          <Box sx={{ px: 2.5, py: 2, borderBottom: '1px solid rgba(226, 232, 255, 0.6)' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Typography sx={columnLabelSx}>Remaining Fields</Typography>
-              <Button
+          {/* New Fields header */}
+          <Box
+            sx={{
+              px: 2.5,
+              py: 2,
+              borderBottom: '1px solid rgba(226, 232, 255, 0.6)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <Typography sx={columnLabelSx}>Ticket Fields</Typography>
+            <Tooltip title='Add New Field'>
+              <IconButton
                 size='small'
-                variant='contained'
-                startIcon={
-                  <Box
-                    sx={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: 18,
-                      height: 18,
-                      borderRadius: '50%',
-                      bgcolor: 'rgba(255,255,255,0.25)',
-                      mr: 0.25,
-                    }}
-                  >
-                    <AddIcon sx={{ fontSize: '0.85rem', color: '#fff' }} />
-                  </Box>
-                }
-                onClick={handleOpenAddCustomField}
+                onClick={() => setAddFieldDialogOpen(true)}
                 sx={{
-                  bgcolor: CUSTOM_FIELD_ACCENT,
+                  width: 28,
+                  height: 28,
+                  bgcolor: 'primary.main',
                   color: '#fff',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  fontSize: '0.78rem',
-                  px: 1.5,
-                  py: 0.6,
-                  borderRadius: 1.25,
-                  boxShadow: '0 2px 8px rgba(124,58,237,0.25)',
-                  '&:hover': {
-                    bgcolor: '#6d28d9',
-                    boxShadow: '0 4px 12px rgba(124,58,237,0.35)',
-                  },
+                  '&:hover': { bgcolor: 'primary.dark' },
+                  '& .MuiSvgIcon-root': { fontSize: '1.1rem' },
                 }}
               >
-                Add New Field
-              </Button>
-            </Box>
+                <AddIcon />
+              </IconButton>
+            </Tooltip>
           </Box>
+
+          {/* Available fields list */}
           <Box sx={{ flex: 1, overflowY: 'auto', p: 0 }}>
-            {remainingFields.length === 0 ? (
+            {currentAvailable.length === 0 ? (
               <Box
                 sx={{
                   display: 'flex',
@@ -1147,121 +454,436 @@ export const TicketTypeLayoutDialog = ({
                   fontSize: '0.8rem',
                 }}
               >
-                All fields assigned to sections
+                No fields added yet
               </Box>
             ) : (
-              remainingFields.map((f) => {
-                const isCf = isCustomFieldKey(f.key);
-                const cf = isCf ? customFields.find((c) => c.fieldKey === f.key) : undefined;
+              currentAvailable.map((field) => {
+                const isEditing = editingField?.name === field;
+
                 return (
-                  <PoolItem
-                    key={f.key}
-                    fieldKey={f.key}
-                    label={f.label}
-                    onClick={() => handlePoolItemClick(f.key)}
-                    onDragStart={handlePoolDragStart}
-                    isCustom={isCf}
-                    onEdit={isCf && cf ? () => handleEditCustomField(cf) : undefined}
-                    onDelete={isCf && cf ? () => handleDeleteCustomField(cf) : undefined}
-                  />
+                  <Box
+                    key={field}
+                    sx={{
+                      px: 2.5,
+                      py: 1.2,
+                      borderBottom: '1px solid rgba(226, 232, 255, 0.4)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      '&:hover': { bgcolor: 'action.hover' },
+                    }}
+                  >
+                    {isEditing ? (
+                      <>
+                        <TextField
+                          inputRef={fieldInputRef}
+                          value={editingField.temp}
+                          onChange={(e) =>
+                            setEditingField((prev) =>
+                              prev ? { ...prev, temp: e.target.value } : null,
+                            )
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleEditFieldSave();
+                            } else if (e.key === 'Escape') {
+                              handleEditFieldCancel();
+                            }
+                          }}
+                          onBlur={handleEditFieldSave}
+                          size='small'
+                          sx={{
+                            flex: 1,
+                            '& .MuiInput-input': {
+                              fontSize: '0.85rem',
+                              padding: '4px 8px',
+                            },
+                          }}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <Typography sx={{ flex: 1, fontSize: '0.85rem' }}>{field}</Typography>
+                        <IconButton
+                          size='small'
+                          onClick={() => handleEditFieldStart(field)}
+                          sx={{ p: 0.3, opacity: 0.5, '&:hover': { opacity: 1, color: '#1976d2' } }}
+                        >
+                          <EditIcon sx={{ fontSize: '0.85rem' }} />
+                        </IconButton>
+                        <IconButton
+                          size='small'
+                          onClick={() => handleRemoveField(field)}
+                          sx={{ p: 0.3, opacity: 0.5, '&:hover': { opacity: 1, color: '#d32f2f' } }}
+                        >
+                          <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
+                        </IconButton>
+                      </>
+                    )}
+                  </Box>
                 );
               })
             )}
           </Box>
         </Box>
 
-        {/* ── Right Panel: Section Drop Zones (reorderable) ──────── */}
+        {/* Right Panel: Sections */}
         <Box
           sx={{
             flex: 1,
             overflowY: 'auto',
-            maxHeight: { xs: 300, md: 520 },
+            maxHeight: { xs: 380, md: 520 },
             p: 2,
             bgcolor: alpha('#f8faff', 1),
           }}
         >
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleSectionDragEnd}
+          {/* Sections header with add button */}
+          <Box
+            sx={{
+              mb: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
           >
-            <SortableContext
-              items={orderedSectionDefs.map((s) => s.key)}
-              strategy={verticalListSortingStrategy}
+            <Typography sx={{ ...columnLabelSx, mb: 0 }}>
+              {activeTab === 'createTicket' ? 'Ticket Sections' : 'Ticket Detail Sections'}
+            </Typography>
+            <Tooltip title='Add New Section'>
+              <IconButton
+                size='small'
+                onClick={() => setShowSectionInput(true)}
+                sx={{
+                  width: 28,
+                  height: 28,
+                  bgcolor: 'primary.main',
+                  color: '#fff',
+                  '&:hover': { bgcolor: 'primary.dark' },
+                  '& .MuiSvgIcon-root': { fontSize: '1.1rem' },
+                }}
+              >
+                <AddIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+
+          {/* Inline section title input (shown when + button clicked) */}
+          {showSectionInput && (
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                inputRef={sectionTitleInputRef}
+                size='small'
+                placeholder='Section title...'
+                value={newSectionTitle}
+                onChange={(e) => setNewSectionTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const title = newSectionTitle.trim();
+                    if (title) {
+                      handleAddSectionWithTitle(title);
+                    }
+                    setShowSectionInput(false);
+                    setNewSectionTitle('');
+                  } else if (e.key === 'Escape') {
+                    setShowSectionInput(false);
+                    setNewSectionTitle('');
+                  }
+                }}
+                onBlur={() => {
+                  if (newSectionTitle.trim()) {
+                    handleAddSectionWithTitle(newSectionTitle.trim());
+                  }
+                  setShowSectionInput(false);
+                  setNewSectionTitle('');
+                }}
+                fullWidth
+              />
+            </Box>
+          )}
+
+          {/* Section cards */}
+          {currentSections.length === 0 ? (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                py: 4,
+                color: 'text.disabled',
+                fontSize: '0.85rem',
+              }}
             >
-              {orderedSectionDefs.map((section) => {
-                const selectedKeys = getSelectedFields(config, activeTab, section.key);
+              <Typography>No sections yet. Click "+ Add New Section" to create one.</Typography>
+            </Box>
+          ) : (
+            currentSections.map((section) => {
+              const isEditing = editingSection?.id === section.id;
 
-                const allCatalogFields =
-                  activeTab === 0
-                    ? CREATE_TICKET_SECTION_DEFS.flatMap((s) => s.fields)
-                    : DETAILS_SECTION_DEFS.flatMap((s) => s.fields);
+              return (
+                <Box
+                  key={section.id}
+                  sx={{
+                    border: '1.5px solid rgba(226, 232, 255, 0.9)',
+                    borderRadius: '10px',
+                    mb: 1.5,
+                    bgcolor: 'background.paper',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {/* Section header */}
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 1.5,
+                      bgcolor: alpha('#0369a1', 0.06),
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      borderBottom:
+                        section.fields.length > 0 ? '1px solid rgba(226, 232, 255, 0.6)' : 'none',
+                    }}
+                  >
+                    {isEditing ? (
+                      <TextField
+                        inputRef={sectionTitleInputRef}
+                        value={editingSection.temp}
+                        onChange={(e) =>
+                          setEditingSection((prev) =>
+                            prev ? { ...prev, temp: e.target.value } : null,
+                          )
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleEditSectionTitleSave();
+                          } else if (e.key === 'Escape') {
+                            handleEditSectionTitleCancel();
+                          }
+                        }}
+                        onBlur={handleEditSectionTitleSave}
+                        size='small'
+                        sx={{
+                          flex: 1,
+                          '& .MuiInput-input': {
+                            fontWeight: 700,
+                            fontSize: '0.82rem',
+                            padding: '2px 4px',
+                          },
+                        }}
+                      />
+                    ) : (
+                      <>
+                        <Typography
+                          sx={{
+                            flex: 1,
+                            fontWeight: 700,
+                            fontSize: '0.82rem',
+                            cursor: 'pointer',
+                            '&:hover': { color: 'primary.main' },
+                          }}
+                          onClick={() => handleEditSectionTitleStart(section.id, section.title)}
+                        >
+                          {section.title}
+                        </Typography>
+                        <IconButton
+                          size='small'
+                          onClick={() => handleEditSectionTitleStart(section.id, section.title)}
+                          sx={{ p: 0.3, opacity: 0.5, '&:hover': { opacity: 1, color: '#1976d2' } }}
+                        >
+                          <EditIcon sx={{ fontSize: '0.85rem' }} />
+                        </IconButton>
+                      </>
+                    )}
+                    <Typography sx={{ fontSize: '0.7rem', color: 'text.secondary', pr: 1 }}>
+                      {section.fields.length} field{section.fields.length !== 1 ? 's' : ''}
+                    </Typography>
+                    <IconButton
+                      size='small'
+                      onClick={() => handleRemoveSection(section.id)}
+                      sx={{ p: 0.3, opacity: 0.5, '&:hover': { opacity: 1, color: '#d32f2f' } }}
+                    >
+                      <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
+                    </IconButton>
+                  </Box>
 
-                const catalogMap = new Map(allCatalogFields.map((f) => [f.key, f]));
+                  {/* Section fields */}
+                  {section.fields.length === 0 ? (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        py: 2.5,
+                        color: 'text.disabled',
+                        fontSize: '0.8rem',
+                      }}
+                    >
+                      <Typography>No fields added yet</Typography>
+                    </Box>
+                  ) : (
+                    <Box>
+                      {section.fields.map((field) => (
+                        <Box
+                          key={field}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            px: 2,
+                            py: 1,
+                            borderBottom: '1px solid rgba(226, 232, 255, 0.4)',
+                            '&:last-child': { borderBottom: 'none' },
+                            '&:hover': { bgcolor: 'action.hover' },
+                          }}
+                        >
+                          <Typography sx={{ flex: 1, fontSize: '0.85rem' }}>{field}</Typography>
+                          <IconButton
+                            size='small'
+                            onClick={() => handleRemoveFieldFromSection(section.id, field)}
+                            sx={{
+                              p: 0.3,
+                              opacity: 0.5,
+                              '&:hover': { opacity: 1, color: '#d32f2f' },
+                            }}
+                          >
+                            <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
+                          </IconButton>
+                        </Box>
+                      ))}
+                    </Box>
+                  )}
 
-                for (const cf of customFields) {
-                  catalogMap.set(cf.fieldKey, { key: cf.fieldKey, label: cf.fieldName });
-                }
-
-                const selectedFields = selectedKeys.map(
-                  (k) => catalogMap.get(k) || { key: k, label: k },
-                );
-
-                return (
-                  <SortableSectionCard
-                    key={section.key}
-                    title={section.title}
-                    sectionKey={section.key}
-                    selectedFields={selectedFields}
-                    onFieldRemove={handleFieldRemove}
-                    onFieldMoveUp={moveSectionFieldUp}
-                    onFieldMoveDown={moveSectionFieldDown}
-                    isDragOver={dragOverSection === section.key}
-                    onDragOver={(e) => handleSectionDragOver(e, section.key)}
-                    onDragLeave={handleSectionDragLeave}
-                    onDrop={(e) => handleSectionDrop(e, section.key)}
-                  />
-                );
-              })}
-            </SortableContext>
-          </DndContext>
+                  {/* Add field to section */}
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 1.5,
+                      borderTop: '1px solid rgba(226, 232, 255, 0.4)',
+                      display: 'flex',
+                      gap: 1,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <FieldSelector
+                      fields={currentAvailable}
+                      onChange={(val) => handleAddFieldToSection(section.id, val)}
+                    />
+                  </Box>
+                </Box>
+              );
+            })
+          )}
         </Box>
       </Box>
 
-      {/* ── Footer ──────────────────────────────────────────── */}
-      <DialogActions sx={{ px: 3, py: 2, gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}>
-        <Button
-          onClick={onClose}
-          variant='outlined'
-          disabled={isSaving}
-          sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-        >
-          Cancel
+      {/* Footer actions */}
+      <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+        <Button onClick={onClose} variant='outlined' sx={{ textTransform: 'none' }}>
+          Close
         </Button>
-        <Button
-          variant='contained'
-          onClick={handleSave}
-          disabled={isSaving}
-          sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-        >
-          {isSaving ? 'Saving...' : 'Save'}
+        <Button onClick={handleSave} variant='contained' sx={{ textTransform: 'none' }}>
+          Save
         </Button>
       </DialogActions>
 
-      {/* ── Custom Field Dialog ───────────────────────────── */}
-      <CustomFieldDialog
-        open={cfDialogOpen}
-        editing={editingCf}
-        existingFields={customFields}
-        categorization={categorization}
-        ticketTypes={ticketTypeOptions}
-        onClose={() => {
-          setCfDialogOpen(false);
-          setEditingCf(null);
-        }}
+      {/* ── Add Custom Field Dialog ─────────────────────────────────── */}
+      <CustomFieldFormDialog
+        open={addFieldDialogOpen}
+        editing={null}
+        existingFields={currentAvailable.map(
+          (name) =>
+            ({ id: name, fieldName: name, fieldType: 'text', fieldUse: {} }) as ICustomField,
+        )}
+        ticketTypes={ticketTypes.map((tt) => ({
+          type: tt.type,
+          displayName: tt.displayName,
+          name: tt.name,
+        }))}
+        defaultTicketType={ticketType?.type}
+        accent='#0369a1'
+        onClose={() => setAddFieldDialogOpen(false)}
         onSave={handleSaveCustomField}
       />
     </Dialog>
+  );
+};
+
+// ── Field selector dropdown ─────────────────────────────────────────
+
+const FieldSelector = ({
+  fields,
+  onChange,
+}: {
+  fields: string[];
+  onChange: (value: string) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+
+  return (
+    <Box ref={anchorRef} sx={{ position: 'relative', flex: 1 }}>
+      <Tooltip title='Add field to section'>
+        <Button
+          variant='outlined'
+          size='small'
+          onClick={() => setOpen(!open)}
+          sx={{
+            justifyContent: 'space-between',
+            minWidth: 0,
+            flex: 1,
+            textTransform: 'none',
+            fontSize: '0.78rem',
+          }}
+        >
+          <Typography sx={{ fontSize: '0.78rem', color: 'text.secondary' }}>
+            {fields.length > 0 ? '+ Add field to section' : 'No fields available'}
+          </Typography>
+          <AddIcon sx={{ fontSize: '0.9rem', ml: 0.5 }} />
+        </Button>
+      </Tooltip>
+
+      {open && fields.length > 0 && (
+        <Box
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          sx={{
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            left: 0,
+            right: 0,
+            zIndex: 1300,
+            bgcolor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 1,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            maxHeight: 200,
+            overflowY: 'auto',
+          }}
+        >
+          {fields.map((field) => (
+            <Box
+              key={field}
+              onClick={() => {
+                onChange(field);
+                setOpen(false);
+              }}
+              sx={{
+                px: 2,
+                py: 1,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                '&:hover': { bgcolor: 'action.hover' },
+                '&:first-of-type': { borderRadius: '4px 4px 0 0' },
+                '&:last-of-type': { borderRadius: '0 0 4px 4px' },
+              }}
+            >
+              {field}
+            </Box>
+          ))}
+        </Box>
+      )}
+    </Box>
   );
 };
 

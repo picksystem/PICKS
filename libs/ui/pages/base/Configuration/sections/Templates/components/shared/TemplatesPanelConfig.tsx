@@ -60,6 +60,7 @@ export const TICKET_UPDATE_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <FileCopyIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Ticket Update Template',
+  accordionId: 'ticket-update-template',
   fields: [
     { name: 'name', label: 'Name', required: true, bold: true },
     { name: 'description', label: 'Description', type: 'richText' },
@@ -120,6 +121,7 @@ export const COMMENT_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <CommentIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Comment Template',
+  accordionId: 'comment-template',
   fields: [
     { name: 'name', label: 'Name', required: true, bold: true },
     { name: 'description', label: 'Description', type: 'richText' },
@@ -180,6 +182,7 @@ export const INTERNAL_NOTE_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <NoteIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Internal Note Template',
+  accordionId: 'internal-note-template',
   fields: [
     { name: 'name', label: 'Name', required: true, bold: true },
     { name: 'description', label: 'Description', type: 'richText' },
@@ -287,6 +290,7 @@ export const RESOLUTION_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <ChecklistIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Resolution Template',
+  accordionId: 'resolution-template',
   fields: [
     { name: 'name', label: 'Name', required: true, bold: true },
     { name: 'description', label: 'Description', type: 'richText' },
@@ -359,6 +363,7 @@ export const TIME_ENTRY_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <AccessTimeIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
   entity: 'Time Entry Template',
+  accordionId: 'time-entry-template',
   fields: [
     { name: 'name', label: 'Name', required: true, bold: true },
     { name: 'description', label: 'Description', type: 'richText' },

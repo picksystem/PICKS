@@ -29,6 +29,7 @@ import {
 import { useFieldError, useNotification } from '@serviceops/hooks';
 import { ICustomField, CustomFieldType, IConfigCategorization } from '@serviceops/interfaces';
 import { ConfigFormDialog } from '@serviceops/configdialogs';
+import { useConfiguration } from '@serviceops/confighooks';
 import ConfigPathPicker from './ConfigPathPicker';
 import { generateCustomFieldKey } from '../../utils/ticketTypeLayoutConfig';
 
@@ -82,6 +83,7 @@ const CustomFieldDialog = ({
 }: CustomFieldDialogProps) => {
   const { success } = useNotification();
   const reqError = useFieldError();
+  const { data: configData } = useConfiguration();
 
   const [form, setForm] = useState<Partial<ICustomField>>({});
   const [dropdownOptionInput, setDropdownOptionInput] = useState<string>('');
@@ -176,7 +178,7 @@ const CustomFieldDialog = ({
         level: 'applicationSubCategory',
       });
     }
-    return opts;
+    return opts.sort((a, b) => a.label.localeCompare(b.label));
   }, [categorization]);
 
   useEffect(() => {

@@ -43,6 +43,7 @@ export const EXP_PROJECT_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <ReceiptLongIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Expense Project',
+    accordionId: 'expense-projects',
   fields: [
     { name: 'project', label: 'Project', required: true, bold: true },
     { name: 'name', label: 'Name', required: true, bold: true },
@@ -69,6 +70,7 @@ export const EXP_PROJECT_SUBCATEGORY_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <AccountTreeIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Sub-Category',
+    accordionId: 'expense-sub-categories',
   fields: [
     { name: 'project', label: 'Project', required: true, bold: true },
     { name: 'subCategory', label: 'Sub-Category', required: true, bold: true },
@@ -149,6 +151,7 @@ export const EXP_CATEGORY_CONFIG: TableConfig = {
   accent: '#0369a1',
   icon: <CategoryIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Expense Category',
+    accordionId: 'expense-categories',
   fields: [
     { name: 'project', label: 'Project', required: true, bold: true },
     { name: 'name', label: 'Name', required: true, bold: true },

@@ -136,6 +136,7 @@ export const ConsultantProfilesSection = ({
 
   return (
     <GenericAccordion
+      id='consultant-profiles'
       title='Consultant Profiles'
       subtitle='Manage consultant profiles, roles, and calendar assignments'
       icon={<BusinessCenterIcon sx={{ fontSize: '1rem' }} />}

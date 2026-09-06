@@ -485,6 +485,7 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
 
   return (
     <GenericAccordion
+      id='working-calendars'
       title='Working Calendars'
       subtitle='Define working calendars with associated working times and consultants'
       icon={<CalendarTodayIcon sx={{ fontSize: '1rem' }} />}

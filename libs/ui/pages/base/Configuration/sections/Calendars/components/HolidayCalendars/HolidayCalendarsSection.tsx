@@ -317,6 +317,7 @@ const HolidayCalendarsSection = ({
 
   return (
     <GenericAccordion
+      id='holiday-calendars'
       title='Holiday Calendar'
       subtitle='Manage holiday calendars and their public bank holidays'
       icon={<CalendarMonthIcon sx={{ fontSize: '1rem' }} />}

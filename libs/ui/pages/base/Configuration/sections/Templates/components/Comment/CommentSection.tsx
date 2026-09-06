@@ -34,7 +34,7 @@ const CommentSection = ({ data, onDataChange }: CommentSectionProps) => {
   };
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='comment-template' className={classes.sectionAccordion}>
       <GenericPanel
         config={COMMENT_CONFIG}
         data={rows}

@@ -66,6 +66,7 @@ const ExpensesSection = () => {
     <>
       {/* Expenses Projects Accordion */}
       <GenericAccordion
+        id='expense-projects'
         title='Expenses Projects'
         subtitle='Configure expense projects and their associations'
         icon={<ReceiptLongIcon sx={{ fontSize: '1rem' }} />}
@@ -91,6 +92,7 @@ const ExpensesSection = () => {
 
       {/* Expenses Categories Accordion */}
       <GenericAccordion
+        id='expense-categories'
         title='Expenses Categories'
         subtitle='Configure expense categories and sub-categories'
         icon={<FolderSpecialIcon sx={{ fontSize: '1rem' }} />}

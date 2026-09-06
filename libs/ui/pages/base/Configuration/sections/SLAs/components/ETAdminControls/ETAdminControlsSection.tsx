@@ -64,6 +64,7 @@ const ETAdminControlsSection = ({ ctrl, onUpdate }: ETAdminControlsSectionProps)
 
   return (
     <Accordion
+      id='et-admin-controls'
       className={classes.sectionAccordion}
       elevation={0}
       sx={{ border: '1px solid rgba(0, 0, 0, 0.12)', borderRadius: '12px !important' }}

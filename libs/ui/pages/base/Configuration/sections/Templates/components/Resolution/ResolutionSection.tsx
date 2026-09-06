@@ -34,7 +34,7 @@ const ResolutionSection = ({ data, onDataChange }: ResolutionSectionProps) => {
   };
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='resolution-template' className={classes.sectionAccordion}>
       <GenericPanel
         config={RESOLUTION_CONFIG}
         data={rows}

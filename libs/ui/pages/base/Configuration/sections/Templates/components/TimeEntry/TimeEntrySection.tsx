@@ -76,7 +76,7 @@ const TimeEntrySection = ({ data, onDataChange }: TimeEntrySectionProps) => {
   );
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='time-entry-template' className={classes.sectionAccordion}>
       <GenericPanel
         config={TIME_ENTRY_CONFIG}
         data={rows}

@@ -38,7 +38,7 @@ const CancellationSection = ({ data, onDataChange }: CancellationSectionProps) =
   };
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='cancellation' className={classes.sectionAccordion}>
       <GenericPanel
         config={CANCELLATION_CONFIG}
         data={rows}

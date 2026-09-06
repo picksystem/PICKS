@@ -37,6 +37,7 @@ export const TABLE_CONFIG: Record<CalendarActiveView, TableConfig> = {
     accent: ACCENT,
     icon: <CalendarMonthIcon sx={{ fontSize: '1.1rem' }} />,
     entity: 'Holiday Calendar',
+    accordionId: 'holiday-calendars',
     fields: [
       { name: 'name', label: 'Holiday Calendar', required: true, bold: true },
       { name: 'shortDescription', label: 'Short Description' },
@@ -50,6 +51,7 @@ export const TABLE_CONFIG: Record<CalendarActiveView, TableConfig> = {
     accent: ACCENT,
     icon: <BeachAccessIcon sx={{ fontSize: '1.1rem' }} />,
     entity: 'Bank Holiday',
+    accordionId: 'bank-holidays',
     newTitle: 'Add Bank Holidays (Public Holidays)',
     fields: [
       {
@@ -94,6 +96,7 @@ export const TABLE_CONFIG: Record<CalendarActiveView, TableConfig> = {
     accent: ACCENT,
     icon: <EventAvailableIcon sx={{ fontSize: '1.1rem' }} />,
     entity: 'Working Calendar',
+    accordionId: 'working-calendars',
     fields: [
       { name: 'name', label: 'Working Calendar', required: true, bold: true },
       { name: 'holidayCalendar', label: 'Holiday Calendar' },
@@ -260,6 +263,7 @@ export const TIMESHEET_PERIOD_CONFIG: TableConfig = {
   accent: ACCENT,
   icon: <EventRepeatIcon sx={{ fontSize: '1.1rem' }} />,
   entity: 'Timesheet Period',
+    accordionId: 'timesheet-periods',
   fields: [
     { name: 'name', label: 'Timesheet Period', required: true, bold: true },
     { name: 'shortDescription', label: 'Short Description', type: 'richText', required: true },

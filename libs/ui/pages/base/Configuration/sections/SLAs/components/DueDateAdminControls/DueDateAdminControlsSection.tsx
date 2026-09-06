@@ -63,6 +63,7 @@ const DueDateAdminControlsSection = ({ ctrl, onUpdate }: DueDateAdminControlsSec
 
   return (
     <Accordion
+      id='due-date-admin-controls'
       className={classes.sectionAccordion}
       elevation={0}
       sx={{ border: '1px solid rgba(0, 0, 0, 0.12)', borderRadius: '12px !important' }}

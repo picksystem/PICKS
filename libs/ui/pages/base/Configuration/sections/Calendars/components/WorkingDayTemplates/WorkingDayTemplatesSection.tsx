@@ -205,7 +205,7 @@ const WorkingDayTemplatesSection = ({
   );
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='working-day-templates' className={classes.sectionAccordion}>
       <GenericPanel
         config={WORKING_DAY_TEMPLATE_CONFIG}
         data={rows as any}

@@ -42,7 +42,7 @@ export const ProjectCategorySection = ({ data, onDataChange }: ProjectCategorySe
   };
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='project-category' className={classes.sectionAccordion}>
       <GenericPanel
         config={PROJECT_CATEGORY_CONFIG}
         data={rows}

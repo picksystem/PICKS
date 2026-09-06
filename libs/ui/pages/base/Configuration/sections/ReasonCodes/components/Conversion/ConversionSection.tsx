@@ -38,7 +38,7 @@ const ConversionSection = ({ data, onDataChange }: ConversionSectionProps) => {
   };
 
   return (
-    <div className={classes.sectionAccordion}>
+    <div id='conversion' className={classes.sectionAccordion}>
       <GenericPanel
         config={CONVERSION_CONFIG}
         data={rows}
