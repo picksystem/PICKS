@@ -1,6 +1,6 @@
 {
   "name": "administration",
-  "root": "web/apps/administration",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "web/apps/administration/src",
   "projectType": "application",
   "tags": ["app"],

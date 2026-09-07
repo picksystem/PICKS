@@ -166,6 +166,29 @@ export function useTicketTypeConfig() {
     }
   };
 
+  const handleLayoutSave = async (layoutData: {
+    createTicket: { ticketFields: string[]; ticketSections: { title: string; fields: string[] }[] };
+    ticketDetails: {
+      ticketFields: string[];
+      ticketSections: { title: string; fields: string[] }[];
+    };
+  }) => {
+    if (!selectedRow) return;
+    try {
+      await updateTicketType({
+        id: selectedRow.id,
+        data: {
+          layoutConfig: layoutData,
+          lastUpdatedBy: currentUserName,
+          lastUpdatedAt: new Date().toISOString(),
+        },
+      }).unwrap();
+      notify.success('Ticket screen layout saved successfully');
+    } catch {
+      notify.error('Failed to save ticket screen layout');
+    }
+  };
+
   return {
     ticketTypes: ticketTypes as ITicketType[] | undefined,
     isLoading,
@@ -181,6 +204,7 @@ export function useTicketTypeConfig() {
     handleSubmit,
     handleDelete,
     handleToggleActive,
+    handleLayoutSave,
     iconMap,
     tagMap,
     isSubmitting,

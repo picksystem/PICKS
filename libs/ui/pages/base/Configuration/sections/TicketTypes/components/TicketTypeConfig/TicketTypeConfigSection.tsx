@@ -42,7 +42,7 @@ const TicketTypeConfigSection = () => {
   const [layoutOpen, setLayoutOpen] = useState(false);
   const [usefulLinksAnchor, setUsefulLinksAnchor] = useState<HTMLElement | null>(null);
   const [usefulLinksOpen, setUsefulLinksOpen] = useState(false);
-  const { success } = useNotification();
+  useNotification();
 
   const handleUsefulLinksOpen = (event: React.MouseEvent<HTMLElement>) => {
     setUsefulLinksAnchor(event.currentTarget);
@@ -84,6 +84,7 @@ const TicketTypeConfigSection = () => {
     handleSubmit,
     handleDelete,
     handleToggleActive,
+    handleLayoutSave,
     iconMap,
     tagMap,
     isSubmitting,
@@ -348,7 +349,7 @@ const TicketTypeConfigSection = () => {
         ticketType={selectedRow}
         ticketTypes={ticketTypes || []}
         onClose={() => setLayoutOpen(false)}
-        onSave={() => success('Ticket screen layout saved successfully')}
+        onSave={handleLayoutSave}
       />
 
       <ConfigDeleteDialog

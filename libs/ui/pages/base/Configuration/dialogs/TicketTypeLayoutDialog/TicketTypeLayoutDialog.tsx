@@ -8,11 +8,10 @@ import {
   Button,
   IconButton,
   Tooltip,
-  Checkbox,
-  FormControlLabel,
-  Switch,
 } from '@serviceops/component';
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CloseIcon from '@mui/icons-material/Close';
 import CreateIcon from '@mui/icons-material/NoteAdd';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -34,6 +33,8 @@ type TabId = 'createTicket' | 'ticketDetails';
 
 // ── Constants ──────────────────────────────────────────────────────
 
+const TAB_ORDER: TabId[] = ['createTicket', 'ticketDetails'];
+
 const POOL_PANEL_WIDTH = 320;
 
 const columnLabelSx = {
@@ -50,10 +51,21 @@ const columnLabelSx = {
 export interface TicketTypeLayoutDialogProps {
   open: boolean;
   ticketType: ITicketType | null;
-  /** All ticket types so the Add Custom Field dialog can show per-type checkboxes. */
+  /** All ticket types so the Add/Edit Custom Field dialog can show per-type checkboxes. */
   ticketTypes?: ITicketType[];
   onClose: () => void;
-  onSave?: () => void;
+  /** Called with the full layout payload when the user clicks Save.
+   *  The parent is responsible for persisting to the API. */
+  onSave: (payload: {
+    createTicket: {
+      ticketFields: string[];
+      ticketSections: { title: string; fields: string[] }[];
+    };
+    ticketDetails: {
+      ticketFields: string[];
+      ticketSections: { title: string; fields: string[] }[];
+    };
+  }) => void;
 }
 
 // ── Component ──────────────────────────────────────────────────────
@@ -65,35 +77,30 @@ export const TicketTypeLayoutDialog = ({
   onClose,
   onSave,
 }: TicketTypeLayoutDialogProps) => {
-  const [activeTab, setActiveTab] = useState<TabId>('createTicket');
+  const [activeTabIdx, setActiveTabIdx] = useState<0 | 1>(0);
+  const activeTab: TabId = TAB_ORDER[activeTabIdx];
   const { error: notifyError } = useNotification();
 
-  // New field dialog
+  // Custom field dialogs
   const [addFieldDialogOpen, setAddFieldDialogOpen] = useState(false);
+  const [editingField, setEditingField] = useState<ICustomField | null>(null);
 
   // Section title input
   const [newSectionTitle, setNewSectionTitle] = useState('');
   const [showSectionInput, setShowSectionInput] = useState(false);
 
-  // Field type dropdown anchor
-  const [fieldTypeAnchor, setFieldTypeAnchor] = useState<null | HTMLElement>(null);
-  const [showFieldTypeDropdown, setShowFieldTypeDropdown] = useState(false);
-
-  // Sections per tab - start empty, user builds from scratch
+  // Sections per tab
   const [sections, setSections] = useState<Record<TabId, Section[]>>({
     createTicket: [],
     ticketDetails: [],
   });
 
-  // Available fields per tab
-  const [availableFields, setAvailableFields] = useState<Record<TabId, string[]>>({
+  // Available fields per tab — stores full ICustomField objects so the
+  // edit dialog can pre-populate all field properties.
+  const [availableFields, setAvailableFields] = useState<Record<TabId, ICustomField[]>>({
     createTicket: [],
     ticketDetails: [],
   });
-
-  // Edit mode for field names
-  const [editingField, setEditingField] = useState<{ name: string; temp: string } | null>(null);
-  const fieldInputRef = useRef<HTMLInputElement>(null);
 
   // Edit mode for section titles
   const [editingSection, setEditingSection] = useState<{ id: string; temp: string } | null>(null);
@@ -102,17 +109,16 @@ export const TicketTypeLayoutDialog = ({
   const currentSections = sections[activeTab] ?? [];
   const currentAvailable = availableFields[activeTab] ?? [];
 
+  // Just the field names (for display in sections, FieldSelector, etc.)
+  const currentFieldNames = useMemo(
+    () => currentAvailable.map((f) => f.fieldName),
+    [currentAvailable],
+  );
+
   // All fields currently assigned across all sections
   const assignedFields = useMemo(() => currentSections.flatMap((s) => s.fields), [currentSections]);
 
-  // Auto-focus inline edit inputs
-  useEffect(() => {
-    if (editingField && fieldInputRef.current) {
-      fieldInputRef.current.focus();
-      fieldInputRef.current.select();
-    }
-  }, [editingField]);
-
+  // Auto-focus inline section title inputs
   useEffect(() => {
     if (showSectionInput && sectionTitleInputRef.current) {
       sectionTitleInputRef.current.focus();
@@ -124,35 +130,23 @@ export const TicketTypeLayoutDialog = ({
 
   const handleSaveCustomField = useCallback(
     (field: ICustomField) => {
-      // Determine which tabs this field applies to based on the Field Use flags.
-      // The `__createTicket__` and `__ticketDetails__` keys in field.fieldUse drive visibility.
       const tabsToUpdate: TabId[] = [];
       if (field.fieldUse?.__createTicket__) tabsToUpdate.push('createTicket');
       if (field.fieldUse?.__ticketDetails__) tabsToUpdate.push('ticketDetails');
-      // If neither flag is set (shouldn't happen — the dialog requires at least one),
-      // fall back to the currently active tab so the field doesn't disappear silently.
       if (tabsToUpdate.length === 0) tabsToUpdate.push(activeTab);
 
-      // Add field name to the available pool for each applicable tab
       setAvailableFields((prev) => {
         const next = { ...prev };
         for (const tab of tabsToUpdate) {
-          if (!next[tab].includes(field.fieldName)) {
-            next[tab] = [...next[tab], field.fieldName];
+          const idx = next[tab].findIndex((f) => f.fieldName === field.fieldName);
+          if (idx >= 0) {
+            // Update existing field (edit mode)
+            next[tab] = [...next[tab]];
+            next[tab][idx] = field;
+          } else {
+            // Add new field
+            next[tab] = [...next[tab], field];
           }
-        }
-        return next;
-      });
-
-      // Create a default section for the new field in each applicable tab
-      const sectionId = `section_${Date.now()}`;
-      setSections((prev) => {
-        const next = { ...prev };
-        for (const tab of tabsToUpdate) {
-          next[tab] = [
-            ...next[tab],
-            { id: `${sectionId}_${tab}`, title: field.fieldName, fields: [] },
-          ];
         }
         return next;
       });
@@ -162,11 +156,39 @@ export const TicketTypeLayoutDialog = ({
     [activeTab],
   );
 
+  const handleEditField = useCallback((field: ICustomField) => {
+    setEditingField(field);
+  }, []);
+
+  const handleEditFieldSave = useCallback(
+    (updated: ICustomField) => {
+      const tabsToUpdate: TabId[] = [];
+      if (updated.fieldUse?.__createTicket__) tabsToUpdate.push('createTicket');
+      if (updated.fieldUse?.__ticketDetails__) tabsToUpdate.push('ticketDetails');
+      if (tabsToUpdate.length === 0) tabsToUpdate.push(activeTab);
+
+      setAvailableFields((prev) => {
+        const next = { ...prev };
+        for (const tab of tabsToUpdate) {
+          const idx = next[tab].findIndex((f) => f.fieldName === updated.fieldName);
+          if (idx >= 0) {
+            next[tab] = [...next[tab]];
+            next[tab][idx] = updated;
+          }
+        }
+        return next;
+      });
+
+      setEditingField(null);
+    },
+    [activeTab],
+  );
+
   const handleRemoveField = useCallback(
     (fieldName: string) => {
       setAvailableFields((prev) => ({
         ...prev,
-        [activeTab]: prev[activeTab].filter((f) => f !== fieldName),
+        [activeTab]: prev[activeTab].filter((f) => f.fieldName !== fieldName),
       }));
       setSections((prev) => ({
         ...prev,
@@ -178,51 +200,6 @@ export const TicketTypeLayoutDialog = ({
     },
     [activeTab],
   );
-
-  const handleEditFieldStart = useCallback((fieldName: string) => {
-    setEditingField({ name: fieldName, temp: fieldName });
-  }, []);
-
-  const handleEditFieldSave = useCallback(() => {
-    if (!editingField) return;
-
-    const newName = editingField.temp.trim();
-    if (!newName) {
-      setEditingField(null);
-      return;
-    }
-
-    // Check duplicate (exclude the current field being edited)
-    const allExisting = [
-      ...assignedFields.filter((f) => f !== editingField.name),
-      ...currentAvailable.filter((f) => f !== editingField.name),
-    ];
-    if (allExisting.includes(newName)) {
-      notifyError('This field name already exists');
-      return;
-    }
-
-    // Update field name in available fields
-    setAvailableFields((prev) => ({
-      ...prev,
-      [activeTab]: prev[activeTab].map((f) => (f === editingField.name ? newName : f)),
-    }));
-
-    // Update field name in all sections
-    setSections((prev) => ({
-      ...prev,
-      [activeTab]: prev[activeTab].map((s) => ({
-        ...s,
-        fields: s.fields.map((f) => (f === editingField.name ? newName : f)),
-      })),
-    }));
-
-    setEditingField(null);
-  }, [editingField, activeTab, assignedFields, currentAvailable, notifyError]);
-
-  const handleEditFieldCancel = useCallback(() => {
-    setEditingField(null);
-  }, []);
 
   // ── Section Handlers ─────────────────────────────────────────────
 
@@ -263,7 +240,6 @@ export const TicketTypeLayoutDialog = ({
 
   const handleEditSectionTitleSave = useCallback(() => {
     if (!editingSection) return;
-
     const newTitle = editingSection.temp.trim();
     if (newTitle) {
       handleUpdateSectionTitle(editingSection.id, newTitle);
@@ -275,6 +251,11 @@ export const TicketTypeLayoutDialog = ({
     setEditingSection(null);
   }, []);
 
+  const handleDismissSectionInput = useCallback(() => {
+    setShowSectionInput(false);
+    setNewSectionTitle('');
+  }, []);
+
   // ── Section Field Handlers ───────────────────────────────────────
 
   const handleAddFieldToSection = useCallback(
@@ -282,7 +263,7 @@ export const TicketTypeLayoutDialog = ({
       if (!fieldName) return;
       setAvailableFields((prev) => ({
         ...prev,
-        [activeTab]: prev[activeTab].filter((f) => f !== fieldName),
+        [activeTab]: prev[activeTab].filter((f) => f.fieldName !== fieldName),
       }));
       setSections((prev) => ({
         ...prev,
@@ -310,11 +291,24 @@ export const TicketTypeLayoutDialog = ({
 
   const handleSave = async () => {
     const payload = {
-      createTicket: activeTab === 'createTicket' ? sections.createTicket : undefined,
-      ticketDetails: activeTab === 'ticketDetails' ? sections.ticketDetails : undefined,
+      createTicket: {
+        ticketFields: currentFieldNames,
+        ticketSections:
+          sections.createTicket?.map((s) => ({
+            title: s.title,
+            fields: [...s.fields],
+          })) ?? [],
+      },
+      ticketDetails: {
+        ticketFields: availableFields.ticketDetails?.map((f) => f.fieldName) ?? [],
+        ticketSections:
+          sections.ticketDetails?.map((s) => ({
+            title: s.title,
+            fields: [...s.fields],
+          })) ?? [],
+      },
     };
-    console.warn('Saving layout:', payload);
-    onSave?.();
+    onSave(payload);
     onClose();
   };
 
@@ -370,8 +364,8 @@ export const TicketTypeLayoutDialog = ({
       {/* Tabs */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs
-          value={activeTab}
-          onChange={(_, v) => setActiveTab(v)}
+          value={activeTabIdx}
+          onChange={(_, v) => setActiveTabIdx(v)}
           variant='fullWidth'
           sx={{ px: 2 }}
         >
@@ -399,7 +393,7 @@ export const TicketTypeLayoutDialog = ({
           overflow: 'hidden',
         }}
       >
-        {/* Left Panel: New Fields */}
+        {/* Left Panel: Fields */}
         <Box
           sx={{
             width: { xs: '100%', md: `${POOL_PANEL_WIDTH}px` },
@@ -411,7 +405,7 @@ export const TicketTypeLayoutDialog = ({
             bgcolor: 'background.paper',
           }}
         >
-          {/* New Fields header */}
+          {/* Fields header */}
           <Box
             sx={{
               px: 2.5,
@@ -422,7 +416,9 @@ export const TicketTypeLayoutDialog = ({
               justifyContent: 'space-between',
             }}
           >
-            <Typography sx={columnLabelSx}>Ticket Fields</Typography>
+            <Typography sx={columnLabelSx}>
+              {activeTab === 'createTicket' ? 'Create Ticket Fields' : 'Ticket Detail Fields'}
+            </Typography>
             <Tooltip title='Add New Field'>
               <IconButton
                 size='small'
@@ -443,7 +439,7 @@ export const TicketTypeLayoutDialog = ({
 
           {/* Available fields list */}
           <Box sx={{ flex: 1, overflowY: 'auto', p: 0 }}>
-            {currentAvailable.length === 0 ? (
+            {currentFieldNames.length === 0 ? (
               <Box
                 sx={{
                   display: 'flex',
@@ -457,73 +453,38 @@ export const TicketTypeLayoutDialog = ({
                 No fields added yet
               </Box>
             ) : (
-              currentAvailable.map((field) => {
-                const isEditing = editingField?.name === field;
-
-                return (
-                  <Box
-                    key={field}
-                    sx={{
-                      px: 2.5,
-                      py: 1.2,
-                      borderBottom: '1px solid rgba(226, 232, 255, 0.4)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.5,
-                      '&:hover': { bgcolor: 'action.hover' },
-                    }}
+              currentAvailable.map((field) => (
+                <Box
+                  key={field.id}
+                  sx={{
+                    px: 2.5,
+                    py: 1.2,
+                    borderBottom: '1px solid rgba(226, 232, 255, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    '&:hover': { bgcolor: 'action.hover' },
+                  }}
+                >
+                  <Typography sx={{ flex: 1, fontSize: '0.85rem' }}>{field.fieldName}</Typography>
+                  <Tooltip title='Edit field'>
+                    <IconButton
+                      size='small'
+                      onClick={() => handleEditField(field)}
+                      sx={{ p: 0.3, opacity: 0.5, '&:hover': { opacity: 1, color: '#1976d2' } }}
+                    >
+                      <EditIcon sx={{ fontSize: '0.85rem' }} />
+                    </IconButton>
+                  </Tooltip>
+                  <IconButton
+                    size='small'
+                    onClick={() => handleRemoveField(field.fieldName)}
+                    sx={{ p: 0.3, opacity: 0.5, '&:hover': { opacity: 1, color: '#d32f2f' } }}
                   >
-                    {isEditing ? (
-                      <>
-                        <TextField
-                          inputRef={fieldInputRef}
-                          value={editingField.temp}
-                          onChange={(e) =>
-                            setEditingField((prev) =>
-                              prev ? { ...prev, temp: e.target.value } : null,
-                            )
-                          }
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handleEditFieldSave();
-                            } else if (e.key === 'Escape') {
-                              handleEditFieldCancel();
-                            }
-                          }}
-                          onBlur={handleEditFieldSave}
-                          size='small'
-                          sx={{
-                            flex: 1,
-                            '& .MuiInput-input': {
-                              fontSize: '0.85rem',
-                              padding: '4px 8px',
-                            },
-                          }}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <Typography sx={{ flex: 1, fontSize: '0.85rem' }}>{field}</Typography>
-                        <IconButton
-                          size='small'
-                          onClick={() => handleEditFieldStart(field)}
-                          sx={{ p: 0.3, opacity: 0.5, '&:hover': { opacity: 1, color: '#1976d2' } }}
-                        >
-                          <EditIcon sx={{ fontSize: '0.85rem' }} />
-                        </IconButton>
-                        <IconButton
-                          size='small'
-                          onClick={() => handleRemoveField(field)}
-                          sx={{ p: 0.3, opacity: 0.5, '&:hover': { opacity: 1, color: '#d32f2f' } }}
-                        >
-                          <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
-                        </IconButton>
-                      </>
-                    )}
-                  </Box>
-                );
-              })
+                    <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
+                  </IconButton>
+                </Box>
+              ))
             )}
           </Box>
         </Box>
@@ -532,19 +493,22 @@ export const TicketTypeLayoutDialog = ({
         <Box
           sx={{
             flex: 1,
-            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
             maxHeight: { xs: 380, md: 520 },
-            p: 2,
-            bgcolor: alpha('#f8faff', 1),
+            bgcolor: 'background.paper',
           }}
         >
-          {/* Sections header with add button */}
+          {/* Sections header */}
           <Box
             sx={{
-              mb: 2,
+              px: 2.5,
+              py: 2,
+              borderBottom: '1px solid rgba(226, 232, 255, 0.6)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
+              flexShrink: 0,
             }}
           >
             <Typography sx={{ ...columnLabelSx, mb: 0 }}>
@@ -568,179 +532,233 @@ export const TicketTypeLayoutDialog = ({
             </Tooltip>
           </Box>
 
-          {/* Inline section title input (shown when + button clicked) */}
-          {showSectionInput && (
-            <Box sx={{ mb: 2 }}>
-              <TextField
-                inputRef={sectionTitleInputRef}
-                size='small'
-                placeholder='Section title...'
-                value={newSectionTitle}
-                onChange={(e) => setNewSectionTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const title = newSectionTitle.trim();
-                    if (title) {
-                      handleAddSectionWithTitle(title);
-                    }
-                    setShowSectionInput(false);
-                    setNewSectionTitle('');
-                  } else if (e.key === 'Escape') {
-                    setShowSectionInput(false);
-                    setNewSectionTitle('');
-                  }
+          {/* Sections body */}
+          <Box sx={{ flex: 1, overflowY: 'auto', p: 0 }}>
+            {showSectionInput && (
+              <Box
+                sx={{
+                  px: 2.5,
+                  py: 1.5,
+                  borderBottom: '1px solid rgba(226, 232, 255, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  bgcolor: alpha('#0369a1', 0.02),
                 }}
-                onBlur={() => {
-                  if (newSectionTitle.trim()) {
-                    handleAddSectionWithTitle(newSectionTitle.trim());
-                  }
-                  setShowSectionInput(false);
-                  setNewSectionTitle('');
-                }}
-                fullWidth
-              />
-            </Box>
-          )}
-
-          {/* Section cards */}
-          {currentSections.length === 0 ? (
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                py: 4,
-                color: 'text.disabled',
-                fontSize: '0.85rem',
-              }}
-            >
-              <Typography>No sections yet. Click "+ Add New Section" to create one.</Typography>
-            </Box>
-          ) : (
-            currentSections.map((section) => {
-              const isEditing = editingSection?.id === section.id;
-
-              return (
-                <Box
-                  key={section.id}
-                  sx={{
-                    border: '1.5px solid rgba(226, 232, 255, 0.9)',
-                    borderRadius: '10px',
-                    mb: 1.5,
-                    bgcolor: 'background.paper',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {/* Section header */}
-                  <Box
+              >
+                <Box sx={{ flex: 1 }}>
+                  <TextField
+                    inputRef={sectionTitleInputRef}
+                    size='small'
+                    placeholder='Enter section title...'
+                    value={newSectionTitle}
+                    onChange={(e) => setNewSectionTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const title = newSectionTitle.trim();
+                        if (title) {
+                          handleAddSectionWithTitle(title);
+                        }
+                        setShowSectionInput(false);
+                        setNewSectionTitle('');
+                      } else if (e.key === 'Escape') {
+                        handleDismissSectionInput();
+                      }
+                    }}
+                    fullWidth
                     sx={{
-                      px: 2,
-                      py: 1.5,
-                      bgcolor: alpha('#0369a1', 0.06),
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      borderBottom:
-                        section.fields.length > 0 ? '1px solid rgba(226, 232, 255, 0.6)' : 'none',
+                      '& .MuiInputBase-root': {
+                        bgcolor: 'background.paper',
+                        borderRadius: 1.5,
+                      },
+                      '& .MuiInputBase-input': {
+                        fontSize: '0.85rem',
+                      },
+                    }}
+                  />
+                </Box>
+                <Tooltip title='Submit'>
+                  <IconButton
+                    size='small'
+                    onClick={() => {
+                      const title = newSectionTitle.trim();
+                      if (title) {
+                        handleAddSectionWithTitle(title);
+                      }
+                      setShowSectionInput(false);
+                      setNewSectionTitle('');
+                    }}
+                    sx={{
+                      p: 0.7,
+                      color: newSectionTitle.trim() ? 'primary.main' : 'text.disabled',
+                      '&:hover': {
+                        color: 'primary.dark',
+                        bgcolor: 'rgba(3, 105, 161, 0.08)',
+                      },
                     }}
                   >
-                    {isEditing ? (
-                      <TextField
-                        inputRef={sectionTitleInputRef}
-                        value={editingSection.temp}
-                        onChange={(e) =>
-                          setEditingSection((prev) =>
-                            prev ? { ...prev, temp: e.target.value } : null,
-                          )
-                        }
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleEditSectionTitleSave();
-                          } else if (e.key === 'Escape') {
-                            handleEditSectionTitleCancel();
-                          }
-                        }}
-                        onBlur={handleEditSectionTitleSave}
-                        size='small'
-                        sx={{
-                          flex: 1,
-                          '& .MuiInput-input': {
-                            fontWeight: 700,
-                            fontSize: '0.82rem',
-                            padding: '2px 4px',
-                          },
-                        }}
-                      />
-                    ) : (
-                      <>
-                        <Typography
-                          sx={{
-                            flex: 1,
-                            fontWeight: 700,
-                            fontSize: '0.82rem',
-                            cursor: 'pointer',
-                            '&:hover': { color: 'primary.main' },
-                          }}
-                          onClick={() => handleEditSectionTitleStart(section.id, section.title)}
-                        >
-                          {section.title}
-                        </Typography>
-                        <IconButton
-                          size='small'
-                          onClick={() => handleEditSectionTitleStart(section.id, section.title)}
-                          sx={{ p: 0.3, opacity: 0.5, '&:hover': { opacity: 1, color: '#1976d2' } }}
-                        >
-                          <EditIcon sx={{ fontSize: '0.85rem' }} />
-                        </IconButton>
-                      </>
-                    )}
-                    <Typography sx={{ fontSize: '0.7rem', color: 'text.secondary', pr: 1 }}>
-                      {section.fields.length} field{section.fields.length !== 1 ? 's' : ''}
-                    </Typography>
-                    <IconButton
-                      size='small'
-                      onClick={() => handleRemoveSection(section.id)}
-                      sx={{ p: 0.3, opacity: 0.5, '&:hover': { opacity: 1, color: '#d32f2f' } }}
-                    >
-                      <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
-                    </IconButton>
-                  </Box>
+                    <CheckCircleIcon sx={{ fontSize: '1.2rem' }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Cancel'>
+                  <IconButton
+                    size='small'
+                    onClick={handleDismissSectionInput}
+                    sx={{
+                      p: 0.7,
+                      color: 'text.secondary',
+                      '&:hover': {
+                        color: '#d32f2f',
+                        bgcolor: 'rgba(211, 47, 47, 0.08)',
+                      },
+                    }}
+                  >
+                    <CloseIcon sx={{ fontSize: '1rem' }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            )}
 
-                  {/* Section fields */}
-                  {section.fields.length === 0 ? (
+            {currentSections.length === 0 ? (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  py: 3,
+                  color: 'text.disabled',
+                  fontSize: '0.8rem',
+                }}
+              >
+                No sections yet. Click '+ Add New Section' to create one.
+              </Box>
+            ) : (
+              currentSections.map((section, sectionIndex) => {
+                const isEditing = editingSection?.id === section.id;
+
+                return (
+                  <Box key={section.id}>
+                    {/* Section header row */}
                     <Box
                       sx={{
+                        px: 2.5,
+                        py: 1.4,
+                        borderTop:
+                          sectionIndex === 0 ? 'none' : '1px solid rgba(226, 232, 255, 0.6)',
+                        borderBottom: '1px solid rgba(226, 232, 255, 0.6)',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        py: 2.5,
-                        color: 'text.disabled',
-                        fontSize: '0.8rem',
+                        gap: 0.5,
+                        bgcolor: alpha('#0369a1', 0.04),
                       }}
                     >
-                      <Typography>No fields added yet</Typography>
-                    </Box>
-                  ) : (
-                    <Box>
-                      {section.fields.map((field) => (
-                        <Box
-                          key={field}
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            px: 2,
-                            py: 1,
-                            borderBottom: '1px solid rgba(226, 232, 255, 0.4)',
-                            '&:last-child': { borderBottom: 'none' },
-                            '&:hover': { bgcolor: 'action.hover' },
-                          }}
-                        >
-                          <Typography sx={{ flex: 1, fontSize: '0.85rem' }}>{field}</Typography>
+                      {isEditing ? (
+                        <>
+                          <Box sx={{ flex: 1 }}>
+                            <TextField
+                              inputRef={sectionTitleInputRef}
+                              value={editingSection.temp}
+                              onChange={(e) =>
+                                setEditingSection((prev) =>
+                                  prev ? { ...prev, temp: e.target.value } : null,
+                                )
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleEditSectionTitleSave();
+                                } else if (e.key === 'Escape') {
+                                  handleEditSectionTitleCancel();
+                                }
+                              }}
+                              size='small'
+                              sx={{
+                                '& .MuiInputBase-root': {
+                                  bgcolor: 'background.paper',
+                                  borderRadius: 1.5,
+                                },
+                                '& .MuiInputBase-input': {
+                                  fontWeight: 700,
+                                  fontSize: '0.82rem',
+                                  padding: '4px 8px',
+                                },
+                              }}
+                            />
+                          </Box>
+                          <Tooltip title='Submit'>
+                            <IconButton
+                              size='small'
+                              onClick={handleEditSectionTitleSave}
+                              sx={{
+                                p: 0.7,
+                                color: editingSection.temp.trim()
+                                  ? 'primary.main'
+                                  : 'text.disabled',
+                                '&:hover': {
+                                  color: 'primary.dark',
+                                  bgcolor: 'rgba(3, 105, 161, 0.08)',
+                                },
+                              }}
+                            >
+                              <CheckCircleIcon sx={{ fontSize: '1.2rem' }} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title='Cancel'>
+                            <IconButton
+                              size='small'
+                              onClick={handleEditSectionTitleCancel}
+                              sx={{
+                                p: 0.7,
+                                color: 'text.secondary',
+                                '&:hover': {
+                                  color: '#d32f2f',
+                                  bgcolor: 'rgba(211, 47, 47, 0.08)',
+                                },
+                              }}
+                            >
+                              <CloseIcon sx={{ fontSize: '1rem' }} />
+                            </IconButton>
+                          </Tooltip>
+                        </>
+                      ) : (
+                        <>
+                          <Typography
+                            sx={{
+                              flex: 1,
+                              fontSize: '0.82rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              '&:hover': { color: 'primary.main' },
+                            }}
+                            onClick={() => handleEditSectionTitleStart(section.id, section.title)}
+                          >
+                            {section.title}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontSize: '0.7rem',
+                              color: 'text.secondary',
+                              fontWeight: 500,
+                              mr: 0.5,
+                            }}
+                          >
+                            {section.fields.length} field{section.fields.length !== 1 ? 's' : ''}
+                          </Typography>
                           <IconButton
                             size='small'
-                            onClick={() => handleRemoveFieldFromSection(section.id, field)}
+                            onClick={() => handleEditSectionTitleStart(section.id, section.title)}
+                            sx={{
+                              p: 0.3,
+                              opacity: 0.5,
+                              '&:hover': { opacity: 1, color: '#1976d2' },
+                            }}
+                          >
+                            <EditIcon sx={{ fontSize: '0.85rem' }} />
+                          </IconButton>
+                          <IconButton
+                            size='small'
+                            onClick={() => handleRemoveSection(section.id)}
                             sx={{
                               p: 0.3,
                               opacity: 0.5,
@@ -749,31 +767,85 @@ export const TicketTypeLayoutDialog = ({
                           >
                             <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
                           </IconButton>
-                        </Box>
-                      ))}
+                        </>
+                      )}
                     </Box>
-                  )}
 
-                  {/* Add field to section */}
-                  <Box
-                    sx={{
-                      px: 2,
-                      py: 1.5,
-                      borderTop: '1px solid rgba(226, 232, 255, 0.4)',
-                      display: 'flex',
-                      gap: 1,
-                      alignItems: 'center',
-                    }}
-                  >
-                    <FieldSelector
-                      fields={currentAvailable}
-                      onChange={(val) => handleAddFieldToSection(section.id, val)}
-                    />
+                    {/* Section fields */}
+                    {section.fields.length === 0 ? (
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          py: 2,
+                          color: 'text.disabled',
+                          fontSize: '0.8rem',
+                        }}
+                      >
+                        No fields added yet
+                      </Box>
+                    ) : (
+                      <Box>
+                        {section.fields.map((fieldName) => (
+                          <Box
+                            key={fieldName}
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              px: 2.5,
+                              py: 1.2,
+                              borderBottom: '1px solid rgba(226, 232, 255, 0.4)',
+                              '&:last-child': { borderBottom: 'none' },
+                              '&:hover': { bgcolor: 'action.hover' },
+                            }}
+                          >
+                            <Typography sx={{ flex: 1, fontSize: '0.85rem' }}>
+                              {fieldName}
+                            </Typography>
+                            <IconButton
+                              size='small'
+                              onClick={() => handleRemoveFieldFromSection(section.id, fieldName)}
+                              sx={{
+                                p: 0.3,
+                                opacity: 0.5,
+                                '&:hover': { opacity: 1, color: '#d32f2f' },
+                              }}
+                            >
+                              <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
+                            </IconButton>
+                          </Box>
+                        ))}
+                      </Box>
+                    )}
+
+                    {/* Add field to section */}
+                    {currentFieldNames.length > 0 && (
+                      <Box
+                        sx={{
+                          px: 2.5,
+                          py: 1.2,
+                          borderTop: '1px solid rgba(226, 232, 255, 0.4)',
+                          borderBottom:
+                            sectionIndex === currentSections.length - 1
+                              ? 'none'
+                              : '1px solid rgba(226, 232, 255, 0.6)',
+                          display: 'flex',
+                          gap: 1,
+                          alignItems: 'center',
+                        }}
+                      >
+                        <FieldSelector
+                          fields={currentFieldNames}
+                          onChange={(val) => handleAddFieldToSection(section.id, val)}
+                        />
+                      </Box>
+                    )}
                   </Box>
-                </Box>
-              );
-            })
-          )}
+                );
+              })
+            )}
+          </Box>
         </Box>
       </Box>
 
@@ -791,10 +863,7 @@ export const TicketTypeLayoutDialog = ({
       <CustomFieldFormDialog
         open={addFieldDialogOpen}
         editing={null}
-        existingFields={currentAvailable.map(
-          (name) =>
-            ({ id: name, fieldName: name, fieldType: 'text', fieldUse: {} }) as ICustomField,
-        )}
+        existingFields={currentAvailable}
         ticketTypes={ticketTypes.map((tt) => ({
           type: tt.type,
           displayName: tt.displayName,
@@ -804,6 +873,22 @@ export const TicketTypeLayoutDialog = ({
         accent='#0369a1'
         onClose={() => setAddFieldDialogOpen(false)}
         onSave={handleSaveCustomField}
+      />
+
+      {/* ── Edit Custom Field Dialog ────────────────────────────────── */}
+      <CustomFieldFormDialog
+        open={!!editingField}
+        editing={editingField}
+        existingFields={currentAvailable}
+        ticketTypes={ticketTypes.map((tt) => ({
+          type: tt.type,
+          displayName: tt.displayName,
+          name: tt.name,
+        }))}
+        defaultTicketType={ticketType?.type}
+        accent='#0369a1'
+        onClose={() => setEditingField(null)}
+        onSave={handleEditFieldSave}
       />
     </Dialog>
   );
@@ -819,30 +904,9 @@ const FieldSelector = ({
   onChange: (value: string) => void;
 }) => {
   const [open, setOpen] = useState(false);
-  const anchorRef = useRef<HTMLDivElement>(null);
 
   return (
-    <Box ref={anchorRef} sx={{ position: 'relative', flex: 1 }}>
-      <Tooltip title='Add field to section'>
-        <Button
-          variant='outlined'
-          size='small'
-          onClick={() => setOpen(!open)}
-          sx={{
-            justifyContent: 'space-between',
-            minWidth: 0,
-            flex: 1,
-            textTransform: 'none',
-            fontSize: '0.78rem',
-          }}
-        >
-          <Typography sx={{ fontSize: '0.78rem', color: 'text.secondary' }}>
-            {fields.length > 0 ? '+ Add field to section' : 'No fields available'}
-          </Typography>
-          <AddIcon sx={{ fontSize: '0.9rem', ml: 0.5 }} />
-        </Button>
-      </Tooltip>
-
+    <Box sx={{ position: 'relative', flex: 1 }}>
       {open && fields.length > 0 && (
         <Box
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
@@ -861,11 +925,11 @@ const FieldSelector = ({
             overflowY: 'auto',
           }}
         >
-          {fields.map((field) => (
+          {fields.map((fieldName) => (
             <Box
-              key={field}
+              key={fieldName}
               onClick={() => {
-                onChange(field);
+                onChange(fieldName);
                 setOpen(false);
               }}
               sx={{
@@ -878,7 +942,7 @@ const FieldSelector = ({
                 '&:last-of-type': { borderRadius: '0 0 4px 4px' },
               }}
             >
-              {field}
+              {fieldName}
             </Box>
           ))}
         </Box>

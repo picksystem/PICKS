@@ -144,9 +144,44 @@ async function startServer() {
       gracefulShutdown('uncaughtException');
     });
 
-    // Catch unhandled promise rejections
+    // Catch unhandled promise rejections — only shut down for truly fatal errors.
+    // Transient database connection errors (e.g. Supabase pooler closing idle
+    // connections) are recoverable; the Prisma client will re-establish the pool
+    // on the next query. Shutting down for these brings the whole service down
+    // unnecessarily.
+    const fatalErrorPatterns = [
+      /ENOENT/i, // missing file / directory
+      /EACCES/i, // permission denied
+      /EADDRINUSE/i, // port already in use
+      /listen EADDRINUSE/i,
+    ];
     process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
-      logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+      const message =
+        typeof reason === 'string'
+          ? reason
+          : reason instanceof Error
+            ? reason.message
+            : String(reason);
+
+      const isFatal = fatalErrorPatterns.some((p) => p.test(message));
+
+      if (!isFatal) {
+        // Likely a transient DB issue — log and continue.
+        logger.warn('Non-fatal unhandled rejection (continuing):', message);
+        // Reset the Prisma pool so the next query gets fresh connections.
+        try {
+          const { prisma } = require('@serviceops/database');
+          // Force a pool reset on the proxy by nulling the global
+          if (prisma && typeof (prisma as any).$disconnect === 'function') {
+            void (prisma as any).$disconnect().catch(() => {});
+          }
+        } catch {
+          // ignore – we just want to nudge a pool reset
+        }
+        return;
+      }
+
+      logger.error('Fatal unhandled rejection – shutting down:', reason);
       gracefulShutdown('unhandledRejection');
     });
 

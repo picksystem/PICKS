@@ -1,6 +1,6 @@
 {
   "name": "generale-partner",
-  "root": "web/tenants/generale-partner",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "web/tenants/generale-partner/src",
   "projectType": "application",
   "tags": ["app", "partner:generale-partner"],
