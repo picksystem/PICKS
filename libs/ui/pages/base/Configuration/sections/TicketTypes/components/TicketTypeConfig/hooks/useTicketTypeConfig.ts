@@ -166,19 +166,13 @@ export function useTicketTypeConfig() {
     }
   };
 
-  const handleLayoutSave = async (layoutData: {
-    createTicket: { ticketFields: string[]; ticketSections: { title: string; fields: string[] }[] };
-    ticketDetails: {
-      ticketFields: string[];
-      ticketSections: { title: string; fields: string[] }[];
-    };
-  }) => {
+  const handleLayoutSave = async (layoutConfig: import('@serviceops/interfaces').ITicketTypeLayoutConfig) => {
     if (!selectedRow) return;
     try {
       await updateTicketType({
         id: selectedRow.id,
         data: {
-          layoutConfig: layoutData,
+          layoutConfig,
           lastUpdatedBy: currentUserName,
           lastUpdatedAt: new Date().toISOString(),
         },

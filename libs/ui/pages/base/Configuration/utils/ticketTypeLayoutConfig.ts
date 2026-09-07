@@ -318,7 +318,7 @@ const defaultCreateTicketConfig = {
 // Mirrors the fields shown before this configuration existed, so a ticket
 // type with no saved layout (or a legacy row saved before a section was
 // added) still renders exactly as before.
-export function getDefaultLayoutConfig(): ITicketTypeLayoutConfig {
+export function getDefaultLayoutConfig(createTicketSections?: string[]): ITicketTypeLayoutConfig {
   return {
     infoBar: {
       selectedFields: [
@@ -345,7 +345,40 @@ export function getDefaultLayoutConfig(): ITicketTypeLayoutConfig {
     vendorBug: { selectedFields: allKeys(DETAILS_VENDOR_FIELDS) },
     changeControl: { selectedFields: allKeys(DETAILS_CAB_FIELDS) },
     resolutionWorkaround: { selectedFields: allKeys(DETAILS_RESOLUTION_FIELDS) },
-    createTicket: { ...defaultCreateTicketConfig },
+    createTicket: {
+      ticketInformation: {
+        selectedFields: [
+          'client',
+          'caller',
+          'additionalContacts',
+          'callerFirstName',
+          'callerLastName',
+          'callerPhone',
+          'callerEmail',
+          'callerLocation',
+          'callerDepartment',
+          'callerReportingManager',
+        ],
+      },
+      categorization: {
+        selectedFields: allKeys(CREATE_TICKET_CATEGORIZATION_FIELDS),
+      },
+      description: {
+        selectedFields: ['shortDescription', 'description', 'isMajor', 'isRecurring'],
+      },
+      additionalDetails: {
+        selectedFields: allKeys(CREATE_TICKET_ADDITIONAL_DETAILS_FIELDS),
+      },
+      priorityAssignment: {
+        selectedFields: allKeys(CREATE_TICKET_PRIORITY_ASSIGNMENT_FIELDS),
+      },
+      auditInformation: {
+        selectedFields: allKeys(CREATE_TICKET_AUDIT_INFORMATION_FIELDS),
+      },
+      attachments: {
+        selectedFields: allKeys(CREATE_TICKET_ATTACHMENTS_FIELDS),
+      },
+    },
   };
 }
 
