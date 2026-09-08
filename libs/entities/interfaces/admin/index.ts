@@ -2,7 +2,6 @@ export * from './ticket.interface';
 export * from './header.interface';
 export * from './dashboard.interface';
 export * from './signin.interface';
-export * from './notfound.interface';
 export * from './job.interface';
 export * from './ticketType.interface';
 export * from './incident.interface';

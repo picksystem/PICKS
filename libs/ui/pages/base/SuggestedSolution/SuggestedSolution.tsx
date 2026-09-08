@@ -43,10 +43,14 @@ const calculateSimilarity = (text1: string, text2: string): number => {
 };
 
 /** Build a complete ticket body with all required fields for the generic create endpoint */
-const buildTicketBody = (data: ICreateTicketInput, overrides: Partial<ICreateTicketInput> = {}): IAdminTicket => ({
-  ...data,
-  ...overrides,
-} as IAdminTicket);
+const buildTicketBody = (
+  data: ICreateTicketInput,
+  overrides: Partial<ICreateTicketInput> = {},
+): IAdminTicket =>
+  ({
+    ...data,
+    ...overrides,
+  }) as IAdminTicket;
 
 const SuggestedSolution = () => {
   const { classes } = useStyles();
@@ -88,8 +92,9 @@ const SuggestedSolution = () => {
   const resolvedIncidents = useMemo(
     () =>
       allTickets.filter(
-        (t) => (t as any).ticketType === 'incident'
-          && (t.status === 'resolved' || t.status === 'closed'),
+        (t) =>
+          (t as any).ticketType === 'incident' &&
+          (t.status === 'resolved' || t.status === 'closed'),
       ),
     [allTickets],
   );
@@ -189,11 +194,11 @@ const SuggestedSolution = () => {
         <InputColumn
           shortDesc={shortDesc}
           issueText={issueText}
-          onShortDescChange={(val) => {
+          onShortDescChange={(val: string) => {
             setShortDesc(val);
             setCurrentIndex(0);
           }}
-          onIssueTextChange={(val) => {
+          onIssueTextChange={(val: string) => {
             setIssueText(val);
             setCurrentIndex(0);
           }}

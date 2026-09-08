@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { IconButton, Typography } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
-import { Column } from '@serviceops/component';
+import { Column, PriorityChip, StatusChip } from '@serviceops/component';
 import {
   useGetTicketsQuery,
   useGetDraftTicketsQuery,
@@ -10,8 +10,6 @@ import {
 } from '@serviceops/services';
 import { IAdminTicket, ITicketType } from '@serviceops/interfaces';
 import { constants } from '@serviceops/utils';
-import PriorityChip from '../components/PriorityChip';
-import StatusChip from '../components/StatusChip';
 import TicketTypeChip from '../components/TicketTypeChip';
 import { TicketManagementRow } from '../types/TicketManagement.types';
 import { FAVORITES_KEY, getFilteredData as filterData } from '../utils/TicketManagement.utils';

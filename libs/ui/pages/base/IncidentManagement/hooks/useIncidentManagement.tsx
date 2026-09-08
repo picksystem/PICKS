@@ -8,15 +8,10 @@ import AutorenewIcon from '@mui/icons-material/Autorenew';
 import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DraftsIcon from '@mui/icons-material/Drafts';
-import { Column } from '@serviceops/component';
-import {
-  useGetTicketsQuery,
-  useGetDraftTicketsQuery,
-} from '@serviceops/services';
+import { Column, PriorityChip, StatusChip } from '@serviceops/component';
+import { useGetTicketsQuery, useGetDraftTicketsQuery } from '@serviceops/services';
 import { IIncident } from '@serviceops/interfaces';
 import { constants } from '@serviceops/utils';
-import PriorityChip from '../components/PriorityChip';
-import StatusChip from '../components/StatusChip';
 import { IncidentRow } from '../types/IncidentManagement.types';
 import {
   FAVORITES_KEY,

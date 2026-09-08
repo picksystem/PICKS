@@ -1,5 +1,5 @@
 import { Box, Typography } from '@serviceops/component';
-import type { ConfigPlaceholderProps } from './ConfigPlaceholder.tsx.util';
+import type { ConfigPlaceholderProps } from './ConfigPlaceholder.types';
 import { useStyles } from './styles';
 
 const ConfigPlaceholder = ({

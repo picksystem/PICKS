@@ -5,7 +5,7 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import { Button, Box } from '@serviceops/component';
 import { useStyles } from '../styles';
-import { ActionButtonsProps } from './util';
+import { ActionButtonsProps } from './types';
 
 const ActionButtons = ({
   canApply,

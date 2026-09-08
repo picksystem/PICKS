@@ -1,6 +1,6 @@
 import { Box, Typography } from '@serviceops/component';
 import { useStyles } from '../styles';
-import { DetailRowProps } from './util';
+import { DetailRowProps } from './types';
 
 const DetailRow = ({ icon, label, value, accent = '#6366f1' }: DetailRowProps) => {
   const { classes } = useStyles();

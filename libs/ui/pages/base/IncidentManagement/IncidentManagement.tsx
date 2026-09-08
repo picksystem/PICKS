@@ -8,13 +8,13 @@ import {
   Tabs,
   Tab,
   PageHeader,
+  TabPanel,
 } from '@serviceops/component';
 import { InputAdornment } from '@mui/material';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import SearchIcon from '@mui/icons-material/Search';
 import { useStyles } from './styles';
 import useIncidentManagement from './hooks/useIncidentManagement';
-import TabPanel from './components/TabPanel';
 import { IncidentRow } from './types/IncidentManagement.types';
 
 const IncidentManagement = () => {

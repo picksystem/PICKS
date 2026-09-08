@@ -2,7 +2,7 @@ import SubjectIcon from '@mui/icons-material/Subject';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import { Box, TextField, Typography } from '@serviceops/component';
 import { useStyles } from '../styles';
-import { InputColumnProps } from './util';
+import { InputColumnProps } from './types';
 
 const InputColumn = ({
   shortDesc,

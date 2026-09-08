@@ -221,8 +221,14 @@ export const TicketTypeLayoutDialog = ({
     return keys;
   }, [dialogSections, activeTab]);
 
-  const currentSections = useMemo(() => dialogSections[activeTab] ?? [], [dialogSections, activeTab]);
-  const currentAvailable = useMemo(() => availableFields[activeTab] ?? [], [availableFields, activeTab]);
+  const currentSections = useMemo(
+    () => dialogSections[activeTab] ?? [],
+    [dialogSections, activeTab],
+  );
+  const currentAvailable = useMemo(
+    () => availableFields[activeTab] ?? [],
+    [availableFields, activeTab],
+  );
 
   // Unassigned = custom fields for this tab that aren't placed in any section of this tab
   const unassignedFieldNames = useMemo(() => {
@@ -1153,6 +1159,30 @@ export const TicketTypeLayoutDialog = ({
                               <Typography sx={{ flex: 1, fontSize: '0.85rem' }}>
                                 {displayName}
                               </Typography>
+                              <Tooltip title='Edit field'>
+                                <IconButton
+                                  size='small'
+                                  onClick={() => customField && handleEditField(customField)}
+                                  sx={{
+                                    p: 0.3,
+                                    opacity: 0.5,
+                                    '&:hover': { opacity: 1, color: '#1976d2' },
+                                  }}
+                                >
+                                  <EditIcon sx={{ fontSize: '0.85rem' }} />
+                                </IconButton>
+                              </Tooltip>
+                              <IconButton
+                                size='small'
+                                onClick={() => handleRemoveFieldFromSection(section.id, fieldKey)}
+                                sx={{
+                                  p: 0.3,
+                                  opacity: 0.5,
+                                  '&:hover': { opacity: 1, color: '#d32f2f' },
+                                }}
+                              >
+                                <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
+                              </IconButton>
                               <Tooltip title='Move up'>
                                 <IconButton
                                   size='small'
@@ -1183,44 +1213,20 @@ export const TicketTypeLayoutDialog = ({
                                   <ArrowDownwardIcon sx={{ fontSize: '0.85rem' }} />
                                 </IconButton>
                               </Tooltip>
-                              <Tooltip title='Edit field'>
-                                <IconButton
-                                  size='small'
-                                  onClick={() => customField && handleEditField(customField)}
-                                  sx={{
-                                    p: 0.3,
-                                    opacity: 0.5,
-                                    '&:hover': { opacity: 1, color: '#1976d2' },
-                                  }}
-                                >
-                                  <EditIcon sx={{ fontSize: '0.85rem' }} />
-                                </IconButton>
-                              </Tooltip>
                               <Tooltip title='Move back to available fields'>
                                 <IconButton
                                   size='small'
                                   onClick={() => handleRemoveFieldFromSection(section.id, fieldKey)}
                                   sx={{
                                     p: 0.3,
-                                    opacity: 0,
                                     transition: 'opacity 0.15s',
+                                    color: '#0000008a',
                                     '&:hover': { opacity: 1, color: '#d32f2f' },
                                   }}
                                 >
                                   <ArrowBackIcon sx={{ fontSize: '0.85rem' }} />
                                 </IconButton>
                               </Tooltip>
-                              <IconButton
-                                size='small'
-                                onClick={() => handleRemoveFieldFromSection(section.id, fieldKey)}
-                                sx={{
-                                  p: 0.3,
-                                  opacity: 0.5,
-                                  '&:hover': { opacity: 1, color: '#d32f2f' },
-                                }}
-                              >
-                                <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
-                              </IconButton>
                             </Box>
                           );
                         })}

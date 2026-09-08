@@ -17,7 +17,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import SpeedIcon from '@mui/icons-material/Speed';
 import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
 import { useStyles } from '../styles';
-import { SolutionViewerProps, MatchDetailProps } from './util';
+import { SolutionViewerProps, MatchDetailProps } from './types';
 
 const getStatusStyle = (status: string) => {
   switch (status) {
@@ -255,9 +255,7 @@ const MatchDetail = ({ ticket, similarity, markedUseful, onToggleUseful }: Match
       {/* Short Description */}
       <Box className={classes.shortDescSection}>
         <Typography className={classes.shortDescLabel}>Short Description</Typography>
-        <Typography className={classes.shortDescValue}>
-          {ticket.shortDescription || '—'}
-        </Typography>
+        <Typography className={classes.shortDescValue}>{ticket.shortDescription || '—'}</Typography>
       </Box>
 
       <Divider sx={{ mb: 1.5, borderColor: 'rgba(226,232,255,0.9)' }} />
@@ -269,9 +267,7 @@ const MatchDetail = ({ ticket, similarity, markedUseful, onToggleUseful }: Match
             <DescriptionOutlinedIcon sx={{ fontSize: 14, color: '#6366f1' }} />
             <Typography className={classes.descCardLabel}>Description</Typography>
           </Box>
-          <Typography className={classes.descCardText}>
-            {stripHtml(ticket.description)}
-          </Typography>
+          <Typography className={classes.descCardText}>{stripHtml(ticket.description)}</Typography>
         </Box>
       )}
 
@@ -288,7 +284,12 @@ const MatchDetail = ({ ticket, similarity, markedUseful, onToggleUseful }: Match
 
       {/* Mark as useful */}
       <Divider sx={{ mb: 1.5, borderColor: 'rgba(226,232,255,0.9)' }} />
-      <Box className={cx(classes.markUsefulRow, markedUseful.has(ticket.id) && classes.markUsefulRowChecked)}>
+      <Box
+        className={cx(
+          classes.markUsefulRow,
+          markedUseful.has(ticket.id) && classes.markUsefulRowChecked,
+        )}
+      >
         <FormControlLabel
           control={
             <Checkbox
@@ -300,7 +301,10 @@ const MatchDetail = ({ ticket, similarity, markedUseful, onToggleUseful }: Match
           }
           label={
             <Typography
-              className={cx(classes.markUsefulLabel, markedUseful.has(ticket.id) && classes.markUsefulLabelChecked)}
+              className={cx(
+                classes.markUsefulLabel,
+                markedUseful.has(ticket.id) && classes.markUsefulLabelChecked,
+              )}
             >
               Mark as useful
             </Typography>

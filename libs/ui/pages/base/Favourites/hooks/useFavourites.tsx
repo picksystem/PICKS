@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { IconButton, Typography } from '@mui/material';
-import { Column } from '@serviceops/component';
+import { Column, PriorityChip, StatusChip } from '@serviceops/component';
 import StarIcon from '@mui/icons-material/Star';
 import {
   useGetTicketsQuery,
@@ -10,8 +10,6 @@ import {
 import { IAdminTicket, ITicketType } from '@serviceops/interfaces';
 import { constants } from '@serviceops/utils';
 import { FavouriteRow } from '../types/Favourites.types';
-import PriorityChip from '../components/PriorityChip';
-import StatusChip from '../components/StatusChip';
 import TicketTypeChip from '../components/TicketTypeChip';
 import {
   FAVORITES_KEY as FAVORITES_INCIDENTS_KEY,
