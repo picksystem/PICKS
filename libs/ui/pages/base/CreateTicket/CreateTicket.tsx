@@ -1,8 +1,7 @@
 import { alpha } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { useStyles } from './styles';
-import { Box, Button, Loader, Typography, Chip, Tooltip } from '@serviceops/component';
+import { Box, Button, Loader, Typography, Chip, Tooltip, PageHeader } from '@serviceops/component';
 import useCreateTicket from './hooks/useCreateTicket';
 import { useGetTicketTypeQuery } from '../../../../services';
 import {
@@ -45,57 +44,11 @@ const CreateTicket = () => {
     <Box className={classes.selectionPage}>
       {/* ── Scrollable content ───────────────────────────────────────────── */}
       <Box className={classes.scrollContent}>
-        {/* ── Hero header ─────────────────────────────────────────────────── */}
-        <Box
-          className={classes.heroHeader}
-          sx={{
-            borderLeft: selected
-              ? `5px solid ${getVisuals(selected.type).accent}`
-              : '5px solid #2563eb',
-            background: '#ffffff',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-            border: selected ? '1px solid #e5e7eb' : '1px solid #e5e7eb',
-          }}
-        >
-          <Box
-            className={classes.heroIconWrap}
-            sx={
-              selected
-                ? {
-                    background: getVisuals(selected.type).gradient,
-                    border: '1px solid rgba(255,255,255,0.25)',
-                    boxShadow: `0 6px 18px ${getVisuals(selected.type).glow}`,
-                  }
-                : {
-                    background: '#2563eb',
-                    border: '1px solid rgba(255,255,255,0.25)',
-                    boxShadow: '0 2px 8px rgba(37,99,235,0.35)',
-                  }
-            }
-          >
-            {selected ? (
-              getIconComponent(iconMap[selected.type], { fontSize: 26, color: '#fff' })
-            ) : (
-              <ConfirmationNumberIcon sx={{ fontSize: 28, color: '#fff' }} />
-            )}
-          </Box>
-          <Box sx={{ flex: 1, position: 'relative', zIndex: 1 }}>
-            <Typography
-              className={classes.heroTitle}
-              sx={{ color: selected ? getVisuals(selected.type).accent : '#1e293b' }}
-            >
-              {selected ? selected.name : 'Create a New Ticket'}
-            </Typography>
-            <Typography
-              className={classes.heroSubtitle}
-              sx={{ color: selected ? getVisuals(selected.type).accent : '#64748b', opacity: 0.8 }}
-            >
-              {selected
-                ? selected.displayName || selected.name
-                : 'Choose the ticket type that best describes your request'}
-            </Typography>
-          </Box>
-        </Box>
+        <PageHeader
+          title='Create a New Ticket'
+          description='Choose the ticket type that best describes your request'
+          className={classes.pageHeader}
+        />
 
         {/* ── Ticket type grid ─────────────────────────────────────────────── */}
         <Box className={classes.ticketTypeGrid}>

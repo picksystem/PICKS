@@ -85,6 +85,7 @@ const TicketTypeConfigSection = () => {
     handleDelete,
     handleToggleActive,
     handleLayoutSave,
+    handleSaveCustomFields,
     iconMap,
     tagMap,
     isSubmitting,
@@ -350,6 +351,7 @@ const TicketTypeConfigSection = () => {
         ticketTypes={ticketTypes || []}
         onClose={() => setLayoutOpen(false)}
         onSave={handleLayoutSave}
+        onSaveCustomFields={handleSaveCustomFields}
       />
 
       <ConfigDeleteDialog

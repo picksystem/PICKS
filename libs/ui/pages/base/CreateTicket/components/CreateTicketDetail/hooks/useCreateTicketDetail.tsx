@@ -25,12 +25,6 @@ import {
 import { constants } from '@serviceops/utils';
 import { useConfiguration } from '@serviceops/confighooks';
 import { channelOptions, generateTicketNumber, calculatePriority, initialValues } from '../util';
-import {
-  getTagVisuals,
-  getTagOption,
-  loadTagMap,
-  FALLBACK_COLOR,
-} from '../../../../Configuration/utils/ticketTypeIcons';
 
 export interface CreateTicketDetailProps {
   ticketType: string;
@@ -45,9 +39,6 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   const notify = useNotification();
   const { data: ticketTypes } = useGetTicketTypeQuery();
   const record = ticketTypes?.find((t) => t.type === ticketType);
-  const tagMap = loadTagMap();
-  const tagColor = getTagOption(tagMap[ticketType] ?? '')?.color ?? FALLBACK_COLOR;
-  const { gradient, glow } = getTagVisuals(tagColor);
   const allCustomFields = record?.customFields ?? [];
   const layoutConfig = record?.layoutConfig;
   const config = {
@@ -55,9 +46,6 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     prefix: record?.prefix || 'TKT',
     numberLength: record?.numberLength || 7,
     subtitle: record?.shortDescription || 'Fill in the details below to create a new ticket',
-    heroGradient: gradient,
-    heroShadow: glow,
-    heroAccent: tagColor,
   };
   const { impactOptions, urgencyOptions, priorityOptions, statusOptions } =
     useTicketConfig(ticketType);

@@ -166,7 +166,9 @@ export function useTicketTypeConfig() {
     }
   };
 
-  const handleLayoutSave = async (layoutConfig: import('@serviceops/interfaces').ITicketTypeLayoutConfig) => {
+  const handleLayoutSave = async (
+    layoutConfig: import('@serviceops/interfaces').ITicketTypeLayoutConfig,
+  ) => {
     if (!selectedRow) return;
     try {
       await updateTicketType({
@@ -180,6 +182,25 @@ export function useTicketTypeConfig() {
       notify.success('Ticket screen layout saved successfully');
     } catch {
       notify.error('Failed to save ticket screen layout');
+    }
+  };
+
+  const handleSaveCustomFields = async (
+    fields: import('@serviceops/interfaces').ICustomField[],
+  ) => {
+    if (!selectedRow) return;
+    try {
+      await updateTicketType({
+        id: selectedRow.id,
+        data: {
+          customFields: fields,
+          lastUpdatedBy: currentUserName,
+          lastUpdatedAt: new Date().toISOString(),
+        },
+      }).unwrap();
+      notify.success('Custom field saved successfully');
+    } catch {
+      notify.error('Failed to save custom field');
     }
   };
 
@@ -199,6 +220,7 @@ export function useTicketTypeConfig() {
     handleDelete,
     handleToggleActive,
     handleLayoutSave,
+    handleSaveCustomFields,
     iconMap,
     tagMap,
     isSubmitting,

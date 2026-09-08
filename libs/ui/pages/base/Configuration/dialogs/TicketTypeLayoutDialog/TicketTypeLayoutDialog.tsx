@@ -80,6 +80,9 @@ export interface TicketTypeLayoutDialogProps {
   /** Called with the canonical ITicketTypeLayoutConfig payload.
    *  The parent is responsible for persisting to the API via updateTicketType. */
   onSave: (layoutConfig: ITicketTypeLayoutConfig) => void;
+  /** Called with the full customFields array whenever a field is added or edited.
+   *  The parent should persist via updateTicketType({ customFields }). */
+  onSaveCustomFields?: (fields: ICustomField[]) => void;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
@@ -127,6 +130,7 @@ export const TicketTypeLayoutDialog = ({
   ticketTypes = [],
   onClose,
   onSave,
+  onSaveCustomFields,
 }: TicketTypeLayoutDialogProps) => {
   const [activeTabIdx, setActiveTabIdx] = useState<0 | 1>(0);
   const activeTab: TabId = TAB_ORDER[activeTabIdx];
@@ -152,20 +156,50 @@ export const TicketTypeLayoutDialog = ({
     return defaultConfig;
   });
 
-  // Custom fields for the current tab (used in the left panel)
-  const allCustomFields = useMemo(() => ticketType?.customFields ?? [], [ticketType]);
+  // Track all custom fields (persisted + pending unsaved changes) so that
+  // new/edited fields are visible in the left panel even before the parent
+  // re-fetches from the API.
+  const persistedFields = useMemo(() => ticketType?.customFields ?? [], [ticketType]);
+  const [allCustomFields, setAllCustomFields] = useState<ICustomField[]>(persistedFields);
   const [availableFields, setAvailableFields] = useState<Record<TabId, ICustomField[]>>({
     createTicket: [],
     ticketDetails: [],
   });
 
-  // Initialize available fields when ticket type changes
+  // When the dialog is opened (or the ticket type changes while closed),
+  // re-initialize allCustomFields from the parent's fresh data so that
+  // newly persisted fields survive a page refresh.
+  const prevTicketTypeIdRef = useRef<number | undefined>(ticketType?.id);
   useEffect(() => {
-    setAvailableFields({
-      createTicket: initialAvailableFields(allCustomFields, 'createTicket'),
-      ticketDetails: initialAvailableFields(allCustomFields, 'ticketDetails'),
-    });
-  }, [allCustomFields, open]);
+    const idChanged = prevTicketTypeIdRef.current !== ticketType?.id;
+    prevTicketTypeIdRef.current = ticketType?.id;
+
+    if (open) {
+      setAllCustomFields(persistedFields);
+      setAvailableFields({
+        createTicket: initialAvailableFields(persistedFields, 'createTicket'),
+        ticketDetails: initialAvailableFields(persistedFields, 'ticketDetails'),
+      });
+    } else if (idChanged && ticketType) {
+      // Ticket type changed while dialog was closed — refresh state too
+      setAllCustomFields(persistedFields);
+    }
+  }, [open, persistedFields]);
+
+  // Track whether a custom-field API save is in-flight
+  const [customFieldSavePending, setCustomFieldSavePending] = useState(false);
+
+  const triggerCustomFieldSave = useCallback(
+    (fields: ICustomField[]) => {
+      if (onSaveCustomFields) {
+        setCustomFieldSavePending(true);
+        Promise.resolve(onSaveCustomFields(fields)).finally(() => {
+          setCustomFieldSavePending(false);
+        });
+      }
+    },
+    [onSaveCustomFields],
+  );
 
   // Build dialog sections from fetched layout sections + layoutConfig
   const buildDialogSections = useCallback(
@@ -537,6 +571,14 @@ export const TicketTypeLayoutDialog = ({
 
   // ── Field CRUD ──────────────────────────────────────────────────
 
+  const persistCustomFields = useCallback(
+    (fields: ICustomField[]) => {
+      setAllCustomFields(fields);
+      triggerCustomFieldSave(fields);
+    },
+    [triggerCustomFieldSave],
+  );
+
   const handleSaveCustomField = useCallback(
     (field: ICustomField) => {
       const tabsToUpdate: TabId[] = [];
@@ -558,9 +600,23 @@ export const TicketTypeLayoutDialog = ({
         return next;
       });
 
+      // Also update allCustomFields so the field is visible in both panels
+      setAllCustomFields((prev) => {
+        const idx = prev.findIndex((f) => f.id === field.id);
+        const next = [...prev];
+        if (idx >= 0) {
+          next[idx] = field;
+        } else {
+          next.push(field);
+        }
+        // Persist to the parent so the backend is updated
+        persistCustomFields(next);
+        return next;
+      });
+
       setAddFieldDialogOpen(false);
     },
-    [activeTab],
+    [activeTab, persistCustomFields],
   );
 
   const handleEditField = useCallback((field: ICustomField) => {
@@ -586,9 +642,21 @@ export const TicketTypeLayoutDialog = ({
         return next;
       });
 
+      // Also update allCustomFields and persist to the parent
+      setAllCustomFields((prev) => {
+        const idx = prev.findIndex((f) => f.id === updated.id);
+        if (idx >= 0) {
+          const next = [...prev];
+          next[idx] = updated;
+          persistCustomFields(next);
+          return next;
+        }
+        return prev;
+      });
+
       setEditingField(null);
     },
-    [activeTab],
+    [activeTab, persistCustomFields],
   );
 
   const handleRemoveField = useCallback(
@@ -596,6 +664,9 @@ export const TicketTypeLayoutDialog = ({
       // Find the fieldKey to also remove from any section
       const cf = currentAvailable.find((f) => f.fieldName === fieldName);
       const fieldKey = cf?.fieldKey ?? fieldName;
+
+      // Also track the id for removal from allCustomFields
+      const removedId = cf?.id;
 
       setAvailableFields((prev) => ({
         ...prev,
@@ -612,8 +683,17 @@ export const TicketTypeLayoutDialog = ({
         }
         return next;
       });
+
+      // Remove from allCustomFields and persist
+      if (removedId) {
+        setAllCustomFields((prev) => {
+          const next = prev.filter((f) => f.id !== removedId);
+          persistCustomFields(next);
+          return next;
+        });
+      }
     },
-    [activeTab, currentAvailable],
+    [activeTab, currentAvailable, persistCustomFields],
   );
 
   // ── Save ─────────────────────────────────────────────────────────
@@ -778,6 +858,7 @@ export const TicketTypeLayoutDialog = ({
               <IconButton
                 size='small'
                 onClick={() => setAddFieldDialogOpen(true)}
+                disabled={customFieldSavePending}
                 sx={{
                   width: 28,
                   height: 28,
