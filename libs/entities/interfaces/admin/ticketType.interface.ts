@@ -46,6 +46,8 @@ export interface ICustomField {
 
 export interface ITicketTypeSectionLayoutConfig {
   selectedFields: string[];
+  sectionTitle?: string;
+  accessControl?: Record<string, boolean>;
 }
 
 export interface ITicketTypeInfoBarLayoutConfig extends ITicketTypeSectionLayoutConfig {
@@ -54,6 +56,16 @@ export interface ITicketTypeInfoBarLayoutConfig extends ITicketTypeSectionLayout
 
 export interface ICreateTicketSectionLayoutConfig {
   selectedFields: string[];
+  sectionTitle?: string;
+  accessControl?: Record<string, boolean>;
+}
+
+export interface ICustomSectionConfig {
+  title: string;
+  fields: string[];
+  tab: 'createTicket' | 'ticketDetails';
+  accessControl?: Record<string, boolean>;
+  displayOrder?: number;
 }
 
 export interface ITicketTypeLayoutConfig {
@@ -79,6 +91,7 @@ export interface ITicketTypeLayoutConfig {
     auditInformation: ICreateTicketSectionLayoutConfig;
     attachments: ICreateTicketSectionLayoutConfig;
   };
+  customSections?: Record<string, ICustomSectionConfig>;
 }
 
 export interface ITicketType {

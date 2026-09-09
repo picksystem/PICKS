@@ -22,7 +22,11 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { alpha, Dialog, DialogActions } from '@mui/material';
 import { ITicketType, ICustomField, ITicketTypeLayoutConfig } from '@serviceops/interfaces';
-import { getDefaultLayoutConfig, mergeLayoutConfig } from '@serviceops/tickettypelayout';
+import {
+  getDefaultLayoutConfig,
+  mergeLayoutConfig,
+  isCustomFieldKey,
+} from '@serviceops/tickettypelayout';
 import { CustomFieldFormDialog } from '../CustomFieldFormDialog';
 import { SectionFormDialog } from '../SectionFormDialog';
 
@@ -41,7 +45,8 @@ const TAB_ORDER: TabId[] = ['createTicket', 'ticketDetails'];
 
 const POOL_PANEL_WIDTH = 320;
 
-// Map section key → tab for cross-tab drag-and-drop
+// Map built-in section keys to their tab. Custom sections store their
+// tab in layoutConfig.customSections[id].tab.
 const SECTION_TO_TAB_MAP: Record<string, TabId> = {
   ticketInformation: 'createTicket',
   categorization: 'createTicket',
@@ -58,6 +63,11 @@ const SECTION_TO_TAB_MAP: Record<string, TabId> = {
   reporting: 'ticketDetails',
   datesAndUsers: 'ticketDetails',
   additionalFields: 'ticketDetails',
+};
+
+const TAB_TO_FIELD_USE_FLAG: Record<TabId, '__createTicket__' | '__ticketDetails__'> = {
+  createTicket: '__createTicket__',
+  ticketDetails: '__ticketDetails__',
 };
 
 const columnLabelSx = {
@@ -94,38 +104,90 @@ function initialAvailableFields(customFields: ICustomField[], tab: TabId): ICust
   });
 }
 
-// Convert the dialog's internal section state into the canonical
-// ITicketTypeLayoutConfig that the rest of the system consumes.
+// Resolve the tab for a section ID — built-in keys use the static map,
+// custom keys carry their tab in layoutConfig.customSections.
+function resolveSectionTab(sectionId: string, layoutConfig: ITicketTypeLayoutConfig): TabId {
+  if (sectionId in SECTION_TO_TAB_MAP) return SECTION_TO_TAB_MAP[sectionId];
+  const custom = layoutConfig.customSections?.[sectionId];
+  if (custom?.tab) return custom.tab;
+  return 'createTicket';
+}
 
-// Static section definitions — move these to the API later when the backend is ready.
-const LAYOUT_SECTIONS: Record<TabId, { key: string; label: string }[]> = {
-  createTicket: [
-    { key: 'ticketInformation', label: 'Ticket Information' },
-    { key: 'categorization', label: 'Categorization' },
-    { key: 'description', label: 'Description' },
-    { key: 'additionalDetails', label: 'Additional Details' },
-    { key: 'priorityAssignment', label: 'Priority & Assignment' },
-    { key: 'auditInformation', label: 'Audit Information' },
-    { key: 'attachments', label: 'Attachments' },
-  ],
-  ticketDetails: [
-    { key: 'infoBar', label: 'Info Bar' },
-    { key: 'sideBar', label: 'Side Bar' },
-    { key: 'ticketOptions', label: 'Ticket Options' },
-    { key: 'assignment', label: 'Assignment' },
-    { key: 'contactAndBilling', label: 'Contact & Billing' },
-    { key: 'reporting', label: 'Reporting' },
-    { key: 'datesAndUsers', label: 'Dates & Users' },
-    { key: 'additionalFields', label: 'Additional Fields' },
-  ],
-};
+// Build dialog sections directly from layoutConfig — no hardcoded section list.
+// All built-in sections are always shown so users can drag fields into them.
+// System fields are filtered from display — only custom fields (cf_*) appear
+// inside sections. Sections with no custom fields show an empty drop zone.
+function buildDialogSectionsFromConfig(
+  layoutConfig: ITicketTypeLayoutConfig,
+): Record<TabId, DialogSection[]> {
+  const result: Record<TabId, DialogSection[]> = { createTicket: [], ticketDetails: [] };
 
-const layoutSections = LAYOUT_SECTIONS;
+  // Built-in createTicket sections
+  const ctKeys: (keyof ITicketTypeLayoutConfig['createTicket'])[] = [
+    'ticketInformation',
+    'categorization',
+    'description',
+    'additionalDetails',
+    'priorityAssignment',
+    'auditInformation',
+    'attachments',
+  ];
+  for (const key of ctKeys) {
+    const cfg = layoutConfig.createTicket[key];
+    if (!cfg) continue;
+    const customOnly = (cfg.selectedFields ?? []).filter((f) => isCustomFieldKey(f));
+    result.createTicket.push({
+      id: key,
+      title: cfg.sectionTitle ?? key,
+      fields: customOnly,
+      accessControl: cfg.accessControl,
+    });
+  }
 
-const TAB_TO_FIELD_USE_FLAG: Record<TabId, '__createTicket__' | '__ticketDetails__'> = {
-  createTicket: '__createTicket__',
-  ticketDetails: '__ticketDetails__',
-};
+  // Built-in ticketDetails sections
+  const detailKeys: (keyof Omit<ITicketTypeLayoutConfig, 'createTicket' | 'customSections'>)[] = [
+    'infoBar',
+    'sideBar',
+    'ticketOptions',
+    'assignment',
+    'contactAndBilling',
+    'reporting',
+    'datesAndUsers',
+    'additionalFields',
+    'ticketCore',
+    'changeManagement',
+    'vendorBug',
+    'changeControl',
+    'resolutionWorkaround',
+  ];
+  for (const key of detailKeys) {
+    const cfg = layoutConfig[key];
+    if (!cfg || !('selectedFields' in cfg)) continue;
+    const customOnly = (cfg.selectedFields ?? []).filter((f) => isCustomFieldKey(f));
+    result.ticketDetails.push({
+      id: key,
+      title: (cfg as { sectionTitle?: string }).sectionTitle ?? key,
+      fields: customOnly,
+      accessControl: (cfg as { accessControl?: Record<string, boolean> }).accessControl,
+    });
+  }
+
+  // Custom sections (user-created)
+  const { customSections } = layoutConfig;
+  if (customSections) {
+    for (const [id, cfg] of Object.entries(customSections)) {
+      const tab: TabId = cfg.tab ?? 'createTicket';
+      result[tab].push({
+        id,
+        title: cfg.title,
+        fields: [...cfg.fields],
+        accessControl: cfg.accessControl,
+      });
+    }
+  }
+
+  return result;
+}
 
 // ── Component ──────────────────────────────────────────────────────
 
@@ -151,10 +213,20 @@ export const TicketTypeLayoutDialog = ({
   // Add Section dialog
   const [addSectionDialogOpen, setAddSectionDialogOpen] = useState(false);
 
+  // Delete confirmation dialogs
+  const [pendingDeleteField, setPendingDeleteField] = useState<{
+    fieldName: string;
+    displayName: string;
+  } | null>(null);
+  const [pendingDeleteSection, setPendingDeleteSection] = useState<{
+    sectionId: string;
+    title: string;
+  } | null>(null);
+
   // Initialize layout config from ticket type's saved config, or defaults
   const defaultConfig = useMemo(() => getDefaultLayoutConfig(), []);
 
-  const [layoutConfig, _setLayoutConfig] = useState<ITicketTypeLayoutConfig>(() => {
+  const [layoutConfig, setLayoutConfig] = useState<ITicketTypeLayoutConfig>(() => {
     if (ticketType?.layoutConfig) {
       return mergeLayoutConfig(ticketType.layoutConfig);
     }
@@ -172,28 +244,42 @@ export const TicketTypeLayoutDialog = ({
   });
   const initializedRef = useRef(false);
 
-  // On every dialog open, initialize both state arrays from the parent's
-  // fresh data. The ref guard ensures this only runs once per open cycle
-  // — never mid-dialog when the parent re-fetches after an API save.
-  const persistedFieldsRef = useRef(persistedFields);
-  useEffect(() => {
-    persistedFieldsRef.current = persistedFields;
-  }, [persistedFields]);
-  useEffect(() => {
-    if (open && !initializedRef.current) {
-      initializedRef.current = true;
-      setAllCustomFields(persistedFieldsRef.current);
-      setAvailableFields({
-        createTicket: initialAvailableFields(persistedFieldsRef.current, 'createTicket'),
-        ticketDetails: initialAvailableFields(persistedFieldsRef.current, 'ticketDetails'),
-      });
-    }
-  }, [open]);
+  // Sync local state from parent's fresh data when: (1) dialog first opens,
+  // or (2) the parent re-fetches after a successful API save (page refresh).
+  const lastSyncedFieldsRef = useRef<ICustomField[]>([]);
+  const lastSyncedLayoutRef = useRef<ITicketTypeLayoutConfig | null>(null);
 
-  // Reset the init guard so the next open cycle re-syncs from parent data.
   useEffect(() => {
-    if (!open) initializedRef.current = false;
-  }, [open]);
+    if (!open) {
+      initializedRef.current = false;
+      return;
+    }
+
+    // persistedFields is a new array reference whenever the parent passes
+    // fresh ticketType data (after re-fetch). Compare by reference to detect
+    // a real data change vs. just a re-render.
+    const parentDataChanged = lastSyncedFieldsRef.current !== persistedFields;
+    if (!initializedRef.current || parentDataChanged) {
+      lastSyncedFieldsRef.current = persistedFields;
+      setAllCustomFields(persistedFields);
+      setAvailableFields({
+        createTicket: initialAvailableFields(persistedFields, 'createTicket'),
+        ticketDetails: initialAvailableFields(persistedFields, 'ticketDetails'),
+      });
+      initializedRef.current = true;
+    }
+  }, [open, persistedFields]);
+
+  // Sync layoutConfig from parent's fresh data when ticketType changes
+  // (e.g. after page refresh / re-fetch).
+  useEffect(() => {
+    if (!open) return;
+    const freshLayout = ticketType?.layoutConfig ?? null;
+    if (freshLayout && lastSyncedLayoutRef.current !== freshLayout) {
+      lastSyncedLayoutRef.current = freshLayout;
+      setLayoutConfig(mergeLayoutConfig(freshLayout));
+    }
+  }, [open, ticketType?.layoutConfig]);
 
   // Track whether a custom-field API save is in-flight
   const [customFieldSavePending, setCustomFieldSavePending] = useState(false);
@@ -210,47 +296,21 @@ export const TicketTypeLayoutDialog = ({
     [onSaveCustomFields],
   );
 
-  // Build dialog sections from fetched layout sections + layoutConfig
-  const buildDialogSections = useCallback(
-    (sections: { key: string; label: string }[] | undefined, tab: TabId): DialogSection[] => {
-      if (!sections) return [];
-      return sections.map((s) => {
-        if (tab === 'createTicket') {
-          const selectedFields =
-            layoutConfig.createTicket?.[s.key as keyof typeof layoutConfig.createTicket]
-              ?.selectedFields ?? [];
-          return { id: s.key, title: s.label, fields: [...selectedFields] };
-        }
-        const selectedFields =
-          (
-            layoutConfig[s.key as keyof ITicketTypeLayoutConfig] as
-              | { selectedFields: string[] }
-              | undefined
-          )?.selectedFields ?? [];
-        return { id: s.key, title: s.label, fields: [...selectedFields] };
-      });
-    },
-    [layoutConfig],
+  // ── Build dialog sections from layoutConfig ─────────────────────
+  // No hardcoded section list — sections are derived entirely from the
+  // layoutConfig's built-in keys + customSections bag.
+
+  const [dialogSections, setDialogSections] = useState<Record<TabId, DialogSection[]>>(
+    buildDialogSectionsFromConfig(layoutConfig),
   );
 
-  // ── Build dialog sections from layoutConfig ─────────────────────
-
-  // We derive "dialog sections" from the fetched section definitions and
-  // the canonical layout config so the drag-and-drop UI mirrors what's saved.
-  const [dialogSections, setDialogSections] = useState<Record<TabId, DialogSection[]>>({
-    createTicket: [],
-    ticketDetails: [],
-  });
-
-  // Sync dialog sections when layoutConfig or layoutSections changes
+  // Sync dialog sections whenever layoutConfig changes (e.g. after parent
+  // re-fetches following a successful save). This replaces the previous
+  // static layoutSections-dependent sync.
   useEffect(() => {
-    if (!layoutSections) return;
-    const sections: Record<TabId, DialogSection[]> = {
-      createTicket: buildDialogSections(layoutSections.createTicket, 'createTicket'),
-      ticketDetails: buildDialogSections(layoutSections.ticketDetails, 'ticketDetails'),
-    };
+    const sections = buildDialogSectionsFromConfig(layoutConfig);
     setDialogSections(sections);
-  }, [layoutSections, layoutConfig, buildDialogSections]);
+  }, [layoutConfig]);
 
   // Fields from layoutConfig.selectedFields that are NOT in any section
   // for the current tab (used to populate the left panel "unassigned" list)
@@ -289,6 +349,13 @@ export const TicketTypeLayoutDialog = ({
         ...prev,
         [activeTab]: [...prev[activeTab], { id, title, fields: [], accessControl }],
       }));
+
+      // Also persist immediately to layoutConfig so it's not lost
+      setLayoutConfig((prev) => {
+        const next = { ...prev, customSections: { ...(prev.customSections ?? {}) } };
+        next.customSections![id] = { title, fields: [], tab: activeTab, accessControl };
+        return next;
+      });
     },
     [activeTab],
   );
@@ -300,6 +367,16 @@ export const TicketTypeLayoutDialog = ({
         ...prev,
         [tab]: prev[tab].filter((s) => s.id !== sectionId),
       }));
+
+      // Also remove from layoutConfig.customSections if it's a custom section
+      if (sectionId.startsWith('custom_')) {
+        setLayoutConfig((prev) => {
+          if (!prev.customSections?.[sectionId]) return prev;
+          const next = { ...prev, customSections: { ...prev.customSections } };
+          delete next.customSections![sectionId];
+          return next;
+        });
+      }
     },
     [activeTab],
   );
@@ -337,7 +414,7 @@ export const TicketTypeLayoutDialog = ({
   const handleAddFieldToSection = useCallback(
     (sectionId: string, fieldName: string) => {
       if (!fieldName) return;
-      const targetTab = SECTION_TO_TAB_MAP[sectionId] ?? activeTab;
+      const targetTab = resolveSectionTab(sectionId, layoutConfig);
       // Find the custom field to get its fieldKey
       const customField = [...availableFields[targetTab]].find((f) => f.fieldName === fieldName);
       if (!customField) return;
@@ -355,12 +432,12 @@ export const TicketTypeLayoutDialog = ({
         ),
       }));
     },
-    [activeTab, availableFields],
+    [availableFields, layoutConfig],
   );
 
   const handleRemoveFieldFromSection = useCallback(
     (sectionId: string, fieldKey: string) => {
-      const sourceTab = SECTION_TO_TAB_MAP[sectionId] ?? activeTab;
+      const sourceTab = resolveSectionTab(sectionId, layoutConfig);
       setDialogSections((prev) => ({
         ...prev,
         [sourceTab]: prev[sourceTab].map((s) =>
@@ -368,7 +445,7 @@ export const TicketTypeLayoutDialog = ({
         ),
       }));
     },
-    [activeTab],
+    [layoutConfig],
   );
 
   // ── Drag-and-Drop State ──────────────────────────────────────────
@@ -437,7 +514,7 @@ export const TicketTypeLayoutDialog = ({
 
   const handleReorderFieldInSection = useCallback(
     (sectionId: string, fieldKey: string, direction: 'up' | 'down') => {
-      const tab = SECTION_TO_TAB_MAP[sectionId] ?? activeTab;
+      const tab = resolveSectionTab(sectionId, layoutConfig);
       setDialogSections((prev) => {
         const tabSections = prev[tab];
         const section = tabSections.find((s) => s.id === sectionId);
@@ -456,7 +533,7 @@ export const TicketTypeLayoutDialog = ({
         return next;
       });
     },
-    [activeTab],
+    [layoutConfig],
   );
 
   const handleDragLeaveSection = useCallback((e: React.DragEvent) => {
@@ -474,13 +551,16 @@ export const TicketTypeLayoutDialog = ({
       setDragOverSection(null);
       if (!dragItem) return;
 
+      const sourceTab =
+        dragItem.kind === 'section'
+          ? resolveSectionTab(dragItem.sectionId, layoutConfig)
+          : activeTab;
+      const targetTab = resolveSectionTab(sectionId, layoutConfig);
+
       if (dragItem.kind === 'available') {
         handleAddFieldToSection(sectionId, dragItem.fieldName);
       } else if (dragItem.kind === 'section') {
         if (dragItem.sectionId === sectionId) return;
-        // Determine source and target tabs from section IDs
-        const sourceTab = SECTION_TO_TAB_MAP[dragItem.sectionId] ?? activeTab;
-        const targetTab = SECTION_TO_TAB_MAP[sectionId] ?? activeTab;
         // Move between sections (same tab or cross-tab)
         setDialogSections((prev) => {
           const next = { ...prev };
@@ -499,7 +579,7 @@ export const TicketTypeLayoutDialog = ({
       }
       handleDragEnd();
     },
-    [dragItem, activeTab, handleAddFieldToSection, handleDragEnd],
+    [dragItem, activeTab, handleAddFieldToSection, handleDragEnd, layoutConfig],
   );
 
   const handleDropOnField = useCallback(
@@ -509,12 +589,15 @@ export const TicketTypeLayoutDialog = ({
       setDragOverSection(null);
       if (!dragItem) return;
 
+      const sourceTab =
+        dragItem.kind === 'section'
+          ? resolveSectionTab(dragItem.sectionId, layoutConfig)
+          : activeTab;
+      const targetTab = resolveSectionTab(sectionId, layoutConfig);
+
       if (dragItem.kind === 'available') {
         handleAddFieldToSection(sectionId, dragItem.fieldName);
       } else if (dragItem.kind === 'section') {
-        const sourceTab = SECTION_TO_TAB_MAP[dragItem.sectionId] ?? activeTab;
-        const targetTab = SECTION_TO_TAB_MAP[sectionId] ?? activeTab;
-
         if (dragItem.sectionId === sectionId) {
           // Reorder within same section
           setDialogSections((prev) => {
@@ -558,7 +641,7 @@ export const TicketTypeLayoutDialog = ({
       }
       handleDragEnd();
     },
-    [dragItem, activeTab, handleAddFieldToSection, handleDragEnd],
+    [dragItem, activeTab, handleAddFieldToSection, handleDragEnd, layoutConfig],
   );
 
   const handleDragOverField = useCallback(
@@ -579,12 +662,6 @@ export const TicketTypeLayoutDialog = ({
   }, []);
 
   // ── Field CRUD ──────────────────────────────────────────────────
-
-  // Delete confirmation dialog state
-  const [pendingDeleteField, setPendingDeleteField] = useState<{
-    fieldName: string;
-    displayName: string;
-  } | null>(null);
 
   const persistCustomFields = useCallback(
     (fields: ICustomField[]) => {
@@ -642,6 +719,21 @@ export const TicketTypeLayoutDialog = ({
   // Cancel the pending deletion
   const cancelDeleteField = useCallback(() => {
     setPendingDeleteField(null);
+  }, []);
+
+  // Section delete confirmation
+  const confirmDeleteSection = useCallback(() => {
+    if (!pendingDeleteSection) return;
+    handleRemoveSection(pendingDeleteSection.sectionId);
+    setPendingDeleteSection(null);
+  }, [pendingDeleteSection, handleRemoveSection]);
+
+  const requestDeleteSection = useCallback((sectionId: string, title: string) => {
+    setPendingDeleteSection({ sectionId, title });
+  }, []);
+
+  const cancelDeleteSection = useCallback(() => {
+    setPendingDeleteSection(null);
   }, []);
 
   const handleSaveCustomField = useCallback(
@@ -713,38 +805,55 @@ export const TicketTypeLayoutDialog = ({
   // ── Save ─────────────────────────────────────────────────────────
 
   const handleSave = async () => {
-    // Build a mutable map to collect selectedFields per section key
-    const sectionSelectedFields: Record<string, string[]> = {};
+    // Start from defaults (which contain all system fields), then overlay
+    // dialog changes. The dialog only shows custom fields for built-in
+    // sections, so we merge them with the defaults rather than replacing.
+    const newConfig = mergeLayoutConfig(defaultConfig);
 
-    // Update createTicket sub-sections from dialog
-    const createSections = dialogSections.createTicket ?? [];
-    for (const dialogSection of createSections) {
-      sectionSelectedFields[`createTicket.${dialogSection.id}`] = [...dialogSection.fields];
-    }
-
-    // Update ticketDetails sections from dialog
-    const detailSections = dialogSections.ticketDetails ?? [];
-    for (const dialogSection of detailSections) {
-      sectionSelectedFields[dialogSection.id] = [...dialogSection.fields];
-    }
-
-    // Construct canonical ITicketTypeLayoutConfig by starting from defaults
-    // and overwriting selectedFields with what the dialog produced.
-    const newConfig: ITicketTypeLayoutConfig = { ...defaultConfig };
-
-    // Apply createTicket sections
-    const ct = { ...newConfig.createTicket } as Record<string, { selectedFields: string[] }>;
-    for (const [key, fields] of Object.entries(sectionSelectedFields)) {
-      if (key.startsWith('createTicket.')) {
-        const subKey = key.slice('createTicket.'.length);
-        ct[subKey] = { selectedFields: fields };
-      } else {
-        (newConfig as unknown as Record<string, { selectedFields: string[] }>)[key] = {
-          selectedFields: fields,
-        };
+    // Persist customSections from dialog state
+    newConfig.customSections = {};
+    for (const tab of TAB_ORDER) {
+      for (const section of dialogSections[tab]) {
+        if (section.id.startsWith('custom_')) {
+          newConfig.customSections![section.id] = {
+            title: section.title,
+            fields: [...section.fields],
+            tab,
+            accessControl: section.accessControl,
+          };
+        }
       }
     }
-    newConfig.createTicket = ct as typeof newConfig.createTicket;
+
+    // Write selectedFields + sectionTitle for built-in sections.
+    // Only custom fields are shown in the dialog, so we append them to the
+    // existing default system fields rather than replacing.
+    for (const tab of TAB_ORDER) {
+      for (const section of dialogSections[tab]) {
+        if (section.id.startsWith('custom_')) continue;
+        if (tab === 'createTicket') {
+          const subKey = section.id as keyof typeof newConfig.createTicket;
+          const sub = { ...newConfig.createTicket } as Record<string, any>;
+          const existing = sub[subKey]?.selectedFields ?? [];
+          const systemFields = existing.filter((f: string) => !isCustomFieldKey(f));
+          const combined = [...systemFields, ...section.fields];
+          sub[subKey] = {
+            selectedFields: combined,
+            sectionTitle: section.title,
+            accessControl: section.accessControl,
+          };
+          newConfig.createTicket = sub as typeof newConfig.createTicket;
+        } else {
+          const existing = (newConfig as any)[section.id]?.selectedFields ?? [];
+          const systemFields = existing.filter((f: string) => !isCustomFieldKey(f));
+          (newConfig as any)[section.id] = {
+            selectedFields: [...systemFields, ...section.fields],
+            sectionTitle: section.title,
+            accessControl: section.accessControl,
+          };
+        }
+      }
+    }
 
     // Merge with defaults to ensure completeness
     const merged = mergeLayoutConfig(newConfig);
@@ -1169,7 +1278,7 @@ export const TicketTypeLayoutDialog = ({
                           </IconButton>
                           <IconButton
                             size='small'
-                            onClick={() => handleRemoveSection(section.id)}
+                            onClick={() => requestDeleteSection(section.id, section.title)}
                             sx={{
                               p: 0.3,
                               opacity: 0.5,
@@ -1368,7 +1477,7 @@ export const TicketTypeLayoutDialog = ({
         </Button>
       </DialogActions>
 
-      {/* ── Delete Confirmation Dialog ────────────────────────────────── */}
+      {/* ── Delete Field Confirmation Dialog ──────────────────────────── */}
       <Dialog
         open={!!pendingDeleteField}
         onClose={cancelDeleteField}
@@ -1434,6 +1543,82 @@ export const TicketTypeLayoutDialog = ({
           </Button>
           <Button
             onClick={confirmDeleteField}
+            color='error'
+            variant='contained'
+            sx={{ textTransform: 'none' }}
+          >
+            Delete
+          </Button>
+        </Box>
+      </Dialog>
+
+      {/* ── Delete Section Confirmation Dialog ────────────────────────── */}
+      <Dialog
+        open={!!pendingDeleteSection}
+        onClose={cancelDeleteSection}
+        maxWidth='xs'
+        fullWidth
+        slotProps={{
+          transition: { unmountOnExit: true },
+          paper: { sx: { borderRadius: 3, overflow: 'hidden' } },
+        }}
+      >
+        {/* Header */}
+        <Box
+          sx={{
+            px: 3,
+            py: 2,
+            background: '#0369a1',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+          }}
+        >
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              borderRadius: 1.5,
+              bgcolor: 'rgba(255,255,255,0.18)',
+              border: '1.5px solid rgba(255,255,255,0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <DeleteOutlineIcon sx={{ color: '#fff' }} />
+          </Box>
+          <Box>
+            <Typography
+              sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff', lineHeight: 1.2 }}
+            >
+              Delete Section
+            </Typography>
+            <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}>
+              This action cannot be undone
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Body */}
+        <Box sx={{ px: 3, py: 2.5 }}>
+          <Typography variant='body2'>
+            Are you sure you want to delete the <strong>{pendingDeleteSection?.title}</strong>{' '}
+            section?
+          </Typography>
+          <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
+            This will remove the section and its field assignments permanently.
+          </Typography>
+        </Box>
+
+        {/* Footer actions */}
+        <Box sx={{ px: 3, pb: 2.5, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+          <Button onClick={cancelDeleteSection} variant='outlined' sx={{ textTransform: 'none' }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDeleteSection}
             color='error'
             variant='contained'
             sx={{ textTransform: 'none' }}

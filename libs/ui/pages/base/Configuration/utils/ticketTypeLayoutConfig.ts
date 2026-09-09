@@ -315,6 +315,30 @@ const defaultCreateTicketConfig = {
   },
 };
 
+// Known section labels — used as fallback when a stored config has no sectionTitle.
+const KNOWN_SECTION_LABELS: Record<string, string> = {
+  infoBar: 'Info Bar',
+  sideBar: 'Side Bar',
+  ticketOptions: 'Ticket Options',
+  assignment: 'Assignment',
+  contactAndBilling: 'Contact & Billing',
+  reporting: 'Reporting',
+  datesAndUsers: 'Dates & Users',
+  additionalFields: 'Additional Fields',
+  ticketCore: 'Ticket Core',
+  changeManagement: 'Change Management',
+  vendorBug: 'Vendor / Bug',
+  changeControl: 'Change Control (CAB)',
+  resolutionWorkaround: 'Resolution / Workaround',
+  ticketInformation: 'Ticket Information',
+  categorization: 'Categorization',
+  description: 'Description',
+  additionalDetails: 'Additional Details',
+  priorityAssignment: 'Priority & Assignment',
+  auditInformation: 'Audit Information',
+  attachments: 'Attachments',
+};
+
 // Mirrors the fields shown before this configuration existed, so a ticket
 // type with no saved layout (or a legacy row saved before a section was
 // added) still renders exactly as before.
@@ -332,19 +356,41 @@ export function getDefaultLayoutConfig(createTicketSections?: string[]): ITicket
         'eta',
       ],
       maxFields: 8,
+      sectionTitle: 'Info Bar',
     },
-    sideBar: { selectedFields: allKeys(SIDE_BAR_SECTION_FIELDS) },
-    ticketOptions: { selectedFields: allKeys(TICKET_OPTIONS_FIELDS) },
-    assignment: { selectedFields: allKeys(ASSIGNMENT_FIELDS) },
-    contactAndBilling: { selectedFields: allKeys(CONTACT_AND_BILLING_FIELDS) },
-    reporting: { selectedFields: allKeys(REPORTING_FIELDS) },
-    datesAndUsers: { selectedFields: allKeys(DATES_AND_USERS_FIELDS) },
-    additionalFields: { selectedFields: allKeys(ADDITIONAL_FIELDS_FIELDS) },
-    ticketCore: { selectedFields: allKeys(DETAILS_CORE_FIELDS) },
-    changeManagement: { selectedFields: allKeys(DETAILS_CHANGE_FIELDS) },
-    vendorBug: { selectedFields: allKeys(DETAILS_VENDOR_FIELDS) },
-    changeControl: { selectedFields: allKeys(DETAILS_CAB_FIELDS) },
-    resolutionWorkaround: { selectedFields: allKeys(DETAILS_RESOLUTION_FIELDS) },
+    sideBar: { selectedFields: allKeys(SIDE_BAR_SECTION_FIELDS), sectionTitle: 'Side Bar' },
+    ticketOptions: {
+      selectedFields: allKeys(TICKET_OPTIONS_FIELDS),
+      sectionTitle: 'Ticket Options',
+    },
+    assignment: { selectedFields: allKeys(ASSIGNMENT_FIELDS), sectionTitle: 'Assignment' },
+    contactAndBilling: {
+      selectedFields: allKeys(CONTACT_AND_BILLING_FIELDS),
+      sectionTitle: 'Contact & Billing',
+    },
+    reporting: { selectedFields: allKeys(REPORTING_FIELDS), sectionTitle: 'Reporting' },
+    datesAndUsers: {
+      selectedFields: allKeys(DATES_AND_USERS_FIELDS),
+      sectionTitle: 'Dates & Users',
+    },
+    additionalFields: {
+      selectedFields: allKeys(ADDITIONAL_FIELDS_FIELDS),
+      sectionTitle: 'Additional Fields',
+    },
+    ticketCore: { selectedFields: allKeys(DETAILS_CORE_FIELDS), sectionTitle: 'Ticket Core' },
+    changeManagement: {
+      selectedFields: allKeys(DETAILS_CHANGE_FIELDS),
+      sectionTitle: 'Change Management',
+    },
+    vendorBug: { selectedFields: allKeys(DETAILS_VENDOR_FIELDS), sectionTitle: 'Vendor / Bug' },
+    changeControl: {
+      selectedFields: allKeys(DETAILS_CAB_FIELDS),
+      sectionTitle: 'Change Control (CAB)',
+    },
+    resolutionWorkaround: {
+      selectedFields: allKeys(DETAILS_RESOLUTION_FIELDS),
+      sectionTitle: 'Resolution / Workaround',
+    },
     createTicket: {
       ticketInformation: {
         selectedFields: [
@@ -359,28 +405,44 @@ export function getDefaultLayoutConfig(createTicketSections?: string[]): ITicket
           'callerDepartment',
           'callerReportingManager',
         ],
+        sectionTitle: 'Ticket Information',
       },
       categorization: {
         selectedFields: allKeys(CREATE_TICKET_CATEGORIZATION_FIELDS),
+        sectionTitle: 'Categorization',
       },
       description: {
         selectedFields: ['shortDescription', 'description', 'isMajor', 'isRecurring'],
+        sectionTitle: 'Description',
       },
       additionalDetails: {
         selectedFields: allKeys(CREATE_TICKET_ADDITIONAL_DETAILS_FIELDS),
+        sectionTitle: 'Additional Details',
       },
       priorityAssignment: {
-        selectedFields: allKeys(CREATE_TICKET_PRIORITY_ASSIGNMENT_FIELDS),
+        selectedFields: [
+          'priority',
+          'status',
+          'impact',
+          'urgency',
+          'assignmentGroup',
+          'primaryResource',
+          'secondaryResources',
+        ],
+        sectionTitle: 'Priority & Assignment',
       },
       auditInformation: {
-        selectedFields: allKeys(CREATE_TICKET_AUDIT_INFORMATION_FIELDS),
+        selectedFields: ['createdBy', 'channel'],
+        sectionTitle: 'Audit Information',
       },
       attachments: {
-        selectedFields: allKeys(CREATE_TICKET_ATTACHMENTS_FIELDS),
+        selectedFields: ['attachments'],
+        sectionTitle: 'Attachments',
       },
     },
   };
 }
+
 
 /**
  * Fills in any section missing from a ticket type's saved layoutConfig
@@ -397,82 +459,121 @@ export function mergeLayoutConfig(
     infoBar: {
       selectedFields: stored.infoBar?.selectedFields ?? base.infoBar.selectedFields,
       maxFields: stored.infoBar?.maxFields ?? base.infoBar.maxFields,
+      sectionTitle: stored.infoBar?.sectionTitle ?? base.infoBar.sectionTitle,
     },
-    sideBar: { selectedFields: stored.sideBar?.selectedFields ?? base.sideBar.selectedFields },
+    sideBar: {
+      selectedFields: stored.sideBar?.selectedFields ?? base.sideBar.selectedFields,
+      sectionTitle: stored.sideBar?.sectionTitle ?? base.sideBar.sectionTitle,
+    },
     ticketOptions: {
       selectedFields: stored.ticketOptions?.selectedFields ?? base.ticketOptions.selectedFields,
+      sectionTitle: stored.ticketOptions?.sectionTitle ?? base.ticketOptions.sectionTitle,
     },
     assignment: {
       selectedFields: stored.assignment?.selectedFields ?? base.assignment.selectedFields,
+      sectionTitle: stored.assignment?.sectionTitle ?? base.assignment.sectionTitle,
     },
     contactAndBilling: {
       selectedFields:
         stored.contactAndBilling?.selectedFields ?? base.contactAndBilling.selectedFields,
+      sectionTitle: stored.contactAndBilling?.sectionTitle ?? base.contactAndBilling.sectionTitle,
     },
     reporting: {
       selectedFields: stored.reporting?.selectedFields ?? base.reporting.selectedFields,
+      sectionTitle: stored.reporting?.sectionTitle ?? base.reporting.sectionTitle,
     },
     datesAndUsers: {
-      selectedFields: stored.datesAndUsers?.selectedFields ?? base.datesAndUsers.selectedFields,
+      selectedFields:
+        stored.datesAndUsers?.selectedFields ?? base.datesAndUsers.selectedFields,
+      sectionTitle: stored.datesAndUsers?.sectionTitle ?? base.datesAndUsers.sectionTitle,
     },
     additionalFields: {
       selectedFields:
         stored.additionalFields?.selectedFields ?? base.additionalFields.selectedFields,
+      sectionTitle: stored.additionalFields?.sectionTitle ?? base.additionalFields.sectionTitle,
     },
     ticketCore: {
       selectedFields: stored.ticketCore?.selectedFields ?? base.ticketCore.selectedFields,
+      sectionTitle: stored.ticketCore?.sectionTitle ?? base.ticketCore.sectionTitle,
     },
     changeManagement: {
       selectedFields:
         stored.changeManagement?.selectedFields ?? base.changeManagement.selectedFields,
+      sectionTitle: stored.changeManagement?.sectionTitle ?? base.changeManagement.sectionTitle,
     },
     vendorBug: {
       selectedFields: stored.vendorBug?.selectedFields ?? base.vendorBug.selectedFields,
+      sectionTitle: stored.vendorBug?.sectionTitle ?? base.vendorBug.sectionTitle,
     },
     changeControl: {
       selectedFields: stored.changeControl?.selectedFields ?? base.changeControl.selectedFields,
+      sectionTitle: stored.changeControl?.sectionTitle ?? base.changeControl.sectionTitle,
     },
     resolutionWorkaround: {
       selectedFields:
         stored.resolutionWorkaround?.selectedFields ?? base.resolutionWorkaround.selectedFields,
+      sectionTitle:
+        stored.resolutionWorkaround?.sectionTitle ?? base.resolutionWorkaround.sectionTitle,
     },
     createTicket: {
       ticketInformation: {
         selectedFields:
           stored.createTicket?.ticketInformation?.selectedFields ??
           defaultCreateTicketConfig.ticketInformation.selectedFields,
+        sectionTitle:
+          stored.createTicket?.ticketInformation?.sectionTitle ??
+          base.createTicket.ticketInformation.sectionTitle,
       },
       categorization: {
         selectedFields:
           stored.createTicket?.categorization?.selectedFields ??
           defaultCreateTicketConfig.categorization.selectedFields,
+        sectionTitle:
+          stored.createTicket?.categorization?.sectionTitle ??
+          base.createTicket.categorization.sectionTitle,
       },
       description: {
         selectedFields:
           stored.createTicket?.description?.selectedFields ??
           defaultCreateTicketConfig.description.selectedFields,
+        sectionTitle:
+          stored.createTicket?.description?.sectionTitle ??
+          base.createTicket.description.sectionTitle,
       },
       additionalDetails: {
         selectedFields:
           stored.createTicket?.additionalDetails?.selectedFields ??
           defaultCreateTicketConfig.additionalDetails.selectedFields,
+        sectionTitle:
+          stored.createTicket?.additionalDetails?.sectionTitle ??
+          base.createTicket.additionalDetails.sectionTitle,
       },
       priorityAssignment: {
         selectedFields:
           stored.createTicket?.priorityAssignment?.selectedFields ??
           defaultCreateTicketConfig.priorityAssignment.selectedFields,
+        sectionTitle:
+          stored.createTicket?.priorityAssignment?.sectionTitle ??
+          base.createTicket.priorityAssignment.sectionTitle,
       },
       auditInformation: {
         selectedFields:
           stored.createTicket?.auditInformation?.selectedFields ??
           defaultCreateTicketConfig.auditInformation.selectedFields,
+        sectionTitle:
+          stored.createTicket?.auditInformation?.sectionTitle ??
+          base.createTicket.auditInformation.sectionTitle,
       },
       attachments: {
         selectedFields:
           stored.createTicket?.attachments?.selectedFields ??
           defaultCreateTicketConfig.attachments.selectedFields,
+        sectionTitle:
+          stored.createTicket?.attachments?.sectionTitle ??
+          base.createTicket.attachments.sectionTitle,
       },
     },
+    customSections: stored.customSections,
   };
 }
 
