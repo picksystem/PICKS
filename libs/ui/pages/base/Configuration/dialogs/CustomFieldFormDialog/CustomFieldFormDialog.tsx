@@ -72,6 +72,9 @@ interface CustomFieldFormDialogProps {
   accent?: string;
   /** The ticket type `type` string to pre-check in Field Use when creating a new field. */
   defaultTicketType?: string;
+  /** Which field-use flag should default to `true` for new fields.
+   *  Pass `'__createTicket__'` or `'__ticketDetails__'`. Defaults to `'__createTicket__'`. */
+  defaultFieldUseFlag?: '__createTicket__' | '__ticketDetails__';
   onClose: () => void;
   onSave: (field: ICustomField) => void;
   subtitle?: string;
@@ -85,6 +88,7 @@ const CustomFieldFormDialog = ({
   ticketTypes = [],
   accent = DEFAULT_ACCENT,
   defaultTicketType,
+  defaultFieldUseFlag = '__createTicket__',
   onClose,
   onSave,
   subtitle,
@@ -231,11 +235,17 @@ const CustomFieldFormDialog = ({
           isRequired: false,
           fieldUse: (() => {
             const flags: Record<string, boolean> = {
-              __createTicket__: true,
+              __createTicket__: false,
               __ticketDetails__: false,
               ...emptyUseFlags,
             };
-            if (defaultTicketType && defaultTicketType in flags) {
+            flags[defaultFieldUseFlag] = true;
+            if (
+              defaultTicketType &&
+              defaultTicketType !== defaultFieldUseFlag &&
+              defaultTicketType !== '__createTicket__' &&
+              defaultTicketType !== '__ticketDetails__'
+            ) {
               flags[defaultTicketType] = true;
             }
             return flags;

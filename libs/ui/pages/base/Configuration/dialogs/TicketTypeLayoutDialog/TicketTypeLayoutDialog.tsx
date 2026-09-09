@@ -122,6 +122,11 @@ const LAYOUT_SECTIONS: Record<TabId, { key: string; label: string }[]> = {
 
 const layoutSections = LAYOUT_SECTIONS;
 
+const TAB_TO_FIELD_USE_FLAG: Record<TabId, '__createTicket__' | '__ticketDetails__'> = {
+  createTicket: '__createTicket__',
+  ticketDetails: '__ticketDetails__',
+};
+
 // ── Component ──────────────────────────────────────────────────────
 
 export const TicketTypeLayoutDialog = ({
@@ -165,26 +170,30 @@ export const TicketTypeLayoutDialog = ({
     createTicket: [],
     ticketDetails: [],
   });
+  const initializedRef = useRef(false);
 
-  // When the dialog is opened (or the ticket type changes while closed),
-  // re-initialize allCustomFields from the parent's fresh data so that
-  // newly persisted fields survive a page refresh.
-  const prevTicketTypeIdRef = useRef<number | undefined>(ticketType?.id);
+  // On every dialog open, initialize both state arrays from the parent's
+  // fresh data. The ref guard ensures this only runs once per open cycle
+  // — never mid-dialog when the parent re-fetches after an API save.
+  const persistedFieldsRef = useRef(persistedFields);
   useEffect(() => {
-    const idChanged = prevTicketTypeIdRef.current !== ticketType?.id;
-    prevTicketTypeIdRef.current = ticketType?.id;
-
-    if (open) {
-      setAllCustomFields(persistedFields);
+    persistedFieldsRef.current = persistedFields;
+  }, [persistedFields]);
+  useEffect(() => {
+    if (open && !initializedRef.current) {
+      initializedRef.current = true;
+      setAllCustomFields(persistedFieldsRef.current);
       setAvailableFields({
-        createTicket: initialAvailableFields(persistedFields, 'createTicket'),
-        ticketDetails: initialAvailableFields(persistedFields, 'ticketDetails'),
+        createTicket: initialAvailableFields(persistedFieldsRef.current, 'createTicket'),
+        ticketDetails: initialAvailableFields(persistedFieldsRef.current, 'ticketDetails'),
       });
-    } else if (idChanged && ticketType) {
-      // Ticket type changed while dialog was closed — refresh state too
-      setAllCustomFields(persistedFields);
     }
-  }, [open, persistedFields]);
+  }, [open]);
+
+  // Reset the init guard so the next open cycle re-syncs from parent data.
+  useEffect(() => {
+    if (!open) initializedRef.current = false;
+  }, [open]);
 
   // Track whether a custom-field API save is in-flight
   const [customFieldSavePending, setCustomFieldSavePending] = useState(false);
@@ -571,6 +580,12 @@ export const TicketTypeLayoutDialog = ({
 
   // ── Field CRUD ──────────────────────────────────────────────────
 
+  // Delete confirmation dialog state
+  const [pendingDeleteField, setPendingDeleteField] = useState<{
+    fieldName: string;
+    displayName: string;
+  } | null>(null);
+
   const persistCustomFields = useCallback(
     (fields: ICustomField[]) => {
       setAllCustomFields(fields);
@@ -579,6 +594,56 @@ export const TicketTypeLayoutDialog = ({
     [triggerCustomFieldSave],
   );
 
+  const confirmDeleteField = useCallback(() => {
+    if (!pendingDeleteField) return;
+    const { fieldName } = pendingDeleteField;
+
+    // Find the fieldKey to also remove from any section
+    const cf = availableFields[activeTab].find((f) => f.fieldName === fieldName);
+    const fieldKey = cf?.fieldKey ?? fieldName;
+    const removedId = cf?.id;
+    if (!removedId) {
+      setPendingDeleteField(null);
+      return;
+    }
+
+    const nextAvailable = {
+      ...availableFields,
+      [activeTab]: availableFields[activeTab].filter((f) => f.fieldName !== fieldName),
+    };
+    const nextAll = allCustomFields.filter((f) => f.id !== removedId);
+    const nextSections: Record<TabId, DialogSection[]> = { ...dialogSections };
+    for (const tab of TAB_ORDER) {
+      nextSections[tab] = nextSections[tab].map((s) => ({
+        ...s,
+        fields: s.fields.filter((f) => f !== fieldKey),
+      }));
+    }
+
+    setAvailableFields(nextAvailable);
+    setAllCustomFields(nextAll);
+    setDialogSections(nextSections);
+    persistCustomFields(nextAll);
+    setPendingDeleteField(null);
+  }, [
+    pendingDeleteField,
+    activeTab,
+    availableFields,
+    allCustomFields,
+    dialogSections,
+    persistCustomFields,
+  ]);
+
+  // Called from delete icon click — opens the confirmation dialog
+  const requestDeleteField = useCallback((fieldName: string, displayName: string) => {
+    setPendingDeleteField({ fieldName, displayName });
+  }, []);
+
+  // Cancel the pending deletion
+  const cancelDeleteField = useCallback(() => {
+    setPendingDeleteField(null);
+  }, []);
+
   const handleSaveCustomField = useCallback(
     (field: ICustomField) => {
       const tabsToUpdate: TabId[] = [];
@@ -586,37 +651,30 @@ export const TicketTypeLayoutDialog = ({
       if (field.fieldUse?.__ticketDetails__) tabsToUpdate.push('ticketDetails');
       if (tabsToUpdate.length === 0) tabsToUpdate.push(activeTab);
 
-      setAvailableFields((prev) => {
-        const next = { ...prev };
-        for (const tab of tabsToUpdate) {
-          const idx = next[tab].findIndex((f) => f.fieldName === field.fieldName);
-          if (idx >= 0) {
-            next[tab] = [...next[tab]];
-            next[tab][idx] = field;
-          } else {
-            next[tab] = [...next[tab], field];
-          }
-        }
-        return next;
-      });
-
-      // Also update allCustomFields so the field is visible in both panels
-      setAllCustomFields((prev) => {
-        const idx = prev.findIndex((f) => f.id === field.id);
-        const next = [...prev];
+      // Compute new arrays before setting any state so all updates are
+      // consistent (avoiding nested state-setter calls inside updaters).
+      const nextAvailable = { ...availableFields };
+      for (const tab of tabsToUpdate) {
+        const idx = nextAvailable[tab].findIndex((f) => f.fieldName === field.fieldName);
         if (idx >= 0) {
-          next[idx] = field;
+          nextAvailable[tab] = [...nextAvailable[tab]];
+          nextAvailable[tab][idx] = field;
         } else {
-          next.push(field);
+          nextAvailable[tab] = [...nextAvailable[tab], field];
         }
-        // Persist to the parent so the backend is updated
-        persistCustomFields(next);
-        return next;
-      });
+      }
+      const idx = allCustomFields.findIndex((f) => f.id === field.id);
+      const nextAll =
+        idx >= 0
+          ? allCustomFields.map((f) => (f.id === field.id ? field : f))
+          : [...allCustomFields, field];
 
+      setAvailableFields(nextAvailable);
+      setAllCustomFields(nextAll);
+      persistCustomFields(nextAll);
       setAddFieldDialogOpen(false);
     },
-    [activeTab, persistCustomFields],
+    [activeTab, availableFields, allCustomFields, persistCustomFields],
   );
 
   const handleEditField = useCallback((field: ICustomField) => {
@@ -630,70 +688,26 @@ export const TicketTypeLayoutDialog = ({
       if (updated.fieldUse?.__ticketDetails__) tabsToUpdate.push('ticketDetails');
       if (tabsToUpdate.length === 0) tabsToUpdate.push(activeTab);
 
-      setAvailableFields((prev) => {
-        const next = { ...prev };
-        for (const tab of tabsToUpdate) {
-          const idx = next[tab].findIndex((f) => f.fieldName === updated.fieldName);
-          if (idx >= 0) {
-            next[tab] = [...next[tab]];
-            next[tab][idx] = updated;
-          }
-        }
-        return next;
-      });
-
-      // Also update allCustomFields and persist to the parent
-      setAllCustomFields((prev) => {
-        const idx = prev.findIndex((f) => f.id === updated.id);
+      const nextAvailable = { ...availableFields };
+      for (const tab of tabsToUpdate) {
+        const idx = nextAvailable[tab].findIndex((f) => f.fieldName === updated.fieldName);
         if (idx >= 0) {
-          const next = [...prev];
-          next[idx] = updated;
-          persistCustomFields(next);
-          return next;
+          nextAvailable[tab] = [...nextAvailable[tab]];
+          nextAvailable[tab][idx] = updated;
         }
-        return prev;
-      });
+      }
+      const idx = allCustomFields.findIndex((f) => f.id === updated.id);
+      const nextAll =
+        idx >= 0
+          ? allCustomFields.map((f) => (f.id === updated.id ? updated : f))
+          : [...allCustomFields, updated];
 
+      setAvailableFields(nextAvailable);
+      setAllCustomFields(nextAll);
+      persistCustomFields(nextAll);
       setEditingField(null);
     },
-    [activeTab, persistCustomFields],
-  );
-
-  const handleRemoveField = useCallback(
-    (fieldName: string) => {
-      // Find the fieldKey to also remove from any section
-      const cf = currentAvailable.find((f) => f.fieldName === fieldName);
-      const fieldKey = cf?.fieldKey ?? fieldName;
-
-      // Also track the id for removal from allCustomFields
-      const removedId = cf?.id;
-
-      setAvailableFields((prev) => ({
-        ...prev,
-        [activeTab]: prev[activeTab].filter((f) => f.fieldName !== fieldName),
-      }));
-      // Remove from all sections across both tabs
-      setDialogSections((prev) => {
-        const next: Record<TabId, DialogSection[]> = { ...prev };
-        for (const tab of TAB_ORDER) {
-          next[tab] = next[tab].map((s) => ({
-            ...s,
-            fields: s.fields.filter((f) => f !== fieldKey),
-          }));
-        }
-        return next;
-      });
-
-      // Remove from allCustomFields and persist
-      if (removedId) {
-        setAllCustomFields((prev) => {
-          const next = prev.filter((f) => f.id !== removedId);
-          persistCustomFields(next);
-          return next;
-        });
-      }
-    },
-    [activeTab, currentAvailable, persistCustomFields],
+    [activeTab, availableFields, allCustomFields, persistCustomFields],
   );
 
   // ── Save ─────────────────────────────────────────────────────────
@@ -946,7 +960,7 @@ export const TicketTypeLayoutDialog = ({
                         size='small'
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleRemoveField(field.fieldName);
+                          requestDeleteField(field.fieldName, field.fieldName);
                         }}
                         sx={{ p: 0.3, opacity: 0.5, '&:hover': { opacity: 1, color: '#d32f2f' } }}
                       >
@@ -1354,6 +1368,81 @@ export const TicketTypeLayoutDialog = ({
         </Button>
       </DialogActions>
 
+      {/* ── Delete Confirmation Dialog ────────────────────────────────── */}
+      <Dialog
+        open={!!pendingDeleteField}
+        onClose={cancelDeleteField}
+        maxWidth='xs'
+        fullWidth
+        slotProps={{
+          transition: { unmountOnExit: true },
+          paper: { sx: { borderRadius: 3, overflow: 'hidden' } },
+        }}
+      >
+        {/* Header */}
+        <Box
+          sx={{
+            px: 3,
+            py: 2,
+            background: '#0369a1',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+          }}
+        >
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              borderRadius: 1.5,
+              bgcolor: 'rgba(255,255,255,0.18)',
+              border: '1.5px solid rgba(255,255,255,0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <DeleteOutlineIcon sx={{ color: '#fff' }} />
+          </Box>
+          <Box>
+            <Typography
+              sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff', lineHeight: 1.2 }}
+            >
+              Delete Custom Field
+            </Typography>
+            <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}>
+              This action cannot be undone
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Body */}
+        <Box sx={{ px: 3, py: 2.5 }}>
+          <Typography variant='body2'>
+            Are you sure you want to delete <strong>{pendingDeleteField?.displayName}</strong>?
+          </Typography>
+          <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
+            This will remove the field from all sections permanently.
+          </Typography>
+        </Box>
+
+        {/* Footer actions */}
+        <Box sx={{ px: 3, pb: 2.5, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+          <Button onClick={cancelDeleteField} variant='outlined' sx={{ textTransform: 'none' }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDeleteField}
+            color='error'
+            variant='contained'
+            sx={{ textTransform: 'none' }}
+          >
+            Delete
+          </Button>
+        </Box>
+      </Dialog>
+
       {/* ── Add Custom Field Dialog ─────────────────────────────────── */}
       <CustomFieldFormDialog
         open={addFieldDialogOpen}
@@ -1365,6 +1454,7 @@ export const TicketTypeLayoutDialog = ({
           name: tt.name,
         }))}
         defaultTicketType={ticketType?.type}
+        defaultFieldUseFlag={TAB_TO_FIELD_USE_FLAG[activeTab]}
         accent='#0369a1'
         onClose={() => setAddFieldDialogOpen(false)}
         onSave={handleSaveCustomField}
