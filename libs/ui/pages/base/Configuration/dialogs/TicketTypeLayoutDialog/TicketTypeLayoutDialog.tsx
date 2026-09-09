@@ -1,32 +1,17 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Tabs,
-  Tab,
-  TextField,
-  Button,
-  IconButton,
-  Tooltip,
-} from '@serviceops/component';
+import { Box, Typography, Tabs, Tab, Button, IconButton, Tooltip } from '@serviceops/component';
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
 import CreateIcon from '@mui/icons-material/NoteAdd';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import EditIcon from '@mui/icons-material/Edit';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { alpha, Dialog, DialogActions } from '@mui/material';
 import { ITicketType, ICustomField, ITicketTypeLayoutConfig } from '@serviceops/interfaces';
-import {
-  getDefaultLayoutConfig,
-  mergeLayoutConfig,
-  isCustomFieldKey,
-} from '@serviceops/tickettypelayout';
+import { getDefaultLayoutConfig, mergeLayoutConfig } from '@serviceops/tickettypelayout';
 import { CustomFieldFormDialog } from '../CustomFieldFormDialog';
 import { SectionFormDialog } from '../SectionFormDialog';
 
@@ -44,26 +29,6 @@ type DialogSection = {
 const TAB_ORDER: TabId[] = ['createTicket', 'ticketDetails'];
 
 const POOL_PANEL_WIDTH = 320;
-
-// Map built-in section keys to their tab. Custom sections store their
-// tab in layoutConfig.customSections[id].tab.
-const SECTION_TO_TAB_MAP: Record<string, TabId> = {
-  ticketInformation: 'createTicket',
-  categorization: 'createTicket',
-  description: 'createTicket',
-  additionalDetails: 'createTicket',
-  priorityAssignment: 'createTicket',
-  auditInformation: 'createTicket',
-  attachments: 'createTicket',
-  infoBar: 'ticketDetails',
-  sideBar: 'ticketDetails',
-  ticketOptions: 'ticketDetails',
-  assignment: 'ticketDetails',
-  contactAndBilling: 'ticketDetails',
-  reporting: 'ticketDetails',
-  datesAndUsers: 'ticketDetails',
-  additionalFields: 'ticketDetails',
-};
 
 const TAB_TO_FIELD_USE_FLAG: Record<TabId, '__createTicket__' | '__ticketDetails__'> = {
   createTicket: '__createTicket__',
@@ -104,75 +69,23 @@ function initialAvailableFields(customFields: ICustomField[], tab: TabId): ICust
   });
 }
 
-// Resolve the tab for a section ID — built-in keys use the static map,
-// custom keys carry their tab in layoutConfig.customSections.
+// Resolve the tab for a section ID from layoutConfig.customSections.
+// Since the dialog only contains user-created custom sections, each one
+// carries its tab assignment directly — no hardcoded map needed.
 function resolveSectionTab(sectionId: string, layoutConfig: ITicketTypeLayoutConfig): TabId {
-  if (sectionId in SECTION_TO_TAB_MAP) return SECTION_TO_TAB_MAP[sectionId];
-  const custom = layoutConfig.customSections?.[sectionId];
-  if (custom?.tab) return custom.tab;
-  return 'createTicket';
+  return layoutConfig.customSections?.[sectionId]?.tab ?? 'createTicket';
 }
 
-// Build dialog sections directly from layoutConfig — no hardcoded section list.
-// All built-in sections are always shown so users can drag fields into them.
-// System fields are filtered from display — only custom fields (cf_*) appear
-// inside sections. Sections with no custom fields show an empty drop zone.
+// Build dialog sections directly from layoutConfig.
+// Only custom (user-created) sections are shown — built-in system sections
+// are NOT hardcoded here. The user adds sections manually via the "+" button.
+// On save, built-in system fields are preserved by merging with defaults.
 function buildDialogSectionsFromConfig(
   layoutConfig: ITicketTypeLayoutConfig,
 ): Record<TabId, DialogSection[]> {
   const result: Record<TabId, DialogSection[]> = { createTicket: [], ticketDetails: [] };
 
-  // Built-in createTicket sections
-  const ctKeys: (keyof ITicketTypeLayoutConfig['createTicket'])[] = [
-    'ticketInformation',
-    'categorization',
-    'description',
-    'additionalDetails',
-    'priorityAssignment',
-    'auditInformation',
-    'attachments',
-  ];
-  for (const key of ctKeys) {
-    const cfg = layoutConfig.createTicket[key];
-    if (!cfg) continue;
-    const customOnly = (cfg.selectedFields ?? []).filter((f) => isCustomFieldKey(f));
-    result.createTicket.push({
-      id: key,
-      title: cfg.sectionTitle ?? key,
-      fields: customOnly,
-      accessControl: cfg.accessControl,
-    });
-  }
-
-  // Built-in ticketDetails sections
-  const detailKeys: (keyof Omit<ITicketTypeLayoutConfig, 'createTicket' | 'customSections'>)[] = [
-    'infoBar',
-    'sideBar',
-    'ticketOptions',
-    'assignment',
-    'contactAndBilling',
-    'reporting',
-    'datesAndUsers',
-    'additionalFields',
-    'ticketCore',
-    'changeManagement',
-    'vendorBug',
-    'changeControl',
-    'resolutionWorkaround',
-  ];
-  for (const key of detailKeys) {
-    const cfg = layoutConfig[key];
-    if (!cfg || !('selectedFields' in cfg)) continue;
-    const customOnly = (cfg.selectedFields ?? []).filter((f) => isCustomFieldKey(f));
-    result.ticketDetails.push({
-      id: key,
-      title: (cfg as { sectionTitle?: string }).sectionTitle ?? key,
-      fields: customOnly,
-      accessControl: (cfg as { accessControl?: Record<string, boolean> }).accessControl,
-    });
-  }
-
-  // Custom sections (user-created)
+  // Custom sections (user-created) — these are the only sections shown in the dialog
   const { customSections } = layoutConfig;
   if (customSections) {
     for (const [id, cfg] of Object.entries(customSections)) {
@@ -206,9 +119,8 @@ export const TicketTypeLayoutDialog = ({
   const [addFieldDialogOpen, setAddFieldDialogOpen] = useState(false);
   const [editingField, setEditingField] = useState<ICustomField | null>(null);
 
-  // Section title editing (for inline editing of existing section titles)
-  const [editingSection, setEditingSection] = useState<{ id: string; temp: string } | null>(null);
-  const sectionTitleInputRef = useRef<HTMLInputElement>(null);
+  // Section editing via SectionFormDialog (reuses the same dialog used for adding sections)
+  const [editingSection, setEditingSection] = useState<DialogSection | null>(null);
 
   // Add Section dialog
   const [addSectionDialogOpen, setAddSectionDialogOpen] = useState(false);
@@ -350,64 +262,57 @@ export const TicketTypeLayoutDialog = ({
         [activeTab]: [...prev[activeTab], { id, title, fields: [], accessControl }],
       }));
 
-      // Also persist immediately to layoutConfig so it's not lost
-      setLayoutConfig((prev) => {
-        const next = { ...prev, customSections: { ...(prev.customSections ?? {}) } };
-        next.customSections![id] = { title, fields: [], tab: activeTab, accessControl };
-        return next;
-      });
+      // Persist immediately to parent so the section appears without waiting
+      // for the main "Save" button.
+      onSave(
+        mergeLayoutConfig({
+          ...layoutConfig,
+          customSections: {
+            ...layoutConfig.customSections,
+            [id]: { title, fields: [], tab: activeTab, accessControl },
+          },
+        }),
+      );
     },
-    [activeTab],
+    [activeTab, layoutConfig, onSave],
   );
 
   const handleRemoveSection = useCallback(
     (sectionId: string) => {
-      const tab = SECTION_TO_TAB_MAP[sectionId] ?? activeTab;
       setDialogSections((prev) => ({
         ...prev,
-        [tab]: prev[tab].filter((s) => s.id !== sectionId),
+        [activeTab]: prev[activeTab].filter((s) => s.id !== sectionId),
       }));
 
-      // Also remove from layoutConfig.customSections if it's a custom section
-      if (sectionId.startsWith('custom_')) {
-        setLayoutConfig((prev) => {
-          if (!prev.customSections?.[sectionId]) return prev;
-          const next = { ...prev, customSections: { ...prev.customSections } };
-          delete next.customSections![sectionId];
-          return next;
-        });
-      }
+      // Persist immediately to parent so the deletion applies without waiting
+      // for the main "Save" button.
+      const nextCustom = { ...(layoutConfig.customSections ?? {}) };
+      delete nextCustom[sectionId];
+      onSave(mergeLayoutConfig({ ...layoutConfig, customSections: nextCustom }));
     },
-    [activeTab],
+    [activeTab, layoutConfig, onSave],
   );
 
-  const handleEditSectionTitleStart = useCallback((sectionId: string, title: string) => {
-    setEditingSection({ id: sectionId, temp: title });
+  const handleEditSectionTitleStart = useCallback((section: DialogSection) => {
+    setEditingSection(section);
   }, []);
 
   const handleUpdateSectionTitle = useCallback(
     (sectionId: string, title: string) => {
-      const tab = SECTION_TO_TAB_MAP[sectionId] ?? activeTab;
       setDialogSections((prev) => ({
         ...prev,
-        [tab]: prev[tab].map((s) => (s.id === sectionId ? { ...s, title } : s)),
+        [activeTab]: prev[activeTab].map((s) => (s.id === sectionId ? { ...s, title } : s)),
       }));
+
+      // Persist immediately to parent
+      const nextCustom = { ...(layoutConfig.customSections ?? {}) };
+      if (nextCustom[sectionId]) {
+        nextCustom[sectionId] = { ...nextCustom[sectionId], title };
+      }
+      onSave(mergeLayoutConfig({ ...layoutConfig, customSections: nextCustom }));
     },
-    [activeTab],
+    [activeTab, layoutConfig, onSave],
   );
-
-  const handleEditSectionTitleSave = useCallback(() => {
-    if (!editingSection) return;
-    const newTitle = editingSection.temp.trim();
-    if (newTitle) {
-      handleUpdateSectionTitle(editingSection.id, newTitle);
-    }
-    setEditingSection(null);
-  }, [editingSection, handleUpdateSectionTitle]);
-
-  const handleEditSectionTitleCancel = useCallback(() => {
-    setEditingSection(null);
-  }, []);
 
   // ── Section Field Handlers ───────────────────────────────────────
 
@@ -814,48 +719,16 @@ export const TicketTypeLayoutDialog = ({
     newConfig.customSections = {};
     for (const tab of TAB_ORDER) {
       for (const section of dialogSections[tab]) {
-        if (section.id.startsWith('custom_')) {
-          newConfig.customSections![section.id] = {
-            title: section.title,
-            fields: [...section.fields],
-            tab,
-            accessControl: section.accessControl,
-          };
-        }
+        newConfig.customSections![section.id] = {
+          title: section.title,
+          fields: [...section.fields],
+          tab,
+          accessControl: section.accessControl,
+        };
       }
     }
 
-    // Write selectedFields + sectionTitle for built-in sections.
-    // Only custom fields are shown in the dialog, so we append them to the
-    // existing default system fields rather than replacing.
-    for (const tab of TAB_ORDER) {
-      for (const section of dialogSections[tab]) {
-        if (section.id.startsWith('custom_')) continue;
-        if (tab === 'createTicket') {
-          const subKey = section.id as keyof typeof newConfig.createTicket;
-          const sub = { ...newConfig.createTicket } as Record<string, any>;
-          const existing = sub[subKey]?.selectedFields ?? [];
-          const systemFields = existing.filter((f: string) => !isCustomFieldKey(f));
-          const combined = [...systemFields, ...section.fields];
-          sub[subKey] = {
-            selectedFields: combined,
-            sectionTitle: section.title,
-            accessControl: section.accessControl,
-          };
-          newConfig.createTicket = sub as typeof newConfig.createTicket;
-        } else {
-          const existing = (newConfig as any)[section.id]?.selectedFields ?? [];
-          const systemFields = existing.filter((f: string) => !isCustomFieldKey(f));
-          (newConfig as any)[section.id] = {
-            selectedFields: [...systemFields, ...section.fields],
-            sectionTitle: section.title,
-            accessControl: section.accessControl,
-          };
-        }
-      }
-    }
-
-    // Merge with defaults to ensure completeness
+    // Merge with defaults to preserve system fields + add default createTicket sections
     const merged = mergeLayoutConfig(newConfig);
     onSave(merged);
     onClose();
@@ -1142,8 +1015,6 @@ export const TicketTypeLayoutDialog = ({
               </Box>
             ) : (
               currentSections.map((section, sectionIndex) => {
-                const isEditing = editingSection?.id === section.id;
-
                 return (
                   <Box
                     key={section.id}
@@ -1173,122 +1044,50 @@ export const TicketTypeLayoutDialog = ({
                         bgcolor: alpha('#0369a1', 0.04),
                       }}
                     >
-                      {isEditing ? (
-                        <>
-                          <Box sx={{ flex: 1 }}>
-                            <TextField
-                              inputRef={sectionTitleInputRef}
-                              value={editingSection.temp}
-                              onChange={(e) =>
-                                setEditingSection((prev) =>
-                                  prev ? { ...prev, temp: e.target.value } : null,
-                                )
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  handleEditSectionTitleSave();
-                                } else if (e.key === 'Escape') {
-                                  handleEditSectionTitleCancel();
-                                }
-                              }}
-                              size='small'
-                              sx={{
-                                '& .MuiInputBase-root': {
-                                  bgcolor: 'background.paper',
-                                  borderRadius: 1.5,
-                                },
-                                '& .MuiInputBase-input': {
-                                  fontWeight: 700,
-                                  fontSize: '0.82rem',
-                                  padding: '4px 8px',
-                                },
-                              }}
-                            />
-                          </Box>
-                          <Tooltip title='Submit'>
-                            <IconButton
-                              size='small'
-                              onClick={handleEditSectionTitleSave}
-                              sx={{
-                                p: 0.7,
-                                color: editingSection.temp.trim()
-                                  ? 'primary.main'
-                                  : 'text.disabled',
-                                '&:hover': {
-                                  color: 'primary.dark',
-                                  bgcolor: 'rgba(3, 105, 161, 0.08)',
-                                },
-                              }}
-                            >
-                              <CheckCircleIcon sx={{ fontSize: '1.2rem' }} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title='Cancel'>
-                            <IconButton
-                              size='small'
-                              onClick={handleEditSectionTitleCancel}
-                              sx={{
-                                p: 0.7,
-                                color: 'text.secondary',
-                                '&:hover': {
-                                  color: '#d32f2f',
-                                  bgcolor: 'rgba(211, 47, 47, 0.08)',
-                                },
-                              }}
-                            >
-                              <CloseIcon sx={{ fontSize: '1rem' }} />
-                            </IconButton>
-                          </Tooltip>
-                        </>
-                      ) : (
-                        <>
-                          <Typography
-                            sx={{
-                              flex: 1,
-                              fontSize: '0.82rem',
-                              fontWeight: 700,
-                              cursor: 'pointer',
-                              '&:hover': { color: 'primary.main' },
-                            }}
-                            onClick={() => handleEditSectionTitleStart(section.id, section.title)}
-                          >
-                            {section.title}
-                          </Typography>
-                          <Typography
-                            sx={{
-                              fontSize: '0.7rem',
-                              color: 'text.secondary',
-                              fontWeight: 500,
-                              mr: 0.5,
-                            }}
-                          >
-                            {section.fields.length} field{section.fields.length !== 1 ? 's' : ''}
-                          </Typography>
-                          <IconButton
-                            size='small'
-                            onClick={() => handleEditSectionTitleStart(section.id, section.title)}
-                            sx={{
-                              p: 0.3,
-                              opacity: 0.5,
-                              '&:hover': { opacity: 1, color: '#1976d2' },
-                            }}
-                          >
-                            <EditIcon sx={{ fontSize: '0.85rem' }} />
-                          </IconButton>
-                          <IconButton
-                            size='small'
-                            onClick={() => requestDeleteSection(section.id, section.title)}
-                            sx={{
-                              p: 0.3,
-                              opacity: 0.5,
-                              '&:hover': { opacity: 1, color: '#d32f2f' },
-                            }}
-                          >
-                            <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
-                          </IconButton>
-                        </>
-                      )}
+                      <Typography
+                        sx={{
+                          flex: 1,
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          '&:hover': { color: 'primary.main' },
+                        }}
+                        onClick={() => handleEditSectionTitleStart(section)}
+                      >
+                        {section.title}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: '0.7rem',
+                          color: 'text.secondary',
+                          fontWeight: 500,
+                          mr: 0.5,
+                        }}
+                      >
+                        {section.fields.length} field{section.fields.length !== 1 ? 's' : ''}
+                      </Typography>
+                      <IconButton
+                        size='small'
+                        onClick={() => handleEditSectionTitleStart(section)}
+                        sx={{
+                          p: 0.3,
+                          opacity: 0.5,
+                          '&:hover': { opacity: 1, color: '#1976d2' },
+                        }}
+                      >
+                        <EditIcon sx={{ fontSize: '0.85rem' }} />
+                      </IconButton>
+                      <IconButton
+                        size='small'
+                        onClick={() => requestDeleteSection(section.id, section.title)}
+                        sx={{
+                          p: 0.3,
+                          opacity: 0.5,
+                          '&:hover': { opacity: 1, color: '#d32f2f' },
+                        }}
+                      >
+                        <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
+                      </IconButton>
                     </Box>
 
                     {/* Section fields */}
@@ -1661,9 +1460,10 @@ export const TicketTypeLayoutDialog = ({
         onSave={handleEditFieldSave}
       />
 
-      {/* ── Add Custom Section Dialog ───────────────────────────────── */}
+      {/* ── Section Form Dialog (used for both add and edit) ───────────── */}
       <SectionFormDialog
-        open={addSectionDialogOpen}
+        open={!!editingSection || addSectionDialogOpen}
+        editingSection={editingSection}
         existingSections={currentSections}
         ticketTypes={ticketTypes.map((tt) => ({
           type: tt.type,
@@ -1671,9 +1471,19 @@ export const TicketTypeLayoutDialog = ({
         }))}
         defaultTicketType={ticketType?.type}
         accent='#0369a1'
-        onClose={() => setAddSectionDialogOpen(false)}
+        onClose={() => {
+          setEditingSection(null);
+          setAddSectionDialogOpen(false);
+        }}
         onSave={(section) => {
-          handleAddSectionWithTitle(section.title, section.accessControl);
+          if (editingSection && editingSection.id === section.id) {
+            // Edit mode — update the existing section's title/accessControl
+            handleUpdateSectionTitle(section.id, section.title);
+          } else if (!editingSection) {
+            // Add mode — add new section
+            handleAddSectionWithTitle(section.title, section.accessControl);
+          }
+          setEditingSection(null);
           setAddSectionDialogOpen(false);
         }}
       />

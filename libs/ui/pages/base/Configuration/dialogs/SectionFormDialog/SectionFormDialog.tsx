@@ -25,6 +25,8 @@ interface SectionFormDialogProps {
   open: boolean;
   /** Pass all existing section titles for duplicate detection. */
   existingSections: DialogSection[];
+  /** The section being edited. When provided, dialog enters edit mode. */
+  editingSection?: DialogSection | null;
   /** Ticket types to show in the Access Control list. */
   ticketTypes: TicketTypeRef[];
   accent?: string;
@@ -36,6 +38,7 @@ interface SectionFormDialogProps {
 const SectionFormDialog = ({
   open,
   existingSections = [],
+  editingSection,
   ticketTypes = [],
   accent = DEFAULT_ACCENT,
   defaultTicketType,
@@ -58,6 +61,8 @@ const SectionFormDialog = ({
   }>({});
 
   const [fieldUseExpanded, setFieldUseExpanded] = useState(false);
+
+  const isEditMode = !!editingSection;
 
   // Build empty use-flags map keyed by ticket type `type` string
   const emptyUseFlags = useMemo(() => {
@@ -92,17 +97,32 @@ const SectionFormDialog = ({
     setDuplicateAlert(null);
     setFieldUseExpanded(false);
 
-    const initial: Partial<DialogSection> = {
-      title: '',
-      accessControl: (() => {
-        const flags: Record<string, boolean> = {};
-        for (const tt of ticketTypes) flags[tt.type] = false;
-        return flags;
-      })(),
-    };
+    const initial: Partial<DialogSection> = editingSection
+      ? {
+          id: editingSection.id,
+          title: editingSection.title,
+          fields: [...editingSection.fields],
+          accessControl: editingSection.accessControl
+            ? { ...editingSection.accessControl }
+            : (() => {
+                const flags: Record<string, boolean> = {};
+                for (const tt of ticketTypes) flags[tt.type] = false;
+                return flags;
+              })(),
+        }
+      : {
+          title: '',
+          fields: [],
+          accessControl: (() => {
+            const flags: Record<string, boolean> = {};
+            for (const tt of ticketTypes) flags[tt.type] = false;
+            return flags;
+          })(),
+        };
+
     formRef.current = initial;
     setForm(initial);
-  }, [open, ticketTypes]);
+  }, [open, editingSection, ticketTypes]);
 
   const validateRequired = (_f: Partial<DialogSection>): typeof requiredErrors => {
     const errs: typeof requiredErrors = {};
@@ -118,6 +138,11 @@ const SectionFormDialog = ({
     const exists = existingSections.some(
       (s) => stripAlphaNumeric(s.title).trim().toLowerCase() === name,
     );
+    // In edit mode, exclude the current section from duplicate check
+    if (exists && editingSection) {
+      const currentName = stripAlphaNumeric(editingSection.title).trim().toLowerCase();
+      if (name === currentName) return null;
+    }
     if (exists) return 'Section Name already exists. Please use a different value.';
     return null;
   };
@@ -127,7 +152,7 @@ const SectionFormDialog = ({
     if (!open) return;
     setDuplicateAlert(computeDuplicateMessage());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form, open, existingSections]);
+  }, [form, open, existingSections, editingSection]);
 
   const handleSubmit = () => {
     const reqErrs = validateRequired(formRef.current);
@@ -142,15 +167,14 @@ const SectionFormDialog = ({
     }
     setDuplicateAlert(null);
 
-    const id = `custom_${Date.now()}`;
     const result: DialogSection = {
-      id,
+      id: editingSection ? editingSection.id : `custom_${Date.now()}`,
       title: formRef.current.title!.trim(),
-      fields: [],
+      fields: editingSection ? [...editingSection.fields] : [],
       accessControl: formRef.current.accessControl,
     };
     onSave(result);
-    success('Section added successfully');
+    success(isEditMode ? 'Section updated successfully' : 'Section added successfully');
   };
 
   const titleError = reqError(touched.title, requiredErrors.title);
@@ -160,11 +184,11 @@ const SectionFormDialog = ({
       open={open}
       onClose={onClose}
       onSubmit={handleSubmit}
-      isEdit={false}
+      isEdit={isEditMode}
       icon={<ViewModuleIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
       accent={accent}
-      title='Custom Section'
-      submitLabel='Submit'
+      title={isEditMode ? 'Edit Custom Section' : 'Custom Section'}
+      submitLabel={isEditMode ? 'Update' : 'Submit'}
       maxWidth='lg'
     >
       {duplicateAlert && (
