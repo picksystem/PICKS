@@ -148,10 +148,19 @@ export const useTicketDetail = () => {
     [ticketTypes, incident?.number],
   );
 
-  const layoutConfig = useMemo(
-    () => mergeLayoutConfig(resolvedTicketType?.layoutConfig),
-    [resolvedTicketType],
-  );
+  const layoutConfig = useMemo(() => {
+    const base = mergeLayoutConfig(resolvedTicketType?.layoutConfig);
+    // Filter customSections by the current ticket type's accessControl
+    if (!base.customSections) return base;
+    const filteredSections: typeof base.customSections = {};
+    for (const [id, section] of Object.entries(base.customSections)) {
+      const ac = section.accessControl;
+      if (!ac || Object.keys(ac).length === 0 || ac[ticketType] === true) {
+        filteredSections[id] = { ...section, fields: [...section.fields] };
+      }
+    }
+    return { ...base, customSections: filteredSections };
+  }, [resolvedTicketType, ticketType]);
 
   // Derive unique dropdown options — merge users list with existing ticket values
   const userNames = useMemo<string[]>(

@@ -15,6 +15,8 @@ import {
   ServiceRequestStatus,
   CreateIncidentSchema,
   IAdminTicket,
+  ITicketTypeLayoutConfig,
+  ICustomSectionConfig,
 } from '@serviceops/interfaces';
 import {
   useAuth,
@@ -24,6 +26,10 @@ import {
 } from '@serviceops/hooks';
 import { constants } from '@serviceops/utils';
 import { useConfiguration } from '@serviceops/confighooks';
+import {
+  filterCustomFieldsByTicketType,
+  filterSectionsByTicketType,
+} from '@serviceops/tickettypelayout';
 import { channelOptions, generateTicketNumber, calculatePriority, initialValues } from '../util';
 
 export interface CreateTicketDetailProps {
@@ -40,7 +46,26 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   const { data: ticketTypes } = useGetTicketTypeQuery();
   const record = ticketTypes?.find((t) => t.type === ticketType);
   const allCustomFields = record?.customFields ?? [];
+  const filteredCustomFields = useMemo(
+    () => filterCustomFieldsByTicketType(allCustomFields, ticketType),
+    [allCustomFields, ticketType],
+  );
   const layoutConfig = record?.layoutConfig;
+
+  // Filter layoutConfig's customSections by the current ticket type's accessControl
+  const filteredLayoutConfig = useMemo<ITicketTypeLayoutConfig | undefined>(() => {
+    if (!layoutConfig?.customSections) return layoutConfig ?? undefined;
+    const cs = layoutConfig.customSections as Record<string, ICustomSectionConfig>;
+    const filteredSections: Record<string, ICustomSectionConfig> = {};
+    for (const [id, section] of Object.entries(cs) as [string, ICustomSectionConfig][]) {
+      const ac = section.accessControl;
+      // Include if no accessControl set (legacy) or if ticket type is allowed
+      if (!ac || Object.keys(ac).length === 0 || ac[ticketType] === true) {
+        filteredSections[id] = { ...section, fields: [...section.fields] };
+      }
+    }
+    return { ...layoutConfig, customSections: filteredSections };
+  }, [layoutConfig, ticketType]);
   const config = {
     title: `Create ${record?.displayName || record?.name || ticketType}`,
     prefix: record?.prefix || 'TKT',
@@ -107,10 +132,10 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   >([]);
   const [manualCallerOpen, setManualCallerOpen] = useState(false);
 
-  // ── Custom field values ──────────────────────────────────────────────
+  // ── Custom field values (filtered by ticket type access control) ──────────
   const initCfValues = useCallback((): Record<string, string | boolean> => {
     const init: Record<string, string | boolean> = {};
-    for (const cf of allCustomFields) {
+    for (const cf of filteredCustomFields) {
       if (cf.defaultValue !== undefined) {
         init[cf.fieldKey] = cf.defaultValue;
       } else if (cf.fieldType === 'checkbox') {
@@ -120,17 +145,17 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
       }
     }
     return init;
-  }, [allCustomFields]);
+  }, [filteredCustomFields]);
 
   const [cfValues, setCfValues] = useState<Record<string, string | boolean>>(initCfValues);
 
-  // When allCustomFields grows (e.g., a new field is added), ensure cfValues
+  // When filteredCustomFields grows (e.g., a new field is added), ensure cfValues
   // has an entry for every current field so the renderer and submit can see it.
   useEffect(() => {
     setCfValues((prev) => {
       const next = { ...prev };
       let changed = false;
-      for (const cf of allCustomFields) {
+      for (const cf of filteredCustomFields) {
         if (!(cf.fieldKey in next)) {
           if (cf.defaultValue !== undefined) next[cf.fieldKey] = cf.defaultValue;
           else if (cf.fieldType === 'checkbox') next[cf.fieldKey] = false;
@@ -140,7 +165,7 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
       }
       return changed ? next : prev;
     });
-  }, [allCustomFields]);
+  }, [filteredCustomFields]);
 
   const setCfValue = useCallback((key: string, value: string | boolean) => {
     setCfValues((prev) => ({ ...prev, [key]: value }));
@@ -479,8 +504,8 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     handleCreateTicket,
     handleSaveAsDraft,
     handleSearchForSolution,
-    customFields: allCustomFields,
-    layoutConfig,
+    customFields: filteredCustomFields,
+    layoutConfig: filteredLayoutConfig,
     getCfValue,
     setCfValue,
   };

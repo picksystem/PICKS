@@ -1,4 +1,8 @@
-import { ITicketTypeLayoutConfig } from '@serviceops/interfaces';
+import {
+  ITicketTypeLayoutConfig,
+  ICustomField,
+  ICustomSectionConfig,
+} from '@serviceops/interfaces';
 
 export interface FieldOption {
   key: string;
@@ -443,7 +447,6 @@ export function getDefaultLayoutConfig(createTicketSections?: string[]): ITicket
   };
 }
 
-
 /**
  * Fills in any section missing from a ticket type's saved layoutConfig
  * (e.g. persisted before a new section existed, or never saved) with the
@@ -483,8 +486,7 @@ export function mergeLayoutConfig(
       sectionTitle: stored.reporting?.sectionTitle ?? base.reporting.sectionTitle,
     },
     datesAndUsers: {
-      selectedFields:
-        stored.datesAndUsers?.selectedFields ?? base.datesAndUsers.selectedFields,
+      selectedFields: stored.datesAndUsers?.selectedFields ?? base.datesAndUsers.selectedFields,
       sectionTitle: stored.datesAndUsers?.sectionTitle ?? base.datesAndUsers.sectionTitle,
     },
     additionalFields: {
@@ -586,4 +588,60 @@ export function applyFieldConfig<T extends { key: string }>(
   const byKey = new Map(items.map((item) => [item.key, item]));
   const ordered = selectedFields.map((key) => byKey.get(key)).filter((item): item is T => !!item);
   return typeof maxFields === 'number' ? ordered.slice(0, maxFields) : ordered;
+}
+
+// ── Access Control filtering ─────────────────────────────────────
+
+/**
+ * Filters custom fields to only those enabled for the given ticket type.
+ * A field is visible on a ticket type when fieldUse[ticketType] === true,
+ * or when it has no fieldUse flags (legacy fields always show).
+ */
+export function filterCustomFieldsByTicketType(
+  fields: ICustomField[],
+  ticketType: string,
+): ICustomField[] {
+  if (!ticketType) return fields;
+  return fields.filter((cf) => {
+    const flags = cf.fieldUse;
+    // If the field has no use flags at all, include it (legacy behavior)
+    if (!flags || Object.keys(flags).length === 0) return true;
+    // Otherwise only show if explicitly enabled for this ticket type
+    return flags[ticketType] === true;
+  });
+}
+
+/**
+ * Filters custom sections to only those whose accessControl allows the
+ * given ticket type. A section is visible when accessControl[ticketType] === true,
+ * or when it has no accessControl (legacy sections always show).
+ */
+export function filterSectionsByTicketType(
+  sections: ICustomSectionConfig[],
+  ticketType: string,
+): ICustomSectionConfig[] {
+  if (!ticketType) return sections;
+  return sections.filter((s) => {
+    const ac = s.accessControl;
+    // If the section has no accessControl at all, include it (legacy behavior)
+    if (!ac || Object.keys(ac).length === 0) return true;
+    // Otherwise only show if explicitly enabled for this ticket type
+    return ac[ticketType] === true;
+  });
+}
+
+/**
+ * Returns the custom sections that belong to a specific tab (createTicket or ticketDetails),
+ * filtered by the given ticket type's access control.
+ */
+export function getSectionsForTab(
+  customSections: Record<string, ICustomSectionConfig> | undefined,
+  tab: 'createTicket' | 'ticketDetails',
+  ticketType: string,
+): ICustomSectionConfig[] {
+  if (!customSections) return [];
+  const sections = Object.values(customSections)
+    .filter((s) => s.tab === tab)
+    .filter((s) => filterSectionsByTicketType([s], ticketType).length > 0);
+  return sections;
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Box, Typography, TextField, Alert } from '@serviceops/component';
 import { alpha, Checkbox, Collapse } from '@mui/material';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
@@ -64,13 +64,6 @@ const SectionFormDialog = ({
 
   const isEditMode = !!editingSection;
 
-  // Build empty use-flags map keyed by ticket type `type` string
-  const emptyUseFlags = useMemo(() => {
-    const m: Record<string, boolean> = {};
-    for (const tt of ticketTypes) m[tt.type] = false;
-    return m;
-  }, [ticketTypes]);
-
   const updateForm = (
     patch: Partial<DialogSection> | ((f: Partial<DialogSection>) => Partial<DialogSection>),
   ) => {
@@ -116,17 +109,26 @@ const SectionFormDialog = ({
           accessControl: (() => {
             const flags: Record<string, boolean> = {};
             for (const tt of ticketTypes) flags[tt.type] = false;
+            if (defaultTicketType && flags.hasOwnProperty(defaultTicketType)) {
+              flags[defaultTicketType] = true;
+            }
             return flags;
           })(),
         };
 
     formRef.current = initial;
     setForm(initial);
-  }, [open, editingSection, ticketTypes]);
+  }, [open, editingSection, ticketTypes, defaultTicketType]);
 
   const validateRequired = (_f: Partial<DialogSection>): typeof requiredErrors => {
     const errs: typeof requiredErrors = {};
     if (!String(formRef.current.title ?? '').trim()) errs.title = 'required';
+    if (
+      !formRef.current.accessControl ||
+      Object.values(formRef.current.accessControl).every((v) => !v)
+    ) {
+      errs.fieldUse = 'Select at least one';
+    }
     return errs;
   };
 
@@ -187,7 +189,7 @@ const SectionFormDialog = ({
       isEdit={isEditMode}
       icon={<ViewModuleIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
       accent={accent}
-      title={isEditMode ? 'Edit Custom Section' : 'Custom Section'}
+      title={isEditMode ? 'Custom Section' : 'Custom Section'}
       submitLabel={isEditMode ? 'Update' : 'Submit'}
       maxWidth='lg'
     >
@@ -242,32 +244,37 @@ const SectionFormDialog = ({
               color={accent}
               sx={{ fontWeight: 600, fontSize: '0.85rem' }}
             >
-              Access Control
-            </Typography>
-            <Typography variant='caption' color={accent}>
-              {getCheckedCount()} of {getTotalCount()} selected
+              Access Control{' '}
+              <Box component='span' sx={{ color: '#d32f2f', fontSize: '0.85rem', lineHeight: 1 }}>
+                *
+              </Box>
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+            <Typography variant='caption' color={accent} sx={{ fontSize: '0.75rem' }}>
+              {getCheckedCount()} of {getTotalCount()} selected
+            </Typography>
             <Checkbox
               size='small'
-              checked={getCheckedCount() > 0}
+              indeterminate={getCheckedCount() > 0 && getCheckedCount() < getTotalCount()}
+              checked={getCheckedCount() === getTotalCount()}
               onClick={(e) => e.stopPropagation()}
-              onChange={(e) => handleSelectAllAccessControl(getCheckedCount() !== getTotalCount())}
+              onChange={(e) => handleSelectAllAccessControl(getCheckedCount() === getTotalCount())}
               sx={{
                 color: accent,
                 '&.Mui-checked': { color: accent },
+                '&.MuiIndeterminate': { color: accent },
               }}
             />
             <Typography
               variant='caption'
-              sx={{ fontWeight: 500, color: accent, cursor: 'pointer' }}
+              sx={{ fontWeight: 500, color: accent, fontSize: '0.75rem', cursor: 'pointer' }}
               onClick={(e) => {
                 e.stopPropagation();
                 handleSelectAllAccessControl(getCheckedCount() !== getTotalCount());
               }}
             >
-              {getCheckedCount() === getTotalCount() ? 'Unselect All' : 'Select All'}
+              Select All
             </Typography>
           </Box>
         </Box>
@@ -282,9 +289,9 @@ const SectionFormDialog = ({
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    py: 0.75,
+                    py: 1,
                     borderBottom: '1px solid',
-                    borderColor: alpha(accent, 0.3),
+                    borderColor: 'rgba(0,0,0,0.06)',
                     '&:last-child': { borderBottom: 'none' },
                   }}
                 >
@@ -302,7 +309,7 @@ const SectionFormDialog = ({
                     }}
                   />
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant='body2' sx={{ fontWeight: 500, fontSize: '0.85rem' }}>
+                    <Typography variant='body2' sx={{ fontWeight: 500, fontSize: '0.84rem' }}>
                       {tt.name}
                     </Typography>
                   </Box>
@@ -311,6 +318,16 @@ const SectionFormDialog = ({
             })}
           </Box>
         </Collapse>
+
+        {/* Access Control error message */}
+        {requiredErrors.fieldUse && (
+          <Typography
+            variant='caption'
+            sx={{ color: '#d32f2f', fontSize: '0.7rem', px: 2, pb: 1, display: 'block' }}
+          >
+            {requiredErrors.fieldUse}
+          </Typography>
+        )}
       </Box>
     </ConfigFormDialog>
   );

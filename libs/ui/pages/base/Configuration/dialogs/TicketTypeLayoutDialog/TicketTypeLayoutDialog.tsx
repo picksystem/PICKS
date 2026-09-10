@@ -129,6 +129,7 @@ export const TicketTypeLayoutDialog = ({
   const [pendingDeleteField, setPendingDeleteField] = useState<{
     fieldName: string;
     displayName: string;
+    fromSection?: { sectionId: string; fieldKey: string };
   } | null>(null);
   const [pendingDeleteSection, setPendingDeleteSection] = useState<{
     sectionId: string;
@@ -298,20 +299,22 @@ export const TicketTypeLayoutDialog = ({
   }, []);
 
   const handleUpdateSectionTitle = useCallback(
-    (sectionId: string, title: string) => {
+    (sectionId: string, title: string, accessControl?: Record<string, boolean>) => {
       setDialogSections((prev) => ({
         ...prev,
-        [activeTab]: prev[activeTab].map((s) => (s.id === sectionId ? { ...s, title } : s)),
+        [activeTab]: prev[activeTab].map((s) =>
+          s.id === sectionId ? { ...s, title, accessControl } : s,
+        ),
       }));
 
-      // Persist immediately to parent
+      // Persist immediately to parent, including accessControl
       const nextCustom = { ...(layoutConfig.customSections ?? {}) };
       if (nextCustom[sectionId]) {
-        nextCustom[sectionId] = { ...nextCustom[sectionId], title };
+        nextCustom[sectionId] = { ...nextCustom[sectionId], title, accessControl };
       }
       onSave(mergeLayoutConfig({ ...layoutConfig, customSections: nextCustom }));
     },
-    [activeTab, layoutConfig, onSave],
+    [activeTab, layoutConfig, onSave, mergeLayoutConfig],
   );
 
   // ── Section Field Handlers ───────────────────────────────────────
@@ -578,34 +581,59 @@ export const TicketTypeLayoutDialog = ({
 
   const confirmDeleteField = useCallback(() => {
     if (!pendingDeleteField) return;
-    const { fieldName } = pendingDeleteField;
+    const { fieldName, fromSection } = pendingDeleteField;
 
-    // Find the fieldKey to also remove from any section
-    const cf = availableFields[activeTab].find((f) => f.fieldName === fieldName);
-    const fieldKey = cf?.fieldKey ?? fieldName;
-    const removedId = cf?.id;
-    if (!removedId) {
-      setPendingDeleteField(null);
-      return;
-    }
+    if (fromSection) {
+      // Scenario 2: Remove field from a specific section (field stays in available list)
+      const { fieldKey } = fromSection;
+      const { sectionId } = fromSection;
+      const sourceTab = resolveSectionTab(sectionId, layoutConfig);
 
-    const nextAvailable = {
-      ...availableFields,
-      [activeTab]: availableFields[activeTab].filter((f) => f.fieldName !== fieldName),
-    };
-    const nextAll = allCustomFields.filter((f) => f.id !== removedId);
-    const nextSections: Record<TabId, DialogSection[]> = { ...dialogSections };
-    for (const tab of TAB_ORDER) {
-      nextSections[tab] = nextSections[tab].map((s) => ({
-        ...s,
-        fields: s.fields.filter((f) => f !== fieldKey),
+      setDialogSections((prev) => ({
+        ...prev,
+        [sourceTab]: prev[sourceTab].map((s) =>
+          s.id === sectionId ? { ...s, fields: s.fields.filter((f) => f !== fieldKey) } : s,
+        ),
       }));
+
+      // Persist to parent immediately
+      const nextCustom = { ...(layoutConfig.customSections ?? {}) };
+      if (nextCustom[sectionId]) {
+        nextCustom[sectionId] = {
+          ...nextCustom[sectionId],
+          fields: nextCustom[sectionId].fields.filter((f) => f !== fieldKey),
+        };
+      }
+      onSave(mergeLayoutConfig({ ...layoutConfig, customSections: nextCustom }));
+    } else {
+      // Scenario 1: Delete field entirely from the ticket type
+      const cf = availableFields[activeTab].find((f) => f.fieldName === fieldName);
+      const fieldKey = cf?.fieldKey ?? fieldName;
+      const removedId = cf?.id;
+      if (!removedId) {
+        setPendingDeleteField(null);
+        return;
+      }
+
+      const nextAvailable = {
+        ...availableFields,
+        [activeTab]: availableFields[activeTab].filter((f) => f.fieldName !== fieldName),
+      };
+      const nextAll = allCustomFields.filter((f) => f.id !== removedId);
+      const nextSections: Record<TabId, DialogSection[]> = { ...dialogSections };
+      for (const tab of TAB_ORDER) {
+        nextSections[tab] = nextSections[tab].map((s) => ({
+          ...s,
+          fields: s.fields.filter((f) => f !== fieldKey),
+        }));
+      }
+
+      setAvailableFields(nextAvailable);
+      setAllCustomFields(nextAll);
+      setDialogSections(nextSections);
+      persistCustomFields(nextAll);
     }
 
-    setAvailableFields(nextAvailable);
-    setAllCustomFields(nextAll);
-    setDialogSections(nextSections);
-    persistCustomFields(nextAll);
     setPendingDeleteField(null);
   }, [
     pendingDeleteField,
@@ -613,13 +641,28 @@ export const TicketTypeLayoutDialog = ({
     availableFields,
     allCustomFields,
     dialogSections,
+    layoutConfig,
+    onSave,
+    resolveSectionTab,
     persistCustomFields,
+    mergeLayoutConfig,
   ]);
 
   // Called from delete icon click — opens the confirmation dialog
-  const requestDeleteField = useCallback((fieldName: string, displayName: string) => {
-    setPendingDeleteField({ fieldName, displayName });
-  }, []);
+  const requestDeleteField = useCallback(
+    (
+      fieldName: string,
+      displayName: string,
+      fromSection?: { sectionId: string; fieldKey: string },
+    ) => {
+      setPendingDeleteField({
+        fieldName,
+        displayName,
+        fromSection,
+      });
+    },
+    [],
+  );
 
   // Cancel the pending deletion
   const cancelDeleteField = useCallback(() => {
@@ -1056,16 +1099,6 @@ export const TicketTypeLayoutDialog = ({
                       >
                         {section.title}
                       </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: '0.7rem',
-                          color: 'text.secondary',
-                          fontWeight: 500,
-                          mr: 0.5,
-                        }}
-                      >
-                        {section.fields.length} field{section.fields.length !== 1 ? 's' : ''}
-                      </Typography>
                       <IconButton
                         size='small'
                         onClick={() => handleEditSectionTitleStart(section)}
@@ -1088,6 +1121,16 @@ export const TicketTypeLayoutDialog = ({
                       >
                         <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
                       </IconButton>
+                      <Typography
+                        sx={{
+                          fontSize: '0.7rem',
+                          color: 'text.secondary',
+                          fontWeight: 500,
+                          mr: 0.5,
+                        }}
+                      >
+                        {section.fields.length} field{section.fields.length !== 1 ? 's' : ''}
+                      </Typography>
                     </Box>
 
                     {/* Section fields */}
@@ -1177,7 +1220,13 @@ export const TicketTypeLayoutDialog = ({
                               </Tooltip>
                               <IconButton
                                 size='small'
-                                onClick={() => handleRemoveFieldFromSection(section.id, fieldKey)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  requestDeleteField(fieldKey, displayName, {
+                                    sectionId: section.id,
+                                    fieldKey,
+                                  });
+                                }}
                                 sx={{
                                   p: 0.3,
                                   opacity: 0.5,
@@ -1328,10 +1377,9 @@ export const TicketTypeLayoutDialog = ({
         {/* Body */}
         <Box sx={{ px: 3, py: 2.5 }}>
           <Typography variant='body2'>
-            Are you sure you want to delete <strong>{pendingDeleteField?.displayName}</strong>?
-          </Typography>
-          <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
-            This will remove the field from all sections permanently.
+            {pendingDeleteField?.fromSection
+              ? `Are you sure you want to remove ${pendingDeleteField.displayName} from this section? The field will be moved back to the available fields list.`
+              : `Are you sure you want to delete ${pendingDeleteField?.displayName ?? ''}? This will remove the field from all sections permanently.`}
           </Typography>
         </Box>
 
@@ -1478,7 +1526,7 @@ export const TicketTypeLayoutDialog = ({
         onSave={(section) => {
           if (editingSection && editingSection.id === section.id) {
             // Edit mode — update the existing section's title/accessControl
-            handleUpdateSectionTitle(section.id, section.title);
+            handleUpdateSectionTitle(section.id, section.title, section.accessControl);
           } else if (!editingSection) {
             // Add mode — add new section
             handleAddSectionWithTitle(section.title, section.accessControl);
