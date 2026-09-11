@@ -246,11 +246,18 @@ export const TicketTypeLayoutDialog = ({
   // ── Section Handlers ─────────────────────────────────────────────
 
   const handleAddSectionWithTitle = useCallback(
-    (title: string, accessControl?: Record<string, boolean>) => {
+    (
+      title: string,
+      accessControl?: Record<string, boolean>,
+      subSections?: { id: string; name: string }[],
+    ) => {
       const id = `custom_${Date.now()}`;
       setDialogSections((prev) => ({
         ...prev,
-        [activeTab]: [...prev[activeTab], { id, title, fields: [], accessControl }],
+        [activeTab]: [
+          ...prev[activeTab],
+          { id, title, fields: [], subSections: subSections ?? [], accessControl },
+        ],
       }));
 
       // Persist immediately to parent so the section appears without waiting
@@ -260,7 +267,13 @@ export const TicketTypeLayoutDialog = ({
           ...layoutConfig,
           customSections: {
             ...layoutConfig.customSections,
-            [id]: { title, fields: [], subSections: [], tab: activeTab, accessControl },
+            [id]: {
+              title,
+              fields: [],
+              subSections: subSections ?? [],
+              tab: activeTab,
+              accessControl,
+            },
           },
         }),
       );
@@ -289,18 +302,30 @@ export const TicketTypeLayoutDialog = ({
   }, []);
 
   const handleUpdateSectionTitle = useCallback(
-    (sectionId: string, title: string, accessControl?: Record<string, boolean>) => {
+    (
+      sectionId: string,
+      title: string,
+      accessControl?: Record<string, boolean>,
+      subSections?: { id: string; name: string }[],
+    ) => {
       setDialogSections((prev) => ({
         ...prev,
         [activeTab]: prev[activeTab].map((s) =>
-          s.id === sectionId ? { ...s, title, accessControl } : s,
+          s.id === sectionId
+            ? { ...s, title, accessControl, subSections: subSections ?? s.subSections }
+            : s,
         ),
       }));
 
-      // Persist immediately to parent, including accessControl
+      // Persist immediately to parent, including accessControl and subSections
       const nextCustom = { ...(layoutConfig.customSections ?? {}) };
       if (nextCustom[sectionId]) {
-        nextCustom[sectionId] = { ...nextCustom[sectionId], title, accessControl };
+        nextCustom[sectionId] = {
+          ...nextCustom[sectionId],
+          title,
+          accessControl,
+          subSections: subSections ?? nextCustom[sectionId].subSections,
+        };
       }
       onSave(mergeLayoutConfig({ ...layoutConfig, customSections: nextCustom }));
     },
@@ -779,7 +804,7 @@ export const TicketTypeLayoutDialog = ({
         newConfig.customSections![section.id] = {
           title: section.title,
           fields: [...section.fields],
-          subSections: [],
+          subSections: section.subSections ? [...section.subSections] : [],
           tab,
           accessControl: section.accessControl,
         };
@@ -988,16 +1013,18 @@ export const TicketTypeLayoutDialog = ({
                         <EditIcon sx={{ fontSize: '0.85rem' }} />
                       </IconButton>
                     </Tooltip>
-                    <IconButton
-                      size='small'
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        requestDeleteField(field.fieldName, field.fieldName);
-                      }}
-                      sx={{ p: 0.3, opacity: 0.5, '&:hover': { opacity: 1, color: '#d32f2f' } }}
-                    >
-                      <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
-                    </IconButton>
+                    <Tooltip title='Delete field'>
+                      <IconButton
+                        size='small'
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          requestDeleteField(field.fieldName, field.fieldName);
+                        }}
+                        sx={{ p: 0.3, opacity: 0.5, '&:hover': { opacity: 1, color: '#d32f2f' } }}
+                      >
+                        <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
                 );
               })
@@ -1099,35 +1126,37 @@ export const TicketTypeLayoutDialog = ({
                           flex: 1,
                           fontSize: '0.82rem',
                           fontWeight: 700,
-                          cursor: 'pointer',
-                          '&:hover': { color: 'primary.main' },
+                          cursor: 'default',
                         }}
-                        onClick={() => handleEditSectionTitleStart(section)}
                       >
                         {section.title}
                       </Typography>
-                      <IconButton
-                        size='small'
-                        onClick={() => handleEditSectionTitleStart(section)}
-                        sx={{
-                          p: 0.3,
-                          opacity: 0.5,
-                          '&:hover': { opacity: 1, color: '#1976d2' },
-                        }}
-                      >
-                        <EditIcon sx={{ fontSize: '0.85rem' }} />
-                      </IconButton>
-                      <IconButton
-                        size='small'
-                        onClick={() => requestDeleteSection(section.id, section.title)}
-                        sx={{
-                          p: 0.3,
-                          opacity: 0.5,
-                          '&:hover': { opacity: 1, color: '#d32f2f' },
-                        }}
-                      >
-                        <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
-                      </IconButton>
+                      <Tooltip title='Edit section'>
+                        <IconButton
+                          size='small'
+                          onClick={() => handleEditSectionTitleStart(section)}
+                          sx={{
+                            p: 0.3,
+                            opacity: 0.5,
+                            '&:hover': { opacity: 1, color: '#1976d2' },
+                          }}
+                        >
+                          <EditIcon sx={{ fontSize: '0.85rem' }} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title='Delete section'>
+                        <IconButton
+                          size='small'
+                          onClick={() => requestDeleteSection(section.id, section.title)}
+                          sx={{
+                            p: 0.3,
+                            opacity: 0.5,
+                            '&:hover': { opacity: 1, color: '#d32f2f' },
+                          }}
+                        >
+                          <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
+                        </IconButton>
+                      </Tooltip>
                       <Typography
                         sx={{
                           fontSize: '0.7rem',
@@ -1225,23 +1254,25 @@ export const TicketTypeLayoutDialog = ({
                                   <EditIcon sx={{ fontSize: '0.85rem' }} />
                                 </IconButton>
                               </Tooltip>
-                              <IconButton
-                                size='small'
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  requestDeleteField(fieldKey, displayName, {
-                                    sectionId: section.id,
-                                    fieldKey,
-                                  });
-                                }}
-                                sx={{
-                                  p: 0.3,
-                                  opacity: 0.5,
-                                  '&:hover': { opacity: 1, color: '#d32f2f' },
-                                }}
-                              >
-                                <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
-                              </IconButton>
+                              <Tooltip title='Delete field'>
+                                <IconButton
+                                  size='small'
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    requestDeleteField(fieldKey, displayName, {
+                                      sectionId: section.id,
+                                      fieldKey,
+                                    });
+                                  }}
+                                  sx={{
+                                    p: 0.3,
+                                    opacity: 0.5,
+                                    '&:hover': { opacity: 1, color: '#d32f2f' },
+                                  }}
+                                >
+                                  <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
+                                </IconButton>
+                              </Tooltip>
                               <Tooltip title='Move up'>
                                 <IconButton
                                   size='small'
@@ -1272,7 +1303,7 @@ export const TicketTypeLayoutDialog = ({
                                   <ArrowDownwardIcon sx={{ fontSize: '0.85rem' }} />
                                 </IconButton>
                               </Tooltip>
-                              <Tooltip title='Move back to available fields'>
+                              <Tooltip title='Move back to additional fields'>
                                 <IconButton
                                   size='small'
                                   onClick={() => handleRemoveFieldFromSection(section.id, fieldKey)}
@@ -1531,11 +1562,16 @@ export const TicketTypeLayoutDialog = ({
         }}
         onSave={(section) => {
           if (editingSection && editingSection.id === section.id) {
-            // Edit mode — update the existing section's title/accessControl
-            handleUpdateSectionTitle(section.id, section.title, section.accessControl);
+            // Edit mode — update the existing section's title/accessControl/subSections
+            handleUpdateSectionTitle(
+              section.id,
+              section.title,
+              section.accessControl,
+              section.subSections,
+            );
           } else if (!editingSection) {
-            // Add mode — add new section
-            handleAddSectionWithTitle(section.title, section.accessControl);
+            // Add mode — add new section with subSections
+            handleAddSectionWithTitle(section.title, section.accessControl, section.subSections);
           }
           setEditingSection(null);
           setAddSectionDialogOpen(false);
