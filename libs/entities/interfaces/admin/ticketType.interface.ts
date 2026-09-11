@@ -60,9 +60,15 @@ export interface ICreateTicketSectionLayoutConfig {
   accessControl?: Record<string, boolean>;
 }
 
+export interface SubSectionItem {
+  id: string;
+  name: string;
+  fields?: string[];
+}
+
 export interface ICustomSectionConfig {
   title: string;
-  subSectionName?: string;
+  subSections: SubSectionItem[];
   fields: string[];
   tab: 'createTicket' | 'ticketDetails';
   accessControl?: Record<string, boolean>;

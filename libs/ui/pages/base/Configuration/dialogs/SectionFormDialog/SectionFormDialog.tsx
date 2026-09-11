@@ -1,9 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
-import { Box, Typography, TextField, Alert } from '@serviceops/component';
+import {
+  Box,
+  Typography,
+  TextField,
+  Alert,
+  IconButton,
+  Tooltip,
+  Button,
+} from '@serviceops/component';
 import { alpha, Checkbox, Collapse } from '@mui/material';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useFieldError, useNotification } from '@serviceops/hooks';
 import { ConfigFormDialog } from '@serviceops/configdialogs';
+import { SubSectionItem } from '@serviceops/interfaces';
 
 const DEFAULT_ACCENT = '#0369a1';
 const ALNUM_PATTERN = /[^A-Za-z0-9 _-]/g;
@@ -17,7 +28,7 @@ export interface TicketTypeRef {
 export interface DialogSection {
   id: string;
   title: string;
-  subSectionName?: string;
+  subSections: SubSectionItem[];
   fields: string[];
   accessControl?: Record<string, boolean>;
 }
@@ -74,7 +85,6 @@ const SectionFormDialog = ({
   };
 
   const getCheckedCount = () => ticketTypes.filter((tt) => !!form.accessControl?.[tt.type]).length;
-
   const getTotalCount = () => ticketTypes.length;
 
   const handleSelectAllAccessControl = (checked: boolean) => {
@@ -95,7 +105,7 @@ const SectionFormDialog = ({
       ? {
           id: editingSection.id,
           title: editingSection.title,
-          subSectionName: editingSection.subSectionName || '',
+          subSections: editingSection.subSections ? [...editingSection.subSections] : [],
           fields: [...editingSection.fields],
           accessControl: editingSection.accessControl
             ? { ...editingSection.accessControl }
@@ -107,7 +117,7 @@ const SectionFormDialog = ({
         }
       : {
           title: '',
-          subSectionName: '',
+          subSections: [],
           fields: [],
           accessControl: (() => {
             const flags: Record<string, boolean> = {};
@@ -143,7 +153,6 @@ const SectionFormDialog = ({
     const exists = existingSections.some(
       (s) => stripAlphaNumeric(s.title).trim().toLowerCase() === name,
     );
-    // In edit mode, exclude the current section from duplicate check
     if (exists && editingSection) {
       const currentName = stripAlphaNumeric(editingSection.title).trim().toLowerCase();
       if (name === currentName) return null;
@@ -152,11 +161,9 @@ const SectionFormDialog = ({
     return null;
   };
 
-  // Live duplicate check
   useEffect(() => {
     if (!open) return;
     setDuplicateAlert(computeDuplicateMessage());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form, open, existingSections, editingSection]);
 
   const handleSubmit = () => {
@@ -175,7 +182,7 @@ const SectionFormDialog = ({
     const result: DialogSection = {
       id: editingSection ? editingSection.id : `custom_${Date.now()}`,
       title: formRef.current.title!.trim(),
-      subSectionName: (formRef.current.subSectionName || '').trim() || undefined,
+      subSections: (formRef.current.subSections ?? []).filter((s) => s.name.trim()),
       fields: editingSection ? [...editingSection.fields] : [],
       accessControl: formRef.current.accessControl,
     };
@@ -183,7 +190,33 @@ const SectionFormDialog = ({
     success(isEditMode ? 'Section updated successfully' : 'Section added successfully');
   };
 
+  // ── Sub-section handlers (inline, no separate dialog) ────────────
+
+  const handleAddSubSection = () => {
+    const id = `sub_${Date.now()}`;
+    const newSub: SubSectionItem = { id, name: '' };
+    updateForm((f) => ({
+      ...f,
+      subSections: [...(f.subSections ?? []), newSub],
+    }));
+  };
+
+  const handleRemoveSubSection = (id: string) => {
+    updateForm((f) => ({
+      ...f,
+      subSections: (f.subSections ?? []).filter((s) => s.id !== id),
+    }));
+  };
+
+  const handleSubSectionNameChange = (id: string, name: string) => {
+    updateForm((f) => ({
+      ...f,
+      subSections: (f.subSections ?? []).map((s) => (s.id === id ? { ...s, name } : s)),
+    }));
+  };
+
   const titleError = reqError(touched.title, requiredErrors.title);
+  const currentSubSections = form.subSections ?? [];
 
   return (
     <ConfigFormDialog
@@ -195,7 +228,7 @@ const SectionFormDialog = ({
       accent={accent}
       title={isEditMode ? 'Custom Section' : 'Custom Section'}
       submitLabel={isEditMode ? 'Update' : 'Submit'}
-      maxWidth='lg'
+      maxWidth='sm'
     >
       {duplicateAlert && (
         <Alert severity='error' variant='outlined' sx={{ mb: 1 }}>
@@ -203,33 +236,90 @@ const SectionFormDialog = ({
         </Alert>
       )}
 
-      {/* Section Name + Sub Section Name in one row */}
-      <Box sx={{ display: 'flex', gap: 1.5 }}>
-        <Box sx={{ flex: 1 }}>
-          <TextField
-            label='Section Name'
-            placeholder='Enter section name'
-            value={form.title ?? ''}
-            onChange={(e) => updateForm((f) => ({ ...f, title: e.target.value }))}
-            onBlur={() => setTouched((t) => ({ ...t, title: true }))}
-            fullWidth
-            size='small'
-            required
-            error={Boolean(titleError)}
-            helperText={titleError}
-            autoFocus
-          />
+      {/* Section Name */}
+      <TextField
+        label='Section Name'
+        placeholder='Enter section name'
+        value={form.title ?? ''}
+        onChange={(e) => updateForm((f) => ({ ...f, title: e.target.value }))}
+        onBlur={() => setTouched((t) => ({ ...t, title: true }))}
+        fullWidth
+        size='small'
+        required
+        error={Boolean(titleError)}
+        helperText={titleError}
+        autoFocus
+        sx={{ mb: 2 }}
+      />
+
+      {/* ── Sub Sections (inline, like Dropdown Options) ── */}
+      <Box sx={{ border: `1px solid ${alpha(accent, 0.3)}`, borderRadius: 2, overflow: 'hidden' }}>
+        {/* Header */}
+        <Box sx={{ px: 2, py: 1.5, bgcolor: alpha(accent, 0.04) }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography
+              variant='body2'
+              color={accent}
+              sx={{ fontWeight: 600, fontSize: '0.85rem' }}
+            >
+              Sub Sections (Optional)
+            </Typography>
+            <Button
+              variant='outlined'
+              size='small'
+              startIcon={<AddCircleOutlineIcon />}
+              onClick={handleAddSubSection}
+              sx={{ textTransform: 'none', fontSize: '0.75rem' }}
+            >
+              Add
+            </Button>
+          </Box>
         </Box>
-        <Box sx={{ flex: 1 }}>
-          <TextField
-            label='Sub Section Name (optional)'
-            placeholder='Enter sub section name'
-            value={form.subSectionName ?? ''}
-            onChange={(e) => updateForm((f) => ({ ...f, subSectionName: e.target.value }))}
-            fullWidth
-            size='small'
-          />
-        </Box>
+
+        {/* Rows */}
+        {currentSubSections.length > 0 && (
+          <Box>
+            {currentSubSections.map((sub, idx) => (
+              <Box
+                key={sub.id}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  px: 2,
+                  py: 0.75,
+                  borderBottom: idx < currentSubSections.length - 1 ? '1px solid' : 'none',
+                  borderColor: alpha(accent, 0.2),
+                }}
+              >
+                <Box sx={{ flex: 1 }}>
+                  <TextField
+                    variant='outlined'
+                    size='small'
+                    fullWidth
+                    placeholder='Option name'
+                    value={sub.name}
+                    onChange={(e) => handleSubSectionNameChange(sub.id, e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { mt: 0, mb: 0 } }}
+                  />
+                </Box>
+                <Tooltip title='Remove sub section'>
+                  <IconButton size='small' onClick={() => handleRemoveSubSection(sub.id)}>
+                    <DeleteIcon sx={{ fontSize: '1.1rem' }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            ))}
+          </Box>
+        )}
+
+        {currentSubSections.length === 0 && (
+          <Box sx={{ px: 2, py: 1.5, textAlign: 'center' }}>
+            <Typography sx={{ fontSize: '0.78rem', color: 'text.disabled', fontStyle: 'italic' }}>
+              No sub sections added. Click "Add Sub Section" to create one.
+            </Typography>
+          </Box>
+        )}
       </Box>
 
       {/* ── Access Control ── */}
@@ -239,6 +329,7 @@ const SectionFormDialog = ({
           borderColor: alpha(accent, 0.3),
           borderRadius: 2,
           overflow: 'hidden',
+          mt: 2,
         }}
       >
         <Box
@@ -335,7 +426,6 @@ const SectionFormDialog = ({
           </Box>
         </Collapse>
 
-        {/* Access Control error message */}
         {requiredErrors.fieldUse && (
           <Typography
             variant='caption'
