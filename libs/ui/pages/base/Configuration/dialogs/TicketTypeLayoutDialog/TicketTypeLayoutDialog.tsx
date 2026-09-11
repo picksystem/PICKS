@@ -22,6 +22,7 @@ type TabId = 'createTicket' | 'ticketDetails';
 type DialogSection = {
   id: string;
   title: string;
+  subSectionName?: string;
   fields: string[];
   accessControl?: Record<string, boolean>;
 };
@@ -85,6 +86,7 @@ function buildDialogSectionsFromConfig(
       result[tab].push({
         id,
         title: cfg.title,
+        subSectionName: cfg.subSectionName,
         fields: [...cfg.fields],
         accessControl: cfg.accessControl,
       });
@@ -244,11 +246,11 @@ export const TicketTypeLayoutDialog = ({
   // ── Section Handlers ─────────────────────────────────────────────
 
   const handleAddSectionWithTitle = useCallback(
-    (title: string, accessControl?: Record<string, boolean>) => {
+    (title: string, subSectionName?: string, accessControl?: Record<string, boolean>) => {
       const id = `custom_${Date.now()}`;
       setDialogSections((prev) => ({
         ...prev,
-        [activeTab]: [...prev[activeTab], { id, title, fields: [], accessControl }],
+        [activeTab]: [...prev[activeTab], { id, title, subSectionName, fields: [], accessControl }],
       }));
 
       // Persist immediately to parent so the section appears without waiting
@@ -258,7 +260,7 @@ export const TicketTypeLayoutDialog = ({
           ...layoutConfig,
           customSections: {
             ...layoutConfig.customSections,
-            [id]: { title, fields: [], tab: activeTab, accessControl },
+            [id]: { title, subSectionName, fields: [], tab: activeTab, accessControl },
           },
         }),
       );
@@ -287,18 +289,23 @@ export const TicketTypeLayoutDialog = ({
   }, []);
 
   const handleUpdateSectionTitle = useCallback(
-    (sectionId: string, title: string, accessControl?: Record<string, boolean>) => {
+    (
+      sectionId: string,
+      title: string,
+      subSectionName?: string,
+      accessControl?: Record<string, boolean>,
+    ) => {
       setDialogSections((prev) => ({
         ...prev,
         [activeTab]: prev[activeTab].map((s) =>
-          s.id === sectionId ? { ...s, title, accessControl } : s,
+          s.id === sectionId ? { ...s, title, subSectionName, accessControl } : s,
         ),
       }));
 
       // Persist immediately to parent, including accessControl
       const nextCustom = { ...(layoutConfig.customSections ?? {}) };
       if (nextCustom[sectionId]) {
-        nextCustom[sectionId] = { ...nextCustom[sectionId], title, accessControl };
+        nextCustom[sectionId] = { ...nextCustom[sectionId], title, subSectionName, accessControl };
       }
       onSave(mergeLayoutConfig({ ...layoutConfig, customSections: nextCustom }));
     },
@@ -776,6 +783,7 @@ export const TicketTypeLayoutDialog = ({
       for (const section of dialogSections[tab]) {
         newConfig.customSections![section.id] = {
           title: section.title,
+          subSectionName: section.subSectionName,
           fields: [...section.fields],
           tab,
           accessControl: section.accessControl,
@@ -1091,18 +1099,33 @@ export const TicketTypeLayoutDialog = ({
                         bgcolor: alpha('#0369a1', 0.04),
                       }}
                     >
-                      <Typography
-                        sx={{
-                          flex: 1,
-                          fontSize: '0.82rem',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          '&:hover': { color: 'primary.main' },
-                        }}
-                        onClick={() => handleEditSectionTitleStart(section)}
-                      >
-                        {section.title}
-                      </Typography>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography
+                          sx={{
+                            fontSize: '0.82rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            '&:hover': { color: 'primary.main' },
+                          }}
+                          onClick={() => handleEditSectionTitleStart(section)}
+                          noWrap
+                        >
+                          {section.title}
+                        </Typography>
+                        {section.subSectionName && (
+                          <Typography
+                            sx={{
+                              fontSize: '0.72rem',
+                              color: 'text.secondary',
+                              fontWeight: 400,
+                              mt: 0.15,
+                            }}
+                            noWrap
+                          >
+                            {section.subSectionName}
+                          </Typography>
+                        )}
+                      </Box>
                       <IconButton
                         size='small'
                         onClick={() => handleEditSectionTitleStart(section)}
@@ -1486,7 +1509,6 @@ export const TicketTypeLayoutDialog = ({
         existingFields={currentAvailable}
         ticketTypes={ticketTypes.map((tt) => ({
           type: tt.type,
-          displayName: tt.displayName,
           name: tt.name,
         }))}
         defaultTicketType={ticketType?.type}
@@ -1502,7 +1524,6 @@ export const TicketTypeLayoutDialog = ({
         existingFields={currentAvailable}
         ticketTypes={ticketTypes.map((tt) => ({
           type: tt.type,
-          displayName: tt.displayName,
           name: tt.name,
         }))}
         defaultTicketType={ticketType?.type}
@@ -1518,7 +1539,7 @@ export const TicketTypeLayoutDialog = ({
         existingSections={currentSections}
         ticketTypes={ticketTypes.map((tt) => ({
           type: tt.type,
-          name: tt.displayName || tt.name,
+          name: tt.name,
         }))}
         defaultTicketType={ticketType?.type}
         accent='#0369a1'
@@ -1529,10 +1550,15 @@ export const TicketTypeLayoutDialog = ({
         onSave={(section) => {
           if (editingSection && editingSection.id === section.id) {
             // Edit mode — update the existing section's title/accessControl
-            handleUpdateSectionTitle(section.id, section.title, section.accessControl);
+            handleUpdateSectionTitle(
+              section.id,
+              section.title,
+              section.subSectionName,
+              section.accessControl,
+            );
           } else if (!editingSection) {
             // Add mode — add new section
-            handleAddSectionWithTitle(section.title, section.accessControl);
+            handleAddSectionWithTitle(section.title, section.subSectionName, section.accessControl);
           }
           setEditingSection(null);
           setAddSectionDialogOpen(false);

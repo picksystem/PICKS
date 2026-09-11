@@ -18,6 +18,8 @@ import {
   ListItemButton,
   ListItemText,
   Switch,
+  alpha,
+  Collapse,
 } from '@mui/material';
 import {
   AddCircle,
@@ -91,17 +93,15 @@ const CustomFieldDialog = ({
   const [touched, setTouched] = useState<{
     fieldName?: boolean;
     fieldType?: boolean;
-    fieldUse?: boolean;
+    accessControl?: boolean;
   }>({});
   const [requiredErrors, setRequiredErrors] = useState<{
     fieldName?: string;
     fieldType?: string;
-    fieldUse?: string;
+    accessControl?: string;
   }>({});
 
-  // Derive an empty use-flags map keyed by the ticket type `type` string.
-  // Special keys `__createTicket__` and `__ticketDetails__` are reserved.
-  const emptyUseFlags = useMemo(() => {
+  const emptyAccessControl = useMemo(() => {
     const m: Record<string, boolean> = {};
     for (const tt of ticketTypes) m[tt.type] = false;
     return m;
@@ -135,6 +135,20 @@ const CustomFieldDialog = ({
     formRef.current =
       typeof patch === 'function' ? patch(formRef.current) : { ...formRef.current, ...patch };
     setForm(formRef.current);
+  };
+
+  // Access Control helpers (mirrors SectionFormDialog)
+  const [accessControlExpanded, setAccessControlExpanded] = useState(false);
+
+  const getCheckedCount = () =>
+    ticketTypes.filter((tt) => !!formRef.current.fieldUse?.[tt.type]).length;
+
+  const getTotalCount = () => ticketTypes.length;
+
+  const handleSelectAllAccessControl = (checked: boolean) => {
+    const newFlags: Record<string, boolean> = {};
+    for (const tt of ticketTypes) newFlags[tt.type] = checked;
+    updateForm((f) => ({ ...f, fieldUse: newFlags }));
   };
 
   const allPathOptions = useMemo<PathOption[]>(() => {
@@ -187,6 +201,7 @@ const CustomFieldDialog = ({
     setRequiredErrors({});
     setDuplicateAlert(null);
     setDropdownOptionInput('');
+    setAccessControlExpanded(false);
     setPathOptionsOpen(false);
     setPathFiltered([]);
     setNameOptionsOpen(false);
@@ -194,9 +209,6 @@ const CustomFieldDialog = ({
     setTypeOptionsOpen(false);
     setTypeInput('');
 
-    // When editing, merge in any newly-loaded ticket-type keys so the
-    // existing selections survive an async ticket-types load. When creating
-    // new, pre-populate every per-type flag from `emptyUseFlags`.
     const initial: Partial<ICustomField> = editing
       ? {
           id: editing.id,
@@ -207,7 +219,7 @@ const CustomFieldDialog = ({
           dropdownOptions: editing.dropdownOptions ? [...editing.dropdownOptions] : [],
           defaultValue: editing.defaultValue,
           isRequired: editing.isRequired ?? false,
-          fieldUse: { ...emptyUseFlags, ...editing.fieldUse },
+          fieldUse: { ...emptyAccessControl, ...editing.fieldUse },
           displayOrder: editing.displayOrder,
         }
       : {
@@ -215,7 +227,7 @@ const CustomFieldDialog = ({
           fieldType: 'text',
           dropdownOptions: [],
           isRequired: false,
-          fieldUse: { __createTicket__: true, __ticketDetails__: false, ...emptyUseFlags },
+          fieldUse: { ...emptyAccessControl },
         };
     formRef.current = initial;
     setForm(initial);
@@ -224,7 +236,7 @@ const CustomFieldDialog = ({
     setTypeInput(
       editing ? (FIELD_TYPES.find((ft) => ft.value === editing.fieldType)?.label ?? '') : '',
     );
-  }, [open, editing, emptyUseFlags]);
+  }, [open, editing, emptyAccessControl]);
 
   const searchPaths = (query: string): PathOption[] => {
     const q = query.trim().toLowerCase();
@@ -322,7 +334,7 @@ const CustomFieldDialog = ({
     if (!String(f.fieldName ?? '').trim()) errs.fieldName = 'required';
     if (!f.fieldType) errs.fieldType = 'required';
     if (!f.fieldUse || Object.values(f.fieldUse).every((v) => !v)) {
-      errs.fieldUse = 'Select at least one';
+      errs.accessControl = 'Select at least one';
     }
     return errs;
   };
@@ -349,7 +361,7 @@ const CustomFieldDialog = ({
   const handleSubmit = () => {
     const reqErrs = validateRequired(formRef.current);
     setRequiredErrors(reqErrs);
-    setTouched({ fieldName: true, fieldType: true, fieldUse: true });
+    setTouched({ fieldName: true, fieldType: true, accessControl: true });
     if (Object.keys(reqErrs).length > 0) return;
 
     const dup = computeDuplicateMessage(formRef.current);
@@ -382,7 +394,7 @@ const CustomFieldDialog = ({
 
   const fieldNameError = reqError(touched.fieldName, requiredErrors.fieldName);
   const fieldTypeError = reqError(touched.fieldType, requiredErrors.fieldType);
-  const fieldUseError = reqError(touched.fieldUse, requiredErrors.fieldUse);
+  const fieldUseError = reqError(touched.accessControl, requiredErrors.accessControl);
 
   const handleAddDropdownOption = () => {
     const v = dropdownOptionInput.trim();
@@ -762,52 +774,121 @@ const CustomFieldDialog = ({
           />
         </Box>
 
-        {/* Per-ticket-type checkboxes */}
-        {ticketTypes.length > 0 && (
-          <>
-            <Typography
-              variant='caption'
-              sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}
-            >
-              Ticket Types
-            </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+        {/* ── Access Control ── */}
+        <Box
+          sx={{
+            border: '1px solid',
+            borderColor: alpha(CF_ACCENT, 0.3),
+            borderRadius: 2,
+            overflow: 'hidden',
+          }}
+        >
+          <Box
+            onClick={() => setAccessControlExpanded(!accessControlExpanded)}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              px: 2,
+              py: 1.5,
+              cursor: 'pointer',
+              bgcolor: alpha(CF_ACCENT, 0.04),
+              transition: 'background-color 0.2s',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography
+                variant='body2'
+                color={CF_ACCENT}
+                sx={{ fontWeight: 600, fontSize: '0.85rem' }}
+              >
+                Access Control{' '}
+                <Box component='span' sx={{ color: '#d32f2f', fontSize: '0.85rem', lineHeight: 1 }}>
+                  *
+                </Box>
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+              <Typography variant='caption' color={CF_ACCENT} sx={{ fontSize: '0.75rem' }}>
+                {getCheckedCount()} of {getTotalCount()} selected
+              </Typography>
+              <Checkbox
+                size='small'
+                indeterminate={getCheckedCount() > 0 && getCheckedCount() < getTotalCount()}
+                checked={getCheckedCount() === getTotalCount()}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) =>
+                  handleSelectAllAccessControl(getCheckedCount() === getTotalCount())
+                }
+                sx={{
+                  color: CF_ACCENT,
+                  '&.Mui-checked': { color: CF_ACCENT },
+                  '&.MuiIndeterminate': { color: CF_ACCENT },
+                }}
+              />
+              <Typography
+                variant='caption'
+                sx={{ fontWeight: 500, color: CF_ACCENT, fontSize: '0.75rem', cursor: 'pointer' }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSelectAllAccessControl(getCheckedCount() !== getTotalCount());
+                }}
+              >
+                Select All
+              </Typography>
+            </Box>
+          </Box>
+
+          <Collapse in={accessControlExpanded}>
+            <Box sx={{ px: 2, pb: 2 }}>
               {ticketTypes.map((tt) => {
                 const checked = !!form.fieldUse?.[tt.type];
                 return (
-                  <FormControlLabel
+                  <Box
                     key={tt.type}
-                    control={
-                      <Checkbox
-                        checked={checked}
-                        onChange={(e) =>
-                          updateForm((f) => ({
-                            ...f,
-                            fieldUse: {
-                              ...(f.fieldUse ?? {}),
-                              [tt.type]: e.target.checked,
-                            },
-                          }))
-                        }
-                        sx={{ color: CF_ACCENT, '&.Mui-checked': { color: CF_ACCENT } }}
-                      />
-                    }
-                    label={tt.displayName || tt.type}
-                  />
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      py: 1,
+                      borderBottom: '1px solid',
+                      borderColor: 'rgba(0,0,0,0.06)',
+                      '&:last-child': { borderBottom: 'none' },
+                    }}
+                  >
+                    <Checkbox
+                      checked={checked}
+                      onChange={(e) =>
+                        updateForm((f) => ({
+                          ...f,
+                          fieldUse: { ...(f.fieldUse ?? {}), [tt.type]: e.target.checked },
+                        }))
+                      }
+                      sx={{
+                        color: CF_ACCENT,
+                        '&.Mui-checked': { color: CF_ACCENT },
+                      }}
+                    />
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant='body2' sx={{ fontWeight: 500, fontSize: '0.84rem' }}>
+                        {tt.displayName || tt.type}
+                      </Typography>
+                    </Box>
+                  </Box>
                 );
               })}
             </Box>
-          </>
-        )}
+          </Collapse>
 
-        {fieldUseError && (
-          <Typography
-            variant='caption'
-            sx={{ color: '#d32f2f', fontSize: '0.7rem', mt: 0.5, display: 'block' }}
-          >
-            {fieldUseError}
-          </Typography>
-        )}
+          {/* Access Control error message */}
+          {fieldUseError && (
+            <Typography
+              variant='caption'
+              sx={{ color: '#d32f2f', fontSize: '0.7rem', px: 2, pb: 1, display: 'block' }}
+            >
+              {fieldUseError}
+            </Typography>
+          )}
+        </Box>
       </Box>
 
       {/* ── Config Path Picker (opened by Path field's Browse button) ─── */}

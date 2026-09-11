@@ -17,6 +17,7 @@ export interface TicketTypeRef {
 export interface DialogSection {
   id: string;
   title: string;
+  subSectionName?: string;
   fields: string[];
   accessControl?: Record<string, boolean>;
 }
@@ -94,6 +95,7 @@ const SectionFormDialog = ({
       ? {
           id: editingSection.id,
           title: editingSection.title,
+          subSectionName: editingSection.subSectionName || '',
           fields: [...editingSection.fields],
           accessControl: editingSection.accessControl
             ? { ...editingSection.accessControl }
@@ -105,6 +107,7 @@ const SectionFormDialog = ({
         }
       : {
           title: '',
+          subSectionName: '',
           fields: [],
           accessControl: (() => {
             const flags: Record<string, boolean> = {};
@@ -172,6 +175,7 @@ const SectionFormDialog = ({
     const result: DialogSection = {
       id: editingSection ? editingSection.id : `custom_${Date.now()}`,
       title: formRef.current.title!.trim(),
+      subSectionName: (formRef.current.subSectionName || '').trim() || undefined,
       fields: editingSection ? [...editingSection.fields] : [],
       accessControl: formRef.current.accessControl,
     };
@@ -199,21 +203,33 @@ const SectionFormDialog = ({
         </Alert>
       )}
 
-      {/* Section Name — required */}
-      <Box>
-        <TextField
-          label='Section Name'
-          placeholder='Enter section name'
-          value={form.title ?? ''}
-          onChange={(e) => updateForm((f) => ({ ...f, title: e.target.value }))}
-          onBlur={() => setTouched((t) => ({ ...t, title: true }))}
-          fullWidth
-          size='small'
-          required
-          error={Boolean(titleError)}
-          helperText={titleError}
-          autoFocus
-        />
+      {/* Section Name + Sub Section Name in one row */}
+      <Box sx={{ display: 'flex', gap: 1.5 }}>
+        <Box sx={{ flex: 1 }}>
+          <TextField
+            label='Section Name'
+            placeholder='Enter section name'
+            value={form.title ?? ''}
+            onChange={(e) => updateForm((f) => ({ ...f, title: e.target.value }))}
+            onBlur={() => setTouched((t) => ({ ...t, title: true }))}
+            fullWidth
+            size='small'
+            required
+            error={Boolean(titleError)}
+            helperText={titleError}
+            autoFocus
+          />
+        </Box>
+        <Box sx={{ flex: 1 }}>
+          <TextField
+            label='Sub Section Name (optional)'
+            placeholder='Enter sub section name'
+            value={form.subSectionName ?? ''}
+            onChange={(e) => updateForm((f) => ({ ...f, subSectionName: e.target.value }))}
+            fullWidth
+            size='small'
+          />
+        </Box>
       </Box>
 
       {/* ── Access Control ── */}

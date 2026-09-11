@@ -62,6 +62,7 @@ export interface ICreateTicketSectionLayoutConfig {
 
 export interface ICustomSectionConfig {
   title: string;
+  subSectionName?: string;
   fields: string[];
   tab: 'createTicket' | 'ticketDetails';
   accessControl?: Record<string, boolean>;

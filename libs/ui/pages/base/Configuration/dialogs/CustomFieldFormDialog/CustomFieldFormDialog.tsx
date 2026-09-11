@@ -66,8 +66,8 @@ interface CustomFieldFormDialogProps {
   editing: ICustomField | null;
   existingFields: ICustomField[];
   categorization?: IConfigCategorization;
-  /** Ticket types to show in the Field Use list. Pass `{type, displayName, name}` tuples. */
-  ticketTypes?: { type: string; displayName: string; name: string }[];
+  /** Ticket types to show in the Field Use list. Pass `{type, name}` tuples. */
+  ticketTypes?: { type: string; name: string }[];
   /** Accent color for the header, buttons, and interactive elements. Defaults to `#0369a1`. */
   accent?: string;
   /** The ticket type `type` string to pre-check in Field Use when creating a new field. */
@@ -136,6 +136,8 @@ const CustomFieldFormDialog = ({
 
   // Field Use section expand/collapse
   const [fieldUseExpanded, setFieldUseExpanded] = useState(false);
+
+  const isEditMode = !!editing;
 
   // Field Name state
   const [nameInput, setNameInput] = useState<string>('');
@@ -211,6 +213,7 @@ const CustomFieldFormDialog = ({
     setTypeInput('');
     setOpenTypeEntryId(null);
 
+    const isNew = !editing;
     const initial: Partial<ICustomField> = editing
       ? {
           id: editing.id,
@@ -229,11 +232,13 @@ const CustomFieldFormDialog = ({
           fieldType: 'text',
           dropdownOptions: [],
           isRequired: false,
-          fieldUse: {
-            __createTicket__: true,
-            __ticketDetails__: true,
-            ...emptyUseFlags,
-          },
+          fieldUse: (() => {
+            const flags: Record<string, boolean> = { ...emptyUseFlags };
+            if (defaultTicketType && flags.hasOwnProperty(defaultTicketType)) {
+              flags[defaultTicketType] = true;
+            }
+            return flags;
+          })(),
         };
     formRef.current = initial;
     setForm(initial);
@@ -242,7 +247,8 @@ const CustomFieldFormDialog = ({
     setTypeInput(
       editing ? (FIELD_TYPES.find((ft) => ft.value === editing.fieldType)?.label ?? '') : '',
     );
-  }, [open, editing, emptyUseFlags]);
+    setFieldUseExpanded(false);
+  }, [open, editing, emptyUseFlags, defaultTicketType]);
 
   const searchPaths = (query: string): PathOption[] => {
     const q = query.trim().toLowerCase();
@@ -950,12 +956,14 @@ const CustomFieldFormDialog = ({
             </Typography>
             <Checkbox
               size='small'
-              checked={getCheckedCount() > 0}
+              indeterminate={getCheckedCount() > 0 && getCheckedCount() < getTotalCount()}
+              checked={getCheckedCount() === getTotalCount()}
               onClick={(e) => e.stopPropagation()}
-              onChange={(e) => handleSelectAllFieldUse(getCheckedCount() !== getTotalCount())}
+              onChange={(e) => handleSelectAllFieldUse(getCheckedCount() === getTotalCount())}
               sx={{
                 color: accent,
                 '&.Mui-checked': { color: accent },
+                '&.MuiIndeterminate': { color: accent },
               }}
             />
             <Typography
