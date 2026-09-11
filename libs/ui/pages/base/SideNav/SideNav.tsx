@@ -1,6 +1,8 @@
 import { Drawer, List, ListItem, ListItemIcon, ListItemText, IconButton, Box } from '@mui/material';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import PushPinIcon from '@mui/icons-material/PushPin';
+import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import { Link, useLocation } from 'react-router-dom';
 import { useStyles } from './styles';
 import { useMenuItems } from './components/MenuItems';
@@ -11,7 +13,7 @@ const SideNav = () => {
   const { cx, classes } = useStyles();
   const role = useAppRole();
   const menuItems = useMenuItems(role);
-  const { collapsed, toggleCollapse } = useCollapse();
+  const { collapsed, toggleCollapse, pinned, pin, unpin } = useCollapse();
   const location = useLocation();
 
   return (
@@ -20,6 +22,21 @@ const SideNav = () => {
       className={cx(classes.drawer, collapsed ? classes.drawerCollapsed : '')}
     >
       <Box className={collapsed ? classes.toggleButtonCenter : classes.toggleButtonRight}>
+        {!collapsed && (
+          <Tooltip title={pinned ? 'Unpin sidebar' : 'Pin sidebar'} placement='right' arrow>
+            <IconButton
+              onClick={pinned ? unpin : pin}
+              className={cx(pinned ? classes.pinIconActive : '')}
+            >
+              {pinned ? (
+                <PushPinIcon className={classes.pinIcon} />
+              ) : (
+                <PushPinOutlinedIcon className={classes.pinIconOutlined} />
+              )}
+            </IconButton>
+          </Tooltip>
+        )}
+
         <Tooltip title={collapsed ? 'Open sidebar' : 'Close sidebar'} placement='right' arrow>
           <IconButton onClick={toggleCollapse}>
             {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
