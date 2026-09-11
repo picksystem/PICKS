@@ -10,6 +10,7 @@ import {
   IAdminControls,
   IUpdateAdminControlsInput,
   IAdminControlsResponse,
+  ICustomField,
 } from '@serviceops/interfaces';
 import { baseApi } from './baseServices';
 
@@ -78,6 +79,55 @@ export const adminApi = baseApi.injectEndpoints({
         body: { orders },
       }),
       invalidatesTags: ['TicketType'],
+    }),
+
+    // =============================================
+    // ADDITIONAL FIELDS (CUSTOM FIELDS) endpoints
+    // =============================================
+    getCustomFields: builder.query<ICustomField[], { ticketType: string }>({
+      query: ({ ticketType }) =>
+        `/api/admin/custom-field?ticketType=${encodeURIComponent(ticketType)}`,
+      transformResponse: (response: any) => response.data ?? [],
+      providesTags: (_r, _e, { ticketType }) => [{ type: 'CustomFields', id: ticketType }],
+    }),
+    getCustomFieldById: builder.query<ICustomField, { ticketType: string; id: string }>({
+      query: ({ ticketType, id }) =>
+        `/api/admin/custom-field/${encodeURIComponent(id)}?ticketType=${encodeURIComponent(ticketType)}`,
+      transformResponse: (response: any) => response.data,
+      providesTags: (_r, _e, { ticketType }) => [{ type: 'CustomFields', id: ticketType }],
+    }),
+    createCustomField: builder.mutation<ICustomField[], { ticketType: string; data: ICustomField }>(
+      {
+        query: ({ ticketType, data }) => ({
+          url: `/api/admin/custom-field?ticketType=${encodeURIComponent(ticketType)}`,
+          method: 'POST',
+          body: data,
+        }),
+        transformResponse: (response: any) => response.data ?? [],
+        invalidatesTags: (_r, _e, { ticketType }) => [{ type: 'CustomFields', id: ticketType }],
+      },
+    ),
+    updateCustomField: builder.mutation<
+      ICustomField[],
+      { ticketType: string; id: string; data: ICustomField[] }
+    >({
+      query: ({ ticketType, id, data }) => ({
+        url: `/api/admin/custom-field/${encodeURIComponent(id)}?ticketType=${encodeURIComponent(ticketType)}`,
+        method: 'PUT',
+        body: data,
+      }),
+      transformResponse: (response: any) => response.data ?? [],
+      invalidatesTags: (_r, _e, { ticketType }) =>
+        [{ type: 'CustomFields', id: ticketType }, { type: 'TicketType' }] as any,
+    }),
+    deleteCustomField: builder.mutation<ICustomField[], { ticketType: string; id: string }>({
+      query: ({ ticketType, id }) => ({
+        url: `/api/admin/custom-field/${encodeURIComponent(id)}?ticketType=${encodeURIComponent(ticketType)}`,
+        method: 'DELETE',
+      }),
+      transformResponse: (response: any) => response.data ?? [],
+      invalidatesTags: (_r, _e, { ticketType }) =>
+        [{ type: 'CustomFields', id: ticketType }, { type: 'TicketType' }] as any,
     }),
 
     // =============================================
@@ -347,6 +397,12 @@ export const {
   useUpdateTicketTypeMutation,
   useReorderTicketTypesMutation,
   useDeleteTicketTypeMutation,
+  // Custom Fields (Additional Fields) hooks
+  useGetCustomFieldsQuery,
+  useGetCustomFieldByIdQuery,
+  useCreateCustomFieldMutation,
+  useUpdateCustomFieldMutation,
+  useDeleteCustomFieldMutation,
   // Generic Ticket CRUD hooks
   useGetTicketsQuery,
   useGetTicketByIdQuery,

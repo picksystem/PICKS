@@ -4,6 +4,9 @@ import {
   useCreateTicketTypeMutation,
   useUpdateTicketTypeMutation,
   useDeleteTicketTypeMutation,
+  useCreateCustomFieldMutation,
+  useUpdateCustomFieldMutation,
+  useDeleteCustomFieldMutation,
 } from '@serviceops/services';
 import { ITicketType } from '@serviceops/interfaces';
 import { useNotification, useAuth } from '@serviceops/hooks';
@@ -185,22 +188,74 @@ export function useTicketTypeConfig() {
     }
   };
 
+  const [createCustomField] = useCreateCustomFieldMutation();
+  const [updateCustomField] = useUpdateCustomFieldMutation();
+  const [deleteCustomField] = useDeleteCustomFieldMutation();
+
   const handleSaveCustomFields = async (
     fields: import('@serviceops/interfaces').ICustomField[],
   ) => {
     if (!selectedRow) return;
     try {
-      await updateTicketType({
-        id: selectedRow.id,
-        data: {
-          customFields: fields,
-          lastUpdatedBy: currentUserName,
-          lastUpdatedAt: new Date().toISOString(),
-        },
+      await updateCustomField({
+        ticketType: selectedRow.type,
+        id: '__bulk__',
+        data: fields,
       }).unwrap();
       notify.success('Custom field saved successfully');
     } catch {
       notify.error('Failed to save custom field');
+    }
+  };
+
+  // Individual field CRUD helpers used by the dialog for optimistic add/edit/delete
+  const handleCreateField = async (field: import('@serviceops/interfaces').ICustomField) => {
+    if (!selectedRow) return;
+    // Ensure the field has an id before persisting
+    if (!field.id) {
+      field = { ...field, id: `custom_${Date.now()}_${Math.random().toString(36).slice(2, 8)}` };
+    }
+    try {
+      const result = await createCustomField({
+        ticketType: selectedRow.type,
+        data: field,
+      }).unwrap();
+      notify.success('Custom field created successfully');
+      return result;
+    } catch {
+      notify.error('Failed to create custom field');
+      throw new Error('Create failed');
+    }
+  };
+
+  const handleUpdateField = async (field: import('@serviceops/interfaces').ICustomField) => {
+    if (!selectedRow) return;
+    try {
+      const result = await updateCustomField({
+        ticketType: selectedRow.type,
+        id: field.id,
+        data: [field],
+      }).unwrap();
+      notify.success('Custom field updated successfully');
+      return result;
+    } catch {
+      notify.error('Failed to update custom field');
+      throw new Error('Update failed');
+    }
+  };
+
+  const handleDeleteField = async (fieldId: string) => {
+    if (!selectedRow) return;
+    try {
+      const result = await deleteCustomField({
+        ticketType: selectedRow.type,
+        id: fieldId,
+      }).unwrap();
+      notify.success('Custom field deleted successfully');
+      return result;
+    } catch {
+      notify.error('Failed to delete custom field');
+      throw new Error('Delete failed');
     }
   };
 
@@ -221,6 +276,9 @@ export function useTicketTypeConfig() {
     handleToggleActive,
     handleLayoutSave,
     handleSaveCustomFields,
+    handleCreateField,
+    handleUpdateField,
+    handleDeleteField,
     iconMap,
     tagMap,
     isSubmitting,

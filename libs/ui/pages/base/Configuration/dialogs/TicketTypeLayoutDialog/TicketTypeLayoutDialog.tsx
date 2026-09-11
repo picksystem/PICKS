@@ -30,11 +30,6 @@ const TAB_ORDER: TabId[] = ['createTicket', 'ticketDetails'];
 
 const POOL_PANEL_WIDTH = 320;
 
-const TAB_TO_FIELD_USE_FLAG: Record<TabId, '__createTicket__' | '__ticketDetails__'> = {
-  createTicket: '__createTicket__',
-  ticketDetails: '__ticketDetails__',
-};
-
 const columnLabelSx = {
   fontSize: '0.7rem',
   fontWeight: 700,
@@ -60,13 +55,10 @@ export interface TicketTypeLayoutDialogProps {
   onSaveCustomFields?: (fields: ICustomField[]) => void;
 }
 
-// ── Helpers ────────────────────────────────────────────────────────
-
-function initialAvailableFields(customFields: ICustomField[], tab: TabId): ICustomField[] {
-  return customFields.filter((cf) => {
-    if (tab === 'createTicket') return cf.fieldUse?.__createTicket__;
-    return cf.fieldUse?.__ticketDetails__;
-  });
+// Return ALL custom fields — the field pool is global (not tab-filtered).
+// When a new field is added it is visible in both tabs automatically.
+function initialAvailableFields(customFields: ICustomField[]): ICustomField[] {
+  return [...customFields];
 }
 
 // Resolve the tab for a section ID from layoutConfig.customSections.
@@ -151,10 +143,8 @@ export const TicketTypeLayoutDialog = ({
   // re-fetches from the API.
   const persistedFields = useMemo(() => ticketType?.customFields ?? [], [ticketType]);
   const [allCustomFields, setAllCustomFields] = useState<ICustomField[]>(persistedFields);
-  const [availableFields, setAvailableFields] = useState<Record<TabId, ICustomField[]>>({
-    createTicket: [],
-    ticketDetails: [],
-  });
+  // Global field pool — same list shown in both tabs.
+  const [availableFields, setAvailableFields] = useState<ICustomField[]>([]);
   const initializedRef = useRef(false);
 
   // Sync local state from parent's fresh data when: (1) dialog first opens,
@@ -168,17 +158,11 @@ export const TicketTypeLayoutDialog = ({
       return;
     }
 
-    // persistedFields is a new array reference whenever the parent passes
-    // fresh ticketType data (after re-fetch). Compare by reference to detect
-    // a real data change vs. just a re-render.
     const parentDataChanged = lastSyncedFieldsRef.current !== persistedFields;
     if (!initializedRef.current || parentDataChanged) {
       lastSyncedFieldsRef.current = persistedFields;
       setAllCustomFields(persistedFields);
-      setAvailableFields({
-        createTicket: initialAvailableFields(persistedFields, 'createTicket'),
-        ticketDetails: initialAvailableFields(persistedFields, 'ticketDetails'),
-      });
+      setAvailableFields(initialAvailableFields(persistedFields));
       initializedRef.current = true;
     }
   }, [open, persistedFields]);
@@ -225,33 +209,37 @@ export const TicketTypeLayoutDialog = ({
     setDialogSections(sections);
   }, [layoutConfig]);
 
-  // Fields from layoutConfig.selectedFields that are NOT in any section
-  // for the current tab (used to populate the left panel "unassigned" list)
-  const usedFieldKeysForCurrentTab = useMemo(() => {
-    const keys = new Set<string>();
-    for (const section of dialogSections[activeTab] ?? []) {
-      for (const f of section.fields) {
-        keys.add(f);
+  // Fields from dialog sections that are NOT in the available pool
+  // Per-tab: only fields in the current tab's sections count as "used"
+  // Per-tab used field keys — a field is hidden from Additional Fields only
+  // when it has been placed in a section of that SAME tab. Fields used in
+  // other tabs remain visible.
+  const usedFieldKeysByTab = useMemo<Record<TabId, Set<string>>>(() => {
+    const result: Record<TabId, Set<string>> = {
+      createTicket: new Set(),
+      ticketDetails: new Set(),
+    };
+    for (const tab of TAB_ORDER) {
+      for (const section of dialogSections[tab] ?? []) {
+        for (const f of section.fields) {
+          result[tab].add(f);
+        }
       }
     }
-    return keys;
-  }, [dialogSections, activeTab]);
+    return result;
+  }, [dialogSections]);
+
+  // Available fields for the active tab — exclude only fields used in
+  // sections of this SAME tab.
+  const currentAvailable = useMemo(() => {
+    const usedInThisTab = usedFieldKeysByTab[activeTab];
+    return availableFields.filter((f) => !usedInThisTab.has(f.fieldKey));
+  }, [availableFields, usedFieldKeysByTab, activeTab]);
 
   const currentSections = useMemo(
     () => dialogSections[activeTab] ?? [],
     [dialogSections, activeTab],
   );
-  const currentAvailable = useMemo(
-    () => availableFields[activeTab] ?? [],
-    [availableFields, activeTab],
-  );
-
-  // Unassigned = custom fields for this tab that aren't placed in any section of this tab
-  const unassignedFieldNames = useMemo(() => {
-    return currentAvailable
-      .filter((f) => !usedFieldKeysForCurrentTab.has(f.fieldKey))
-      .map((f) => f.fieldName);
-  }, [currentAvailable, usedFieldKeysForCurrentTab]);
 
   // ── Section Handlers ─────────────────────────────────────────────
 
@@ -322,25 +310,35 @@ export const TicketTypeLayoutDialog = ({
   const handleAddFieldToSection = useCallback(
     (sectionId: string, fieldName: string) => {
       if (!fieldName) return;
-      const targetTab = resolveSectionTab(sectionId, layoutConfig);
-      // Find the custom field to get its fieldKey
-      const customField = [...availableFields[targetTab]].find((f) => f.fieldName === fieldName);
+
+      // Find the custom field by fieldName to get its fieldKey
+      const customField = availableFields.find((f) => f.fieldName === fieldName);
       if (!customField) return;
 
-      // Store the fieldKey (not fieldName) in sections — this is what
-      // layoutConfig.selectedFields contains, and what consumers expect.
       const { fieldKey } = customField;
 
-      setDialogSections((prev) => ({
-        ...prev,
-        [targetTab]: prev[targetTab].map((s) =>
-          s.id === sectionId && !s.fields.includes(fieldKey)
-            ? { ...s, fields: [...s.fields, fieldKey] }
-            : s,
-        ),
-      }));
+      setDialogSections((prev) => {
+        const next: Record<TabId, DialogSection[]> = { ...prev };
+        let found = false;
+
+        for (const tab of TAB_ORDER) {
+          // Skip if this field already exists in any section of this tab
+          const alreadyUsedInTab = prev[tab].some((s) => s.fields.includes(fieldKey));
+          if (alreadyUsedInTab) continue;
+
+          next[tab] = next[tab].map((s) => {
+            if (s.id === sectionId && !s.fields.includes(fieldKey)) {
+              found = true;
+              return { ...s, fields: [...s.fields, fieldKey] };
+            }
+            return s;
+          });
+          if (found) break;
+        }
+        return next;
+      });
     },
-    [availableFields, layoutConfig],
+    [availableFields],
   );
 
   const handleRemoveFieldFromSection = useCallback(
@@ -472,6 +470,13 @@ export const TicketTypeLayoutDialog = ({
         // Move between sections (same tab or cross-tab)
         setDialogSections((prev) => {
           const next = { ...prev };
+          // Same-tab: skip if field already exists in another section of this tab
+          if (sourceTab === targetTab) {
+            const alreadyElsewhere = prev[targetTab].some(
+              (s) => s.id !== dragItem.sectionId && s.fields.includes(dragItem.fieldKey),
+            );
+            if (alreadyElsewhere) return prev;
+          }
           // Remove from source section
           next[sourceTab] = next[sourceTab].map((s) =>
             s.id === dragItem.sectionId
@@ -530,6 +535,13 @@ export const TicketTypeLayoutDialog = ({
           // Move from one section to another at specific index (cross-tab or same tab)
           setDialogSections((prev) => {
             const next = { ...prev };
+            // Same-tab: skip if field already exists in another section of this tab
+            if (sourceTab === targetTab) {
+              const alreadyElsewhere = prev[targetTab].some(
+                (s) => s.id !== dragItem.sectionId && s.fields.includes(dragItem.fieldKey),
+              );
+              if (alreadyElsewhere) return prev;
+            }
             // Remove from source section
             next[sourceTab] = next[sourceTab].map((s) => {
               if (s.id !== dragItem.sectionId) return s;
@@ -607,7 +619,7 @@ export const TicketTypeLayoutDialog = ({
       onSave(mergeLayoutConfig({ ...layoutConfig, customSections: nextCustom }));
     } else {
       // Scenario 1: Delete field entirely from the ticket type
-      const cf = availableFields[activeTab].find((f) => f.fieldName === fieldName);
+      const cf = availableFields.find((f) => f.fieldName === fieldName);
       const fieldKey = cf?.fieldKey ?? fieldName;
       const removedId = cf?.id;
       if (!removedId) {
@@ -615,29 +627,41 @@ export const TicketTypeLayoutDialog = ({
         return;
       }
 
-      const nextAvailable = {
-        ...availableFields,
-        [activeTab]: availableFields[activeTab].filter((f) => f.fieldName !== fieldName),
-      };
+      const nextAvailable = availableFields.filter((f) => f.fieldName !== fieldName);
       const nextAll = allCustomFields.filter((f) => f.id !== removedId);
-      const nextSections: Record<TabId, DialogSection[]> = { ...dialogSections };
-      for (const tab of TAB_ORDER) {
-        nextSections[tab] = nextSections[tab].map((s) => ({
-          ...s,
-          fields: s.fields.filter((f) => f !== fieldKey),
-        }));
+
+      // Remove field from all dialog sections and persist the cleaned layout
+      const nextCustomSections = { ...(layoutConfig.customSections ?? {}) };
+      for (const sId of Object.keys(nextCustomSections)) {
+        nextCustomSections[sId] = {
+          ...nextCustomSections[sId],
+          fields: nextCustomSections[sId].fields.filter((f) => f !== fieldKey),
+        };
       }
+      const cleanedLayout = mergeLayoutConfig({
+        ...layoutConfig,
+        customSections: nextCustomSections,
+      });
+      onSave(cleanedLayout);
 
       setAvailableFields(nextAvailable);
       setAllCustomFields(nextAll);
-      setDialogSections(nextSections);
+      setDialogSections((prev) => {
+        const next: Record<TabId, DialogSection[]> = { ...prev };
+        for (const tab of TAB_ORDER) {
+          next[tab] = next[tab].map((s) => ({
+            ...s,
+            fields: s.fields.filter((f) => f !== fieldKey),
+          }));
+        }
+        return next;
+      });
       persistCustomFields(nextAll);
     }
 
     setPendingDeleteField(null);
   }, [
     pendingDeleteField,
-    activeTab,
     availableFields,
     allCustomFields,
     dialogSections,
@@ -686,35 +710,32 @@ export const TicketTypeLayoutDialog = ({
 
   const handleSaveCustomField = useCallback(
     (field: ICustomField) => {
-      const tabsToUpdate: TabId[] = [];
-      if (field.fieldUse?.__createTicket__) tabsToUpdate.push('createTicket');
-      if (field.fieldUse?.__ticketDetails__) tabsToUpdate.push('ticketDetails');
-      if (tabsToUpdate.length === 0) tabsToUpdate.push(activeTab);
+      // Ensure both tab flags are set — the pool is global.
+      const updatedField = {
+        ...field,
+        fieldUse: {
+          __createTicket__: true,
+          __ticketDetails__: true,
+          ...(field.fieldUse ?? {}),
+        },
+      };
 
-      // Compute new arrays before setting any state so all updates are
-      // consistent (avoiding nested state-setter calls inside updaters).
-      const nextAvailable = { ...availableFields };
-      for (const tab of tabsToUpdate) {
-        const idx = nextAvailable[tab].findIndex((f) => f.fieldName === field.fieldName);
-        if (idx >= 0) {
-          nextAvailable[tab] = [...nextAvailable[tab]];
-          nextAvailable[tab][idx] = field;
-        } else {
-          nextAvailable[tab] = [...nextAvailable[tab], field];
-        }
-      }
-      const idx = allCustomFields.findIndex((f) => f.id === field.id);
+      const idx = allCustomFields.findIndex((f) => f.id === updatedField.id);
+      const nextAvailable =
+        idx >= 0
+          ? availableFields.map((f) => (f.id === updatedField.id ? updatedField : updatedField))
+          : [...availableFields, updatedField];
       const nextAll =
         idx >= 0
-          ? allCustomFields.map((f) => (f.id === field.id ? field : f))
-          : [...allCustomFields, field];
+          ? allCustomFields.map((f) => (f.id === updatedField.id ? updatedField : f))
+          : [...allCustomFields, updatedField];
 
       setAvailableFields(nextAvailable);
       setAllCustomFields(nextAll);
       persistCustomFields(nextAll);
       setAddFieldDialogOpen(false);
     },
-    [activeTab, availableFields, allCustomFields, persistCustomFields],
+    [availableFields, allCustomFields, persistCustomFields],
   );
 
   const handleEditField = useCallback((field: ICustomField) => {
@@ -723,20 +744,11 @@ export const TicketTypeLayoutDialog = ({
 
   const handleEditFieldSave = useCallback(
     (updated: ICustomField) => {
-      const tabsToUpdate: TabId[] = [];
-      if (updated.fieldUse?.__createTicket__) tabsToUpdate.push('createTicket');
-      if (updated.fieldUse?.__ticketDetails__) tabsToUpdate.push('ticketDetails');
-      if (tabsToUpdate.length === 0) tabsToUpdate.push(activeTab);
-
-      const nextAvailable = { ...availableFields };
-      for (const tab of tabsToUpdate) {
-        const idx = nextAvailable[tab].findIndex((f) => f.fieldName === updated.fieldName);
-        if (idx >= 0) {
-          nextAvailable[tab] = [...nextAvailable[tab]];
-          nextAvailable[tab][idx] = updated;
-        }
-      }
       const idx = allCustomFields.findIndex((f) => f.id === updated.id);
+      const nextAvailable =
+        idx >= 0
+          ? availableFields.map((f) => (f.id === updated.id ? updated : updated))
+          : availableFields;
       const nextAll =
         idx >= 0
           ? allCustomFields.map((f) => (f.id === updated.id ? updated : f))
@@ -747,7 +759,7 @@ export const TicketTypeLayoutDialog = ({
       persistCustomFields(nextAll);
       setEditingField(null);
     },
-    [activeTab, availableFields, allCustomFields, persistCustomFields],
+    [availableFields, allCustomFields, persistCustomFields],
   );
 
   // ── Save ─────────────────────────────────────────────────────────
@@ -890,9 +902,7 @@ export const TicketTypeLayoutDialog = ({
               justifyContent: 'space-between',
             }}
           >
-            <Typography sx={columnLabelSx}>
-              {activeTab === 'createTicket' ? 'Create Ticket Fields' : 'Ticket Detail Fields'}
-            </Typography>
+            <Typography sx={columnLabelSx}>Additional Fields</Typography>
             <Tooltip title='Add New Field'>
               <IconButton
                 size='small'
@@ -914,7 +924,7 @@ export const TicketTypeLayoutDialog = ({
 
           {/* Available fields list */}
           <Box sx={{ flex: 1, overflowY: 'auto', p: 0 }}>
-            {unassignedFieldNames.length === 0 ? (
+            {currentAvailable.length === 0 ? (
               <Box
                 sx={{
                   display: 'flex',
@@ -928,72 +938,66 @@ export const TicketTypeLayoutDialog = ({
                 No fields added yet
               </Box>
             ) : (
-              currentAvailable
-                .filter((f) => unassignedFieldNames.includes(f.fieldName))
-                .map((field) => {
-                  const { fieldKey } = field;
-                  return (
-                    <Box
-                      key={field.id}
-                      draggable
-                      onDragStart={(e: React.DragEvent) => {
-                        e.dataTransfer.effectAllowed = 'move';
-                        e.dataTransfer.setData('text/plain', fieldKey);
-                        handleDragStart('available', fieldKey, field.fieldName);
-                      }}
-                      onDragEnd={handleDragEnd}
+              currentAvailable.map((field) => {
+                const { fieldKey } = field;
+                return (
+                  <Box
+                    key={field.id}
+                    draggable
+                    onDragStart={(e: React.DragEvent) => {
+                      e.dataTransfer.effectAllowed = 'move';
+                      e.dataTransfer.setData('text/plain', fieldKey);
+                      handleDragStart('available', fieldKey, field.fieldName);
+                    }}
+                    onDragEnd={handleDragEnd}
+                    sx={{
+                      px: 2.5,
+                      py: 1.2,
+                      borderBottom: '1px solid rgba(226, 232, 255, 0.4)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      cursor: 'grab',
+                      opacity:
+                        dragItem?.kind === 'available' && dragItem.fieldKey === fieldKey ? 0.4 : 1,
+                      '&:active': { cursor: 'grabbing' },
+                      '&:hover': { bgcolor: 'action.hover' },
+                    }}
+                  >
+                    <DragIndicatorIcon
                       sx={{
-                        px: 2.5,
-                        py: 1.2,
-                        borderBottom: '1px solid rgba(226, 232, 255, 0.4)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.5,
+                        fontSize: '0.9rem',
+                        color: 'text.disabled',
                         cursor: 'grab',
-                        opacity:
-                          dragItem?.kind === 'available' && dragItem.fieldKey === fieldKey
-                            ? 0.4
-                            : 1,
-                        '&:active': { cursor: 'grabbing' },
-                        '&:hover': { bgcolor: 'action.hover' },
+                        flexShrink: 0,
                       }}
-                    >
-                      <DragIndicatorIcon
-                        sx={{
-                          fontSize: '0.9rem',
-                          color: 'text.disabled',
-                          cursor: 'grab',
-                          flexShrink: 0,
-                        }}
-                      />
-                      <Typography sx={{ flex: 1, fontSize: '0.85rem' }}>
-                        {field.fieldName}
-                      </Typography>
-                      <Tooltip title='Edit field'>
-                        <IconButton
-                          size='small'
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditField(field);
-                          }}
-                          sx={{ p: 0.3, opacity: 0.5, '&:hover': { opacity: 1, color: '#1976d2' } }}
-                        >
-                          <EditIcon sx={{ fontSize: '0.85rem' }} />
-                        </IconButton>
-                      </Tooltip>
+                    />
+                    <Typography sx={{ flex: 1, fontSize: '0.85rem' }}>{field.fieldName}</Typography>
+                    <Tooltip title='Edit field'>
                       <IconButton
                         size='small'
                         onClick={(e) => {
                           e.stopPropagation();
-                          requestDeleteField(field.fieldName, field.fieldName);
+                          handleEditField(field);
                         }}
-                        sx={{ p: 0.3, opacity: 0.5, '&:hover': { opacity: 1, color: '#d32f2f' } }}
+                        sx={{ p: 0.3, opacity: 0.5, '&:hover': { opacity: 1, color: '#1976d2' } }}
                       >
-                        <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
+                        <EditIcon sx={{ fontSize: '0.85rem' }} />
                       </IconButton>
-                    </Box>
-                  );
-                })
+                    </Tooltip>
+                    <IconButton
+                      size='small'
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        requestDeleteField(field.fieldName, field.fieldName);
+                      }}
+                      sx={{ p: 0.3, opacity: 0.5, '&:hover': { opacity: 1, color: '#d32f2f' } }}
+                    >
+                      <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
+                    </IconButton>
+                  </Box>
+                );
+              })
             )}
           </Box>
         </Box>
@@ -1286,7 +1290,7 @@ export const TicketTypeLayoutDialog = ({
                     )}
 
                     {/* Add field dropdown */}
-                    {unassignedFieldNames.length > 0 && (
+                    {currentAvailable.length > 0 && (
                       <Box
                         sx={{
                           px: 2.5,
@@ -1302,7 +1306,7 @@ export const TicketTypeLayoutDialog = ({
                         }}
                       >
                         <FieldSelector
-                          fields={unassignedFieldNames}
+                          fields={currentAvailable.map((f) => f.fieldName)}
                           onChange={(val) => handleAddFieldToSection(section.id, val)}
                         />
                       </Box>
@@ -1486,7 +1490,6 @@ export const TicketTypeLayoutDialog = ({
           name: tt.name,
         }))}
         defaultTicketType={ticketType?.type}
-        defaultFieldUseFlag={TAB_TO_FIELD_USE_FLAG[activeTab]}
         accent='#0369a1'
         onClose={() => setAddFieldDialogOpen(false)}
         onSave={handleSaveCustomField}

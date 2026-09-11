@@ -3,6 +3,7 @@ import { Router } from 'express';
 import adminControlsRoutes from './AdminControls/AdminControls.routes';
 import configurationRoutes from './Configuration/Configuration.routes';
 import ticketTypeRoutes from './TicketType/TicketType.routes';
+import customFieldRoutes from './CustomField/CustomField.routes';
 import { ADMIN_PATHS } from '@serviceops/constants';
 
 /**
@@ -18,6 +19,7 @@ export function buildAdminRouter(ticketRouter?: Router): Router {
   router.use(`/${ADMIN_PATHS.ADMIN_CONTROLS}`, adminControlsRoutes);
   router.use(`/${ADMIN_PATHS.CONFIGURATION}`, configurationRoutes);
   router.use(`/${ADMIN_PATHS.TICKET_TYPE}`, ticketTypeRoutes);
+  router.use(`/${ADMIN_PATHS.CUSTOM_FIELD}`, customFieldRoutes);
 
   if (ticketRouter) {
     router.use(`/${ADMIN_PATHS.TICKETS}`, ticketRouter);
