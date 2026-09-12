@@ -33,8 +33,6 @@ interface SectionFormDialogProps {
   editingSection?: DialogSection | null;
   /** Ticket types to show in the Access Control list. */
   ticketTypes: TicketTypeRef[];
-  /** Available custom fields for field assignment to sub-sections. */
-  customFields?: { fieldKey: string; fieldName: string }[];
   accent?: string;
   defaultTicketType?: string;
   onClose: () => void;
@@ -46,7 +44,6 @@ const SectionFormDialog = ({
   existingSections = [],
   editingSection,
   ticketTypes = [],
-  customFields = [],
   accent = DEFAULT_ACCENT,
   defaultTicketType,
   onClose,
@@ -210,24 +207,6 @@ const SectionFormDialog = ({
     }));
   };
 
-  const handleAddFieldToSubSection = (subId: string, fieldKey: string) => {
-    updateForm((f) => ({
-      ...f,
-      subSections: (f.subSections ?? []).map((s) =>
-        s.id === subId ? { ...s, fields: [...(s.fields ?? []), fieldKey] } : s,
-      ),
-    }));
-  };
-
-  const handleRemoveFieldFromSubSection = (subId: string, fieldKey: string) => {
-    updateForm((f) => ({
-      ...f,
-      subSections: (f.subSections ?? []).map((s) =>
-        s.id === subId ? { ...s, fields: (s.fields ?? []).filter((fk) => fk !== fieldKey) } : s,
-      ),
-    }));
-  };
-
   const titleError = reqError(touched.title, requiredErrors.title);
   const currentSubSections = form.subSections ?? [];
 
@@ -329,95 +308,12 @@ const SectionFormDialog = ({
                       sx={{ '& .MuiOutlinedInput-root': { mt: 0, mb: 0 } }}
                     />
                   </Box>
-                  <Tooltip title='Assign fields'>
-                    <IconButton
-                      size='small'
-                      onClick={() => {
-                        const input = document.getElementById(`field-picker-${sub.id}`);
-                        input?.click();
-                      }}
-                      sx={{ color: accent }}
-                    >
-                      <AddCircleOutlineIcon sx={{ fontSize: '1.1rem' }} />
-                    </IconButton>
-                  </Tooltip>
                   <Tooltip title='Remove sub section'>
                     <IconButton size='small' onClick={() => handleRemoveSubSection(sub.id)}>
                       <DeleteIcon sx={{ fontSize: '1.1rem' }} />
                     </IconButton>
                   </Tooltip>
                 </Box>
-
-                {/* Hidden select for field picking */}
-                <select
-                  id={`field-picker-${sub.id}`}
-                  style={{ display: 'none' }}
-                  value=''
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handleAddFieldToSubSection(sub.id, e.target.value);
-                      e.target.value = '';
-                    }
-                  }}
-                >
-                  <option value='' disabled>
-                    Select a field
-                  </option>
-                  {customFields
-                    .filter(
-                      (f) =>
-                        !(sub.fields ?? []).includes(f.fieldKey) &&
-                        !currentSubSections.some(
-                          (other) =>
-                            other.id !== sub.id && (other.fields ?? []).includes(f.fieldKey),
-                        ),
-                    )
-                    .map((f) => (
-                      <option key={f.fieldKey} value={f.fieldKey}>
-                        {f.fieldName}
-                      </option>
-                    ))}
-                </select>
-
-                {/* Assigned fields chips */}
-                {(sub.fields ?? []).length > 0 && (
-                  <Box sx={{ px: 2, pb: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {(sub.fields ?? []).map((fieldKey) => {
-                      const customField = customFields.find((f) => f.fieldKey === fieldKey);
-                      const displayName = customField?.fieldName ?? fieldKey;
-                      return (
-                        <Box
-                          key={fieldKey}
-                          sx={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 0.5,
-                            px: 1,
-                            py: 0.25,
-                            borderRadius: 1,
-                            bgcolor: alpha(accent, 0.08),
-                            border: `1px solid ${alpha(accent, 0.2)}`,
-                            fontSize: '0.72rem',
-                          }}
-                        >
-                          <Typography sx={{ fontSize: '0.72rem' }}>{displayName}</Typography>
-                          <Box
-                            onClick={() => handleRemoveFieldFromSubSection(sub.id, fieldKey)}
-                            sx={{
-                              cursor: 'pointer',
-                              fontSize: '0.85rem',
-                              lineHeight: 1,
-                              color: 'text.secondary',
-                              '&:hover': { color: 'error.main' },
-                            }}
-                          >
-                            ×
-                          </Box>
-                        </Box>
-                      );
-                    })}
-                  </Box>
-                )}
               </Box>
             ))}
           </Box>

@@ -1,5 +1,14 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { Box, Typography, Tabs, Tab, Button, IconButton, Tooltip } from '@serviceops/component';
+import {
+  Box,
+  Typography,
+  Tabs,
+  Tab,
+  Button,
+  IconButton,
+  Tooltip,
+  TextField,
+} from '@serviceops/component';
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt';
 import EditIcon from '@mui/icons-material/Edit';
 import CreateIcon from '@mui/icons-material/NoteAdd';
@@ -115,6 +124,9 @@ export const TicketTypeLayoutDialog = ({
 
   // Section editing via SectionFormDialog (reuses the same dialog used for adding sections)
   const [editingSection, setEditingSection] = useState<DialogSection | null>(null);
+
+  // Inline sub-section name editing
+  const [editingSubId, setEditingSubId] = useState<string | null>(null);
 
   // Add Section dialog
   const [addSectionDialogOpen, setAddSectionDialogOpen] = useState(false);
@@ -304,6 +316,61 @@ export const TicketTypeLayoutDialog = ({
   const handleEditSectionTitleStart = useCallback((section: DialogSection) => {
     setEditingSection(section);
   }, []);
+
+  const handleEditSubSectionName = useCallback((subId: string) => {
+    setEditingSubId(subId);
+  }, []);
+
+  const handleSubSectionNameCommit = useCallback(
+    (sectionId: string, subId: string, newName: string) => {
+      setDialogSections((prev) => ({
+        ...prev,
+        [activeTab]: prev[activeTab].map((s) => {
+          if (s.id !== sectionId) return s;
+          return {
+            ...s,
+            subSections: (s.subSections ?? []).map((ss) =>
+              ss.id === subId ? { id: ss.id, name: newName.trim(), fields: ss.fields } : ss,
+            ),
+          };
+        }),
+      }));
+      setEditingSubId(null);
+    },
+    [activeTab],
+  );
+
+  const handleSubSectionNameChange = useCallback(
+    (sectionId: string, subId: string, name: string) => {
+      setDialogSections((prev) => ({
+        ...prev,
+        [activeTab]: prev[activeTab].map((s) => {
+          if (s.id !== sectionId) return s;
+          return {
+            ...s,
+            subSections: (s.subSections ?? []).map((ss) =>
+              ss.id === subId ? { id: ss.id, name, fields: ss.fields } : ss,
+            ),
+          };
+        }),
+      }));
+    },
+    [activeTab],
+  );
+
+  const handleDeleteSubSection = useCallback(
+    (sectionId: string, subId: string) => {
+      setDialogSections((prev) => ({
+        ...prev,
+        [activeTab]: prev[activeTab].map((s) =>
+          s.id === sectionId
+            ? { ...s, subSections: (s.subSections ?? []).filter((ss) => ss.id !== subId) }
+            : s,
+        ),
+      }));
+    },
+    [activeTab],
+  );
 
   const handleUpdateSectionTitle = useCallback(
     (
@@ -1525,16 +1592,68 @@ export const TicketTypeLayoutDialog = ({
                                   cursor: 'default',
                                 }}
                               />
-                              <Typography
-                                sx={{
-                                  flex: 1,
-                                  fontSize: '0.8rem',
-                                  fontWeight: 600,
-                                  color: 'text.secondary',
-                                }}
-                              >
-                                {sub.name || 'Unnamed Sub-section'}
-                              </Typography>
+                              {editingSubId === sub.id ? (
+                                <TextField
+                                  autoFocus
+                                  size='small'
+                                  value={sub.name}
+                                  onChange={(e) =>
+                                    handleSubSectionNameChange(section.id, sub.id, e.target.value)
+                                  }
+                                  onBlur={() =>
+                                    handleSubSectionNameCommit(section.id, sub.id, sub.name)
+                                  }
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === 'Escape') {
+                                      setEditingSubId(null);
+                                    }
+                                  }}
+                                  sx={{
+                                    flex: 1,
+                                    fontSize: '0.8rem',
+                                    '& .MuiInputBase-input': { fontSize: '0.8rem', py: 0.5 },
+                                  }}
+                                />
+                              ) : (
+                                <Typography
+                                  sx={{
+                                    flex: 1,
+                                    fontSize: '0.8rem',
+                                    fontWeight: 600,
+                                    color: 'text.secondary',
+                                  }}
+                                >
+                                  {sub.name || 'Unnamed Sub-section'}
+                                </Typography>
+                              )}
+                              {editingSubId !== sub.id && (
+                                <Tooltip title='Rename sub-section'>
+                                  <IconButton
+                                    size='small'
+                                    onClick={() => handleEditSubSectionName(sub.id)}
+                                    sx={{
+                                      p: 0.3,
+                                      opacity: 0.5,
+                                      '&:hover': { opacity: 1, color: '#1976d2' },
+                                    }}
+                                  >
+                                    <EditIcon sx={{ fontSize: '0.85rem' }} />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                              <Tooltip title='Delete sub-section'>
+                                <IconButton
+                                  size='small'
+                                  onClick={() => handleDeleteSubSection(section.id, sub.id)}
+                                  sx={{
+                                    p: 0.3,
+                                    opacity: 0.5,
+                                    '&:hover': { opacity: 1, color: '#d32f2f' },
+                                  }}
+                                >
+                                  <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
+                                </IconButton>
+                              </Tooltip>
                               <Typography
                                 sx={{
                                   fontSize: '0.7rem',
@@ -1546,53 +1665,7 @@ export const TicketTypeLayoutDialog = ({
                                 {(sub.fields ?? []).length} field
                                 {(sub.fields ?? []).length !== 1 ? 's' : ''}
                               </Typography>
-                              <Tooltip title='Add field to sub-section'>
-                                <IconButton
-                                  size='small'
-                                  onClick={() => {
-                                    const input = document.getElementById(
-                                      `sub-field-picker-${sub.id}`,
-                                    );
-                                    input?.click();
-                                  }}
-                                  sx={{
-                                    p: 0.3,
-                                    opacity: 0.5,
-                                    '&:hover': { opacity: 1, color: '#1976d2' },
-                                  }}
-                                >
-                                  <AddIcon sx={{ fontSize: '0.85rem' }} />
-                                </IconButton>
-                              </Tooltip>
                             </Box>
-
-                            {/* Hidden select for sub-section field picking */}
-                            <select
-                              id={`sub-field-picker-${sub.id}`}
-                              style={{ display: 'none' }}
-                              value=''
-                              onChange={(e) => {
-                                if (e.target.value) {
-                                  handleAddFieldToSubSection(section.id, sub.id, e.target.value);
-                                  e.target.value = '';
-                                }
-                              }}
-                            >
-                              <option value='' disabled>
-                                Select a field
-                              </option>
-                              {currentAvailable
-                                .filter(
-                                  (f) =>
-                                    !(sub.fields ?? []).includes(f.fieldKey) &&
-                                    !(section.fields ?? []).includes(f.fieldKey),
-                                )
-                                .map((f) => (
-                                  <option key={f.fieldKey} value={f.fieldKey}>
-                                    {f.fieldName}
-                                  </option>
-                                ))}
-                            </select>
 
                             {/* Sub-section fields */}
                             {(sub.fields ?? []).length === 0 ? (
@@ -1605,7 +1678,7 @@ export const TicketTypeLayoutDialog = ({
                                   fontStyle: 'italic',
                                 }}
                               >
-                                Drag fields here or use the + button above
+                                Drag fields here to add
                               </Box>
                             ) : (
                               <Box>
@@ -1958,10 +2031,6 @@ export const TicketTypeLayoutDialog = ({
         ticketTypes={ticketTypes.map((tt) => ({
           type: tt.type,
           name: tt.displayName || tt.name,
-        }))}
-        customFields={allCustomFields.map((f) => ({
-          fieldKey: f.fieldKey,
-          fieldName: f.fieldName,
         }))}
         defaultTicketType={ticketType?.type}
         accent='#0369a1'
