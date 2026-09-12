@@ -23,22 +23,27 @@ const SideNav = () => {
     >
       <Box className={collapsed ? classes.toggleButtonCenter : classes.toggleButtonRight}>
         {!collapsed && (
-          <Tooltip title={pinned ? 'Unpin sidebar' : 'Pin sidebar'} placement='right' arrow>
-            <IconButton
+          <Tooltip title={pinned ? 'Unpin sidebar' : 'Pin sidebar'} placement='left' arrow>
+            <Box
               onClick={pinned ? unpin : pin}
-              className={cx(pinned ? classes.pinIconActive : '')}
-            >
-              {pinned ? (
-                <PushPinIcon className={classes.pinIcon} />
-              ) : (
-                <PushPinOutlinedIcon className={classes.pinIconOutlined} />
+              className={cx(
+                classes.pinIcon,
+                pinned ? classes.pinIconActive : classes.pinIconOutlined,
               )}
-            </IconButton>
+              sx={{
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {pinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
+            </Box>
           </Tooltip>
         )}
 
         <Tooltip title={collapsed ? 'Open sidebar' : 'Close sidebar'} placement='right' arrow>
-          <IconButton onClick={toggleCollapse}>
+          <IconButton size='medium' onClick={toggleCollapse}>
             {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
           </IconButton>
         </Tooltip>
@@ -51,14 +56,23 @@ const SideNav = () => {
           overflowY: 'auto',
           overflowX: 'hidden',
           flex: 1,
-          // Thin, themed scrollbar
-          '&::-webkit-scrollbar': { width: 4 },
+          minHeight: 0,
+          // Themed scrollbar — slim, dark thumb on light sidebar
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#c0c0c0 transparent',
+          '&::-webkit-scrollbar': { width: 5 },
           '&::-webkit-scrollbar-track': { background: 'transparent' },
           '&::-webkit-scrollbar-thumb': {
-            background: 'rgba(255,255,255,0.2)',
-            borderRadius: 4,
+            background: '#c0c0c0',
+            borderRadius: 10,
+            border: '1px solid rgba(0,0,0,0.05)',
           },
-          '&::-webkit-scrollbar-thumb:hover': { background: 'rgba(255,255,255,0.35)' },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: '#999',
+          },
+          '&::-webkit-scrollbar-thumb:active': {
+            background: '#777',
+          },
         }}
       >
         <List sx={{ padding: 0 }}>

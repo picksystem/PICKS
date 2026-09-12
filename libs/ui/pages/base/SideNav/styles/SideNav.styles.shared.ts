@@ -293,6 +293,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     transition: 'all 0.3s ease',
     position: 'sticky',
     top: 0,
+    gap: 8,
     backgroundColor: 'inherit',
     zIndex: 10,
 

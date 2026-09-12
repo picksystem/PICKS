@@ -1,13 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import {
-  Box,
-  Typography,
-  TextField,
-  Alert,
-  IconButton,
-  Tooltip,
-  Button,
-} from '@serviceops/component';
+import { Box, Typography, TextField, Alert, IconButton, Tooltip } from '@serviceops/component';
 import { alpha, Checkbox, Collapse } from '@mui/material';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -41,6 +33,8 @@ interface SectionFormDialogProps {
   editingSection?: DialogSection | null;
   /** Ticket types to show in the Access Control list. */
   ticketTypes: TicketTypeRef[];
+  /** Available custom fields for field assignment to sub-sections. */
+  customFields?: { fieldKey: string; fieldName: string }[];
   accent?: string;
   defaultTicketType?: string;
   onClose: () => void;
@@ -52,6 +46,7 @@ const SectionFormDialog = ({
   existingSections = [],
   editingSection,
   ticketTypes = [],
+  customFields = [],
   accent = DEFAULT_ACCENT,
   defaultTicketType,
   onClose,
@@ -215,6 +210,24 @@ const SectionFormDialog = ({
     }));
   };
 
+  const handleAddFieldToSubSection = (subId: string, fieldKey: string) => {
+    updateForm((f) => ({
+      ...f,
+      subSections: (f.subSections ?? []).map((s) =>
+        s.id === subId ? { ...s, fields: [...(s.fields ?? []), fieldKey] } : s,
+      ),
+    }));
+  };
+
+  const handleRemoveFieldFromSubSection = (subId: string, fieldKey: string) => {
+    updateForm((f) => ({
+      ...f,
+      subSections: (f.subSections ?? []).map((s) =>
+        s.id === subId ? { ...s, fields: (s.fields ?? []).filter((fk) => fk !== fieldKey) } : s,
+      ),
+    }));
+  };
+
   const titleError = reqError(touched.title, requiredErrors.title);
   const currentSubSections = form.subSections ?? [];
 
@@ -264,15 +277,21 @@ const SectionFormDialog = ({
             >
               Sub Sections (Optional)
             </Typography>
-            <Button
-              variant='outlined'
-              size='small'
-              startIcon={<AddCircleOutlineIcon />}
-              onClick={handleAddSubSection}
-              sx={{ textTransform: 'none', fontSize: '0.75rem' }}
-            >
-              Add
-            </Button>
+            <Tooltip title='Add Sub Section'>
+              <IconButton
+                size='small'
+                onClick={handleAddSubSection}
+                sx={{
+                  bgcolor: accent,
+                  color: '#fff',
+                  '&:hover': { bgcolor: accent, opacity: 0.85 },
+                  width: 28,
+                  height: 28,
+                }}
+              >
+                <AddCircleOutlineIcon sx={{ fontSize: '1.1rem' }} />
+              </IconButton>
+            </Tooltip>
           </Box>
         </Box>
 
@@ -284,30 +303,121 @@ const SectionFormDialog = ({
                 key={sub.id}
                 sx={{
                   display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  px: 2,
-                  py: 0.75,
+                  flexDirection: 'column',
                   borderBottom: idx < currentSubSections.length - 1 ? '1px solid' : 'none',
                   borderColor: alpha(accent, 0.2),
                 }}
               >
-                <Box sx={{ flex: 1 }}>
-                  <TextField
-                    variant='outlined'
-                    size='small'
-                    fullWidth
-                    placeholder='Option name'
-                    value={sub.name}
-                    onChange={(e) => handleSubSectionNameChange(sub.id, e.target.value)}
-                    sx={{ '& .MuiOutlinedInput-root': { mt: 0, mb: 0 } }}
-                  />
+                {/* Sub-section name row */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 2,
+                    py: 0.75,
+                  }}
+                >
+                  <Box sx={{ flex: 1 }}>
+                    <TextField
+                      variant='outlined'
+                      size='small'
+                      fullWidth
+                      placeholder='Sub-section name'
+                      value={sub.name}
+                      onChange={(e) => handleSubSectionNameChange(sub.id, e.target.value)}
+                      sx={{ '& .MuiOutlinedInput-root': { mt: 0, mb: 0 } }}
+                    />
+                  </Box>
+                  <Tooltip title='Assign fields'>
+                    <IconButton
+                      size='small'
+                      onClick={() => {
+                        const input = document.getElementById(`field-picker-${sub.id}`);
+                        input?.click();
+                      }}
+                      sx={{ color: accent }}
+                    >
+                      <AddCircleOutlineIcon sx={{ fontSize: '1.1rem' }} />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title='Remove sub section'>
+                    <IconButton size='small' onClick={() => handleRemoveSubSection(sub.id)}>
+                      <DeleteIcon sx={{ fontSize: '1.1rem' }} />
+                    </IconButton>
+                  </Tooltip>
                 </Box>
-                <Tooltip title='Remove sub section'>
-                  <IconButton size='small' onClick={() => handleRemoveSubSection(sub.id)}>
-                    <DeleteIcon sx={{ fontSize: '1.1rem' }} />
-                  </IconButton>
-                </Tooltip>
+
+                {/* Hidden select for field picking */}
+                <select
+                  id={`field-picker-${sub.id}`}
+                  style={{ display: 'none' }}
+                  value=''
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleAddFieldToSubSection(sub.id, e.target.value);
+                      e.target.value = '';
+                    }
+                  }}
+                >
+                  <option value='' disabled>
+                    Select a field
+                  </option>
+                  {customFields
+                    .filter(
+                      (f) =>
+                        !(sub.fields ?? []).includes(f.fieldKey) &&
+                        !currentSubSections.some(
+                          (other) =>
+                            other.id !== sub.id && (other.fields ?? []).includes(f.fieldKey),
+                        ),
+                    )
+                    .map((f) => (
+                      <option key={f.fieldKey} value={f.fieldKey}>
+                        {f.fieldName}
+                      </option>
+                    ))}
+                </select>
+
+                {/* Assigned fields chips */}
+                {(sub.fields ?? []).length > 0 && (
+                  <Box sx={{ px: 2, pb: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {(sub.fields ?? []).map((fieldKey) => {
+                      const customField = customFields.find((f) => f.fieldKey === fieldKey);
+                      const displayName = customField?.fieldName ?? fieldKey;
+                      return (
+                        <Box
+                          key={fieldKey}
+                          sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            px: 1,
+                            py: 0.25,
+                            borderRadius: 1,
+                            bgcolor: alpha(accent, 0.08),
+                            border: `1px solid ${alpha(accent, 0.2)}`,
+                            fontSize: '0.72rem',
+                          }}
+                        >
+                          <Typography sx={{ fontSize: '0.72rem' }}>{displayName}</Typography>
+                          <Box
+                            onClick={() => handleRemoveFieldFromSubSection(sub.id, fieldKey)}
+                            sx={{
+                              cursor: 'pointer',
+                              fontSize: '0.85rem',
+                              lineHeight: 1,
+                              color: 'text.secondary',
+                              '&:hover': { color: 'error.main' },
+                            }}
+                          >
+                            ×
+                          </Box>
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                )}
               </Box>
             ))}
           </Box>

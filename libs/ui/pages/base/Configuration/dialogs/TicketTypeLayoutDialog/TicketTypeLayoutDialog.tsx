@@ -123,7 +123,7 @@ export const TicketTypeLayoutDialog = ({
   const [pendingDeleteField, setPendingDeleteField] = useState<{
     fieldName: string;
     displayName: string;
-    fromSection?: { sectionId: string; fieldKey: string };
+    fromSection?: { sectionId: string; subId?: string; fieldKey: string };
   } | null>(null);
   const [pendingDeleteSection, setPendingDeleteSection] = useState<{
     sectionId: string;
@@ -214,8 +214,7 @@ export const TicketTypeLayoutDialog = ({
   // Fields from dialog sections that are NOT in the available pool
   // Per-tab: only fields in the current tab's sections count as "used"
   // Per-tab used field keys — a field is hidden from Additional Fields only
-  // when it has been placed in a section of that SAME tab. Fields used in
-  // other tabs remain visible.
+  // when it has been placed in a section or sub-section of that SAME tab.
   const usedFieldKeysByTab = useMemo<Record<TabId, Set<string>>>(() => {
     const result: Record<TabId, Set<string>> = {
       createTicket: new Set(),
@@ -225,6 +224,11 @@ export const TicketTypeLayoutDialog = ({
       for (const section of dialogSections[tab] ?? []) {
         for (const f of section.fields) {
           result[tab].add(f);
+        }
+        for (const sub of section.subSections ?? []) {
+          for (const f of sub.fields ?? []) {
+            result[tab].add(f);
+          }
         }
       }
     }
@@ -377,6 +381,79 @@ export const TicketTypeLayoutDialog = ({
           s.id === sectionId ? { ...s, fields: s.fields.filter((f) => f !== fieldKey) } : s,
         ),
       }));
+    },
+    [layoutConfig],
+  );
+
+  const handleAddFieldToSubSection = useCallback(
+    (sectionId: string, subId: string, fieldKey: string) => {
+      const sourceTab = resolveSectionTab(sectionId, layoutConfig);
+      setDialogSections((prev) => ({
+        ...prev,
+        [sourceTab]: prev[sourceTab].map((s) =>
+          s.id === sectionId
+            ? {
+                ...s,
+                subSections: (s.subSections ?? []).map((sub) =>
+                  sub.id === subId ? { ...sub, fields: [...(sub.fields ?? []), fieldKey] } : sub,
+                ),
+              }
+            : s,
+        ),
+      }));
+    },
+    [layoutConfig],
+  );
+
+  const handleRemoveFieldFromSubSection = useCallback(
+    (sectionId: string, subId: string, fieldKey: string) => {
+      const sourceTab = resolveSectionTab(sectionId, layoutConfig);
+      setDialogSections((prev) => ({
+        ...prev,
+        [sourceTab]: prev[sourceTab].map((s) =>
+          s.id === sectionId
+            ? {
+                ...s,
+                subSections: (s.subSections ?? []).map((sub) =>
+                  sub.id === subId
+                    ? { ...sub, fields: (sub.fields ?? []).filter((f) => f !== fieldKey) }
+                    : sub,
+                ),
+              }
+            : s,
+        ),
+      }));
+    },
+    [layoutConfig],
+  );
+
+  const handleReorderFieldInSubSection = useCallback(
+    (sectionId: string, subId: string, fieldKey: string, direction: 'up' | 'down') => {
+      const sourceTab = resolveSectionTab(sectionId, layoutConfig);
+      setDialogSections((prev) => {
+        const tabSections = prev[sourceTab];
+        const section = tabSections.find((s) => s.id === sectionId);
+        if (!section) return prev;
+        const sub = (section.subSections ?? []).find((ss) => ss.id === subId);
+        if (!sub) return prev;
+        const subFields = sub.fields ?? [];
+        const idx = subFields.indexOf(fieldKey);
+        if (idx === -1) return prev;
+        const newIdx = direction === 'up' ? idx - 1 : idx + 1;
+        if (newIdx < 0 || newIdx >= subFields.length) return prev;
+        const next = { ...prev };
+        next[sourceTab] = tabSections.map((s) => {
+          if (s.id !== sectionId) return s;
+          const subSections = (s.subSections ?? []).map((ss) => {
+            if (ss.id !== subId) return ss;
+            const fields = [...(ss.fields ?? [])];
+            [fields[idx], fields[newIdx]] = [fields[newIdx], fields[idx]];
+            return { ...ss, fields };
+          });
+          return { ...s, subSections };
+        });
+        return next;
+      });
     },
     [layoutConfig],
   );
@@ -608,6 +685,11 @@ export const TicketTypeLayoutDialog = ({
     setDragOverField(null);
   }, []);
 
+  // Clear drag state when switching tabs
+  useEffect(() => {
+    handleDragEnd();
+  }, [activeTabIdx]);
+
   // ── Field CRUD ──────────────────────────────────────────────────
 
   const persistCustomFields = useCallback(
@@ -631,7 +713,16 @@ export const TicketTypeLayoutDialog = ({
       setDialogSections((prev) => ({
         ...prev,
         [sourceTab]: prev[sourceTab].map((s) =>
-          s.id === sectionId ? { ...s, fields: s.fields.filter((f) => f !== fieldKey) } : s,
+          s.id === sectionId
+            ? {
+                ...s,
+                fields: s.fields.filter((f) => f !== fieldKey),
+                subSections: (s.subSections ?? []).map((sub) => ({
+                  ...sub,
+                  fields: (sub.fields ?? []).filter((f) => f !== fieldKey),
+                })),
+              }
+            : s,
         ),
       }));
 
@@ -641,6 +732,10 @@ export const TicketTypeLayoutDialog = ({
         nextCustom[sectionId] = {
           ...nextCustom[sectionId],
           fields: nextCustom[sectionId].fields.filter((f) => f !== fieldKey),
+          subSections: (nextCustom[sectionId].subSections ?? []).map((sub) => ({
+            ...sub,
+            fields: (sub.fields ?? []).filter((f) => f !== fieldKey),
+          })),
         };
       }
       onSave(mergeLayoutConfig({ ...layoutConfig, customSections: nextCustom }));
@@ -657,12 +752,16 @@ export const TicketTypeLayoutDialog = ({
       const nextAvailable = availableFields.filter((f) => f.fieldName !== fieldName);
       const nextAll = allCustomFields.filter((f) => f.id !== removedId);
 
-      // Remove field from all dialog sections and persist the cleaned layout
+      // Remove field from all dialog sections and sub-sections, then persist
       const nextCustomSections = { ...(layoutConfig.customSections ?? {}) };
       for (const sId of Object.keys(nextCustomSections)) {
         nextCustomSections[sId] = {
           ...nextCustomSections[sId],
           fields: nextCustomSections[sId].fields.filter((f) => f !== fieldKey),
+          subSections: (nextCustomSections[sId].subSections ?? []).map((sub) => ({
+            ...sub,
+            fields: (sub.fields ?? []).filter((f) => f !== fieldKey),
+          })),
         };
       }
       const cleanedLayout = mergeLayoutConfig({
@@ -704,7 +803,7 @@ export const TicketTypeLayoutDialog = ({
     (
       fieldName: string,
       displayName: string,
-      fromSection?: { sectionId: string; fieldKey: string },
+      fromSection?: { sectionId: string; subId?: string; fieldKey: string },
     ) => {
       setPendingDeleteField({
         fieldName,
@@ -1331,7 +1430,8 @@ export const TicketTypeLayoutDialog = ({
                           py: 1.2,
                           borderTop: '1px solid rgba(226, 232, 255, 0.4)',
                           borderBottom:
-                            sectionIndex === currentSections.length - 1
+                            sectionIndex === currentSections.length - 1 &&
+                            section.subSections.length === 0
                               ? 'none'
                               : '1px solid rgba(226, 232, 255, 0.6)',
                           display: 'flex',
@@ -1343,6 +1443,311 @@ export const TicketTypeLayoutDialog = ({
                           fields={currentAvailable.map((f) => f.fieldName)}
                           onChange={(val) => handleAddFieldToSection(section.id, val)}
                         />
+                      </Box>
+                    )}
+
+                    {/* ── Sub-sections ── */}
+                    {(section.subSections ?? []).length > 0 && (
+                      <Box
+                        sx={{
+                          borderTop: '1px solid rgba(226, 232, 255, 0.6)',
+                          borderBottom:
+                            sectionIndex === currentSections.length - 1
+                              ? 'none'
+                              : '1px solid rgba(226, 232, 255, 0.6)',
+                        }}
+                      >
+                        {(section.subSections ?? []).map((sub, subIdx) => (
+                          <Box
+                            key={sub.id}
+                            onDragOver={(e: React.DragEvent) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                            onDragLeave={(e: React.DragEvent) => {
+                              e.stopPropagation();
+                              handleDragLeaveSection(e);
+                            }}
+                            onDrop={(e: React.DragEvent) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (!dragItem) return;
+                              let targetFieldKey = dragItem.fieldKey;
+                              if (dragItem.kind === 'available') {
+                                const cf = availableFields.find(
+                                  (f) => f.fieldName === dragItem.fieldName,
+                                );
+                                if (cf) targetFieldKey = cf.fieldKey;
+                              }
+                              if ((sub.fields ?? []).includes(targetFieldKey)) {
+                                handleDragEnd();
+                                return;
+                              }
+                              const sourceTab =
+                                dragItem.kind === 'section' && dragItem.sectionId
+                                  ? resolveSectionTab(dragItem.sectionId, layoutConfig)
+                                  : activeTab;
+                              const alreadyInTab = (dialogSections[sourceTab] ?? []).some((s) => {
+                                if (s.fields.includes(targetFieldKey)) return true;
+                                return (s.subSections ?? []).some((ss) =>
+                                  (ss.fields ?? []).includes(targetFieldKey),
+                                );
+                              });
+                              if (!alreadyInTab) {
+                                handleAddFieldToSubSection(section.id, sub.id, targetFieldKey);
+                              }
+                              handleDragEnd();
+                            }}
+                            sx={{
+                              ml: 3,
+                              borderBottom:
+                                subIdx < (section.subSections ?? []).length - 1
+                                  ? '1px solid rgba(226, 232, 255, 0.4)'
+                                  : 'none',
+                            }}
+                          >
+                            {/* Sub-section header row */}
+                            <Box
+                              sx={{
+                                px: 2,
+                                py: 1,
+                                bgcolor: alpha('#0369a1', 0.04),
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.75,
+                              }}
+                            >
+                              <DragIndicatorIcon
+                                sx={{
+                                  fontSize: '0.85rem',
+                                  color: 'text.disabled',
+                                  flexShrink: 0,
+                                  cursor: 'default',
+                                }}
+                              />
+                              <Typography
+                                sx={{
+                                  flex: 1,
+                                  fontSize: '0.8rem',
+                                  fontWeight: 600,
+                                  color: 'text.secondary',
+                                }}
+                              >
+                                {sub.name || 'Unnamed Sub-section'}
+                              </Typography>
+                              <Typography
+                                sx={{
+                                  fontSize: '0.7rem',
+                                  color: 'text.secondary',
+                                  fontWeight: 500,
+                                  mr: 0.5,
+                                }}
+                              >
+                                {(sub.fields ?? []).length} field
+                                {(sub.fields ?? []).length !== 1 ? 's' : ''}
+                              </Typography>
+                              <Tooltip title='Add field to sub-section'>
+                                <IconButton
+                                  size='small'
+                                  onClick={() => {
+                                    const input = document.getElementById(
+                                      `sub-field-picker-${sub.id}`,
+                                    );
+                                    input?.click();
+                                  }}
+                                  sx={{
+                                    p: 0.3,
+                                    opacity: 0.5,
+                                    '&:hover': { opacity: 1, color: '#1976d2' },
+                                  }}
+                                >
+                                  <AddIcon sx={{ fontSize: '0.85rem' }} />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+
+                            {/* Hidden select for sub-section field picking */}
+                            <select
+                              id={`sub-field-picker-${sub.id}`}
+                              style={{ display: 'none' }}
+                              value=''
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  handleAddFieldToSubSection(section.id, sub.id, e.target.value);
+                                  e.target.value = '';
+                                }
+                              }}
+                            >
+                              <option value='' disabled>
+                                Select a field
+                              </option>
+                              {currentAvailable
+                                .filter(
+                                  (f) =>
+                                    !(sub.fields ?? []).includes(f.fieldKey) &&
+                                    !(section.fields ?? []).includes(f.fieldKey),
+                                )
+                                .map((f) => (
+                                  <option key={f.fieldKey} value={f.fieldKey}>
+                                    {f.fieldName}
+                                  </option>
+                                ))}
+                            </select>
+
+                            {/* Sub-section fields */}
+                            {(sub.fields ?? []).length === 0 ? (
+                              <Box
+                                sx={{
+                                  px: 2,
+                                  py: 0.75,
+                                  color: 'text.disabled',
+                                  fontSize: '0.75rem',
+                                  fontStyle: 'italic',
+                                }}
+                              >
+                                Drag fields here or use the + button above
+                              </Box>
+                            ) : (
+                              <Box>
+                                {(sub.fields ?? []).map((fieldKey, subFieldIdx) => {
+                                  const customField = allCustomFields.find(
+                                    (f) => f.fieldKey === fieldKey,
+                                  );
+                                  const displayName = customField?.fieldName ?? fieldKey;
+
+                                  return (
+                                    <Box
+                                      key={fieldKey}
+                                      sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        px: 2,
+                                        py: 0.9,
+                                        borderBottom:
+                                          subFieldIdx < (sub.fields ?? []).length - 1
+                                            ? '1px solid rgba(226, 232, 255, 0.3)'
+                                            : 'none',
+                                        '&:last-child': { borderBottom: 'none' },
+                                      }}
+                                    >
+                                      <DragIndicatorIcon
+                                        sx={{
+                                          fontSize: '0.8rem',
+                                          color: 'text.disabled',
+                                          flexShrink: 0,
+                                          mr: 1,
+                                        }}
+                                      />
+                                      <Typography
+                                        sx={{
+                                          flex: 1,
+                                          fontSize: '0.8rem',
+                                          color: 'text.secondary',
+                                        }}
+                                      >
+                                        {displayName}
+                                      </Typography>
+                                      <Tooltip title='Edit field'>
+                                        <IconButton
+                                          size='small'
+                                          onClick={() =>
+                                            customField && handleEditField(customField)
+                                          }
+                                          sx={{
+                                            p: 0.3,
+                                            opacity: 0.5,
+                                            '&:hover': { opacity: 1, color: '#1976d2' },
+                                          }}
+                                        >
+                                          <EditIcon sx={{ fontSize: '0.8rem' }} />
+                                        </IconButton>
+                                      </Tooltip>
+                                      <Tooltip title='Delete field'>
+                                        <IconButton
+                                          size='small'
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            requestDeleteField(fieldKey, displayName, {
+                                              sectionId: section.id,
+                                              subId: sub.id,
+                                              fieldKey,
+                                            });
+                                          }}
+                                          sx={{
+                                            p: 0.3,
+                                            opacity: 0.5,
+                                            '&:hover': { opacity: 1, color: '#d32f2f' },
+                                          }}
+                                        >
+                                          <DeleteOutlineIcon sx={{ fontSize: '0.8rem' }} />
+                                        </IconButton>
+                                      </Tooltip>
+                                      <Tooltip title='Move up'>
+                                        <IconButton
+                                          size='small'
+                                          onClick={() =>
+                                            handleReorderFieldInSubSection(
+                                              section.id,
+                                              sub.id,
+                                              fieldKey,
+                                              'up',
+                                            )
+                                          }
+                                          sx={{
+                                            p: 0.3,
+                                            opacity: 0.5,
+                                            '&:hover': { opacity: 1, color: '#1976d2' },
+                                          }}
+                                        >
+                                          <ArrowUpwardIcon sx={{ fontSize: '0.8rem' }} />
+                                        </IconButton>
+                                      </Tooltip>
+                                      <Tooltip title='Move down'>
+                                        <IconButton
+                                          size='small'
+                                          onClick={() =>
+                                            handleReorderFieldInSubSection(
+                                              section.id,
+                                              sub.id,
+                                              fieldKey,
+                                              'down',
+                                            )
+                                          }
+                                          sx={{
+                                            p: 0.3,
+                                            opacity: 0.5,
+                                            '&:hover': { opacity: 1, color: '#1976d2' },
+                                          }}
+                                        >
+                                          <ArrowDownwardIcon sx={{ fontSize: '0.8rem' }} />
+                                        </IconButton>
+                                      </Tooltip>
+                                      <Tooltip title='Remove from sub-section'>
+                                        <IconButton
+                                          size='small'
+                                          onClick={() =>
+                                            handleRemoveFieldFromSubSection(
+                                              section.id,
+                                              sub.id,
+                                              fieldKey,
+                                            )
+                                          }
+                                          sx={{
+                                            p: 0.3,
+                                            opacity: 0.5,
+                                            '&:hover': { opacity: 1, color: '#d32f2f' },
+                                          }}
+                                        >
+                                          <ArrowBackIcon sx={{ fontSize: '0.8rem' }} />
+                                        </IconButton>
+                                      </Tooltip>
+                                    </Box>
+                                  );
+                                })}
+                              </Box>
+                            )}
+                          </Box>
+                        ))}
                       </Box>
                     )}
                   </Box>
@@ -1553,6 +1958,10 @@ export const TicketTypeLayoutDialog = ({
         ticketTypes={ticketTypes.map((tt) => ({
           type: tt.type,
           name: tt.displayName || tt.name,
+        }))}
+        customFields={allCustomFields.map((f) => ({
+          fieldKey: f.fieldKey,
+          fieldName: f.fieldName,
         }))}
         defaultTicketType={ticketType?.type}
         accent='#0369a1'
