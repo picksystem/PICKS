@@ -18,6 +18,8 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import { alpha, Dialog, DialogActions } from '@mui/material';
 import { ITicketType, ICustomField, ITicketTypeLayoutConfig } from '@serviceops/interfaces';
 import { getDefaultLayoutConfig, mergeLayoutConfig } from '@serviceops/tickettypelayout';
@@ -125,9 +127,6 @@ export const TicketTypeLayoutDialog = ({
   // Section editing via SectionFormDialog (reuses the same dialog used for adding sections)
   const [editingSection, setEditingSection] = useState<DialogSection | null>(null);
 
-  // Inline sub-section name editing
-  const [editingSubId, setEditingSubId] = useState<string | null>(null);
-
   // Add Section dialog
   const [addSectionDialogOpen, setAddSectionDialogOpen] = useState(false);
 
@@ -140,6 +139,16 @@ export const TicketTypeLayoutDialog = ({
   const [pendingDeleteSection, setPendingDeleteSection] = useState<{
     sectionId: string;
     title: string;
+  } | null>(null);
+
+  // Inline sub-section name editing
+  const [editingSubId, setEditingSubId] = useState<string | null>(null);
+
+  // Delete confirmation for sub-sections
+  const [pendingDeleteSubSection, setPendingDeleteSubSection] = useState<{
+    sectionId: string;
+    subId: string;
+    subName: string;
   } | null>(null);
 
   // Initialize layout config from ticket type's saved config, or defaults
@@ -321,25 +330,6 @@ export const TicketTypeLayoutDialog = ({
     setEditingSubId(subId);
   }, []);
 
-  const handleSubSectionNameCommit = useCallback(
-    (sectionId: string, subId: string, newName: string) => {
-      setDialogSections((prev) => ({
-        ...prev,
-        [activeTab]: prev[activeTab].map((s) => {
-          if (s.id !== sectionId) return s;
-          return {
-            ...s,
-            subSections: (s.subSections ?? []).map((ss) =>
-              ss.id === subId ? { id: ss.id, name: newName.trim(), fields: ss.fields } : ss,
-            ),
-          };
-        }),
-      }));
-      setEditingSubId(null);
-    },
-    [activeTab],
-  );
-
   const handleSubSectionNameChange = useCallback(
     (sectionId: string, subId: string, name: string) => {
       setDialogSections((prev) => ({
@@ -358,19 +348,74 @@ export const TicketTypeLayoutDialog = ({
     [activeTab],
   );
 
-  const handleDeleteSubSection = useCallback(
-    (sectionId: string, subId: string) => {
+  const handleSubSectionNameCommit = useCallback(
+    (sectionId: string, subId: string, newName: string) => {
       setDialogSections((prev) => ({
         ...prev,
-        [activeTab]: prev[activeTab].map((s) =>
-          s.id === sectionId
-            ? { ...s, subSections: (s.subSections ?? []).filter((ss) => ss.id !== subId) }
-            : s,
-        ),
+        [activeTab]: prev[activeTab].map((s) => {
+          if (s.id !== sectionId) return s;
+          return {
+            ...s,
+            subSections: (s.subSections ?? []).map((ss) =>
+              ss.id === subId ? { id: ss.id, name: newName.trim(), fields: ss.fields } : ss,
+            ),
+          };
+        }),
       }));
+      setEditingSubId(null);
+
+      // Persist the rename to parent immediately so it survives refresh.
+      // Read the latest layoutConfig from the ref to avoid stale closures.
+      const currentConfig = lastSyncedLayoutRef.current ?? layoutConfig;
+      const nextCustom = { ...(currentConfig.customSections ?? {}) };
+      if (nextCustom[sectionId]) {
+        nextCustom[sectionId] = {
+          ...nextCustom[sectionId],
+          subSections: (nextCustom[sectionId].subSections ?? []).map((ss) =>
+            ss.id === subId ? { ...ss, name: newName.trim() } : ss,
+          ),
+        };
+      }
+      onSave(mergeLayoutConfig({ ...currentConfig, customSections: nextCustom }));
+      lastSyncedLayoutRef.current = { ...currentConfig, customSections: nextCustom };
     },
-    [activeTab],
+    [activeTab, layoutConfig, onSave, mergeLayoutConfig],
   );
+
+  const requestDeleteSubSection = useCallback(
+    (sectionId: string, subId: string, subName: string) => {
+      setPendingDeleteSubSection({ sectionId, subId, subName });
+    },
+    [],
+  );
+
+  const cancelDeleteSubSection = useCallback(() => {
+    setPendingDeleteSubSection(null);
+  }, []);
+
+  const confirmDeleteSubSection = useCallback(() => {
+    if (!pendingDeleteSubSection) return;
+    const { sectionId, subId } = pendingDeleteSubSection;
+    setDialogSections((prev) => ({
+      ...prev,
+      [activeTab]: prev[activeTab].map((s) =>
+        s.id === sectionId
+          ? { ...s, subSections: (s.subSections ?? []).filter((ss) => ss.id !== subId) }
+          : s,
+      ),
+    }));
+
+    // Persist the deletion to parent immediately
+    const nextCustom = { ...(layoutConfig.customSections ?? {}) };
+    if (nextCustom[sectionId]) {
+      nextCustom[sectionId] = {
+        ...nextCustom[sectionId],
+        subSections: (nextCustom[sectionId].subSections ?? []).filter((ss) => ss.id !== subId),
+      };
+    }
+    onSave(mergeLayoutConfig({ ...layoutConfig, customSections: nextCustom }));
+    setPendingDeleteSubSection(null);
+  }, [pendingDeleteSubSection, activeTab, layoutConfig, onSave, mergeLayoutConfig]);
 
   const handleUpdateSectionTitle = useCallback(
     (
@@ -1626,7 +1671,23 @@ export const TicketTypeLayoutDialog = ({
                                   {sub.name || 'Unnamed Sub-section'}
                                 </Typography>
                               )}
-                              {editingSubId !== sub.id && (
+                              {editingSubId === sub.id ? (
+                                <Tooltip title='Save'>
+                                  <IconButton
+                                    size='small'
+                                    onClick={() =>
+                                      handleSubSectionNameCommit(section.id, sub.id, sub.name)
+                                    }
+                                    sx={{
+                                      p: 0.3,
+                                      opacity: 0.5,
+                                      '&:hover': { opacity: 1, color: '#2e7d32' },
+                                    }}
+                                  >
+                                    <CheckIcon sx={{ fontSize: '0.85rem' }} />
+                                  </IconButton>
+                                </Tooltip>
+                              ) : (
                                 <Tooltip title='Rename sub-section'>
                                   <IconButton
                                     size='small'
@@ -1641,19 +1702,37 @@ export const TicketTypeLayoutDialog = ({
                                   </IconButton>
                                 </Tooltip>
                               )}
-                              <Tooltip title='Delete sub-section'>
-                                <IconButton
-                                  size='small'
-                                  onClick={() => handleDeleteSubSection(section.id, sub.id)}
-                                  sx={{
-                                    p: 0.3,
-                                    opacity: 0.5,
-                                    '&:hover': { opacity: 1, color: '#d32f2f' },
-                                  }}
-                                >
-                                  <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
-                                </IconButton>
-                              </Tooltip>
+                              {editingSubId === sub.id ? (
+                                <Tooltip title='Cancel'>
+                                  <IconButton
+                                    size='small'
+                                    onClick={() => setEditingSubId(null)}
+                                    sx={{
+                                      p: 0.3,
+                                      opacity: 0.5,
+                                      '&:hover': { opacity: 1, color: '#d32f2f' },
+                                    }}
+                                  >
+                                    <CloseIcon sx={{ fontSize: '0.85rem' }} />
+                                  </IconButton>
+                                </Tooltip>
+                              ) : (
+                                <Tooltip title='Delete sub-section'>
+                                  <IconButton
+                                    size='small'
+                                    onClick={() =>
+                                      requestDeleteSubSection(section.id, sub.id, sub.name)
+                                    }
+                                    sx={{
+                                      p: 0.3,
+                                      opacity: 0.5,
+                                      '&:hover': { opacity: 1, color: '#d32f2f' },
+                                    }}
+                                  >
+                                    <DeleteOutlineIcon sx={{ fontSize: '0.85rem' }} />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
                               <Typography
                                 sx={{
                                   fontSize: '0.7rem',
@@ -1906,6 +1985,84 @@ export const TicketTypeLayoutDialog = ({
           </Button>
           <Button
             onClick={confirmDeleteField}
+            color='error'
+            variant='contained'
+            sx={{ textTransform: 'none' }}
+          >
+            Delete
+          </Button>
+        </Box>
+      </Dialog>
+
+      {/* ── Delete Sub-Section Confirmation Dialog ───────────────────── */}
+      <Dialog
+        open={!!pendingDeleteSubSection}
+        onClose={cancelDeleteSubSection}
+        maxWidth='xs'
+        fullWidth
+        slotProps={{
+          transition: { unmountOnExit: true },
+          paper: { sx: { borderRadius: 3, overflow: 'hidden' } },
+        }}
+      >
+        {/* Header */}
+        <Box
+          sx={{
+            px: 3,
+            py: 2,
+            background: '#0369a1',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+          }}
+        >
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              borderRadius: 1.5,
+              bgcolor: 'rgba(255,255,255,0.18)',
+              border: '1.5px solid rgba(255,255,255,0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <DeleteOutlineIcon sx={{ color: '#fff' }} />
+          </Box>
+          <Box>
+            <Typography
+              sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff', lineHeight: 1.2 }}
+            >
+              Delete Sub-Section
+            </Typography>
+            <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}>
+              This action cannot be undone
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Body */}
+        <Box sx={{ px: 3, py: 2.5 }}>
+          <Typography variant='body2'>
+            Are you sure you want to delete the sub-section{' '}
+            <strong>{pendingDeleteSubSection?.subName || 'this sub-section'}</strong>? Any fields
+            inside it will be removed from this section.
+          </Typography>
+        </Box>
+
+        {/* Footer actions */}
+        <Box sx={{ px: 3, pb: 2.5, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+          <Button
+            onClick={cancelDeleteSubSection}
+            variant='outlined'
+            sx={{ textTransform: 'none' }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDeleteSubSection}
             color='error'
             variant='contained'
             sx={{ textTransform: 'none' }}
