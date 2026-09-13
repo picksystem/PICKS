@@ -80,6 +80,10 @@ export const useStyles = makeStyles()((theme) => ({
     [theme.breakpoints.down('sm')]: { gridTemplateColumns: '1fr' },
   },
 
+  formGridItem: {
+    minWidth: 0,
+  },
+
   fullWidth: { gridColumn: '1 / -1' },
 
   // ── Action buttons bar ───────────────────────────────────────────────────

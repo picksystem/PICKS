@@ -207,9 +207,24 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
 
   const defaultCreatedBy = user?.name || '';
 
+  // Pre-populate caller fields from the logged-in user's API data
+  const defaultCallerFields = useMemo(() => {
+    if (!user) return {};
+    return {
+      callerFirstName: user.firstName || '',
+      callerLastName: user.lastName || '',
+      callerEmail: user.email || '',
+      callerPhone: user.phone || '',
+      callerLocation: user.workLocation || '',
+      callerDepartment: user.department || '',
+      callerReportingManager: user.managerName || '',
+    };
+  }, [user]);
+
   const formik = useFormWithSessionStorage(`createTicket_${ticketType}`, {
     initialValues: {
       ...initialValues,
+      ...defaultCallerFields,
       createdBy: defaultCreatedBy,
       caller: defaultCreatedBy,
     },
@@ -418,6 +433,21 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
       }
       if (!formik.values.callerReportingManager?.trim()) {
         allErrors.callerReportingManager = 'Reporting manager is required';
+      }
+    }
+
+    // Validate required custom fields
+    for (const cf of filteredCustomFields) {
+      if (cf.isRequired) {
+        const val = cfValues[cf.fieldKey];
+        const isEmpty =
+          val === undefined ||
+          val === null ||
+          val === '' ||
+          (typeof val === 'string' && val.trim() === '');
+        if (isEmpty) {
+          allErrors[cf.fieldKey] = `${cf.fieldName} is required`;
+        }
       }
     }
 

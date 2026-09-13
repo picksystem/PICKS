@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Box, Button, PageHeader, Typography } from '@serviceops/component';
+import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from './styles';
 import { DynamicFieldRenderer } from './DynamicFieldRenderer';
 import useCreateTicketDetail, { CreateTicketDetailProps } from './hooks/useCreateTicketDetail';
@@ -140,6 +141,7 @@ const resolveField = (
 
 const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDetailProps) => {
   const { classes } = useStyles();
+  const reqError = useFieldError();
 
   const {
     config,
@@ -267,15 +269,22 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
       setCfValue,
       optionSets,
     );
-    const fieldError = validationFailed && !!formik?.errors?.[fieldKey];
-    const fieldErrorText = (formik?.errors?.[fieldKey] as string) || '';
+    // Use Formik's touched state so errors only show after user interaction
+    const isTouched = formik?.touched?.[fieldKey];
+    const rawError = (formik?.errors?.[fieldKey] as string) || '';
+    const fieldError = validationFailed && !!isTouched && !!rawError;
+    // Format error with ArrowCircleRightIcon, same as Approved Estimate dialog
+    const fieldErrorText = reqError(isTouched, rawError);
 
     // Textarea and attachment types span full width; everything else fits
     // in the grid. No hardcoded field-key list.
     const isFullWidth = resolved.type === 'textarea' || resolved.type === 'attachment';
 
     return (
-      <Box key={fieldKey} className={isFullWidth ? classes.fullWidth : undefined}>
+      <Box
+        key={fieldKey}
+        className={`${classes.formGridItem} ${isFullWidth ? classes.fullWidth : ''}`.trim()}
+      >
         <DynamicFieldRenderer
           fieldKey={fieldKey}
           fieldLabel={resolved.label}

@@ -1,11 +1,4 @@
-import {
-  IncidentImpact,
-  IncidentUrgency,
-  IncidentPriority,
-  IncidentStatus,
-  IncidentChannel,
-  calculatePriority,
-} from '@serviceops/interfaces';
+import { IncidentChannel, calculatePriority } from '@serviceops/interfaces';
 
 // ── Dropdown options ──────────────────────────────────────────────────────────
 // impact/urgency/priority/status options are sourced dynamically per ticket type
@@ -53,11 +46,11 @@ export const initialValues = {
   applicationSubCategory: '',
   shortDescription: '',
   description: '',
-  impact: IncidentImpact.MEDIUM,
-  urgency: IncidentUrgency.LOW,
-  priority: IncidentPriority.LOW,
-  channel: IncidentChannel.PORTAL,
-  status: IncidentStatus.NEW,
+  impact: '',
+  urgency: '',
+  priority: '',
+  channel: '',
+  status: '',
   assignmentGroup: '',
   primaryResource: '',
   secondaryResources: '',
