@@ -18,6 +18,7 @@ interface FieldResolution {
   onChange: (val: string | boolean) => void;
   dropdownOptions?: { value: string; label: string }[];
   required: boolean;
+  disabled?: boolean;
 }
 
 /**
@@ -58,6 +59,7 @@ const resolveField = (
       onChange: (val: string | boolean) => setCfValue(fieldKey, val),
       dropdownOptions: customField.dropdownOptions?.map((o) => ({ value: o, label: o })),
       required: customField.isRequired ?? false,
+      disabled: customField.isDisabled ?? false,
     };
   }
 
@@ -278,9 +280,11 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     // Format error with ArrowCircleRightIcon, same as Approved Estimate dialog
     const fieldErrorText = reqError(isTouched, rawError);
 
-    // Textarea and attachment types span full width; everything else fits
-    // in the grid. No hardcoded field-key list.
-    const isFullWidth = resolved.type === 'textarea' || resolved.type === 'attachment';
+    // Textarea, attachment, and checkbox with options span full width
+    const isFullWidth =
+      resolved.type === 'textarea' ||
+      resolved.type === 'attachment' ||
+      (resolved.type === 'checkbox' && (resolved.dropdownOptions?.length ?? 0) > 0);
 
     return (
       <Box
@@ -296,6 +300,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
           error={fieldError}
           errorText={fieldErrorText}
           required={resolved.required}
+          disabled={resolved.disabled}
           dropdownOptions={resolved.dropdownOptions}
           fullWidth={isFullWidth}
         />

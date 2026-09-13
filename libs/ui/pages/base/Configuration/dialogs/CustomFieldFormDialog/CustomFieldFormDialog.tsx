@@ -225,6 +225,7 @@ const CustomFieldFormDialog = ({
           dropdownOptions: editing.dropdownOptions ? [...editing.dropdownOptions] : [],
           defaultValue: editing.defaultValue,
           isRequired: editing.isRequired ?? false,
+          isDisabled: editing.isDisabled ?? false,
           fieldUse: { ...emptyUseFlags, ...editing.fieldUse },
           displayOrder: editing.displayOrder,
         }
@@ -233,6 +234,7 @@ const CustomFieldFormDialog = ({
           fieldType: 'text',
           dropdownOptions: [],
           isRequired: false,
+          isDisabled: false,
           fieldUse: (() => {
             const flags: Record<string, boolean> = { ...emptyUseFlags };
             if (defaultTicketType && flags.hasOwnProperty(defaultTicketType)) {
@@ -249,6 +251,20 @@ const CustomFieldFormDialog = ({
       editing ? (FIELD_TYPES.find((ft) => ft.value === editing.fieldType)?.label ?? '') : '',
     );
     setFieldUseExpanded(false);
+
+    // Populate checkboxOptions when editing a checkbox field
+    if (editing?.fieldType === 'checkbox' && editing.dropdownOptions) {
+      setCheckboxOptions(
+        editing.dropdownOptions.map((label) => ({
+          id: `cb_${Date.now()}_${Math.random().toString(36).slice(2, 7)}_${label}`,
+          fieldName: label,
+          fieldType: 'text',
+          path: '',
+        })),
+      );
+    } else {
+      setCheckboxOptions([]);
+    }
   }, [open, editing, emptyUseFlags, defaultTicketType]);
 
   const searchPaths = (query: string): PathOption[] => {
@@ -369,12 +385,22 @@ const CustomFieldFormDialog = ({
       fieldType: formRef.current.fieldType!,
       path: formRef.current.path,
       dropdownOptions:
-        formRef.current.fieldType === 'dropdown' ? formRef.current.dropdownOptions : undefined,
+        formRef.current.fieldType === 'dropdown' || formRef.current.fieldType === 'checkbox'
+          ? formRef.current.dropdownOptions
+          : undefined,
       defaultValue: formRef.current.defaultValue,
       isRequired: formRef.current.isRequired ?? false,
+      isDisabled: formRef.current.isDisabled ?? false,
       fieldUse: formRef.current.fieldUse!,
       displayOrder,
     };
+
+    // For checkbox type, collect options from checkboxOptions state into dropdownOptions
+    if (formRef.current.fieldType === 'checkbox') {
+      result.dropdownOptions = checkboxOptions
+        .map((entry) => entry.fieldName.trim())
+        .filter(Boolean);
+    }
 
     onSave(result);
     success(editing ? 'Custom field updated successfully' : 'Custom field added successfully');
@@ -922,6 +948,45 @@ const CustomFieldFormDialog = ({
             sx={{ color: form.isRequired ? 'success.main' : 'text.secondary' }}
           >
             {form.isRequired ? 'Active' : 'Inactive'}
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* ── Disabled ── */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          px: 2,
+          py: 1.5,
+          borderRadius: 1.5,
+          border: '1px solid',
+          borderColor: alpha(accent, 0.3),
+          bgcolor: form.isDisabled ? alpha(accent, 0.04) : 'transparent',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        <Box>
+          <Typography variant='body2' color={accent} fontWeight={600}>
+            Disabled
+          </Typography>
+          <Typography variant='caption' sx={{ color: accent }}>
+            {form.isDisabled ? 'This field is disabled' : 'This field is enabled'}
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Switch
+            checked={!!form.isDisabled}
+            onChange={(e) => updateForm((f) => ({ ...f, isDisabled: e.target.checked }))}
+            color='default'
+          />
+          <Typography
+            variant='body2'
+            fontWeight={700}
+            sx={{ color: form.isDisabled ? 'text.secondary' : 'success.main' }}
+          >
+            {form.isDisabled ? 'Active' : 'Inactive'}
           </Typography>
         </Box>
       </Box>

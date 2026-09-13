@@ -40,8 +40,8 @@ export const useStyles = makeStyles()((theme) => ({
   sectionCard: {
     backgroundColor: theme.palette.background.paper,
     borderRadius: 14,
-    borderLeft: '4px solid',
-    borderLeftColor: theme.palette.primary.main,
+    border: '1px solid',
+    borderColor: theme.palette.divider,
     boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
     marginBottom: theme.spacing(2.5),
     overflow: 'hidden',

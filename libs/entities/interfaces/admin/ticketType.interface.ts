@@ -38,6 +38,7 @@ export interface ICustomField {
   dropdownOptions?: string[];
   defaultValue?: string;
   isRequired?: boolean;
+  isDisabled?: boolean;
   /**
    * Per-ticket-type use flags. The key is the ticket type's `type`
    * (e.g. "incident", "service_request"). A field may be enabled on

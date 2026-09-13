@@ -1,7 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Box, Typography, TextField, Checkbox, DatePicker } from '@serviceops/component';
-import { InputAdornment, List, ListItem, ListItemButton, ListItemText, Paper } from '@mui/material';
+import {
+  alpha,
+  InputAdornment,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Paper,
+  useTheme,
+} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import { CustomFieldType } from '@serviceops/interfaces';
@@ -20,6 +29,7 @@ export interface DynamicFieldProps {
   error?: boolean;
   errorText?: string | React.ReactNode;
   required?: boolean;
+  disabled?: boolean;
   dropdownOptions?: { value: string; label: string }[];
   fullWidth?: boolean;
   rows?: number;
@@ -53,7 +63,9 @@ export const DynamicFieldRenderer = ({
   fullWidth,
   rows = 3,
   helperText,
+  disabled,
 }: DynamicFieldProps) => {
+  const theme = useTheme();
   // ── Dropdown state (mirrors ApprovedEstimateFormDialog pattern) ──────
   const [ddInput, setDdInput] = useState('');
   const [ddOpen, setDdOpen] = useState(false);
@@ -232,6 +244,7 @@ export const DynamicFieldRenderer = ({
             onFocus={handleDdFocus}
             onBlur={handleDdBlur}
             fullWidth
+            disabled={disabled}
             error={error}
             helperText={error ? (errorText as string) : helperText}
             slotProps={{
@@ -293,6 +306,7 @@ export const DynamicFieldRenderer = ({
           }}
           type='number'
           fullWidth
+          disabled={disabled}
           error={error}
           errorText={errorText as string | undefined}
         />
@@ -306,19 +320,121 @@ export const DynamicFieldRenderer = ({
           value={String(value ?? '')}
           onChange={(val: string) => onChange(val)}
           fullWidth={fullWidth}
+          disabled={disabled}
           error={error}
           helperText={error ? (errorText as string) : helperText}
         />
       );
 
     // ── Checkbox ──────────────────────────────────────────────────────
-    case 'checkbox':
+    case 'checkbox': {
+      // If dropdownOptions are provided, render as a list of checkboxes
+      const options = dropdownOptions ?? [];
+
+      if (options.length > 0) {
+        // Value is a comma-separated string of selected option values
+        const selectedValues = new Set(
+          String(value ?? '')
+            .split(',')
+            .map((v) => v.trim())
+            .filter(Boolean),
+        );
+
+        const handleToggle = (optValue: string) => {
+          const next = new Set(selectedValues);
+          if (next.has(optValue)) {
+            next.delete(optValue);
+          } else {
+            next.add(optValue);
+          }
+          const result = Array.from(next).join(',');
+          onChange(result || '');
+        };
+
+        return (
+          <Box sx={{ pt: 0.5 }}>
+            <Typography
+              variant='body2'
+              sx={{ fontWeight: 600, mb: 1, color: disabled ? 'text.disabled' : 'text.primary' }}
+            >
+              {fieldLabel}
+            </Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 0.75,
+                opacity: disabled ? 0.5 : 1,
+                pointerEvents: disabled ? 'none' : 'auto',
+              }}
+            >
+              {options.map((opt) => {
+                const isChecked = selectedValues.has(opt.value);
+                return (
+                  <Box
+                    key={opt.value}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      px: 1.5,
+                      py: 0.75,
+                      borderRadius: 1,
+                      border: '1px solid',
+                      borderColor: isChecked ? 'primary.main' : 'divider',
+                      bgcolor: isChecked ? alpha(theme.palette.primary.main, 0.04) : 'transparent',
+                      transition: 'all 0.15s ease',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        borderColor: 'primary.main',
+                        bgcolor: alpha(theme.palette.primary.main, 0.04),
+                      },
+                    }}
+                    onClick={() => handleToggle(opt.value)}
+                  >
+                    <Checkbox
+                      checked={isChecked}
+                      onChange={(_, checked) => handleToggle(opt.value)}
+                      disabled={disabled}
+                    />
+                    <Typography
+                      variant='body2'
+                      sx={{
+                        fontWeight: isChecked ? 500 : 400,
+                        color: isChecked ? 'primary.main' : 'text.primary',
+                        userSelect: 'none',
+                      }}
+                    >
+                      {opt.label}
+                    </Typography>
+                  </Box>
+                );
+              })}
+            </Box>
+            {error && errorText ? (
+              <Typography variant='caption' color='error' sx={{ mt: 1, ml: 1 }}>
+                {errorText as string}
+              </Typography>
+            ) : null}
+          </Box>
+        );
+      }
+
+      // Single checkbox (no options)
       return (
-        <Box sx={{ display: 'flex', alignItems: 'center', pt: 0.5 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            pt: 0.5,
+            opacity: disabled ? 0.5 : 1,
+            pointerEvents: disabled ? 'none' : 'auto',
+          }}
+        >
           <Checkbox
             label={fieldLabel}
             checked={!!value}
             onChange={(_, checked) => onChange(checked)}
+            disabled={disabled}
           />
           {error && errorText ? (
             <Typography variant='caption' color='error' sx={{ ml: 1, mt: 0.25 }}>
@@ -327,6 +443,7 @@ export const DynamicFieldRenderer = ({
           ) : null}
         </Box>
       );
+    }
 
     // ── Text (default) ────────────────────────────────────────────────
     default:
@@ -336,6 +453,7 @@ export const DynamicFieldRenderer = ({
           value={String(value ?? '')}
           onChange={(e) => onChange(e.target.value)}
           fullWidth
+          disabled={disabled}
           error={error}
           errorText={errorText as string | undefined}
           helperText={helperText}

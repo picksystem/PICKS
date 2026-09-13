@@ -436,8 +436,9 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
       }
     }
 
-    // Validate required custom fields
+    // Validate required custom fields (skip disabled fields)
     for (const cf of filteredCustomFields) {
+      if (cf.isDisabled) continue;
       if (cf.isRequired) {
         const val = cfValues[cf.fieldKey];
         const isEmpty =
