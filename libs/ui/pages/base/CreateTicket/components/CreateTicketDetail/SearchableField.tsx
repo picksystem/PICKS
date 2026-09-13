@@ -26,10 +26,10 @@ export interface SearchableFieldProps {
 
 /**
  * Reusable searchable text field with a dropdown of options.
- * Matches the icon behavior of the Add Approved Estimate dialog:
  * - Shows ClearIcon (X) when the field has a value
  * - Shows SearchIcon when the field is empty
- * - Both icons are inside endAdornment via InputAdornment
+ * - Dropdown opens on focus; clicking an option closes it
+ * - onBlur defers closing so click events on dropdown items fire first
  */
 export const SearchableField = ({
   value,
@@ -47,9 +47,9 @@ export const SearchableField = ({
   const [isOpen, setIsOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync local input state when the parent value prop changes
-  // (e.g. after formik restore from sessionStorage)
   useEffect(() => {
     if (!value) {
       setInputValue('');
@@ -73,14 +73,23 @@ export const SearchableField = ({
     }, 200);
   };
 
-  const handleSelect = (opt: { value: string; label: string }) => {
-    setInputValue(opt.label ?? opt.value);
-    onChange(opt.value);
-    setIsOpen(false);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-  };
+  const handleSelect = useCallback(
+    (opt: { value: string; label: string }) => {
+      // Cancel pending blur timeout so it doesn't run after selection.
+      if (blurTimeoutRef.current) {
+        clearTimeout(blurTimeoutRef.current);
+        blurTimeoutRef.current = null;
+      }
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      setInputValue(opt.label ?? opt.value);
+      onChange(opt.value);
+      setIsOpen(false);
+    },
+    [onChange],
+  );
 
   const handleClear = () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     setInputValue('');
     onChange('');
     setIsOpen(false);
@@ -94,16 +103,26 @@ export const SearchableField = ({
     e.preventDefault();
   }, []);
 
+  const handleTextFieldBlur = useCallback(() => {
+    // Defer close so click events on dropdown items fire first.
+    blurTimeoutRef.current = setTimeout(() => {
+      // If focus is still inside this component (including a dropdown
+      // item), keep the dropdown open — handleSelect will close it.
+      if (anchorRef.current && anchorRef.current.contains(document.activeElement)) {
+        return;
+      }
+      setIsOpen(false);
+    }, 150);
+  }, []);
+
   return (
     <Box sx={{ position: 'relative' }} ref={anchorRef}>
       <TextField
         label={label}
         value={inputValue}
         onChange={handleInputChange}
+        onBlur={handleTextFieldBlur}
         onFocus={() => setIsOpen(true)}
-        onBlur={() => {
-          setIsOpen(false);
-        }}
         inputProps={{ maxLength }}
         required={required}
         error={error}

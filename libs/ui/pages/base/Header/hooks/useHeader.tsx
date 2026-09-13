@@ -44,10 +44,20 @@ export const useHeader = () => {
 
   // Menus
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [notifAnchorEl, setNotifAnchorEl] = useState<null | HTMLElement>(null);
 
-  // Notifications
+  // Notifications — use boolean for dialog open state
+  const [notifOpen, setNotifOpen] = useState(false);
+
+  // Notifications data
   const [notifications, setNotifications] = useState<IAuthUser[]>([]);
+  const fetchPendingRequests = useCallback(async () => {
+    try {
+      const result = await authAction({ action: 'get-pending-role-requests' }).unwrap();
+      setNotifications(result.data || []);
+    } catch {
+      // non-critical
+    }
+  }, [authAction]);
 
   // Loading overlay
   const [isLoading, setIsLoading] = useState(false);
@@ -68,16 +78,15 @@ export const useHeader = () => {
   }, [debouncedSearch, tickets]);
 
   useEffect(() => {
-    const fetchPendingRequests = async () => {
-      try {
-        const result = await authAction({ action: 'get-pending-role-requests' }).unwrap();
-        setNotifications(result.data || []);
-      } catch {
-        // non-critical
-      }
-    };
     fetchPendingRequests();
-  }, [authAction]);
+  }, [fetchPendingRequests]);
+
+  // Refetch notifications when dialog opens
+  useEffect(() => {
+    if (notifOpen) {
+      fetchPendingRequests();
+    }
+  }, [notifOpen, fetchPendingRequests]);
 
   const userName =
     user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'User';
@@ -109,8 +118,8 @@ export const useHeader = () => {
   // Menu handlers
   const handleSettingsOpen = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
   const handleSettingsClose = () => setAnchorEl(null);
-  const handleNotifOpen = (e: React.MouseEvent<HTMLElement>) => setNotifAnchorEl(e.currentTarget);
-  const handleNotifClose = () => setNotifAnchorEl(null);
+  const handleNotifOpen = () => setNotifOpen(true);
+  const handleNotifClose = () => setNotifOpen(false);
   const handleNotifClick = () => {
     handleNotifClose();
     navigate(BasePath.ROLE_REQUESTS);
@@ -184,7 +193,7 @@ export const useHeader = () => {
     currentRole,
     userName,
     anchorEl,
-    notifAnchorEl,
+    notifOpen,
     notifications,
     isLoading,
     loadingMessage,

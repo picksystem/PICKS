@@ -20,7 +20,7 @@ import { useStyles } from './styles';
 import { useHeader } from './hooks/useHeader';
 import LogoMark from './components/LogoMark';
 import SearchBar from './components/SearchBar';
-import NotificationsMenu from './components/NotificationsMenu';
+import NotificationsDialog from './components/NotificationsDialog';
 import UserMenu from './components/UserMenu';
 
 // Shared sx for every icon button — uniform 32×32 touch target on mobile
@@ -39,7 +39,7 @@ const Header = () => {
     user,
     userName,
     anchorEl,
-    notifAnchorEl,
+    notifOpen,
     notifications,
     isLoading,
     loadingMessage,
@@ -132,8 +132,8 @@ const Header = () => {
           </Tooltip>
         </Box>
 
-        <NotificationsMenu
-          anchorEl={notifAnchorEl}
+        <NotificationsDialog
+          open={notifOpen}
           onClose={handleNotifClose}
           onViewAll={handleNotifClick}
           notifications={notifications}

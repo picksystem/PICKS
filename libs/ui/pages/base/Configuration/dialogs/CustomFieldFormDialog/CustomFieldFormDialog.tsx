@@ -44,6 +44,7 @@ const FIELD_TYPES: { value: CustomFieldType; label: string }[] = [
   { value: 'date', label: 'Date' },
   { value: 'dropdown', label: 'Dropdown' },
   { value: 'checkbox', label: 'Checkbox' },
+  { value: 'attachment', label: 'Attachment' },
 ];
 
 const ALNUM_PATTERN = /[^A-Za-z0-9 _-]/g;

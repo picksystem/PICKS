@@ -20,7 +20,14 @@ export interface ITicketTypeGateway {
   reorder(orders: { id: number; displayOrder: number }[]): Promise<void>;
 }
 
-export type CustomFieldType = 'text' | 'textarea' | 'number' | 'date' | 'dropdown' | 'checkbox';
+export type CustomFieldType =
+  | 'text'
+  | 'textarea'
+  | 'number'
+  | 'date'
+  | 'dropdown'
+  | 'checkbox'
+  | 'attachment';
 
 export interface ICustomField {
   id: string;
@@ -89,15 +96,7 @@ export interface ITicketTypeLayoutConfig {
   vendorBug: ITicketTypeSectionLayoutConfig;
   changeControl: ITicketTypeSectionLayoutConfig;
   resolutionWorkaround: ITicketTypeSectionLayoutConfig;
-  createTicket: {
-    ticketInformation: ICreateTicketSectionLayoutConfig;
-    categorization: ICreateTicketSectionLayoutConfig;
-    description: ICreateTicketSectionLayoutConfig;
-    additionalDetails: ICreateTicketSectionLayoutConfig;
-    priorityAssignment: ICreateTicketSectionLayoutConfig;
-    auditInformation: ICreateTicketSectionLayoutConfig;
-    attachments: ICreateTicketSectionLayoutConfig;
-  };
+  createTicket: Record<string, ICreateTicketSectionLayoutConfig>;
   customSections?: Record<string, ICustomSectionConfig>;
 }
 

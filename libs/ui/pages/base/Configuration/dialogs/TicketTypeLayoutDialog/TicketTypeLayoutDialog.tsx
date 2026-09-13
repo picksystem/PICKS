@@ -9,6 +9,7 @@ import {
   Tooltip,
   TextField,
 } from '@serviceops/component';
+import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRight';
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt';
 import EditIcon from '@mui/icons-material/Edit';
 import CreateIcon from '@mui/icons-material/NoteAdd';
@@ -1629,12 +1630,11 @@ export const TicketTypeLayoutDialog = ({
                                 gap: 0.75,
                               }}
                             >
-                              <DragIndicatorIcon
+                              <SubdirectoryArrowRightIcon
                                 sx={{
-                                  fontSize: '0.85rem',
+                                  fontSize: '1rem',
                                   color: 'text.disabled',
                                   flexShrink: 0,
-                                  cursor: 'default',
                                 }}
                               />
                               {editingSubId === sub.id ? (
