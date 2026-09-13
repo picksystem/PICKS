@@ -5,6 +5,11 @@ import { InputAdornment, List, ListItem, ListItemButton, ListItemText, Paper } f
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import { CustomFieldType } from '@serviceops/interfaces';
+import {
+  parseRichText,
+  RichTextEditor,
+  serializeRichText,
+} from '@serviceops/pages/base/Configuration/shared/RichTextEditor';
 
 export interface DynamicFieldProps {
   fieldKey: string;
@@ -260,17 +265,16 @@ export const DynamicFieldRenderer = ({
     // ── Textarea ─────────────────────────────────────────────────────
     case 'textarea':
       return (
-        <TextField
-          label={fieldLabel}
-          value={String(value ?? '')}
-          onChange={(e) => onChange(e.target.value)}
-          multiline
-          rows={rows}
-          fullWidth
-          error={error}
-          errorText={errorText as string | undefined}
-          helperText={helperText}
-        />
+        <Box sx={{ gridColumn: fullWidth ? undefined : '1 / -1' }}>
+          <RichTextEditor
+            value={parseRichText(String(value ?? ''))}
+            onChange={(richVal) => onChange(serializeRichText(richVal.segments))}
+            title={fieldLabel}
+            error={error}
+            showFooterActions={false}
+          />
+          {error && errorText ? <Box sx={{ mt: 0.5, ml: 1.5 }}>{errorText}</Box> : null}
+        </Box>
       );
 
     // ── Number ────────────────────────────────────────────────────────

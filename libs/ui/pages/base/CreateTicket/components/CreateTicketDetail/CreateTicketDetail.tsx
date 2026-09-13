@@ -167,6 +167,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     layoutConfig,
     getCfValue,
     setCfValue,
+    ticketNumber,
   } = useCreateTicketDetail({ ticketType, onCancel, onSuccess }) as {
     config: { title: string; prefix: string; numberLength: number; subtitle: string };
     formik: any;
@@ -191,6 +192,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     layoutConfig: ITicketTypeLayoutConfig | undefined;
     getCfValue: (key: string) => string | boolean;
     setCfValue: (key: string, value: string | boolean) => void;
+    ticketNumber: string;
   };
 
   // Build lookup map for custom fields by fieldKey
@@ -303,11 +305,23 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
 
   return (
     <Box className={classes.formContainer}>
-      <PageHeader
-        title={config.title}
-        description={config.subtitle}
-        className={classes.pageHeader}
-      />
+      {/* ── Page header with ticket number on the right ── */}
+      <Box className={classes.pageHeader}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <PageHeader title={config.title} description={config.subtitle} />
+        </Box>
+        <Box sx={{ flexShrink: 0, ml: 3, textAlign: 'right' }}>
+          <Typography variant='body2' sx={{ fontWeight: 600, fontSize: '1rem' }}>
+            {ticketNumber}
+          </Typography>
+          <Typography
+            variant='caption'
+            sx={{ color: 'text.disabled', fontWeight: 500, display: 'block', mb: 0.25 }}
+          >
+            Ticket Number
+          </Typography>
+        </Box>
+      </Box>
 
       <form
         onSubmit={(e) => {

@@ -371,7 +371,7 @@ const CustomFieldDialog = ({
       return;
     }
 
-    const id = editing?.id ?? `cf_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const id = editing?.id ?? `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     const fieldKey = editing?.fieldKey ?? generateCustomFieldKey(id);
     const displayOrder = editing?.displayOrder ?? existingFields.length;
 

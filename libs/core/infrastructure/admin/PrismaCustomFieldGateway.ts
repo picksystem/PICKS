@@ -33,9 +33,14 @@ export class PrismaCustomFieldGateway implements ICustomFieldGateway {
 
   async update(ticketType: string, field: ICustomField): Promise<ICustomField[]> {
     const current = await this.getAll(ticketType);
-    const next = current.map((f: ICustomField) => (f.id === field.id ? field : f));
-    await this.write(ticketType, next);
-    return next;
+    const idx = current.findIndex((f: ICustomField) => f.id === field.id);
+    if (idx >= 0) {
+      current[idx] = field;
+    } else {
+      current.push(field);
+    }
+    await this.write(ticketType, current);
+    return current;
   }
 
   async delete(ticketType: string, fieldId: string): Promise<ICustomField[]> {

@@ -14,6 +14,9 @@ export const useStyles = makeStyles()((theme) => ({
     position: 'relative',
     border: '1px solid #e5e7eb',
     overflow: 'hidden',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     '&::before': {
       content: '""',
       position: 'absolute',
@@ -28,6 +31,8 @@ export const useStyles = makeStyles()((theme) => ({
     [theme.breakpoints.down('sm')]: {
       padding: theme.spacing(2),
       borderRadius: 8,
+      flexDirection: 'column',
+      alignItems: 'flex-start',
     },
   },
 

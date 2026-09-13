@@ -37,8 +37,16 @@ export class PrismaTicketTypeGateway implements ITicketTypeGateway {
   }
 
   async create(input: ICreateTicketTypeInput): Promise<ITicketType> {
-    const { accessControl, layoutConfig, customFields, lastUpdatedBy, lastUpdatedAt, ...rest } =
-      input;
+    const {
+      accessControl,
+      layoutConfig,
+      customFields,
+      lastUpdatedBy,
+      lastUpdatedAt,
+      iconKey,
+      tag,
+      ...rest
+    } = input;
     const r = await this.db.adminTicketType.create({
       data: {
         ...rest,
@@ -59,7 +67,8 @@ export class PrismaTicketTypeGateway implements ITicketTypeGateway {
   }
 
   async update(id: number, input: IUpdateTicketTypeInput): Promise<ITicketType> {
-    const { accessControl, layoutConfig, customFields, lastUpdatedBy, ...rest } = input;
+    const { accessControl, layoutConfig, customFields, lastUpdatedBy, iconKey, tag, ...rest } =
+      input;
     const data: Record<string, unknown> = { ...rest };
     if (accessControl !== undefined) data.accessControl = JSON.stringify(accessControl);
     if (layoutConfig !== undefined)
