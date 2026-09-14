@@ -494,64 +494,23 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     statusOverride?: IncidentStatus | ServiceRequestStatus,
     uploadedFilenames?: string[],
   ): IAdminTicket => {
-    // Fields that need type casting when copying from formik values
-    const castMap: Record<string, (v: any) => any> = {
-      impact: (v) => v as IncidentImpact,
-      urgency: (v) => v as IncidentUrgency,
-      channel: (v) => v as IncidentChannel,
-      status: (v) => (v as IncidentStatus) || statusOverride,
-    };
-
-    // These fields are required by the API schema (Prisma .required())
-    // Always include them even if empty — the API needs them present
-    const apiRequiredFields = new Set([
-      'caller',
-      'createdBy',
-      'isRecurring',
-      'isMajor',
-      'isReleaseManagement',
-      'timesReopened',
-      'changeProductBugFix',
-      'changeCabRequired',
-      'changeTestCompleted',
-    ]);
-
-    // Safe fallback defaults for API-required fields when value is missing/empty
-    const safeFallback = (key: string, value: any): any => {
-      if (value !== undefined && value !== null) {
-        if (typeof value === 'boolean') return value; // false is valid
-        if (typeof value === 'string' && value.trim() !== '') return value; // non-empty string is valid
-      }
-      // Empty/missing — apply fallback
-      if (key === 'caller' || key === 'createdBy') return 'Unknown';
-      if (key === 'isRecurring' || key === 'isMajor' || key === 'isReleaseManagement') return false;
-      if (key === 'timesReopened') return 0;
-      if (key === 'changeProductBugFix' || key === 'changeCabRequired' || key === 'changeTestCompleted') return false;
-      return undefined;
-    };
-
     // Collect all built-in field values from formik dynamically
+    // Always include them (even empty strings) — the API schema may require them
     const builtInPayload: Record<string, any> = {};
     for (const [key, value] of Object.entries(formik.values)) {
       if (key === 'number') continue; // ticketNumber is set separately
       if (key === 'attachments') {
-        // Convert File[] to JSON string for API
         builtInPayload.attachments =
           uploadedFilenames && uploadedFilenames.length > 0
             ? JSON.stringify(uploadedFilenames)
             : undefined;
         continue;
       }
-      // Always include API-required fields (apply fallback for empty/missing)
-      if (apiRequiredFields.has(key)) {
-        builtInPayload[key] = safeFallback(key, value);
-        continue;
-      }
-      // Include booleans (even false), include strings/numbers if not empty
+      // Always include booleans and non-undefined values
       if (typeof value === 'boolean') {
         builtInPayload[key] = value;
-      } else if (value !== undefined && value !== null && value !== '') {
-        builtInPayload[key] = castMap[key] ? castMap[key](value) : value;
+      } else if (value !== undefined && value !== null) {
+        builtInPayload[key] = value;
       }
     }
 

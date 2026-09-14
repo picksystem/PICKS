@@ -50,6 +50,8 @@ export interface ICustomField {
    */
   fieldUse: Record<string, boolean>;
   displayOrder: number;
+  /** When fieldType is 'date', automatically use today's date as default. */
+  useCurrentDate?: boolean;
 }
 
 export interface ITicketTypeSectionLayoutConfig {

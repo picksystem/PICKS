@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { Box, Button, PageHeader, Typography, Alert } from '@serviceops/component';
-import { ErrorOutline as ErrorOutlineIcon } from '@mui/icons-material';
 import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from './styles';
 import { DynamicFieldRenderer } from './DynamicFieldRenderer';
@@ -243,18 +242,22 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
         {missingFieldsList.length > 0 && (
           <Alert
             severity='error'
-            icon={<ErrorOutlineIcon />}
             sx={{
               mb: 2,
               borderRadius: 2,
+              borderStyle: 'solid',
+              borderColor: '#dc2626',
+              borderWidth: 1,
               '& .MuiAlert-message': { display: 'block', width: '100%' },
-              '& .MuiAlert-icon': { alignItems: 'flex-start', mt: 0.3 },
+              '& .MuiAlert-icon': { display: 'none' },
             }}
           >
             <Box sx={{ fontWeight: 600, fontSize: '0.875rem', mb: 1, color: '#1e293b' }}>
               Please fill in the following required field{missingFieldsList.length > 1 ? 's' : ''}:
             </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+            <Box
+              sx={{ display: 'flex', flexDirection: 'column', gap: 1, marginLeft: 2, marginTop: 1 }}
+            >
               {missingFieldsList.map((name) => (
                 <Box
                   key={name}
@@ -270,18 +273,13 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                 >
                   <Box
                     sx={{
-                      width: 18,
-                      height: 18,
+                      width: 6,
+                      height: 6,
                       borderRadius: '50%',
-                      backgroundColor: '#fee2e2',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      backgroundColor: '#dc2626',
                       flexShrink: 0,
                     }}
-                  >
-                    <ErrorOutlineIcon sx={{ fontSize: 12, color: '#dc2626' }} />
-                  </Box>
+                  />
                   {name}
                 </Box>
               ))}

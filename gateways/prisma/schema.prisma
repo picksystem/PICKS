@@ -614,7 +614,7 @@ model AdminTicket {
   ticketType               String
   number                   String    @unique
   client                   String?
-  caller                   String
+  caller                   String?
   callerPhone              String?
   callerEmail              String?
   callerLocation           String?
@@ -636,7 +636,7 @@ model AdminTicket {
   assignmentGroup          String?
   primaryResource          String?
   secondaryResources       String?
-  createdBy                String
+  createdBy                String?
   isRecurring              Boolean   @default(false)
   isMajor                  Boolean   @default(false)
   notes                    String?

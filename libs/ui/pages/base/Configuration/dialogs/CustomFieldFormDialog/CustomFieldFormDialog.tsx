@@ -228,6 +228,9 @@ const CustomFieldFormDialog = ({
           isDisabled: editing.isDisabled ?? false,
           fieldUse: { ...emptyUseFlags, ...editing.fieldUse },
           displayOrder: editing.displayOrder,
+          ...(editing.fieldType === 'date' && {
+            useCurrentDate: (editing as any).useCurrentDate ?? false,
+          }),
         }
       : {
           fieldName: '',
@@ -235,6 +238,7 @@ const CustomFieldFormDialog = ({
           dropdownOptions: [],
           isRequired: false,
           isDisabled: false,
+          useCurrentDate: false,
           fieldUse: (() => {
             const flags: Record<string, boolean> = { ...emptyUseFlags };
             if (defaultTicketType && flags.hasOwnProperty(defaultTicketType)) {
@@ -318,13 +322,18 @@ const CustomFieldFormDialog = ({
       ...f,
       fieldType: value,
       dropdownOptions: value === 'dropdown' ? (f.dropdownOptions ?? []) : [],
+      useCurrentDate: value === 'date' ? false : undefined,
     }));
   };
 
   const handleTypeClear = () => {
     setTypeInput('');
     setTypeOptionsOpen(false);
-    updateForm((f) => ({ ...f, fieldType: 'text' }));
+    updateForm((f) => ({
+      ...f,
+      fieldType: 'text',
+      useCurrentDate: undefined,
+    }));
   };
 
   const handlePathClear = () => {
@@ -395,6 +404,11 @@ const CustomFieldFormDialog = ({
       displayOrder,
     };
 
+    // Include useCurrentDate for date fields
+    if (formRef.current.fieldType === 'date') {
+      (result as any).useCurrentDate = formRef.current.useCurrentDate ?? false;
+    }
+
     // For checkbox type, collect options from checkboxOptions state into dropdownOptions
     if (formRef.current.fieldType === 'checkbox') {
       result.dropdownOptions = checkboxOptions
@@ -459,6 +473,7 @@ const CustomFieldFormDialog = ({
 
   const isDropdown = form.fieldType === 'dropdown';
   const isCheckbox = form.fieldType === 'checkbox';
+  const isDate = form.fieldType === 'date';
 
   // Close row type dropdown when clicking outside it
   useEffect(() => {
@@ -864,7 +879,55 @@ const CustomFieldFormDialog = ({
         </Box>
       )}
 
-      {!isDropdown && (
+      {isDate && (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            px: 2,
+            py: 1.5,
+            borderRadius: 1.5,
+            border: '1px solid',
+            borderColor: alpha(accent, 0.3),
+            bgcolor: form.useCurrentDate ? alpha(accent, 0.04) : 'transparent',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <Box>
+            <Typography variant='body2' color={accent} fontWeight={600}>
+              Use Current Date
+            </Typography>
+            <Typography variant='caption' sx={{ color: accent }}>
+              {form.useCurrentDate
+                ? 'Current date will be set automatically'
+                : 'Set a custom default value'}
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Switch
+              checked={!!form.useCurrentDate}
+              onChange={(e) =>
+                updateForm((f) => ({
+                  ...f,
+                  useCurrentDate: e.target.checked,
+                  defaultValue: e.target.checked ? new Date().toISOString().split('T')[0] : '',
+                }))
+              }
+              color='success'
+            />
+            <Typography
+              variant='body2'
+              fontWeight={700}
+              sx={{ color: form.useCurrentDate ? 'success.main' : 'text.secondary' }}
+            >
+              {form.useCurrentDate ? 'Active' : 'Inactive'}
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
+      {!isDropdown && !isCheckbox && !isDate && (
         <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
           <Box sx={{ flex: 1 }}>
             <TextField

@@ -19,10 +19,11 @@ export class AdminTicketGateway {
   // ── Ticket CRUD ────────────────────────────────────────────────────────────
 
   async create(data: ICreateTicketInput): Promise<IAdminTicket> {
-    const raw: any = { ...data, updatedAt: new Date() };
+    const raw: any = { ...data };
     // Remove fields not present in the AdminTicket schema
     delete raw.isReleaseManagement;
-    if (raw.customFieldValues !== undefined) {
+    delete raw.updatedAt; // Prisma @updatedAt handles this automatically
+    if (raw.customFieldValues !== undefined && typeof raw.customFieldValues === 'object') {
       raw.customFieldValues = JSON.stringify(raw.customFieldValues);
     }
     const ticket = await this.prisma.adminTicket.create({
@@ -73,130 +74,31 @@ export class AdminTicketGateway {
 
   async update(id: number, data: Partial<ICreateTicketInput>): Promise<IAdminTicket> {
     const updateData: Record<string, unknown> = {};
-    const fields = [
-      'ticketType',
-      'client',
-      'caller',
-      'callerPhone',
-      'callerEmail',
-      'callerLocation',
-      'callerDepartment',
-      'callerReportingManager',
-      'additionalContacts',
-      'businessCategory',
-      'serviceLine',
-      'application',
-      'applicationCategory',
-      'applicationSubCategory',
-      'shortDescription',
-      'description',
-      'impact',
-      'urgency',
-      'priority',
-      'priorityChangeReasonCode',
-      'priorityChangeNote',
-      'channel',
-      'status',
-      'assignmentGroup',
-      'primaryResource',
-      'secondaryResources',
-      'isRecurring',
-      'isMajor',
-      'notes',
-      'relatedRecords',
-      'attachments',
-      'clientPrimaryContact',
-      'billingCode',
-      'analysisSummary',
-      'cancellationReasonCode',
-      'cancellationComment',
-      'reopenReasonCode',
-      'reopenComment',
-      'conversionReasonCode',
-      'conversionComment',
-      'changeType',
-      'justificationOfChange',
-      'currentProcess',
-      'proposedProcess',
-      'changeRiskImpactAnalysis',
-      'backoutPlan',
-      'testPlan',
-      'testResults',
-      'accessRequirements',
-      'productOwner',
-      'knownError',
-      'productBugFix',
-      'productBugId',
-      'vendorName',
-      'bugDetails',
-      'vendorTicketReference',
-      'cabApprovalRequired',
-      'cabId',
-      'testCompleted',
-      'testEvidenceRetained',
-      'numberOfTimesReopened',
-      'customFieldValues',
-      // date / datetime fields
-      'actualEndDate',
-      'actualStartDate',
-      'approvedAt',
-      'approvedBy',
-      'approvedEstimatesHours',
-      'closedAt',
-      'closedBy',
-      'eta',
-      'proposedEndDate',
-      'proposedStartDate',
-      'reopenedAt',
-      'reopenedBy',
-      'resolvedAt',
-      'resolvedBy',
-      // boolean / misc fields
-      'additionalField1',
-      'additionalField2',
-      'additionalField3',
-      'additionalField4',
-      'additionalField5',
-      'additionalField6',
-      'additionalField7',
-      'additionalField8',
-      'additionalField9',
-      'cabApprovalRequired',
-      'customerConfirmation',
-      'isRecurringIssue',
-      'relatedTicket',
-      'rootCauseIdentified',
-      'testCompleted',
-    ];
 
-    for (const field of fields) {
-      if (field in data) {
-        const key = field as string;
-        const value = (data as any)[key];
-
-        if (
-          (key === 'actualEndDate' ||
-            key === 'actualStartDate' ||
-            key === 'approvedAt' ||
-            key === 'closedAt' ||
-            key === 'eta' ||
-            key === 'proposedEndDate' ||
-            key === 'proposedStartDate' ||
-            key === 'reopenedAt' ||
-            key === 'resolvedAt') &&
-          typeof value === 'string'
-        ) {
-          updateData[field] = new Date(value);
-        } else if (
-          field === 'customFieldValues' &&
-          value !== undefined &&
-          value !== null &&
-          typeof value === 'object'
-        ) {
-          updateData[field] = JSON.stringify(value);
-        } else {
-          updateData[field] = value;
-        }
+    for (const [key, value] of Object.entries(data)) {
+      // Convert date string fields to Date objects
+      const dateFields = new Set([
+        'actualEndDate',
+        'actualStartDate',
+        'approvedAt',
+        'closedAt',
+        'eta',
+        'proposedEndDate',
+        'proposedStartDate',
+        'reopenedAt',
+        'resolvedAt',
+      ]);
+      if (dateFields.has(key) && typeof value === 'string') {
+        updateData[key] = new Date(value);
+      } else if (
+        key === 'customFieldValues' &&
+        value !== undefined &&
+        value !== null &&
+        typeof value === 'object'
+      ) {
+        updateData[key] = JSON.stringify(value);
+      } else {
+        updateData[key] = value;
       }
     }
 
