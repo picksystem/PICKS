@@ -74,6 +74,10 @@ export interface SubSectionItem {
   id: string;
   name: string;
   fields?: string[];
+  /** Number of columns for this sub-section's field layout (1-4). Defaults to 3. */
+  columns?: number;
+  /** Number of rows for this sub-section's field layout. */
+  rows?: number;
 }
 
 export interface ICustomSectionConfig {
@@ -83,6 +87,10 @@ export interface ICustomSectionConfig {
   tab: 'createTicket' | 'ticketDetails';
   accessControl?: Record<string, boolean>;
   displayOrder?: number;
+  /** Number of columns for field layout (1-4). Defaults to 3. */
+  columns?: number;
+  /** Number of rows for field layout. */
+  rows?: number;
 }
 
 export interface ITicketTypeLayoutConfig {

@@ -16,6 +16,10 @@ import {
   DialogContent,
   DialogActions,
   darken,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
 } from '@mui/material';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import PaletteIcon from '@mui/icons-material/Palette';
@@ -40,6 +44,10 @@ export interface DialogSection {
   subSections: SubSectionItem[];
   fields: string[];
   accessControl?: Record<string, boolean>;
+  /** Number of columns for field layout (1-4). Defaults to 3. */
+  columns?: number;
+  /** Number of rows for field layout. */
+  rows?: number;
 }
 
 interface SectionFormDialogProps {
@@ -52,6 +60,8 @@ interface SectionFormDialogProps {
   ticketTypes: TicketTypeRef[];
   accent?: string;
   defaultTicketType?: string;
+  /** The tab this section belongs to. Only 'createTicket' gets the Style dialog. */
+  tab?: 'createTicket' | 'ticketDetails';
   onClose: () => void;
   onSave: (section: DialogSection) => void;
 }
@@ -63,6 +73,7 @@ const SectionFormDialog = ({
   ticketTypes = [],
   accent = DEFAULT_ACCENT,
   defaultTicketType,
+  tab = 'createTicket',
   onClose,
   onSave,
 }: SectionFormDialogProps) => {
@@ -117,6 +128,8 @@ const SectionFormDialog = ({
           title: editingSection.title,
           subSections: editingSection.subSections ? [...editingSection.subSections] : [],
           fields: [...editingSection.fields],
+          columns: editingSection.columns ?? 3,
+          rows: editingSection.rows ?? 1,
           accessControl: editingSection.accessControl
             ? { ...editingSection.accessControl }
             : (() => {
@@ -129,6 +142,8 @@ const SectionFormDialog = ({
           title: '',
           subSections: [],
           fields: [],
+          columns: 3,
+          rows: 1,
           accessControl: (() => {
             const flags: Record<string, boolean> = {};
             for (const tt of ticketTypes) flags[tt.type] = false;
@@ -194,6 +209,8 @@ const SectionFormDialog = ({
       title: formRef.current.title!.trim(),
       subSections: (formRef.current.subSections ?? []).filter((s) => s.name.trim()),
       fields: editingSection ? [...editingSection.fields] : [],
+      columns: (formRef.current.columns ?? 3) as number,
+      rows: (formRef.current.rows ?? 1) as number,
       accessControl: formRef.current.accessControl,
     };
     onSave(result);
@@ -240,24 +257,26 @@ const SectionFormDialog = ({
       submitLabel={isEditMode ? 'Update' : 'Submit'}
       maxWidth='sm'
       headerActions={
-        <Button
-          variant='outlined'
-          size='small'
-          startIcon={<PaletteIcon sx={{ fontSize: '1rem' }} />}
-          onClick={() => setStyleDialogOpen(true)}
-          sx={{
-            color: '#fff',
-            borderColor: 'rgba(255,255,255,0.5)',
-            textTransform: 'none',
-            fontSize: '0.78rem',
-            '&:hover': {
-              borderColor: '#fff',
-              bgcolor: 'rgba(255,255,255,0.1)',
-            },
-          }}
-        >
-          Style
-        </Button>
+        tab === 'createTicket' ? (
+          <Button
+            variant='outlined'
+            size='small'
+            startIcon={<PaletteIcon sx={{ fontSize: '1rem' }} />}
+            onClick={() => setStyleDialogOpen(true)}
+            sx={{
+              color: '#fff',
+              borderColor: 'rgba(255,255,255,0.5)',
+              textTransform: 'none',
+              fontSize: '0.78rem',
+              '&:hover': {
+                borderColor: '#fff',
+                bgcolor: 'rgba(255,255,255,0.1)',
+              },
+            }}
+          >
+            Style
+          </Button>
+        ) : null
       }
     >
       {duplicateAlert && (
@@ -538,10 +557,66 @@ const SectionFormDialog = ({
 
         <DialogContent sx={{ px: 2.5, pt: 2, pb: 1.5 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {/* Field styles will be implemented here */}
-            <Typography variant='body2' color='text.secondary'>
-              Style options coming soon.
-            </Typography>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              {/* Columns */}
+              <Box sx={{ flex: 1 }}>
+                <FormControl fullWidth size='small'>
+                  <InputLabel id='style-columns-label'>Columns</InputLabel>
+                  <Select
+                    labelId='style-columns-label'
+                    label='Columns'
+                    value={form.columns ?? 3}
+                    onChange={(e) =>
+                      updateForm((f) => ({
+                        ...f,
+                        columns: Number(e.target.value),
+                      }))
+                    }
+                  >
+                    <MenuItem value={1}>1 Column</MenuItem>
+                    <MenuItem value={2}>2 Columns</MenuItem>
+                    <MenuItem value={3}>3 Columns</MenuItem>
+                    <MenuItem value={4}>4 Columns</MenuItem>
+                  </Select>
+                </FormControl>
+                <Typography
+                  variant='caption'
+                  sx={{ color: 'text.secondary', fontSize: '0.7rem', mt: 0.5, display: 'block' }}
+                >
+                  Number of field columns per row
+                </Typography>
+              </Box>
+
+              {/* Rows */}
+              <Box sx={{ flex: 1 }}>
+                <FormControl fullWidth size='small'>
+                  <InputLabel id='style-rows-label'>Rows</InputLabel>
+                  <Select
+                    labelId='style-rows-label'
+                    label='Rows'
+                    value={form.rows ?? 1}
+                    onChange={(e) =>
+                      updateForm((f) => ({
+                        ...f,
+                        rows: Number(e.target.value),
+                      }))
+                    }
+                  >
+                    <MenuItem value={1}>1 Row</MenuItem>
+                    <MenuItem value={2}>2 Rows</MenuItem>
+                    <MenuItem value={3}>3 Rows</MenuItem>
+                    <MenuItem value={4}>4 Rows</MenuItem>
+                    <MenuItem value={5}>5 Rows</MenuItem>
+                  </Select>
+                </FormControl>
+                <Typography
+                  variant='caption'
+                  sx={{ color: 'text.secondary', fontSize: '0.7rem', mt: 0.5, display: 'block' }}
+                >
+                  Number of field rows in this section
+                </Typography>
+              </Box>
+            </Box>
           </Box>
         </DialogContent>
 

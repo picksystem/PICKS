@@ -200,7 +200,14 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
             <Box className={classes.sectionCardBody}>
               {/* Top-level section fields */}
               {section.fields.length > 0 && (
-                <Box className={classes.formGrid}>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gap: 2,
+                    gridTemplateColumns: `repeat(${section.columns ?? 3}, 1fr)`,
+                    gridTemplateRows: `repeat(${section.rows ?? 'auto-fill'}, 1fr)`,
+                  }}
+                >
                   {section.fields.map((fk) => renderFieldWithErrors(fk))}
                 </Box>
               )}
@@ -230,7 +237,14 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                     />
                     {sub.name || 'Sub-section'}
                   </Typography>
-                  <Box className={classes.formGrid}>
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gap: (sub.columns ?? section.columns ?? 3) === 1 ? 1 : 2,
+                      gridTemplateColumns: `repeat(${sub.columns ?? section.columns ?? 3}, 1fr)`,
+                      gridTemplateRows: `repeat(${sub.rows ?? section.rows ?? 'auto-fill'}, 1fr)`,
+                    }}
+                  >
                     {(sub.fields ?? []).map((fk) => renderFieldWithErrors(fk))}
                   </Box>
                 </Box>

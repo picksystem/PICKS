@@ -37,6 +37,8 @@ type DialogSection = {
   fields: string[];
   subSections: { id: string; name: string; fields?: string[] }[];
   accessControl?: Record<string, boolean>;
+  columns?: number;
+  rows?: number;
 };
 
 const TAB_ORDER: TabId[] = ['createTicket', 'ticketDetails'];
@@ -101,6 +103,8 @@ function buildDialogSectionsFromConfig(
         fields: [...cfg.fields],
         subSections: cfg.subSections ? [...cfg.subSections] : [],
         accessControl: cfg.accessControl,
+        columns: cfg.columns,
+        rows: cfg.rows,
       });
     }
   }
@@ -276,13 +280,15 @@ export const TicketTypeLayoutDialog = ({
       title: string,
       accessControl?: Record<string, boolean>,
       subSections?: { id: string; name: string }[],
+      columns?: number,
+      rows?: number,
     ) => {
       const id = `custom_${Date.now()}`;
       setDialogSections((prev) => ({
         ...prev,
         [activeTab]: [
           ...prev[activeTab],
-          { id, title, fields: [], subSections: subSections ?? [], accessControl },
+          { id, title, fields: [], subSections: subSections ?? [], accessControl, columns, rows },
         ],
       }));
 
@@ -299,6 +305,8 @@ export const TicketTypeLayoutDialog = ({
               subSections: subSections ?? [],
               tab: activeTab,
               accessControl,
+              columns,
+              rows,
             },
           },
         }),
@@ -424,12 +432,21 @@ export const TicketTypeLayoutDialog = ({
       title: string,
       accessControl?: Record<string, boolean>,
       subSections?: { id: string; name: string }[],
+      columns?: number,
+      rows?: number,
     ) => {
       setDialogSections((prev) => ({
         ...prev,
         [activeTab]: prev[activeTab].map((s) =>
           s.id === sectionId
-            ? { ...s, title, accessControl, subSections: subSections ?? s.subSections }
+            ? {
+                ...s,
+                title,
+                accessControl,
+                subSections: subSections ?? s.subSections,
+                columns,
+                rows,
+              }
             : s,
         ),
       }));
@@ -442,6 +459,8 @@ export const TicketTypeLayoutDialog = ({
           title,
           accessControl,
           subSections: subSections ?? nextCustom[sectionId].subSections,
+          columns,
+          rows,
         };
       }
       onSave(mergeLayoutConfig({ ...layoutConfig, customSections: nextCustom }));
@@ -2190,6 +2209,7 @@ export const TicketTypeLayoutDialog = ({
           name: tt.displayName || tt.name,
         }))}
         defaultTicketType={ticketType?.type}
+        tab={activeTab}
         accent='#0369a1'
         onClose={() => {
           setEditingSection(null);
@@ -2203,10 +2223,18 @@ export const TicketTypeLayoutDialog = ({
               section.title,
               section.accessControl,
               section.subSections,
+              section.columns,
+              section.rows,
             );
           } else if (!editingSection) {
             // Add mode — add new section with subSections
-            handleAddSectionWithTitle(section.title, section.accessControl, section.subSections);
+            handleAddSectionWithTitle(
+              section.title,
+              section.accessControl,
+              section.subSections,
+              section.columns,
+              section.rows,
+            );
           }
           setEditingSection(null);
           setAddSectionDialogOpen(false);
