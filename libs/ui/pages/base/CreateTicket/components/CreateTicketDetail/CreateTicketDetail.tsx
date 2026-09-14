@@ -13,6 +13,7 @@ import {
   ICustomSectionConfig,
   ICustomField,
 } from '@serviceops/interfaces';
+import GppBadIcon from '@mui/icons-material/GppBad';
 
 const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDetailProps) => {
   const { classes } = useStyles();
@@ -253,6 +254,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
             }}
           >
             <Box sx={{ fontWeight: 600, fontSize: '0.875rem', mb: 1, color: '#1e293b' }}>
+              <GppBadIcon />
               Please fill in the following required field{missingFieldsList.length > 1 ? 's' : ''}:
             </Box>
             <Box

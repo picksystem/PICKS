@@ -7,6 +7,7 @@ import {
   Paper,
   IconButton,
   Button,
+  Tooltip,
 } from '@serviceops/component';
 import {
   alpha,
@@ -19,7 +20,6 @@ import {
   ListItemButton,
   ListItemText,
   Switch,
-  Tooltip,
 } from '@mui/material';
 import {
   AddCircle,
@@ -27,6 +27,7 @@ import {
   Clear as ClearIcon,
   Delete as DeleteIcon,
   Search as SearchIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
 import { useFieldError, useNotification } from '@serviceops/hooks';
 import { ICustomField, CustomFieldType, IConfigCategorization } from '@serviceops/interfaces';
@@ -34,6 +35,7 @@ import { ConfigFormDialog } from '@serviceops/configdialogs';
 import { useConfiguration } from '@serviceops/confighooks';
 import ConfigPathPicker from '../CustomFieldDialog/ConfigPathPicker';
 import { generateCustomFieldKey } from '../../utils/ticketTypeLayoutConfig';
+import CustomFieldOptionFormDialog, { OptionEntry } from './CustomFieldOptionFormDialog';
 
 const DEFAULT_ACCENT = '#0369a1';
 
@@ -92,7 +94,7 @@ const CustomFieldFormDialog = ({
 }: CustomFieldFormDialogProps) => {
   const { success } = useNotification();
   const reqError = useFieldError();
-  const { data: configData } = useConfiguration();
+  const { data: _configData } = useConfiguration();
 
   const [form, setForm] = useState<Partial<ICustomField>>({});
   const [duplicateAlert, setDuplicateAlert] = useState<string | null>(null);
@@ -111,8 +113,9 @@ const CustomFieldFormDialog = ({
   interface CheckboxOptionEntry {
     id: string;
     fieldName: string;
-    fieldType: string;
     path: string;
+    isRequired: boolean;
+    isDisabled: boolean;
   }
   const [checkboxOptions, setCheckboxOptions] = useState<CheckboxOptionEntry[]>([]);
   const [openTypeEntryId, setOpenTypeEntryId] = useState<string | null>(null);
@@ -137,6 +140,10 @@ const CustomFieldFormDialog = ({
 
   // Field Use section expand/collapse
   const [fieldUseExpanded, setFieldUseExpanded] = useState(false);
+
+  // Option dialog state (replaces inline option editing)
+  const [optionDialogOpen, setOptionDialogOpen] = useState(false);
+  const [editingOption, setEditingOption] = useState<OptionEntry | null>(null);
 
   const isEditMode = !!editing;
 
@@ -262,8 +269,9 @@ const CustomFieldFormDialog = ({
         editing.dropdownOptions.map((label) => ({
           id: `cb_${Date.now()}_${Math.random().toString(36).slice(2, 7)}_${label}`,
           fieldName: label,
-          fieldType: 'text',
           path: '',
+          isRequired: false,
+          isDisabled: false,
         })),
       );
     } else {
@@ -453,22 +461,58 @@ const CustomFieldFormDialog = ({
     updateForm((f) => ({ ...f, fieldUse: newFlags }));
   };
 
-  const handleAddCheckboxOption = () => {
-    const entry: CheckboxOptionEntry = {
-      id: `cb_${Date.now()}`,
-      fieldName: '',
-      fieldType: '',
-      path: '',
-    };
-    setCheckboxOptions((prev) => [...prev, entry]);
+  // ── Checkbox Option handlers (dialog-based) ──────────────────
+  const handleCheckboxOptionSave = (entry: OptionEntry) => {
+    if (editingOption) {
+      setCheckboxOptions((prev) =>
+        prev.map((e) =>
+          e.id === entry.id ? { ...e, fieldName: entry.fieldName, path: entry.path } : e,
+        ),
+      );
+    } else {
+      const newEntry: CheckboxOptionEntry = {
+        id: entry.id,
+        fieldName: entry.fieldName,
+        path: entry.path,
+        isRequired: entry.isRequired,
+        isDisabled: entry.isDisabled,
+      };
+      setCheckboxOptions((prev) => [...prev, newEntry]);
+    }
   };
 
-  const handleRemoveCheckboxOption = (id: string) => {
+  const handleCheckboxOptionPatch = (id: string, patch: Partial<CheckboxOptionEntry>) => {
+    setCheckboxOptions((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
+  };
+
+  const handleCheckboxOptionDelete = (id: string) => {
     setCheckboxOptions((prev) => prev.filter((e) => e.id !== id));
   };
 
-  const handleCheckboxOptionChange = (id: string, patch: Partial<CheckboxOptionEntry>) => {
-    setCheckboxOptions((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
+  // ── Dropdown Option handlers (dialog-based) ──────────────────
+  const handleDropdownOptionSave = (entry: OptionEntry) => {
+    if (editingOption) {
+      // Update existing dropdown option
+      updateForm((f) => {
+        const opts = [...(f.dropdownOptions ?? [])];
+        const idx = opts.indexOf(editingOption.fieldName);
+        if (idx >= 0) opts[idx] = entry.fieldName;
+        return { ...f, dropdownOptions: opts };
+      });
+    } else {
+      // Add new dropdown option
+      updateForm((f) => ({
+        ...f,
+        dropdownOptions: [...(f.dropdownOptions ?? []), entry.fieldName],
+      }));
+    }
+  };
+
+  const handleDropdownOptionDelete = (fieldName: string) => {
+    updateForm((f) => ({
+      ...f,
+      dropdownOptions: (f.dropdownOptions ?? []).filter((o) => o !== fieldName),
+    }));
   };
 
   const isDropdown = form.fieldType === 'dropdown';
@@ -634,7 +678,10 @@ const CustomFieldFormDialog = ({
                 variant='outlined'
                 size='small'
                 startIcon={<AddCircle />}
-                onClick={handleAddBlankDropdownOption}
+                onClick={() => {
+                  setEditingOption(null);
+                  setOptionDialogOpen(true);
+                }}
                 sx={{ textTransform: 'none', fontSize: '0.75rem' }}
               >
                 Add Option
@@ -646,7 +693,7 @@ const CustomFieldFormDialog = ({
             <Box>
               {form.dropdownOptions.map((opt, idx) => (
                 <Stack
-                  key={`${opt}-${idx}`}
+                  key={opt}
                   direction='row'
                   alignItems='center'
                   spacing={1}
@@ -658,28 +705,35 @@ const CustomFieldFormDialog = ({
                   }}
                 >
                   <Box sx={{ flex: 1 }}>
-                    <TextField
-                      variant='outlined'
-                      size='small'
-                      fullWidth
-                      sx={{ '& .MuiOutlinedInput-root': { mt: 0, mb: 0 } }}
-                      placeholder='Option name'
-                      value={opt}
-                      onChange={(e) => {
-                        const { value } = e.target;
-                        updateForm((f) => {
-                          const next = [...(f.dropdownOptions ?? [])];
-                          next[idx] = value;
-                          return { ...f, dropdownOptions: next };
-                        });
-                      }}
-                    />
+                    <Typography variant='body2' sx={{ fontSize: '0.85rem' }}>
+                      {opt}
+                    </Typography>
                   </Box>
-                  <Tooltip title='Remove option'>
-                    <IconButton size='small' onClick={() => handleRemoveDropdownOption(idx)}>
-                      <DeleteIcon fontSize='small' />
-                    </IconButton>
-                  </Tooltip>
+                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                    <Tooltip title='Edit option'>
+                      <IconButton
+                        size='small'
+                        onClick={() => {
+                          setEditingOption({
+                            id: `opt_${idx}`,
+                            fieldName: opt,
+                            fieldType: 'text',
+                            path: '',
+                            isRequired: false,
+                            isDisabled: false,
+                          });
+                          setOptionDialogOpen(true);
+                        }}
+                      >
+                        <EditIcon sx={{ fontSize: '1.1rem', color: accent }} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title='Remove option'>
+                      <IconButton size='small' onClick={() => handleRemoveDropdownOption(idx)}>
+                        <DeleteIcon fontSize='small' />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                 </Stack>
               ))}
             </Box>
@@ -694,7 +748,7 @@ const CustomFieldFormDialog = ({
             border: '1px solid',
             borderColor: alpha(accent, 0.3),
             borderRadius: 2,
-            overflow: 'visible',
+            overflow: 'hidden',
           }}
         >
           <Box sx={{ px: 2, py: 1.5, bgcolor: alpha(accent, 0.04) }}>
@@ -710,7 +764,10 @@ const CustomFieldFormDialog = ({
                 variant='outlined'
                 size='small'
                 startIcon={<AddCircle />}
-                onClick={handleAddCheckboxOption}
+                onClick={() => {
+                  setEditingOption(null);
+                  setOptionDialogOpen(true);
+                }}
                 sx={{ textTransform: 'none', fontSize: '0.75rem' }}
               >
                 Add Option
@@ -718,164 +775,52 @@ const CustomFieldFormDialog = ({
             </Stack>
           </Box>
 
-          {checkboxOptions.map((entry) => {
-            const typeLabel = FIELD_TYPES.find((ft) => ft.value === entry.fieldType)?.label ?? '';
-            return (
-              <Stack
-                key={entry.id}
-                data-type-dropdown
-                direction='row'
-                alignItems='center'
-                spacing={1}
-                sx={{
-                  px: 2,
-                  py: 0.75,
-                  borderBottom: '1px solid',
-                  borderColor: alpha(accent, 0.3),
-                  '&:last-child': { borderBottom: 'none' },
-                }}
-              >
-                {/* Field Name */}
-                <Box sx={{ flex: 1 }}>
-                  <TextField
-                    variant='outlined'
+          {checkboxOptions.map((entry) => (
+            <Stack
+              key={entry.id}
+              direction='row'
+              alignItems='center'
+              spacing={1}
+              sx={{
+                px: 2,
+                py: 0.75,
+                borderBottom: '1px solid',
+                borderColor: alpha(accent, 0.3),
+                '&:last-child': { borderBottom: 'none' },
+              }}
+            >
+              <Box sx={{ flex: 1 }}>
+                <Typography variant='body2' sx={{ fontSize: '0.85rem' }}>
+                  {entry.fieldName || '(unnamed)'}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 0.5 }}>
+                <Tooltip title='Edit option'>
+                  <IconButton
                     size='small'
-                    fullWidth
-                    sx={{ '& .MuiOutlinedInput-root': { mt: 0, mb: 0 } }}
-                    placeholder='Field Name'
-                    value={entry.fieldName}
-                    onChange={(e) =>
-                      handleCheckboxOptionChange(entry.id, { fieldName: e.target.value })
-                    }
-                  />
-                </Box>
-
-                {/* Type */}
-                <Box sx={{ flex: 1, position: 'relative' }}>
-                  <TextField
-                    variant='outlined'
-                    size='small'
-                    fullWidth
-                    sx={{ '& .MuiOutlinedInput-root': { mt: 0, mb: 0 } }}
-                    placeholder='Select type...'
-                    value={typeLabel}
-                    onFocus={() => setOpenTypeEntryId(entry.id)}
-                    slotProps={{
-                      input: {
-                        readOnly: true,
-                        endAdornment: (
-                          <InputAdornment position='end'>
-                            {typeLabel ? (
-                              <ClearIcon
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  handleCheckboxOptionChange(entry.id, { fieldType: '' });
-                                  setOpenTypeEntryId(null);
-                                }}
-                                sx={{ fontSize: 18, color: 'text.primary', cursor: 'pointer' }}
-                              />
-                            ) : (
-                              <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-                            )}
-                          </InputAdornment>
-                        ),
-                      },
+                    onClick={() => {
+                      setEditingOption({
+                        id: entry.id,
+                        fieldName: entry.fieldName,
+                        fieldType: 'text',
+                        path: entry.path,
+                        isRequired: false,
+                        isDisabled: false,
+                      });
+                      setOptionDialogOpen(true);
                     }}
-                  />
-                  {openTypeEntryId === entry.id && (
-                    <Paper
-                      elevation={4}
-                      sx={{
-                        position: 'absolute',
-                        top: '100%',
-                        left: 0,
-                        right: 0,
-                        zIndex: 1000,
-                        mt: 0,
-                        maxHeight: 200,
-                        overflow: 'auto',
-                      }}
-                    >
-                      <List dense disablePadding>
-                        {FIELD_TYPES.map((ft) => (
-                          <ListItem key={ft.value} disablePadding>
-                            <ListItemButton
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                handleCheckboxOptionChange(entry.id, { fieldType: ft.value });
-                                setOpenTypeEntryId(null);
-                              }}
-                              sx={{
-                                py: 1,
-                                px: 1.5,
-                                '&:hover': { bgcolor: alpha(accent, 0.08) },
-                              }}
-                            >
-                              <ListItemText
-                                primary={ft.label}
-                                primaryTypographyProps={{ fontSize: '0.84rem', noWrap: true }}
-                              />
-                            </ListItemButton>
-                          </ListItem>
-                        ))}
-                      </List>
-                    </Paper>
-                  )}
-                </Box>
-
-                {/* Path — opens picker dialog on click */}
-                <Box sx={{ flex: 1, position: 'relative' }}>
-                  <TextField
-                    variant='outlined'
-                    size='small'
-                    fullWidth
-                    sx={{ '& .MuiOutlinedInput-root': { mt: 0, mb: 0 } }}
-                    placeholder='Path (optional)'
-                    value={entry.path}
-                    slotProps={{
-                      input: {
-                        readOnly: true,
-                        endAdornment: (
-                          <InputAdornment position='end'>
-                            {entry.path ? (
-                              <ClearIcon
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCheckboxOptionChange(entry.id, { path: '' });
-                                }}
-                                sx={{ fontSize: 18, color: 'text.primary', cursor: 'pointer' }}
-                              />
-                            ) : (
-                              <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-                            )}
-                          </InputAdornment>
-                        ),
-                      },
-                      htmlInput: {
-                        onClick: () => {
-                          setEditingOptionPathId(entry.id);
-                          setConfigPickerOpen(true);
-                        },
-                      },
-                    }}
-                  />
-                </Box>
-
-                {/* Delete */}
-                <Box sx={{ flex: '0 0 32px', display: 'flex', justifyContent: 'center' }}>
-                  <Tooltip title='Remove option'>
-                    <IconButton
-                      size='small'
-                      onClick={() => handleRemoveCheckboxOption(entry.id)}
-                      sx={{ padding: '6px' }}
-                    >
-                      <DeleteIcon sx={{ fontSize: '1.25rem' }} />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              </Stack>
-            );
-          })}
+                  >
+                    <EditIcon sx={{ fontSize: '1.1rem', color: accent }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Remove option'>
+                  <IconButton size='small' onClick={() => handleCheckboxOptionDelete(entry.id)}>
+                    <DeleteIcon sx={{ fontSize: '1.1rem' }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Stack>
+          ))}
         </Box>
       )}
 
@@ -1158,8 +1103,7 @@ const CustomFieldFormDialog = ({
         )}
       </Box>
 
-      {/* ── Config Path Picker (opened by Path field's Browse button or
-           by clicking the Field Name / Path inputs in checkbox options) ─── */}
+      {/* ── Config Path Picker ─── */}
       <ConfigPathPicker
         open={configPickerOpen}
         onClose={() => {
@@ -1168,13 +1112,40 @@ const CustomFieldFormDialog = ({
         }}
         onSelect={(label, value) => {
           if (editingOptionPathId) {
-            handleCheckboxOptionChange(editingOptionPathId, { path: value });
+            handleCheckboxOptionPatch(editingOptionPathId, { path: value });
             setEditingOptionPathId(null);
           } else {
             setPathInput(value);
             updateForm((f) => ({ ...f, path: value }));
           }
         }}
+      />
+
+      {/* ── Option Form Dialog (for Dropdown & Checkbox options) ── */}
+      <CustomFieldOptionFormDialog
+        open={optionDialogOpen}
+        editing={editingOption}
+        onClose={() => {
+          setOptionDialogOpen(false);
+          setEditingOption(null);
+        }}
+        onSave={(entry: OptionEntry) => {
+          if (isDropdown) {
+            handleDropdownOptionSave(entry);
+          } else if (isCheckbox) {
+            handleCheckboxOptionSave(entry);
+          }
+          setOptionDialogOpen(false);
+          setEditingOption(null);
+        }}
+        onDelete={(id: string) => {
+          if (isCheckbox) {
+            handleCheckboxOptionDelete(id);
+          }
+          setOptionDialogOpen(false);
+          setEditingOption(null);
+        }}
+        accent={accent}
       />
     </ConfigFormDialog>
   );
