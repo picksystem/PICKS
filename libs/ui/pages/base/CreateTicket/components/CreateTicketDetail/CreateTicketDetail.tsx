@@ -1,145 +1,19 @@
 import { useMemo } from 'react';
-import { Box, Button, PageHeader, Typography } from '@serviceops/component';
+import { Box, Button, PageHeader, Typography, Alert } from '@serviceops/component';
+import { ErrorOutline as ErrorOutlineIcon } from '@mui/icons-material';
 import { useFieldError } from '@serviceops/hooks';
 import { useStyles } from './styles';
 import { DynamicFieldRenderer } from './DynamicFieldRenderer';
-import useCreateTicketDetail, { CreateTicketDetailProps } from './hooks/useCreateTicketDetail';
+import useCreateTicketDetail, {
+  CreateTicketDetailProps,
+  FieldResolution,
+  OptionSets,
+} from './hooks/useCreateTicketDetail';
 import {
   ITicketTypeLayoutConfig,
   ICustomSectionConfig,
   ICustomField,
-  CustomFieldType,
 } from '@serviceops/interfaces';
-
-interface FieldResolution {
-  label: string;
-  type: CustomFieldType;
-  value: string | boolean;
-  onChange: (val: string | boolean) => void;
-  dropdownOptions?: { value: string; label: string }[];
-  required: boolean;
-  disabled?: boolean;
-}
-
-/**
- * Resolves a field key into rendering metadata.
- *
- * Priority:
- * 1. Custom fields — label + type come from the API (ICustomField).
- * 2. Built-in fields — label is the field key (no hardcoded map),
- *    type and dropdown options come from the field resolver.
- */
-const resolveField = (
-  fieldKey: string,
-  customFieldMap: Map<string, ICustomField>,
-  formik: any,
-  getCfValue: (key: string) => string | boolean,
-  setCfValue: (key: string, value: string | boolean) => void,
-  opts: {
-    callerOptions: { value: string; label: string }[];
-    impactOptions: { value: string; label: string }[];
-    urgencyOptions: { value: string; label: string }[];
-    priorityOptions: { value: string; label: string }[];
-    statusOptions: { value: string; label: string }[];
-    channelOptions: { value: string; label: string }[];
-    businessCategoryOptions: { value: string; label: string }[];
-    serviceLineOptions: { value: string; label: string }[];
-    applicationOptions: { value: string; label: string }[];
-    applicationCategoryOptions: { value: string; label: string }[];
-    applicationSubCategoryOptions: { value: string; label: string }[];
-  },
-): FieldResolution => {
-  // ── Custom field: label + type come from API ───────────────────────
-  const customField = customFieldMap.get(fieldKey);
-  if (customField) {
-    return {
-      label: customField.fieldName,
-      type: customField.fieldType,
-      value: getCfValue(fieldKey),
-      onChange: (val: string | boolean) => setCfValue(fieldKey, val),
-      dropdownOptions: customField.dropdownOptions?.map((o) => ({ value: o, label: o })),
-      required: customField.isRequired ?? false,
-      disabled: customField.isDisabled ?? false,
-    };
-  }
-
-  // ── Built-in field: type + options from resolver, label = field key ─
-  const formikValue = formik?.values?.[fieldKey];
-
-  let fieldType: CustomFieldType = 'text';
-  let dropdownOptions: { value: string; label: string }[] | undefined;
-
-  switch (fieldKey) {
-    case 'caller':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.callerOptions;
-      break;
-    case 'businessCategory':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.businessCategoryOptions;
-      break;
-    case 'serviceLine':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.serviceLineOptions;
-      break;
-    case 'application':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.applicationOptions;
-      break;
-    case 'applicationCategory':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.applicationCategoryOptions;
-      break;
-    case 'applicationSubCategory':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.applicationSubCategoryOptions;
-      break;
-    case 'impact':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.impactOptions;
-      break;
-    case 'urgency':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.urgencyOptions;
-      break;
-    case 'priority':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.priorityOptions;
-      break;
-    case 'status':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.statusOptions;
-      break;
-    case 'channel':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.channelOptions;
-      break;
-    case 'description':
-      fieldType = 'textarea';
-      break;
-    case 'isMajor':
-    case 'isRecurring':
-    case 'isReleaseManagement':
-      fieldType = 'checkbox';
-      break;
-    case 'attachments':
-      fieldType = 'attachment';
-      break;
-    default:
-      fieldType = 'text';
-  }
-
-  return {
-    label: fieldKey,
-    type: fieldType,
-    value: formikValue ?? '',
-    onChange: (val: string | boolean) => formik?.setFieldValue?.(fieldKey, val),
-    dropdownOptions,
-    required: false,
-  };
-};
-
-// ── Component ───────────────────────────────────────────────────────
 
 const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDetailProps) => {
   const { classes } = useStyles();
@@ -153,22 +27,13 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     handleCreateTicket,
     handleSaveAsDraft,
     handleSearchForSolution,
-    callerOptions,
-    impactOptions,
-    urgencyOptions,
-    priorityOptions,
-    statusOptions,
-    channelOptions,
-    businessCategoryOptions,
-    serviceLineOptions,
-    applicationOptions,
-    applicationCategoryOptions,
-    applicationSubCategoryOptions,
     validationFailed,
-    customFields,
     layoutConfig,
     getCfValue,
     setCfValue,
+    optionSets,
+    customFieldMap,
+    resolveField,
     attachedFiles,
     setAttachedFiles,
     ticketNumber,
@@ -180,70 +45,57 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     handleCreateTicket: () => Promise<void>;
     handleSaveAsDraft: () => Promise<void>;
     handleSearchForSolution: () => Promise<void>;
-    callerOptions: { value: string; label: string }[];
-    impactOptions: { value: string; label: string }[];
-    urgencyOptions: { value: string; label: string }[];
-    priorityOptions: { value: string; label: string }[];
-    statusOptions: { value: string; label: string }[];
-    channelOptions: { value: string; label: string }[];
-    businessCategoryOptions: { value: string; label: string }[];
-    serviceLineOptions: { value: string; label: string }[];
-    applicationOptions: { value: string; label: string }[];
-    applicationCategoryOptions: { value: string; label: string }[];
-    applicationSubCategoryOptions: { value: string; label: string }[];
     validationFailed: boolean;
     customFields: ICustomField[];
     layoutConfig: ITicketTypeLayoutConfig | undefined;
     getCfValue: (key: string) => string | boolean;
     setCfValue: (key: string, value: string | boolean) => void;
+    optionSets: OptionSets;
+    customFieldMap: Map<string, ICustomField>;
+    resolveField: (
+      fieldKey: string,
+      customFieldMap: Map<string, ICustomField>,
+      formik: any,
+      getCfValue: (key: string) => string | boolean,
+      setCfValue: (key: string, value: string | boolean) => void,
+      opts: OptionSets,
+    ) => FieldResolution;
     attachedFiles: File[];
     setAttachedFiles: React.Dispatch<React.SetStateAction<File[]>>;
     ticketNumber: string;
   };
 
-  // Build lookup map for custom fields by fieldKey
-  const customFieldMap = useMemo(() => {
-    const map = new Map<string, ICustomField>();
-    for (const cf of customFields) {
-      map.set(cf.fieldKey, cf);
-    }
-    return map;
-  }, [customFields]);
+  // Compute human-readable labels for fields that have validation errors
+  const missingFieldsList = useMemo(() => {
+    if (!validationFailed || !formik.errors) return [];
+    const errs = formik.errors as Record<string, string>;
 
-  const optionSets = useMemo(
-    () => ({
-      callerOptions,
-      impactOptions,
-      urgencyOptions,
-      priorityOptions,
-      statusOptions,
-      channelOptions,
-      businessCategoryOptions,
-      serviceLineOptions,
-      applicationOptions,
-      applicationCategoryOptions,
-      applicationSubCategoryOptions,
-    }),
-    [
-      callerOptions,
-      impactOptions,
-      urgencyOptions,
-      priorityOptions,
-      statusOptions,
-      channelOptions,
-      businessCategoryOptions,
-      serviceLineOptions,
-      applicationOptions,
-      applicationCategoryOptions,
-      applicationSubCategoryOptions,
-    ],
-  );
+    // Convert camelCase to Title Case for built-in fields (dynamic, no hardcoding)
+    const camelToTitle = (key: string): string =>
+      key
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, (s) => s.toUpperCase())
+        .trim();
+
+    // Dedup by label using a Set on the resolved label
+    const seenLabels = new Set<string>();
+    return Object.keys(errs)
+      .map((key) => {
+        const customField = customFieldMap.get(key);
+        if (customField) return customField.fieldName; // Dynamic from API
+        return camelToTitle(key); // Dynamic from field key
+      })
+      .filter((label) => {
+        const lower = label.toLowerCase();
+        if (seenLabels.has(lower)) return false;
+        seenLabels.add(lower);
+        return true;
+      });
+  }, [validationFailed, formik.errors, customFieldMap]);
 
   // Sections from the admin's "Ticket Sections" configuration (customSections).
   // Each section has a title, a list of field keys (selectedFields),
-  // and optional sub-sections. This is the ONLY source of sections —
-  // the legacy built-in createTicket sections are intentionally excluded
-  // so that admin changes in Ticket Screen Layout are always reflected.
+  // and optional sub-sections. This is the ONLY source of sections.
   const createTicketSections = useMemo((): (ICustomSectionConfig & { id: string })[] => {
     if (!layoutConfig?.customSections) return [];
     return Object.entries(layoutConfig.customSections)
@@ -277,14 +129,11 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
       setCfValue,
       optionSets,
     );
-    // Use Formik's touched state so errors only show after user interaction
     const isTouched = formik?.touched?.[fieldKey];
     const rawError = (formik?.errors?.[fieldKey] as string) || '';
     const fieldError = validationFailed && !!isTouched && !!rawError;
-    // Format error with ArrowCircleRightIcon, same as Approved Estimate dialog
     const fieldErrorText = reqError(isTouched, rawError);
 
-    // Textarea, attachment, and checkbox with options span full width
     const isFullWidth =
       resolved.type === 'textarea' ||
       resolved.type === 'attachment' ||
@@ -389,6 +238,56 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
             </Box>
           </Box>
         ))}
+
+        {/* ── Missing Fields Alert ── */}
+        {missingFieldsList.length > 0 && (
+          <Alert
+            severity='error'
+            icon={<ErrorOutlineIcon />}
+            sx={{
+              mb: 2,
+              borderRadius: 2,
+              '& .MuiAlert-message': { display: 'block', width: '100%' },
+              '& .MuiAlert-icon': { alignItems: 'flex-start', mt: 0.3 },
+            }}
+          >
+            <Box sx={{ fontWeight: 600, fontSize: '0.875rem', mb: 1, color: '#1e293b' }}>
+              Please fill in the following required field{missingFieldsList.length > 1 ? 's' : ''}:
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+              {missingFieldsList.map((name) => (
+                <Box
+                  key={name}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75,
+                    fontSize: '0.8125rem',
+                    fontWeight: 500,
+                    color: '#374151',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: '50%',
+                      backgroundColor: '#fee2e2',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <ErrorOutlineIcon sx={{ fontSize: 12, color: '#dc2626' }} />
+                  </Box>
+                  {name}
+                </Box>
+              ))}
+            </Box>
+          </Alert>
+        )}
 
         {/* ── Action Buttons ── */}
         <Box className={classes.buttonContainer}>

@@ -17,6 +17,8 @@ import {
   IAdminTicket,
   ITicketTypeLayoutConfig,
   ICustomSectionConfig,
+  ICustomField,
+  CustomFieldType,
 } from '@serviceops/interfaces';
 import {
   useAuth,
@@ -31,6 +33,133 @@ import {
   filterSectionsByTicketType,
 } from '@serviceops/tickettypelayout';
 import { channelOptions, generateTicketNumber, calculatePriority, initialValues } from '../util';
+
+// ── Field resolution types ──────────────────────────────────────────────────
+
+export interface FieldResolution {
+  label: string;
+  type: CustomFieldType;
+  value: string | boolean;
+  onChange: (val: string | boolean) => void;
+  dropdownOptions?: { value: string; label: string }[];
+  required: boolean;
+  disabled?: boolean;
+}
+
+export interface OptionSets {
+  callerOptions: { value: string; label: string }[];
+  impactOptions: { value: string; label: string }[];
+  urgencyOptions: { value: string; label: string }[];
+  priorityOptions: { value: string; label: string }[];
+  statusOptions: { value: string; label: string }[];
+  channelOptions: { value: string; label: string }[];
+  businessCategoryOptions: { value: string; label: string }[];
+  serviceLineOptions: { value: string; label: string }[];
+  applicationOptions: { value: string; label: string }[];
+  applicationCategoryOptions: { value: string; label: string }[];
+  applicationSubCategoryOptions: { value: string; label: string }[];
+}
+
+/**
+ * Resolves a field key into rendering metadata.
+ * Priority: 1. Custom fields (API-driven), 2. Built-in fields (type from resolver, label from key).
+ */
+const resolveField = (
+  fieldKey: string,
+  customFieldMap: Map<string, ICustomField>,
+  formik: any,
+  getCfValue: (key: string) => string | boolean,
+  setCfValue: (key: string, value: string | boolean) => void,
+  opts: OptionSets,
+): FieldResolution => {
+  // Custom field: label + type come from API
+  const customField = customFieldMap.get(fieldKey);
+  if (customField) {
+    return {
+      label: customField.fieldName,
+      type: customField.fieldType,
+      value: getCfValue(fieldKey),
+      onChange: (val: string | boolean) => setCfValue(fieldKey, val),
+      dropdownOptions: customField.dropdownOptions?.map((o) => ({ value: o, label: o })),
+      required: customField.isRequired ?? false,
+      disabled: customField.isDisabled ?? false,
+    };
+  }
+
+  // Built-in field: type + options from resolver, label = field key
+  const formikValue = formik?.values?.[fieldKey];
+  let fieldType: CustomFieldType = 'text';
+  let dropdownOptions: { value: string; label: string }[] | undefined;
+
+  switch (fieldKey) {
+    case 'caller':
+      fieldType = 'dropdown';
+      dropdownOptions = opts.callerOptions;
+      break;
+    case 'businessCategory':
+      fieldType = 'dropdown';
+      dropdownOptions = opts.businessCategoryOptions;
+      break;
+    case 'serviceLine':
+      fieldType = 'dropdown';
+      dropdownOptions = opts.serviceLineOptions;
+      break;
+    case 'application':
+      fieldType = 'dropdown';
+      dropdownOptions = opts.applicationOptions;
+      break;
+    case 'applicationCategory':
+      fieldType = 'dropdown';
+      dropdownOptions = opts.applicationCategoryOptions;
+      break;
+    case 'applicationSubCategory':
+      fieldType = 'dropdown';
+      dropdownOptions = opts.applicationSubCategoryOptions;
+      break;
+    case 'impact':
+      fieldType = 'dropdown';
+      dropdownOptions = opts.impactOptions;
+      break;
+    case 'urgency':
+      fieldType = 'dropdown';
+      dropdownOptions = opts.urgencyOptions;
+      break;
+    case 'priority':
+      fieldType = 'dropdown';
+      dropdownOptions = opts.priorityOptions;
+      break;
+    case 'status':
+      fieldType = 'dropdown';
+      dropdownOptions = opts.statusOptions;
+      break;
+    case 'channel':
+      fieldType = 'dropdown';
+      dropdownOptions = opts.channelOptions;
+      break;
+    case 'description':
+      fieldType = 'textarea';
+      break;
+    case 'isMajor':
+    case 'isRecurring':
+    case 'isReleaseManagement':
+      fieldType = 'checkbox';
+      break;
+    case 'attachments':
+      fieldType = 'attachment';
+      break;
+    default:
+      fieldType = 'text';
+  }
+
+  return {
+    label: fieldKey,
+    type: fieldType,
+    value: formikValue ?? '',
+    onChange: (val: string | boolean) => formik?.setFieldValue?.(fieldKey, val),
+    dropdownOptions,
+    required: false,
+  };
+};
 
 export interface CreateTicketDetailProps {
   ticketType: string;
@@ -360,51 +489,84 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     }
   };
 
-  /** Build the payload for createTicket mutation — includes ticketType for the unified API */
+  /** Build the payload for createTicket mutation — fully dynamic from formik values */
   const buildTicketData = (
     statusOverride?: IncidentStatus | ServiceRequestStatus,
     uploadedFilenames?: string[],
-  ): IAdminTicket =>
-    ({
+  ): IAdminTicket => {
+    // Fields that need type casting when copying from formik values
+    const castMap: Record<string, (v: any) => any> = {
+      impact: (v) => v as IncidentImpact,
+      urgency: (v) => v as IncidentUrgency,
+      channel: (v) => v as IncidentChannel,
+      status: (v) => (v as IncidentStatus) || statusOverride,
+    };
+
+    // These fields are required by the API schema (Prisma .required())
+    // Always include them even if empty — the API needs them present
+    const apiRequiredFields = new Set([
+      'caller',
+      'createdBy',
+      'isRecurring',
+      'isMajor',
+      'isReleaseManagement',
+      'timesReopened',
+      'changeProductBugFix',
+      'changeCabRequired',
+      'changeTestCompleted',
+    ]);
+
+    // Safe fallback defaults for API-required fields when value is missing/empty
+    const safeFallback = (key: string, value: any): any => {
+      if (value !== undefined && value !== null) {
+        if (typeof value === 'boolean') return value; // false is valid
+        if (typeof value === 'string' && value.trim() !== '') return value; // non-empty string is valid
+      }
+      // Empty/missing — apply fallback
+      if (key === 'caller' || key === 'createdBy') return 'Unknown';
+      if (key === 'isRecurring' || key === 'isMajor' || key === 'isReleaseManagement') return false;
+      if (key === 'timesReopened') return 0;
+      if (key === 'changeProductBugFix' || key === 'changeCabRequired' || key === 'changeTestCompleted') return false;
+      return undefined;
+    };
+
+    // Collect all built-in field values from formik dynamically
+    const builtInPayload: Record<string, any> = {};
+    for (const [key, value] of Object.entries(formik.values)) {
+      if (key === 'number') continue; // ticketNumber is set separately
+      if (key === 'attachments') {
+        // Convert File[] to JSON string for API
+        builtInPayload.attachments =
+          uploadedFilenames && uploadedFilenames.length > 0
+            ? JSON.stringify(uploadedFilenames)
+            : undefined;
+        continue;
+      }
+      // Always include API-required fields (apply fallback for empty/missing)
+      if (apiRequiredFields.has(key)) {
+        builtInPayload[key] = safeFallback(key, value);
+        continue;
+      }
+      // Include booleans (even false), include strings/numbers if not empty
+      if (typeof value === 'boolean') {
+        builtInPayload[key] = value;
+      } else if (value !== undefined && value !== null && value !== '') {
+        builtInPayload[key] = castMap[key] ? castMap[key](value) : value;
+      }
+    }
+
+    // Collect custom field values from cfValues (non-empty only)
+    const customFieldPayload = Object.fromEntries(
+      Object.entries(cfValues).filter(([, v]) => v !== '' && v !== false && v !== undefined),
+    );
+
+    return {
       ticketType,
       number: ticketNumber,
-      client: formik.values.client || undefined,
-      caller: formik.values.caller,
-      callerPhone: formik.values.callerPhone || undefined,
-      callerEmail: formik.values.callerEmail || undefined,
-      callerLocation: formik.values.callerLocation || undefined,
-      callerDepartment: formik.values.callerDepartment || undefined,
-      callerReportingManager: formik.values.callerReportingManager || undefined,
-      additionalContacts: formik.values.additionalContacts || undefined,
-      businessCategory: formik.values.businessCategory || undefined,
-      serviceLine: formik.values.serviceLine || undefined,
-      application: formik.values.application || undefined,
-      applicationCategory: formik.values.applicationCategory || undefined,
-      applicationSubCategory: formik.values.applicationSubCategory || undefined,
-      shortDescription: formik.values.shortDescription || undefined,
-      description: formik.values.description || undefined,
-      impact: (formik.values.impact as IncidentImpact) || undefined,
-      urgency: (formik.values.urgency as IncidentUrgency) || undefined,
-      priority: formik.values.priority || undefined,
-      channel: (formik.values.channel as IncidentChannel) || undefined,
-      status: statusOverride || (formik.values.status as IncidentStatus),
-      assignmentGroup: formik.values.assignmentGroup || undefined,
-      primaryResource: formik.values.primaryResource || undefined,
-      secondaryResources: formik.values.secondaryResources || undefined,
-      createdBy: formik.values.createdBy,
-      isRecurring: formik.values.isRecurring,
-      isMajor: formik.values.isMajor,
-      isReleaseManagement: (formik.values as any).isReleaseManagement || false,
-      notes: formik.values.notes || undefined,
-      relatedRecords: formik.values.relatedRecords || undefined,
-      attachments:
-        uploadedFilenames && uploadedFilenames.length > 0
-          ? JSON.stringify(uploadedFilenames)
-          : undefined,
-      customFieldValues: Object.fromEntries(
-        Object.entries(cfValues).filter(([, v]) => v !== '' && v !== false && v !== undefined),
-      ) as Record<string, string>,
-    }) as IAdminTicket;
+      ...builtInPayload,
+      customFieldValues: customFieldPayload,
+    } as IAdminTicket;
+  };
 
   const handleBack = () => onCancel?.();
 
@@ -417,8 +579,27 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   };
 
   const triggerValidation = async () => {
+    // Collect all field keys that are actually visible in the admin-configured sections
+    const visibleKeys = new Set<string>();
+    if (filteredLayoutConfig?.customSections) {
+      for (const section of Object.values(filteredLayoutConfig.customSections)) {
+        for (const fk of section.fields) visibleKeys.add(fk);
+        for (const sub of section.subSections ?? []) {
+          for (const fk of sub.fields ?? []) visibleKeys.add(fk);
+        }
+      }
+    }
+
+    // Run Yup schema validation (format checks, types, etc.)
     const schemaErrors = await formik.validateForm();
-    const allErrors: Record<string, string> = { ...(schemaErrors as Record<string, string>) };
+    const allErrors: Record<string, string> = {};
+
+    // Only keep errors for fields that are actually visible in the form
+    for (const [key, error] of Object.entries(schemaErrors as Record<string, string>)) {
+      if (visibleKeys.has(key)) {
+        allErrors[key] = error;
+      }
+    }
 
     // When the manual caller section is open, validate its required fields too
     if (manualCallerOpen) {
@@ -436,10 +617,10 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
       }
     }
 
-    // Validate required custom fields (skip disabled fields)
+    // Validate required custom fields (only if visible and not disabled)
     for (const cf of filteredCustomFields) {
       if (cf.isDisabled) continue;
-      if (cf.isRequired) {
+      if (cf.isRequired && visibleKeys.has(cf.fieldKey)) {
         const val = cfValues[cf.fieldKey];
         const isEmpty =
           val === undefined ||
@@ -453,8 +634,7 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     }
 
     if (Object.keys(allErrors).length > 0) {
-      // Pass `false` as second arg so setTouched does NOT re-run Yup validation,
-      // which would overwrite allErrors (including our custom manual-section errors) back to schema-only.
+      // Pass `false` as second arg so setTouched does NOT re-run Yup validation
       formik.setTouched(
         Object.keys(allErrors).reduce((acc, key) => ({ ...acc, [key]: true }), {}),
         false,
@@ -505,6 +685,44 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     navigate(BasePath.SUGGESTED_SOLUTION, { state: { incidentData: ticketData } });
   };
 
+  // ── Derived: option sets + custom field map ────────────────────────────
+  const optionSets = useMemo<OptionSets>(
+    () => ({
+      callerOptions,
+      impactOptions,
+      urgencyOptions,
+      priorityOptions,
+      statusOptions,
+      channelOptions,
+      businessCategoryOptions,
+      serviceLineOptions,
+      applicationOptions,
+      applicationCategoryOptions,
+      applicationSubCategoryOptions,
+    }),
+    [
+      callerOptions,
+      impactOptions,
+      urgencyOptions,
+      priorityOptions,
+      statusOptions,
+      channelOptions,
+      businessCategoryOptions,
+      serviceLineOptions,
+      applicationOptions,
+      applicationCategoryOptions,
+      applicationSubCategoryOptions,
+    ],
+  );
+
+  const customFieldMap = useMemo(() => {
+    const map = new Map<string, ICustomField>();
+    for (const cf of filteredCustomFields) {
+      map.set(cf.fieldKey, cf);
+    }
+    return map;
+  }, [filteredCustomFields]);
+
   return {
     formik,
     config,
@@ -539,6 +757,9 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     layoutConfig: filteredLayoutConfig,
     getCfValue,
     setCfValue,
+    optionSets,
+    customFieldMap,
+    resolveField,
   };
 };
 
