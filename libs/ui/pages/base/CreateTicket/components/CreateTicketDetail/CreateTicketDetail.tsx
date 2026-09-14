@@ -169,6 +169,8 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     layoutConfig,
     getCfValue,
     setCfValue,
+    attachedFiles,
+    setAttachedFiles,
     ticketNumber,
   } = useCreateTicketDetail({ ticketType, onCancel, onSuccess }) as {
     config: { title: string; prefix: string; numberLength: number; subtitle: string };
@@ -194,6 +196,8 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     layoutConfig: ITicketTypeLayoutConfig | undefined;
     getCfValue: (key: string) => string | boolean;
     setCfValue: (key: string, value: string | boolean) => void;
+    attachedFiles: File[];
+    setAttachedFiles: React.Dispatch<React.SetStateAction<File[]>>;
     ticketNumber: string;
   };
 
@@ -286,6 +290,8 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
       resolved.type === 'attachment' ||
       (resolved.type === 'checkbox' && (resolved.dropdownOptions?.length ?? 0) > 0);
 
+    const isAttachment = resolved.type === 'attachment';
+
     return (
       <Box
         key={fieldKey}
@@ -303,6 +309,8 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
           disabled={resolved.disabled}
           dropdownOptions={resolved.dropdownOptions}
           fullWidth={isFullWidth}
+          attachedFiles={isAttachment ? attachedFiles : undefined}
+          onFilesChange={isAttachment ? setAttachedFiles : undefined}
         />
       </Box>
     );

@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Box, Typography, TextField, Checkbox, DatePicker } from '@serviceops/component';
+import {
+  Box,
+  Typography,
+  TextField,
+  Checkbox,
+  DatePicker,
+  Button,
+  CloudUploadIcon,
+} from '@serviceops/component';
 import {
   alpha,
   InputAdornment,
@@ -13,6 +21,8 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
+import DeleteIcon from '@mui/icons-material/Delete';
+import FilePresent from '@mui/icons-material/FilePresent';
 import { CustomFieldType } from '@serviceops/interfaces';
 import {
   parseRichText,
@@ -34,6 +44,8 @@ export interface DynamicFieldProps {
   fullWidth?: boolean;
   rows?: number;
   helperText?: string;
+  attachedFiles?: File[];
+  onFilesChange?: (files: File[]) => void;
 }
 
 /**
@@ -46,13 +58,12 @@ export interface DynamicFieldProps {
  *  - textarea   → multi-line TextField
  *  - number     → numeric TextField
  *  - date       → project DatePicker component (MUI type='date' input)
- *  - checkbox   → project Checkbox component
+ *  - checkbox   → project Checkbox component (single) or editable text fields grid (with options)
  *  - text       → standard TextField (default)
- *
- * Note: 'attachment' type is handled directly in CreateTicketDetail
- * because UploadFile uses a FileList | null callback, not string | boolean.
+ *  - attachment → drag-and-drop file upload zone
  */
 export const DynamicFieldRenderer = ({
+  fieldKey: _fieldKey,
   fieldLabel,
   fieldType,
   value,
@@ -61,9 +72,12 @@ export const DynamicFieldRenderer = ({
   errorText,
   dropdownOptions,
   fullWidth,
-  rows = 3,
+  rows: _rows = 3,
   helperText,
   disabled,
+  required: _required,
+  attachedFiles,
+  onFilesChange,
 }: DynamicFieldProps) => {
   const theme = useTheme();
   // ── Dropdown state (mirrors ApprovedEstimateFormDialog pattern) ──────
@@ -76,6 +90,10 @@ export const DynamicFieldRenderer = ({
   const ddDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const anchorRef = useRef<HTMLDivElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
+
+  // File input ref for attachment field (always declared at top level for Rules of Hooks)
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // Sync input when parent value changes
   useEffect(() => {
@@ -222,10 +240,7 @@ export const DynamicFieldRenderer = ({
                   >
                     <ListItemText
                       primary={opt.label}
-                      primaryTypographyProps={{
-                        fontSize: '0.84rem',
-                        noWrap: true,
-                      }}
+                      slotProps={{ primary: { sx: { fontSize: '0.84rem' } } }}
                     />
                   </ListItemButton>
                 </ListItem>
@@ -328,94 +343,21 @@ export const DynamicFieldRenderer = ({
 
     // ── Checkbox ──────────────────────────────────────────────────────
     case 'checkbox': {
-      // If dropdownOptions are provided, render as a list of checkboxes
       const options = dropdownOptions ?? [];
 
+      // With options: show "Can't find in the list? Update manually" toggle
       if (options.length > 0) {
-        // Value is a comma-separated string of selected option values
-        const selectedValues = new Set(
-          String(value ?? '')
-            .split(',')
-            .map((v) => v.trim())
-            .filter(Boolean),
-        );
-
-        const handleToggle = (optValue: string) => {
-          const next = new Set(selectedValues);
-          if (next.has(optValue)) {
-            next.delete(optValue);
-          } else {
-            next.add(optValue);
-          }
-          const result = Array.from(next).join(',');
-          onChange(result || '');
-        };
-
         return (
-          <Box sx={{ pt: 0.5 }}>
-            <Typography
-              variant='body2'
-              sx={{ fontWeight: 600, mb: 1, color: disabled ? 'text.disabled' : 'text.primary' }}
-            >
-              {fieldLabel}
-            </Typography>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 0.75,
-                opacity: disabled ? 0.5 : 1,
-                pointerEvents: disabled ? 'none' : 'auto',
-              }}
-            >
-              {options.map((opt) => {
-                const isChecked = selectedValues.has(opt.value);
-                return (
-                  <Box
-                    key={opt.value}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      px: 1.5,
-                      py: 0.75,
-                      borderRadius: 1,
-                      border: '1px solid',
-                      borderColor: isChecked ? 'primary.main' : 'divider',
-                      bgcolor: isChecked ? alpha(theme.palette.primary.main, 0.04) : 'transparent',
-                      transition: 'all 0.15s ease',
-                      cursor: 'pointer',
-                      '&:hover': {
-                        borderColor: 'primary.main',
-                        bgcolor: alpha(theme.palette.primary.main, 0.04),
-                      },
-                    }}
-                    onClick={() => handleToggle(opt.value)}
-                  >
-                    <Checkbox
-                      checked={isChecked}
-                      onChange={(_, checked) => handleToggle(opt.value)}
-                      disabled={disabled}
-                    />
-                    <Typography
-                      variant='body2'
-                      sx={{
-                        fontWeight: isChecked ? 500 : 400,
-                        color: isChecked ? 'primary.main' : 'text.primary',
-                        userSelect: 'none',
-                      }}
-                    >
-                      {opt.label}
-                    </Typography>
-                  </Box>
-                );
-              })}
-            </Box>
-            {error && errorText ? (
-              <Typography variant='caption' color='error' sx={{ mt: 1, ml: 1 }}>
-                {errorText as string}
-              </Typography>
-            ) : null}
-          </Box>
+          <CheckboxWithManualUpdate
+            fieldLabel={fieldLabel}
+            options={options}
+            value={value}
+            onChange={onChange}
+            disabled={disabled}
+            error={error}
+            errorText={errorText}
+            fullWidth={fullWidth}
+          />
         );
       }
 
@@ -445,6 +387,202 @@ export const DynamicFieldRenderer = ({
       );
     }
 
+    // ── Attachment (drag-and-drop + file picker) ──────────────────────────
+    case 'attachment': {
+      const files = attachedFiles ?? [];
+
+      const formatFileSize = (bytes: number) => {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+      };
+
+      const handleDragOver = (e: React.DragEvent<HTMLElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!disabled) setIsDragOver(true);
+      };
+
+      const handleDragLeave = (e: React.DragEvent<HTMLElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(false);
+      };
+
+      const handleDrop = (e: React.DragEvent<HTMLElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(false);
+        if (disabled) return;
+
+        const droppedFiles = Array.from(e.dataTransfer.files);
+        if (droppedFiles.length > 0 && onFilesChange) {
+          const combined = [...files, ...droppedFiles];
+          onFilesChange(combined);
+        }
+        onChange?.('');
+      };
+
+      const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files) return;
+        const selectedFiles = Array.from(e.target.files);
+        if (selectedFiles.length > 0 && onFilesChange) {
+          const combined = [...files, ...selectedFiles];
+          onFilesChange(combined);
+        }
+        e.target.value = '';
+        onChange?.('');
+      };
+
+      const handleBrowseClick = () => {
+        if (!disabled) fileInputRef.current?.click();
+      };
+
+      const handleRemoveFile = (index: number) => {
+        if (onFilesChange) {
+          const next = files.filter((_, i) => i !== index);
+          onFilesChange(next);
+        }
+      };
+
+      return (
+        <Box sx={{ gridColumn: fullWidth ? undefined : '1 / -1' }}>
+          <Box
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={handleBrowseClick}
+            sx={{
+              position: 'relative',
+              border: '2px dashed',
+              borderColor: isDragOver ? 'primary.main' : 'divider',
+              borderRadius: 2,
+              p: 3,
+              textAlign: 'center',
+              cursor: disabled ? 'not-allowed' : 'pointer',
+              bgcolor: isDragOver ? alpha(theme.palette.primary.main, 0.04) : 'transparent',
+              transition: 'all 0.2s ease',
+              '&:hover': !disabled
+                ? {
+                    borderColor: 'primary.main',
+                    bgcolor: alpha(theme.palette.primary.main, 0.02),
+                  }
+                : {},
+              opacity: disabled ? 0.5 : 1,
+            }}
+          >
+            <input
+              ref={fileInputRef}
+              type='file'
+              multiple
+              accept='*/*'
+              onChange={handleFileInputChange}
+              style={{ display: 'none' }}
+              disabled={disabled}
+            />
+            <CloudUploadIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }} />
+            <Typography variant='body2' sx={{ color: 'text.secondary' }}>
+              Drop files here or click to browse
+            </Typography>
+            <Typography
+              variant='caption'
+              sx={{ color: 'text.disabled', mt: 0.5, display: 'block' }}
+            >
+              Supports all file types
+            </Typography>
+          </Box>
+
+          {/* Attached files list */}
+          {files.length > 0 && (
+            <Box sx={{ mt: 2 }}>
+              <Typography
+                variant='caption'
+                sx={{
+                  fontWeight: 600,
+                  color: 'text.secondary',
+                  display: 'block',
+                  mb: 1,
+                }}
+              >
+                Attached Files ({files.length})
+              </Typography>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 0.75,
+                }}
+              >
+                {files.map((file, index) => (
+                  <Box
+                    key={`${file.name}-${index}`}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      px: 1.5,
+                      py: 1,
+                      borderRadius: 1,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      bgcolor: 'background.paper',
+                    }}
+                  >
+                    <FilePresent sx={{ fontSize: 20, color: 'primary.main', flexShrink: 0 }} />
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography
+                        variant='body2'
+                        sx={{
+                          fontWeight: 500,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {file.name}
+                      </Typography>
+                      <Typography variant='caption' sx={{ color: 'text.disabled' }}>
+                        {formatFileSize(file.size)}
+                      </Typography>
+                    </Box>
+                    <Box
+                      onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+                        e.stopPropagation();
+                        handleRemoveFile(index);
+                      }}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 28,
+                        height: 28,
+                        borderRadius: 1,
+                        cursor: 'pointer',
+                        color: 'text.secondary',
+                        flexShrink: 0,
+                        '&:hover': {
+                          bgcolor: alpha(theme.palette.error.main, 0.08),
+                          color: 'error.main',
+                        },
+                      }}
+                    >
+                      <DeleteIcon sx={{ fontSize: 18 }} />
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          )}
+
+          {error && errorText ? (
+            <Typography variant='caption' color='error' sx={{ mt: 1, display: 'block', ml: 0.5 }}>
+              {errorText as string}
+            </Typography>
+          ) : null}
+        </Box>
+      );
+    }
+
     // ── Text (default) ────────────────────────────────────────────────
     default:
       return (
@@ -460,6 +598,177 @@ export const DynamicFieldRenderer = ({
         />
       );
   }
+};
+
+// ── Sub-component: Checkbox field with "Update manually" toggle ───────────
+// Extracted to its own component so that useState/useCallback hooks are not
+// conditionally called inside a switch-case (which would violate Rules of Hooks).
+
+interface CheckboxWithManualUpdateProps {
+  fieldLabel: string;
+  options: { value: string; label: string }[];
+  value: string | boolean;
+  onChange: (val: string | boolean) => void;
+  disabled?: boolean;
+  error?: boolean;
+  errorText?: string | React.ReactNode;
+  fullWidth?: boolean;
+}
+
+const CheckboxWithManualUpdate = ({
+  fieldLabel: _fieldLabel,
+  options,
+  value,
+  onChange,
+  disabled,
+  error,
+  errorText,
+  fullWidth,
+}: CheckboxWithManualUpdateProps) => {
+  const [manualMode, setManualMode] = useState(false);
+  const [draftValues, setDraftValues] = useState<Record<string, string>>({});
+  const theme = useTheme();
+
+  // Sync draft when entering manual mode from current value
+  const handleToggleMode = () => {
+    if (!manualMode) {
+      const current = String(value ?? '');
+      const map: Record<string, string> = {};
+      options.forEach((opt) => {
+        if (
+          current
+            .split(',')
+            .map((v) => v.trim())
+            .includes(opt.value)
+        ) {
+          map[opt.value] = opt.value;
+        } else {
+          map[opt.value] = '';
+        }
+      });
+      setDraftValues(map);
+    }
+    setManualMode((prev) => !prev);
+  };
+
+  const handleFieldChange = (optValue: string, fieldValue: string) => {
+    setDraftValues((prev) => ({ ...prev, [optValue]: fieldValue }));
+  };
+
+  const handleUpdate = () => {
+    const selected = Object.entries(draftValues)
+      .filter(([, v]) => v.trim())
+      .map(([, v]) => v.trim())
+      .join(',');
+    onChange(selected || '');
+    setManualMode(false);
+  };
+
+  const handleCancel = () => {
+    setManualMode(false);
+    setDraftValues({});
+  };
+
+  return (
+    <Box sx={{ gridColumn: fullWidth ? undefined : '1 / -1' }}>
+      {/* "Can't find in the list? Update manually" toggle */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          mb: manualMode ? 1.5 : 0,
+          opacity: disabled ? 0.5 : 1,
+          pointerEvents: disabled ? 'none' : 'auto',
+        }}
+      >
+        <Checkbox
+          label={`Can't find in the list? Update manually`}
+          checked={manualMode}
+          onChange={(_, checked) => {
+            if (checked) handleToggleMode();
+            else handleCancel();
+          }}
+          disabled={disabled}
+        />
+      </Box>
+
+      {/* Manual update form with Cancel/Update buttons inside the bordered box */}
+      {manualMode && (
+        <Box
+          sx={{
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 1,
+            bgcolor: 'background.paper',
+            opacity: disabled ? 0.5 : 1,
+            pointerEvents: disabled ? 'none' : 'auto',
+          }}
+        >
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: 1.5,
+              p: 2,
+            }}
+          >
+            {options.map((opt) => (
+              <TextField
+                key={opt.value}
+                label={opt.label}
+                value={draftValues[opt.value] ?? ''}
+                onChange={(e) => handleFieldChange(opt.value, e.target.value)}
+                disabled={disabled}
+                variant='outlined'
+              />
+            ))}
+          </Box>
+
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: 1,
+              pr: 2,
+              pb: 2,
+            }}
+          >
+            <Button
+              variant='outlined'
+              size='small'
+              onClick={handleCancel}
+              disabled={disabled}
+              sx={{
+                borderColor: 'error.main',
+                color: 'error.main',
+                '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.08) },
+                textTransform: 'none',
+                fontWeight: 600,
+              }}
+            >
+              CANCEL
+            </Button>
+            <Button
+              variant='contained'
+              size='small'
+              onClick={handleUpdate}
+              disabled={disabled}
+              sx={{ textTransform: 'none', fontWeight: 600 }}
+            >
+              UPDATE
+            </Button>
+          </Box>
+        </Box>
+      )}
+
+      {error && errorText ? (
+        <Typography variant='caption' color='error' sx={{ mt: 1, display: 'block', ml: 0.5 }}>
+          {errorText as string}
+        </Typography>
+      ) : null}
+    </Box>
+  );
 };
 
 export default DynamicFieldRenderer;
