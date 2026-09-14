@@ -324,12 +324,12 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
           <PageHeader title={config.title} description={config.subtitle} />
         </Box>
         <Box sx={{ flexShrink: 0, ml: 3, textAlign: 'right' }}>
-          <Typography variant='body2' sx={{ fontWeight: 600, fontSize: '1rem' }}>
+          <Typography variant='h6' sx={{ fontWeight: 800, color: '#1e293b', lineHeight: 1.3 }}>
             {ticketNumber}
           </Typography>
           <Typography
-            variant='caption'
-            sx={{ color: 'text.disabled', fontWeight: 500, display: 'block', mb: 0.25 }}
+            variant='body2'
+            sx={{ color: '#64748b', fontWeight: 400, lineHeight: 1.5, marginTop: '2px' }}
           >
             Ticket Number
           </Typography>

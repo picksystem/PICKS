@@ -75,7 +75,7 @@ export const DynamicFieldRenderer = ({
   rows: _rows = 3,
   helperText,
   disabled,
-  required: _required,
+  required,
   attachedFiles,
   onFilesChange,
 }: DynamicFieldProps) => {
@@ -260,6 +260,7 @@ export const DynamicFieldRenderer = ({
             onBlur={handleDdBlur}
             fullWidth
             disabled={disabled}
+            required={required}
             error={error}
             helperText={error ? (errorText as string) : helperText}
             slotProps={{
@@ -322,6 +323,7 @@ export const DynamicFieldRenderer = ({
           type='number'
           fullWidth
           disabled={disabled}
+          required={required}
           error={error}
           errorText={errorText as string | undefined}
         />
@@ -354,6 +356,7 @@ export const DynamicFieldRenderer = ({
             value={value}
             onChange={onChange}
             disabled={disabled}
+            required={required}
             error={error}
             errorText={errorText}
             fullWidth={fullWidth}
@@ -592,6 +595,7 @@ export const DynamicFieldRenderer = ({
           onChange={(e) => onChange(e.target.value)}
           fullWidth
           disabled={disabled}
+          required={required}
           error={error}
           errorText={errorText as string | undefined}
           helperText={helperText}
@@ -610,6 +614,7 @@ interface CheckboxWithManualUpdateProps {
   value: string | boolean;
   onChange: (val: string | boolean) => void;
   disabled?: boolean;
+  required?: boolean;
   error?: boolean;
   errorText?: string | React.ReactNode;
   fullWidth?: boolean;
@@ -621,6 +626,7 @@ const CheckboxWithManualUpdate = ({
   value,
   onChange,
   disabled,
+  required,
   error,
   errorText,
   fullWidth,
@@ -720,6 +726,7 @@ const CheckboxWithManualUpdate = ({
                 value={draftValues[opt.value] ?? ''}
                 onChange={(e) => handleFieldChange(opt.value, e.target.value)}
                 disabled={disabled}
+                required={required}
                 variant='outlined'
               />
             ))}

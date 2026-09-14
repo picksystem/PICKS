@@ -28,6 +28,17 @@ export const useStyles = makeStyles()((theme) => ({
       borderTopLeftRadius: 12,
       borderBottomLeftRadius: 12,
     },
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      right: 0,
+      top: 0,
+      bottom: 0,
+      width: 4,
+      backgroundColor: '#2563eb',
+      borderTopRightRadius: 12,
+      borderBottomRightRadius: 12,
+    },
     [theme.breakpoints.down('sm')]: {
       padding: theme.spacing(2),
       borderRadius: 8,
