@@ -28,5 +28,7 @@ interface ConfigFormDialogProps {
   /** Hide both Cancel and Submit buttons (useful for read-only or auto-save forms) */
   hideActions?: boolean;
   maxWidth?: 'xs' | 'sm' | 'md' | 'lg';
+  /** Optional actions rendered in the header bar (e.g. Style button) */
+  headerActions?: React.ReactNode;
   children: React.ReactNode;
 }

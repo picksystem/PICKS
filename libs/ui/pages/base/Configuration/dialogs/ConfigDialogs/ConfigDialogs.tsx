@@ -20,6 +20,7 @@ export const ConfigFormDialog = ({
   submitLabel,
   hideActions,
   maxWidth = 'sm',
+  headerActions,
   children,
 }: ConfigFormDialogProps) => {
   const resolvedTitle = isEdit ? (editTitle ?? `Edit ${title}`) : (newTitle ?? `Add ${title}`);
@@ -44,38 +45,53 @@ export const ConfigFormDialog = ({
           background: `linear-gradient(135deg, ${darken(accent, 0.18)} 0%, ${accent} 100%)`,
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'space-between',
           gap: 1.75,
         }}
       >
-        <Box
-          sx={{
-            width: 38,
-            height: 38,
-            borderRadius: 1.5,
-            bgcolor: 'rgba(255,255,255,0.18)',
-            border: '1.5px solid rgba(255,255,255,0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75 }}>
           <Box
-            sx={{ color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            sx={{
+              width: 38,
+              height: 38,
+              borderRadius: 1.5,
+              bgcolor: 'rgba(255,255,255,0.18)',
+              border: '1.5px solid rgba(255,255,255,0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
           >
-            {icon}
+            <Box
+              sx={{
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {icon}
+            </Box>
+          </Box>
+          <Box>
+            <Typography
+              sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff', lineHeight: 1.2 }}
+            >
+              {resolvedTitle}
+            </Typography>
+            {resolvedSubtitle && (
+              <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}>
+                {resolvedSubtitle}
+              </Typography>
+            )}
           </Box>
         </Box>
-        <Box>
-          <Typography sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff', lineHeight: 1.2 }}>
-            {resolvedTitle}
-          </Typography>
-          {resolvedSubtitle && (
-            <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}>
-              {resolvedSubtitle}
-            </Typography>
-          )}
-        </Box>
+        {headerActions && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexShrink: 0 }}>
+            {headerActions}
+          </Box>
+        )}
       </Box>
 
       <DialogContent dividers sx={{ p: 0, overflowY: 'auto', maxHeight: 'calc(90vh - 140px)' }}>

@@ -1,11 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button, Box, Typography, TextField, IconButton, Switch } from '@serviceops/component';
-import {
-  AddCircle,
-  Clear as ClearIcon,
-  Search as SearchIcon,
-  Delete as DeleteIcon,
-} from '@mui/icons-material';
+import { AddCircle, Clear as ClearIcon, Search as SearchIcon } from '@mui/icons-material';
 import { useFieldError, useNotification } from '@serviceops/hooks';
 import { ConfigFormDialog } from '@serviceops/configdialogs';
 import ConfigPathPicker from '../CustomFieldDialog/ConfigPathPicker';
@@ -26,7 +21,6 @@ interface CustomFieldOptionFormDialogProps {
   editing: OptionEntry | null;
   onClose: () => void;
   onSave: (entry: OptionEntry) => void;
-  onDelete?: (id: string) => void;
   accent?: string;
 }
 
@@ -47,7 +41,6 @@ const CustomFieldOptionFormDialog = ({
   editing,
   onClose,
   onSave,
-  onDelete,
   accent = DEFAULT_ACCENT,
 }: CustomFieldOptionFormDialogProps) => {
   const { success } = useNotification();
@@ -106,7 +99,7 @@ const CustomFieldOptionFormDialog = ({
     if (!typeSelected) errs.type = 'Type is required';
     setErrors(errs);
     setTouched({ fieldName: true, type: true });
-    return Object.keys(errs).length === 0;
+    return Object.values(errs).every((v) => !v);
   };
 
   const handleSubmit = () => {
@@ -172,25 +165,6 @@ const CustomFieldOptionFormDialog = ({
         submitLabel={editing ? 'Save' : 'Add'}
         maxWidth='sm'
       >
-        {/* Delete button — only shown in edit mode */}
-        {editing && onDelete && (
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-            <Button
-              variant='outlined'
-              color='error'
-              size='small'
-              startIcon={<DeleteIcon fontSize='small' />}
-              onClick={() => {
-                onDelete(editing.id);
-                handleClose();
-              }}
-              sx={{ textTransform: 'none', fontSize: '0.75rem' }}
-            >
-              Delete
-            </Button>
-          </Box>
-        )}
-
         {/* Field Name */}
         <Box sx={{ mt: 1 }}>
           <TextField
@@ -251,20 +225,22 @@ const CustomFieldOptionFormDialog = ({
                 endAdornment: (
                   <InputAdornment position='end'>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      {typeInput && (
+                      {typeInput ? (
                         <IconButton
                           size='small'
                           onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                             e.stopPropagation();
                             setTypeInput('');
                             setFieldType('text');
+                            setTypeSelected(false);
                           }}
                           sx={{ padding: 0 }}
                         >
                           <ClearIcon sx={{ fontSize: 18, color: 'text.primary' }} />
                         </IconButton>
+                      ) : (
+                        <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
                       )}
-                      <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
                     </Box>
                   </InputAdornment>
                 ),

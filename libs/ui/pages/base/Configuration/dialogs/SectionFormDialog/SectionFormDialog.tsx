@@ -1,7 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
-import { Box, Typography, TextField, Alert, IconButton, Tooltip } from '@serviceops/component';
-import { alpha, Checkbox, Collapse } from '@mui/material';
+import {
+  Box,
+  Typography,
+  TextField,
+  Alert,
+  IconButton,
+  Tooltip,
+  Button,
+} from '@serviceops/component';
+import {
+  alpha,
+  Checkbox,
+  Collapse,
+  Dialog,
+  DialogContent,
+  DialogActions,
+  darken,
+} from '@mui/material';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
+import PaletteIcon from '@mui/icons-material/Palette';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useFieldError, useNotification } from '@serviceops/hooks';
@@ -65,6 +82,7 @@ const SectionFormDialog = ({
   }>({});
 
   const [fieldUseExpanded, setFieldUseExpanded] = useState(false);
+  const [styleDialogOpen, setStyleDialogOpen] = useState(false);
 
   const isEditMode = !!editingSection;
 
@@ -221,6 +239,26 @@ const SectionFormDialog = ({
       title={isEditMode ? 'Custom Section' : 'Custom Section'}
       submitLabel={isEditMode ? 'Update' : 'Submit'}
       maxWidth='sm'
+      headerActions={
+        <Button
+          variant='outlined'
+          size='small'
+          startIcon={<PaletteIcon sx={{ fontSize: '1rem' }} />}
+          onClick={() => setStyleDialogOpen(true)}
+          sx={{
+            color: '#fff',
+            borderColor: 'rgba(255,255,255,0.5)',
+            textTransform: 'none',
+            fontSize: '0.78rem',
+            '&:hover': {
+              borderColor: '#fff',
+              bgcolor: 'rgba(255,255,255,0.1)',
+            },
+          }}
+        >
+          Style
+        </Button>
+      }
     >
       {duplicateAlert && (
         <Alert severity='error' variant='outlined' sx={{ mb: 1 }}>
@@ -441,6 +479,91 @@ const SectionFormDialog = ({
           </Typography>
         )}
       </Box>
+
+      {/* ── Style Dialog ── */}
+      <Dialog
+        open={styleDialogOpen}
+        onClose={() => setStyleDialogOpen(false)}
+        maxWidth='xs'
+        fullWidth
+        disableEscapeKeyDown
+        TransitionProps={{ unmountOnExit: true }}
+        PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}
+      >
+        <Box
+          sx={{
+            px: 2.5,
+            py: 2,
+            background: `linear-gradient(135deg, ${darken(accent, 0.18)} 0%, ${accent} 100%)`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+          }}
+        >
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              borderRadius: 1.5,
+              bgcolor: 'rgba(255,255,255,0.18)',
+              border: '1.5px solid rgba(255,255,255,0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <Box
+              sx={{
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <PaletteIcon sx={{ fontSize: '1.1rem' }} />
+            </Box>
+          </Box>
+          <Box>
+            <Typography
+              sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff', lineHeight: 1.2 }}
+            >
+              Style
+            </Typography>
+            <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}>
+              Customize the appearance of this section
+            </Typography>
+          </Box>
+        </Box>
+
+        <DialogContent sx={{ px: 2.5, pt: 2, pb: 1.5 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {/* Field styles will be implemented here */}
+            <Typography variant='body2' color='text.secondary'>
+              Style options coming soon.
+            </Typography>
+          </Box>
+        </DialogContent>
+
+        <DialogActions
+          sx={{ px: 2.5, py: 1.5, gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}
+        >
+          <Button
+            onClick={() => setStyleDialogOpen(false)}
+            variant='outlined'
+            sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant='contained'
+            onClick={() => setStyleDialogOpen(false)}
+            sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+          >
+            Apply
+          </Button>
+        </DialogActions>
+      </Dialog>
     </ConfigFormDialog>
   );
 };

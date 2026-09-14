@@ -544,7 +544,7 @@ const CustomFieldFormDialog = ({
       subtitle={subtitle}
       submitDisabled={false}
       submitLabel={editing ? 'Save' : 'Submit'}
-      maxWidth='lg'
+      maxWidth='sm'
     >
       {duplicateAlert && (
         <Alert severity='error' variant='outlined' sx={{ mb: 1 }}>
@@ -552,7 +552,7 @@ const CustomFieldFormDialog = ({
         </Alert>
       )}
 
-      <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
+      <Box sx={{ mt: 1, display: 'flex', gap: 1.5 }}>
         {/* Field Name */}
         <Box sx={{ flex: 1 }}>
           <TextField
@@ -1134,13 +1134,6 @@ const CustomFieldFormDialog = ({
             handleDropdownOptionSave(entry);
           } else if (isCheckbox) {
             handleCheckboxOptionSave(entry);
-          }
-          setOptionDialogOpen(false);
-          setEditingOption(null);
-        }}
-        onDelete={(id: string) => {
-          if (isCheckbox) {
-            handleCheckboxOptionDelete(id);
           }
           setOptionDialogOpen(false);
           setEditingOption(null);
