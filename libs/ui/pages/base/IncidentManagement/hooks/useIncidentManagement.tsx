@@ -10,14 +10,19 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DraftsIcon from '@mui/icons-material/Drafts';
 import { Column, PriorityChip, StatusChip } from '@serviceops/component';
 import { useGetTicketsQuery, useGetDraftTicketsQuery } from '@serviceops/services';
-import { IIncident } from '@serviceops/interfaces';
+import { IIncident, IncidentStatus } from '@serviceops/interfaces';
 import { constants } from '@serviceops/utils';
 import { IncidentRow } from '../types/IncidentManagement.types';
-import {
-  FAVORITES_KEY,
-  buildTabLists,
-  getFilteredData as filterData,
-} from '../utils/IncidentManagement.utils';
+import { FAVORITES_KEY, getFilteredData as filterData } from '../utils/IncidentManagement.utils';
+
+const STATUS_FILTERS = [
+  { value: 'all', label: 'All', icon: <AssignmentIcon /> },
+  { value: IncidentStatus.NEW, label: 'New', icon: <FiberNewIcon /> },
+  { value: 'in_progress', label: 'In Progress', icon: <AutorenewIcon /> },
+  { value: IncidentStatus.ON_HOLD, label: 'On Hold', icon: <PauseCircleIcon /> },
+  { value: IncidentStatus.RESOLVED, label: 'Resolved', icon: <CheckCircleIcon /> },
+  { value: IncidentStatus.DRAFT, label: 'Drafts', icon: <DraftsIcon /> },
+];
 
 const useIncidentManagement = () => {
   const { BasePath } = constants;
@@ -68,16 +73,25 @@ const useIncidentManagement = () => {
     e.stopPropagation();
     setFavorites((prev) => {
       const next = new Set(prev);
-      // eslint-disable-next-line no-unused-expressions
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
   };
 
-  const [tabValue, setTabValue] = useState(0);
+  const [selectedStatus, setSelectedStatus] = useState('all');
   const [tableSearch, setTableSearch] = useState('');
 
-  const tabLists = useMemo(() => buildTabLists(allIncidents), [allIncidents]);
+  const filteredList = useMemo(() => {
+    if (selectedStatus === 'all') return allIncidents;
+    if (selectedStatus === 'in_progress') {
+      return allIncidents.filter(
+        (i) =>
+          i.status === IncidentStatus.IN_PROGRESS ||
+          i.status === IncidentStatus.ASSIGNED,
+      );
+    }
+    return allIncidents.filter((i) => i.status === selectedStatus);
+  }, [allIncidents, selectedStatus]);
 
   const openIncident = (number: string) => {
     window.open(
@@ -86,14 +100,23 @@ const useIncidentManagement = () => {
     );
   };
 
-  const tabLabels = [
-    { label: `All (${tabLists[0].length})`, icon: <AssignmentIcon /> },
-    { label: `New (${tabLists[1].length})`, icon: <FiberNewIcon /> },
-    { label: `In Progress (${tabLists[2].length})`, icon: <AutorenewIcon /> },
-    { label: `On Hold (${tabLists[3].length})`, icon: <PauseCircleIcon /> },
-    { label: `Resolved (${tabLists[4].length})`, icon: <CheckCircleIcon /> },
-    { label: `Drafts (${tabLists[5].length})`, icon: <DraftsIcon /> },
-  ];
+  const statusFilterOptions = STATUS_FILTERS.map(({ value, label, icon }) => ({
+    value,
+    label,
+    icon,
+  }));
+
+  const getCountForStatus = (statusValue: string): number => {
+    if (statusValue === 'all') return allIncidents.length;
+    if (statusValue === 'in_progress') {
+      return allIncidents.filter(
+        (i) =>
+          i.status === IncidentStatus.IN_PROGRESS ||
+          i.status === IncidentStatus.ASSIGNED,
+      ).length;
+    }
+    return allIncidents.filter((i) => i.status === statusValue).length;
+  };
 
   const columns: Column<IncidentRow>[] = [
     { id: 'sno', label: 'S.No', minWidth: 60, align: 'center', sortable: false },
@@ -187,14 +210,16 @@ const useIncidentManagement = () => {
   return {
     isLoading,
     error,
-    tabValue,
-    setTabValue,
-    tableSearch,
-    setTableSearch,
-    tabLists,
-    tabLabels,
+    selectedStatus,
+    setSelectedStatus,
+    statusFilterOptions,
+    getCountForStatus,
+    allIncidents,
+    filteredList,
     columns,
     openIncident,
+    tableSearch,
+    setTableSearch,
     getFilteredData,
   };
 };

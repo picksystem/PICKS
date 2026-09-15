@@ -8,84 +8,44 @@ export const useStyles = makeStyles()((theme) => ({
     [theme.breakpoints.down('sm')]: { padding: theme.spacing(1.5) },
   },
 
-  // ── Hero ────────────────────────────────────────────────────────────────
-  hero: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: theme.spacing(2),
-    padding: theme.spacing(3, 4),
-    background: 'linear-gradient(135deg, #312e81 0%, #4338ca 45%, #6366f1 100%)',
-    borderRadius: 20,
-    marginBottom: theme.spacing(3),
-    position: 'relative' as const,
+  // ── Page header row ──────────────────────────────────────────────────────
+  pageHeaderRow: {
+    marginBottom: theme.spacing(2.5),
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: theme.spacing(2.5, 3),
+    position: 'relative',
+    border: '1px solid #e5e7eb',
     overflow: 'hidden',
-    boxShadow: '0 12px 40px rgba(67,56,202,0.4)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     '&::before': {
       content: '""',
-      position: 'absolute' as const,
-      top: -60,
-      right: -60,
-      width: 220,
-      height: 220,
-      borderRadius: '50%',
-      background: 'rgba(255,255,255,0.06)',
-      pointerEvents: 'none',
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: 4,
+      backgroundColor: '#2563eb',
+      borderTopLeftRadius: 12,
+      borderBottomLeftRadius: 12,
     },
     '&::after': {
       content: '""',
-      position: 'absolute' as const,
-      bottom: -40,
-      left: 100,
-      width: 160,
-      height: 160,
-      borderRadius: '50%',
-      background: 'rgba(255,255,255,0.04)',
-      pointerEvents: 'none',
+      position: 'absolute',
+      right: 0,
+      top: 0,
+      bottom: 0,
+      width: 4,
+      backgroundColor: '#2563eb',
+      borderTopRightRadius: 12,
+      borderBottomRightRadius: 12,
     },
-    [theme.breakpoints.down('sm')]: { padding: theme.spacing(2.5, 2), borderRadius: 14 },
-  },
-
-  heroIconBox: {
-    width: 58,
-    height: 58,
-    borderRadius: 16,
-    background: 'rgba(255,255,255,0.15)',
-    border: '1px solid rgba(255,255,255,0.3)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    position: 'relative' as const,
-    zIndex: 1,
-  },
-
-  heroContent: {
-    flex: 1,
-    position: 'relative' as const,
-    zIndex: 1,
-  },
-
-  heroTitle: {
-    color: '#fff',
-    fontWeight: 800,
-    fontSize: '1.5rem',
-    letterSpacing: '-0.3px',
-    [theme.breakpoints.down('sm')]: { fontSize: '1.2rem' },
-  },
-
-  heroSub: {
-    color: 'rgba(255,255,255,0.72)',
-    fontSize: '0.85rem',
-    marginTop: theme.spacing(0.5),
-    [theme.breakpoints.down('sm')]: { display: 'none' },
-  },
-
-  heroChipRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: theme.spacing(1),
-    marginTop: theme.spacing(1),
-    flexWrap: 'wrap' as const,
+    [theme.breakpoints.down('sm')]: {
+      padding: theme.spacing(2),
+      borderRadius: 8,
+    },
   },
 
   // ── Two-column layout ────────────────────────────────────────────────────
@@ -641,34 +601,6 @@ export const useStyles = makeStyles()((theme) => ({
     fontWeight: 500,
     lineHeight: 1.5,
     wordBreak: 'break-word' as const,
-  },
-
-  // ── Hero chips ───────────────────────────────────────────────────────────
-  heroChipTicket: {
-    background: 'rgba(255,255,255,0.18)',
-    color: '#fff',
-    border: '1px solid rgba(255,255,255,0.3)',
-    fontWeight: 700,
-    fontSize: '0.72rem',
-    fontFamily: 'monospace',
-    height: 22,
-  },
-
-  heroChipCount: {
-    background: 'rgba(255,255,255,0.1)',
-    color: 'rgba(255,255,255,0.85)',
-    border: '1px solid rgba(255,255,255,0.2)',
-    fontSize: '0.72rem',
-    height: 22,
-  },
-
-  heroChipMatches: {
-    background: 'rgba(134,239,172,0.22)',
-    color: '#86efac',
-    border: '1px solid rgba(134,239,172,0.4)',
-    fontWeight: 700,
-    fontSize: '0.72rem',
-    height: 22,
   },
 
   // ── Input card icon badges ────────────────────────────────────────────────

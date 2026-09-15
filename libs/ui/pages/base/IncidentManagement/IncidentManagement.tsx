@@ -5,16 +5,13 @@ import {
   Grid,
   Typography,
   TextField,
-  Tabs,
-  Tab,
   PageHeader,
-  TabPanel,
 } from '@serviceops/component';
 import { InputAdornment } from '@mui/material';
-import AssignmentIcon from '@mui/icons-material/Assignment';
 import SearchIcon from '@mui/icons-material/Search';
 import { useStyles } from './styles';
 import useIncidentManagement from './hooks/useIncidentManagement';
+import { StatusFilterField } from './components/StatusFilterField';
 import { IncidentRow } from './types/IncidentManagement.types';
 
 const IncidentManagement = () => {
@@ -22,12 +19,12 @@ const IncidentManagement = () => {
   const {
     isLoading,
     error,
-    tabValue,
-    setTabValue,
+    selectedStatus,
+    setSelectedStatus,
+    statusFilterOptions,
+    filteredList,
     tableSearch,
     setTableSearch,
-    tabLists,
-    tabLabels,
     columns,
     openIncident,
     getFilteredData,
@@ -50,6 +47,15 @@ const IncidentManagement = () => {
     );
   }
 
+  const emptyMessages: Record<string, string> = {
+    all: 'No incidents found',
+    new: 'No new incidents',
+    in_progress: 'No incidents in progress',
+    on_hold: 'No incidents on hold',
+    resolved: 'No resolved incidents',
+    draft: 'No draft incidents',
+  };
+
   return (
     <Grid className={classes.container}>
       <PageHeader
@@ -59,21 +65,15 @@ const IncidentManagement = () => {
       />
 
       <Box className={classes.tabsBox}>
-        <Tabs
-          value={tabValue}
-          onChange={(_, v) => {
-            setTabValue(v);
+        <StatusFilterField
+          value={selectedStatus}
+          options={statusFilterOptions}
+          onChange={(v) => {
+            setSelectedStatus(v);
             setTableSearch('');
           }}
-          variant='scrollable'
-          scrollButtons='auto'
-          allowScrollButtonsMobile
-          className={classes.tabsFlex}
-        >
-          {tabLabels.map(({ label, icon }) => (
-            <Tab key={label} icon={icon} iconPosition='start' label={label} title={label} />
-          ))}
-        </Tabs>
+          className={classes.filterField}
+        />
         <TextField
           placeholder='Search...'
           value={tableSearch}
@@ -91,41 +91,26 @@ const IncidentManagement = () => {
         />
       </Box>
 
-      {tabLists.map((list, idx) => (
-        <TabPanel key={idx} value={tabValue} index={idx}>
-          {getFilteredData(list).length === 0 ? (
-            <Box className={classes.emptyState}>
-              <AssignmentIcon className={classes.emptyIcon} />
-              <Typography variant='h6' color='text.secondary'>
-                {tableSearch
-                  ? 'No matching incidents'
-                  : idx === 1
-                    ? 'No new incidents'
-                    : idx === 2
-                      ? 'No incidents in progress'
-                      : idx === 3
-                        ? 'No incidents on hold'
-                        : idx === 4
-                          ? 'No resolved incidents'
-                          : idx === 5
-                            ? 'No draft incidents'
-                            : 'No incidents found'}
-              </Typography>
-            </Box>
-          ) : (
-            <Box className={classes.tableContainer}>
-              <DataTable
-                columns={columns}
-                data={getFilteredData(list)}
-                rowKey='id'
-                searchable={false}
-                initialRowsPerPage={10}
-                onRowClick={(row) => openIncident((row as IncidentRow).number)}
-              />
-            </Box>
-          )}
-        </TabPanel>
-      ))}
+      {getFilteredData(filteredList).length === 0 ? (
+        <Box className={classes.emptyState}>
+          <Typography variant='h6' color='text.secondary'>
+            {tableSearch
+              ? 'No matching incidents'
+              : emptyMessages[selectedStatus] || 'No incidents found'}
+          </Typography>
+        </Box>
+      ) : (
+        <Box className={classes.tableContainer}>
+          <DataTable
+            columns={columns}
+            data={getFilteredData(filteredList)}
+            rowKey='id'
+            searchable={false}
+            initialRowsPerPage={10}
+            onRowClick={(row) => openIncident((row as IncidentRow).number)}
+          />
+        </Box>
+      )}
     </Grid>
   );
 };

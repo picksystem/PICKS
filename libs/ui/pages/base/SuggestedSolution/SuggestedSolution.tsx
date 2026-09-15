@@ -1,13 +1,13 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { Alert, Button, Box } from '@serviceops/component';
+import { Alert, Button, Box, PageHeader, Typography } from '@serviceops/component';
 import { useGetTicketsQuery, useCreateTicketMutation } from '../../../../services';
 import { ICreateTicketInput, IAdminTicket } from '@serviceops/interfaces';
 import { constants } from '@serviceops/utils';
 import { useNotification, useDebounce } from '@serviceops/hooks';
 import { useStyles } from './styles';
-import { HeroBanner, InputColumn, SolutionViewer, ActionButtons } from './components';
+import { InputColumn, SolutionViewer, ActionButtons } from './components';
 
 const stripHtml = (html: string): string => {
   if (!html) return '';
@@ -184,11 +184,26 @@ const SuggestedSolution = () => {
 
   return (
     <Box className={classes.container}>
-      <HeroBanner
-        ticketNumber={ticketNumber}
-        resolvedCount={resolvedIncidents.length}
-        matchCount={total}
-      />
+      {/* ── Page header with ticket number on the right ── */}
+      <Box className={classes.pageHeaderRow}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <PageHeader
+            title='Suggested Solution'
+            description='Resolved incidents with solutions matching your issue'
+          />
+        </Box>
+        <Box sx={{ flexShrink: 0, ml: 3, textAlign: 'right' }}>
+          <Typography variant='h6' sx={{ fontWeight: 800, color: '#1e293b', lineHeight: 1.3 }}>
+            {ticketNumber}
+          </Typography>
+          <Typography
+            variant='body2'
+            sx={{ color: '#64748b', fontWeight: 400, lineHeight: 1.5, marginTop: '2px' }}
+          >
+            Ticket Number
+          </Typography>
+        </Box>
+      </Box>
 
       <Box className={classes.mainGrid}>
         <InputColumn

@@ -1,8 +1,13 @@
 import SubjectIcon from '@mui/icons-material/Subject';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
-import { Box, TextField, Typography } from '@serviceops/component';
+import { Box, Typography } from '@serviceops/component';
 import { useStyles } from '../styles';
 import { InputColumnProps } from './types';
+import {
+  parseRichText,
+  RichTextEditor,
+  serializeRichText,
+} from '../../Configuration/shared/RichTextEditor';
 
 const InputColumn = ({
   shortDesc,
@@ -24,11 +29,21 @@ const InputColumn = ({
           </Typography>
         </Box>
         <Box className={classes.inputCardBody}>
-          <TextField
-            label='Short Description'
+          <input
+            type='text'
             value={shortDesc}
             onChange={(e) => onShortDescChange(e.target.value)}
             placeholder='Brief summary of the issue...'
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              fontSize: '0.9rem',
+              border: '1px solid rgba(226,232,255,0.9)',
+              borderRadius: 10,
+              background: '#f8faff',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
           />
         </Box>
       </Box>
@@ -44,17 +59,15 @@ const InputColumn = ({
           </Typography>
         </Box>
         <Box className={`${classes.inputCardBody} ${classes.issueDescBody}`}>
-          <TextField
-            label='Describe the issue'
-            value={issueText}
-            onChange={(e) => onIssueTextChange(e.target.value)}
-            multiline
-            minRows={6}
-            placeholder='Describe the issue in detail to find matching solutions...'
-            sx={{
-              '& .MuiInputBase-root': { height: '100%' },
-              '& textarea': { height: '100% !important', overflow: 'auto !important' },
+          <RichTextEditor
+            title='Describe the issue'
+            value={parseRichText(issueText)}
+            onChange={(richVal) => {
+              const plain = serializeRichText(richVal.segments);
+              onIssueTextChange(plain);
             }}
+            placeholder='Describe the issue in detail to find matching solutions...'
+            showFooterActions={false}
           />
         </Box>
       </Box>
