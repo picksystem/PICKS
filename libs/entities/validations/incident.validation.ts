@@ -15,10 +15,7 @@ export const CreateIncidentSchema = yup.object({
     .string()
     .matches(/^INC\d{7}$/, 'Invalid ticket number format')
     .max(16),
-  client: yup
-    .string()
-    .required('Client is required')
-    .max(50, 'Client must be 50 characters or less'),
+  client: yup.string().max(50, 'Client must be 50 characters or less'),
   caller: yup
     .string()
     .required('Caller is required')

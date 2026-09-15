@@ -25,6 +25,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     isLoading,
     handleBack,
     handleCreateTicket,
+    handleCancel,
     handleSaveAsDraft,
     handleSearchForSolution,
     validationFailed,
@@ -43,6 +44,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     isLoading: boolean;
     handleBack: () => void;
     handleCreateTicket: () => Promise<void>;
+    handleCancel: () => void;
     handleSaveAsDraft: () => Promise<void>;
     handleSearchForSolution: () => Promise<void>;
     validationFailed: boolean;
@@ -307,6 +309,9 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
         <Box className={classes.buttonContainer}>
           <Button variant='outlined' onClick={handleBack} type='button'>
             Back
+          </Button>
+          <Button variant='outlined' onClick={handleCancel} type='button'>
+            Cancel
           </Button>
           <Button variant='outlined' onClick={handleSaveAsDraft} type='button'>
             Save as Draft

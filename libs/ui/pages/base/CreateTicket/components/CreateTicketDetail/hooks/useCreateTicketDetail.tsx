@@ -350,6 +350,19 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     };
   }, [user]);
 
+  const submitTicket = async (status?: IncidentStatus | ServiceRequestStatus) => {
+    const uploadedFilenames = await uploadAndGetFilenames();
+    const ticketData = buildTicketData(status, uploadedFilenames);
+    try {
+      await createTicket(ticketData).unwrap();
+      formik.resetForm();
+      setAttachedFiles([]);
+      onSuccess?.(ticketNumber);
+    } catch (err) {
+      console.error('Failed to create ticket:', err);
+    }
+  };
+
   const formik = useFormWithSessionStorage(`createTicket_${ticketType}`, {
     initialValues: {
       ...initialValues,
@@ -361,19 +374,10 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     validateOnChange: false,
     validateOnBlur: true,
     onSubmit: async () => {
-      const uploadedFilenames = await uploadAndGetFilenames();
-      const ticketData = buildTicketData(IncidentStatus.NEW, uploadedFilenames);
-      try {
-        await createTicket(ticketData).unwrap();
-        notify.success(
-          `${config.title.replace('Create ', '')} ${ticketNumber} created successfully!`,
-        );
-        formik.resetForm();
-        setAttachedFiles([]);
-        onSuccess?.(ticketNumber);
-      } catch (err) {
-        console.error('Failed to create ticket:', err);
-      }
+      notify.success(
+        `${config.title.replace('Create ', '')} ${ticketNumber} created successfully!`,
+      );
+      onSuccess?.(ticketNumber);
     },
   });
 
@@ -494,11 +498,12 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     statusOverride?: IncidentStatus | ServiceRequestStatus,
     uploadedFilenames?: string[],
   ): IAdminTicket => {
-    // Collect all built-in field values from formik dynamically
-    // Always include them (even empty strings) — the API schema may require them
+    // Form-only fields not present on the Prisma AdminTicket schema
+    const formOnlyKeys = new Set(['callerFirstName', 'callerLastName', 'number']);
+    // Collect built-in field values from formik dynamically
     const builtInPayload: Record<string, any> = {};
     for (const [key, value] of Object.entries(formik.values)) {
-      if (key === 'number') continue; // ticketNumber is set separately
+      if (formOnlyKeys.has(key)) continue;
       if (key === 'attachments') {
         builtInPayload.attachments =
           uploadedFilenames && uploadedFilenames.length > 0
@@ -609,7 +614,8 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   const handleCreateTicket = async () => {
     const errors = await triggerValidation();
     if (Object.keys(errors).length > 0) return;
-    await formik.submitForm();
+    notify.success(`${config.title.replace('Create ', '')} ${ticketNumber} created successfully!`);
+    await submitTicket(IncidentStatus.NEW);
   };
 
   const handleSaveAsDraft = async () => {
@@ -617,9 +623,8 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     if (Object.keys(errors).length > 0) return;
     const draftExpiresAt = new Date();
     draftExpiresAt.setDate(draftExpiresAt.getDate() + 30);
-    const uploadedFilenames = await uploadAndGetFilenames();
     const ticketData = {
-      ...buildTicketData(IncidentStatus.DRAFT, uploadedFilenames),
+      ...buildTicketData(IncidentStatus.DRAFT, await uploadAndGetFilenames()),
       draftExpiresAt: draftExpiresAt.toISOString(),
     } as unknown as IAdminTicket;
     try {
@@ -639,9 +644,8 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   const handleSearchForSolution = async () => {
     const errors = await triggerValidation();
     if (Object.keys(errors).length > 0) return;
-    const uploadedFilenames = await uploadAndGetFilenames();
-    const ticketData = buildTicketData(undefined, uploadedFilenames);
-    navigate(BasePath.SUGGESTED_SOLUTION, { state: { incidentData: ticketData } });
+    const ticketData = buildTicketData(undefined, await uploadAndGetFilenames());
+    navigate(BasePath.SUGGESTED_SOLUTION, { state: { ticketData } });
   };
 
   // ── Derived: option sets + custom field map ────────────────────────────
