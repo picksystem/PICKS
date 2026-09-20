@@ -8,7 +8,11 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     // classes.root is applied to the MuiPickersTextField-root element
     '&.MuiPickersTextField-root': {
       borderRadius: 2,
-      overflow: 'hidden',
+      // Do NOT set overflow:hidden here — it clips the floating label
+      '& .MuiPickersOutlinedInput-root': {
+        borderRadius: 2,
+        overflow: 'hidden',
+      },
     },
   },
 });

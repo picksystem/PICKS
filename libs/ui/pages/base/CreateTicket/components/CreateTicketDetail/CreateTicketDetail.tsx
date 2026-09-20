@@ -167,6 +167,100 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     );
   };
 
+  // Renders checkboxes inline horizontally and non-checkbox fields in separate grid cells.
+  // Takes the full fields array, groups consecutive simple checkboxes together,
+  // and returns one React element per group for the parent to map into grid cells.
+  const renderFieldGroups = (fieldKeys: string[]) => {
+    const groups: { key: string; fieldKeys: string[] }[] = [];
+    let i = 0;
+    while (i < fieldKeys.length) {
+      const resolved = resolveField(
+        fieldKeys[i],
+        customFieldMap,
+        formik,
+        getCfValue,
+        setCfValue,
+        optionSets,
+      );
+      if (resolved.type === 'checkbox' && (resolved.dropdownOptions?.length ?? 0) === 0) {
+        const cbGroup: string[] = [];
+        let j = i;
+        while (j < fieldKeys.length) {
+          const rj = resolveField(
+            fieldKeys[j],
+            customFieldMap,
+            formik,
+            getCfValue,
+            setCfValue,
+            optionSets,
+          );
+          if (rj.type === 'checkbox' && (rj.dropdownOptions?.length ?? 0) === 0) {
+            cbGroup.push(fieldKeys[j]);
+            j++;
+          } else break;
+        }
+        groups.push({ key: cbGroup.join(','), fieldKeys: cbGroup });
+        i = j;
+      } else {
+        groups.push({ key: fieldKeys[i], fieldKeys: [fieldKeys[i]] });
+        i++;
+      }
+    }
+
+    return groups.map((group) => {
+      // Multiple simple checkboxes -> render inline in a single grid cell
+      if (group.fieldKeys.length > 1) {
+        return (
+          <Box
+            key={group.key}
+            className={classes.fullWidth}
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 3,
+              flexWrap: 'wrap',
+              width: '100%',
+            }}
+          >
+            {group.fieldKeys.map((fk) => {
+              const resolved = resolveField(
+                fk,
+                customFieldMap,
+                formik,
+                getCfValue,
+                setCfValue,
+                optionSets,
+              );
+              const isTouched = formik?.touched?.[fk];
+              const rawError = (formik?.errors?.[fk] as string) || '';
+              const fieldError = validationFailed && !!isTouched && !!rawError;
+              const fieldErrorText = reqError(isTouched, rawError);
+              return (
+                <DynamicFieldRenderer
+                  key={fk}
+                  fieldKey={fk}
+                  fieldLabel={resolved.label}
+                  fieldType={resolved.type}
+                  value={resolved.value}
+                  onChange={resolved.onChange}
+                  error={fieldError}
+                  errorText={fieldErrorText}
+                  required={resolved.required}
+                  disabled={resolved.disabled}
+                  dropdownOptions={resolved.dropdownOptions}
+                  fullWidth={false}
+                />
+              );
+            })}
+          </Box>
+        );
+      }
+
+      // Single field (non-checkbox or lone checkbox) -> render normally
+      return renderFieldWithErrors(group.fieldKeys[0]);
+    });
+  };
+
   return (
     <Box className={classes.formContainer}>
       {/* ── Page header with ticket number on the right ── */}
@@ -210,7 +304,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                     gridTemplateRows: `repeat(${section.rows ?? 'auto-fill'}, 1fr)`,
                   }}
                 >
-                  {section.fields.map((fk) => renderFieldWithErrors(fk))}
+                  {renderFieldGroups(section.fields ?? [])}
                 </Box>
               )}
 
@@ -247,7 +341,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                       gridTemplateRows: `repeat(${sub.rows ?? section.rows ?? 'auto-fill'}, 1fr)`,
                     }}
                   >
-                    {(sub.fields ?? []).map((fk) => renderFieldWithErrors(fk))}
+                    {renderFieldGroups(sub.fields ?? [])}
                   </Box>
                 </Box>
               ))}
@@ -269,12 +363,28 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
               '& .MuiAlert-icon': { display: 'none' },
             }}
           >
-            <Box sx={{ fontWeight: 600, fontSize: '0.875rem', mb: 1, color: '#1e293b' }}>
-              <GppBadIcon />
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                fontWeight: 600,
+                fontSize: '0.875rem',
+                color: '#1e293b',
+                mb: 1,
+              }}
+            >
+              <GppBadIcon sx={{ fontSize: 20 }} />
               Please fill in the following required field{missingFieldsList.length > 1 ? 's' : ''}:
             </Box>
             <Box
-              sx={{ display: 'flex', flexDirection: 'column', gap: 1, marginLeft: 2, marginTop: 1 }}
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+                marginLeft: '26px',
+                marginTop: 1,
+              }}
             >
               {missingFieldsList.map((name) => (
                 <Box
