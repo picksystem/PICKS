@@ -11,6 +11,7 @@ import {
 } from '@serviceops/component';
 import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRight';
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt';
+import PaletteIcon from '@mui/icons-material/Palette';
 import EditIcon from '@mui/icons-material/Edit';
 import CreateIcon from '@mui/icons-material/NoteAdd';
 import AddIcon from '@mui/icons-material/Add';
@@ -21,7 +22,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import { alpha, Dialog, DialogActions } from '@mui/material';
+import { alpha, darken, Dialog, DialogActions, DialogContent } from '@mui/material';
 import { ITicketType, ICustomField, ITicketTypeLayoutConfig } from '@serviceops/interfaces';
 import { getDefaultLayoutConfig, mergeLayoutConfig } from '@serviceops/tickettypelayout';
 import { CustomFieldFormDialog } from '../CustomFieldFormDialog';
@@ -134,6 +135,9 @@ export const TicketTypeLayoutDialog = ({
 
   // Add Section dialog
   const [addSectionDialogOpen, setAddSectionDialogOpen] = useState(false);
+
+  // Ticket Details Layout Styles dialog
+  const [ticketDetailsStylesOpen, setTicketDetailsStylesOpen] = useState(false);
 
   // Delete confirmation dialogs
   const [pendingDeleteField, setPendingDeleteField] = useState<{
@@ -1288,22 +1292,43 @@ export const TicketTypeLayoutDialog = ({
             <Typography sx={{ ...columnLabelSx, mb: 0 }}>
               {activeTab === 'createTicket' ? 'Ticket Sections' : 'Ticket Detail Sections'}
             </Typography>
-            <Tooltip title='Add New Section'>
-              <IconButton
-                size='small'
-                onClick={() => setAddSectionDialogOpen(true)}
-                sx={{
-                  width: 28,
-                  height: 28,
-                  bgcolor: 'primary.main',
-                  color: '#fff',
-                  '&:hover': { bgcolor: 'primary.dark' },
-                  '& .MuiSvgIcon-root': { fontSize: '1.1rem' },
-                }}
-              >
-                <AddIcon />
-              </IconButton>
-            </Tooltip>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <Tooltip title='Layout Styles'>
+                <IconButton
+                  size='small'
+                  onClick={() => setTicketDetailsStylesOpen(true)}
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    bgcolor: activeTab === 'ticketDetails' ? '#0369a1' : 'default',
+                    color: activeTab === 'ticketDetails' ? '#fff' : 'default',
+                    '&:hover': {
+                      bgcolor:
+                        activeTab === 'ticketDetails' ? darken('#0369a1', 0.15) : 'action.hover',
+                    },
+                    '& .MuiSvgIcon-root': { fontSize: '1.1rem' },
+                  }}
+                >
+                  <PaletteIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title='Add New Section'>
+                <IconButton
+                  size='small'
+                  onClick={() => setAddSectionDialogOpen(true)}
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    bgcolor: 'primary.main',
+                    color: '#fff',
+                    '&:hover': { bgcolor: 'primary.dark' },
+                    '& .MuiSvgIcon-root': { fontSize: '1.1rem' },
+                  }}
+                >
+                  <AddIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
           </Box>
 
           {/* Sections body */}
@@ -2240,6 +2265,77 @@ export const TicketTypeLayoutDialog = ({
           setAddSectionDialogOpen(false);
         }}
       />
+
+      {/* ── Ticket Details Layout Styles Dialog ─────────────────────────── */}
+      <Dialog
+        open={ticketDetailsStylesOpen}
+        onClose={() => setTicketDetailsStylesOpen(false)}
+        maxWidth='xs'
+        fullWidth
+        disableEscapeKeyDown
+        TransitionProps={{ unmountOnExit: true }}
+        PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}
+      >
+        <Box
+          sx={{
+            px: 2.5,
+            py: 2,
+            background: `linear-gradient(135deg, ${darken('#0369a1', 0.18)} 0%, #0369a1 100%)`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+          }}
+        >
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              borderRadius: 1.5,
+              bgcolor: 'rgba(255,255,255,0.18)',
+              border: '1.5px solid rgba(255,255,255,0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <PaletteIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />
+          </Box>
+          <Box>
+            <Typography
+              sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff', lineHeight: 1.2 }}
+            >
+              Ticket Details Layout Styles
+            </Typography>
+            <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', mt: 0.3 }}>
+              Customize the layout appearance
+            </Typography>
+          </Box>
+        </Box>
+
+        <DialogContent sx={{ px: 2.5, pt: 2, pb: 1.5 }}>
+          <Box sx={{ minHeight: 200 }} />
+        </DialogContent>
+
+        <DialogActions
+          sx={{ px: 2.5, py: 1.5, gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}
+        >
+          <Button
+            onClick={() => setTicketDetailsStylesOpen(false)}
+            variant='outlined'
+            sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => setTicketDetailsStylesOpen(false)}
+            variant='contained'
+            sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+          >
+            Apply
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Dialog>
   );
 };
