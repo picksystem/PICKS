@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Typography,
   Accordion as MuiAccordion,
@@ -24,7 +25,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import ErrorIcon from '@mui/icons-material/Error';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { CloudUploadOutlined, DeleteOutline } from '@mui/icons-material';
 import { Box, TextField, Checkbox, Button } from '@serviceops/component';
 import { useStyles } from './styles';
@@ -44,7 +44,7 @@ const SECTION_META = [
   { label: 'Attachments' },
 ];
 
-// ── Shared Searchable Field ──────────────────────────────────────
+// ── Shared Searchable Field (portal-based dropdown) ──────────────────────
 const SearchableField = ({
   value,
   options,
@@ -70,6 +70,11 @@ const SearchableField = ({
 }) => {
   const [searchText, setSearchText] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
+  const [menuRect, setMenuRect] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
   const anchorRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closerRef = useRef<(() => void) | null>(null);
@@ -88,6 +93,41 @@ const SearchableField = ({
     setSearchText(resolvedLabel);
   }, [resolvedLabel]);
 
+  // Update menu position on scroll/resize
+  useEffect(() => {
+    if (!isOpen) return;
+    const updatePosition = () => {
+      if (!anchorRef.current) return;
+      const rect = anchorRef.current.getBoundingClientRect();
+      setMenuRect({ top: rect.bottom, left: rect.left, width: rect.width });
+    };
+    updatePosition();
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isOpen]);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeDropdown();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
+  const closeDropdown = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setIsOpen(false);
+    setMenuRect(null);
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setSearchText(newValue);
@@ -97,26 +137,35 @@ const SearchableField = ({
       clearTimeout(debounceRef.current);
     }
     debounceRef.current = setTimeout(() => {
-      setIsOpen(newValue.length > 0 && filteredOptions.length > 0);
-    }, 100);
+      if (newValue.length > 0 && filteredOptions.length > 0 && anchorRef.current) {
+        const rect = anchorRef.current.getBoundingClientRect();
+        setMenuRect({ top: rect.bottom, left: rect.left, width: rect.width });
+        setIsOpen(true);
+      } else {
+        closeDropdown();
+      }
+    }, 200);
   };
 
   const handleClear = () => {
     setSearchText('');
     onChange('');
-    setIsOpen(false);
+    closeDropdown();
   };
 
   const handleSelectOption = (option: { value: string; label: string }) => {
     setSearchText(option.label);
     onChange(option.value);
-    setIsOpen(false);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
+    closeDropdown();
   };
 
   const handleFocus = () => {
     if (options.length > 0) {
       activateDropdown(closerRef.current!);
+      if (anchorRef.current) {
+        const rect = anchorRef.current.getBoundingClientRect();
+        setMenuRect({ top: rect.bottom, left: rect.left, width: rect.width });
+      }
       setIsOpen(true);
     }
   };
@@ -133,14 +182,50 @@ const SearchableField = ({
   const handleInputBlur = useCallback(
     (e: React.FocusEvent<HTMLInputElement>) => {
       deactivateDropdown(closerRef.current!);
-      setIsOpen(false);
+      closeDropdown();
       onBlur?.(e);
     },
-    [onBlur],
+    [onBlur, closeDropdown],
   );
 
+  const portalContent =
+    isOpen && filteredOptions.length > 0 && menuRect ? (
+      <Paper
+        elevation={4}
+        sx={{
+          position: 'fixed',
+          top: menuRect.top,
+          left: menuRect.left,
+          width: menuRect.width,
+          zIndex: 1400,
+          maxHeight: 280,
+          overflow: 'auto',
+        }}
+      >
+        <MenuList dense disablePadding>
+          {filteredOptions.map((option) => (
+            <MenuItem
+              key={option.value}
+              onClick={() => handleSelectOption(option)}
+              selected={searchText === option.label}
+              onMouseDown={handleItemMouseDown}
+              sx={{ py: 1, px: 1.5 }}
+            >
+              <ListItemText
+                primary={option.label}
+                primaryTypographyProps={{
+                  fontSize: '0.84rem',
+                  noWrap: true,
+                }}
+              />
+            </MenuItem>
+          ))}
+        </MenuList>
+      </Paper>
+    ) : null;
+
   return (
-    <Box ref={anchorRef} position='relative'>
+    <Box ref={anchorRef} sx={{ position: 'relative' }}>
       <TextField
         name={label.toLowerCase().replace(/\s+/g, '')}
         label={label}
@@ -176,40 +261,7 @@ const SearchableField = ({
           ),
         }}
       />
-      {isOpen && filteredOptions.length > 0 && (
-        <Paper
-          elevation={3}
-          sx={{
-            position: 'absolute',
-            top: 'calc(100% + 1px)',
-            left: 0,
-            right: 0,
-            zIndex: 1300,
-            maxHeight: 240,
-            overflow: 'auto',
-          }}
-        >
-          <MenuList dense disablePadding>
-            {filteredOptions.map((option) => (
-              <MenuItem
-                key={option.value}
-                onClick={() => handleSelectOption(option)}
-                selected={searchText === option.label}
-                onMouseDown={handleItemMouseDown}
-                sx={{ py: 0.75, px: 2 }}
-              >
-                <ListItemText
-                  primary={option.label}
-                  primaryTypographyProps={{
-                    fontSize: '0.84rem',
-                    noWrap: true,
-                  }}
-                />
-              </MenuItem>
-            ))}
-          </MenuList>
-        </Paper>
-      )}
+      {portalContent ? createPortal(portalContent, document.body) : null}
     </Box>
   );
 };
@@ -217,7 +269,6 @@ const SearchableField = ({
 const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDetailProps) => {
   const { classes } = useStyles();
   const reqError = useFieldError();
-  const attachInputRef = useRef<HTMLInputElement>(null);
   const errorAlertRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -705,41 +756,6 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                   onChange={(_, checked) => formik.setFieldValue('isRecurring', checked)}
                 />
               </Box>
-              <Tooltip title='Add attachment'>
-                <IconButton
-                  size='small'
-                  onClick={() => attachInputRef.current?.click()}
-                  sx={{
-                    border: '1px dashed',
-                    borderColor: 'divider',
-                    borderRadius: 2,
-                    px: 1.5,
-                    py: 0.75,
-                    gap: 0.5,
-                    fontSize: '0.8rem',
-                    color: 'text.secondary',
-                    '&:hover': {
-                      borderColor: 'primary.main',
-                      color: 'primary.main',
-                      backgroundColor: 'primary.50',
-                    },
-                  }}
-                >
-                  <AttachFileIcon sx={{ fontSize: '1rem' }} />
-                  Add Attachment
-                </IconButton>
-              </Tooltip>
-              <input
-                ref={attachInputRef}
-                type='file'
-                multiple
-                accept='.pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif'
-                hidden
-                onChange={(e) =>
-                  e.target.files &&
-                  setAttachedFiles((prev) => [...prev, ...Array.from(e.target.files!)])
-                }
-              />
             </Box>
 
             {/* Custom fields for Description section */}
@@ -1064,10 +1080,14 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                   return (
                     <li
                       key={fieldName}
-                      style={{ marginBottom: '4px', fontWeight: 500, fontSize: '0.875rem' }}
+                      style={{
+                        marginBottom: '4px',
+                        fontWeight: 500,
+                        fontSize: '0.875rem',
+                        color: '#080808',
+                      }}
                     >
                       {label}
-                      {typeof error === 'string' ? ` - ${error}` : ''}
                     </li>
                   );
                 })}
