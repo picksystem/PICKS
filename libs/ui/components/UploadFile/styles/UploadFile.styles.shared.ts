@@ -5,7 +5,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   root: {
     border: '2px dashed #ccc',
     borderRadius: 8,
-    padding: theme.spacing(4),
+    padding: theme.spacing(2),
     textAlign: 'center',
     cursor: 'pointer',
     transition: 'all 0.3s ease',

@@ -457,7 +457,7 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     if (Object.keys(errors).length > 0) return;
     const uploadedFilenames = await uploadAndGetFilenames();
     const ticketData = buildTicketData(undefined, uploadedFilenames);
-    navigate(BasePath.SUGGESTED_SOLUTION, { state: { incidentData: ticketData } });
+    navigate(BasePath.SUGGESTED_SOLUTION, { state: { ticketData } });
   };
 
   return {

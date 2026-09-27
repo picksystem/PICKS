@@ -40,7 +40,6 @@ import { Box, TextField, Checkbox, Button, UploadFile } from '@serviceops/compon
 import { useStyles } from './styles';
 import useCreateTicketDetail, { CreateTicketDetailProps } from './hooks/useCreateTicketDetail';
 import CustomFieldRenderer from './CustomFieldRenderer';
-import { getIconComponent, loadIconMap } from '../../../Configuration/utils/ticketTypeIcons';
 import { activateDropdown, deactivateDropdown } from './dropdownRegistry';
 import { useFieldError } from '@serviceops/hooks';
 
@@ -418,19 +417,20 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
           defaultExpanded={false}
           disableGutters
           sx={{
-            borderLeft: `4px solid ${m.color}`,
             borderRadius: '14px !important',
             mb: 2.5,
             overflow: 'hidden',
             backgroundColor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
             boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
             '&::before': { display: 'none' },
           }}
         >
           <MuiAccordionSummary
-            expandIcon={<ExpandMoreIcon sx={{ color: m.color, fontSize: 20 }} />}
+            expandIcon={<ExpandMoreIcon sx={{ color: '#64748b', fontSize: 20 }} />}
             sx={{
-              background: `${m.color}12`,
+              backgroundColor: '#fff',
               borderBottom: '1px solid',
               borderColor: 'divider',
               minHeight: 0,
@@ -457,7 +457,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
 
     return (
       <Box className={classes.sectionCard} sx={{ borderLeftColor: m.color }}>
-        <Box className={classes.sectionCardHeader} sx={{ background: `${m.color}12` }}>
+        <Box className={classes.sectionCardHeader}>
           {iconBadge}
           {title}
         </Box>
@@ -466,37 +466,28 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     );
   };
 
-  const iconMap = loadIconMap();
   const descHasError = !!(formik.touched.description && formik.errors.description);
 
   return (
     <Box className={classes.formContainer}>
       {/* ── Hero header ───────────────────────────────────────────────── */}
-      <Box
-        className={classes.ticketHero}
-        sx={{ background: config.heroGradient, boxShadow: `0 8px 32px ${config.heroShadow}` }}
-      >
-        <Box className={classes.ticketHeroIcon}>
-          {getIconComponent(iconMap[ticketType], { fontSize: 26, color: '#fff' })}
-        </Box>
-        <Box sx={{ flex: 1, position: 'relative', zIndex: 1 }}>
+      <Box className={classes.ticketHero} sx={{ background: '#ffffff', boxShadow: 'none' }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
             <Typography className={classes.ticketHeroTitle}>{config.title}</Typography>
-            <Chip
-              label='New Ticket'
-              size='small'
-              sx={{
-                background: 'rgba(255,255,255,0.2)',
-                color: '#fff',
-                border: '1px solid rgba(255,255,255,0.35)',
-                fontWeight: 700,
-                fontSize: '0.7rem',
-                height: 22,
-              }}
-            />
           </Box>
-          <Typography className={classes.ticketHeroNumber}>{ticketNumber}</Typography>
           <Typography className={classes.ticketHeroSub}>{config.subtitle}</Typography>
+        </Box>
+        <Box sx={{ flexShrink: 0, ml: 3, textAlign: 'right' }}>
+          <Typography variant='h6' sx={{ fontWeight: 800, color: '#1e293b', lineHeight: 1.3 }}>
+            {ticketNumber}
+          </Typography>
+          <Typography
+            variant='body2'
+            sx={{ color: '#64748b', fontWeight: 400, lineHeight: 1.5, marginTop: '2px' }}
+          >
+            Ticket Number
+          </Typography>
         </Box>
       </Box>
 
@@ -506,12 +497,6 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
           0,
           <>
             <Box className={classes.formGrid}>
-              <TextField
-                label='Ticket Number'
-                value={ticketNumber}
-                disabled
-                sx={{ '& .MuiInputBase-root': { backgroundColor: 'grey.100' } }}
-              />
               <SearchableField
                 value={formik.values.client}
                 options={callerOptions}
