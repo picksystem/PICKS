@@ -1,7 +1,8 @@
 import { alpha } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { useStyles } from './styles';
-import { Box, Button, Loader, Typography, Chip, Tooltip, PageHeader } from '@serviceops/component';
+import { Box, Button, Loader, Typography, Chip, Tooltip } from '@serviceops/component';
 import useCreateTicket from './hooks/useCreateTicket';
 import { useGetTicketTypeQuery } from '../../../../services';
 import {
@@ -44,11 +45,18 @@ const CreateTicket = () => {
     <Box className={classes.selectionPage}>
       {/* ── Scrollable content ───────────────────────────────────────────── */}
       <Box className={classes.scrollContent}>
-        <PageHeader
-          title='Create a New Ticket'
-          description='Choose the ticket type that best describes your request'
-          className={classes.pageHeader}
-        />
+        {/* ── Hero header ─────────────────────────────────────────────────── */}
+        <Box className={classes.heroHeader}>
+          <Box className={classes.heroIconWrap}>
+            <ConfirmationNumberIcon sx={{ fontSize: 28, color: '#fff' }} />
+          </Box>
+          <Box>
+            <Typography className={classes.heroTitle}>Create a New Ticket</Typography>
+            <Typography className={classes.heroSubtitle}>
+              Choose the ticket type that best describes your request
+            </Typography>
+          </Box>
+        </Box>
 
         {/* ── Ticket type grid ─────────────────────────────────────────────── */}
         <Box className={classes.ticketTypeGrid}>

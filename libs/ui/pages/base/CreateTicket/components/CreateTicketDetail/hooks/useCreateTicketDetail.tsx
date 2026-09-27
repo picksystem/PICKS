@@ -15,10 +15,6 @@ import {
   ServiceRequestStatus,
   CreateIncidentSchema,
   IAdminTicket,
-  ITicketTypeLayoutConfig,
-  ICustomSectionConfig,
-  ICustomField,
-  CustomFieldType,
 } from '@serviceops/interfaces';
 import {
   useAuth,
@@ -28,138 +24,13 @@ import {
 } from '@serviceops/hooks';
 import { constants } from '@serviceops/utils';
 import { useConfiguration } from '@serviceops/confighooks';
-import {
-  filterCustomFieldsByTicketType,
-  filterSectionsByTicketType,
-} from '@serviceops/tickettypelayout';
 import { channelOptions, generateTicketNumber, calculatePriority, initialValues } from '../util';
-
-// ── Field resolution types ──────────────────────────────────────────────────
-
-export interface FieldResolution {
-  label: string;
-  type: CustomFieldType;
-  value: string | boolean;
-  onChange: (val: string | boolean) => void;
-  dropdownOptions?: { value: string; label: string }[];
-  required: boolean;
-  disabled?: boolean;
-}
-
-export interface OptionSets {
-  callerOptions: { value: string; label: string }[];
-  impactOptions: { value: string; label: string }[];
-  urgencyOptions: { value: string; label: string }[];
-  priorityOptions: { value: string; label: string }[];
-  statusOptions: { value: string; label: string }[];
-  channelOptions: { value: string; label: string }[];
-  businessCategoryOptions: { value: string; label: string }[];
-  serviceLineOptions: { value: string; label: string }[];
-  applicationOptions: { value: string; label: string }[];
-  applicationCategoryOptions: { value: string; label: string }[];
-  applicationSubCategoryOptions: { value: string; label: string }[];
-}
-
-/**
- * Resolves a field key into rendering metadata.
- * Priority: 1. Custom fields (API-driven), 2. Built-in fields (type from resolver, label from key).
- */
-const resolveField = (
-  fieldKey: string,
-  customFieldMap: Map<string, ICustomField>,
-  formik: any,
-  getCfValue: (key: string) => string | boolean,
-  setCfValue: (key: string, value: string | boolean) => void,
-  opts: OptionSets,
-): FieldResolution => {
-  // Custom field: label + type come from API
-  const customField = customFieldMap.get(fieldKey);
-  if (customField) {
-    return {
-      label: customField.fieldName,
-      type: customField.fieldType,
-      value: getCfValue(fieldKey),
-      onChange: (val: string | boolean) => setCfValue(fieldKey, val),
-      dropdownOptions: customField.dropdownOptions?.map((o) => ({ value: o, label: o })),
-      required: customField.isRequired ?? false,
-      disabled: customField.isDisabled ?? false,
-    };
-  }
-
-  // Built-in field: type + options from resolver, label = field key
-  const formikValue = formik?.values?.[fieldKey];
-  let fieldType: CustomFieldType = 'text';
-  let dropdownOptions: { value: string; label: string }[] | undefined;
-
-  switch (fieldKey) {
-    case 'caller':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.callerOptions;
-      break;
-    case 'businessCategory':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.businessCategoryOptions;
-      break;
-    case 'serviceLine':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.serviceLineOptions;
-      break;
-    case 'application':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.applicationOptions;
-      break;
-    case 'applicationCategory':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.applicationCategoryOptions;
-      break;
-    case 'applicationSubCategory':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.applicationSubCategoryOptions;
-      break;
-    case 'impact':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.impactOptions;
-      break;
-    case 'urgency':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.urgencyOptions;
-      break;
-    case 'priority':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.priorityOptions;
-      break;
-    case 'status':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.statusOptions;
-      break;
-    case 'channel':
-      fieldType = 'dropdown';
-      dropdownOptions = opts.channelOptions;
-      break;
-    case 'description':
-      fieldType = 'textarea';
-      break;
-    case 'isMajor':
-    case 'isRecurring':
-    case 'isReleaseManagement':
-      fieldType = 'checkbox';
-      break;
-    case 'attachments':
-      fieldType = 'attachment';
-      break;
-    default:
-      fieldType = 'text';
-  }
-
-  return {
-    label: fieldKey,
-    type: fieldType,
-    value: formikValue ?? '',
-    onChange: (val: string | boolean) => formik?.setFieldValue?.(fieldKey, val),
-    dropdownOptions,
-    required: false,
-  };
-};
+import {
+  getTagVisuals,
+  getTagOption,
+  loadTagMap,
+  FALLBACK_COLOR,
+} from '../../../../Configuration/utils/ticketTypeIcons';
 
 export interface CreateTicketDetailProps {
   ticketType: string;
@@ -174,32 +45,18 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   const notify = useNotification();
   const { data: ticketTypes } = useGetTicketTypeQuery();
   const record = ticketTypes?.find((t) => t.type === ticketType);
+  const tagMap = loadTagMap();
+  const tagColor = getTagOption(tagMap[ticketType] ?? '')?.color ?? FALLBACK_COLOR;
+  const { gradient, glow } = getTagVisuals(tagColor);
   const allCustomFields = record?.customFields ?? [];
-  const filteredCustomFields = useMemo(
-    () => filterCustomFieldsByTicketType(allCustomFields, ticketType),
-    [allCustomFields, ticketType],
-  );
   const layoutConfig = record?.layoutConfig;
-
-  // Filter layoutConfig's customSections by the current ticket type's accessControl
-  const filteredLayoutConfig = useMemo<ITicketTypeLayoutConfig | undefined>(() => {
-    if (!layoutConfig?.customSections) return layoutConfig ?? undefined;
-    const cs = layoutConfig.customSections as Record<string, ICustomSectionConfig>;
-    const filteredSections: Record<string, ICustomSectionConfig> = {};
-    for (const [id, section] of Object.entries(cs) as [string, ICustomSectionConfig][]) {
-      const ac = section.accessControl;
-      // Include if no accessControl set (legacy) or if ticket type is allowed
-      if (!ac || Object.keys(ac).length === 0 || ac[ticketType] === true) {
-        filteredSections[id] = { ...section, fields: [...section.fields] };
-      }
-    }
-    return { ...layoutConfig, customSections: filteredSections };
-  }, [layoutConfig, ticketType]);
   const config = {
     title: `Create ${record?.displayName || record?.name || ticketType}`,
     prefix: record?.prefix || 'TKT',
     numberLength: record?.numberLength || 7,
     subtitle: record?.shortDescription || 'Fill in the details below to create a new ticket',
+    heroGradient: gradient,
+    heroShadow: glow,
   };
   const { impactOptions, urgencyOptions, priorityOptions, statusOptions } =
     useTicketConfig(ticketType);
@@ -261,10 +118,10 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   >([]);
   const [manualCallerOpen, setManualCallerOpen] = useState(false);
 
-  // ── Custom field values (filtered by ticket type access control) ──────────
+  // ── Custom field values ──────────────────────────────────────────────
   const initCfValues = useCallback((): Record<string, string | boolean> => {
     const init: Record<string, string | boolean> = {};
-    for (const cf of filteredCustomFields) {
+    for (const cf of allCustomFields) {
       if (cf.defaultValue !== undefined) {
         init[cf.fieldKey] = cf.defaultValue;
       } else if (cf.fieldType === 'checkbox') {
@@ -274,17 +131,17 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
       }
     }
     return init;
-  }, [filteredCustomFields]);
+  }, [allCustomFields]);
 
   const [cfValues, setCfValues] = useState<Record<string, string | boolean>>(initCfValues);
 
-  // When filteredCustomFields grows (e.g., a new field is added), ensure cfValues
+  // When allCustomFields grows (e.g., a new field is added), ensure cfValues
   // has an entry for every current field so the renderer and submit can see it.
   useEffect(() => {
     setCfValues((prev) => {
       const next = { ...prev };
       let changed = false;
-      for (const cf of filteredCustomFields) {
+      for (const cf of allCustomFields) {
         if (!(cf.fieldKey in next)) {
           if (cf.defaultValue !== undefined) next[cf.fieldKey] = cf.defaultValue;
           else if (cf.fieldType === 'checkbox') next[cf.fieldKey] = false;
@@ -294,7 +151,7 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
       }
       return changed ? next : prev;
     });
-  }, [filteredCustomFields]);
+  }, [allCustomFields]);
 
   const setCfValue = useCallback((key: string, value: string | boolean) => {
     setCfValues((prev) => ({ ...prev, [key]: value }));
@@ -336,37 +193,9 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
 
   const defaultCreatedBy = user?.name || '';
 
-  // Pre-populate caller fields from the logged-in user's API data
-  const defaultCallerFields = useMemo(() => {
-    if (!user) return {};
-    return {
-      callerFirstName: user.firstName || '',
-      callerLastName: user.lastName || '',
-      callerEmail: user.email || '',
-      callerPhone: user.phone || '',
-      callerLocation: user.workLocation || '',
-      callerDepartment: user.department || '',
-      callerReportingManager: user.managerName || '',
-    };
-  }, [user]);
-
-  const submitTicket = async (status?: IncidentStatus | ServiceRequestStatus) => {
-    const uploadedFilenames = await uploadAndGetFilenames();
-    const ticketData = buildTicketData(status, uploadedFilenames);
-    try {
-      await createTicket(ticketData).unwrap();
-      formik.resetForm();
-      setAttachedFiles([]);
-      onSuccess?.(ticketNumber);
-    } catch (err) {
-      console.error('Failed to create ticket:', err);
-    }
-  };
-
   const formik = useFormWithSessionStorage(`createTicket_${ticketType}`, {
     initialValues: {
       ...initialValues,
-      ...defaultCallerFields,
       createdBy: defaultCreatedBy,
       caller: defaultCreatedBy,
     },
@@ -374,10 +203,19 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     validateOnChange: false,
     validateOnBlur: true,
     onSubmit: async () => {
-      notify.success(
-        `${config.title.replace('Create ', '')} ${ticketNumber} created successfully!`,
-      );
-      onSuccess?.(ticketNumber);
+      const uploadedFilenames = await uploadAndGetFilenames();
+      const ticketData = buildTicketData(IncidentStatus.NEW, uploadedFilenames);
+      try {
+        await createTicket(ticketData).unwrap();
+        notify.success(
+          `${config.title.replace('Create ', '')} ${ticketNumber} created successfully!`,
+        );
+        formik.resetForm();
+        setAttachedFiles([]);
+        onSuccess?.(ticketNumber);
+      } catch (err) {
+        console.error('Failed to create ticket:', err);
+      }
     },
   });
 
@@ -493,44 +331,51 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     }
   };
 
-  /** Build the payload for createTicket mutation — fully dynamic from formik values */
+  /** Build the payload for createTicket mutation — includes ticketType for the unified API */
   const buildTicketData = (
     statusOverride?: IncidentStatus | ServiceRequestStatus,
     uploadedFilenames?: string[],
-  ): IAdminTicket => {
-    // Form-only fields not present on the Prisma AdminTicket schema
-    const formOnlyKeys = new Set(['callerFirstName', 'callerLastName', 'number']);
-    // Collect built-in field values from formik dynamically
-    const builtInPayload: Record<string, any> = {};
-    for (const [key, value] of Object.entries(formik.values)) {
-      if (formOnlyKeys.has(key)) continue;
-      if (key === 'attachments') {
-        builtInPayload.attachments =
-          uploadedFilenames && uploadedFilenames.length > 0
-            ? JSON.stringify(uploadedFilenames)
-            : undefined;
-        continue;
-      }
-      // Always include booleans and non-undefined values
-      if (typeof value === 'boolean') {
-        builtInPayload[key] = value;
-      } else if (value !== undefined && value !== null) {
-        builtInPayload[key] = value;
-      }
-    }
-
-    // Collect custom field values from cfValues (non-empty only)
-    const customFieldPayload = Object.fromEntries(
-      Object.entries(cfValues).filter(([, v]) => v !== '' && v !== false && v !== undefined),
-    );
-
-    return {
+  ): IAdminTicket =>
+    ({
       ticketType,
       number: ticketNumber,
-      ...builtInPayload,
-      customFieldValues: customFieldPayload,
-    } as IAdminTicket;
-  };
+      client: formik.values.client || undefined,
+      caller: formik.values.caller,
+      callerPhone: formik.values.callerPhone || undefined,
+      callerEmail: formik.values.callerEmail || undefined,
+      callerLocation: formik.values.callerLocation || undefined,
+      callerDepartment: formik.values.callerDepartment || undefined,
+      callerReportingManager: formik.values.callerReportingManager || undefined,
+      additionalContacts: formik.values.additionalContacts || undefined,
+      businessCategory: formik.values.businessCategory || undefined,
+      serviceLine: formik.values.serviceLine || undefined,
+      application: formik.values.application || undefined,
+      applicationCategory: formik.values.applicationCategory || undefined,
+      applicationSubCategory: formik.values.applicationSubCategory || undefined,
+      shortDescription: formik.values.shortDescription || undefined,
+      description: formik.values.description || undefined,
+      impact: (formik.values.impact as IncidentImpact) || undefined,
+      urgency: (formik.values.urgency as IncidentUrgency) || undefined,
+      priority: formik.values.priority || undefined,
+      channel: (formik.values.channel as IncidentChannel) || undefined,
+      status: statusOverride || (formik.values.status as IncidentStatus),
+      assignmentGroup: formik.values.assignmentGroup || undefined,
+      primaryResource: formik.values.primaryResource || undefined,
+      secondaryResources: formik.values.secondaryResources || undefined,
+      createdBy: formik.values.createdBy,
+      isRecurring: formik.values.isRecurring,
+      isMajor: formik.values.isMajor,
+      isReleaseManagement: (formik.values as any).isReleaseManagement || false,
+      notes: formik.values.notes || undefined,
+      relatedRecords: formik.values.relatedRecords || undefined,
+      attachments:
+        uploadedFilenames && uploadedFilenames.length > 0
+          ? JSON.stringify(uploadedFilenames)
+          : undefined,
+      customFieldValues: Object.fromEntries(
+        Object.entries(cfValues).filter(([, v]) => v !== '' && v !== false && v !== undefined),
+      ) as Record<string, string>,
+    }) as IAdminTicket;
 
   const handleBack = () => onCancel?.();
 
@@ -543,29 +388,8 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   };
 
   const triggerValidation = async () => {
-    // Collect all field keys that are actually visible in the admin-configured sections
-    // for the createTicket tab only (matches the render logic in CreateTicketDetail)
-    const visibleKeys = new Set<string>();
-    if (filteredLayoutConfig?.customSections) {
-      for (const section of Object.values(filteredLayoutConfig.customSections)) {
-        if (section.tab !== 'createTicket') continue;
-        for (const fk of section.fields) visibleKeys.add(fk);
-        for (const sub of section.subSections ?? []) {
-          for (const fk of sub.fields ?? []) visibleKeys.add(fk);
-        }
-      }
-    }
-
-    // Run Yup schema validation (format checks, types, etc.)
     const schemaErrors = await formik.validateForm();
-    const allErrors: Record<string, string> = {};
-
-    // Only keep errors for fields that are actually visible in the form
-    for (const [key, error] of Object.entries(schemaErrors as Record<string, string>)) {
-      if (visibleKeys.has(key)) {
-        allErrors[key] = error;
-      }
-    }
+    const allErrors: Record<string, string> = { ...(schemaErrors as Record<string, string>) };
 
     // When the manual caller section is open, validate its required fields too
     if (manualCallerOpen) {
@@ -583,24 +407,9 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
       }
     }
 
-    // Validate required custom fields (only if visible and not disabled)
-    for (const cf of filteredCustomFields) {
-      if (cf.isDisabled) continue;
-      if (cf.isRequired && visibleKeys.has(cf.fieldKey)) {
-        const val = cfValues[cf.fieldKey];
-        const isEmpty =
-          val === undefined ||
-          val === null ||
-          val === '' ||
-          (typeof val === 'string' && val.trim() === '');
-        if (isEmpty) {
-          allErrors[cf.fieldKey] = `${cf.fieldName} is required`;
-        }
-      }
-    }
-
     if (Object.keys(allErrors).length > 0) {
-      // Pass `false` as second arg so setTouched does NOT re-run Yup validation
+      // Pass `false` as second arg so setTouched does NOT re-run Yup validation,
+      // which would overwrite allErrors (including our custom manual-section errors) back to schema-only.
       formik.setTouched(
         Object.keys(allErrors).reduce((acc, key) => ({ ...acc, [key]: true }), {}),
         false,
@@ -616,8 +425,7 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   const handleCreateTicket = async () => {
     const errors = await triggerValidation();
     if (Object.keys(errors).length > 0) return;
-    notify.success(`${config.title.replace('Create ', '')} ${ticketNumber} created successfully!`);
-    await submitTicket(IncidentStatus.NEW);
+    await formik.submitForm();
   };
 
   const handleSaveAsDraft = async () => {
@@ -625,8 +433,9 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     if (Object.keys(errors).length > 0) return;
     const draftExpiresAt = new Date();
     draftExpiresAt.setDate(draftExpiresAt.getDate() + 30);
+    const uploadedFilenames = await uploadAndGetFilenames();
     const ticketData = {
-      ...buildTicketData(IncidentStatus.DRAFT, await uploadAndGetFilenames()),
+      ...buildTicketData(IncidentStatus.DRAFT, uploadedFilenames),
       draftExpiresAt: draftExpiresAt.toISOString(),
     } as unknown as IAdminTicket;
     try {
@@ -646,47 +455,10 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
   const handleSearchForSolution = async () => {
     const errors = await triggerValidation();
     if (Object.keys(errors).length > 0) return;
-    const ticketData = buildTicketData(undefined, await uploadAndGetFilenames());
-    navigate(BasePath.SUGGESTED_SOLUTION, { state: { ticketData } });
+    const uploadedFilenames = await uploadAndGetFilenames();
+    const ticketData = buildTicketData(undefined, uploadedFilenames);
+    navigate(BasePath.SUGGESTED_SOLUTION, { state: { incidentData: ticketData } });
   };
-
-  // ── Derived: option sets + custom field map ────────────────────────────
-  const optionSets = useMemo<OptionSets>(
-    () => ({
-      callerOptions,
-      impactOptions,
-      urgencyOptions,
-      priorityOptions,
-      statusOptions,
-      channelOptions,
-      businessCategoryOptions,
-      serviceLineOptions,
-      applicationOptions,
-      applicationCategoryOptions,
-      applicationSubCategoryOptions,
-    }),
-    [
-      callerOptions,
-      impactOptions,
-      urgencyOptions,
-      priorityOptions,
-      statusOptions,
-      channelOptions,
-      businessCategoryOptions,
-      serviceLineOptions,
-      applicationOptions,
-      applicationCategoryOptions,
-      applicationSubCategoryOptions,
-    ],
-  );
-
-  const customFieldMap = useMemo(() => {
-    const map = new Map<string, ICustomField>();
-    for (const cf of filteredCustomFields) {
-      map.set(cf.fieldKey, cf);
-    }
-    return map;
-  }, [filteredCustomFields]);
 
   return {
     formik,
@@ -718,13 +490,10 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
     handleCreateTicket,
     handleSaveAsDraft,
     handleSearchForSolution,
-    customFields: filteredCustomFields,
-    layoutConfig: filteredLayoutConfig,
+    customFields: allCustomFields,
+    layoutConfig,
     getCfValue,
     setCfValue,
-    optionSets,
-    customFieldMap,
-    resolveField,
   };
 };
 
