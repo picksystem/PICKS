@@ -23,6 +23,14 @@ const CreateTicketForm = () => {
   const handleBack = () => navigate(BasePath.CREATE_TICKET);
   const handleSuccess = () => navigate(BasePath.INCIDENT_MANAGEMENT);
 
+  if (isLoading) {
+    return (
+      <Box className={classes.container} sx={{ p: 3 }}>
+        <Loader />
+      </Box>
+    );
+  }
+
   if (!typeKey || !record) {
     return (
       <Box className={classes.container} sx={{ p: 3 }}>
@@ -36,16 +44,6 @@ const CreateTicketForm = () => {
     );
   }
 
-  if (isLoading) {
-    return (
-      <Box className={classes.container} sx={{ p: 3 }}>
-        <Loader />
-      </Box>
-    );
-  }
-
-  // Any active ticket type configured in Configuration → Ticket Types renders
-  // the unified generic form
   if (record) {
     return (
       <Box className={classes.container}>
