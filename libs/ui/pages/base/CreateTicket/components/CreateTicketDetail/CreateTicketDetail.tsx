@@ -1,13 +1,11 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 import {
   Typography,
-  Chip,
   Accordion as MuiAccordion,
   AccordionSummary as MuiAccordionSummary,
   AccordionDetails as MuiAccordionDetails,
   Tooltip,
   IconButton,
-  Divider,
   Paper,
   MenuList,
   MenuItem,
@@ -15,6 +13,8 @@ import {
   Alert,
   AlertTitle,
   InputAdornment,
+  alpha,
+  darken,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
@@ -25,68 +25,23 @@ import SaveIcon from '@mui/icons-material/Save';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import ErrorIcon from '@mui/icons-material/Error';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
-import FormatBoldIcon from '@mui/icons-material/FormatBold';
-import FormatItalicIcon from '@mui/icons-material/FormatItalic';
-import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined';
-import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
-import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
-import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import CategoryIcon from '@mui/icons-material/Category';
-import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
-import FlagIcon from '@mui/icons-material/Flag';
-import HistoryIcon from '@mui/icons-material/History';
-import { Box, TextField, Checkbox, Button, UploadFile } from '@serviceops/component';
+import { CloudUploadOutlined, DeleteOutline } from '@mui/icons-material';
+import { Box, TextField, Checkbox, Button } from '@serviceops/component';
 import { useStyles } from './styles';
 import useCreateTicketDetail, { CreateTicketDetailProps } from './hooks/useCreateTicketDetail';
 import CustomFieldRenderer from './CustomFieldRenderer';
 import { activateDropdown, deactivateDropdown } from './dropdownRegistry';
 import { useFieldError } from '@serviceops/hooks';
+import { RichTextEditor } from '@serviceops/pages/base/Configuration/shared/RichTextEditor';
 
 // ── Section metadata ──────────────────────────────────────────────────────────
 const SECTION_META = [
-  {
-    icon: PersonOutlineIcon,
-    label: 'Ticket Information',
-    color: '#1976d2',
-    gradient: 'linear-gradient(135deg,#1565c0,#1976d2)',
-    glow: 'rgba(25,118,210,0.22)',
-  },
-  {
-    icon: CategoryIcon,
-    label: 'Categorization',
-    color: '#7b1fa2',
-    gradient: 'linear-gradient(135deg,#6a1b9a,#8e24aa)',
-    glow: 'rgba(123,31,162,0.22)',
-  },
-  {
-    icon: DescriptionOutlinedIcon,
-    label: 'Description',
-    color: '#0e7490',
-    gradient: 'linear-gradient(135deg,#0e7490,#06b6d4)',
-    glow: 'rgba(14,116,144,0.22)',
-  },
-  {
-    icon: FlagIcon,
-    label: 'Priority, Status and Assignment',
-    color: '#ed6c02',
-    gradient: 'linear-gradient(135deg,#e65100,#fb8c00)',
-    glow: 'rgba(237,108,2,0.22)',
-  },
-  {
-    icon: HistoryIcon,
-    label: 'Audit Information',
-    color: '#546e7a',
-    gradient: 'linear-gradient(135deg,#37474f,#546e7a)',
-    glow: 'rgba(84,110,122,0.22)',
-  },
-  {
-    icon: AttachFileIcon,
-    label: 'Attachments',
-    color: '#00838f',
-    gradient: 'linear-gradient(135deg,#006064,#00838f)',
-    glow: 'rgba(0,131,143,0.22)',
-  },
+  { label: 'Ticket Information' },
+  { label: 'Categorization' },
+  { label: 'Description' },
+  { label: 'Priority, Status and Assignment' },
+  { label: 'Audit Information' },
+  { label: 'Attachments' },
 ];
 
 // ── Shared Searchable Field ──────────────────────────────────────
@@ -259,23 +214,11 @@ const SearchableField = ({
   );
 };
 
-const toolbarBtnSx = {
-  width: 30,
-  height: 30,
-  borderRadius: 1,
-  color: 'text.secondary',
-  '&:hover': { backgroundColor: 'action.hover', color: 'primary.main' },
-  '& svg': { fontSize: '1.1rem' },
-};
-
 const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDetailProps) => {
   const { classes } = useStyles();
   const reqError = useFieldError();
-  const editorRef = useRef<HTMLDivElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
   const attachInputRef = useRef<HTMLInputElement>(null);
   const errorAlertRef = useRef<HTMLDivElement>(null);
-  const isFocused = useRef(false);
 
   const {
     formik,
@@ -333,23 +276,44 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
       .sort((a: any, b: any) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
   };
 
-  // ── Rich-text editor init ─────────────────────────────────────────────────
-  useEffect(() => {
-    if (editorRef.current) {
-      editorRef.current.innerHTML = formik.values.description || '';
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // ── Rich-text editor helpers ───────────────────────────────────────────────
+  const htmlToSegments = (html: string): { text: string }[] => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const text = tmp.textContent?.trim() ?? '';
+    if (!text) return [];
+    return text
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .map((line) => ({ text: line }));
+  };
 
-  useEffect(() => {
-    if (!isFocused.current && editorRef.current) {
-      const current = editorRef.current.innerHTML;
-      if (current !== formik.values.description) {
-        editorRef.current.innerHTML = formik.values.description || '';
-      }
-    }
-  }, [formik.values.description]);
+  const segmentsToFormik = (segments: { text: string }[]): string => {
+    if (segments.length === 0) return '';
+    const div = document.createElement('div');
+    segments.forEach((s) => {
+      const p = document.createElement('p');
+      p.textContent = s.text;
+      div.appendChild(p);
+    });
+    return div.innerHTML;
+  };
 
+  const [descriptionRichTextValue, setDescriptionRichTextValue] = useState<{
+    segments: { text: string }[];
+  }>({ segments: htmlToSegments(formik.values.description || '') });
+
+  const handleRichTextChange = useCallback(
+    (value: { segments: { text: string }[] }) => {
+      setDescriptionRichTextValue(value);
+      const html = segmentsToFormik(value.segments);
+      formik.setFieldValue('description', html);
+    },
+    [formik],
+  );
+
+  // ── Validation ─────────────────────────────────────────────────────────────
   const showValidationErrors = validationFailed && Object.keys(formik.errors).length > 0;
 
   useEffect(() => {
@@ -358,58 +322,11 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     }
   }, [showValidationErrors]);
 
-  const handleEditorInput = useCallback(() => {
-    if (editorRef.current) formik.setFieldValue('description', editorRef.current.innerHTML);
-  }, [formik]);
-
-  const applyFormat = useCallback(
-    (command: string) => {
-      editorRef.current?.focus();
-      document.execCommand(command, false);
-      if (editorRef.current) formik.setFieldValue('description', editorRef.current.innerHTML);
-    },
-    [formik],
-  );
-
-  const handleImageInsert = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const src = evt.target?.result as string;
-        editorRef.current?.focus();
-        document.execCommand(
-          'insertHTML',
-          false,
-          `<img src="${src}" style="max-width:100%;height:auto;border-radius:4px;margin:4px 0;" alt="image"/>`,
-        );
-        if (editorRef.current) formik.setFieldValue('description', editorRef.current.innerHTML);
-      };
-      reader.readAsDataURL(file);
-      e.target.value = '';
-    },
-    [formik],
-  );
-
   // ── Section wrapper ───────────────────────────────────────────────────────
   const wrap = (index: number, children: React.ReactNode, collapsible = false) => {
     const m = SECTION_META[index];
-    const Icon = m.icon;
 
-    const iconBadge = (
-      <Box
-        className={classes.sectionIconBadge}
-        sx={{ background: m.gradient, boxShadow: `0 4px 14px ${m.glow}` }}
-      >
-        <Icon sx={{ fontSize: 18, color: '#fff' }} />
-      </Box>
-    );
-    const title = (
-      <Typography className={classes.sectionCardTitle} sx={{ color: m.color }}>
-        {m.label}
-      </Typography>
-    );
+    const title = <Typography className={classes.sectionCardTitle}>{m.label}</Typography>;
 
     if (collapsible) {
       return (
@@ -445,7 +362,6 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
               },
             }}
           >
-            {iconBadge}
             {title}
           </MuiAccordionSummary>
           <MuiAccordionDetails sx={{ p: 0 }}>
@@ -456,11 +372,8 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
     }
 
     return (
-      <Box className={classes.sectionCard} sx={{ borderLeftColor: m.color }}>
-        <Box className={classes.sectionCardHeader}>
-          {iconBadge}
-          {title}
-        </Box>
+      <Box className={classes.sectionCard}>
+        <Box className={classes.sectionCardHeader}>{title}</Box>
         <Box className={classes.sectionCardBody}>{children}</Box>
       </Box>
     );
@@ -753,139 +666,15 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
 
             {/* Rich text editor */}
             <Box className={classes.fullWidth}>
-              <Box
-                sx={{
-                  border: descHasError ? '1px solid #d32f2f' : '1px solid rgba(0,0,0,0.23)',
-                  borderRadius: 2,
-                  overflow: 'hidden',
-                  '&:focus-within': {
-                    borderColor: descHasError ? '#d32f2f' : 'primary.main',
-                    borderWidth: '2px',
-                  },
-                }}
-              >
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.25,
-                    px: 1,
-                    py: 0.5,
-                    backgroundColor: 'grey.50',
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <Tooltip title='Bold'>
-                    <IconButton
-                      size='small'
-                      sx={toolbarBtnSx}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        applyFormat('bold');
-                      }}
-                    >
-                      <FormatBoldIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title='Italic'>
-                    <IconButton
-                      size='small'
-                      sx={toolbarBtnSx}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        applyFormat('italic');
-                      }}
-                    >
-                      <FormatItalicIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title='Underline'>
-                    <IconButton
-                      size='small'
-                      sx={toolbarBtnSx}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        applyFormat('underline');
-                      }}
-                    >
-                      <FormatUnderlinedIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />
-                  <Tooltip title='Bullet List'>
-                    <IconButton
-                      size='small'
-                      sx={toolbarBtnSx}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        applyFormat('insertUnorderedList');
-                      }}
-                    >
-                      <FormatListBulletedIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title='Numbered List'>
-                    <IconButton
-                      size='small'
-                      sx={toolbarBtnSx}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        applyFormat('insertOrderedList');
-                      }}
-                    >
-                      <FormatListNumberedIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />
-                  <Tooltip title='Insert Image'>
-                    <IconButton
-                      size='small'
-                      sx={toolbarBtnSx}
-                      onClick={() => imageInputRef.current?.click()}
-                    >
-                      <ImageOutlinedIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <input
-                    ref={imageInputRef}
-                    type='file'
-                    accept='image/*'
-                    hidden
-                    onChange={handleImageInsert}
-                  />
-                </Box>
-                <Box
-                  ref={editorRef}
-                  contentEditable
-                  suppressContentEditableWarning
-                  onInput={handleEditorInput}
-                  onFocus={() => {
-                    isFocused.current = true;
-                  }}
-                  onBlur={() => {
-                    isFocused.current = false;
-                  }}
-                  sx={{
-                    minHeight: 140,
-                    padding: '10px 14px',
-                    fontSize: '0.9rem',
-                    lineHeight: 1.6,
-                    outline: 'none',
-                    wordBreak: 'break-word',
-                    overflowWrap: 'break-word',
-                    color: 'text.primary',
-                    '&:empty::before': {
-                      content: '"Describe the issue in detail..."',
-                      color: 'text.disabled',
-                      pointerEvents: 'none',
-                    },
-                    '& ul, & ol': { paddingLeft: '1.5em', margin: '4px 0' },
-                    '& img': { maxWidth: '100%' },
-                  }}
-                />
-              </Box>
+              <RichTextEditor
+                value={descriptionRichTextValue}
+                onChange={handleRichTextChange}
+                title='Description'
+                placeholder='Describe the issue in detail...'
+                error={descHasError}
+                required
+                showFooterActions={false}
+              />
               {descHasError && (
                 <Box sx={{ color: 'error.main', fontSize: '0.75rem', mt: 0.5, ml: 1.75 }}>
                   {reqError(formik.touched.description, formik.errors.description as string)}
@@ -1078,7 +867,8 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
         {/* ── 6. Attachments ───────────────────────────────────────────── */}
         {wrap(
           5,
-          <>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            {/* Custom fields for Attachments section */}
             {getCustomFieldsForSection(5).length > 0 && (
               <Box className={classes.formGrid}>
                 {getCustomFieldsForSection(5).map((cf: any) => (
@@ -1091,29 +881,142 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                 ))}
               </Box>
             )}
-            <UploadFile
-              onChange={(files) =>
-                files && setAttachedFiles((prev) => [...prev, ...(Array.from(files) as File[])])
-              }
-              multiple
-              accept='.pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif'
-              buttonText='Upload Files'
-              helperText='Supported formats: PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, JPEG, GIF'
-              maxSize={10 * 1024 * 1024}
-            />
+
+            {/* Upload dropzone */}
+            <Box>
+              <Box
+                onClick={() =>
+                  document.querySelector<HTMLInputElement>('.create-ticket-upload-input')?.click()
+                }
+                sx={{
+                  border: '2px dashed #ccc',
+                  borderRadius: 1,
+                  p: '24px 16px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.2s',
+                  bgcolor: alpha('#0369a1', 0.02),
+                  '&:hover': {
+                    borderColor: '#0369a1',
+                    bgcolor: alpha('#0369a1', 0.04),
+                  },
+                }}
+              >
+                <input
+                  type='file'
+                  className='create-ticket-upload-input'
+                  multiple
+                  accept='.pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif'
+                  style={{ display: 'none' }}
+                  onChange={(e) =>
+                    e.target.files &&
+                    setAttachedFiles((prev) => [...prev, ...Array.from(e.target.files!)])
+                  }
+                />
+                <Box sx={{ mb: 0.75 }}>
+                  <CloudUploadOutlined sx={{ fontSize: 24, color: '#9ca3af' }} />
+                </Box>
+                <Button
+                  variant='contained'
+                  size='small'
+                  sx={{
+                    bgcolor: '#0369a1',
+                    '&:hover': { bgcolor: darken('#0369a1', 0.15) },
+                    textTransform: 'none',
+                    px: 3,
+                    py: 0.75,
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    borderRadius: 1.5,
+                  }}
+                >
+                  CHOOSE FILE
+                </Button>
+              </Box>
+            </Box>
+
+            {/* Attached files list */}
             {attachedFiles.length > 0 && (
-              <Box className={classes.attachedFilesList}>
-                <Typography variant='body2' className={classes.attachedFilesTitle}>
-                  Attached Files:
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151' }}>
+                  Attached Files ({attachedFiles.length})
                 </Typography>
-                {attachedFiles.map((file, index) => (
-                  <Typography key={index} variant='body2' color='textSecondary'>
-                    {file.name} ({(file.size / 1024).toFixed(2)} KB)
-                  </Typography>
-                ))}
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1 }}>
+                  {attachedFiles.map((file, index) => (
+                    <Box
+                      key={`${file.name}-${index}`}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        padding: '14px 16px',
+                        borderRadius: '10px',
+                        border: '1px solid rgba(226, 232, 255, 0.9)',
+                        background: '#ffffff',
+                        transition: 'all 0.15s ease',
+                        '&:hover': {
+                          background: '#f8faff',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                        },
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: '8px',
+                          background: '#eef2ff',
+                          border: '1px solid rgba(99,102,241,0.15)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <CloudUploadOutlined sx={{ fontSize: 20, color: '#6366f1' }} />
+                      </Box>
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Typography
+                          sx={{
+                            fontSize: '0.85rem',
+                            fontWeight: 600,
+                            color: '#1e293b',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                          title={file.name}
+                        >
+                          {file.name}
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.72rem', color: '#64748b' }}>
+                          {(file.size / 1024).toFixed(1)} KB
+                        </Typography>
+                      </Box>
+                      <Box
+                        onClick={() =>
+                          setAttachedFiles((prev) => prev.filter((_, i) => i !== index))
+                        }
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          p: 0.5,
+                          borderRadius: 1,
+                          color: '#dc2626',
+                          '&:hover': { bgcolor: 'rgba(220, 38, 38, 0.08)' },
+                          flexShrink: 0,
+                        }}
+                      >
+                        <DeleteOutline sx={{ fontSize: '1.1rem' }} />
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
               </Box>
             )}
-          </>,
+          </Box>,
           true,
         )}
 
