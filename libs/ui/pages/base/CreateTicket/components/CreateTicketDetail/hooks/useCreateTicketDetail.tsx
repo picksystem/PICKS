@@ -544,9 +544,11 @@ const useCreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicket
 
   const triggerValidation = async () => {
     // Collect all field keys that are actually visible in the admin-configured sections
+    // for the createTicket tab only (matches the render logic in CreateTicketDetail)
     const visibleKeys = new Set<string>();
     if (filteredLayoutConfig?.customSections) {
       for (const section of Object.values(filteredLayoutConfig.customSections)) {
+        if (section.tab !== 'createTicket') continue;
         for (const fk of section.fields) visibleKeys.add(fk);
         for (const sub of section.subSections ?? []) {
           for (const fk of sub.fields ?? []) visibleKeys.add(fk);
