@@ -24,6 +24,7 @@ import {
   Clear as ClearIcon,
   CloudUploadOutlined as CloudUploadIcon,
   DeleteOutline as DeleteOutlineIcon,
+  Check as CheckIcon,
 } from '@mui/icons-material';
 import { IConfigStatusLevel, IIncidentComment } from '@serviceops/interfaces';
 import { useStyles } from '../styles';
@@ -118,6 +119,7 @@ const BUTTON_STYLES = [
     bg: '#eef2ff',
     text: '#4338ca',
     mode: 'comment' as const,
+    tooltip: 'Visible to everyone (including affected user, client-side contact(s), assigned consultant(s), and all followers).',
   },
   {
     label: 'Add internal note',
@@ -125,6 +127,7 @@ const BUTTON_STYLES = [
     bg: '#fffbeb',
     text: '#92400e',
     mode: 'internal' as const,
+    tooltip: 'Visible to IT team only',
   },
   {
     label: 'Add self note',
@@ -132,6 +135,7 @@ const BUTTON_STYLES = [
     bg: '#ecfdf5',
     text: '#065f46',
     mode: 'self' as const,
+    tooltip: 'Visible to you only (note: it might be visible to others in screensharing)',
   },
 ];
 
@@ -170,7 +174,7 @@ const ActionButtonRow = ({
   onCommentTypeFilterChange: (value: string) => void;
   commentTypeOptions: { value: string; label: string }[];
 }) => {
-  const handleClick = (mode: 'comment' | 'internal' | 'self') => {
+  const handleClick = (mode: 'comment' | 'internal' | 'self', btn: (typeof BUTTON_STYLES)[0]) => {
     if (onOpenComment) onOpenComment(mode);
   };
 
@@ -202,14 +206,21 @@ const ActionButtonRow = ({
     <Box className={classes.actionButtonsRow} sx={{ alignItems: 'center' }}>
       {/* Left group — action buttons + search */}
       <Box sx={{ display: 'flex', gap: '6px', alignItems: 'center', flex: 1, flexWrap: 'wrap' }}>
-        {BUTTON_STYLES.map((btn) => (
-          <Box key={btn.label} onClick={() => handleClick(btn.mode)} sx={actionBtnSx(btn)}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 700, lineHeight: 1 }}>+</span>
+        {BUTTON_STYLES.map((btn) => {
+          const buttonEl = (
+            <Box key={btn.label} onClick={() => handleClick(btn.mode, btn)} sx={actionBtnSx(btn)}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, lineHeight: 1 }}>+</span>
+              </Box>
+              <span>{btn.label}</span>
             </Box>
-            <span>{btn.label}</span>
-          </Box>
-        ))}
+          );
+          return btn.tooltip ? (
+            <Tooltip key={btn.label} title={btn.tooltip}>{buttonEl}</Tooltip>
+          ) : (
+            buttonEl
+          );
+        })}
       </Box>
 
       {/* Right group — toggles & actions */}
@@ -229,20 +240,23 @@ const ActionButtonRow = ({
             checked: filterSaved,
             onToggle: onToggleFilterSaved,
             always: false,
+            tooltip: 'Filter saved comments only',
           },
           {
             label: 'Show activity log',
             checked: showActivity,
             onToggle: onToggleShowActivity,
             always: false,
+            tooltip: 'Show activity logs like status changes, Priority changes, time entries etc',
           },
           {
             label: 'Show system notes',
             checked: showSystem,
             onToggle: onToggleShowSystem,
             always: false,
+            tooltip: 'System notes like email sent, SLA breaches, and other updates by system user',
           },
-        ].map(({ label, checked, onToggle, always }) => (
+        ].map(({ label, checked, onToggle, always, tooltip }) => (
           <Box
             key={label}
             onClick={always ? undefined : onToggle}
@@ -255,35 +269,69 @@ const ActionButtonRow = ({
               height: 30,
             }}
           >
-            <Box
-              component='input'
-              type='checkbox'
-              checked={checked}
-              readOnly
-              tabIndex={-1}
-              sx={{
-                width: 16,
-                height: 16,
-                borderRadius: '3px',
-                border: checked ? 'none' : '1.5px solid #6366f1',
-                backgroundColor: checked ? '#6366f1' : 'transparent',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                transition: 'all 0.15s ease',
-                boxSizing: 'border-box',
-                appearance: 'none',
-                WebkitAppearance: 'none',
-                MozAppearance: 'none',
-                padding: 0,
-                margin: 0,
-                outline: 'none',
-                cursor: 'pointer',
-                position: 'relative',
-                accentColor: '#6366f1',
-              }}
-            />
+            {tooltip ? (
+              <Tooltip title={tooltip}>
+                <Box
+                  component='input'
+                  type='checkbox'
+                  checked={checked}
+                  readOnly
+                  tabIndex={-1}
+                  sx={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: '3px',
+                    border: checked ? 'none' : '1.5px solid #6366f1',
+                    backgroundColor: checked ? '#6366f1' : 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    transition: 'all 0.15s ease',
+                    boxSizing: 'border-box',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none',
+                    padding: 0,
+                    margin: 0,
+                    outline: 'none',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    accentColor: '#6366f1',
+                  }}
+                />
+              </Tooltip>
+            ) : (
+              <Box
+                component='input'
+                type='checkbox'
+                checked={checked}
+                readOnly
+                tabIndex={-1}
+                sx={{
+                  width: 16,
+                  height: 16,
+                  borderRadius: '3px',
+                  border: checked ? 'none' : '1.5px solid #6366f1',
+                  backgroundColor: checked ? '#6366f1' : 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  transition: 'all 0.15s ease',
+                  boxSizing: 'border-box',
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                  padding: 0,
+                  margin: 0,
+                  outline: 'none',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  accentColor: '#6366f1',
+                }}
+              />
+            )}
             <Typography
               sx={{
                 fontSize: '0.8rem',
@@ -327,20 +375,25 @@ const ActionButtonRow = ({
         </Box>
 
         {/* Comment type filter dropdown — matches search field styling */}
-        <CommentTypeFilterField
-          value={commentTypeFilter}
-          options={commentTypeOptions}
-          onChange={onCommentTypeFilterChange}
-          className={classes.searchField}
-        />
+        <Tooltip title='Use filter option to filter the updates as needed.'>
+          <Box>
+            <CommentTypeFilterField
+              value={commentTypeFilter}
+              options={commentTypeOptions}
+              onChange={onCommentTypeFilterChange}
+              className={classes.searchField}
+            />
+          </Box>
+        </Tooltip>
 
         {/* Search field */}
-        <TextField
-          placeholder='Search'
-          value={searchText}
-          onChange={(e) => onSearchChange(e.target.value)}
-          size='small'
-          className={classes.searchField}
+        <Tooltip title='Show activity logs like status changes, Priority changes, time entries etc'>
+          <TextField
+            placeholder='Find text'
+            value={searchText}
+            onChange={(e) => onSearchChange(e.target.value)}
+            size='small'
+            className={classes.searchField}
           slotProps={{
             input: {
               endAdornment: (
@@ -367,6 +420,7 @@ const ActionButtonRow = ({
             },
           }}
         />
+        </Tooltip>
       </Box>
     </Box>
   );
@@ -1282,14 +1336,6 @@ const commentActionIconSx = {
   },
 };
 
-const commentMessageSx = {
-  fontSize: '0.9rem',
-  color: '#374151',
-  lineHeight: 1.7,
-  whiteSpace: 'pre-wrap' as const,
-  wordBreak: 'break-word' as const,
-};
-
 /* ── Activity types & System Card ────────────────────────── */
 
 type ActivityType =
@@ -1809,6 +1855,8 @@ const UpdatesSection = ({
       { value: 'internal', label: 'Internal note' },
       { value: 'self_note', label: 'Self note' },
       { value: 'notify_assignees', label: 'Notify assignees' },
+      { value: 'activity', label: 'Activity log' },
+      { value: 'system', label: 'System notes' },
     ];
     return opts;
   }, []);

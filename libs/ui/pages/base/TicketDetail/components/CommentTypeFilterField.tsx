@@ -103,7 +103,7 @@ export const CommentTypeFilterField = ({
     <Box ref={anchorRef} sx={{ position: 'relative' }}>
       <TextField
         className={className}
-        placeholder='Filter by type...'
+        placeholder='Filter'
         value={inputValue}
         onChange={(e) => {
           setInputValue(e.target.value);
