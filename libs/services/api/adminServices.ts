@@ -11,6 +11,7 @@ import {
   IUpdateAdminControlsInput,
   IAdminControlsResponse,
   ICustomField,
+  IAdminKBArticle,
 } from '@serviceops/interfaces';
 import { baseApi } from './baseServices';
 
@@ -216,6 +217,17 @@ export const adminApi = baseApi.injectEndpoints({
         body: formData,
       }),
       transformResponse: (response: { data: string[] }) => response.data,
+    }),
+
+    // =============================================
+    // KNOWLEDGE BASE endpoints
+    // =============================================
+
+    /** Get all KB articles (used for global search) */
+    getKBArticles: builder.query<IAdminKBArticle[], void>({
+      query: () => '/api/admin/knowledge-base/articles',
+      transformResponse: (response: { data: IAdminKBArticle[] }) => response.data,
+      providesTags: ['KBArticle'],
     }),
 
     // =============================================
@@ -437,4 +449,6 @@ export const {
   useGetConfigurationQuery,
   useUpdateConfigurationMutation,
   useUpdateConfigurationSectionMutation,
+  // Knowledge Base hooks
+  useGetKBArticlesQuery,
 } = adminApi;

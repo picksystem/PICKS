@@ -45,9 +45,9 @@ const Header = () => {
     loadingMessage,
     ticketSearch,
     showSearchResults,
-    filteredIncidents,
+    searchResults,
     handleTicketSearchChange,
-    handleSelectIncident,
+    handleSelectSearchResult,
     handleCloseSearchResults,
     handleSettingsOpen,
     handleSettingsClose,
@@ -147,8 +147,8 @@ const Header = () => {
               onChange={handleTicketSearchChange}
               onClickAway={handleCloseSearchResults}
               showResults={showSearchResults}
-              incidents={filteredIncidents}
-              onSelectIncident={handleSelectIncident}
+              searchResults={searchResults}
+              onSelectResult={handleSelectSearchResult}
               className={classes.mobileSearchField}
               wrapperClassName={classes.ticketSearchWrapper}
               dropdownClassName={classes.searchDropdown}
@@ -165,8 +165,8 @@ const Header = () => {
               onChange={handleTicketSearchChange}
               onClickAway={handleCloseSearchResults}
               showResults={showSearchResults}
-              incidents={filteredIncidents}
-              onSelectIncident={handleSelectIncident}
+              searchResults={searchResults}
+              onSelectResult={handleSelectSearchResult}
               className={classes.textField}
               wrapperClassName={classes.ticketSearchWrapper}
               dropdownClassName={classes.searchDropdown}

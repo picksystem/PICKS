@@ -9,3 +9,4 @@ export * from './adminControls.interface';
 export * from './serviceRequest.interface';
 export * from './advisoryRequest.interface';
 export * from './configuration.interface';
+export * from './knowledgeBase.interface';

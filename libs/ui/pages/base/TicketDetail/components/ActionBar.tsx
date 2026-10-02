@@ -95,7 +95,7 @@ const ActionBar = ({
           <AssignmentIndIcon sx={{ ...iconSx, color: '#7c3aed' }} />
         </IconPill>
       ),
-      label: 'Assign',
+      label: 'Assign a ticket',
       onClick: onAssign,
     },
     {
@@ -104,7 +104,7 @@ const ActionBar = ({
           <CommentIcon sx={{ ...iconSx, color: '#0284c7' }} />
         </IconPill>
       ),
-      label: 'Comment',
+      label: 'Add a comment',
       onClick: onComment,
     },
     {

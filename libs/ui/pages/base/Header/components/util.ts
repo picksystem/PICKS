@@ -15,13 +15,24 @@ export interface LogoMarkProps {
   compact?: boolean;
 }
 
+export type SearchResult =
+  | {
+      type: 'ticket';
+      id: number;
+      number: string;
+      shortDescription: string | null;
+      status: string;
+      ticketType: string;
+    }
+  | { type: 'kb'; id: number; title: string; description: string; category?: string | null };
+
 export interface SearchBarProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onClickAway: () => void;
   showResults: boolean;
-  incidents: any[];
-  onSelectIncident: (incident: any) => void;
+  searchResults: SearchResult[];
+  onSelectResult: (result: SearchResult) => void;
   className?: string;
   wrapperClassName?: string;
   dropdownClassName?: string;

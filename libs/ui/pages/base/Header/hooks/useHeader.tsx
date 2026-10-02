@@ -2,7 +2,11 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { constants } from '@serviceops/utils';
 import { useAuth, useDebounce } from '@serviceops/hooks';
-import { useAuthActionMutation, useGetTicketsQuery } from '@serviceops/services';
+import {
+  useAuthActionMutation,
+  useGetTicketsQuery,
+  useGetKBArticlesQuery,
+} from '@serviceops/services';
 import { IAuthUser } from '@serviceops/interfaces';
 
 type TicketType = 'incident' | 'service_request' | 'advisory_request';
@@ -14,6 +18,24 @@ type Ticket = {
   status: string;
   ticketType: TicketType;
 };
+
+type KBArticle = {
+  id: number;
+  title: string;
+  description: string;
+  category?: string | null;
+};
+
+type SearchResult =
+  | {
+      type: 'ticket';
+      id: number;
+      number: string;
+      shortDescription: string | null;
+      status: string;
+      ticketType: string;
+    }
+  | { type: 'kb'; id: number; title: string; description: string; category?: string | null };
 
 const TICKET_TYPE_PATH_SEGMENT: Record<TicketType, string> = {
   incident: 'incident',
@@ -68,14 +90,60 @@ export const useHeader = () => {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const debouncedSearch = useDebounce(ticketSearch, 300);
   const { data: tickets } = useGetTicketsQuery(void 0);
+  const { data: kbArticles } = useGetKBArticlesQuery(void 0);
 
-  const filteredIncidents = useMemo(() => {
-    if (!debouncedSearch || debouncedSearch.length < 2 || !tickets) return [];
-    const query = debouncedSearch.toLowerCase();
-    return (tickets as Ticket[])
-      .filter((ticket) => ticket.number.toLowerCase().includes(query))
-      .slice(0, 8);
-  }, [debouncedSearch, tickets]);
+  const normalizeText = (text: string | null | undefined): string =>
+    (text ?? '')
+      .replace(/[^\w\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+  const searchResults = useMemo<SearchResult[]>(() => {
+    if (!debouncedSearch || debouncedSearch.length < 2) return [];
+    const query = normalizeText(debouncedSearch);
+    const words = query.split(' ').filter(Boolean);
+    if (words.length === 0) return [];
+
+    const results: SearchResult[] = [];
+
+    // Search tickets by number, title, and description
+    if (tickets?.length) {
+      (tickets as Ticket[]).forEach((t) => {
+        const normNumber = normalizeText(t.number);
+        const normTitle = normalizeText(t.shortDescription);
+        if (words.every((w) => normNumber.includes(w) || normTitle.includes(w))) {
+          results.push({
+            type: 'ticket',
+            id: t.id,
+            number: t.number,
+            shortDescription: t.shortDescription,
+            status: t.status,
+            ticketType: t.ticketType,
+          });
+        }
+      });
+    }
+
+    // Search KB articles by title and description
+    if (kbArticles?.length) {
+      (kbArticles as KBArticle[]).forEach((a) => {
+        const normTitle = normalizeText(a.title);
+        const normDesc = normalizeText(a.description);
+        if (words.every((w) => normTitle.includes(w) || normDesc.includes(w))) {
+          results.push({
+            type: 'kb',
+            id: a.id,
+            title: a.title,
+            description: a.description,
+            category: a.category,
+          });
+        }
+      });
+    }
+
+    return results.slice(0, 8);
+  }, [debouncedSearch, tickets, kbArticles]);
 
   useEffect(() => {
     fetchPendingRequests();
@@ -97,18 +165,22 @@ export const useHeader = () => {
     setShowSearchResults(true);
   }, []);
 
-  const handleSelectIncident = useCallback(
-    (incident: Ticket) => {
+  const handleSelectSearchResult = useCallback(
+    (result: SearchResult) => {
       setShowSearchResults(false);
       setTicketSearch('');
-      const segment = TICKET_TYPE_PATH_SEGMENT[incident.ticketType];
-      // Navigate to ticket detail in the current mode
-      const detailPath = currentPath.startsWith('/app/user')
-        ? `/app/user/${segment}/${incident.number}`
-        : currentPath.startsWith('/app/consultant')
-          ? `/app/consultant/${segment}/${incident.number}`
-          : `/app/base/${segment}/${incident.number}`;
-      navigate(detailPath);
+      if (result.type === 'ticket') {
+        const t = result as { type: 'ticket'; number: string; ticketType: string };
+        const segment = TICKET_TYPE_PATH_SEGMENT[t.ticketType as TicketType];
+        const detailPath = currentPath.startsWith('/app/user')
+          ? `/app/user/${segment}/${t.number}`
+          : currentPath.startsWith('/app/consultant')
+            ? `/app/consultant/${segment}/${t.number}`
+            : `/app/base/${segment}/${t.number}`;
+        navigate(detailPath);
+      } else if (result.type === 'kb') {
+        navigate('/app/base/knowledge-base');
+      }
     },
     [currentPath, navigate],
   );
@@ -199,11 +271,11 @@ export const useHeader = () => {
     loadingMessage,
     ticketSearch,
     showSearchResults,
-    filteredIncidents,
+    searchResults,
     activeDashboardPath,
     // Handlers
     handleTicketSearchChange,
-    handleSelectIncident,
+    handleSelectSearchResult,
     handleCloseSearchResults,
     handleSettingsOpen,
     handleSettingsClose,

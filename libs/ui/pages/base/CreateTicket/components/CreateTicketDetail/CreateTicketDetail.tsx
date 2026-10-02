@@ -829,7 +829,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                 formik.touched.primaryResource,
                 formik.errors.primaryResource as string,
               )}
-              label='Primary Resource'
+              label='Assigned to'
             />
             <SearchableField
               value={formik.values.secondaryResources}

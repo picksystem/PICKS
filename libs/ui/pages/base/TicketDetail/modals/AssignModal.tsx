@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Box, Modal, Button, TextField, Typography } from '../../../../components';
 import { Person as PersonIcon } from '@mui/icons-material';
 import { alpha, darken } from '@mui/material';
-import { useNotification } from '@serviceops/hooks';
+import { useFieldError } from '@serviceops/hooks';
 import { TicketEntity, UpdateTicketFn } from '../types/ticketDetail.types';
 import { ApplicationSearchField } from '../../Configuration/shared/GenericPanel/components/ApplicationSearchField';
 import { QueueSearchField } from '../../Configuration/shared/GenericPanel/components/QueueSearchField';
@@ -23,11 +23,15 @@ const AssignModal = ({ open, onClose, incident, onUpdateTicket, onSuccess }: Ass
   const [assignmentGroup, setAssignmentGroup] = useState(incident.assignmentGroup || '');
   const [primaryResource, setPrimaryResource] = useState(incident.primaryResource || '');
   const [secondaryResources, setSecondaryResources] = useState(incident.secondaryResources || '');
-  const notify = useNotification();
+  const reqError = useFieldError();
+  const [touchedPrimaryResource, setTouchedPrimaryResource] = useState(false);
+  const [primaryResourceError, setPrimaryResourceError] = useState<string>();
 
   const handleSubmit = async () => {
-    if (!primaryResource.trim()) {
-      notify.error('Primary resource is required');
+    const trimmed = primaryResource.trim();
+    if (!trimmed) {
+      setTouchedPrimaryResource(true);
+      setPrimaryResourceError('required');
       return;
     }
     setIsLoading(true);
@@ -37,14 +41,14 @@ const AssignModal = ({ open, onClose, incident, onUpdateTicket, onSuccess }: Ass
         data: {
           application: application || undefined,
           assignmentGroup: assignmentGroup || undefined,
-          primaryResource,
+          primaryResource: trimmed,
           secondaryResources: secondaryResources || undefined,
           status: 'assigned',
         },
       }).unwrap();
       onSuccess();
     } catch {
-      notify.error('Failed to assign ticket');
+      // API error — handled by onUpdateTicket's toast/notification
     } finally {
       setIsLoading(false);
     }
@@ -138,12 +142,19 @@ const AssignModal = ({ open, onClose, incident, onUpdateTicket, onSuccess }: Ass
         />
 
         <TextField
-          label='Primary Resource'
+          label='Assigned to'
           value={primaryResource}
           onChange={(e) => setPrimaryResource(e.target.value)}
+          onBlur={(e) => {
+            setTouchedPrimaryResource(true);
+            if (!e.target.value.trim()) setPrimaryResourceError('required');
+            else setPrimaryResourceError(undefined);
+          }}
           size='small'
           fullWidth
           required
+          error={touchedPrimaryResource && Boolean(primaryResourceError)}
+          errorText={reqError(touchedPrimaryResource, primaryResourceError)}
           sx={fieldBaseSx}
         />
 
