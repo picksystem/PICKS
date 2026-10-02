@@ -9,7 +9,7 @@ import {
   Button,
 } from '../../../../components';
 import CommentWindow from '../windows/CommentWindow';
-import { Avatar, InputAdornment, alpha } from '@mui/material';
+import { Avatar, InputAdornment, alpha, Paper } from '@mui/material';
 import {
   Search as SearchIcon,
   Lock as LockIcon,
@@ -22,19 +22,27 @@ import {
   Bookmark as BookmarkIcon,
   KeyboardArrowDown as ArrowDownIcon,
   Clear as ClearIcon,
+  CloudUploadOutlined as CloudUploadIcon,
+  DeleteOutline as DeleteOutlineIcon,
 } from '@mui/icons-material';
 import { IConfigStatusLevel, IIncidentComment } from '@serviceops/interfaces';
 import { useStyles } from '../styles';
 import { TicketEntity } from '../types/ticketDetail.types';
 import { formatStatus } from '../utils/ticketDetail.utils';
 import { useConfiguration } from '@serviceops/confighooks';
-import { useUpdateTicketCommentMutation } from '@serviceops/services';
+import {
+  useUpdateTicketCommentMutation,
+  useCreateTicketCommentMutation,
+  useUploadTicketAttachmentsMutation,
+} from '@serviceops/services';
+import { useAuth, useNotification } from '@serviceops/hooks';
 import {
   parseRichText,
   RichTextEditor,
   serializeRichText,
 } from '../../Configuration/shared/RichTextEditor';
 import { CommentTypeFilterField } from './CommentTypeFilterField';
+import { createPortal } from 'react-dom';
 
 interface UpdatesSectionProps {
   comments: IIncidentComment[];
@@ -100,6 +108,8 @@ const emptyTextSx = {
 };
 
 /* ── Action button colors ────────────────────────────────── */
+
+const COMMENT_ACCENT = '#0369a1';
 
 const BUTTON_STYLES = [
   {
@@ -1312,11 +1322,38 @@ const UpdatesSection = ({
   activities,
 }: UpdatesSectionProps) => {
   const { classes } = useStyles();
+  const { user } = useAuth();
+  const notify = useNotification();
   const { statuses: configStatuses } = useConfiguration();
+  const [createComment, { isLoading }] = useCreateTicketCommentMutation();
+  const [uploadAttachments] = useUploadTicketAttachmentsMutation();
   const [modalMode, setModalMode] = useState<'comment' | 'internal' | 'self' | 'notify' | 'email'>(
     'comment',
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [inlineOpen, setInlineOpen] = useState(false);
+  const [inlineMode, setInlineMode] = useState<'comment' | 'internal' | 'self'>('comment');
+  const [inlineMessage, setInlineMessage] = useState('');
+  const [inlineStatus, setInlineStatus] = useState('');
+  const [inlineTemplate, setInlineTemplate] = useState('');
+  const [inlineIsInternal, setInlineIsInternal] = useState(false);
+  const [inlineIsSelfNote, setInlineIsSelfNote] = useState(false);
+  const [inlineNotifyAssignees, setInlineNotifyAssignees] = useState(false);
+  const [inlineFiles, setInlineFiles] = useState<File[]>([]);
+  const [inlineStatusOptionsOpen, setInlineStatusOptionsOpen] = useState(false);
+  const [inlineStatusFiltered, setInlineStatusFiltered] = useState<{ id: string; label: string }[]>(
+    [],
+  );
+  const [inlineSubmitting, setInlineSubmitting] = useState(false);
+  const [inlineStatusInput, setInlineStatusInput] = useState('');
+  const [inlineStatusValue, setInlineStatusValue] = useState('');
+  const [inlineStatusDropdownPos, setInlineStatusDropdownPos] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
+  const inlineStatusDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inlineStatusInputRef = useRef<HTMLInputElement>(null);
   const [searchText, setSearchText] = useState('');
   const [filterSaved, setFilterSaved] = useState(false);
   const [showActivity, setShowActivity] = useState(false);
@@ -1404,8 +1441,129 @@ const UpdatesSection = ({
   }, [comments, searchText]);
 
   const handleOpenComment = (mode: 'comment' | 'internal' | 'self') => {
+    setInlineMode(mode);
+    setInlineOpen(true);
+    setInlineMessage('');
+    setInlineStatus('');
+    setInlineStatusInput('');
+    setInlineTemplate('');
+    setInlineIsInternal(mode === 'internal');
+    setInlineIsSelfNote(mode === 'self');
+    setInlineNotifyAssignees(false);
+    setInlineFiles([]);
+    setInlineSubmitting(false);
     setModalMode(mode);
-    setIsModalOpen(true);
+    setIsModalOpen(false);
+  };
+
+  const handleInlineSave = async () => {
+    if (!inlineMessage.trim()) {
+      notify.error('Comment is required');
+      return;
+    }
+    setInlineSubmitting(true);
+    try {
+      const statusesFromConfig = configStatuses?.items
+        ? configStatuses.items
+            .filter((s) => s.isActive)
+            .map((s) => ({ id: String(s.id), label: s.displayName || s.name }))
+        : [];
+      const matchedStatus = statusesFromConfig.find((s) => s.label === inlineStatusInput);
+      const finalStatus = matchedStatus?.id || inlineStatusValue || incident.status || '';
+
+      const formData = new FormData();
+      inlineFiles.forEach((f) => formData.append('files', f));
+
+      await createComment({
+        ticketType: incident.ticketType,
+        ticketId: incident.id,
+        message: inlineMessage,
+        isInternal: inlineIsInternal,
+        isSelfNote: inlineIsSelfNote,
+        notifyAssigneesOnly: inlineNotifyAssignees,
+        isEmail: false,
+        status: finalStatus,
+        createdBy: user?.email || '',
+      }).unwrap();
+
+      if (inlineFiles.length > 0 && uploadAttachments) {
+        await uploadAttachments(formData).unwrap();
+      }
+
+      setInlineOpen(false);
+      setInlineMessage('');
+      setInlineStatusInput('');
+      setInlineStatusValue('');
+      setInlineTemplate('');
+      setInlineFiles([]);
+      setInlineNotifyAssignees(false);
+      onRefresh();
+      onRefreshComments();
+    } catch {
+      notify.error('Failed to add comment');
+    } finally {
+      setInlineSubmitting(false);
+    }
+  };
+
+  const handleInlineCancel = () => {
+    setInlineOpen(false);
+    setInlineMessage('');
+    setInlineStatusInput('');
+    setInlineStatusValue('');
+    setInlineTemplate('');
+    setInlineFiles([]);
+    setInlineNotifyAssignees(false);
+  };
+
+  const handleInlineStatusInputChange = (value: string) => {
+    setInlineStatusInput(value);
+    if (inlineStatusDebounceRef.current) clearTimeout(inlineStatusDebounceRef.current);
+    inlineStatusDebounceRef.current = setTimeout(() => {
+      const q = value.trim().toLowerCase();
+      const statusesFromConfig = configStatuses?.items
+        ? configStatuses.items
+            .filter((s) => s.isActive)
+            .map((s) => ({ id: String(s.id), label: s.displayName || s.name }))
+        : [];
+      const next = q
+        ? statusesFromConfig.filter((o) => o.label.toLowerCase().includes(q))
+        : statusesFromConfig;
+      setInlineStatusFiltered(next);
+      setInlineStatusOptionsOpen(next.length > 0);
+      if (next.length > 0 && inlineStatusInputRef.current) {
+        const rect = inlineStatusInputRef.current.getBoundingClientRect();
+        setInlineStatusDropdownPos({
+          top: rect.bottom,
+          left: rect.left,
+          width: rect.width,
+        });
+      }
+    }, 150);
+  };
+
+  const handleInlineStatusSelect = (opt: { id: string; label: string }) => {
+    setInlineStatusInput(opt.label);
+    setInlineStatusValue(opt.id);
+    setInlineStatusOptionsOpen(false);
+    setInlineStatusFiltered([]);
+    setInlineStatusDropdownPos(null);
+  };
+
+  const handleInlineStatusClear = () => {
+    setInlineStatusInput('');
+    setInlineStatusValue('');
+    setInlineStatusOptionsOpen(false);
+    setInlineStatusFiltered([]);
+    setInlineStatusDropdownPos(null);
+  };
+
+  const handleInlineFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { files } = e.target;
+    if (files && files.length > 0) {
+      setInlineFiles((prev) => [...prev, ...Array.from(files)]);
+    }
+    e.target.value = '';
   };
 
   const handleCommentSuccess = () => {
@@ -1440,6 +1598,417 @@ const UpdatesSection = ({
       />
 
       <FollowersList />
+
+      {/* ── Inline comment form ── */}
+      {inlineOpen && (
+        <Box
+          sx={{
+            mt: 2,
+            border: '1px solid #e2e8f0',
+            borderRadius: 2,
+            overflow: 'hidden',
+          }}
+        >
+          {/* Header */}
+          <Box
+            sx={{
+              px: 2.5,
+              py: 1.5,
+              borderBottom: '1px solid #e2e8f0',
+              bgcolor: '#fafbfd',
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: '0.88rem',
+                fontStyle: 'italic',
+                fontWeight: 500,
+                color: '#4338ca',
+              }}
+            >
+              Add a comment{' '}
+              {inlineMode === 'internal'
+                ? '(internal note)'
+                : inlineMode === 'self'
+                  ? '(self note)'
+                  : '(visible to affected user)'}
+            </Typography>
+          </Box>
+
+          {/* Status + Template — side by side, constrained width */}
+          <Box sx={{ px: 2.5, pt: 2, display: 'flex', gap: 2, maxWidth: 700, marginLeft: 'auto' }}>
+            <Box sx={{ flex: 1, position: 'relative' }}>
+              <TextField
+                label='Status'
+                placeholder='Search statuses...'
+                value={inlineStatusInput}
+                onChange={(e) => handleInlineStatusInputChange(e.target.value)}
+                inputRef={inlineStatusInputRef}
+                onFocus={() => {
+                  const q = inlineStatusInput.trim().toLowerCase();
+                  const statusesFromConfig = configStatuses?.items
+                    ? configStatuses.items
+                        .filter((s) => s.isActive)
+                        .map((s) => ({ id: String(s.id), label: s.displayName || s.name }))
+                    : [];
+                  const next = q
+                    ? statusesFromConfig.filter((o) => o.label.toLowerCase().includes(q))
+                    : statusesFromConfig;
+                  setInlineStatusFiltered(next);
+                  setInlineStatusOptionsOpen(next.length > 0);
+                  if (next.length > 0 && inlineStatusInputRef.current) {
+                    const rect = inlineStatusInputRef.current.getBoundingClientRect();
+                    setInlineStatusDropdownPos({
+                      top: rect.bottom,
+                      left: rect.left,
+                      width: rect.width,
+                    });
+                  }
+                }}
+                onBlur={() => setTimeout(() => setInlineStatusOptionsOpen(false), 200)}
+                size='small'
+                fullWidth
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                          {inlineStatusInput ? (
+                            <ClearIcon
+                              onClick={handleInlineStatusClear}
+                              sx={{ fontSize: 18, color: 'text.primary', cursor: 'pointer' }}
+                            />
+                          ) : (
+                            <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                          )}
+                        </Box>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+              {inlineStatusOptionsOpen &&
+                inlineStatusFiltered.length > 0 &&
+                inlineStatusDropdownPos &&
+                createPortal(
+                  <Paper
+                    elevation={4}
+                    sx={{
+                      position: 'fixed',
+                      top: inlineStatusDropdownPos.top,
+                      left: inlineStatusDropdownPos.left,
+                      width: inlineStatusDropdownPos.width,
+                      zIndex: 9999,
+                      maxHeight: 200,
+                      overflow: 'auto',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: 1,
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+                    }}
+                  >
+                    {inlineStatusFiltered.map((opt) => (
+                      <Box
+                        key={opt.id}
+                        onClick={() => handleInlineStatusSelect(opt)}
+                        sx={{
+                          px: 2,
+                          py: 1,
+                          cursor: 'pointer',
+                          fontSize: '0.84rem',
+                          borderBottom: '1px solid #f1f5f9',
+                          '&:last-child': { borderBottom: 'none' },
+                          '&:hover': { bgcolor: '#f1f5f9' },
+                        }}
+                      >
+                        {opt.label}
+                      </Box>
+                    ))}
+                  </Paper>,
+                  document.body,
+                )}
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <TextField
+                label='Response Template'
+                placeholder='Search templates...'
+                value={inlineTemplate}
+                onChange={(e) => setInlineTemplate(e.target.value)}
+                size='small'
+                fullWidth
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                          {inlineTemplate ? (
+                            <ClearIcon
+                              onClick={() => setInlineTemplate('')}
+                              sx={{ fontSize: 18, color: 'text.primary', cursor: 'pointer' }}
+                            />
+                          ) : (
+                            <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                          )}
+                        </Box>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Comment — RichTextEditor */}
+          <Box sx={{ px: 2.5, pt: 2 }}>
+            <RichTextEditor
+              value={{ segments: parseRichText(inlineMessage).segments }}
+              onChange={(value) => setInlineMessage(serializeRichText(value.segments))}
+              showFooterActions={false}
+              title='Comment'
+              required
+            />
+          </Box>
+
+          {/* Bottom controls row */}
+          <Box
+            sx={{
+              px: 2.5,
+              pt: 1.5,
+              pb: 1.5,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 3,
+              flexWrap: 'wrap',
+            }}
+          >
+            {/* Internal Note toggle */}
+            <Box
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
+              onClick={() => setInlineIsInternal(!inlineIsInternal)}
+            >
+              <Typography sx={{ fontSize: '0.82rem', color: '#374151', fontWeight: 500 }}>
+                Internal Note
+              </Typography>
+              <Box
+                sx={{
+                  width: 36,
+                  height: 20,
+                  borderRadius: 10,
+                  bgcolor: inlineIsInternal ? COMMENT_ACCENT : '#cbd5e1',
+                  position: 'relative',
+                  transition: 'background-color 0.2s',
+                  cursor: 'pointer',
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: '50%',
+                    bgcolor: '#fff',
+                    position: 'absolute',
+                    top: 2,
+                    left: inlineIsInternal ? 18 : 2,
+                    transition: 'left 0.2s',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                  }}
+                />
+              </Box>
+            </Box>
+
+            {/* Notify assignees toggle */}
+            <Box
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
+              onClick={() => setInlineNotifyAssignees(!inlineNotifyAssignees)}
+            >
+              <Typography sx={{ fontSize: '0.82rem', color: '#374151', fontWeight: 500 }}>
+                Notify ticket assignees only
+              </Typography>
+              <Box
+                sx={{
+                  width: 36,
+                  height: 20,
+                  borderRadius: 10,
+                  bgcolor: inlineNotifyAssignees ? COMMENT_ACCENT : '#cbd5e1',
+                  position: 'relative',
+                  transition: 'background-color 0.2s',
+                  cursor: 'pointer',
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: '50%',
+                    bgcolor: '#fff',
+                    position: 'absolute',
+                    top: 2,
+                    left: inlineNotifyAssignees ? 18 : 2,
+                    transition: 'left 0.2s',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                  }}
+                />
+              </Box>
+            </Box>
+
+            {/* Self-note toggle */}
+            <Box
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
+              onClick={() => setInlineIsSelfNote(!inlineIsSelfNote)}
+            >
+              <Typography sx={{ fontSize: '0.82rem', color: '#374151', fontWeight: 500 }}>
+                Self-note
+              </Typography>
+              <Box
+                sx={{
+                  width: 36,
+                  height: 20,
+                  borderRadius: 10,
+                  bgcolor: inlineIsSelfNote ? COMMENT_ACCENT : '#cbd5e1',
+                  position: 'relative',
+                  transition: 'background-color 0.2s',
+                  cursor: 'pointer',
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: '50%',
+                    bgcolor: '#fff',
+                    position: 'absolute',
+                    top: 2,
+                    left: inlineIsSelfNote ? 18 : 2,
+                    transition: 'left 0.2s',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                  }}
+                />
+              </Box>
+            </Box>
+
+            {/* Attach file */}
+            <Box
+              sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'pointer' }}
+              onClick={() =>
+                document.querySelector<HTMLInputElement>('.inline-comment-upload-input')?.click()
+              }
+            >
+              <Typography sx={{ fontSize: '0.82rem', color: '#374151', fontWeight: 500 }}>
+                Attach file
+              </Typography>
+              <CloudUploadIcon sx={{ fontSize: 18, color: '#64748b' }} />
+              <input
+                type='file'
+                className='inline-comment-upload-input'
+                style={{ display: 'none' }}
+                onChange={handleInlineFileChange}
+                multiple
+              />
+            </Box>
+
+            <Box sx={{ flex: 1 }} />
+
+            {/* Action buttons */}
+            <Button
+              variant='outlined'
+              onClick={handleInlineCancel}
+              size='small'
+              sx={{
+                textTransform: 'none',
+                px: 3,
+                py: 0.5,
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                borderRadius: 1.5,
+                borderColor: '#c7d2fe',
+                color: '#4338ca',
+                '&:hover': { borderColor: '#4338ca', bgcolor: '#f5f3ff' },
+              }}
+            >
+              CANCEL
+            </Button>
+            <Button
+              variant='contained'
+              onClick={handleInlineSave}
+              disabled={inlineSubmitting || !inlineMessage.trim()}
+              size='small'
+              sx={{
+                textTransform: 'none',
+                px: 3,
+                py: 0.5,
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                borderRadius: 1.5,
+                bgcolor: '#2563eb',
+                '&:hover': { bgcolor: '#1d4ed8' },
+                '&.Mui-disabled': { bgcolor: '#93c5fd' },
+              }}
+            >
+              {inlineSubmitting ? 'SAVING...' : 'SAVE'}
+            </Button>
+          </Box>
+
+          {/* Attached files preview */}
+          {inlineFiles.length > 0 && (
+            <Box sx={{ px: 2.5, pb: 2 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                {inlineFiles.map((file, index) => (
+                  <Box
+                    key={`${file.name}-${index}`}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 1,
+                      p: '8px 12px',
+                      borderRadius: 1.5,
+                      border: '1px solid #e5e7eb',
+                      bgcolor: alpha('#2d5ebb', 0.04),
+                    }}
+                  >
+                    <Box
+                      sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0, flex: 1 }}
+                    >
+                      <CloudUploadIcon sx={{ fontSize: '1.1rem', color: COMMENT_ACCENT }} />
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Typography
+                          sx={{
+                            fontSize: '0.8rem',
+                            fontWeight: 600,
+                            color: '#1e293b',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {file.name}
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.7rem', color: '#64748b' }}>
+                          {(file.size / 1024).toFixed(1)} KB
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Box
+                      onClick={() => setInlineFiles((prev) => prev.filter((_, i) => i !== index))}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        p: 0.5,
+                        borderRadius: 1,
+                        color: '#dc2626',
+                        '&:hover': { bgcolor: 'rgba(220, 38, 38, 0.08)' },
+                      }}
+                    >
+                      <DeleteOutlineIcon sx={{ fontSize: '1.1rem' }} />
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          )}
+        </Box>
+      )}
 
       <Box sx={dividerSx} />
 

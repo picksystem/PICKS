@@ -240,7 +240,7 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
             <Typography
               sx={{ fontSize: '1.1rem', fontWeight: 600, lineHeight: 1.3, color: '#fff' }}
             >
-              Add Time Entry
+              Time entry
             </Typography>
             <Typography
               sx={{
@@ -259,7 +259,7 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
     >
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-          {/* Status — search-style field */}
+          {/* Status — full width */}
           <Box sx={{ position: 'relative' }}>
             <TextField
               label='Ticket Status'
@@ -321,7 +321,59 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
             )}
           </Box>
 
-          {/* Time Entry Template */}
+          {/* Date + Duration — side by side */}
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ flex: 1 }}>
+              <DatePicker
+                label='Date'
+                value={date}
+                onChange={handleDateChange}
+                open={datePickerOpen}
+                onOpen={() => setDatePickerOpen(true)}
+                onClose={() => setDatePickerOpen(false)}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    sx: fieldBaseSx,
+                    fullWidth: true,
+                  },
+                }}
+              />
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <DurationPickerField
+                label='Duration'
+                required
+                value={duration}
+                onChange={setDuration}
+                sx={{ ...fieldBaseSx, width: '100%' }}
+              />
+            </Box>
+          </Box>
+
+          {/* Billing Code + Activity / Task — side by side */}
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ flex: 1 }}>
+              <ProjectSearchField
+                label='Billing code / Project'
+                value={billingCode}
+                onChange={setBillingCode}
+                sx={{ ...fieldBaseSx, width: '100%' }}
+              />
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <TextField
+                label='Activity / Task'
+                value={activityTask}
+                onChange={(e) => setActivityTask(e.target.value)}
+                size='small'
+                fullWidth
+                sx={fieldBaseSx}
+              />
+            </Box>
+          </Box>
+
+          {/* Time Entry Template — full width */}
           <TextField
             label='Time Entry Template'
             placeholder='Search templates...'
@@ -335,49 +387,6 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
                 endAdornment: searchAdornment(templateInput.length > 0, handleTemplateClear),
               },
             }}
-          />
-
-          {/* Date */}
-          <DatePicker
-            label='Date'
-            value={date}
-            onChange={handleDateChange}
-            open={datePickerOpen}
-            onOpen={() => setDatePickerOpen(true)}
-            onClose={() => setDatePickerOpen(false)}
-            slotProps={{
-              textField: {
-                size: 'small',
-                sx: fieldBaseSx,
-              },
-            }}
-          />
-
-          {/* Duration (HH:MM) */}
-          <DurationPickerField
-            label='Duration'
-            required
-            value={duration}
-            onChange={setDuration}
-            sx={fieldBaseSx}
-          />
-
-          {/* Billing Code */}
-          <ProjectSearchField
-            label='Billing Code'
-            value={billingCode}
-            onChange={setBillingCode}
-            sx={fieldBaseSx}
-          />
-
-          {/* Activity / Task */}
-          <TextField
-            label='Activity / Task'
-            value={activityTask}
-            onChange={(e) => setActivityTask(e.target.value)}
-            size='small'
-            fullWidth
-            sx={fieldBaseSx}
           />
 
           {/* External Comment — RichTextEditor */}

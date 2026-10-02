@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Box, Typography, Button, Modal } from '../../../../components';
+import { Box, Typography, Button, Modal, IconButton, Tooltip } from '../../../../components';
 import { alpha, darken } from '@mui/material';
 import {
   CloudUploadOutlined as CloudUploadOutlinedIcon,
   DeleteOutline as DeleteOutlineIcon,
+  DownloadOutlined as DownloadIcon,
 } from '@mui/icons-material';
 import { useNotification } from '@serviceops/hooks';
 import { useUploadTicketAttachmentsMutation } from '../../../../../services';
@@ -72,6 +73,28 @@ const AttachmentModal = ({
       setSelectedFiles((prev) => [...prev, ...Array.from(files)]);
     }
     event.target.value = '';
+  };
+
+  const handleDownload = async (filename: string) => {
+    const fileUrl = `http://localhost:3001/uploads/attachments/${encodeURIComponent(filename)}`;
+    try {
+      const res = await fetch(fileUrl);
+      if (!res.ok) {
+        notify.error(`File "${filename}" is not available on the server.`);
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      notify.error(`Failed to download "${filename}". Please try again.`);
+    }
   };
 
   const footer = (
@@ -153,19 +176,145 @@ const AttachmentModal = ({
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         {existingAttachments.length > 0 && (
           <Box>
-            <Typography variant='subtitle2' sx={{ mb: 1 }}>
+            <Typography variant='subtitle2' sx={{ mb: 1.5, fontWeight: 600, color: '#374151' }}>
               Existing Attachments
             </Typography>
-            {existingAttachments.map((att, idx) => (
-              <Typography key={idx} variant='body2' sx={{ py: 0.5 }}>
-                {att}
-              </Typography>
-            ))}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {existingAttachments.map((att, idx) => (
+                <Box
+                  key={idx}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    p: '12px 16px',
+                    borderRadius: '10px',
+                    border: '1px solid rgba(226, 232, 255, 0.9)',
+                    background: '#ffffff',
+                    transition: 'all 0.15s ease',
+                    '&:hover': {
+                      background: '#f8faff',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                    },
+                  }}
+                >
+                  {/* Cloud upload icon */}
+                  <Box
+                    sx={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: '8px',
+                      background: '#eef2ff',
+                      border: '1px solid rgba(99,102,241,0.15)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <CloudUploadOutlinedIcon sx={{ fontSize: 20, color: '#6366f1' }} />
+                  </Box>
+
+                  {/* Filename */}
+                  <Typography
+                    sx={{
+                      flex: 1,
+                      fontSize: '0.88rem',
+                      fontWeight: 700,
+                      color: '#1e293b',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                    title={att}
+                  >
+                    {att}
+                  </Typography>
+
+                  {/* Actions: download, delete, re-upload */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, flexShrink: 0 }}>
+                    <Tooltip title='Download' arrow placement='top'>
+                      <IconButton
+                        size='small'
+                        onClick={() => handleDownload(att)}
+                        sx={{
+                          width: 34,
+                          height: 34,
+                          color: '#6366f1',
+                          '&:hover': { background: '#eef2ff', borderRadius: '8px' },
+                        }}
+                      >
+                        <DownloadIcon sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title='Delete' arrow placement='top'>
+                      <IconButton
+                        size='small'
+                        onClick={async () => {
+                          try {
+                            const updated = existingAttachments.filter((_, i) => i !== idx);
+                            await onUpdateTicket({
+                              id: incident.id,
+                              data: { attachments: JSON.stringify(updated) },
+                            }).unwrap();
+                            onSuccess();
+                            notify.success('Attachment removed');
+                          } catch {
+                            notify.error('Failed to remove attachment');
+                          }
+                        }}
+                        sx={{
+                          width: 34,
+                          height: 34,
+                          color: '#dc2626',
+                          '&:hover': { background: '#fef2f2', borderRadius: '8px' },
+                        }}
+                      >
+                        <DeleteOutlineIcon sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title='Replace / Re-upload' arrow placement='top'>
+                      <IconButton
+                        size='small'
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.multiple = false;
+                          input.onchange = async (e: Event) => {
+                            const target = e.target as HTMLInputElement;
+                            if (target.files && target.files.length > 0) {
+                              const formData = new FormData();
+                              formData.append('files', target.files[0]);
+                              try {
+                                await uploadAttachments(formData).unwrap();
+                                onSuccess();
+                                notify.success('File uploaded successfully');
+                              } catch {
+                                notify.error('Failed to upload file');
+                              }
+                            }
+                          };
+                          input.click();
+                        }}
+                        sx={{
+                          width: 34,
+                          height: 34,
+                          color: '#059669',
+                          '&:hover': { background: '#ecfdf5', borderRadius: '8px' },
+                        }}
+                      >
+                        <CloudUploadOutlinedIcon sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
           </Box>
         )}
 
         <Box>
-          <Typography variant='subtitle2' sx={{ mb: 1 }}>
+          <Typography variant='subtitle2' sx={{ mb: 1.5, fontWeight: 600, color: '#374151' }}>
             Add New Attachments
           </Typography>
           <Box
