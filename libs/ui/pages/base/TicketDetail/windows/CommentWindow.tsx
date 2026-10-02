@@ -53,6 +53,7 @@ const CommentWindow = ({
   const [statusValue, setStatusValue] = useState('');
   const [statusOptionsOpen, setStatusOptionsOpen] = useState(false);
   const [statusFiltered, setStatusFiltered] = useState<{ id: string; label: string }[]>([]);
+  const [statusTouched, setStatusTouched] = useState(false);
   const statusDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const statusOptions = statuses?.items
@@ -108,6 +109,7 @@ const CommentWindow = ({
       setMessage('');
       setStatusInput('');
       setStatusValue('');
+      setStatusTouched(false);
       setTemplateInput('');
       setStatusOptionsOpen(false);
       setStatusFiltered([]);
@@ -123,11 +125,13 @@ const CommentWindow = ({
       if (mode === 'internal') {
         setIsInternal(true);
         setIsSelfNote(false);
+        setNotifyAssigneesOnly(false);
       } else if (mode === 'self') {
         setIsInternal(false);
         setIsSelfNote(true);
+        setNotifyAssigneesOnly(false);
       } else if (mode === 'notify') {
-        setIsInternal(false);
+        setIsInternal(true);
         setIsSelfNote(false);
         setNotifyAssigneesOnly(true);
       } else if (mode === 'email') {
@@ -137,9 +141,25 @@ const CommentWindow = ({
       } else {
         setIsInternal(false);
         setIsSelfNote(false);
+        setNotifyAssigneesOnly(false);
       }
     }
   }, [open, mode]);
+
+  // ── Mode-based toggle exclusivity ─────────────────────────────────────────
+  // isInternalDisabled: when in 'self' mode, internal note is not applicable
+  // isSelfNoteDisabled: when in 'internal' mode, self-note is not applicable
+  // notifyAssigneesDisabled: only works with internal note (excluded in 'self' and default 'comment' modes)
+  const isInternalDisabled = mode === 'self';
+  const isSelfNoteDisabled = mode === 'internal';
+  const notifyAssigneesDisabled = mode === 'self' || mode === 'comment';
+
+  // ── Reset conflicting toggle when internal is toggled ────────────────────
+  useEffect(() => {
+    if (!isInternal && notifyAssigneesOnly) {
+      setNotifyAssigneesOnly(false);
+    }
+  }, [isInternal, notifyAssigneesOnly]);
 
   // ── Search icon adornment ────────────────────────────────────────────────
   const searchAdornment = (hasValue: boolean, onClear: () => void) => (
@@ -161,6 +181,10 @@ const CommentWindow = ({
   const handleSave = async () => {
     if (!message.trim()) {
       notify.error('Message is required');
+      return;
+    }
+    if (!statusValue) {
+      setStatusTouched(true);
       return;
     }
     try {
@@ -187,25 +211,25 @@ const CommentWindow = ({
 
   const dialogTitle =
     mode === 'internal'
-      ? 'Internal Note'
+      ? 'Internal note'
       : mode === 'self'
-        ? 'Self Note'
+        ? 'Self-note'
         : mode === 'notify'
-          ? 'Notify Assignees Only'
+          ? 'Notify assignees only'
           : mode === 'email'
             ? 'Send Email'
             : 'Add a comment';
 
   const dialogSubtitle =
     mode === 'internal'
-      ? 'Add an internal note to this ticket'
+      ? 'Visible to IT team only'
       : mode === 'self'
-        ? 'Add a personal note to this ticket'
+        ? 'Visible to you only'
         : mode === 'notify'
-          ? 'Send a notification to ticket assignees only'
+          ? 'Email will trigger to Assigned to and Secondary resource(s) only'
           : mode === 'email'
             ? 'Send an email note for this ticket'
-            : 'Add a comment to this ticket';
+            : 'Visible to everyone (including affected user, client-side contact(s), assigned consultant(s), and all followers)';
 
   const footer = (
     <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
@@ -308,6 +332,8 @@ const CommentWindow = ({
               placeholder='Search statuses...'
               value={statusInput}
               onChange={(e) => handleStatusInputChange(e.target.value)}
+              error={statusTouched && !statusValue}
+              helperText={statusTouched && !statusValue ? 'Status is required' : ' '}
               onFocus={() => {
                 const q = statusInput.trim().toLowerCase();
                 const next = q
@@ -316,7 +342,10 @@ const CommentWindow = ({
                 setStatusFiltered(next);
                 if (next.length > 0) setStatusOptionsOpen(true);
               }}
-              onBlur={() => setTimeout(() => setStatusOptionsOpen(false), 200)}
+              onBlur={() => {
+                setStatusTouched(true);
+                setTimeout(() => setStatusOptionsOpen(false), 200);
+              }}
               fullWidth
               size='small'
               sx={fieldBaseSx}
@@ -371,14 +400,14 @@ const CommentWindow = ({
             showFooterActions={false}
             title={
               mode === 'internal'
-                ? 'Internal Comment'
+                ? 'Internal note'
                 : mode === 'self'
-                  ? 'Self Comment'
+                  ? 'Self-note'
                   : mode === 'notify'
-                    ? 'Notify Assignees Comment'
+                    ? 'Notify assignees only'
                     : mode === 'email'
                       ? 'Email Comment'
-                      : 'Comment'
+                      : 'Add a comment (visible to affected user)'
             }
             required
           />
@@ -448,6 +477,7 @@ const CommentWindow = ({
               size='small'
               color='primary'
               checked={isInternal}
+              disabled={isInternalDisabled}
               onChange={(e) => setIsInternal(e.target.checked)}
             />
           </Box>
@@ -466,6 +496,7 @@ const CommentWindow = ({
               size='small'
               color='primary'
               checked={isSelfNote}
+              disabled={isSelfNoteDisabled}
               onChange={(e) => setIsSelfNote(e.target.checked)}
             />
           </Box>
@@ -478,12 +509,13 @@ const CommentWindow = ({
             }}
           >
             <Typography sx={{ fontSize: '0.85rem', color: '#374151' }}>
-              Notify ticket assignees only
+              Notify assignees only
             </Typography>
             <Switch
               size='small'
               color='primary'
               checked={notifyAssigneesOnly}
+              disabled={notifyAssigneesDisabled}
               onChange={(e) => setNotifyAssigneesOnly(e.target.checked)}
             />
           </Box>

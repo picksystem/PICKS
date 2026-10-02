@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -36,7 +36,7 @@ import {
   useCreateTicketCommentMutation,
   useUploadTicketAttachmentsMutation,
 } from '@serviceops/services';
-import { useAuth, useNotification } from '@serviceops/hooks';
+import { useAuth, useNotification, useFieldError } from '@serviceops/hooks';
 import {
   parseRichText,
   RichTextEditor,
@@ -119,7 +119,8 @@ const BUTTON_STYLES = [
     bg: '#eef2ff',
     text: '#4338ca',
     mode: 'comment' as const,
-    tooltip: 'Visible to everyone (including affected user, client-side contact(s), assigned consultant(s), and all followers).',
+    tooltip:
+      'Visible to everyone (including affected user, client-side contact(s), assigned consultant(s), and all followers).',
   },
   {
     label: 'Add internal note',
@@ -216,7 +217,9 @@ const ActionButtonRow = ({
             </Box>
           );
           return btn.tooltip ? (
-            <Tooltip key={btn.label} title={btn.tooltip}>{buttonEl}</Tooltip>
+            <Tooltip key={btn.label} title={btn.tooltip}>
+              {buttonEl}
+            </Tooltip>
           ) : (
             buttonEl
           );
@@ -394,32 +397,32 @@ const ActionButtonRow = ({
             onChange={(e) => onSearchChange(e.target.value)}
             size='small'
             className={classes.searchField}
-          slotProps={{
-            input: {
-              endAdornment: (
-                <InputAdornment position='end'>
-                  <Box
-                    component='span'
-                    onClick={searchText ? onSearchChange.bind(null, '') : undefined}
-                    sx={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: searchText ? 'pointer' : 'default',
-                      lineHeight: 1,
-                    }}
-                  >
-                    {searchText ? (
-                      <ClearIcon sx={{ fontSize: 18, color: '#475569' }} />
-                    ) : (
-                      <SearchIcon sx={{ fontSize: 18, color: '#94a3b8' }} />
-                    )}
-                  </Box>
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position='end'>
+                    <Box
+                      component='span'
+                      onClick={searchText ? onSearchChange.bind(null, '') : undefined}
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: searchText ? 'pointer' : 'default',
+                        lineHeight: 1,
+                      }}
+                    >
+                      {searchText ? (
+                        <ClearIcon sx={{ fontSize: 18, color: '#475569' }} />
+                      ) : (
+                        <SearchIcon sx={{ fontSize: 18, color: '#94a3b8' }} />
+                      )}
+                    </Box>
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
         </Tooltip>
       </Box>
     </Box>
@@ -691,22 +694,6 @@ const CommentCard = ({
     }
   };
 
-  const handleCancel = () => {
-    clearTimer();
-    setCountdown(computeRemaining());
-    setEditing(false);
-    setEditValue(displayMessage);
-    setEditStatus(comment.status || '');
-    setEditStatusInput(comment.status || '');
-    setEditStatusValue(comment.status || '');
-    setEditTemplate('');
-    setEditIsInternal(comment.isInternal || false);
-    setEditIsSelfNote(comment.isSelfNote || false);
-    setEditNotifyAssignees(comment.notifyAssigneesOnly || false);
-    setEditFiles([]);
-    setHasChanges(false);
-  };
-
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(displayMessage);
@@ -926,6 +913,7 @@ const CommentCard = ({
                     value={editStatusInput}
                     onChange={(e) => handleEditStatusInputChange(e.target.value)}
                     inputRef={editStatusInputRef}
+                    required
                     onFocus={() => {
                       const q = editStatusInput.trim().toLowerCase();
                       const statusesFromConfig = configStatusesItems
@@ -1069,7 +1057,14 @@ const CommentCard = ({
             >
               <Box
                 sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
-                onClick={() => setEditIsInternal(!editIsInternal)}
+                onClick={() => {
+                  if (!editIsInternal) {
+                    // Turning ON — reset conflicting toggles
+                    setEditIsSelfNote(false);
+                    setEditNotifyAssignees(false);
+                  }
+                  setEditIsInternal(!editIsInternal);
+                }}
               >
                 <Typography sx={{ fontSize: '0.82rem', color: '#374151', fontWeight: 500 }}>
                   Internal Note
@@ -1102,11 +1097,24 @@ const CommentCard = ({
               </Box>
 
               <Box
-                sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
-                onClick={() => setEditNotifyAssignees(!editNotifyAssignees)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  cursor: editIsSelfNote ? 'not-allowed' : 'pointer',
+                  opacity: editIsSelfNote ? 0.5 : 1,
+                }}
+                onClick={() => {
+                  if (editIsSelfNote) return;
+                  if (!editIsInternal) {
+                    setEditIsInternal(true);
+                    setEditNotifyAssignees(false);
+                  }
+                  setEditIsSelfNote(!editIsSelfNote);
+                }}
               >
                 <Typography sx={{ fontSize: '0.82rem', color: '#374151', fontWeight: 500 }}>
-                  Notify ticket assignees only
+                  Notify assignees only
                 </Typography>
                 <Box
                   sx={{
@@ -1116,7 +1124,7 @@ const CommentCard = ({
                     bgcolor: editNotifyAssignees ? COMMENT_ACCENT : '#cbd5e1',
                     position: 'relative',
                     transition: 'background-color 0.2s',
-                    cursor: 'pointer',
+                    cursor: !editIsInternal || editIsSelfNote ? 'not-allowed' : 'pointer',
                   }}
                 >
                   <Box
@@ -1137,7 +1145,14 @@ const CommentCard = ({
 
               <Box
                 sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
-                onClick={() => setEditIsSelfNote(!editIsSelfNote)}
+                onClick={() => {
+                  if (!editIsSelfNote) {
+                    // Turning ON — reset conflicting toggles
+                    setEditIsInternal(false);
+                    setEditNotifyAssignees(false);
+                  }
+                  setEditIsSelfNote(!editIsSelfNote);
+                }}
               >
                 <Typography sx={{ fontSize: '0.82rem', color: '#374151', fontWeight: 500 }}>
                   Self-note
@@ -1808,6 +1823,11 @@ const UpdatesSection = ({
   const [inlineSubmitting, setInlineSubmitting] = useState(false);
   const [inlineStatusInput, setInlineStatusInput] = useState('');
   const [inlineStatusValue, setInlineStatusValue] = useState('');
+  const [inlineStatusTouched, setInlineStatusTouched] = useState(false);
+  const [inlineRequiredErrors, setInlineRequiredErrors] = useState<{
+    status?: string;
+  }>({});
+  const reqError = useFieldError();
   const [inlineStatusDropdownPos, setInlineStatusDropdownPos] = useState<{
     top: number;
     left: number;
@@ -1825,6 +1845,11 @@ const UpdatesSection = ({
   >({});
   const [updateComment] = useUpdateTicketCommentMutation();
   const commentsListRef = useRef<HTMLDivElement>(null);
+
+  // Inline form toggle exclusivity — only one mode at a time
+  const inlineSelfNoteDisabled = inlineIsInternal;
+  const inlineInternalDisabled = inlineIsSelfNote;
+  const inlineNotifyDisabled = !inlineIsInternal || inlineIsSelfNote;
 
   const getCommentPinState = (commentId: number): boolean => {
     if (optimisticState[commentId]?.isPinned !== undefined)
@@ -1919,11 +1944,28 @@ const UpdatesSection = ({
     setIsModalOpen(false);
   };
 
+  // Auto-reset notify assignees when internal is toggled off in inline form
+  useEffect(() => {
+    if (!inlineIsInternal && inlineNotifyAssignees) {
+      setInlineNotifyAssignees(false);
+    }
+  }, [inlineIsInternal, inlineNotifyAssignees]);
+
+  const validateInlineRequired = (): typeof inlineRequiredErrors => {
+    const errs: typeof inlineRequiredErrors = {};
+    if (!inlineStatusValue && !inlineStatusInput.trim()) errs.status = 'required';
+    return errs;
+  };
+
   const handleInlineSave = async () => {
     if (!inlineMessage.trim()) {
       notify.error('Comment is required');
       return;
     }
+    const reqErrs = validateInlineRequired();
+    setInlineRequiredErrors(reqErrs);
+    setInlineStatusTouched(true);
+    if (Object.keys(reqErrs).length > 0) return;
     setInlineSubmitting(true);
     try {
       const statusesFromConfig = configStatuses?.items
@@ -2089,12 +2131,11 @@ const UpdatesSection = ({
                 color: '#4338ca',
               }}
             >
-              Add a comment{' '}
               {inlineMode === 'internal'
-                ? '(internal note)'
+                ? 'Internal note'
                 : inlineMode === 'self'
-                  ? '(self note)'
-                  : '(visible to affected user)'}
+                  ? 'Self-note'
+                  : 'Add a comment (visible to affected user)'}
             </Typography>
           </Box>
 
@@ -2103,9 +2144,12 @@ const UpdatesSection = ({
             <Box sx={{ flex: 1, position: 'relative' }}>
               <TextField
                 label='Status'
+                required
                 placeholder='Search statuses...'
                 value={inlineStatusInput}
                 onChange={(e) => handleInlineStatusInputChange(e.target.value)}
+                error={Boolean(reqError(inlineStatusTouched, inlineRequiredErrors.status))}
+                helperText={reqError(inlineStatusTouched, inlineRequiredErrors.status)}
                 inputRef={inlineStatusInputRef}
                 onFocus={() => {
                   const q = inlineStatusInput.trim().toLowerCase();
@@ -2128,7 +2172,10 @@ const UpdatesSection = ({
                     });
                   }
                 }}
-                onBlur={() => setTimeout(() => setInlineStatusOptionsOpen(false), 200)}
+                onBlur={() => {
+                  setInlineStatusTouched(true);
+                  setTimeout(() => setInlineStatusOptionsOpen(false), 200);
+                }}
                 size='small'
                 fullWidth
                 slotProps={{
@@ -2245,8 +2292,22 @@ const UpdatesSection = ({
           >
             {/* Internal Note toggle */}
             <Box
-              sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
-              onClick={() => setInlineIsInternal(!inlineIsInternal)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                cursor: inlineInternalDisabled ? 'not-allowed' : 'pointer',
+                opacity: inlineInternalDisabled ? 0.5 : 1,
+              }}
+              onClick={() => {
+                if (inlineInternalDisabled) return;
+                if (!inlineIsInternal) {
+                  // Turning internal ON — disable self-note
+                  setInlineIsSelfNote(false);
+                  setInlineNotifyAssignees(false);
+                }
+                setInlineIsInternal(!inlineIsInternal);
+              }}
             >
               <Typography sx={{ fontSize: '0.82rem', color: '#374151', fontWeight: 500 }}>
                 Internal Note
@@ -2259,7 +2320,7 @@ const UpdatesSection = ({
                   bgcolor: inlineIsInternal ? COMMENT_ACCENT : '#cbd5e1',
                   position: 'relative',
                   transition: 'background-color 0.2s',
-                  cursor: 'pointer',
+                  cursor: inlineInternalDisabled ? 'not-allowed' : 'pointer',
                 }}
               >
                 <Box
@@ -2280,11 +2341,20 @@ const UpdatesSection = ({
 
             {/* Notify assignees toggle */}
             <Box
-              sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
-              onClick={() => setInlineNotifyAssignees(!inlineNotifyAssignees)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                cursor: inlineNotifyDisabled ? 'not-allowed' : 'pointer',
+                opacity: inlineNotifyDisabled ? 0.5 : 1,
+              }}
+              onClick={() => {
+                if (inlineNotifyDisabled) return;
+                setInlineNotifyAssignees(!inlineNotifyAssignees);
+              }}
             >
               <Typography sx={{ fontSize: '0.82rem', color: '#374151', fontWeight: 500 }}>
-                Notify ticket assignees only
+                Notify assignees only
               </Typography>
               <Box
                 sx={{
@@ -2294,7 +2364,7 @@ const UpdatesSection = ({
                   bgcolor: inlineNotifyAssignees ? COMMENT_ACCENT : '#cbd5e1',
                   position: 'relative',
                   transition: 'background-color 0.2s',
-                  cursor: 'pointer',
+                  cursor: inlineNotifyDisabled ? 'not-allowed' : 'pointer',
                 }}
               >
                 <Box
@@ -2315,8 +2385,22 @@ const UpdatesSection = ({
 
             {/* Self-note toggle */}
             <Box
-              sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
-              onClick={() => setInlineIsSelfNote(!inlineIsSelfNote)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                cursor: inlineSelfNoteDisabled ? 'not-allowed' : 'pointer',
+                opacity: inlineSelfNoteDisabled ? 0.5 : 1,
+              }}
+              onClick={() => {
+                if (inlineSelfNoteDisabled) return;
+                if (!inlineIsSelfNote) {
+                  // Turning self-note ON — disable internal and notify
+                  setInlineIsInternal(false);
+                  setInlineNotifyAssignees(false);
+                }
+                setInlineIsSelfNote(!inlineIsSelfNote);
+              }}
             >
               <Typography sx={{ fontSize: '0.82rem', color: '#374151', fontWeight: 500 }}>
                 Self-note
@@ -2329,7 +2413,7 @@ const UpdatesSection = ({
                   bgcolor: inlineIsSelfNote ? COMMENT_ACCENT : '#cbd5e1',
                   position: 'relative',
                   transition: 'background-color 0.2s',
-                  cursor: 'pointer',
+                  cursor: inlineSelfNoteDisabled ? 'not-allowed' : 'pointer',
                 }}
               >
                 <Box
