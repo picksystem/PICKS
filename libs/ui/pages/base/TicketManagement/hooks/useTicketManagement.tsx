@@ -236,7 +236,7 @@ const useTicketManagement = () => {
     },
     {
       id: 'assignmentGroup',
-      label: 'Assignment Group',
+      label: 'Queue',
       minWidth: 160,
       format: (v): React.ReactNode => String(v || '-'),
     },

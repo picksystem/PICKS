@@ -73,6 +73,7 @@ const useIncidentManagement = () => {
     e.stopPropagation();
     setFavorites((prev) => {
       const next = new Set(prev);
+      // eslint-disable-next-line no-unused-expressions
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
@@ -85,9 +86,7 @@ const useIncidentManagement = () => {
     if (selectedStatus === 'all') return allIncidents;
     if (selectedStatus === 'in_progress') {
       return allIncidents.filter(
-        (i) =>
-          i.status === IncidentStatus.IN_PROGRESS ||
-          i.status === IncidentStatus.ASSIGNED,
+        (i) => i.status === IncidentStatus.IN_PROGRESS || i.status === IncidentStatus.ASSIGNED,
       );
     }
     return allIncidents.filter((i) => i.status === selectedStatus);
@@ -110,9 +109,7 @@ const useIncidentManagement = () => {
     if (statusValue === 'all') return allIncidents.length;
     if (statusValue === 'in_progress') {
       return allIncidents.filter(
-        (i) =>
-          i.status === IncidentStatus.IN_PROGRESS ||
-          i.status === IncidentStatus.ASSIGNED,
+        (i) => i.status === IncidentStatus.IN_PROGRESS || i.status === IncidentStatus.ASSIGNED,
       ).length;
     }
     return allIncidents.filter((i) => i.status === statusValue).length;
@@ -170,7 +167,7 @@ const useIncidentManagement = () => {
     },
     {
       id: 'assignmentGroup',
-      label: 'Assignment Group',
+      label: 'Queue',
       minWidth: 160,
       format: (v): React.ReactNode => String(v || '-'),
     },

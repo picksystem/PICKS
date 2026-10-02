@@ -730,7 +730,7 @@ const Sidebar = ({
                         node: (
                           <EditDropdownCard
                             icon={<GroupIcon sx={iconMdSx} />}
-                            label='Assignment Group'
+                            label='Queue'
                             value={editFormData.assignmentGroup || ''}
                             options={assignmentGroupOptions}
                             onChange={(val) => onEditFormChange({ assignmentGroup: val })}
@@ -772,7 +772,7 @@ const Sidebar = ({
                         node: (
                           <FieldCard
                             icon={<GroupIcon sx={iconMdSx} />}
-                            label='Assignment Group'
+                            label='Queue'
                             value={incident.assignmentGroup || ''}
                             accentColor='#7c3aed'
                           />

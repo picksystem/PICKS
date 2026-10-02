@@ -56,7 +56,7 @@ const AssignModal = ({ open, onClose, incident, onUpdateTicket, onSuccess }: Ass
         Cancel
       </Button>
       <Button variant='contained' onClick={handleSubmit} disabled={isLoading}>
-        Update
+        Assign
       </Button>
     </Box>
   );
@@ -105,7 +105,7 @@ const AssignModal = ({ open, onClose, incident, onUpdateTicket, onSuccess }: Ass
             <Typography
               sx={{ fontSize: '1.1rem', fontWeight: 600, lineHeight: 1.3, color: '#fff' }}
             >
-              Assign Ticket
+              Assign a ticket
             </Typography>
             <Typography
               sx={{

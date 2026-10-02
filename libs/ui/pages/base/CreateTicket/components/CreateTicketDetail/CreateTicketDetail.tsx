@@ -816,7 +816,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                 formik.touched.assignmentGroup,
                 formik.errors.assignmentGroup as string,
               )}
-              label='Assignment Group'
+              label='Queue'
               required
             />
             <SearchableField
@@ -1072,7 +1072,7 @@ const CreateTicketDetail = ({ ticketType, onCancel, onSuccess }: CreateTicketDet
                     impact: 'Impact',
                     urgency: 'Urgency',
                     channel: 'Channel',
-                    assignmentGroup: 'Assignment Group',
+                    assignmentGroup: 'Queue',
                     createdBy: 'Created',
                   };
                   const label =

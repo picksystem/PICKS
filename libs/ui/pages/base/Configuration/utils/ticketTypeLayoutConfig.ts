@@ -75,7 +75,7 @@ export const TICKET_OPTIONS_FIELDS: FieldOption[] = [
 export const ASSIGNMENT_FIELDS: FieldOption[] = [
   { key: 'assignedTo', label: 'Assigned to' },
   { key: 'queue', label: 'Queue' },
-  { key: 'assignmentGroup', label: 'Assignment Group' },
+  { key: 'assignmentGroup', label: 'Queue' },
   { key: 'secondaryResource', label: 'Secondary Resource' },
 ];
 
@@ -252,7 +252,7 @@ export const CREATE_TICKET_PRIORITY_ASSIGNMENT_FIELDS: FieldOption[] = [
   { key: 'urgency', label: 'Urgency' },
   { key: 'priority', label: 'Priority' },
   { key: 'status', label: 'Status' },
-  { key: 'assignmentGroup', label: 'Assignment Group' },
+  { key: 'assignmentGroup', label: 'Queue' },
   { key: 'primaryResource', label: 'Primary Resource' },
   { key: 'secondaryResources', label: 'Secondary Resource(s)' },
 ];
