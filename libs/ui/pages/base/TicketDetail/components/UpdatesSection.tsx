@@ -607,8 +607,14 @@ const CommentCard = ({
   const handleSave = async () => {
     clearTimer();
     setHasChanges(false);
-    setEditing(false);
+    // Capture current values BEFORE any state resets (React batches state updates)
+    const savedStatus = editStatusValue || undefined;
+    const savedIsInternal = editIsInternal;
+    const savedIsSelfNote = editIsSelfNote;
+    const savedNotifyAssignees = editNotifyAssignees;
+    const savedMessage = editValue.trim();
     // Reset all edit form state after closing the editor
+    setEditing(false);
     setEditStatus(comment.status || '');
     setEditStatusInput(comment.status || '');
     setEditStatusValue(comment.status || '');
@@ -622,11 +628,11 @@ const CommentCard = ({
     setEditStatusDropdownPos(null);
     if (onEditSave) {
       await onEditSave({
-        message: editValue.trim(),
-        status: editStatusValue || undefined,
-        isInternal: editIsInternal,
-        isSelfNote: editIsSelfNote,
-        notifyAssigneesOnly: editNotifyAssignees,
+        message: savedMessage,
+        status: savedStatus,
+        isInternal: savedIsInternal,
+        isSelfNote: savedIsSelfNote,
+        notifyAssigneesOnly: savedNotifyAssignees,
       });
     }
   };

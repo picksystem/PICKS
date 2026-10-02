@@ -21,6 +21,9 @@ import MoreToolsMenu from './modals/MoreToolsMenu';
 import CommentWindow from './windows/CommentWindow';
 import TimeEntryWindow from './windows/TimeEntryWindow';
 import ResolveWindow from './windows/ResolveWindow';
+import DuplicateSearchDialog from './modals/DuplicateSearchDialog';
+import TicketSearchDialog from './modals/TicketSearchDialog';
+import TicketNotificationsMenu from './components/TicketNotificationsMenu';
 
 const TicketDetailView = () => {
   const { classes, cx } = useStyles();
@@ -60,12 +63,25 @@ const TicketDetailView = () => {
     handleCancelIncident,
     handleMoreToolsOpen,
     handleMoreToolsClose,
+    handleCloseWindow,
+    notifAnchorEl,
+    handleNotifOpen,
+    handleNotifClose,
     showNotification,
     eta,
     handleEtaChange,
     timeSummary,
     timer,
     navigation,
+    allIncidents,
+    duplicateSearchOpen,
+    setDuplicateSearchOpen,
+    handleCloseDuplicateSearch,
+    ticketSearchOpen,
+    setTicketSearchOpen,
+    handleCloseTicketSearch,
+    activities,
+    activitiesLoading,
     clientOptions,
     assignmentGroupOptions,
     secondaryResourceOptions,
@@ -152,6 +168,13 @@ const TicketDetailView = () => {
           prevNumber={navigation.prevNumber}
           nextNumber={navigation.nextNumber}
           navigateToIncident={navigation.navigateToIncident}
+          onSearchClick={() => setDuplicateSearchOpen(true)}
+          onFilterClick={() => setTicketSearchOpen(true)}
+          onRefreshClick={() => window.location.reload()}
+          notifAnchorEl={notifAnchorEl}
+          onNotifOpen={handleNotifOpen}
+          onNotifClose={handleNotifClose}
+          onCloseClick={handleCloseWindow}
         />
 
         {/* ── Draft Expiry Banners ────────────────────────────────────────────── */}
@@ -331,6 +354,28 @@ const TicketDetailView = () => {
         incident={incident}
         onCancelIncident={handleCancelIncident}
         onDuplicate={handleDuplicate}
+      />
+
+      <TicketNotificationsMenu
+        anchorEl={notifAnchorEl}
+        onClose={handleNotifClose}
+        activities={activities ?? []}
+        isLoading={activitiesLoading}
+      />
+
+      <DuplicateSearchDialog
+        open={duplicateSearchOpen}
+        onClose={handleCloseDuplicateSearch}
+        currentTitle={incident?.shortDescription}
+        allTickets={allIncidents ?? []}
+        currentTicketId={incident.id}
+      />
+
+      <TicketSearchDialog
+        open={ticketSearchOpen}
+        onClose={handleCloseTicketSearch}
+        allTickets={allIncidents ?? []}
+        currentTicketId={incident.id}
       />
 
       {/* ════════════════════════════════════════════════════════════════

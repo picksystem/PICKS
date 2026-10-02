@@ -7,6 +7,7 @@ import {
   useUpdateTicketMutation,
   useGetTicketTimeEntriesQuery,
   useCreateTicketTimeEntryMutation,
+  useGetTicketActivitiesQuery,
 } from '../../../../../services';
 import {
   useGetAllUsersMutation,
@@ -39,8 +40,6 @@ export const useTicketDetail = () => {
   const ticketType = incident?.ticketType ?? 'incident';
 
   // Ticket lists for prev/next navigation and dropdown-option derivation.
-  // Call all three list queries unconditionally (Rules of Hooks) and pick
-  // the one matching this ticket's type.
   const { data: allIncidentsList } = useGetTicketsQuery({ ticketType: 'incident' });
   const { data: allServiceRequestsList } = useGetTicketsQuery({ ticketType: 'service_request' });
   const { data: allAdvisoryRequestsList } = useGetTicketsQuery({ ticketType: 'advisory_request' });
@@ -51,6 +50,12 @@ export const useTicketDetail = () => {
       return allAdvisoryRequestsList as TicketEntity[] | undefined;
     return allIncidentsList as TicketEntity[] | undefined;
   }, [ticketType, allIncidentsList, allServiceRequestsList, allAdvisoryRequestsList]);
+
+  // ── Duplicate search state (filtering lives in the dialog)
+  const [duplicateSearchOpen, setDuplicateSearchOpen] = useState(false);
+  const handleCloseDuplicateSearch = useCallback(() => setDuplicateSearchOpen(false), []);
+  const [ticketSearchOpen, setTicketSearchOpen] = useState(false);
+  const handleCloseTicketSearch = useCallback(() => setTicketSearchOpen(false), []);
 
   const { data: ticketTypes } = useGetTicketTypeQuery();
   const { user, isAdmin, logout } = useAuth();
@@ -110,6 +115,7 @@ export const useTicketDetail = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [settingsAnchorEl, setSettingsAnchorEl] = useState<null | HTMLElement>(null);
   const [moreToolsAnchorEl, setMoreToolsAnchorEl] = useState<null | HTMLElement>(null);
+  const [notifAnchorEl, setNotifAnchorEl] = useState<null | HTMLElement>(null);
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -128,6 +134,12 @@ export const useTicketDetail = () => {
     isLoading: timeEntriesLoading,
     refetch: refetchTimeEntries,
   } = useGetTicketTimeEntriesQuery(
+    { ticketType, ticketId: incident?.id ?? 0 },
+    { skip: !incident },
+  );
+
+  // Ticket activities query (for notification bell)
+  const { data: activities, isLoading: activitiesLoading } = useGetTicketActivitiesQuery(
     { ticketType, ticketId: incident?.id ?? 0 },
     { skip: !incident },
   );
@@ -521,6 +533,12 @@ export const useTicketDetail = () => {
   }, []);
   const handleMoreToolsClose = useCallback(() => setMoreToolsAnchorEl(null), []);
 
+  // Notifications menu
+  const handleNotifOpen = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    setNotifAnchorEl(e.currentTarget);
+  }, []);
+  const handleNotifClose = useCallback(() => setNotifAnchorEl(null), []);
+
   const handleCloseWindow = useCallback(() => window.close(), []);
 
   const dispatchNotification = useCallback(
@@ -552,6 +570,7 @@ export const useTicketDetail = () => {
     activeTab,
     setActiveTab,
     settingsAnchorEl,
+    setSettingsAnchorEl,
     moreToolsAnchorEl,
     isEditing,
     editFormData,
@@ -602,5 +621,20 @@ export const useTicketDetail = () => {
     // Composed hooks
     timer,
     navigation,
+
+    // Duplicate search
+    duplicateSearchOpen,
+    setDuplicateSearchOpen,
+    handleCloseDuplicateSearch,
+    ticketSearchOpen,
+    setTicketSearchOpen,
+    handleCloseTicketSearch,
+
+    // Notifications
+    activities,
+    activitiesLoading,
+    notifAnchorEl,
+    handleNotifOpen,
+    handleNotifClose,
   };
 };

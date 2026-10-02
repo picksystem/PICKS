@@ -7,6 +7,12 @@ import {
   NavigateBeforeIcon,
   NavigateNextIcon,
   Typography,
+  SearchIcon,
+  FilterListIcon,
+  RefreshIcon,
+  NotificationsIcon,
+  SettingsIcon,
+  CloseIcon,
 } from '../../../../components';
 import { copyRichLink, copyToClipboard } from '../utils/ticketDetail.utils';
 import { TicketEntity } from '../types/ticketDetail.types';
@@ -17,6 +23,13 @@ interface TicketHeaderProps {
   prevNumber: string | null;
   nextNumber: string | null;
   navigateToIncident: (num: string) => void;
+  onSearchClick?: () => void;
+  onFilterClick?: () => void;
+  onRefreshClick?: () => void;
+  notifAnchorEl: HTMLElement | null;
+  onNotifOpen: (e: React.MouseEvent<HTMLElement>) => void;
+  onNotifClose: () => void;
+  onCloseClick?: () => void;
 }
 
 const navIconSize = '1.4rem';
@@ -71,6 +84,13 @@ const TicketHeader = ({
   prevNumber,
   nextNumber,
   navigateToIncident,
+  onSearchClick,
+  onFilterClick,
+  onRefreshClick,
+  notifAnchorEl,
+  onNotifOpen,
+  onNotifClose,
+  onCloseClick,
 }: TicketHeaderProps) => (
   <>
     {/* Mobile-only header: Row 1 — Nav + Ticket Number + Status + Copy Number */}
@@ -176,6 +196,38 @@ const TicketHeader = ({
             onClick={() => copyToClipboard(window.location.href)}
           >
             <LinkIcon sx={linkIconHeaderSx} />
+          </IconButton>
+        </Tooltip>
+      </Box>
+      <Box className={classes.headerActions}>
+        <Tooltip title='Search for Duplicates'>
+          <IconButton size='small' className={classes.headerActionIcon} onClick={onSearchClick}>
+            <SearchIcon sx={navIconSx} />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title='Search Tickets'>
+          <IconButton size='small' className={classes.headerActionIcon} onClick={onFilterClick}>
+            <FilterListIcon sx={navIconSx} />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title='Refresh'>
+          <IconButton size='small' className={classes.headerActionIcon} onClick={onRefreshClick}>
+            <RefreshIcon sx={navIconSx} />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title='Notifications'>
+          <IconButton size='small' className={classes.headerActionIcon} onClick={onNotifOpen}>
+            <NotificationsIcon sx={navIconSx} />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title='Settings'>
+          <IconButton size='small' className={classes.headerActionIcon}>
+            <SettingsIcon sx={navIconSx} />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title='Close'>
+          <IconButton size='small' className={classes.headerActionIcon} onClick={onCloseClick}>
+            <CloseIcon sx={navIconSx} />
           </IconButton>
         </Tooltip>
       </Box>

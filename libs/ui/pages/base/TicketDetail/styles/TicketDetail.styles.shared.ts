@@ -192,6 +192,25 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     },
   },
 
+  // Action icons between headerCenter and the > button
+  headerActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginRight: theme.spacing(1),
+  },
+
+  headerActionIcon: {
+    color: 'rgba(255,255,255,0.8)',
+    padding: '3px',
+    transition: 'transform 0.2s ease, color 0.2s ease',
+    '&:hover': {
+      transform: 'scale(1.2)',
+      color: '#fff',
+      background: 'rgba(255,255,255,0.15)',
+    },
+  },
+
   headerIcon: {
     color: 'rgba(255,255,255,0.85)',
     padding: '4px',
@@ -796,6 +815,10 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   descriptionRichTextEditor: {
     marginTop: theme.spacing(0.5),
+  },
+
+  descriptionChevron: {
+    transition: 'transform 0.3s ease',
   },
 
   // Tabs Section
