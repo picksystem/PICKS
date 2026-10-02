@@ -1,4 +1,4 @@
-import { Box } from '../../../components';
+import { Box, PageHeader } from '../../../components';
 import { useStyles } from './styles';
 import { ClientsAccordion } from './sections/ClientsAccordion';
 import { ProjectContractsAccordion } from './sections/ProjectContractsAccordion';
@@ -11,7 +11,13 @@ const ClientsAndProjects = () => {
 
   return (
     <Box className={classes.container}>
-      <Box sx={{ mt: 2 }}>
+      <PageHeader
+        title='Clients & Projects'
+        description='Manage clients, projects, contracts, and journals across the system.'
+        className={classes.pageHeader}
+      />
+
+      <Box>
         <ClientsAccordion />
       </Box>
 

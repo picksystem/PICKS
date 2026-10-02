@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DEFAULT_CONFIGURATION_DATA, IConfigClient } from '@serviceops/interfaces';
-import { GenericAccordion } from '@serviceops/genericaccordion';
 import { GenericPanel } from '@serviceops/genericpanel';
 import {
   useGetConfigurationQuery,
@@ -42,23 +41,16 @@ const ClientsAccordion = () => {
   );
 
   return (
-    <GenericAccordion
-      title='Clients'
-      subtitle='Manage client master records and billing details'
-      icon={CLIENTS_ICON}
-      accent={ACCENT}
+    <GenericPanel
+      config={CLIENTS_TABLE_CONFIG}
+      data={rows as unknown as Record<string, unknown>[]}
+      onSave={handleSave}
+      customColumns={clientColumns as unknown as never}
+      variant='plain'
       defaultExpanded={true}
-    >
-      <GenericPanel
-        config={CLIENTS_TABLE_CONFIG}
-        data={rows as unknown as Record<string, unknown>[]}
-        onSave={handleSave}
-        customColumns={clientColumns as unknown as never}
-        variant='standard'
-        enableSuccessMessage
-        isLoading={isLoading}
-      />
-    </GenericAccordion>
+      enableSuccessMessage
+      isLoading={isLoading}
+    />
   );
 };
 

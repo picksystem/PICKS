@@ -1,6 +1,6 @@
 import WorkIcon from '@mui/icons-material/Work';
 import { Column } from '@serviceops/component';
-import { mkCell, mkActiveChip, mkRichTextCell } from '@serviceops/configutils';
+import { mkCell, mkDescCell, mkActiveChip } from '@serviceops/configutils';
 import type { TableConfig } from '@serviceops/genericpanel';
 import type { IConfigProject } from '@serviceops/interfaces';
 
@@ -13,7 +13,7 @@ export const PROJECTS_ICON = <WorkIcon sx={{ fontSize: '1.1rem' }} />;
 export const projectColumns: Column<IConfigProject>[] = [
   { id: 'projectId', label: 'Project ID', minWidth: 120, format: mkCell(true) },
   { id: 'projectName', label: 'Project Name', minWidth: 160, format: mkCell() },
-  { id: 'shortDescription', label: 'Short Description', minWidth: 200, format: mkRichTextCell },
+  { id: 'shortDescription', label: 'Short Description', minWidth: 200, format: mkDescCell },
   { id: 'contractId', label: 'Contract ID', minWidth: 120, format: mkCell() },
   { id: 'contractName', label: 'Contract Name', minWidth: 150, format: mkCell() },
   { id: 'clientId', label: 'Client ID', minWidth: 110, format: mkCell() },
@@ -26,7 +26,7 @@ export const projectColumns: Column<IConfigProject>[] = [
   { id: 'actualEndDate', label: 'Actual End Date', minWidth: 140, format: mkCell() },
   { id: 'projectType', label: 'Project Type', minWidth: 130, format: mkCell() },
   { id: 'projectStatus', label: 'Project Status', minWidth: 130, format: mkCell() },
-  { id: 'internalNote', label: 'Internal Note', minWidth: 200, format: mkRichTextCell },
+  { id: 'internalNote', label: 'Internal Note', minWidth: 200, format: mkDescCell },
   {
     id: 'allowedTransactionType',
     label: 'Allowed Transaction Type',

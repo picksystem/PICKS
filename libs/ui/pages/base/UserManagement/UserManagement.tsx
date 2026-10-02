@@ -1,4 +1,4 @@
-import { Box, Loader } from '@serviceops/component';
+import { Box, Loader, PageHeader } from '@serviceops/component';
 import useUserManagement from './hooks/useUserManagement';
 import AdminControlsDialog from './dialogs/AdminControlsDialog/AdminControlsDialog';
 import EditUserDialog from './dialogs/EditUserDialog/EditUserDialog';
@@ -194,6 +194,11 @@ const UserManagement = () => {
 
   return (
     <Box className={classes.container}>
+      <PageHeader
+        title='User Management'
+        description='View and manage all users across different roles in the system'
+        className={classes.pageHeader}
+      />
       <UserManagementSection
         allUsers={allUsers}
         columns={columns}

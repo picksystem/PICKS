@@ -17,6 +17,7 @@ import TabsSection from './components/TabsSection';
 import PriorityChangeModal from './modals/PriorityChangeModal';
 import AssignModal from './modals/AssignModal';
 import AttachmentModal from './modals/AttachmentModal';
+import WorkLocationDialog from './modals/WorkLocationDialog';
 import MoreToolsMenu from './modals/MoreToolsMenu';
 import CommentWindow from './windows/CommentWindow';
 import TimeEntryWindow from './windows/TimeEntryWindow';
@@ -138,6 +139,7 @@ const TicketDetailView = () => {
     onTimeEntry: () => setActiveModal('timeEntry'),
     onFollow: handleFollow,
     onAttachment: () => setActiveModal('attachment'),
+    onWorkLocation: () => setActiveModal('workLocation'),
     onReviewLater: handleReviewLater,
     onMoreTools: handleMoreToolsOpen,
     onSave: handleSaveEdit,
@@ -344,6 +346,18 @@ const TicketDetailView = () => {
         onSuccess={() => {
           setActiveModal(null);
           showNotification('Attachments updated', 'success');
+          refetch();
+        }}
+      />
+
+      <WorkLocationDialog
+        open={activeModal === 'workLocation'}
+        onClose={() => setActiveModal(null)}
+        incident={incident}
+        onUpdateTicket={updateTicket}
+        onSuccess={() => {
+          setActiveModal(null);
+          showNotification('Work location updated', 'success');
           refetch();
         }}
       />

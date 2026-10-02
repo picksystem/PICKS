@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Box,
   CheckIcon,
@@ -15,6 +16,7 @@ import {
   EditIcon,
   IconButton,
 } from '../../../../components';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { ActionButtonConfig } from '../types/ticketDetail.types';
 
 interface ActionBarProps {
@@ -34,11 +36,11 @@ interface ActionBarProps {
   onSaveAndClose: () => void;
   onCancelEdit: () => void;
   onPriorityChange: () => void;
+  onWorkLocation: () => void;
 }
 
 const iconSx = { fontSize: '1.5rem' };
 
-// Icon pill: pass color via style prop for dynamic background; structural styles from className
 const IconPill = ({
   color,
   children,
@@ -69,6 +71,8 @@ const ActionBar = ({
   onSave,
   onSaveAndClose,
   onCancelEdit,
+  onPriorityChange,
+  onWorkLocation,
 }: ActionBarProps) => {
   const viewModeButtons: ActionButtonConfig[] = [
     {
@@ -142,6 +146,15 @@ const ActionBar = ({
       ),
       label: 'Attachment',
       onClick: onAttachment,
+    },
+    {
+      icon: (
+        <IconPill color='#7c3aed' classes={classes}>
+          <LocationOnIcon sx={{ ...iconSx, color: '#7c3aed' }} />
+        </IconPill>
+      ),
+      label: 'Work Location',
+      onClick: onWorkLocation,
     },
     {
       icon: (

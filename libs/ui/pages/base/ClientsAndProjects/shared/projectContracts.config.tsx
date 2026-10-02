@@ -1,6 +1,6 @@
 import DescriptionIcon from '@mui/icons-material/Description';
 import { Column } from '@serviceops/component';
-import { mkCell, mkActiveChip, mkRichTextCell } from '@serviceops/configutils';
+import { mkCell, mkDescCell, mkActiveChip } from '@serviceops/configutils';
 import type { TableConfig } from '@serviceops/genericpanel';
 import type { IConfigProjectContract } from '@serviceops/interfaces';
 
@@ -13,8 +13,8 @@ export const PROJECT_CONTRACTS_ICON = <DescriptionIcon sx={{ fontSize: '1.1rem' 
 export const projectContractColumns: Column<IConfigProjectContract>[] = [
   { id: 'contractId', label: 'Contract ID', minWidth: 120, format: mkCell(true) },
   { id: 'contractName', label: 'Contract Name', minWidth: 160, format: mkCell() },
-  { id: 'shortDescription', label: 'Short Description', minWidth: 200, format: mkRichTextCell },
-  { id: 'description', label: 'Description', minWidth: 200, format: mkRichTextCell },
+  { id: 'shortDescription', label: 'Short Description', minWidth: 200, format: mkDescCell },
+  { id: 'description', label: 'Description', minWidth: 200, format: mkDescCell },
   { id: 'clientId', label: 'Client ID', minWidth: 110, format: mkCell() },
   { id: 'clientName', label: 'Client Name', minWidth: 150, format: mkCell() },
   { id: 'billingAddress', label: 'Billing Address', minWidth: 180, format: mkCell() },
@@ -35,8 +35,8 @@ export const projectContractColumns: Column<IConfigProjectContract>[] = [
   { id: 'billingFrequency', label: 'Billing Frequency', minWidth: 150, format: mkCell() },
   { id: 'clientBankAccount', label: 'Client Bank Account', minWidth: 170, format: mkCell() },
   { id: 'paymentMethod', label: 'Payment Method', minWidth: 150, format: mkCell() },
-  { id: 'invoiceNote', label: 'Invoice Note', minWidth: 200, format: mkRichTextCell },
-  { id: 'internalNote', label: 'Internal Note', minWidth: 200, format: mkRichTextCell },
+  { id: 'invoiceNote', label: 'Invoice Note', minWidth: 200, format: mkDescCell },
+  { id: 'internalNote', label: 'Internal Note', minWidth: 200, format: mkDescCell },
 ];
 
 // ── Table Config ───────────────────────────────────────────────────────────────

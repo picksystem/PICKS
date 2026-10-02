@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DEFAULT_CONFIGURATION_DATA, IConfigProject } from '@serviceops/interfaces';
-import { GenericAccordion } from '@serviceops/genericaccordion';
 import { GenericPanel } from '@serviceops/genericpanel';
 import {
   useGetConfigurationQuery,
@@ -42,23 +41,16 @@ const ProjectsAccordion = () => {
   );
 
   return (
-    <GenericAccordion
-      title='Projects'
-      subtitle='Manage projects, their contracts and pre-paid hours balances'
-      icon={PROJECTS_ICON}
-      accent={ACCENT}
+    <GenericPanel
+      config={PROJECTS_TABLE_CONFIG}
+      data={rows as unknown as Record<string, unknown>[]}
+      onSave={handleSave}
+      customColumns={projectColumns as unknown as never}
+      variant='plain'
       defaultExpanded={false}
-    >
-      <GenericPanel
-        config={PROJECTS_TABLE_CONFIG}
-        data={rows as unknown as Record<string, unknown>[]}
-        onSave={handleSave}
-        customColumns={projectColumns as unknown as never}
-        variant='standard'
-        enableSuccessMessage
-        isLoading={isLoading}
-      />
-    </GenericAccordion>
+      enableSuccessMessage
+      isLoading={isLoading}
+    />
   );
 };
 

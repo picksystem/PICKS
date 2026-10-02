@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DEFAULT_CONFIGURATION_DATA, IConfigProjectJournal } from '@serviceops/interfaces';
-import { GenericAccordion } from '@serviceops/genericaccordion';
 import { GenericPanel } from '@serviceops/genericpanel';
 import {
   useGetConfigurationQuery,
@@ -42,23 +41,16 @@ const ProjectJournalsAccordion = () => {
   );
 
   return (
-    <GenericAccordion
-      title='Project Journals'
-      subtitle='Track project journal transactions and their approval status'
-      icon={PROJECT_JOURNALS_ICON}
-      accent={ACCENT}
+    <GenericPanel
+      config={PROJECT_JOURNALS_TABLE_CONFIG}
+      data={rows as unknown as Record<string, unknown>[]}
+      onSave={handleSave}
+      customColumns={projectJournalColumns as unknown as never}
+      variant='plain'
       defaultExpanded={false}
-    >
-      <GenericPanel
-        config={PROJECT_JOURNALS_TABLE_CONFIG}
-        data={rows as unknown as Record<string, unknown>[]}
-        onSave={handleSave}
-        customColumns={projectJournalColumns as unknown as never}
-        variant='standard'
-        enableSuccessMessage
-        isLoading={isLoading}
-      />
-    </GenericAccordion>
+      enableSuccessMessage
+      isLoading={isLoading}
+    />
   );
 };
 

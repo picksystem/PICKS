@@ -112,6 +112,7 @@ const ProjectContractsAccordion = () => {
           variant='standard'
           enableSuccessMessage
           isLoading={isLoading}
+          hideHeader
         />
       )}
       {activeView === 'extensions' && (
@@ -123,6 +124,7 @@ const ProjectContractsAccordion = () => {
           variant='standard'
           enableSuccessMessage
           isLoading={isLoading}
+          hideHeader
         />
       )}
     </GenericAccordion>

@@ -44,6 +44,7 @@ export type ModalType =
   | 'commentSelf'
   | 'timeEntry'
   | 'resolve'
+  | 'workLocation'
   | null;
 
 export interface TimeSummaryData {

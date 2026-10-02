@@ -1,6 +1,6 @@
 import BusinessIcon from '@mui/icons-material/Business';
 import { Column } from '@serviceops/component';
-import { mkCell, mkActiveChip, mkRichTextCell } from '@serviceops/configutils';
+import { mkCell, mkDescCell, mkActiveChip } from '@serviceops/configutils';
 import type { TableConfig } from '@serviceops/genericpanel';
 import type { IConfigClient } from '@serviceops/interfaces';
 
@@ -13,7 +13,7 @@ export const CLIENTS_ICON = <BusinessIcon sx={{ fontSize: '1.1rem' }} />;
 export const clientColumns: Column<IConfigClient>[] = [
   { id: 'clientId', label: 'Client ID', minWidth: 110, format: mkCell(true) },
   { id: 'clientName', label: 'Client Name', minWidth: 160, format: mkCell() },
-  { id: 'shortDescription', label: 'Short Description', minWidth: 200, format: mkRichTextCell },
+  { id: 'shortDescription', label: 'Short Description', minWidth: 200, format: mkDescCell },
   { id: 'termsOfPayment', label: 'Terms of Payment', minWidth: 150, format: mkCell() },
   { id: 'language', label: 'Language', minWidth: 110, format: mkCell() },
   { id: 'salesCurrency', label: 'Sales Currency', minWidth: 130, format: mkCell() },
@@ -22,7 +22,7 @@ export const clientColumns: Column<IConfigClient>[] = [
   { id: 'paymentMethod', label: 'Payment Method', minWidth: 150, format: mkCell() },
   { id: 'defaultAddress', label: 'Default Address', minWidth: 180, format: mkCell() },
   { id: 'primaryContact', label: 'Primary Contact', minWidth: 150, format: mkCell() },
-  { id: 'internalNote', label: 'Internal Note', minWidth: 200, format: mkRichTextCell },
+  { id: 'internalNote', label: 'Internal Note', minWidth: 200, format: mkDescCell },
 ];
 
 // ── Table Config ───────────────────────────────────────────────────────────────

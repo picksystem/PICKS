@@ -87,15 +87,15 @@ const Modal: React.FC<DSModalProps> = ({
                 <Box
                   component='button'
                   className={classes.closeButton}
-                  sx={
-                    headerBackground
-                      ? { color: 'rgba(255,255,255,0.8)', '&:hover': { color: '#fff' } }
-                      : undefined
-                  }
                   onClick={() => onClose?.({}, 'escapeKeyDown')}
                   aria-label='close'
                 >
-                  <CloseIcon />
+                  <CloseIcon
+                    sx={{
+                      color: headerBackground ? 'rgba(255,255,255,0.8)' : undefined,
+                      '&:hover': { color: headerBackground ? '#fff' : undefined },
+                    }}
+                  />
                 </Box>
               )}
             </Box>

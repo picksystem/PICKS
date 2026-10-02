@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DEFAULT_CONFIGURATION_DATA, IConfigCustomerJournal } from '@serviceops/interfaces';
-import { GenericAccordion } from '@serviceops/genericaccordion';
 import { GenericPanel } from '@serviceops/genericpanel';
 import {
   useGetConfigurationQuery,
@@ -42,23 +41,16 @@ const CustomerJournalsAccordion = () => {
   );
 
   return (
-    <GenericAccordion
-      title='Customer Journals'
-      subtitle='Track customer journal transactions and their approval status'
-      icon={CUSTOMER_JOURNALS_ICON}
-      accent={ACCENT}
+    <GenericPanel
+      config={CUSTOMER_JOURNALS_TABLE_CONFIG}
+      data={rows as unknown as Record<string, unknown>[]}
+      onSave={handleSave}
+      customColumns={customerJournalColumns as unknown as never}
+      variant='plain'
       defaultExpanded={false}
-    >
-      <GenericPanel
-        config={CUSTOMER_JOURNALS_TABLE_CONFIG}
-        data={rows as unknown as Record<string, unknown>[]}
-        onSave={handleSave}
-        customColumns={customerJournalColumns as unknown as never}
-        variant='standard'
-        enableSuccessMessage
-        isLoading={isLoading}
-      />
-    </GenericAccordion>
+      enableSuccessMessage
+      isLoading={isLoading}
+    />
   );
 };
 
