@@ -234,6 +234,10 @@ export const adminApi = baseApi.injectEndpoints({
         message?: string;
         isPinned?: boolean;
         isSaved?: boolean;
+        status?: string;
+        isInternal?: boolean;
+        isSelfNote?: boolean;
+        notifyAssigneesOnly?: boolean;
       }
     >({
       query: ({ ticketId, commentId, ...body }) => ({

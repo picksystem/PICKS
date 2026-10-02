@@ -88,15 +88,23 @@ export function buildTicketRouter(): Router {
     async (req: Request, res: Response): Promise<void> => {
       try {
         const commentId = parseInt(req.params.commentId, 10);
-        const { isPinned, isSaved, message } = req.body as {
+        const { isPinned, isSaved, message, status, isInternal, isSelfNote, notifyAssigneesOnly } = req.body as {
           isPinned?: boolean;
           isSaved?: boolean;
           message?: string;
+          status?: string;
+          isInternal?: boolean;
+          isSelfNote?: boolean;
+          notifyAssigneesOnly?: boolean;
         };
         const comment = await ticketUseCase.updateComment(commentId, {
           isPinned,
           isSaved,
           message,
+          status,
+          isInternal,
+          isSelfNote,
+          notifyAssigneesOnly,
         });
         res.json({ message: 'Comment updated successfully', data: comment });
       } catch (error: any) {

@@ -488,7 +488,13 @@ const CommentCard = ({
   onCopy?: () => void;
   onPin?: () => void;
   onSave?: () => void;
-  onEditSave?: (newMessage: string) => void;
+  onEditSave?: (data: {
+    message: string;
+    status?: string;
+    isInternal?: boolean;
+    isSelfNote?: boolean;
+    notifyAssigneesOnly?: boolean;
+  }) => void;
   configStatusesItems?: IConfigStatusLevel[];
   ticketStatus?: string;
 }) => {
@@ -501,6 +507,27 @@ const CommentCard = ({
   const [displayMessage, setDisplayMessage] = useState(comment.message);
   const [hasChanges, setHasChanges] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ── Edit form state ──
+  const [editStatus, setEditStatus] = useState<string>(comment.status || '');
+  const [editTemplate, setEditTemplate] = useState('');
+  const [editIsInternal, setEditIsInternal] = useState(comment.isInternal || false);
+  const [editIsSelfNote, setEditIsSelfNote] = useState(comment.isSelfNote || false);
+  const [editNotifyAssignees, setEditNotifyAssignees] = useState(
+    comment.notifyAssigneesOnly || false,
+  );
+  const [editFiles, setEditFiles] = useState<File[]>([]);
+  const [editStatusInput, setEditStatusInput] = useState<string>(String(comment.status || ''));
+  const [editStatusValue, setEditStatusValue] = useState<string>(String(comment.status || ''));
+  const [editStatusOptionsOpen, setEditStatusOptionsOpen] = useState(false);
+  const [editStatusFiltered, setEditStatusFiltered] = useState<{ id: string; label: string }[]>([]);
+  const [editStatusDropdownPos, setEditStatusDropdownPos] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
+  const editStatusDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const editStatusInputRef = useRef<HTMLInputElement>(null);
 
   // Compute remaining edit window based on creation time (59s window)
   const computeRemaining = () => {
@@ -562,6 +589,17 @@ const CommentCard = ({
   const handleEditClick = () => {
     if (!isEditAvailable) return;
     setEditValue(displayMessage);
+    setEditStatus(comment.status || '');
+    setEditStatusInput(comment.status || '');
+    setEditStatusValue(comment.status || '');
+    setEditTemplate('');
+    setEditIsInternal(comment.isInternal || false);
+    setEditIsSelfNote(comment.isSelfNote || false);
+    setEditNotifyAssignees(comment.notifyAssigneesOnly || false);
+    setEditFiles([]);
+    setEditStatusOptionsOpen(false);
+    setEditStatusFiltered([]);
+    setEditStatusDropdownPos(null);
     setEditing(true);
     setHasChanges(false);
   };
@@ -569,13 +607,27 @@ const CommentCard = ({
   const handleSave = async () => {
     clearTimer();
     setHasChanges(false);
-    const newMessage = editValue.trim();
-    if (newMessage !== displayMessage && onEditSave) {
-      setDisplayMessage(newMessage); // optimistic update
-      setEditing(false);
-      await onEditSave(newMessage);
-    } else {
-      setEditing(false);
+    setEditing(false);
+    // Reset all edit form state after closing the editor
+    setEditStatus(comment.status || '');
+    setEditStatusInput(comment.status || '');
+    setEditStatusValue(comment.status || '');
+    setEditTemplate('');
+    setEditIsInternal(comment.isInternal || false);
+    setEditIsSelfNote(comment.isSelfNote || false);
+    setEditNotifyAssignees(comment.notifyAssigneesOnly || false);
+    setEditFiles([]);
+    setEditStatusOptionsOpen(false);
+    setEditStatusFiltered([]);
+    setEditStatusDropdownPos(null);
+    if (onEditSave) {
+      await onEditSave({
+        message: editValue.trim(),
+        status: editStatusValue || undefined,
+        isInternal: editIsInternal,
+        isSelfNote: editIsSelfNote,
+        notifyAssigneesOnly: editNotifyAssignees,
+      });
     }
   };
 
@@ -584,6 +636,14 @@ const CommentCard = ({
     setCountdown(computeRemaining());
     setEditing(false);
     setEditValue(displayMessage);
+    setEditStatus(comment.status || '');
+    setEditStatusInput(comment.status || '');
+    setEditStatusValue(comment.status || '');
+    setEditTemplate('');
+    setEditIsInternal(comment.isInternal || false);
+    setEditIsSelfNote(comment.isSelfNote || false);
+    setEditNotifyAssignees(comment.notifyAssigneesOnly || false);
+    setEditFiles([]);
     setHasChanges(false);
   };
 
@@ -594,6 +654,47 @@ const CommentCard = ({
     } catch {
       // clipboard unavailable — silently fail
     }
+  };
+
+  // ── Edit form handlers (inside CommentCard so they can access edit state) ──
+  const handleEditStatusInputChange = (value: string) => {
+    setEditStatusInput(value);
+    if (editStatusDebounceRef.current) clearTimeout(editStatusDebounceRef.current);
+    editStatusDebounceRef.current = setTimeout(() => {
+      const q = value.trim().toLowerCase();
+      const statusesFromConfig = configStatusesItems
+        ? configStatusesItems
+            .filter((s) => s.isActive)
+            .map((s) => ({ id: String(s.id), label: s.displayName || s.name }))
+        : [];
+      const next = q
+        ? statusesFromConfig.filter((o) => o.label.toLowerCase().includes(q))
+        : statusesFromConfig;
+      setEditStatusFiltered(next);
+      setEditStatusOptionsOpen(next.length > 0);
+      if (next.length > 0 && editStatusInputRef.current) {
+        const rect = editStatusInputRef.current.getBoundingClientRect();
+        setEditStatusDropdownPos({ top: rect.bottom, left: rect.left, width: rect.width });
+      }
+    }, 150);
+  };
+
+  const handleEditStatusSelect = (opt: { id: string; label: string }) => {
+    setEditStatusInput(opt.label);
+    setEditStatusValue(opt.id);
+    setEditStatus(opt.id);
+    setEditStatusOptionsOpen(false);
+    setEditStatusFiltered([]);
+    setEditStatusDropdownPos(null);
+  };
+
+  const handleEditStatusClear = () => {
+    setEditStatusInput('');
+    setEditStatusValue('');
+    setEditStatus('');
+    setEditStatusOptionsOpen(false);
+    setEditStatusFiltered([]);
+    setEditStatusDropdownPos(null);
   };
 
   return (
@@ -739,40 +840,348 @@ const CommentCard = ({
       {/* Body */}
       <Box sx={commentCardBodySx}>
         {editing ? (
-          <Box sx={{ position: 'relative' }}>
-            <RichTextEditor
-              value={parseRichText(editValue)}
-              onChange={(value) => {
-                const serialized = serializeRichText(value.segments);
-                setEditValue(serialized);
-                setHasChanges(serialized.trim() !== displayMessage);
-              }}
-              showFooterActions={false}
-              title='Edit Internal Comment'
-              accent='#059669'
-              required
-            />
-            {/* Edit toolbar */}
+          <Box
+            sx={{
+              border: '1px solid #e2e8f0',
+              borderRadius: 2,
+              overflow: 'hidden',
+            }}
+          >
+            {/* Header */}
+            <Box sx={{ px: 2.5, py: 1.5, borderBottom: '1px solid #e2e8f0', bgcolor: '#fafbfd' }}>
+              <Typography
+                sx={{ fontSize: '0.88rem', fontStyle: 'italic', fontWeight: 500, color: '#4338ca' }}
+              >
+                {editIsInternal ? 'Edit internal comment' : 'Edit comment'}
+              </Typography>
+            </Box>
+
+            {/* Status + Template — constrained width, right-aligned */}
+            <Box sx={{ px: 2.5, pt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+              <Box sx={{ display: 'flex', gap: 2, maxWidth: 700, width: '100%' }}>
+                <Box sx={{ flex: 1, position: 'relative' }}>
+                  <TextField
+                    label='Status'
+                    placeholder='Search statuses...'
+                    value={editStatusInput}
+                    onChange={(e) => handleEditStatusInputChange(e.target.value)}
+                    inputRef={editStatusInputRef}
+                    onFocus={() => {
+                      const q = editStatusInput.trim().toLowerCase();
+                      const statusesFromConfig = configStatusesItems
+                        ? configStatusesItems
+                            .filter((s) => s.isActive)
+                            .map((s) => ({ id: String(s.id), label: s.displayName || s.name }))
+                        : [];
+                      const next = q
+                        ? statusesFromConfig.filter((o) => o.label.toLowerCase().includes(q))
+                        : statusesFromConfig;
+                      setEditStatusFiltered(next);
+                      setEditStatusOptionsOpen(next.length > 0);
+                      if (next.length > 0 && editStatusInputRef.current) {
+                        const rect = editStatusInputRef.current.getBoundingClientRect();
+                        setEditStatusDropdownPos({
+                          top: rect.bottom,
+                          left: rect.left,
+                          width: rect.width,
+                        });
+                      }
+                    }}
+                    onBlur={() => setTimeout(() => setEditStatusOptionsOpen(false), 200)}
+                    size='small'
+                    fullWidth
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position='end'>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                              {editStatusInput ? (
+                                <ClearIcon
+                                  onClick={handleEditStatusClear}
+                                  sx={{ fontSize: 18, color: 'text.primary', cursor: 'pointer' }}
+                                />
+                              ) : (
+                                <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                              )}
+                            </Box>
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                  {editStatusOptionsOpen &&
+                    editStatusFiltered.length > 0 &&
+                    editStatusDropdownPos &&
+                    createPortal(
+                      <Paper
+                        elevation={4}
+                        sx={{
+                          position: 'fixed',
+                          top: editStatusDropdownPos.top,
+                          left: editStatusDropdownPos.left,
+                          width: editStatusDropdownPos.width,
+                          zIndex: 9999,
+                          maxHeight: 200,
+                          overflow: 'auto',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: 1,
+                          boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+                        }}
+                      >
+                        {editStatusFiltered.map((opt) => (
+                          <Box
+                            key={opt.id}
+                            onClick={() => handleEditStatusSelect(opt)}
+                            sx={{
+                              px: 2,
+                              py: 1,
+                              cursor: 'pointer',
+                              fontSize: '0.84rem',
+                              borderBottom: '1px solid #f1f5f9',
+                              '&:last-child': { borderBottom: 'none' },
+                              '&:hover': { bgcolor: '#f1f5f9' },
+                            }}
+                          >
+                            {opt.label}
+                          </Box>
+                        ))}
+                      </Paper>,
+                      document.body,
+                    )}
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <TextField
+                    label='Response Template'
+                    placeholder='Search templates...'
+                    value={editTemplate}
+                    onChange={(e) => setEditTemplate(e.target.value)}
+                    size='small'
+                    fullWidth
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position='end'>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                              {editTemplate ? (
+                                <ClearIcon
+                                  onClick={() => setEditTemplate('')}
+                                  sx={{ fontSize: 18, color: 'text.primary', cursor: 'pointer' }}
+                                />
+                              ) : (
+                                <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                              )}
+                            </Box>
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                </Box>
+              </Box>
+            </Box>
+
+            {/* Comment — RichTextEditor */}
+            <Box sx={{ px: 2.5, pt: 2 }}>
+              <RichTextEditor
+                value={{ segments: parseRichText(editValue).segments }}
+                onChange={(value) => {
+                  const serialized = serializeRichText(value.segments);
+                  setEditValue(serialized);
+                  setHasChanges(serialized.trim() !== displayMessage);
+                }}
+                showFooterActions={false}
+                title='Comment'
+                required
+              />
+            </Box>
+
+            {/* Bottom controls row */}
             <Box
               sx={{
+                px: 2.5,
+                pt: 1.5,
+                pb: 1.5,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'flex-end',
-                mt: 1,
-                gap: 1,
+                gap: 3,
+                flexWrap: 'wrap',
               }}
             >
-              <Button variant='outlined' onClick={handleCancel} size='small'>
-                Cancel
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
+                onClick={() => setEditIsInternal(!editIsInternal)}
+              >
+                <Typography sx={{ fontSize: '0.82rem', color: '#374151', fontWeight: 500 }}>
+                  Internal Note
+                </Typography>
+                <Box
+                  sx={{
+                    width: 36,
+                    height: 20,
+                    borderRadius: 10,
+                    bgcolor: editIsInternal ? COMMENT_ACCENT : '#cbd5e1',
+                    position: 'relative',
+                    transition: 'background-color 0.2s',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: '50%',
+                      bgcolor: '#fff',
+                      position: 'absolute',
+                      top: 2,
+                      left: editIsInternal ? 18 : 2,
+                      transition: 'left 0.2s',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                    }}
+                  />
+                </Box>
+              </Box>
+
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
+                onClick={() => setEditNotifyAssignees(!editNotifyAssignees)}
+              >
+                <Typography sx={{ fontSize: '0.82rem', color: '#374151', fontWeight: 500 }}>
+                  Notify ticket assignees only
+                </Typography>
+                <Box
+                  sx={{
+                    width: 36,
+                    height: 20,
+                    borderRadius: 10,
+                    bgcolor: editNotifyAssignees ? COMMENT_ACCENT : '#cbd5e1',
+                    position: 'relative',
+                    transition: 'background-color 0.2s',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: '50%',
+                      bgcolor: '#fff',
+                      position: 'absolute',
+                      top: 2,
+                      left: editNotifyAssignees ? 18 : 2,
+                      transition: 'left 0.2s',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                    }}
+                  />
+                </Box>
+              </Box>
+
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
+                onClick={() => setEditIsSelfNote(!editIsSelfNote)}
+              >
+                <Typography sx={{ fontSize: '0.82rem', color: '#374151', fontWeight: 500 }}>
+                  Self-note
+                </Typography>
+                <Box
+                  sx={{
+                    width: 36,
+                    height: 20,
+                    borderRadius: 10,
+                    bgcolor: editIsSelfNote ? COMMENT_ACCENT : '#cbd5e1',
+                    position: 'relative',
+                    transition: 'background-color 0.2s',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: '50%',
+                      bgcolor: '#fff',
+                      position: 'absolute',
+                      top: 2,
+                      left: editIsSelfNote ? 18 : 2,
+                      transition: 'left 0.2s',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                    }}
+                  />
+                </Box>
+              </Box>
+
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'pointer' }}
+                onClick={() =>
+                  document.querySelector<HTMLInputElement>('.edit-comment-upload-input')?.click()
+                }
+              >
+                <Typography sx={{ fontSize: '0.82rem', color: '#374151', fontWeight: 500 }}>
+                  Attach file
+                </Typography>
+                <CloudUploadIcon sx={{ fontSize: 18, color: '#64748b' }} />
+                <input
+                  type='file'
+                  className='edit-comment-upload-input'
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files.length > 0)
+                      setEditFiles(Array.from(e.target.files));
+                  }}
+                  multiple
+                />
+              </Box>
+
+              <Box sx={{ flex: 1 }} />
+
+              <Button
+                variant='outlined'
+                onClick={() => {
+                  setEditing(false);
+                  setEditValue(displayMessage);
+                  setEditStatus(comment.status || '');
+                  setEditStatusInput(comment.status || '');
+                  setEditStatusValue(comment.status || '');
+                  setEditTemplate('');
+                  setEditIsInternal(comment.isInternal || false);
+                  setEditIsSelfNote(comment.isSelfNote || false);
+                  setEditNotifyAssignees(comment.notifyAssigneesOnly || false);
+                  setEditFiles([]);
+                  setEditStatusOptionsOpen(false);
+                  setEditStatusFiltered([]);
+                  setEditStatusDropdownPos(null);
+                  setHasChanges(false);
+                }}
+                size='small'
+                sx={{
+                  textTransform: 'none',
+                  px: 3,
+                  py: 0.5,
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  borderRadius: 1.5,
+                  borderColor: '#c7d2fe',
+                  color: '#4338ca',
+                  '&:hover': { borderColor: '#4338ca', bgcolor: '#f5f3ff' },
+                }}
+              >
+                CANCEL
               </Button>
               <Button
                 variant='contained'
                 onClick={handleSave}
                 size='small'
-                disabled={!hasChanges}
-                sx={{ bgcolor: '#2563eb', '&:hover': { bgcolor: '#1d4ed8' } }}
+                sx={{
+                  textTransform: 'none',
+                  px: 3,
+                  py: 0.5,
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  borderRadius: 1.5,
+                  bgcolor: '#2563eb',
+                  '&:hover': { bgcolor: '#1d4ed8' },
+                }}
               >
-                Save
+                SAVE
               </Button>
             </Box>
           </Box>
@@ -2108,13 +2517,23 @@ const UpdatesSection = ({
                       onCopy={undefined}
                       onPin={() => handlePinComment(c.id)}
                       onSave={() => handleSaveComment(c.id)}
-                      onEditSave={async (newMessage) => {
+                      onEditSave={async ({
+                        message,
+                        status,
+                        isInternal,
+                        isSelfNote,
+                        notifyAssigneesOnly,
+                      }) => {
                         const c = entry.item as IIncidentComment;
                         try {
                           await updateComment({
                             ticketId: incidentId,
                             commentId: c.id,
-                            message: newMessage,
+                            message,
+                            status,
+                            isInternal,
+                            isSelfNote,
+                            notifyAssigneesOnly,
                           }).unwrap();
                           await onRefreshComments();
                         } catch {

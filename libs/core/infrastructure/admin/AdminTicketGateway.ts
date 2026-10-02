@@ -201,12 +201,24 @@ export class AdminTicketGateway {
 
   async updateComment(
     id: number,
-    data: { message?: string; isPinned?: boolean; isSaved?: boolean },
+    data: {
+      message?: string;
+      isPinned?: boolean;
+      isSaved?: boolean;
+      status?: string;
+      isInternal?: boolean;
+      isSelfNote?: boolean;
+      notifyAssigneesOnly?: boolean;
+    },
   ): Promise<IAdminTicketComment> {
     const prismaData: any = {
       ...(data.message !== undefined && { message: data.message }),
       ...(data.isPinned !== undefined && { isPinned: data.isPinned }),
       ...(data.isSaved !== undefined && { isSaved: data.isSaved }),
+      ...(data.status !== undefined && { status: data.status }),
+      ...(data.isInternal !== undefined && { isInternal: data.isInternal }),
+      ...(data.isSelfNote !== undefined && { isSelfNote: data.isSelfNote }),
+      ...(data.notifyAssigneesOnly !== undefined && { notifyAssigneesOnly: data.notifyAssigneesOnly }),
       updatedAt: new Date(),
     };
     const comment = await this.prisma.adminTicketComment.update({

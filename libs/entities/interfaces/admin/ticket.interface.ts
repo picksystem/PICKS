@@ -306,7 +306,15 @@ export interface IAdminTicketGateway {
   getComments(ticketId: number): Promise<IAdminTicketComment[]>;
   updateComment(
     id: number,
-    data: { message?: string; isPinned?: boolean; isSaved?: boolean },
+    data: {
+      message?: string;
+      isPinned?: boolean;
+      isSaved?: boolean;
+      status?: string;
+      isInternal?: boolean;
+      isSelfNote?: boolean;
+      notifyAssigneesOnly?: boolean;
+    },
   ): Promise<IAdminTicketComment>;
   addTimeEntry(data: {
     ticketId: number;
