@@ -18,6 +18,7 @@ export interface SubCategorySearchFieldProps {
   required?: boolean;
   error?: boolean;
   helperText?: React.ReactNode;
+  categoryName?: string;
 }
 
 export const SubCategorySearchField = ({
@@ -27,6 +28,7 @@ export const SubCategorySearchField = ({
   required,
   error,
   helperText,
+  categoryName,
 }: SubCategorySearchFieldProps) => {
   const [inputValue, setInputValue] = useState(value || '');
   const [options, setOptions] = useState<{ id: string; name: string }[]>([]);
@@ -40,6 +42,7 @@ export const SubCategorySearchField = ({
     const seen = new Set<string>();
     const opts: { id: string; name: string }[] = [];
     categorization.applicationSubCategories.forEach((cat) => {
+      if (categoryName && cat.applicationCategoryName !== categoryName) return;
       const name = String(cat?.subCategoryName ?? '').trim();
       if (!name) return;
       const key = name.toLowerCase();
@@ -48,7 +51,7 @@ export const SubCategorySearchField = ({
       opts.push({ id: cat.id ?? name, name });
     });
     return opts.sort((a, b) => a.name.localeCompare(b.name));
-  }, [categorization?.applicationSubCategories]);
+  }, [categorization?.applicationSubCategories, categoryName]);
 
   const isLoading = configLoading || !categorization;
 

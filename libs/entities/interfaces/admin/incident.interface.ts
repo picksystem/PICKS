@@ -357,6 +357,10 @@ export interface IResolution {
   isRecurring: boolean;
   rootCauseIdentified: boolean;
   rootCause: string | null;
+  workaroundIdentified: boolean;
+  workaround: string | null;
+  rootCauseId: string | null;
+  workaroundId: string | null;
   resolutionCode: ResolutionCode;
   resolution: string;
   internalNote: string | null;
@@ -375,6 +379,8 @@ export interface ICreateResolutionInput {
   isRecurring?: boolean;
   rootCauseIdentified?: boolean;
   rootCause?: string;
+  workaroundIdentified?: boolean;
+  workaround?: string;
   resolutionCode: ResolutionCode;
   resolution: string;
   internalNote?: string;

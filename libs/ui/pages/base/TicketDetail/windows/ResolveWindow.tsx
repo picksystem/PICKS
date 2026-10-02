@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Box, Button, TextField, Paper } from '../../../../components';
+import { Box, Button, TextField, Paper, Typography } from '../../../../components';
 import { alpha, darken, InputAdornment } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -21,6 +21,7 @@ import { useConfiguration } from '@serviceops/confighooks';
 import { CategorySearchField } from '../../Configuration/shared/GenericPanel/components/CategorySearchField/CategorySearchField';
 import { SubCategorySearchField } from '../../Configuration/shared/GenericPanel/components/SubCategorySearchField/SubCategorySearchField';
 import { ResolutionCodeSearchField } from '../../Configuration/shared/GenericPanel/components/ResolutionCodeSearchField/ResolutionCodeSearchField';
+import { ApplicationSearchField } from '../../Configuration/shared/GenericPanel/components/ApplicationSearchField/ApplicationSearchField';
 
 const RESOLVE_ACCENT = '#0369a1';
 
@@ -45,11 +46,16 @@ const ResolveWindow = ({
   const [updLoading, setUpdLoading] = useState(false);
   const [category, setCategory] = useState('');
   const [subCategory, setSubCategory] = useState('');
+  const [application, setApplication] = useState('');
   const [customerConfirmation, setCustomerConfirmation] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
   const [rootCauseIdentified, setRootCauseIdentified] = useState(false);
   const [rootCause, setRootCause] = useState('');
+  const [workaroundIdentified, setWorkaroundIdentified] = useState(false);
+  const [workaround, setWorkaround] = useState('');
   const [resolutionCode, setResolutionCode] = useState('');
+  const [rootCauseId, setRootCauseId] = useState('');
+  const [workaroundId, setWorkaroundId] = useState('');
   const [resolution, setResolution] = useState('');
   const [internalNote, setInternalNote] = useState('');
   const notify = useNotification();
@@ -159,16 +165,21 @@ const ResolveWindow = ({
       setStatusInput('');
       setTemplateInput('');
       setResolutionCode('');
-      setCategory('');
-      setSubCategory('');
+      setRootCauseId('');
+      setWorkaroundId('');
+      setApplication(incident.application || '');
+      setCategory(incident.applicationCategory || '');
+      setSubCategory(incident.applicationSubCategory || '');
       setCustomerConfirmation(false);
       setIsRecurring(false);
       setRootCauseIdentified(false);
       setRootCause('');
+      setWorkaroundIdentified(false);
+      setWorkaround('');
       setResolution('');
       setInternalNote('');
     }
-  }, [open]);
+  }, [open, incident.application, incident.applicationCategory, incident.applicationSubCategory]);
 
   // ── Save handler ──────────────────────────────────────────────────────────
   const handleSave = async () => {
@@ -184,13 +195,17 @@ const ResolveWindow = ({
       await createResolution({
         ticketType: incident.ticketType,
         ticketId: incident.id,
-        application: incident.application || undefined,
+        application: application || undefined,
         category: category || undefined,
         subCategory: subCategory || undefined,
         customerConfirmation,
         isRecurring,
         rootCauseIdentified,
         rootCause: rootCause || undefined,
+        workaroundIdentified,
+        workaround: workaround || undefined,
+        rootCauseId: rootCauseId || undefined,
+        workaroundId: workaroundId || undefined,
         resolutionCode: resolutionCode as ResolutionCode,
         resolution,
         internalNote: internalNote || undefined,
@@ -219,7 +234,8 @@ const ResolveWindow = ({
       isEdit={false}
       icon={<CheckCircleIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
       accent={RESOLVE_ACCENT}
-      title='Resolve Ticket'
+      title='Resolve the ticket'
+      newTitle='Resolve the ticket'
       subtitle='Add resolution details to this ticket'
       submitDisabled={false}
       submitLabel='Save'
@@ -350,31 +366,32 @@ const ResolveWindow = ({
           </Box>
         </Box>
 
-        {/* Application */}
-        <TextField
+        {/* Application — searchable, auto-filled from ticket */}
+        <ApplicationSearchField
           label='Application'
-          value={incident.application || ''}
-          disabled
-          size='small'
-          fullWidth
+          value={application}
+          onChange={setApplication}
+          required={false}
         />
 
         {/* Category & Sub-category row */}
         <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <CategorySearchField
-              label='Category'
+              label='Application Category'
               value={category}
               onChange={setCategory}
               required={false}
+              applicationId={application}
             />
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <SubCategorySearchField
-              label='Sub-category'
+              label='Application Sub-category'
               value={subCategory}
               onChange={setSubCategory}
               required={false}
+              categoryName={category}
             />
           </Box>
         </Box>
@@ -406,7 +423,7 @@ const ResolveWindow = ({
                 whiteSpace: 'nowrap',
               }}
             >
-              Customer Confirmation
+              Received Customer Confirmation
             </label>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
@@ -449,19 +466,47 @@ const ResolveWindow = ({
               Root Cause Identified
             </label>
           </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Box
+              component='input'
+              type='checkbox'
+              id='workaround-identified'
+              checked={workaroundIdentified}
+              onChange={() => setWorkaroundIdentified(!workaroundIdentified)}
+            />
+            <label
+              htmlFor='workaround-identified'
+              style={{
+                fontSize: '0.85rem',
+                color: '#374151',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Workaround Identified
+            </label>
+          </Box>
         </Box>
 
         {/* Root Cause (conditional) */}
         {rootCauseIdentified && (
-          <TextField
-            label='Root Cause'
-            value={rootCause}
-            onChange={(e) => setRootCause(e.target.value)}
-            multiline
-            minRows={2}
-            maxRows={8}
-            size='small'
-            fullWidth
+          <RichTextEditor
+            value={{ segments: parseRichText(rootCause).segments }}
+            onChange={(value) => setRootCause(serializeRichText(value.segments))}
+            showFooterActions={false}
+            title='Root Cause'
+            required={false}
+          />
+        )}
+
+        {/* Workaround (conditional) */}
+        {workaroundIdentified && (
+          <RichTextEditor
+            value={{ segments: parseRichText(workaround).segments }}
+            onChange={(value) => setWorkaround(serializeRichText(value.segments))}
+            showFooterActions={false}
+            title='Workaround'
+            required={false}
           />
         )}
 
@@ -473,129 +518,139 @@ const ResolveWindow = ({
           required
         />
 
-        {/* Resolution, Internal Note & File Upload in dashed border container */}
-        <Box
-          sx={{
-            border: '2px dashed #d1d5db',
-            borderRadius: '6px',
-            p: 2.5,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2.5,
-            bgcolor: '#fafafa',
-          }}
-        >
-          {/* Resolution */}
-          <RichTextEditor
-            value={{ segments: parseRichText(resolution).segments }}
-            onChange={(value) => setResolution(serializeRichText(value.segments))}
-            showFooterActions={false}
-            title='Resolution'
-            required
-          />
-
-          {/* Internal Note */}
-          <RichTextEditor
-            value={{ segments: parseRichText(internalNote).segments }}
-            onChange={(value) => setInternalNote(serializeRichText(value.segments))}
-            showFooterActions={false}
-            title='Internal Note'
-            required={false}
-          />
-
-          {/* File Upload */}
-          <Box
-            onClick={() =>
-              document.querySelector<HTMLInputElement>('.resolve-upload-input')?.click()
-            }
-            sx={{
-              border: '2px dashed #d1d5db',
-              borderRadius: '4px',
-              p: '20px 16px',
-              textAlign: 'center',
-              cursor: 'pointer',
-              transition: 'border-color 0.2s',
-              bgcolor: '#f9fafb',
-              '&:hover': {
-                borderColor: RESOLVE_ACCENT,
-                bgcolor: alpha(RESOLVE_ACCENT, 0.02),
-              },
-            }}
-          >
-            <input
-              type='file'
-              className='resolve-upload-input'
-              style={{ display: 'none' }}
-              onChange={() => {}}
-            />
-            <Box sx={{ mb: 1.5 }}>
-              <CloudUploadOutlinedIcon sx={{ fontSize: 32, color: '#9ca3af' }} />
-            </Box>
-            <Button
-              variant='contained'
+        {/* Root Cause ID & Workaround ID — side by side */}
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ flex: 1 }}>
+            <TextField
+              label='Root Cause ID'
+              value={rootCauseId}
+              onChange={(e) => setRootCauseId(e.target.value)}
+              placeholder='Enter root cause ID'
               size='small'
-              sx={{
-                bgcolor: '#2d5ebb',
-                '&:hover': { bgcolor: '#1e40af' },
-                textTransform: 'none',
-                px: 3,
-                py: 0.75,
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                borderRadius: '4px',
-              }}
-            >
-              CHOOSE FILE
-            </Button>
+              fullWidth
+            />
+          </Box>
+          <Box sx={{ flex: 1 }}>
+            <TextField
+              label='Workaround ID'
+              value={workaroundId}
+              onChange={(e) => setWorkaroundId(e.target.value)}
+              placeholder='Enter workaround ID'
+              size='small'
+              fullWidth
+            />
           </Box>
         </Box>
 
-        {/* Action Buttons */}
+        {/* Resolution, Internal Note & File Upload in dashed border container */}
+        {/* Resolution */}
+        <RichTextEditor
+          value={{ segments: parseRichText(resolution).segments }}
+          onChange={(value) => setResolution(serializeRichText(value.segments))}
+          showFooterActions={false}
+          title='Resolution'
+          required
+        />
+
+        {/* Internal Note */}
+        <RichTextEditor
+          value={{ segments: parseRichText(internalNote).segments }}
+          onChange={(value) => setInternalNote(serializeRichText(value.segments))}
+          showFooterActions={false}
+          title='Internal Note'
+          required={false}
+        />
+
+        {/* File Upload */}
         <Box
+          onClick={() => document.querySelector<HTMLInputElement>('.resolve-upload-input')?.click()}
           sx={{
-            display: 'flex',
-            gap: 1,
-            justifyContent: 'flex-end',
-            flexDirection: { xs: 'column', sm: 'row' },
-            pt: 2,
-            mt: 1,
-            borderTop: '1px solid',
-            borderColor: 'divider',
+            border: '2px dashed #d1d5db',
+            borderRadius: '4px',
+            p: '20px 16px',
+            textAlign: 'center',
+            cursor: 'pointer',
+            transition: 'border-color 0.2s',
+            bgcolor: '#f9fafb',
+            '&:hover': {
+              borderColor: RESOLVE_ACCENT,
+              bgcolor: alpha(RESOLVE_ACCENT, 0.02),
+            },
           }}
         >
+          <input
+            type='file'
+            className='resolve-upload-input'
+            style={{ display: 'none' }}
+            onChange={() => {}}
+          />
+          <Box sx={{ mb: 1.5 }}>
+            <CloudUploadOutlinedIcon sx={{ fontSize: 32, color: '#9ca3af' }} />
+          </Box>
           <Button
-            onClick={onClose}
-            variant='outlined'
-            sx={{
-              textTransform: 'none',
-              width: { xs: '100%', sm: 'auto' },
-              borderColor: alpha(RESOLVE_ACCENT, 0.4),
-              color: darken(RESOLVE_ACCENT, 0.15),
-              '&:hover': {
-                borderColor: RESOLVE_ACCENT,
-                bgcolor: alpha(RESOLVE_ACCENT, 0.04),
-              },
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={() => handleSave()}
-            disabled={isLoading}
             variant='contained'
+            size='small'
             sx={{
+              bgcolor: '#2d5ebb',
+              '&:hover': { bgcolor: '#1e40af' },
               textTransform: 'none',
-              width: { xs: '100%', sm: 'auto' },
-              bgcolor: RESOLVE_ACCENT,
-              '&:hover': { bgcolor: darken(RESOLVE_ACCENT, 0.15) },
-              '&.Mui-disabled': {
-                bgcolor: alpha(RESOLVE_ACCENT, 0.4),
-              },
+              px: 3,
+              py: 0.75,
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              borderRadius: '4px',
             }}
           >
-            Save
+            CHOOSE FILE
           </Button>
         </Box>
+      </Box>
+
+      {/* Action Buttons */}
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 1,
+          justifyContent: 'flex-end',
+          flexDirection: { xs: 'column', sm: 'row' },
+          pt: 2,
+          mt: 1,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Button
+          onClick={onClose}
+          variant='outlined'
+          sx={{
+            textTransform: 'none',
+            width: { xs: '100%', sm: 'auto' },
+            borderColor: alpha(RESOLVE_ACCENT, 0.4),
+            color: darken(RESOLVE_ACCENT, 0.15),
+            '&:hover': {
+              borderColor: RESOLVE_ACCENT,
+              bgcolor: alpha(RESOLVE_ACCENT, 0.04),
+            },
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={() => handleSave()}
+          disabled={isLoading}
+          variant='contained'
+          sx={{
+            textTransform: 'none',
+            width: { xs: '100%', sm: 'auto' },
+            bgcolor: RESOLVE_ACCENT,
+            '&:hover': { bgcolor: darken(RESOLVE_ACCENT, 0.15) },
+            '&.Mui-disabled': {
+              bgcolor: alpha(RESOLVE_ACCENT, 0.4),
+            },
+          }}
+        >
+          Save
+        </Button>
       </Box>
     </ConfigFormDialog>
   );

@@ -52,6 +52,10 @@ export interface IAddResolutionInput {
   isRecurring?: boolean;
   rootCauseIdentified?: boolean;
   rootCause?: string;
+  workaroundIdentified?: boolean;
+  workaround?: string;
+  rootCauseId?: string;
+  workaroundId?: string;
   resolutionCode: string;
   resolution: string;
   internalNote?: string;

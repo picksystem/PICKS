@@ -143,57 +143,60 @@ const TicketDetailView = () => {
 
   return (
     <Box className={classes.container}>
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <TicketHeader
-        classes={classes}
-        incident={incident}
-        prevNumber={navigation.prevNumber}
-        nextNumber={navigation.nextNumber}
-        navigateToIncident={navigation.navigateToIncident}
-      />
-
-      {/* ── Draft Expiry Banners ────────────────────────────────────────────── */}
-      {incident.status === 'draft' && incident.draftExpiresAt && (
-        <>
-          <DraftExpiryBanner
-            classes={classes}
-            cx={cx}
-            draftExpired={draftExpired}
-            draftRemaining={draftRemaining}
-            isMobile
-          />
-          <DraftExpiryBanner
-            classes={classes}
-            cx={cx}
-            draftExpired={draftExpired}
-            draftRemaining={draftRemaining}
-          />
-        </>
-      )}
-
-      {/* ── Mobile: Ticket Info toggle + InfoRow ────────────────────────────── */}
-      {isMobile && (
-        <MobileToggleRow
-          classes={classes}
-          cx={cx}
-          open={infoRowOpen}
-          label='Ticket Info'
-          onClick={() => setInfoRowOpen((prev) => !prev)}
-        />
-      )}
-      {(!isMobile || infoRowOpen) && (
-        <InfoRow
+      {/* ── Sticky Header Section ─────────────────────────────────────────── */}
+      <Box className={classes.stickyHeaderSection}>
+        {/* ── Header ─────────────────────────────────────────────────────────── */}
+        <TicketHeader
           classes={classes}
           incident={incident}
-          eta={eta}
-          onEtaChange={handleEtaChange}
-          onPriorityClick={() => setActiveModal('priorityChange')}
-          layoutConfig={layoutConfig}
+          prevNumber={navigation.prevNumber}
+          nextNumber={navigation.nextNumber}
+          navigateToIncident={navigation.navigateToIncident}
         />
-      )}
 
-      {/* ── Mobile: ActionBar ───────────────────────────────────────────────── */}
-      {isMobile && <ActionBar {...actionBarProps} />}
+        {/* ── Draft Expiry Banners ────────────────────────────────────────────── */}
+        {incident.status === 'draft' && incident.draftExpiresAt && (
+          <>
+            <DraftExpiryBanner
+              classes={classes}
+              cx={cx}
+              draftExpired={draftExpired}
+              draftRemaining={draftRemaining}
+              isMobile
+            />
+            <DraftExpiryBanner
+              classes={classes}
+              cx={cx}
+              draftExpired={draftExpired}
+              draftRemaining={draftRemaining}
+            />
+          </>
+        )}
+
+        {/* ── Mobile: Ticket Info toggle + InfoRow ────────────────────────────── */}
+        {isMobile && (
+          <MobileToggleRow
+            classes={classes}
+            cx={cx}
+            open={infoRowOpen}
+            label='Ticket Info'
+            onClick={() => setInfoRowOpen((prev) => !prev)}
+          />
+        )}
+        {(!isMobile || infoRowOpen) && (
+          <InfoRow
+            classes={classes}
+            incident={incident}
+            eta={eta}
+            onEtaChange={handleEtaChange}
+            onPriorityClick={() => setActiveModal('priorityChange')}
+            layoutConfig={layoutConfig}
+          />
+        )}
+
+        {/* ── Action Buttons ─────────────────────────────────────────────────── */}
+        <ActionBar {...actionBarProps} />
+      </Box>
 
       {/* ── Mobile: Details (Sidebar) toggle ───────────────────────────────── */}
       {isMobile && (
@@ -234,9 +237,6 @@ const TicketDetailView = () => {
 
         {/* Right Content Area */}
         <Box className={classes.contentArea}>
-          {/* ActionBar — desktop only (mobile renders above mainLayout) */}
-          {!isMobile && <ActionBar {...actionBarProps} />}
-
           {/* Support Note + Time Summary + Timer — all screen sizes */}
           <Box className={classes.noteAndTimerRow}>
             <Box className={classes.supportPlanNote}>

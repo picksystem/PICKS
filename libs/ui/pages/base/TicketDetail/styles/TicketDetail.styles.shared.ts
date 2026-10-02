@@ -955,6 +955,20 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     textAlign: 'center' as const,
   },
 
+  // ── Sticky header section (headerRow + infoRow + actionButtonsRow) ──────
+  stickyHeaderSection: {
+    position: 'sticky' as const,
+    top: 0,
+    zIndex: 20,
+    background: 'linear-gradient(145deg, #eef2ff 0%, #f8faff 50%, #eff6ff 100%)',
+    paddingBottom: theme.spacing(1),
+    borderRadius: 0,
+
+    [theme.breakpoints.down('sm')]: {
+      paddingBottom: theme.spacing(0.5),
+    },
+  },
+
   // Main layout
   mainLayout: {
     display: 'flex',

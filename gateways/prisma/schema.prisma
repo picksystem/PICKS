@@ -791,6 +791,8 @@ model AdminTicketResolution {
   isRecurring          Boolean  @default(false)
   rootCauseIdentified  Boolean  @default(false)
   rootCause            String?
+  workaroundIdentified  Boolean  @default(false)
+  workaround            String?
   resolutionCode       String
   resolution           String
   internalNote         String?

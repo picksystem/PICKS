@@ -194,7 +194,7 @@ const CommentWindow = ({
           ? 'Notify Assignees Only'
           : mode === 'email'
             ? 'Send Email'
-            : 'Add a Comment';
+            : 'Add a comment';
 
   const dialogSubtitle =
     mode === 'internal'
@@ -283,83 +283,85 @@ const CommentWindow = ({
       maxWidth='sm'
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-        {/* Status — search-style field */}
-        <Box sx={{ position: 'relative' }}>
-          <TextField
-            label='Status'
-            required
-            placeholder='Search statuses...'
-            value={statusInput}
-            onChange={(e) => handleStatusInputChange(e.target.value)}
-            onFocus={() => {
-              const q = statusInput.trim().toLowerCase();
-              const next = q
-                ? statusOptions.filter((o) => o.label.toLowerCase().includes(q))
-                : statusOptions;
-              setStatusFiltered(next);
-              if (next.length > 0) setStatusOptionsOpen(true);
-            }}
-            onBlur={() => setTimeout(() => setStatusOptionsOpen(false), 200)}
-            fullWidth
-            size='small'
-            sx={fieldBaseSx}
-            slotProps={{
-              input: {
-                endAdornment: searchAdornment(statusInput.length > 0, handleStatusClear),
-              },
-            }}
-          />
-          {statusOptionsOpen && statusFiltered.length > 0 && (
-            <Paper
-              elevation={4}
-              sx={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                zIndex: 1000,
-                mt: 0,
-                maxHeight: 280,
-                overflow: 'auto',
+        {/* Response Template + Status — side by side */}
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ flex: 1 }}>
+            <TextField
+              label='Response Template'
+              placeholder='Search templates...'
+              value={templateInput}
+              onChange={(e) => handleTemplateInputChange(e.target.value)}
+              fullWidth
+              size='small'
+              sx={fieldBaseSx}
+              slotProps={{
+                input: {
+                  endAdornment: searchAdornment(templateInput.length > 0, handleTemplateClear),
+                },
               }}
-            >
-              {statusFiltered.map((opt) => (
-                <Box
-                  key={opt.id}
-                  onClick={() => handleStatusSelect(opt)}
-                  sx={{
-                    px: 1.5,
-                    py: 1,
-                    cursor: 'pointer',
-                    fontSize: '0.84rem',
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    '&:last-child': { borderBottom: 'none' },
-                    '&:hover': { bgcolor: alpha(COMMENT_ACCENT, 0.08) },
-                  }}
-                >
-                  {opt.label}
-                </Box>
-              ))}
-            </Paper>
-          )}
+            />
+          </Box>
+          <Box sx={{ flex: 1, position: 'relative' }}>
+            <TextField
+              label='Status'
+              required
+              placeholder='Search statuses...'
+              value={statusInput}
+              onChange={(e) => handleStatusInputChange(e.target.value)}
+              onFocus={() => {
+                const q = statusInput.trim().toLowerCase();
+                const next = q
+                  ? statusOptions.filter((o) => o.label.toLowerCase().includes(q))
+                  : statusOptions;
+                setStatusFiltered(next);
+                if (next.length > 0) setStatusOptionsOpen(true);
+              }}
+              onBlur={() => setTimeout(() => setStatusOptionsOpen(false), 200)}
+              fullWidth
+              size='small'
+              sx={fieldBaseSx}
+              slotProps={{
+                input: {
+                  endAdornment: searchAdornment(statusInput.length > 0, handleStatusClear),
+                },
+              }}
+            />
+            {statusOptionsOpen && statusFiltered.length > 0 && (
+              <Paper
+                elevation={4}
+                sx={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  zIndex: 1000,
+                  mt: 0,
+                  maxHeight: 280,
+                  overflow: 'auto',
+                }}
+              >
+                {statusFiltered.map((opt) => (
+                  <Box
+                    key={opt.id}
+                    onClick={() => handleStatusSelect(opt)}
+                    sx={{
+                      px: 1.5,
+                      py: 1,
+                      cursor: 'pointer',
+                      fontSize: '0.84rem',
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                      '&:last-child': { borderBottom: 'none' },
+                      '&:hover': { bgcolor: alpha(COMMENT_ACCENT, 0.08) },
+                    }}
+                  >
+                    {opt.label}
+                  </Box>
+                ))}
+              </Paper>
+            )}
+          </Box>
         </Box>
-
-        {/* Response Template */}
-        <TextField
-          label='Response Template'
-          placeholder='Search templates...'
-          value={templateInput}
-          onChange={(e) => handleTemplateInputChange(e.target.value)}
-          fullWidth
-          size='small'
-          sx={fieldBaseSx}
-          slotProps={{
-            input: {
-              endAdornment: searchAdornment(templateInput.length > 0, handleTemplateClear),
-            },
-          }}
-        />
 
         {/* Message — RichTextEditor */}
         <Box>

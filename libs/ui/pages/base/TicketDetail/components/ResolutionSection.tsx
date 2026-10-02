@@ -55,77 +55,92 @@ const getAvatarColor = (name: string): string => {
 };
 
 /* ─────────────────────────────────────────────────────────
-   Action icon style
+   Action icon style — clean, minimal icon buttons
    ───────────────────────────────────────────────────────── */
 
 const actionIconSx = {
   p: 0,
-  width: 34,
-  height: 34,
+  width: 30,
+  height: 30,
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  borderRadius: '8px',
+  borderRadius: '6px',
   border: '1px solid #e2e8f0',
   backgroundColor: '#ffffff',
-  color: '#334155',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+  color: '#64748b',
   transition: 'all 0.15s ease',
   cursor: 'pointer',
   '&:hover': {
-    backgroundColor: '#f8fafc',
-    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-    transform: 'translateY(-1px)',
+    backgroundColor: '#f1f5f9',
+    color: '#334155',
+    borderColor: '#cbd5e1',
   },
 };
 
 /* ─────────────────────────────────────────────────────────
-   Badge helpers
+   Badge: Resolution Code (FIXED / UNFIXED / etc.)
    ───────────────────────────────────────────────────────── */
 
-const CodeBadge = ({ code }: { code: string }) => (
-  <Box
-    component='span'
-    sx={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: 0.5,
-      px: 1,
-      py: '2px 8px',
-      borderRadius: '4px',
-      bgcolor: '#f1f5f9',
-      border: '1px solid #e2e8f0',
-    }}
-  >
-    <Box sx={{ width: 8, height: 8, borderRadius: '50%', background: '#f97316' }} />
-    <Typography
+const CodeBadge = ({ code }: { code: string }) => {
+  const isFixed = code.toUpperCase() === 'FIXED';
+  return (
+    <Box
       component='span'
       sx={{
-        fontSize: '0.78rem',
-        fontWeight: 700,
-        color: '#475569',
-        textTransform: 'uppercase',
-        letterSpacing: '0.3px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 0.5,
+        px: 1.25,
+        py: 0.25,
+        borderRadius: '5px',
+        bgcolor: isFixed ? '#f0fdf4' : '#fef2f2',
+        border: `1px solid ${isFixed ? '#bbf7d0' : '#fecaca'}`,
       }}
     >
-      {code.replace(/_/g, ' ').toUpperCase()}
-    </Typography>
-  </Box>
-);
+      <Box
+        sx={{
+          width: 7,
+          height: 7,
+          borderRadius: '50%',
+          background: isFixed ? '#22c55e' : '#ef4444',
+        }}
+      />
+      <Typography
+        component='span'
+        sx={{
+          fontSize: '0.75rem',
+          fontWeight: 700,
+          color: isFixed ? '#16a34a' : '#dc2626',
+          textTransform: 'uppercase',
+          letterSpacing: '0.4px',
+        }}
+      >
+        {code.replace(/_/g, ' ').toUpperCase()}
+      </Typography>
+    </Box>
+  );
+};
+
+/* ─────────────────────────────────────────────────────────
+   Badge: Yes/No boolean
+   ───────────────────────────────────────────────────────── */
 
 const YesNoBadge = ({ value }: { value: boolean }) => (
   <Box
     sx={{
       display: 'inline-flex',
       alignItems: 'center',
+      gap: 0.4,
       px: 1,
-      py: 0.35,
-      borderRadius: '6px',
+      py: 0.2,
+      borderRadius: '4px',
       fontSize: '0.7rem',
       fontWeight: 700,
       background: value ? '#dcfce7' : '#fef2f2',
       color: value ? '#16a34a' : '#dc2626',
       border: `1px solid ${value ? '#bbf7d0' : '#fecaca'}`,
+      lineHeight: 1.5,
     }}
   >
     {value ? 'Yes' : 'No'}
@@ -147,23 +162,25 @@ const ResolutionCard = ({ resolution }: ResolutionCardProps) => {
     resolution.subCategory ||
     resolution.resolution ||
     resolution.internalNote ||
-    resolution.isRecurring ||
-    resolution.rootCauseIdentified;
+    resolution.isRecurring !== undefined ||
+    resolution.rootCauseIdentified !== undefined ||
+    resolution.workaroundIdentified !== undefined;
 
   const avatarColor = getAvatarColor(resolution.createdBy);
   const initials = getInitials(resolution.createdBy);
+  const isFixed = resolution.resolutionCode?.toUpperCase() === 'FIXED';
 
   return (
     <Box
       sx={{
         mb: 1.5,
-        borderRadius: 0,
+        borderRadius: '10px',
         backgroundColor: '#ffffff',
         border: '1px solid #e2e8f0',
-        borderLeft: '3px solid #f97316',
+        borderLeft: `3px solid ${isFixed ? '#22c55e' : '#f97316'}`,
         overflow: 'hidden',
         transition: 'box-shadow 0.15s ease',
-        '&:hover': { boxShadow: '0 1px 3px rgba(0,0,0,0.04)' },
+        '&:hover': { boxShadow: '0 1px 4px rgba(0,0,0,0.04)' },
       }}
     >
       {/* ── Header: Avatar | Email | Time | Actions ─ */}
@@ -174,17 +191,17 @@ const ResolutionCard = ({ resolution }: ResolutionCardProps) => {
           justifyContent: 'space-between',
           gap: 2,
           px: 2,
-          pt: 1.5,
+          pt: 1.25,
           pb: 0.75,
         }}
       >
         {/* Left — Avatar + Email */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0, flex: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0, flex: 1 }}>
           <Box
             sx={{
-              width: 32,
-              height: 32,
-              borderRadius: '4px',
+              width: 30,
+              height: 30,
+              borderRadius: '6px',
               bgcolor: avatarColor,
               display: 'flex',
               alignItems: 'center',
@@ -194,10 +211,11 @@ const ResolutionCard = ({ resolution }: ResolutionCardProps) => {
           >
             <Typography
               sx={{
-                fontSize: '0.72rem',
+                fontSize: '0.68rem',
                 fontWeight: 800,
                 color: '#fff',
                 fontFamily: '"Roboto Mono", monospace',
+                letterSpacing: '0.3px',
               }}
             >
               {initials}
@@ -205,7 +223,7 @@ const ResolutionCard = ({ resolution }: ResolutionCardProps) => {
           </Box>
           <Typography
             sx={{
-              fontSize: '0.875rem',
+              fontSize: '0.82rem',
               fontWeight: 600,
               color: '#374151',
               overflow: 'hidden',
@@ -219,40 +237,40 @@ const ResolutionCard = ({ resolution }: ResolutionCardProps) => {
 
         {/* Right — Type label + Timestamp + Action icons */}
         <Box
-          sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0, flexWrap: 'wrap' }}
+          sx={{ display: 'flex', alignItems: 'center', gap: 1.25, flexShrink: 0, flexWrap: 'wrap' }}
         >
-          <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#d97706' }}>
+          <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#d97706' }}>
             Resolution
           </Typography>
           <Typography
             sx={{
-              fontSize: '0.8rem',
-              color: '#64748b',
+              fontSize: '0.75rem',
+              color: '#94a3b8',
               fontWeight: 500,
               fontFamily: '"Roboto Mono", monospace',
             }}
           >
             {formatDate(resolution.createdAt)}
           </Typography>
-          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
+          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.4, flexShrink: 0 }}>
             <Tooltip title='Copy'>
               <Box component='span' sx={actionIconSx}>
-                <ContentCopyIcon sx={{ fontSize: 18 }} />
+                <ContentCopyIcon sx={{ fontSize: 15 }} />
               </Box>
             </Tooltip>
             <Tooltip title='Pin'>
               <Box component='span' sx={actionIconSx}>
-                <PushPinIcon sx={{ fontSize: 18 }} />
+                <PushPinIcon sx={{ fontSize: 15 }} />
               </Box>
             </Tooltip>
             <Tooltip title='Bookmark'>
               <Box component='span' sx={actionIconSx}>
-                <BookmarkBorderIcon sx={{ fontSize: 18 }} />
+                <BookmarkBorderIcon sx={{ fontSize: 15 }} />
               </Box>
             </Tooltip>
             <Tooltip title='Edit'>
               <Box component='span' sx={actionIconSx}>
-                <EditIcon sx={{ fontSize: 18 }} />
+                <EditIcon sx={{ fontSize: 15 }} />
               </Box>
             </Tooltip>
           </Box>
@@ -260,7 +278,7 @@ const ResolutionCard = ({ resolution }: ResolutionCardProps) => {
       </Box>
 
       {/* ── Body: Key-Value Fields ─ */}
-      <Box sx={{ px: '56px', pb: 1.5 }}>
+      <Box sx={{ px: 2.5, pb: 1.25 }}>
         {/* Application */}
         {resolution.application && <FieldRow label='Application' value={resolution.application} />}
 
@@ -270,6 +288,16 @@ const ResolutionCard = ({ resolution }: ResolutionCardProps) => {
             label='Resolution Code'
             value={<CodeBadge code={resolution.resolutionCode} />}
           />
+        )}
+
+        {/* Root Cause ID */}
+        {resolution.rootCauseId && (
+          <FieldRow label='Root Cause ID' value={resolution.rootCauseId} />
+        )}
+
+        {/* Workaround ID */}
+        {resolution.workaroundId && (
+          <FieldRow label='Workaround ID' value={resolution.workaroundId} />
         )}
 
         {/* Category (with sub-category appended if present) */}
@@ -292,18 +320,24 @@ const ResolutionCard = ({ resolution }: ResolutionCardProps) => {
         {/* Customer Confirmation */}
         {resolution.customerConfirmation && (
           <FieldRow
-            label='Customer Confirmation'
+            label='Received Customer Confirmation'
             value={
-              <span style={{ color: '#059669', fontWeight: 600, fontSize: '0.85rem' }}>
-                Confirmed
-              </span>
+              <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.4 }}>
+                <CheckCircleIcon sx={{ fontSize: 15, color: '#059669' }} />
+                <Typography
+                  component='span'
+                  sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#059669' }}
+                >
+                  Confirmed
+                </Typography>
+              </Box>
             }
           />
         )}
 
         {/* Show More Details toggle */}
         {hasExpandable && (
-          <Box sx={{ mt: 0.5 }}>
+          <Box sx={{ mt: 0.75 }}>
             <Box
               onClick={() => setExpanded(!expanded)}
               sx={{
@@ -312,12 +346,30 @@ const ResolutionCard = ({ resolution }: ResolutionCardProps) => {
                 gap: 0.5,
                 cursor: 'pointer',
                 color: '#6366f1',
-                fontSize: '0.8rem',
+                fontSize: '0.78rem',
                 fontWeight: 700,
                 userSelect: 'none',
-                '&:hover': { textDecoration: 'underline' },
+                px: 0.5,
+                py: 0.25,
+                borderRadius: '4px',
+                transition: 'all 0.15s ease',
+                '&:hover': {
+                  backgroundColor: '#eef2ff',
+                  textDecoration: 'none',
+                },
               }}
             >
+              <Typography
+                component='span'
+                sx={{
+                  fontSize: '0.7rem',
+                  transition: 'transform 0.2s ease',
+                  transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                  display: 'inline-block',
+                }}
+              >
+                ▾
+              </Typography>
               {expanded ? 'Show Less' : 'Show More Details'}
             </Box>
           </Box>
@@ -325,18 +377,18 @@ const ResolutionCard = ({ resolution }: ResolutionCardProps) => {
 
         {/* ── Expandable Section ─ */}
         {expanded && hasExpandable && (
-          <Box sx={{ mt: 1.5, pt: 1.5, borderTop: '1px solid #e2e8f0' }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <Box sx={{ mt: 1.25, pt: 1.25, borderTop: '1px solid #f1f5f9' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
               {/* Resolution text */}
               {resolution.resolution && (
-                <Box sx={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
+                <Box sx={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <Typography
                     sx={{
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
+                      fontSize: '0.82rem',
+                      fontWeight: 700,
                       color: '#475569',
                       whiteSpace: 'nowrap',
-                      minWidth: 140,
+                      minWidth: 115,
                       flexShrink: 0,
                     }}
                   >
@@ -344,10 +396,9 @@ const ResolutionCard = ({ resolution }: ResolutionCardProps) => {
                   </Typography>
                   <Typography
                     sx={{
-                      flex: 1,
-                      fontSize: '0.85rem',
+                      fontSize: '0.82rem',
                       color: '#1e293b',
-                      lineHeight: 1.6,
+                      lineHeight: 1.65,
                       whiteSpace: 'pre-wrap',
                       wordBreak: 'break-word',
                     }}
@@ -359,14 +410,14 @@ const ResolutionCard = ({ resolution }: ResolutionCardProps) => {
 
               {/* Internal Note */}
               {resolution.internalNote && (
-                <Box sx={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
+                <Box sx={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <Typography
                     sx={{
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
+                      fontSize: '0.82rem',
+                      fontWeight: 700,
                       color: '#475569',
                       whiteSpace: 'nowrap',
-                      minWidth: 140,
+                      minWidth: 115,
                       flexShrink: 0,
                     }}
                   >
@@ -374,14 +425,9 @@ const ResolutionCard = ({ resolution }: ResolutionCardProps) => {
                   </Typography>
                   <Typography
                     sx={{
-                      flex: 1,
-                      p: 1.5,
-                      borderRadius: '6px',
-                      bgcolor: '#fff7ed',
-                      border: '1px solid #fed7aa',
-                      fontSize: '0.84rem',
+                      fontSize: '0.82rem',
                       color: '#1e293b',
-                      lineHeight: 1.6,
+                      lineHeight: 1.65,
                       whiteSpace: 'pre-wrap',
                       wordBreak: 'break-word',
                     }}
@@ -393,71 +439,92 @@ const ResolutionCard = ({ resolution }: ResolutionCardProps) => {
 
               {/* Root Cause text */}
               {resolution.rootCause && (
-                <Box sx={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
+                <Box sx={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <Typography
                     sx={{
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
+                      fontSize: '0.82rem',
+                      fontWeight: 700,
                       color: '#475569',
                       whiteSpace: 'nowrap',
-                      minWidth: 140,
+                      minWidth: 115,
                       flexShrink: 0,
                     }}
                   >
                     Root Cause:
                   </Typography>
-                  <Typography
+                  <Box
                     sx={{
                       flex: 1,
-                      p: 1.5,
+                      p: 1.25,
                       borderRadius: '6px',
-                      bgcolor: '#fefce8',
-                      border: '1px solid #fde68a',
-                      fontSize: '0.84rem',
-                      color: '#1e293b',
-                      lineHeight: 1.6,
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
+                      bgcolor: '#f8fafc',
+                      border: '1px solid #e2e8f0',
                     }}
                   >
-                    {resolution.rootCause}
-                  </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: '0.82rem',
+                        color: '#1e293b',
+                        lineHeight: 1.65,
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                      }}
+                    >
+                      {resolution.rootCause}
+                    </Typography>
+                  </Box>
                 </Box>
               )}
 
-              {/* Flags — vertical, one per row (no Customer Confirmation — already shown above) */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 0.5 }}>
-                {resolution.isRecurring !== undefined && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {/* Workaround */}
+              {resolution.workaround && (
+                <Box sx={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <Typography
+                    sx={{
+                      fontSize: '0.82rem',
+                      fontWeight: 700,
+                      color: '#475569',
+                      whiteSpace: 'nowrap',
+                      minWidth: 115,
+                      flexShrink: 0,
+                    }}
+                  >
+                    Workaround:
+                  </Typography>
+                  <Box
+                    sx={{
+                      flex: 1,
+                      p: 1.25,
+                      borderRadius: '6px',
+                      bgcolor: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                    }}
+                  >
                     <Typography
                       sx={{
                         fontSize: '0.82rem',
-                        color: '#64748b',
-                        fontWeight: 600,
-                        minWidth: 140,
-                        flexShrink: 0,
+                        color: '#1e293b',
+                        lineHeight: 1.65,
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
                       }}
                     >
-                      Recurring Issue:
+                      {resolution.workaround}
                     </Typography>
-                    <YesNoBadge value={resolution.isRecurring} />
                   </Box>
+                </Box>
+              )}
+
+              {/* Flags — vertical, one per row */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, mt: 0.25 }}>
+                {resolution.isRecurring !== undefined && (
+                  <FlagRow label='Recurring Issue' value={resolution.isRecurring} />
                 )}
                 {resolution.rootCauseIdentified !== undefined && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography
-                      sx={{
-                        fontSize: '0.82rem',
-                        color: '#64748b',
-                        fontWeight: 600,
-                        minWidth: 140,
-                        flexShrink: 0,
-                      }}
-                    >
-                      Root Cause Identified:
-                    </Typography>
-                    <YesNoBadge value={resolution.rootCauseIdentified} />
-                  </Box>
+                  <FlagRow label='Root Cause Identified' value={resolution.rootCauseIdentified} />
+                )}
+                {resolution.workaroundIdentified !== undefined && (
+                  <FlagRow label='Workaround Identified' value={resolution.workaroundIdentified} />
                 )}
               </Box>
             </Box>
@@ -469,30 +536,51 @@ const ResolutionCard = ({ resolution }: ResolutionCardProps) => {
 };
 
 /* ─────────────────────────────────────────────────────────
+   Flag Row — Recurring Issue / Root Cause Identified / Workaround Identified
+   ───────────────────────────────────────────────────────── */
+
+const FlagRow = ({ label, value }: { label: string; value: boolean }) => (
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+    <Typography
+      sx={{
+        fontSize: '0.78rem',
+        color: '#64748b',
+        fontWeight: 600,
+        minWidth: 115,
+        flexShrink: 0,
+      }}
+    >
+      {label}:
+    </Typography>
+    <YesNoBadge value={value} />
+  </Box>
+);
+
+/* ─────────────────────────────────────────────────────────
    Field Row helper — consistent key-value row
    ───────────────────────────────────────────────────────── */
 
 const FieldRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
-  <Box sx={{ display: 'flex', gap: '8px', py: 0.5, alignItems: 'baseline' }}>
+  <Box sx={{ display: 'flex', gap: '10px', py: 0.5, alignItems: 'center' }}>
     <Typography
       sx={{
-        fontSize: '0.85rem',
+        fontSize: '0.82rem',
         fontWeight: 600,
-        color: '#475569',
+        color: '#64748b',
         whiteSpace: 'nowrap',
-        minWidth: 140,
+        minWidth: 115,
         flexShrink: 0,
-        lineHeight: 1.5,
       }}
     >
       {label}:
     </Typography>
     <Typography
       sx={{
-        fontSize: '0.85rem',
+        fontSize: '0.82rem',
         color: '#1e293b',
         lineHeight: 1.5,
         wordBreak: 'break-word',
+        fontWeight: 500,
       }}
     >
       {value}
@@ -501,13 +589,13 @@ const FieldRow = ({ label, value }: { label: string; value: React.ReactNode }) =
 );
 
 /* ─────────────────────────────────────────────────────────
-   Empty State — matches "Unfixed" screenshot
+   Empty State — no resolutions yet
    ───────────────────────────────────────────────────────── */
 
 const EmptyState = ({ onAdd }: { onAdd: () => void }) => (
   <Box
     sx={{
-      borderRadius: 0,
+      borderRadius: '10px',
       backgroundColor: '#ffffff',
       border: '1px solid #e2e8f0',
       borderLeft: '3px solid #f97316',
@@ -517,7 +605,7 @@ const EmptyState = ({ onAdd }: { onAdd: () => void }) => (
     <Box
       sx={{
         px: 2,
-        py: '12px 16px',
+        py: 1.25,
         display: 'flex',
         alignItems: 'center',
         gap: 1.5,
@@ -531,17 +619,17 @@ const EmptyState = ({ onAdd }: { onAdd: () => void }) => (
           gap: 0.5,
           px: 1,
           py: '2px 8px',
-          borderRadius: '4px',
-          bgcolor: '#f1f5f9',
-          border: '1px solid #e2e8f0',
+          borderRadius: '5px',
+          bgcolor: '#fef2f2',
+          border: '1px solid #fecaca',
         }}
       >
-        <Box sx={{ width: 8, height: 8, borderRadius: '50%', background: '#f97316' }} />
+        <Box sx={{ width: 7, height: 7, borderRadius: '50%', background: '#f97316' }} />
         <Typography
           sx={{
-            fontSize: '0.78rem',
+            fontSize: '0.75rem',
             fontWeight: 700,
-            color: '#475569',
+            color: '#c2410c',
             textTransform: 'uppercase',
             letterSpacing: '0.3px',
           }}
@@ -550,35 +638,9 @@ const EmptyState = ({ onAdd }: { onAdd: () => void }) => (
         </Typography>
       </Box>
 
-      <Typography sx={{ fontSize: '0.82rem', color: '#64748b' }}>
+      <Typography sx={{ fontSize: '0.8rem', color: '#94a3b8' }}>
         No resolution has been added yet.
       </Typography>
-
-      <Box sx={{ flex: 1 }} />
-
-      <Box
-        onClick={onAdd}
-        sx={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 0.5,
-          px: 2,
-          py: 0.5,
-          borderRadius: '6px',
-          border: '1.5px dashed #86efac',
-          color: '#16a34a',
-          background: '#f0fdf4',
-          fontSize: '0.8rem',
-          fontWeight: 600,
-          cursor: 'pointer',
-          userSelect: 'none',
-          transition: 'all 0.15s ease',
-          '&:hover': { border: '1.5px solid #22c55e', background: '#dcfce7' },
-        }}
-      >
-        <span style={{ fontSize: '1rem', fontWeight: 700, lineHeight: 1 }}>+</span>
-        <span>Add Resolution</span>
-      </Box>
     </Box>
   </Box>
 );
@@ -596,13 +658,13 @@ const ResolutionSection = ({ resolutions, onAddResolution }: ResolutionSectionPr
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          mb: 2,
+          mb: 1.5,
         }}
       >
         <Typography
           sx={{
             fontWeight: 800,
-            fontSize: '0.82rem',
+            fontSize: '0.78rem',
             color: '#475569',
             textTransform: 'uppercase',
             letterSpacing: '0.8px',
@@ -617,13 +679,13 @@ const ResolutionSection = ({ resolutions, onAddResolution }: ResolutionSectionPr
             display: 'inline-flex',
             alignItems: 'center',
             gap: 0.5,
-            px: 2,
-            py: 0.5,
+            px: 1.5,
+            py: 0.4,
             borderRadius: '6px',
             border: '1.5px dashed #86efac',
             color: '#16a34a',
             background: '#f0fdf4',
-            fontSize: '0.8rem',
+            fontSize: '0.78rem',
             fontWeight: 600,
             cursor: 'pointer',
             userSelect: 'none',
@@ -631,7 +693,7 @@ const ResolutionSection = ({ resolutions, onAddResolution }: ResolutionSectionPr
             '&:hover': { border: '1.5px solid #22c55e', background: '#dcfce7' },
           }}
         >
-          <span style={{ fontSize: '1rem', fontWeight: 700, lineHeight: 1 }}>+</span>
+          <span style={{ fontSize: '0.95rem', fontWeight: 700, lineHeight: 1 }}>+</span>
           <span>Add Resolution</span>
         </Box>
       </Box>

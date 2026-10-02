@@ -264,6 +264,10 @@ export class AdminTicketGateway {
     isRecurring?: boolean;
     rootCauseIdentified?: boolean;
     rootCause?: string;
+    workaroundIdentified?: boolean;
+    workaround?: string;
+    rootCauseId?: string;
+    workaroundId?: string;
     resolutionCode: string;
     resolution: string;
     internalNote?: string;
@@ -284,6 +288,10 @@ export class AdminTicketGateway {
     if (data.category !== undefined) resolutionData.category = data.category;
     if (data.subCategory !== undefined) resolutionData.subCategory = data.subCategory;
     if (data.rootCause !== undefined) resolutionData.rootCause = data.rootCause;
+    if (data.workaroundIdentified !== undefined) resolutionData.workaroundIdentified = data.workaroundIdentified;
+    if (data.workaround !== undefined) resolutionData.workaround = data.workaround;
+    if (data.rootCauseId !== undefined) resolutionData.rootCauseId = data.rootCauseId;
+    if (data.workaroundId !== undefined) resolutionData.workaroundId = data.workaroundId;
     if (data.internalNote !== undefined) resolutionData.internalNote = data.internalNote;
     if (data.attachments !== undefined) resolutionData.attachments = data.attachments;
     return this.prisma.adminTicketResolution.create({

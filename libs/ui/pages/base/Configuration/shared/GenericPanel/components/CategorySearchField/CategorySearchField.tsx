@@ -18,6 +18,7 @@ export interface CategorySearchFieldProps {
   required?: boolean;
   error?: boolean;
   helperText?: React.ReactNode;
+  applicationId?: string;
 }
 
 export const CategorySearchField = ({
@@ -27,6 +28,7 @@ export const CategorySearchField = ({
   required,
   error,
   helperText,
+  applicationId,
 }: CategorySearchFieldProps) => {
   const [inputValue, setInputValue] = useState(value || '');
   const [options, setOptions] = useState<{ id: string; name: string }[]>([]);
@@ -40,6 +42,7 @@ export const CategorySearchField = ({
     const seen = new Set<string>();
     const opts: { id: string; name: string }[] = [];
     categorization.applicationCategories.forEach((cat) => {
+      if (applicationId && cat.applicationName !== applicationId) return;
       const name = String(cat?.categoryName ?? '').trim();
       if (!name) return;
       const key = name.toLowerCase();
@@ -48,7 +51,7 @@ export const CategorySearchField = ({
       opts.push({ id: cat.id ?? name, name });
     });
     return opts.sort((a, b) => a.name.localeCompare(b.name));
-  }, [categorization?.applicationCategories]);
+  }, [categorization?.applicationCategories, applicationId]);
 
   const isLoading = configLoading || !categorization;
 

@@ -157,7 +157,11 @@ export interface IAdminTicketResolution {
   customerConfirmation: boolean;
   isRecurring: boolean;
   rootCauseIdentified: boolean;
+  workaroundIdentified: boolean;
   rootCause?: string | null;
+  workaround?: string | null;
+  rootCauseId?: string | null;
+  workaroundId?: string | null;
   resolutionCode: string;
   resolution: string;
   internalNote?: string | null;
