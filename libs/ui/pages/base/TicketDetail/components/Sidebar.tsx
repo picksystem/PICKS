@@ -595,7 +595,6 @@ const getNameInitials = (nameOrEmail: string): string => {
 // ── Draggable sidebar sections ─────────────────────────────────
 
 const SIDEBAR_SECTION_ORDER: string[] = [
-  'assignment',
   'ticketOptions',
   'contactAndBilling',
   'reporting',
@@ -702,116 +701,6 @@ const Sidebar = ({
                 </Typography>
               </Box>
             </Box>
-          )}
-
-          {isSectionVisible('assignment') && (
-            <>
-              <SectionDivider label='Assignment' isEditing={isEditing} />
-
-              {/* ── Assignment fields ── */}
-              {isEditing
-                ? applyFieldConfig(
-                    [
-                      {
-                        key: 'client',
-                        node: (
-                          <EditDropdownCard
-                            icon={<BusinessCenterIcon sx={iconMdSx} />}
-                            label='Client'
-                            value={editFormData.client || ''}
-                            options={clientOptions}
-                            onChange={(val) => onEditFormChange({ client: val })}
-                            accentColor='#4338ca'
-                          />
-                        ),
-                      },
-                      {
-                        key: 'assignmentGroup',
-                        node: (
-                          <EditDropdownCard
-                            icon={<GroupIcon sx={iconMdSx} />}
-                            label='Queue'
-                            value={editFormData.assignmentGroup || ''}
-                            options={assignmentGroupOptions}
-                            onChange={(val) => onEditFormChange({ assignmentGroup: val })}
-                            accentColor='#7c3aed'
-                          />
-                        ),
-                      },
-                      {
-                        key: 'secondaryResource',
-                        node: (
-                          <EditDropdownCard
-                            icon={<PeopleIcon sx={iconMdSx} />}
-                            label='Secondary Resource'
-                            value={editFormData.secondaryResources || ''}
-                            options={secondaryResourceOptions}
-                            onChange={(val) => onEditFormChange({ secondaryResources: val })}
-                            accentColor='#0891b2'
-                          />
-                        ),
-                      },
-                    ],
-                    layoutConfig.assignment.selectedFields,
-                  ).map(({ key, node }) => <Box key={key}>{node}</Box>)
-                : applyFieldConfig(
-                    [
-                      {
-                        key: 'client',
-                        node: (
-                          <FieldCard
-                            icon={<BusinessCenterIcon sx={iconMdSx} />}
-                            label='Client'
-                            value={incident.client || ''}
-                            accentColor='#4338ca'
-                          />
-                        ),
-                      },
-                      {
-                        key: 'assignmentGroup',
-                        node: (
-                          <FieldCard
-                            icon={<GroupIcon sx={iconMdSx} />}
-                            label='Queue'
-                            value={incident.assignmentGroup || ''}
-                            accentColor='#7c3aed'
-                          />
-                        ),
-                      },
-                      {
-                        key: 'secondaryResource',
-                        node: (
-                          <FieldCard
-                            icon={<PeopleIcon sx={iconMdSx} />}
-                            label='Secondary Resource'
-                            value={incident.secondaryResources || ''}
-                            accentColor='#0891b2'
-                          />
-                        ),
-                      },
-                      {
-                        key: 'lastUpdated',
-                        node: (
-                          <FieldCard
-                            icon={<AccessTimeIcon sx={iconSmSx} />}
-                            label='Last Updated'
-                            value={
-                              incident.updatedAt
-                                ? new Date(incident.updatedAt).toLocaleDateString(undefined, {
-                                    day: 'numeric',
-                                    month: 'short',
-                                    year: 'numeric',
-                                  })
-                                : '—'
-                            }
-                            accentColor='#d97706'
-                          />
-                        ),
-                      },
-                    ],
-                    layoutConfig.assignment.selectedFields,
-                  ).map(({ key, node }) => <Box key={key}>{node}</Box>)}
-            </>
           )}
 
           {isSectionVisible('ticketOptions') && (

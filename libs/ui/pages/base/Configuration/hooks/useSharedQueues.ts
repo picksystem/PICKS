@@ -5,6 +5,7 @@ export interface QueueOption {
   id: string;
   name: string;
   applicationName: string;
+  shortDescription: string;
 }
 
 export const useSharedQueues = () => {
@@ -17,6 +18,7 @@ export const useSharedQueues = () => {
     id: q.id,
     name: q.name,
     applicationName: q.applicationName,
+    shortDescription: q.shortDescription || '',
   }));
 
   return { queues, options, isLoading };

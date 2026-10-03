@@ -33,6 +33,7 @@ interface InfoRowProps {
   eta: Date | null;
   onEtaChange: (date: Date) => void;
   onPriorityClick?: () => void;
+  onStatusClick?: () => void;
   layoutConfig?: ITicketTypeLayoutConfig;
 }
 
@@ -70,6 +71,7 @@ const InfoRow = ({
   eta,
   onEtaChange,
   onPriorityClick,
+  onStatusClick,
   layoutConfig = getDefaultLayoutConfig(),
 }: InfoRowProps) => {
   const { dueDate, slaPercent } = calculateSLA(incident.createdAt);
@@ -189,7 +191,12 @@ const InfoRow = ({
           label={formatStatus(incident.status)}
           color={getStatusColor(incident.status)}
           size='small'
-          sx={{ height: 24, fontSize: '0.875rem' }}
+          sx={{
+            height: 24,
+            fontSize: '0.875rem',
+            cursor: onStatusClick ? 'pointer' : 'default',
+          }}
+          onClick={onStatusClick}
         />
       </Box>
     ),

@@ -37,6 +37,7 @@ export interface ActionButtonConfig {
 
 export type ModalType =
   | 'priorityChange'
+  | 'statusChange'
   | 'assign'
   | 'attachment'
   | 'comment'
@@ -44,7 +45,6 @@ export type ModalType =
   | 'commentSelf'
   | 'timeEntry'
   | 'resolve'
-  | 'workLocation'
   | null;
 
 export interface TimeSummaryData {

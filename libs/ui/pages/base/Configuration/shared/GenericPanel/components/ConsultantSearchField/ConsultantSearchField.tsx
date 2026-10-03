@@ -1,4 +1,5 @@
-import { Box, TextField, Paper } from '@serviceops/component';
+import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
+import { Box, TextField, Paper, Tooltip } from '@serviceops/component';
 import { alpha } from '@mui/material';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -8,8 +9,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
-import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
-import { useSharedUsers } from '../../../../hooks/useSharedUsers';
+import { IConfigUserConsultantProfile } from '@serviceops/interfaces';
+import { useGetConfigurationQuery } from '@serviceops/services';
 
 export interface ConsultantSearchFieldProps {
   label: string;
@@ -18,14 +19,9 @@ export interface ConsultantSearchFieldProps {
   required?: boolean;
   error?: boolean;
   helperText?: React.ReactNode;
+  tooltipField?: keyof Pick<IConfigUserConsultantProfile, 'shortDescription' | 'internalNote'>;
 }
 
-/**
- * Search field for the "Consultant Name" field on the Add Consultant Profile
- * dialog — options are users of role 'consultant' from the User Management
- * user list (User Management > Consultants > Name), matching the same
- * shared-list pattern as ServiceLineSearchField / QueueSearchField.
- */
 export const ConsultantSearchField = ({
   label,
   value,
@@ -33,20 +29,18 @@ export const ConsultantSearchField = ({
   required,
   error,
   helperText,
+  tooltipField = 'shortDescription',
 }: ConsultantSearchFieldProps) => {
   const [inputValue, setInputValue] = useState(value || '');
-  const [options, setOptions] = useState<{ id: string; name: string }[]>([]);
+  const [options, setOptions] = useState<IConfigUserConsultantProfile[]>([]);
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { options: allUserOptions, isLoading } = useSharedUsers();
+  const { data: configData, isLoading } = useGetConfigurationQuery();
 
-  const allOptions = useMemo(
-    () =>
-      allUserOptions
-        .filter((u) => u.role === 'consultant')
-        .map((u) => ({ id: String(u.id), name: u.name })),
-    [allUserOptions],
+  const allProfiles = useMemo(
+    () => configData?.data?.userManagement?.consultantProfiles ?? [],
+    [configData],
   );
 
   useEffect(() => {
@@ -54,12 +48,12 @@ export const ConsultantSearchField = ({
   }, [value]);
 
   const buildOptions = useCallback(
-    (query: string) =>
-      allOptions.filter((c) => {
-        if (!query) return true;
-        return c.name.toLowerCase().includes(query.toLowerCase());
-      }),
-    [allOptions],
+    (query: string) => {
+      if (!query) return allProfiles;
+      const q = query.toLowerCase();
+      return allProfiles.filter((p) => p.consultantName.toLowerCase().includes(q));
+    },
+    [allProfiles],
   );
 
   const handleInputChange = useCallback(
@@ -79,11 +73,11 @@ export const ConsultantSearchField = ({
     [buildOptions],
   );
 
-  const handleSelect = (option: { id: string; name: string }) => {
-    setInputValue(option.name);
+  const handleSelect = (option: IConfigUserConsultantProfile) => {
+    setInputValue(option.consultantName);
     setOpen(false);
     setOptions([]);
-    onChange(option.name);
+    onChange(option.consultantName);
   };
 
   const handleClear = () => {
@@ -158,28 +152,33 @@ export const ConsultantSearchField = ({
           }}
         >
           <List dense disablePadding>
-            {options.map((option) => (
-              <ListItem key={option.id} disablePadding>
-                <ListItemButton
-                  onClick={() => handleSelect(option)}
-                  sx={{
-                    py: 1,
-                    px: 1.5,
-                    '&:hover': {
-                      bgcolor: alpha('#0369a1', 0.08),
-                    },
-                  }}
-                >
-                  <ListItemText
-                    primary={option.name}
-                    primaryTypographyProps={{
-                      fontSize: '0.84rem',
-                      noWrap: true,
-                    }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
+            {options.map((option) => {
+              const tooltipContent = option[tooltipField];
+              return (
+                <ListItem key={option.id} disablePadding>
+                  <Tooltip title={tooltipContent || ''} arrow placement='left' enterDelay={300}>
+                    <ListItemButton
+                      onClick={() => handleSelect(option)}
+                      sx={{
+                        py: 1,
+                        px: 1.5,
+                        '&:hover': {
+                          bgcolor: alpha('#0369a1', 0.08),
+                        },
+                      }}
+                    >
+                      <ListItemText
+                        primary={option.consultantName}
+                        primaryTypographyProps={{
+                          fontSize: '0.84rem',
+                          noWrap: true,
+                        }}
+                      />
+                    </ListItemButton>
+                  </Tooltip>
+                </ListItem>
+              );
+            })}
           </List>
         </Paper>
       )}

@@ -6,6 +6,7 @@ import { useFieldError } from '@serviceops/hooks';
 import { TicketEntity, UpdateTicketFn } from '../types/ticketDetail.types';
 import { ApplicationSearchField } from '../../Configuration/shared/GenericPanel/components/ApplicationSearchField';
 import { QueueSearchField } from '../../Configuration/shared/GenericPanel/components/QueueSearchField';
+import { ConsultantSearchField } from '../../Configuration/shared/GenericPanel/components/ConsultantSearchField/ConsultantSearchField';
 
 const ASSIGN_ACCENT = '#0369a1';
 
@@ -141,21 +142,13 @@ const AssignModal = ({ open, onClose, incident, onUpdateTicket, onSuccess }: Ass
           required={false}
         />
 
-        <TextField
+        <ConsultantSearchField
           label='Assigned to'
           value={primaryResource}
-          onChange={(e) => setPrimaryResource(e.target.value)}
-          onBlur={(e) => {
-            setTouchedPrimaryResource(true);
-            if (!e.target.value.trim()) setPrimaryResourceError('required');
-            else setPrimaryResourceError(undefined);
-          }}
-          size='small'
-          fullWidth
+          onChange={setPrimaryResource}
           required
           error={touchedPrimaryResource && Boolean(primaryResourceError)}
-          errorText={reqError(touchedPrimaryResource, primaryResourceError)}
-          sx={fieldBaseSx}
+          helperText={reqError(touchedPrimaryResource, primaryResourceError)}
         />
 
         <TextField

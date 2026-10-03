@@ -19,7 +19,7 @@ import { ImpactSearchField } from '../../../../pages/base/Configuration/shared/G
 import { UrgencySearchField } from '../../../../pages/base/Configuration/shared/GenericPanel/components/UrgencySearchField/UrgencySearchField';
 import { ReasonCodeSearchField } from '../../../../pages/base/Configuration/shared/GenericPanel/components/ReasonCodeSearchField/ReasonCodeSearchField';
 
-const PRIORITY_ACCENT = '#2d5ebb';
+const PRIORITY_ACCENT = '#0369a1';
 
 interface PriorityChangeModalProps {
   open: boolean;

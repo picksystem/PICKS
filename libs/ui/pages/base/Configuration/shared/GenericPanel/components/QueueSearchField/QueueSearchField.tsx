@@ -1,11 +1,10 @@
-import { Box, TextField, Paper } from '@serviceops/component';
-import { alpha } from '@mui/material';
+import { Box, TextField, Paper, Tooltip } from '@serviceops/component';
+import { ListItemText, alpha } from '@mui/material';
+import CircularProgress from '@mui/material/CircularProgress';
+import InputAdornment from '@mui/material/InputAdornment';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
-import ListItemText from '@mui/material/ListItemText';
-import CircularProgress from '@mui/material/CircularProgress';
-import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -29,9 +28,9 @@ export const QueueSearchField = ({
   helperText,
 }: QueueSearchFieldProps) => {
   const [inputValue, setInputValue] = useState(value || '');
-  const [options, setOptions] = useState<{ id: string; name: string; applicationName: string }[]>(
-    [],
-  );
+  const [options, setOptions] = useState<
+    { id: string; name: string; applicationName: string; shortDescription: string }[]
+  >([]);
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -72,7 +71,7 @@ export const QueueSearchField = ({
     [buildOptions],
   );
 
-  const handleSelect = (option: { id: string; name: string }) => {
+  const handleSelect = (option: { id: string; name: string; shortDescription: string }) => {
     setInputValue(option.name);
     setOpen(false);
     setOptions([]);
@@ -153,24 +152,26 @@ export const QueueSearchField = ({
           <List dense disablePadding>
             {options.map((option) => (
               <ListItem key={option.id} disablePadding>
-                <ListItemButton
-                  onClick={() => handleSelect(option)}
-                  sx={{
-                    py: 1,
-                    px: 1.5,
-                    '&:hover': {
-                      bgcolor: alpha('#0369a1', 0.08),
-                    },
-                  }}
-                >
-                  <ListItemText
-                    primary={option.name}
-                    primaryTypographyProps={{
-                      fontSize: '0.84rem',
-                      noWrap: true,
+                <Tooltip title={option.shortDescription || ''} arrow placement='left'>
+                  <ListItemButton
+                    onClick={() => handleSelect(option)}
+                    sx={{
+                      py: 1,
+                      px: 1.5,
+                      '&:hover': {
+                        bgcolor: alpha('#0369a1', 0.08),
+                      },
                     }}
-                  />
-                </ListItemButton>
+                  >
+                    <ListItemText
+                      primary={option.name}
+                      primaryTypographyProps={{
+                        fontSize: '0.84rem',
+                        noWrap: true,
+                      }}
+                    />
+                  </ListItemButton>
+                </Tooltip>
               </ListItem>
             ))}
           </List>
