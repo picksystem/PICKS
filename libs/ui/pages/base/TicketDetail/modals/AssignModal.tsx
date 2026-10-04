@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Box, Modal, Button, TextField, Typography } from '../../../../components';
+import { Box, Modal, Button, Typography } from '../../../../components';
 import { Person as PersonIcon } from '@mui/icons-material';
-import { alpha, darken } from '@mui/material';
+import { darken } from '@mui/material';
 import { useFieldError } from '@serviceops/hooks';
 import { TicketEntity, UpdateTicketFn } from '../types/ticketDetail.types';
 import { ApplicationSearchField } from '../../Configuration/shared/GenericPanel/components/ApplicationSearchField';
@@ -22,28 +22,51 @@ const AssignModal = ({ open, onClose, incident, onUpdateTicket, onSuccess }: Ass
   const [isLoading, setIsLoading] = useState(false);
   const [application, setApplication] = useState(incident.application || '');
   const [assignmentGroup, setAssignmentGroup] = useState(incident.assignmentGroup || '');
-  const [primaryResource, setPrimaryResource] = useState(incident.primaryResource || '');
-  const [secondaryResources, setSecondaryResources] = useState(incident.secondaryResources || '');
+  const [selectedResources, setSelectedResources] = useState<string[]>(() => {
+    const primary = incident.primaryResource;
+    return primary
+      ? [
+          primary,
+          ...(incident.secondaryResources
+            ?.split(',')
+            .map((s) => s.trim())
+            .filter(Boolean) ?? []),
+        ]
+      : [];
+  });
+  const [primaryIndex, setPrimaryIndex] = useState(0);
   const reqError = useFieldError();
   const [touchedPrimaryResource, setTouchedPrimaryResource] = useState(false);
   const [primaryResourceError, setPrimaryResourceError] = useState<string>();
 
+  const setSelectedResourcesWrapped = (val: string | string[]) => {
+    const next = Array.isArray(val) ? val : [val].filter(Boolean);
+    setSelectedResources(next);
+    // Clamp primaryIndex if it's now out of range
+    setPrimaryIndex((prev) => Math.min(prev, next.length > 0 ? next.length - 1 : 0));
+  };
+
   const handleSubmit = async () => {
-    const trimmed = primaryResource.trim();
-    if (!trimmed) {
+    if (selectedResources.length === 0) {
       setTouchedPrimaryResource(true);
       setPrimaryResourceError('required');
       return;
     }
     setIsLoading(true);
     try {
+      const resources = [...selectedResources];
+      if (resources.length > 0 && primaryIndex >= resources.length) {
+        // Move first item to primary position
+        const [moved] = resources.splice(primaryIndex, 1);
+        resources.unshift(moved);
+      }
       await onUpdateTicket({
         id: incident.id,
         data: {
           application: application || undefined,
           assignmentGroup: assignmentGroup || undefined,
-          primaryResource: trimmed,
-          secondaryResources: secondaryResources || undefined,
+          primaryResource: resources[0],
+          secondaryResources: resources.length > 1 ? resources.slice(1).join(', ') : undefined,
           status: 'assigned',
         },
       }).unwrap();
@@ -65,24 +88,6 @@ const AssignModal = ({ open, onClose, incident, onUpdateTicket, onSuccess }: Ass
       </Button>
     </Box>
   );
-
-  const fieldBaseSx = {
-    '& .MuiOutlinedInput-root': {
-      borderRadius: 1.5,
-      bgcolor: alpha(ASSIGN_ACCENT, 0.03),
-      '& fieldset': {
-        borderColor: alpha(ASSIGN_ACCENT, 0.3),
-        borderWidth: 1.5,
-      },
-      '&:hover fieldset': {
-        borderColor: ASSIGN_ACCENT,
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: ASSIGN_ACCENT,
-        borderWidth: 2,
-      },
-    },
-  };
 
   return (
     <Modal
@@ -144,20 +149,14 @@ const AssignModal = ({ open, onClose, incident, onUpdateTicket, onSuccess }: Ass
 
         <ConsultantSearchField
           label='Assigned to'
-          value={primaryResource}
-          onChange={setPrimaryResource}
+          value={selectedResources}
+          onChange={setSelectedResourcesWrapped}
+          multiple
+          primaryIndex={primaryIndex}
+          onPrimaryChange={setPrimaryIndex}
           required
           error={touchedPrimaryResource && Boolean(primaryResourceError)}
           helperText={reqError(touchedPrimaryResource, primaryResourceError)}
-        />
-
-        <TextField
-          label='Secondary Resource(s)'
-          value={secondaryResources}
-          onChange={(e) => setSecondaryResources(e.target.value)}
-          size='small'
-          fullWidth
-          sx={fieldBaseSx}
         />
       </Box>
     </Modal>

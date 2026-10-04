@@ -1655,7 +1655,7 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
                       key={field.name}
                       label={field.label}
                       value={currentValue}
-                      onChange={(value) => handleTextFieldChange(field.name, value)}
+                      onChange={(value) => handleTextFieldChange(field.name, value as string)}
                       required={field.required}
                       error={Boolean(showValidation && mergedFormErrors[field.name])}
                       helperText={reqError(showValidation, mergedFormErrors[field.name])}

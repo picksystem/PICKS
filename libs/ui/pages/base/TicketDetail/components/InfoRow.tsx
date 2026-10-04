@@ -224,7 +224,50 @@ const InfoRow = ({
     assignedTo: (
       <Box key='assignedTo' className={classes.infoItem}>
         <Typography className={classes.infoLabel}>Assigned to</Typography>
-        <Typography className={classes.infoValue}>{incident.primaryResource || '-'}</Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          {incident.primaryResource ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Chip
+                label={incident.primaryResource}
+                size='small'
+                sx={{
+                  height: 22,
+                  fontSize: '0.8rem',
+                  bgcolor: 'primary.main',
+                  color: 'primary.contrastText',
+                  fontWeight: 500,
+                }}
+              />
+              <Typography
+                sx={{ fontSize: '0.65rem', color: 'text.secondary', textTransform: 'uppercase' }}
+              >
+                Primary
+              </Typography>
+            </Box>
+          ) : (
+            <Typography className={classes.infoValue}>-</Typography>
+          )}
+          {incident.secondaryResources && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.25 }}>
+              {incident.secondaryResources.split(',').map((name) => {
+                const trimmed = name.trim();
+                if (!trimmed) return null;
+                return (
+                  <Chip
+                    key={trimmed}
+                    label={trimmed}
+                    size='small'
+                    variant='outlined'
+                    sx={{
+                      height: 22,
+                      fontSize: '0.8rem',
+                    }}
+                  />
+                );
+              })}
+            </Box>
+          )}
+        </Box>
       </Box>
     ),
 
