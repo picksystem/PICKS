@@ -1,6 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
 import {
-  Alert,
   Box,
   TextField,
   Typography,
@@ -30,6 +29,7 @@ import {
   serializeRichText,
   RichTextEditor,
 } from '../../../../pages/base/Configuration/shared/RichTextEditor';
+import { Alert } from '@serviceops/component';
 
 const STATUS_ACCENT = '#0369a1';
 
@@ -195,30 +195,42 @@ const StatusChangeModal = ({
       maxWidth='sm'
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        {/* Info Alert */}
-        <Alert
-          severity='info'
-          sx={{
-            '& .MuiAlert-icon': { color: STATUS_ACCENT },
-            '& .MuiAlert-message': { fontSize: '0.82rem', color: '#164e63' },
-          }}
-        >
-          Changing the status of this ticket requires documentation.
-        </Alert>
-
-        {/* Current Status */}
-        <TextField
-          label='Current Status'
-          value={currentStatusLabel}
-          disabled
-          size='small'
-          fullWidth
-        />
+        {/* Current Status — read-only search field */}
+        <Box sx={{ mt: 1, position: 'relative' }}>
+          <TextField
+            label='Current Status'
+            value={currentStatusLabel}
+            size='small'
+            fullWidth
+            InputProps={{ readOnly: true }}
+            slotProps={{
+              input: { readOnly: true },
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 1.5,
+                bgcolor: alpha(STATUS_ACCENT, 0.03),
+                '& fieldset': {
+                  borderColor: alpha(STATUS_ACCENT, 0.3),
+                  borderWidth: 1.5,
+                },
+                '&:hover fieldset': {
+                  borderColor: STATUS_ACCENT,
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: STATUS_ACCENT,
+                  borderWidth: 2,
+                },
+              },
+            }}
+          />
+        </Box>
 
         {/* New Status — searchable dropdown */}
-        <Box sx={{ position: 'relative' }}>
+        <Box sx={{ mt: 1, position: 'relative' }}>
           <TextField
             label='New Status'
+            required
             placeholder='Search statuses...'
             value={statusInput}
             onChange={(e) => handleStatusInputChange(e.target.value)}
@@ -286,57 +298,50 @@ const StatusChangeModal = ({
         />
 
         {/* Attachment (optional) */}
-        <Box>
-          <Typography sx={{ fontSize: '0.82rem', fontWeight: 500, color: '#374151', mb: 1 }}>
-            Attachment (optional)
-          </Typography>
+        <Box
+          onClick={() => document.querySelector<HTMLInputElement>('.status-upload-input')?.click()}
+          sx={{
+            border: '2px dashed #ccc',
+            borderRadius: 1.5,
+            p: '16px 16px',
+            textAlign: 'center',
+            cursor: 'pointer',
+            transition: 'border-color 0.2s',
+            bgcolor: alpha(STATUS_ACCENT, 0.02),
+            '&:hover': {
+              borderColor: STATUS_ACCENT,
+              bgcolor: alpha(STATUS_ACCENT, 0.04),
+            },
+          }}
+        >
+          <input
+            type='file'
+            className='status-upload-input'
+            multiple
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+          <Box sx={{ mb: 0.75 }}>
+            <CloudUploadOutlinedIcon sx={{ fontSize: 24, color: '#9ca3af' }} />
+          </Box>
           <Box
-            onClick={() =>
-              document.querySelector<HTMLInputElement>('.status-upload-input')?.click()
-            }
+            component='button'
+            type='button'
             sx={{
-              border: '2px dashed #ccc',
+              border: 'none',
+              background: STATUS_ACCENT,
+              color: '#fff',
+              px: 3,
+              py: 0.75,
               borderRadius: 1.5,
-              p: '24px 16px',
-              textAlign: 'center',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              textTransform: 'none',
               cursor: 'pointer',
-              transition: 'border-color 0.2s',
-              bgcolor: alpha(STATUS_ACCENT, 0.02),
-              '&:hover': {
-                borderColor: STATUS_ACCENT,
-                bgcolor: alpha(STATUS_ACCENT, 0.04),
-              },
+              '&:hover': { background: darken(STATUS_ACCENT, 0.15) },
             }}
           >
-            <input
-              type='file'
-              className='status-upload-input'
-              multiple
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
-            />
-            <Box sx={{ mb: 0.75 }}>
-              <CloudUploadOutlinedIcon sx={{ fontSize: 24, color: '#9ca3af' }} />
-            </Box>
-            <Box
-              component='button'
-              type='button'
-              sx={{
-                border: 'none',
-                background: STATUS_ACCENT,
-                color: '#fff',
-                px: 3,
-                py: 0.75,
-                borderRadius: 1.5,
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                textTransform: 'none',
-                cursor: 'pointer',
-                '&:hover': { background: darken(STATUS_ACCENT, 0.15) },
-              }}
-            >
-              CHOOSE FILE
-            </Box>
+            CHOOSE FILE
           </Box>
         </Box>
 

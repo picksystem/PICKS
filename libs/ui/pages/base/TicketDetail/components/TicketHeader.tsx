@@ -6,11 +6,11 @@ import {
   LinkIcon,
   NavigateBeforeIcon,
   NavigateNextIcon,
+  NotificationsIcon,
   Typography,
   SearchIcon,
   FilterListIcon,
   RefreshIcon,
-  NotificationsIcon,
   SettingsIcon,
   CloseIcon,
 } from '../../../../components';
@@ -26,9 +26,6 @@ interface TicketHeaderProps {
   onSearchClick?: () => void;
   onFilterClick?: () => void;
   onRefreshClick?: () => void;
-  notifAnchorEl: HTMLElement | null;
-  onNotifOpen: (e: React.MouseEvent<HTMLElement>) => void;
-  onNotifClose: () => void;
   onCloseClick?: () => void;
 }
 
@@ -87,9 +84,6 @@ const TicketHeader = ({
   onSearchClick,
   onFilterClick,
   onRefreshClick,
-  notifAnchorEl,
-  onNotifOpen,
-  onNotifClose,
   onCloseClick,
 }: TicketHeaderProps) => (
   <>
@@ -216,7 +210,7 @@ const TicketHeader = ({
           </IconButton>
         </Tooltip>
         <Tooltip title='Notifications'>
-          <IconButton size='small' className={classes.headerActionIcon} onClick={onNotifOpen}>
+          <IconButton size='small' className={classes.headerActionIcon}>
             <NotificationsIcon sx={navIconSx} />
           </IconButton>
         </Tooltip>

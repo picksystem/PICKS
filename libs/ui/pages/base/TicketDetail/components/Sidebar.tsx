@@ -1,24 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Box,
   IconButton,
+  Typography,
+  Switch,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  InputAdornment,
+  Paper,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  TextField,
+  alpha,
+} from '@mui/material';
+import {
   ChevronLeftIcon,
   ChevronRightIcon,
-  GroupIcon,
-  BusinessCenterIcon,
   AccessTimeIcon,
   PeopleIcon,
   ExpandMoreIcon,
   EditIcon,
   UserAvatar,
-  Typography,
-  Switch,
-  Select,
-  MenuItem,
 } from '../../../../components';
-import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import { Clear as ClearIcon, Search as SearchIcon } from '@mui/icons-material';
 import { ITicketTypeLayoutConfig } from '@serviceops/interfaces';
 import { getDefaultLayoutConfig, applyFieldConfig } from '@serviceops/tickettypelayout';
+import { useConfiguration } from '@serviceops/confighooks';
 import { TimeSummaryData, TicketEntity, TicketUpdateInput } from '../types/ticketDetail.types';
 
 interface SidebarProps {
@@ -37,15 +47,6 @@ interface SidebarProps {
   editFormData: TicketUpdateInput;
   onEditFormChange: (data: Partial<TicketUpdateInput>) => void;
   onToggle: () => void;
-  clientOptions?: string[];
-  assignmentGroupOptions?: string[];
-  secondaryResourceOptions?: string[];
-  serviceLineOptions?: string[];
-  applicationOptions?: string[];
-  applicationCategoryOptions?: string[];
-  applicationSubCategoryOptions?: string[];
-  ticketSourceOptions?: string[];
-  businessCategoryOptions?: string[];
   timeSummary?: TimeSummaryData;
   layoutConfig?: ITicketTypeLayoutConfig;
 }
@@ -147,29 +148,6 @@ const editPencilBadgeSx = (accentColor: string) => ({
   alignItems: 'center',
   justifyContent: 'center',
   border: '1.5px solid #fff',
-});
-
-const getSelectSx = (accentColor: string) => ({
-  '& .MuiSelect-select': { padding: 0, paddingRight: '24px !important' },
-  '& .MuiSelect-icon': { color: accentColor, right: -2, fontSize: '1.2rem' },
-});
-
-const getMenuPaperSx = (accentColor: string) => ({
-  borderRadius: '12px',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-  border: '1px solid rgba(226,232,255,0.8)',
-  mt: 0.5,
-  '& .MuiMenuItem-root': {
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    color: '#1e293b',
-    borderRadius: '8px',
-    mx: 0.5,
-    my: 0.25,
-    px: 1.5,
-    '&.Mui-selected': { background: `${accentColor}14`, color: accentColor, fontWeight: 700 },
-    '&:hover': { background: `${accentColor}0e` },
-  },
 });
 
 const getToggleRowSx = (accentColor: string, checked: boolean, disabled?: boolean) => ({
@@ -343,25 +321,9 @@ const accordionTitleSx = {
 // ── Additional named constants for inline sx removal ───────────────────────
 
 const fieldContentSx = { minWidth: 0, flex: 1 };
-const editIconWrapperSx = { position: 'relative' as const, flexShrink: 0 };
-const editContentSx = { minWidth: 0, flex: 1 };
-const renderSelectedSx = {
-  fontSize: '0.875rem',
-  color: '#1e293b',
-  fontWeight: 600,
-  lineHeight: 1.3,
-};
-const renderPlaceholderSx = {
-  fontSize: '0.875rem',
-  color: '#94a3b8',
-  fontWeight: 400,
-  lineHeight: 1.3,
-};
-const noOptionsSx = { color: '#94a3b8', fontSize: '0.8rem', fontStyle: 'italic' as const };
 const toggleLabelRowSx = { display: 'flex', alignItems: 'center', gap: 1 };
 const toggleLabelSx = { fontSize: '0.8rem', color: '#334155', fontWeight: 600 };
 const dividerRowSx = { display: 'flex', alignItems: 'center', gap: 1.5, my: 1.5 };
-const iconMdSx = { fontSize: '1.1rem' };
 const iconSmSx = { fontSize: '1rem' };
 const accordionIconSx = { fontSize: '1rem', color: '#6366f1' };
 
@@ -396,7 +358,6 @@ const creatorNameSx = {
 };
 const creatorDateSx = { fontSize: '0.72rem', color: '#64748b', fontWeight: 500 };
 const accordionWrapSx = { mt: 1.5 };
-const editPencilIconSx = { fontSize: '0.5rem', color: '#fff' };
 
 // ── Sub-components ─────────────────────────────────────────────────────────
 
@@ -419,68 +380,6 @@ const FieldCard = ({
     </Box>
   </Box>
 );
-
-const EditDropdownCard = ({
-  icon,
-  label,
-  value,
-  options = [],
-  onChange,
-  accentColor = '#6366f1',
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  options?: string[];
-  onChange: (val: string) => void;
-  accentColor?: string;
-}) => {
-  const allOptions = value && !options.includes(value) ? [value, ...options] : options;
-
-  return (
-    <Box sx={getEditDropdownCardSx(accentColor)}>
-      <Box sx={editIconWrapperSx}>
-        <Box sx={getEditIconPillSx(accentColor)}>{icon}</Box>
-        <Box sx={editPencilBadgeSx(accentColor)}>
-          <EditIcon sx={editPencilIconSx} />
-        </Box>
-      </Box>
-
-      <Box sx={editContentSx}>
-        <Typography sx={fieldLabelSx(accentColor)}>{label}</Typography>
-        <Select
-          value={value || ''}
-          onChange={(e) => onChange(e.target.value as string)}
-          variant='standard'
-          disableUnderline
-          fullWidth
-          displayEmpty
-          renderValue={(v) =>
-            v ? (
-              <Typography sx={renderSelectedSx}>{v}</Typography>
-            ) : (
-              <Typography sx={renderPlaceholderSx}>Select {label}…</Typography>
-            )
-          }
-          sx={getSelectSx(accentColor)}
-          MenuProps={{ PaperProps: { sx: getMenuPaperSx(accentColor) } }}
-        >
-          {allOptions.length === 0 ? (
-            <MenuItem disabled>
-              <Typography sx={noOptionsSx}>No options available</Typography>
-            </MenuItem>
-          ) : (
-            allOptions.map((opt) => (
-              <MenuItem key={opt} value={opt}>
-                {opt}
-              </MenuItem>
-            ))
-          )}
-        </Select>
-      </Box>
-    </Box>
-  );
-};
 
 const ToggleRow = ({
   label,
@@ -510,50 +409,143 @@ const ToggleRow = ({
   </Box>
 );
 
-const EditTextCard = ({
-  icon,
+const SearchableField = ({
   label,
   value,
+  options,
   onChange,
   accentColor = '#6366f1',
-  type = 'text',
 }: {
-  icon: React.ReactNode;
   label: string;
   value: string;
+  options: { value: string; label: string }[];
   onChange: (val: string) => void;
   accentColor?: string;
-  type?: string;
-}) => (
-  <Box sx={getEditDropdownCardSx(accentColor)}>
-    <Box sx={editIconWrapperSx}>
-      <Box sx={getEditIconPillSx(accentColor)}>{icon}</Box>
-      <Box sx={editPencilBadgeSx(accentColor)}>
-        <EditIcon sx={editPencilIconSx} />
-      </Box>
-    </Box>
-    <Box sx={editContentSx}>
-      <Typography sx={fieldLabelSx(accentColor)}>{label}</Typography>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        style={{
-          border: 'none',
-          outline: 'none',
-          background: 'transparent',
-          width: '100%',
-          fontSize: '0.875rem',
-          color: '#1e293b',
-          fontWeight: 600,
-          fontFamily: 'inherit',
-          padding: 0,
+}) => {
+  const [inputValue, setInputValue] = useState(value);
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  const [filteredOptions, setFilteredOptions] = useState<{ value: string; label: string }[]>([]);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
+
+  useEffect(() => {
+    if (optionsOpen) {
+      const handleClickOutside = (e: MouseEvent) => {
+        if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+          setOptionsOpen(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [optionsOpen]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInputValue(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const q = val.trim().toLowerCase();
+      const next = q ? options.filter((o) => o.label.toLowerCase().includes(q)) : options;
+      setFilteredOptions(next);
+      setOptionsOpen(next.length > 0);
+    }, 150);
+  };
+
+  const handleFocus = () => {
+    const q = inputValue.trim().toLowerCase();
+    const next = q ? options.filter((o) => o.label.toLowerCase().includes(q)) : options;
+    setFilteredOptions(next);
+    if (next.length > 0) setOptionsOpen(true);
+  };
+
+  const handleSelect = (opt: { value: string; label: string }) => {
+    setInputValue(opt.label);
+    setOptionsOpen(false);
+    onChange(opt.value);
+  };
+
+  const handleClear = () => {
+    setInputValue('');
+    setFilteredOptions([]);
+    setOptionsOpen(false);
+    onChange('');
+  };
+
+  return (
+    <Box ref={containerRef} sx={{ mt: 1, position: 'relative' }}>
+      <TextField
+        label={label}
+        placeholder={`Search ${label.toLowerCase()}...`}
+        value={inputValue}
+        onChange={handleInputChange}
+        onFocus={handleFocus}
+        onBlur={() => setTimeout(() => setOptionsOpen(false), 200)}
+        fullWidth
+        size='small'
+        slotProps={{
+          input: {
+            endAdornment: (
+              <InputAdornment position='end'>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  {inputValue ? (
+                    <ClearIcon
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={handleClear}
+                      sx={{ fontSize: 18, color: 'text.primary', cursor: 'pointer' }}
+                    />
+                  ) : (
+                    <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                  )}
+                </Box>
+              </InputAdornment>
+            ),
+          },
         }}
-        placeholder={`Enter ${label}…`}
       />
+      {optionsOpen && filteredOptions.length > 0 && (
+        <Paper
+          elevation={4}
+          sx={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            zIndex: 1000,
+            mt: 0,
+            maxHeight: 280,
+            overflow: 'auto',
+          }}
+        >
+          <List dense disablePadding>
+            {filteredOptions.map((opt) => (
+              <ListItem key={opt.value} disablePadding>
+                <ListItemButton
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleSelect(opt)}
+                  sx={{
+                    py: 1,
+                    px: 1.5,
+                    '&:hover': { bgcolor: alpha(accentColor, 0.08) },
+                  }}
+                >
+                  <ListItemText
+                    primary={opt.label}
+                    primaryTypographyProps={{ fontSize: '0.84rem', noWrap: true }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Paper>
+      )}
     </Box>
-  </Box>
-);
+  );
+};
 
 const SectionDivider = ({ label, isEditing }: { label: string; isEditing?: boolean }) => (
   <Box sx={dividerRowSx}>
@@ -585,22 +577,58 @@ const formatDateTime = (value: Date | null | undefined): string => {
   });
 };
 
+// ── Inline edit text field ──────────────────────────────────────
+const EditTextField = ({
+  label,
+  value,
+  onChange,
+  accentColor = '#6366f1',
+  multiline = false,
+  rows = 3,
+}: {
+  label: string;
+  value: string;
+  onChange: (val: string) => void;
+  accentColor?: string;
+  multiline?: boolean;
+  rows?: number;
+}) => {
+  const [localValue, setLocalValue] = useState(value);
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  return (
+    <Box sx={{ pt: 1 }}>
+      <TextField
+        label={label}
+        value={localValue}
+        onChange={(e) => {
+          setLocalValue(e.target.value);
+          onChange(e.target.value);
+        }}
+        fullWidth
+        size='small'
+        InputProps={{
+          sx: {
+            fontSize: '0.875rem',
+            color: '#1e293b',
+            fontWeight: 600,
+            fontFamily: 'inherit',
+          },
+        }}
+      />
+    </Box>
+  );
+};
+
 const getNameInitials = (nameOrEmail: string): string => {
   if (!nameOrEmail) return '?';
   const parts = nameOrEmail.trim().split(/[\s@]+/);
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   return parts[0][0].toUpperCase();
 };
-
-// ── Draggable sidebar sections ─────────────────────────────────
-
-const SIDEBAR_SECTION_ORDER: string[] = [
-  'ticketOptions',
-  'contactAndBilling',
-  'reporting',
-  'datesAndUsers',
-  'additionalFields',
-];
 
 // ── Main Component ─────────────────────────────────────────────────────────
 
@@ -614,21 +642,47 @@ const Sidebar = ({
   editFormData,
   onEditFormChange,
   onToggle,
-  clientOptions = [],
-  assignmentGroupOptions = [],
-  secondaryResourceOptions = [],
-  serviceLineOptions = [],
-  applicationOptions = [],
-  applicationCategoryOptions = [],
-  applicationSubCategoryOptions = [],
-  ticketSourceOptions = [],
   timeSummary,
   layoutConfig = getDefaultLayoutConfig(),
 }: SidebarProps) => {
   const isSectionVisible = (key: string) => layoutConfig.sideBar.selectedFields.includes(key);
 
-  // ── DnD state for sidebar section ordering ────────────────────
-  const [sidebarSectionOrder, setSidebarSectionOrder] = useState<string[]>(SIDEBAR_SECTION_ORDER);
+  const { categorization } = useConfiguration();
+  const applicationOptions = useMemo(() => {
+    return (categorization?.applications ?? []).map((app) => ({
+      value: app.name,
+      label: app.name,
+    }));
+  }, [categorization]);
+
+  const billingCodeOptions = useMemo(() => {
+    const codeMap = new Map<string, { code: string; description: string }>();
+    (categorization?.applications ?? []).forEach((app) => {
+      (app.billingCodes ?? []).forEach((bc) => {
+        if (bc.isActive !== false) {
+          codeMap.set(bc.code, { code: bc.code, description: bc.description });
+        }
+      });
+    });
+    return Array.from(codeMap.values()).map((bc) => ({
+      value: bc.code,
+      label: `${bc.code} — ${bc.description}`,
+    }));
+  }, [categorization]);
+
+  const applicationCategoryOptions = useMemo(() => {
+    return (categorization?.applicationCategories ?? []).map((cat) => ({
+      value: cat.categoryName,
+      label: cat.categoryName,
+    }));
+  }, [categorization]);
+
+  const applicationSubCategoryOptions = useMemo(() => {
+    return (categorization?.applicationSubCategories ?? []).map((sub) => ({
+      value: sub.subCategoryName,
+      label: sub.subCategoryName,
+    }));
+  }, [categorization]);
 
   const createdByMatchesUser =
     user?.email && incident.createdBy
@@ -803,204 +857,65 @@ const Sidebar = ({
                   <Typography sx={accordionTitleSx}>Contact &amp; Billing</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
-                  {(isEditing
-                    ? applyFieldConfig(
-                        [
-                          {
-                            key: 'clientPrimaryContact',
-                            node: (
-                              <EditDropdownCard
-                                icon={<PeopleIcon sx={iconSmSx} />}
-                                label='Client Primary Contact'
-                                value={editFormData.clientPrimaryContact || ''}
-                                options={clientOptions}
-                                onChange={(val) => onEditFormChange({ clientPrimaryContact: val })}
-                                accentColor='#0891b2'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'additionalContacts',
-                            node: (
-                              <EditDropdownCard
-                                icon={<PeopleIcon sx={iconSmSx} />}
-                                label='Additional Contact(s)'
-                                value={editFormData.additionalContacts || ''}
-                                options={clientOptions}
-                                onChange={(val) => onEditFormChange({ additionalContacts: val })}
-                                accentColor='#0891b2'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'billingCode',
-                            node: (
-                              <EditTextCard
-                                icon={<AccessTimeIcon sx={iconSmSx} />}
-                                label='Billing Code'
-                                value={editFormData.billingCode || ''}
-                                onChange={(val) => onEditFormChange({ billingCode: val })}
-                                accentColor='#7c3aed'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'approvedEstimatesHours',
-                            node: (
-                              <EditTextCard
-                                icon={<AccessTimeIcon sx={iconSmSx} />}
-                                label='Approved Estimates (hrs)'
-                                value={
-                                  editFormData.approvedEstimatesHours !== null &&
-                                  editFormData.approvedEstimatesHours !== undefined
-                                    ? String(editFormData.approvedEstimatesHours)
-                                    : ''
-                                }
-                                onChange={(val) =>
-                                  onEditFormChange({
-                                    approvedEstimatesHours: val ? parseFloat(val) : undefined,
-                                  })
-                                }
-                                accentColor='#d97706'
-                                type='number'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'estimatesDetails',
-                            node: (
-                              <EditTextCard
-                                icon={<GroupIcon sx={iconSmSx} />}
-                                label='Estimates Details'
-                                value={editFormData.estimatesDetails || ''}
-                                onChange={(val) => onEditFormChange({ estimatesDetails: val })}
-                                accentColor='#6366f1'
-                              />
-                            ),
-                          },
-                        ],
-                        layoutConfig.contactAndBilling.selectedFields,
-                      )
-                    : applyFieldConfig(
-                        [
-                          {
-                            key: 'clientPrimaryContact',
-                            node: (
-                              <FieldCard
-                                icon={<PeopleIcon sx={iconSmSx} />}
-                                label='Client Primary Contact'
-                                value={incident.clientPrimaryContact || ''}
-                                accentColor='#0891b2'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'additionalContacts',
-                            node: (
-                              <FieldCard
-                                icon={<PeopleIcon sx={iconSmSx} />}
-                                label='Additional Contact(s)'
-                                // Incident-only field — not present on Service/Advisory Requests
-                                value={
-                                  ('additionalContacts' in incident &&
-                                    incident.additionalContacts) ||
-                                  ''
-                                }
-                                accentColor='#0891b2'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'billingCode',
-                            node: (
-                              <FieldCard
-                                icon={<AccessTimeIcon sx={iconSmSx} />}
-                                label='Billing Code'
-                                value={incident.billingCode || ''}
-                                accentColor='#7c3aed'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'approvedEstimatesHours',
-                            node: (
-                              <FieldCard
-                                icon={<AccessTimeIcon sx={iconSmSx} />}
-                                label='Approved Estimates (hrs)'
-                                value={
-                                  incident.approvedEstimatesHours !== null &&
-                                  incident.approvedEstimatesHours !== undefined
-                                    ? `${incident.approvedEstimatesHours}h`
-                                    : ''
-                                }
-                                accentColor='#d97706'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'estimatesDetails',
-                            node: (
-                              <FieldCard
-                                icon={<GroupIcon sx={iconSmSx} />}
-                                label='Estimates Details'
-                                value={incident.estimatesDetails || ''}
-                                accentColor='#6366f1'
-                              />
-                            ),
-                          },
-                        ],
-                        layoutConfig.contactAndBilling.selectedFields,
-                      )
-                  ).map(({ key, node }) => (
-                    <Box key={key}>{node}</Box>
-                  ))}
-                  {/* Always read-only computed fields */}
-                  {applyFieldConfig(
-                    [
-                      {
-                        key: 'timeSpentBillable',
-                        node: (
-                          <FieldCard
-                            icon={<AccessTimeIcon sx={iconSmSx} />}
-                            label='Time Spent (Billable hrs)'
-                            value={timeSummary ? formatMins(timeSummary.billableMinutes) : '—'}
-                            accentColor='#16a34a'
-                          />
-                        ),
-                      },
-                      {
-                        key: 'timeSpentNonBillable',
-                        node: (
-                          <FieldCard
-                            icon={<AccessTimeIcon sx={iconSmSx} />}
-                            label='Time Spent (Non-Billable hrs)'
-                            value={timeSummary ? formatMins(timeSummary.nonBillableMinutes) : '—'}
-                            accentColor='#64748b'
-                          />
-                        ),
-                      },
-                      {
-                        key: 'remainingHours',
-                        node: (
-                          <FieldCard
-                            icon={<AccessTimeIcon sx={iconSmSx} />}
-                            label='Remaining Hours'
-                            value={(() => {
-                              const approved = incident.approvedEstimatesHours;
-                              if (!approved || !timeSummary) return '—';
-                              const billableHrs = timeSummary.billableMinutes / 60;
-                              const remaining = approved - billableHrs;
-                              return `${remaining.toFixed(1)}h`;
-                            })()}
-                            accentColor='#ef4444'
-                          />
-                        ),
-                      },
-                    ],
-                    layoutConfig.contactAndBilling.selectedFields,
-                  ).map(({ key, node }) => (
-                    <Box key={key}>{node}</Box>
-                  ))}
+                  {isEditing ? (
+                    <>
+                      <SearchableField
+                        label='Billing Code'
+                        value={editFormData.billingCode || ''}
+                        options={billingCodeOptions}
+                        onChange={(val) => onEditFormChange({ billingCode: val })}
+                      />
+                      <EditTextField
+                        label='Estimate Details'
+                        value={editFormData.estimatesDetails || ''}
+                        onChange={(val) => onEditFormChange({ estimatesDetails: val })}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <FieldCard
+                        icon={<AccessTimeIcon sx={iconSmSx} />}
+                        label='Billing Code'
+                        value={incident.billingCode || ''}
+                        accentColor='#1422e4'
+                      />
+                      <Box sx={{ pt: 1 }}>
+                        <FieldCard
+                          icon={<AccessTimeIcon sx={iconSmSx} />}
+                          label='Estimate Details'
+                          value={incident.estimatesDetails || ''}
+                          accentColor='#1422e4'
+                        />
+                      </Box>
+                    </>
+                  )}
+                </AccordionDetails>
+              </Accordion>
+            )}
+
+            {/* Estimate Details */}
+            {isSectionVisible('estimateDetails') && (
+              <Accordion sx={styledAccordionSx} disableGutters>
+                <AccordionSummary expandIcon={<ExpandMoreIcon sx={accordionIconSx} />}>
+                  <Typography sx={accordionTitleSx}>Estimate Details</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Box sx={{ pt: 1 }}>
+                    {isEditing ? (
+                      <EditTextField
+                        label='Estimate Details'
+                        value={editFormData.estimatesDetails || ''}
+                        onChange={(val) => onEditFormChange({ estimatesDetails: val })}
+                      />
+                    ) : (
+                      <FieldCard
+                        icon={<AccessTimeIcon sx={iconSmSx} />}
+                        label='Estimate Details'
+                        value={incident.estimatesDetails || ''}
+                        accentColor='#1422e4'
+                      />
+                    )}
+                  </Box>
                 </AccordionDetails>
               </Accordion>
             )}
@@ -1012,165 +927,71 @@ const Sidebar = ({
                   <Typography sx={accordionTitleSx}>Reporting</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
-                  {(isEditing
-                    ? applyFieldConfig(
-                        [
-                          {
-                            key: 'analysisSummary',
-                            node: (
-                              <EditTextCard
-                                icon={<GroupIcon sx={iconSmSx} />}
-                                label='Analysis Summary'
-                                value={editFormData.analysisSummary || ''}
-                                onChange={(val) => onEditFormChange({ analysisSummary: val })}
-                                accentColor='#6366f1'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'serviceLine',
-                            node: (
-                              <EditDropdownCard
-                                icon={<BusinessCenterIcon sx={iconSmSx} />}
-                                label='Business Service-Line'
-                                value={editFormData.serviceLine || ''}
-                                options={serviceLineOptions}
-                                onChange={(val) => onEditFormChange({ serviceLine: val })}
-                                accentColor='#4338ca'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'application',
-                            node: (
-                              <EditDropdownCard
-                                icon={<BusinessCenterIcon sx={iconSmSx} />}
-                                label='Application'
-                                value={editFormData.application || ''}
-                                options={applicationOptions}
-                                onChange={(val) => onEditFormChange({ application: val })}
-                                accentColor='#7c3aed'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'applicationCategory',
-                            node: (
-                              <EditDropdownCard
-                                icon={<BusinessCenterIcon sx={iconSmSx} />}
-                                label='Application Category'
-                                value={editFormData.applicationCategory || ''}
-                                options={applicationCategoryOptions}
-                                onChange={(val) => onEditFormChange({ applicationCategory: val })}
-                                accentColor='#0891b2'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'applicationSubCategory',
-                            node: (
-                              <EditDropdownCard
-                                icon={<BusinessCenterIcon sx={iconSmSx} />}
-                                label='Application Sub-Category'
-                                value={editFormData.applicationSubCategory || ''}
-                                options={applicationSubCategoryOptions}
-                                onChange={(val) =>
-                                  onEditFormChange({ applicationSubCategory: val })
-                                }
-                                accentColor='#0891b2'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'ticketSource',
-                            node: (
-                              <EditDropdownCard
-                                icon={<BusinessCenterIcon sx={iconSmSx} />}
-                                label='Ticket Source'
-                                value={editFormData.ticketSource || ''}
-                                options={ticketSourceOptions}
-                                onChange={(val) => onEditFormChange({ ticketSource: val })}
-                                accentColor='#d97706'
-                              />
-                            ),
-                          },
-                        ],
-                        layoutConfig.reporting.selectedFields,
-                      )
-                    : applyFieldConfig(
-                        [
-                          {
-                            key: 'analysisSummary',
-                            node: (
-                              <FieldCard
-                                icon={<GroupIcon sx={iconSmSx} />}
-                                label='Analysis Summary'
-                                value={incident.analysisSummary || ''}
-                                accentColor='#6366f1'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'serviceLine',
-                            node: (
-                              <FieldCard
-                                icon={<BusinessCenterIcon sx={iconSmSx} />}
-                                label='Business Service-Line'
-                                value={incident.serviceLine || ''}
-                                accentColor='#4338ca'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'application',
-                            node: (
-                              <FieldCard
-                                icon={<BusinessCenterIcon sx={iconSmSx} />}
-                                label='Application'
-                                value={incident.application || ''}
-                                accentColor='#7c3aed'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'applicationCategory',
-                            node: (
-                              <FieldCard
-                                icon={<BusinessCenterIcon sx={iconSmSx} />}
-                                label='Application Category'
-                                value={incident.applicationCategory || ''}
-                                accentColor='#0891b2'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'applicationSubCategory',
-                            node: (
-                              <FieldCard
-                                icon={<BusinessCenterIcon sx={iconSmSx} />}
-                                label='Application Sub-Category'
-                                value={incident.applicationSubCategory || ''}
-                                accentColor='#0891b2'
-                              />
-                            ),
-                          },
-                          {
-                            key: 'ticketSource',
-                            node: (
-                              <FieldCard
-                                icon={<BusinessCenterIcon sx={iconSmSx} />}
-                                label='Ticket Source'
-                                value={incident.ticketSource || ''}
-                                accentColor='#d97706'
-                              />
-                            ),
-                          },
-                        ],
-                        layoutConfig.reporting.selectedFields,
-                      )
-                  ).map(({ key, node }) => (
-                    <Box key={key}>{node}</Box>
-                  ))}
+                  {isEditing ? (
+                    <EditTextField
+                      label='Analysis Summary'
+                      value={editFormData.analysisSummary || ''}
+                      onChange={(val) => onEditFormChange({ analysisSummary: val })}
+                    />
+                  ) : (
+                    <FieldCard
+                      icon={<AccessTimeIcon sx={iconSmSx} />}
+                      label='Analysis Summary'
+                      value={incident.analysisSummary || ''}
+                      accentColor='#1422e4'
+                    />
+                  )}
+                  <Box sx={{ pt: 1 }}>
+                    {isEditing ? (
+                      <SearchableField
+                        label='Application'
+                        value={editFormData.application || ''}
+                        options={applicationOptions}
+                        onChange={(val) => onEditFormChange({ application: val })}
+                      />
+                    ) : (
+                      <FieldCard
+                        icon={<AccessTimeIcon sx={iconSmSx} />}
+                        label='Application'
+                        value={incident.application || ''}
+                        accentColor='#1422e4'
+                      />
+                    )}
+                  </Box>
+                  <Box sx={{ pt: 1 }}>
+                    {isEditing ? (
+                      <SearchableField
+                        label='Application Category'
+                        value={editFormData.applicationCategory || ''}
+                        options={applicationCategoryOptions}
+                        onChange={(val) => onEditFormChange({ applicationCategory: val })}
+                      />
+                    ) : (
+                      <FieldCard
+                        icon={<AccessTimeIcon sx={iconSmSx} />}
+                        label='Application Category'
+                        value={incident.applicationCategory || ''}
+                        accentColor='#1422e4'
+                      />
+                    )}
+                  </Box>
+                  <Box sx={{ pt: 1 }}>
+                    {isEditing ? (
+                      <SearchableField
+                        label='Application Sub Category'
+                        value={editFormData.applicationSubCategory || ''}
+                        options={applicationSubCategoryOptions}
+                        onChange={(val) => onEditFormChange({ applicationSubCategory: val })}
+                      />
+                    ) : (
+                      <FieldCard
+                        icon={<AccessTimeIcon sx={iconSmSx} />}
+                        label='Application Sub Category'
+                        value={incident.applicationSubCategory || ''}
+                        accentColor='#1422e4'
+                      />
+                    )}
+                  </Box>
                 </AccordionDetails>
               </Accordion>
             )}
@@ -1191,7 +1012,7 @@ const Sidebar = ({
                             icon={<AccessTimeIcon sx={iconSmSx} />}
                             label='Resolved Date and Time'
                             value={formatDateTime(incident.resolvedAt)}
-                            accentColor='#16a34a'
+                            accentColor='#1422e4'
                           />
                         ),
                       },
@@ -1202,7 +1023,7 @@ const Sidebar = ({
                             icon={<PeopleIcon sx={iconSmSx} />}
                             label='Resolved By'
                             value={incident.resolvedBy || ''}
-                            accentColor='#16a34a'
+                            accentColor='#1422e4'
                           />
                         ),
                       },
@@ -1213,7 +1034,7 @@ const Sidebar = ({
                             icon={<AccessTimeIcon sx={iconSmSx} />}
                             label='Closed Date and Time'
                             value={formatDateTime(incident.closedAt)}
-                            accentColor='#64748b'
+                            accentColor='#1422e4'
                           />
                         ),
                       },
@@ -1224,7 +1045,7 @@ const Sidebar = ({
                             icon={<PeopleIcon sx={iconSmSx} />}
                             label='Closed By'
                             value={incident.closedBy || ''}
-                            accentColor='#64748b'
+                            accentColor='#1422e4'
                           />
                         ),
                       },
@@ -1235,7 +1056,7 @@ const Sidebar = ({
                             icon={<AccessTimeIcon sx={iconSmSx} />}
                             label='Reopened Date and Time'
                             value={formatDateTime(incident.reopenedAt)}
-                            accentColor='#d97706'
+                            accentColor='#1422e4'
                           />
                         ),
                       },
@@ -1246,7 +1067,7 @@ const Sidebar = ({
                             icon={<PeopleIcon sx={iconSmSx} />}
                             label='Reopened By'
                             value={incident.reopenedBy || ''}
-                            accentColor='#d97706'
+                            accentColor='#1422e4'
                           />
                         ),
                       },
@@ -1257,7 +1078,7 @@ const Sidebar = ({
                             icon={<AccessTimeIcon sx={iconSmSx} />}
                             label='Approved Date and Time'
                             value={formatDateTime(incident.approvedAt)}
-                            accentColor='#0891b2'
+                            accentColor='#1422e4'
                           />
                         ),
                       },
@@ -1268,7 +1089,7 @@ const Sidebar = ({
                             icon={<PeopleIcon sx={iconSmSx} />}
                             label='Approved By'
                             value={incident.approvedBy || ''}
-                            accentColor='#0891b2'
+                            accentColor='#1422e4'
                           />
                         ),
                       },
@@ -1297,7 +1118,7 @@ const Sidebar = ({
                             icon={<AccessTimeIcon sx={iconSmSx} />}
                             label='Time Spent (Billable hrs)'
                             value={timeSummary ? formatMins(timeSummary.billableMinutes) : '—'}
-                            accentColor='#16a34a'
+                            accentColor='#1422e4'
                           />
                         ),
                       },
@@ -1308,7 +1129,7 @@ const Sidebar = ({
                             icon={<AccessTimeIcon sx={iconSmSx} />}
                             label='Time Spent (Non-Billable hrs)'
                             value={timeSummary ? formatMins(timeSummary.nonBillableMinutes) : '—'}
-                            accentColor='#64748b'
+                            accentColor='#1422e4'
                           />
                         ),
                       },
@@ -1325,7 +1146,7 @@ const Sidebar = ({
                               const variance = approved - billableHrs;
                               return `${variance.toFixed(1)}h`;
                             })()}
-                            accentColor='#ef4444'
+                            accentColor='#1422e4'
                           />
                         ),
                       },

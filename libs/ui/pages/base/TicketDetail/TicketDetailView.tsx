@@ -24,7 +24,6 @@ import TimeEntryWindow from './windows/TimeEntryWindow';
 import ResolveWindow from './windows/ResolveWindow';
 import DuplicateSearchDialog from './modals/DuplicateSearchDialog';
 import TicketSearchDialog from './modals/TicketSearchDialog';
-import TicketNotificationsMenu from './components/TicketNotificationsMenu';
 
 const TicketDetailView = () => {
   const { classes, cx } = useStyles();
@@ -65,10 +64,6 @@ const TicketDetailView = () => {
     handleMoreToolsOpen,
     handleMoreToolsClose,
     handleCloseWindow,
-    notifAnchorEl,
-    handleNotifOpen,
-    handleNotifClose,
-    showNotification,
     eta,
     handleEtaChange,
     timeSummary,
@@ -81,17 +76,6 @@ const TicketDetailView = () => {
     ticketSearchOpen,
     setTicketSearchOpen,
     handleCloseTicketSearch,
-    activities,
-    activitiesLoading,
-    clientOptions,
-    assignmentGroupOptions,
-    secondaryResourceOptions,
-    serviceLineOptions,
-    applicationOptions,
-    applicationCategoryOptions,
-    applicationSubCategoryOptions,
-    ticketSourceOptions,
-    businessCategoryOptions,
   } = detail;
 
   const { data: comments, refetch: refetchComments } = useGetTicketCommentsQuery(
@@ -172,9 +156,6 @@ const TicketDetailView = () => {
           onSearchClick={() => setDuplicateSearchOpen(true)}
           onFilterClick={() => setTicketSearchOpen(true)}
           onRefreshClick={() => window.location.reload()}
-          notifAnchorEl={notifAnchorEl}
-          onNotifOpen={handleNotifOpen}
-          onNotifClose={handleNotifClose}
           onCloseClick={handleCloseWindow}
         />
 
@@ -249,15 +230,6 @@ const TicketDetailView = () => {
           onEditFormChange={handleEditFormChange}
           onToggle={() => setSidebarOpen(!sidebarOpen)}
           timeSummary={timeSummary}
-          clientOptions={clientOptions}
-          assignmentGroupOptions={assignmentGroupOptions}
-          secondaryResourceOptions={secondaryResourceOptions}
-          serviceLineOptions={serviceLineOptions}
-          applicationOptions={applicationOptions}
-          applicationCategoryOptions={applicationCategoryOptions}
-          applicationSubCategoryOptions={applicationSubCategoryOptions}
-          ticketSourceOptions={ticketSourceOptions}
-          businessCategoryOptions={businessCategoryOptions}
         />
 
         {/* Right Content Area */}
@@ -321,7 +293,6 @@ const TicketDetailView = () => {
         onUpdateTicket={updateTicket}
         onSuccess={() => {
           setActiveModal(null);
-          showNotification('Priority updated successfully', 'success');
           refetch();
         }}
       />
@@ -333,7 +304,6 @@ const TicketDetailView = () => {
         onUpdateTicket={updateTicket}
         onSuccess={() => {
           setActiveModal(null);
-          showNotification('Status updated successfully', 'success');
           refetch();
         }}
       />
@@ -345,7 +315,6 @@ const TicketDetailView = () => {
         onUpdateTicket={updateTicket}
         onSuccess={() => {
           setActiveModal(null);
-          showNotification('Ticket assigned successfully', 'success');
           refetch();
         }}
       />
@@ -357,7 +326,6 @@ const TicketDetailView = () => {
         onUpdateTicket={updateTicket}
         onSuccess={() => {
           setActiveModal(null);
-          showNotification('Attachments updated', 'success');
           refetch();
         }}
       />
@@ -368,13 +336,6 @@ const TicketDetailView = () => {
         incident={incident}
         onCancelIncident={handleCancelIncident}
         onDuplicate={handleDuplicate}
-      />
-
-      <TicketNotificationsMenu
-        anchorEl={notifAnchorEl}
-        onClose={handleNotifClose}
-        activities={activities ?? []}
-        isLoading={activitiesLoading}
       />
 
       <DuplicateSearchDialog
@@ -401,7 +362,6 @@ const TicketDetailView = () => {
         incident={incident}
         onSuccess={() => {
           setActiveModal(null);
-          showNotification('Comment added successfully', 'success');
           refetch();
         }}
       />
@@ -412,7 +372,6 @@ const TicketDetailView = () => {
         incident={incident}
         onSuccess={() => {
           setActiveModal(null);
-          showNotification('Time entry added successfully', 'success');
           refetch();
         }}
       />
@@ -424,7 +383,6 @@ const TicketDetailView = () => {
         onUpdateTicket={updateTicket}
         onSuccess={() => {
           setActiveModal(null);
-          showNotification('Ticket resolved successfully', 'success');
           refetch();
         }}
       />

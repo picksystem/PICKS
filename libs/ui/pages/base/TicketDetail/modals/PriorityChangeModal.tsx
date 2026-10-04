@@ -1,11 +1,13 @@
 import { useState, useMemo } from 'react';
 import { Box, Modal, Button, Alert, Typography, TextField } from '../../../../components';
+import { alpha, darken } from '@mui/material';
 import {
   WarningAmber as WarningAmberIcon,
+  Clear as ClearIcon,
+  Search as SearchIcon,
   CloudUploadOutlined as CloudUploadOutlinedIcon,
   DeleteOutline as DeleteOutlineIcon,
 } from '@mui/icons-material';
-import { alpha, darken } from '@mui/material';
 import { IncidentImpact, IncidentUrgency, calculatePriority } from '@serviceops/interfaces';
 import { useUploadTicketAttachmentsMutation } from '../../../../../services';
 import { useNotification } from '@serviceops/hooks';
@@ -198,16 +200,6 @@ const PriorityChangeModal = ({
       maxWidth='sm'
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-        <Alert
-          severity='warning'
-          sx={{
-            '& .MuiAlert-icon': { color: '#d97706' },
-            '& .MuiAlert-message': { fontSize: '0.82rem', color: '#78350f' },
-          }}
-        >
-          Changing the priority of an incident requires approval and documentation.
-        </Alert>
-
         {/* Current Priority */}
         <TextField
           label='Current Priority'
@@ -263,119 +255,117 @@ const PriorityChangeModal = ({
         />
 
         {/* Attachment (optional) */}
-        <Box>
-          <Typography sx={{ fontSize: '0.82rem', fontWeight: 500, color: '#374151', mb: 1 }}>
-            Attachment (optional)
-          </Typography>
+        <Box
+          onClick={() =>
+            document.querySelector<HTMLInputElement>('.priority-upload-input')?.click()
+          }
+          sx={{
+            border: '2px dashed #ccc',
+            borderRadius: 1.5,
+            p: '16px 16px',
+            textAlign: 'center',
+            cursor: 'pointer',
+            transition: 'border-color 0.2s',
+            bgcolor: alpha(PRIORITY_ACCENT, 0.02),
+            '&:hover': {
+              borderColor: PRIORITY_ACCENT,
+              bgcolor: alpha(PRIORITY_ACCENT, 0.04),
+            },
+          }}
+        >
+          <input
+            type='file'
+            className='priority-upload-input'
+            multiple
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+          <Box sx={{ mb: 0.75 }}>
+            <CloudUploadOutlinedIcon sx={{ fontSize: 24, color: '#9ca3af' }} />
+          </Box>
           <Box
-            onClick={() =>
-              document.querySelector<HTMLInputElement>('.priority-upload-input')?.click()
-            }
+            component='button'
+            type='button'
             sx={{
-              border: '2px dashed #ccc',
+              border: 'none',
+              background: PRIORITY_ACCENT,
+              color: '#fff',
+              px: 3,
+              py: 0.75,
               borderRadius: 1.5,
-              p: '24px 16px',
-              textAlign: 'center',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              textTransform: 'none',
               cursor: 'pointer',
-              transition: 'border-color 0.2s',
-              bgcolor: alpha(PRIORITY_ACCENT, 0.02),
-              '&:hover': {
-                borderColor: PRIORITY_ACCENT,
-                bgcolor: alpha(PRIORITY_ACCENT, 0.04),
-              },
+              '&:hover': { background: darken(PRIORITY_ACCENT, 0.15) },
             }}
           >
-            <input
-              type='file'
-              className='priority-upload-input'
-              multiple
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
-            />
-            <Box sx={{ mb: 0.75 }}>
-              <CloudUploadOutlinedIcon sx={{ fontSize: 24, color: '#9ca3af' }} />
-            </Box>
-            <Button
-              variant='contained'
-              size='small'
-              sx={{
-                bgcolor: PRIORITY_ACCENT,
-                '&:hover': { bgcolor: darken(PRIORITY_ACCENT, 0.15) },
-                textTransform: 'none',
-                px: 3,
-                py: 0.75,
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                borderRadius: 1.5,
-              }}
-            >
-              CHOOSE FILE
-            </Button>
+            CHOOSE FILE
           </Box>
         </Box>
+      </Box>
 
-        {/* Attached files */}
-        {files.length > 0 && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151' }}>
-              Attached Files ({files.length})
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-              {files.map((file, index) => (
+      {/* Attached files */}
+      {files.length > 0 && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151' }}>
+            Attached Files ({files.length})
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+            {files.map((file, index) => (
+              <Box
+                key={`${file.name}-${index}`}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 1,
+                  p: 1,
+                  borderRadius: 1.5,
+                  border: '1px solid #e5e7eb',
+                  bgcolor: alpha(PRIORITY_ACCENT, 0.04),
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0, flex: 1 }}>
+                  <CloudUploadOutlinedIcon sx={{ fontSize: '1.1rem', color: PRIORITY_ACCENT }} />
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography
+                      sx={{
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        color: '#1e293b',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {file.name}
+                    </Typography>
+                    <Typography sx={{ fontSize: '0.7rem', color: '#64748b' }}>
+                      {(file.size / 1024).toFixed(1)} KB
+                    </Typography>
+                  </Box>
+                </Box>
                 <Box
-                  key={`${file.name}-${index}`}
+                  onClick={() => setFiles((prev) => prev.filter((_, i) => i !== index))}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 1,
-                    p: 1,
-                    borderRadius: 1.5,
-                    border: '1px solid #e5e7eb',
-                    bgcolor: alpha(PRIORITY_ACCENT, 0.04),
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    p: 0.5,
+                    borderRadius: 1,
+                    color: '#dc2626',
+                    '&:hover': { bgcolor: 'rgba(220, 38, 38, 0.08)' },
                   }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0, flex: 1 }}>
-                    <CloudUploadOutlinedIcon sx={{ fontSize: '1.1rem', color: PRIORITY_ACCENT }} />
-                    <Box sx={{ minWidth: 0, flex: 1 }}>
-                      <Typography
-                        sx={{
-                          fontSize: '0.8rem',
-                          fontWeight: 600,
-                          color: '#1e293b',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {file.name}
-                      </Typography>
-                      <Typography sx={{ fontSize: '0.7rem', color: '#64748b' }}>
-                        {(file.size / 1024).toFixed(1)} KB
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box
-                    onClick={() => setFiles((prev) => prev.filter((_, i) => i !== index))}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      p: 0.5,
-                      borderRadius: 1,
-                      color: '#dc2626',
-                      '&:hover': { bgcolor: 'rgba(220, 38, 38, 0.08)' },
-                    }}
-                  >
-                    <DeleteOutlineIcon sx={{ fontSize: '1.1rem' }} />
-                  </Box>
+                  <DeleteOutlineIcon sx={{ fontSize: '1.1rem' }} />
                 </Box>
-              ))}
-            </Box>
+              </Box>
+            ))}
           </Box>
-        )}
-      </Box>
+        </Box>
+      )}
     </Modal>
   );
 };

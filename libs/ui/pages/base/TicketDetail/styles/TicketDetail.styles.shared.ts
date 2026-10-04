@@ -1025,7 +1025,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   sidebarExpanded: {
-    width: 300,
+    width: 400,
 
     [theme.breakpoints.down('md')]: {
       maxHeight: 9999,
@@ -1068,7 +1068,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   sidebarContent: {
     background: '#ffffff',
-    width: 300,
+    width: 400,
     padding: '14px',
     paddingTop: '52px',
     borderRadius: '16px',

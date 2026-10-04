@@ -7,15 +7,9 @@ import {
   useUpdateTicketMutation,
   useGetTicketTimeEntriesQuery,
   useCreateTicketTimeEntryMutation,
-  useGetTicketActivitiesQuery,
 } from '../../../../../services';
-import {
-  useGetAllUsersMutation,
-  useGetTicketTypeQuery,
-  showNotification,
-} from '@serviceops/services';
+import { useGetAllUsersMutation, useGetTicketTypeQuery } from '@serviceops/services';
 import { useAuth } from '@serviceops/hooks';
-import { useAppDispatch } from '../../../../hooks/useAppDispatch';
 import { mergeLayoutConfig } from '@serviceops/tickettypelayout';
 import { ITimeEntry } from '@serviceops/interfaces';
 import {
@@ -91,7 +85,6 @@ export const useTicketDetail = () => {
 
   const [createTicketTimeEntry] = useCreateTicketTimeEntryMutation();
   const [getAllUsers] = useGetAllUsersMutation();
-  const dispatch = useAppDispatch();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -115,7 +108,6 @@ export const useTicketDetail = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [settingsAnchorEl, setSettingsAnchorEl] = useState<null | HTMLElement>(null);
   const [moreToolsAnchorEl, setMoreToolsAnchorEl] = useState<null | HTMLElement>(null);
-  const [notifAnchorEl, setNotifAnchorEl] = useState<null | HTMLElement>(null);
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -134,12 +126,6 @@ export const useTicketDetail = () => {
     isLoading: timeEntriesLoading,
     refetch: refetchTimeEntries,
   } = useGetTicketTimeEntriesQuery(
-    { ticketType, ticketId: incident?.id ?? 0 },
-    { skip: !incident },
-  );
-
-  // Ticket activities query (for notification bell)
-  const { data: activities, isLoading: activitiesLoading } = useGetTicketActivitiesQuery(
     { ticketType, ticketId: incident?.id ?? 0 },
     { skip: !incident },
   );
@@ -223,19 +209,7 @@ export const useTicketDetail = () => {
     const fromIncidents = (allIncidents ?? [])
       .map((i) => i.application)
       .filter(Boolean) as string[];
-    const mock = [
-      'Active Directory',
-      'Azure DevOps',
-      'Dynamics 365',
-      'Internal Wiki',
-      'Microsoft 365',
-      'Payment Gateway',
-      'Power BI',
-      'SAP ERP',
-      'ServiceNow',
-      'SharePoint',
-    ];
-    return [...new Set([...fromIncidents, ...mock])].sort();
+    return [...new Set(fromIncidents)].sort();
   }, [allIncidents]);
 
   const applicationCategoryOptions: string[] = [
@@ -344,12 +318,11 @@ export const useTicketDetail = () => {
           createdBy: user.email ?? user.firstName ?? 'unknown',
         }).unwrap();
         refetchTimeEntries();
-        dispatch(showNotification({ message: 'Time entry saved', severity: 'success' }));
       } catch {
-        dispatch(showNotification({ message: 'Failed to save time entry', severity: 'error' }));
+        // silently fail
       }
     },
-    [incident, user, ticketType, createTicketTimeEntry, refetchTimeEntries, dispatch],
+    [incident, user, ticketType, createTicketTimeEntry, refetchTimeEntries],
   );
 
   // Timer (resets when navigating to a different ticket)
@@ -407,6 +380,12 @@ export const useTicketDetail = () => {
       isReleaseManagement: incident.isReleaseManagement,
       shortDescription: incident.shortDescription || undefined,
       description: incident.description || undefined,
+      billingCode: incident.billingCode || undefined,
+      estimatesDetails: incident.estimatesDetails || undefined,
+      analysisSummary: incident.analysisSummary || undefined,
+      application: incident.application || undefined,
+      applicationCategory: incident.applicationCategory || undefined,
+      applicationSubCategory: incident.applicationSubCategory || undefined,
     });
     setEditCustomFieldValues(incident.customFieldValues ?? {});
     setIsEditing(true);
@@ -426,12 +405,11 @@ export const useTicketDetail = () => {
       setIsEditing(false);
       setEditFormData({});
       setEditCustomFieldValues({});
-      dispatch(showNotification({ message: 'Ticket updated successfully', severity: 'success' }));
       refetch();
     } catch {
-      dispatch(showNotification({ message: 'Failed to update ticket', severity: 'error' }));
+      // silently fail
     }
-  }, [incident, editFormData, editCustomFieldValues, updateTicket, refetch, dispatch]);
+  }, [incident, editFormData, editCustomFieldValues, updateTicket, refetch]);
 
   const handleSaveAndClose = useCallback(async () => {
     await handleSaveEdit();
@@ -449,26 +427,17 @@ export const useTicketDetail = () => {
           status: 'assigned',
         },
       }).unwrap();
-      dispatch(
-        showNotification({ message: 'Ticket accepted and assigned to you', severity: 'success' }),
-      );
       refetch();
     } catch {
-      dispatch(showNotification({ message: 'Failed to accept ticket', severity: 'error' }));
+      // silently fail
     }
-  }, [incident, user, updateTicket, refetch, dispatch]);
+  }, [incident, user, updateTicket, refetch]);
 
   const handleFollow = useCallback(async () => {
     if (!incident || !user) return;
     try {
       const currentFollowers: string[] = incident.followers ? JSON.parse(incident.followers) : [];
       if (currentFollowers.includes(user.email)) {
-        dispatch(
-          showNotification({
-            message: 'You are already following this ticket',
-            severity: 'info',
-          }),
-        );
         return;
       }
       currentFollowers.push(user.email);
@@ -476,12 +445,11 @@ export const useTicketDetail = () => {
         id: incident.id,
         data: { followers: JSON.stringify(currentFollowers) },
       }).unwrap();
-      dispatch(showNotification({ message: 'Now following this ticket', severity: 'success' }));
       refetch();
     } catch {
-      dispatch(showNotification({ message: 'Failed to follow ticket', severity: 'error' }));
+      // silently fail
     }
-  }, [incident, user, updateTicket, refetch, dispatch]);
+  }, [incident, user, updateTicket, refetch]);
 
   const handleCancelIncident = useCallback(async () => {
     if (!incident) return;
@@ -490,12 +458,11 @@ export const useTicketDetail = () => {
         id: incident.id,
         data: { status: 'cancelled' },
       }).unwrap();
-      dispatch(showNotification({ message: 'Ticket cancelled', severity: 'success' }));
       refetch();
     } catch {
-      dispatch(showNotification({ message: 'Failed to cancel ticket', severity: 'error' }));
+      // silently fail
     }
-  }, [incident, updateTicket, refetch, dispatch]);
+  }, [incident, updateTicket, refetch]);
 
   const handleReviewLater = useCallback(() => {
     if (!incident) return;
@@ -505,21 +472,12 @@ export const useTicketDetail = () => {
       if (existing.includes(incident.number)) {
         const updated = existing.filter((n) => n !== incident.number);
         localStorage.setItem(key, JSON.stringify(updated));
-        dispatch(showNotification({ message: 'Removed from Review Later', severity: 'info' }));
       } else {
         existing.push(incident.number);
         localStorage.setItem(key, JSON.stringify(existing));
-        dispatch(
-          showNotification({
-            message: `${incident.number} added to Review Later`,
-            severity: 'success',
-          }),
-        );
       }
-    } catch {
-      dispatch(showNotification({ message: 'Could not update Review Later', severity: 'error' }));
-    }
-  }, [incident, dispatch]);
+    } catch {}
+  }, [incident]);
 
   // Settings menu
   const handleSettingsOpen = useCallback((e: React.MouseEvent<HTMLElement>) => {
@@ -533,20 +491,7 @@ export const useTicketDetail = () => {
   }, []);
   const handleMoreToolsClose = useCallback(() => setMoreToolsAnchorEl(null), []);
 
-  // Notifications menu
-  const handleNotifOpen = useCallback((e: React.MouseEvent<HTMLElement>) => {
-    setNotifAnchorEl(e.currentTarget);
-  }, []);
-  const handleNotifClose = useCallback(() => setNotifAnchorEl(null), []);
-
   const handleCloseWindow = useCallback(() => window.close(), []);
-
-  const dispatchNotification = useCallback(
-    (message: string, severity: 'success' | 'error' | 'info' | 'warning') => {
-      dispatch(showNotification({ message, severity }));
-    },
-    [dispatch],
-  );
 
   return {
     // Data
@@ -596,7 +541,6 @@ export const useTicketDetail = () => {
     handleMoreToolsOpen,
     handleMoreToolsClose,
     handleCloseWindow,
-    showNotification: dispatchNotification,
     logout,
 
     // Dropdown options
@@ -604,7 +548,6 @@ export const useTicketDetail = () => {
     assignmentGroupOptions,
     secondaryResourceOptions,
     serviceLineOptions,
-    applicationOptions,
     applicationCategoryOptions,
     applicationSubCategoryOptions,
     ticketSourceOptions,
@@ -629,12 +572,5 @@ export const useTicketDetail = () => {
     ticketSearchOpen,
     setTicketSearchOpen,
     handleCloseTicketSearch,
-
-    // Notifications
-    activities,
-    activitiesLoading,
-    notifAnchorEl,
-    handleNotifOpen,
-    handleNotifClose,
   };
 };
