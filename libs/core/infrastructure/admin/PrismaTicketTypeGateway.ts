@@ -52,7 +52,7 @@ export class PrismaTicketTypeGateway implements ITicketTypeGateway {
         ...rest,
         lastUpdatedBy: lastUpdatedBy || '',
         accessControl: JSON.stringify(accessControl ?? []),
-        layoutConfig: layoutConfig ? JSON.stringify(layoutConfig) : null,
+        layoutConfig: layoutConfig ? JSON.stringify(layoutConfig) : '',
         customFields: JSON.stringify(customFields ?? []),
       },
     });

@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Box,
   TextField,
@@ -11,6 +12,7 @@ import {
   ListItemText,
   alpha,
   darken,
+  Button,
 } from '@mui/material';
 import {
   Sync as SyncIcon,
@@ -21,15 +23,14 @@ import {
 } from '@mui/icons-material';
 import { useUploadTicketAttachmentsMutation } from '../../../../../services';
 import { useConfiguration } from '@serviceops/confighooks';
-import { useNotification } from '@serviceops/hooks';
+import { useFieldError, useNotification } from '@serviceops/hooks';
 import { TicketEntity, UpdateTicketFn } from '../types/ticketDetail.types';
-import { ConfigFormDialog } from '@serviceops/configdialogs';
 import {
   parseRichText,
   serializeRichText,
   RichTextEditor,
 } from '../../../../pages/base/Configuration/shared/RichTextEditor';
-import { Alert } from '@serviceops/component';
+import { Modal } from '@serviceops/component';
 
 const STATUS_ACCENT = '#0369a1';
 
@@ -48,6 +49,8 @@ const StatusChangeModal = ({
   onUpdateTicket,
   onSuccess,
 }: StatusChangeModalProps) => {
+  const reqError = useFieldError();
+
   const [isLoading, setIsLoading] = useState(false);
   const [uploadAttachments, { isLoading: isUploading }] = useUploadTicketAttachmentsMutation();
   const { statuses } = useConfiguration();
@@ -57,11 +60,21 @@ const StatusChangeModal = ({
   const [note, setNote] = useState('');
   const [files, setFiles] = useState<File[]>([]);
 
+  const [touchedNewStatus, setTouchedNewStatus] = useState(false);
+  const [newStatusError, setNewStatusError] = useState<string>();
+  const reqStatusError = reqError(touchedNewStatus, newStatusError);
+
   // Status dropdown state
   const [statusInput, setStatusInput] = useState('');
   const [statusOptionsOpen, setStatusOptionsOpen] = useState(false);
   const [statusFiltered, setStatusFiltered] = useState<{ id: string; label: string }[]>([]);
   const statusDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const newStatusFieldRef = useRef<HTMLDivElement>(null);
+  const [dropdownPos, setDropdownPos] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
 
   // Status options from configuration — exclude current status
   const statusList = useMemo(() => {
@@ -94,6 +107,7 @@ const StatusChangeModal = ({
     setNewStatus(opt.id);
     setStatusOptionsOpen(false);
     setStatusFiltered([]);
+    setDropdownPos(null);
   }, []);
 
   const handleStatusClear = useCallback(() => {
@@ -101,6 +115,7 @@ const StatusChangeModal = ({
     setNewStatus('');
     setStatusFiltered([]);
     setStatusOptionsOpen(false);
+    setDropdownPos(null);
   }, []);
 
   // ── File upload ───────────────────────────────────────────────────────────
@@ -114,10 +129,11 @@ const StatusChangeModal = ({
 
   // ── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
-    if (!newStatus) {
-      notify.error('Status is required');
-      return;
-    }
+    setTouchedNewStatus(true);
+    const statusErr = !newStatus ? 'required' : undefined;
+    setNewStatusError(statusErr);
+    if (reqStatusError) return;
+
     if (!note.trim()) {
       notify.error('Status change note is required');
       return;
@@ -180,54 +196,113 @@ const StatusChangeModal = ({
       ? incident.status
       : statusList.find((s) => s.id === incident.status)?.label || incident.status;
 
+  // ── Shared field styling ──────────────────────────────────────────────────
+  const fieldBaseSx = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 1.5,
+      bgcolor: alpha(STATUS_ACCENT, 0.03),
+      '& fieldset': {
+        borderColor: alpha(STATUS_ACCENT, 0.3),
+        borderWidth: 1.5,
+      },
+      '&:hover fieldset': {
+        borderColor: STATUS_ACCENT,
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: STATUS_ACCENT,
+        borderWidth: 2,
+      },
+      '&.Mui-disabled fieldset': {
+        borderColor: alpha(STATUS_ACCENT, 0.2),
+      },
+    },
+  };
+
+  const footer = (
+    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+      <Button
+        variant='outlined'
+        onClick={onClose}
+        sx={{
+          textTransform: 'none',
+          borderColor: alpha(STATUS_ACCENT, 0.4),
+          color: darken(STATUS_ACCENT, 0.15),
+          '&:hover': {
+            borderColor: STATUS_ACCENT,
+            bgcolor: alpha(STATUS_ACCENT, 0.04),
+          },
+        }}
+      >
+        Cancel
+      </Button>
+      <Button
+        variant='contained'
+        onClick={handleSubmit}
+        disabled={isLoading || isUploading}
+        sx={{
+          textTransform: 'none',
+          bgcolor: STATUS_ACCENT,
+          '&:hover': { bgcolor: darken(STATUS_ACCENT, 0.15) },
+        }}
+      >
+        {isUploading ? 'Uploading...' : isLoading ? 'Updating...' : 'Update'}
+      </Button>
+    </Box>
+  );
+
+  const title = (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+      <Box
+        sx={{
+          width: 38,
+          height: 38,
+          borderRadius: 1.5,
+          bgcolor: 'rgba(255,255,255,0.18)',
+          border: '1px solid rgba(255,255,255,0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <SyncIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />
+      </Box>
+      <Box>
+        <Typography sx={{ fontSize: '1.1rem', fontWeight: 600, lineHeight: 1.3, color: '#fff' }}>
+          Change Status
+        </Typography>
+        <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.85)', lineHeight: 1.3 }}>
+          Update the status of this ticket
+        </Typography>
+      </Box>
+    </Box>
+  );
+
   return (
-    <ConfigFormDialog
+    <Modal
       open={open}
       onClose={onClose}
-      onSubmit={handleSubmit}
-      isEdit={false}
-      icon={<SyncIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
-      accent={STATUS_ACCENT}
-      title='Change Status'
-      subtitle='Update the status of this ticket'
-      submitDisabled={isLoading || isUploading}
-      submitLabel={isUploading ? 'Uploading...' : isLoading ? 'Updating...' : 'Update'}
+      title={title}
+      headerTextColor='#fff'
+      headerBackground={`linear-gradient(135deg, ${darken(STATUS_ACCENT, 0.18)} 0%, ${STATUS_ACCENT} 100%)`}
+      footer={footer}
       maxWidth='sm'
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
         {/* Current Status — read-only search field */}
-        <Box sx={{ mt: 1, position: 'relative' }}>
-          <TextField
-            label='Current Status'
-            value={currentStatusLabel}
-            size='small'
-            fullWidth
-            InputProps={{ readOnly: true }}
-            slotProps={{
-              input: { readOnly: true },
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 1.5,
-                bgcolor: alpha(STATUS_ACCENT, 0.03),
-                '& fieldset': {
-                  borderColor: alpha(STATUS_ACCENT, 0.3),
-                  borderWidth: 1.5,
-                },
-                '&:hover fieldset': {
-                  borderColor: STATUS_ACCENT,
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: STATUS_ACCENT,
-                  borderWidth: 2,
-                },
-              },
-            }}
-          />
-        </Box>
+        <TextField
+          label='Current Status'
+          value={currentStatusLabel}
+          size='small'
+          fullWidth
+          InputProps={{ readOnly: true }}
+          slotProps={{
+            input: { readOnly: true },
+          }}
+          sx={fieldBaseSx}
+        />
 
         {/* New Status — searchable dropdown */}
-        <Box sx={{ mt: 1, position: 'relative' }}>
+        <div ref={newStatusFieldRef}>
           <TextField
             label='New Status'
             required
@@ -240,27 +315,50 @@ const StatusChangeModal = ({
                 ? statusList.filter((o) => o.label.toLowerCase().includes(q))
                 : statusList;
               setStatusFiltered(next);
-              if (next.length > 0) setStatusOptionsOpen(true);
+              if (next.length > 0) {
+                // Calculate dropdown position relative to viewport
+                if (newStatusFieldRef.current) {
+                  const rect = newStatusFieldRef.current.getBoundingClientRect();
+                  setDropdownPos({
+                    top: rect.bottom,
+                    left: rect.left,
+                    width: rect.width,
+                  });
+                }
+                setStatusOptionsOpen(true);
+              }
             }}
-            onBlur={() => setTimeout(() => setStatusOptionsOpen(false), 200)}
+            onBlur={() => {
+              setTouchedNewStatus(true);
+              setTimeout(() => {
+                setStatusOptionsOpen(false);
+                setDropdownPos(null);
+              }, 200);
+            }}
             size='small'
             fullWidth
+            error={Boolean(reqStatusError)}
+            helperText={reqStatusError}
             slotProps={{
               input: {
                 endAdornment: searchAdornment(statusInput.length > 0, handleStatusClear),
               },
             }}
+            sx={fieldBaseSx}
           />
-          {statusOptionsOpen && statusFiltered.length > 0 && (
+        </div>
+        {statusOptionsOpen &&
+          statusFiltered.length > 0 &&
+          dropdownPos &&
+          createPortal(
             <Paper
               elevation={4}
               sx={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                zIndex: 1000,
-                mt: 0,
+                position: 'fixed',
+                top: dropdownPos.top,
+                left: dropdownPos.left,
+                width: dropdownPos.width,
+                zIndex: 9999,
                 maxHeight: 280,
                 overflow: 'auto',
               }}
@@ -284,9 +382,9 @@ const StatusChangeModal = ({
                   </ListItem>
                 ))}
               </List>
-            </Paper>
+            </Paper>,
+            document.body,
           )}
-        </Box>
 
         {/* Status Change Note — RichTextEditor */}
         <RichTextEditor
@@ -407,7 +505,7 @@ const StatusChangeModal = ({
           </Box>
         )}
       </Box>
-    </ConfigFormDialog>
+    </Modal>
   );
 };
 
