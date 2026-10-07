@@ -582,16 +582,10 @@ const EditTextField = ({
   label,
   value,
   onChange,
-  accentColor = '#6366f1',
-  multiline = false,
-  rows = 3,
 }: {
   label: string;
   value: string;
   onChange: (val: string) => void;
-  accentColor?: string;
-  multiline?: boolean;
-  rows?: number;
 }) => {
   const [localValue, setLocalValue] = useState(value);
 
@@ -600,7 +594,7 @@ const EditTextField = ({
   }, [value]);
 
   return (
-    <Box sx={{ pt: 1 }}>
+    <Box sx={{ mt: 1 }}>
       <TextField
         label={label}
         value={localValue}
@@ -865,11 +859,13 @@ const Sidebar = ({
                         options={billingCodeOptions}
                         onChange={(val) => onEditFormChange({ billingCode: val })}
                       />
-                      <EditTextField
-                        label='Estimate Details'
-                        value={editFormData.estimatesDetails || ''}
-                        onChange={(val) => onEditFormChange({ estimatesDetails: val })}
-                      />
+                      <Box sx={{ pt: 1 }}>
+                        <EditTextField
+                          label='Estimate Details'
+                          value={editFormData.estimatesDetails || ''}
+                          onChange={(val) => onEditFormChange({ estimatesDetails: val })}
+                        />
+                      </Box>
                     </>
                   ) : (
                     <>
@@ -900,22 +896,20 @@ const Sidebar = ({
                   <Typography sx={accordionTitleSx}>Estimate Details</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
-                  <Box sx={{ pt: 1 }}>
-                    {isEditing ? (
-                      <EditTextField
-                        label='Estimate Details'
-                        value={editFormData.estimatesDetails || ''}
-                        onChange={(val) => onEditFormChange({ estimatesDetails: val })}
-                      />
-                    ) : (
-                      <FieldCard
-                        icon={<AccessTimeIcon sx={iconSmSx} />}
-                        label='Estimate Details'
-                        value={incident.estimatesDetails || ''}
-                        accentColor='#1422e4'
-                      />
-                    )}
-                  </Box>
+                  {isEditing ? (
+                    <EditTextField
+                      label='Estimate Details'
+                      value={editFormData.estimatesDetails || ''}
+                      onChange={(val) => onEditFormChange({ estimatesDetails: val })}
+                    />
+                  ) : (
+                    <FieldCard
+                      icon={<AccessTimeIcon sx={iconSmSx} />}
+                      label='Estimate Details'
+                      value={incident.estimatesDetails || ''}
+                      accentColor='#1422e4'
+                    />
+                  )}
                 </AccordionDetails>
               </Accordion>
             )}

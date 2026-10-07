@@ -235,30 +235,6 @@ const TicketTypeTable = ({ ticketTypes, selectedRowId, onRowClick }: TicketTypeT
         const name = String(v || '—');
         return name !== '—' ? (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-            <Box
-              sx={{
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                bgcolor: alpha('#0369a1', 0.12),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <Typography
-                variant='body2'
-                sx={{ fontWeight: 700, fontSize: '0.7rem', color: '#0369a1' }}
-              >
-                {name
-                  .split(' ')
-                  .map((n) => n[0])
-                  .join('')
-                  .toUpperCase()
-                  .slice(0, 2)}
-              </Typography>
-            </Box>
             <Typography variant='body2' fontWeight={500} fontSize='0.82rem'>
               {name}
             </Typography>

@@ -306,7 +306,7 @@ const CommentWindow = ({
       footer={footer}
       maxWidth='sm'
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         {/* Response Template + Status — side by side */}
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Box sx={{ flex: 1 }}>

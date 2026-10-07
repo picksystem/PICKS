@@ -19,7 +19,10 @@ import {
   IConfigWorkingDayTemplate,
   IConfigWorkingDayTemplateTime,
 } from '@serviceops/interfaces';
-import { WORKING_DAY_TEMPLATE_TIMES_CONFIG } from './WorkingDayTemplatesSection.config';
+import {
+  WORKING_DAY_TEMPLATE_TIMES_CONFIG,
+  formatHoursToHHMM,
+} from './WorkingDayTemplatesSection.config';
 
 interface CreateWorkingTimesPanelProps {
   templates: IConfigWorkingDayTemplate[];
@@ -67,6 +70,19 @@ const dayHours = (blocks: IConfigWorkingDayTemplateTime[]): number =>
     if (from === null || to === null || to <= from) return sum;
     return sum + (to - from) / 60;
   }, 0);
+
+const WEEKDAY_HOURS_KEYS: (keyof IConfigWorkingDayTemplate)[] = [
+  'mondayHours',
+  'tuesdayHours',
+  'wednesdayHours',
+  'thursdayHours',
+  'fridayHours',
+  'saturdayHours',
+  'sundayHours',
+];
+
+const sumTemplateHours = (template: IConfigWorkingDayTemplate | undefined): number =>
+  WEEKDAY_HOURS_KEYS.reduce((sum, key) => sum + (Number(template?.[key]) || 0), 0);
 
 let blockIdSeq = 0;
 const newBlockId = () => `wdt-time-${Date.now()}-${blockIdSeq++}`;
@@ -118,6 +134,10 @@ const CreateWorkingTimesPanel = ({
   const blocks = timeBlocks.filter(
     (b) => b.workingDayTemplateId === selectedTemplateId && b.dayOfWeek === day,
   );
+
+  const selectedTemplate = templates.find((t) => t.id === selectedTemplateId);
+  const totalTemplateHours = sumTemplateHours(selectedTemplate);
+  const totalTemplateDisplay = formatHoursToHHMM(totalTemplateHours);
 
   const updateBlocks = (nextBlocks: IConfigWorkingDayTemplateTime[]) => {
     const others = timeBlocks.filter(
@@ -215,8 +235,36 @@ const CreateWorkingTimesPanel = ({
                 textAlign: 'center',
               }}
             >
-              <Typography sx={{ fontWeight: 700, fontSize: '0.85rem' }}>
-                {dayHours(blocks).toFixed(2)}
+              <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', fontFamily: 'monospace' }}>
+                {formatHoursToHHMM(dayHours(blocks))}
+              </Typography>
+            </Box>
+          </Box>
+          <Box sx={{ textAlign: 'right', ml: 1.5 }}>
+            <Typography variant='caption' color='text.secondary' sx={{ display: 'block' }}>
+              Total Hours
+            </Typography>
+            <Box
+              sx={{
+                border: '1px solid',
+                borderColor: alpha('#f97316', 0.4),
+                borderRadius: 1,
+                px: 1.5,
+                py: 0.25,
+                minWidth: 72,
+                textAlign: 'center',
+                bgcolor: alpha('#f97316', 0.06),
+              }}
+            >
+              <Typography
+                sx={{
+                  fontWeight: 800,
+                  fontSize: '0.85rem',
+                  fontFamily: 'monospace',
+                  color: '#ea580c',
+                }}
+              >
+                {totalTemplateDisplay}
               </Typography>
             </Box>
           </Box>

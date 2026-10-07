@@ -41,20 +41,30 @@ const mkRichTextCell = (v: unknown): React.ReactNode => {
 
 export const AccentColor = '#0369a1';
 
-export const fmtHours = (h: number) => (h > 0 ? `${h}h` : '—');
+export const fmtHours = (h: number) => formatHoursToHHMM(h);
+
+export const formatHoursToHHMM = (hours: number): string => {
+  if (hours <= 0) return '—';
+  const h = Math.floor(hours);
+  const decimalPart = Math.round((hours - h) * 100);
+  const clampedMin = Math.min(decimalPart, 59);
+  return `${String(h).padStart(2, '0')}:${String(clampedMin).padStart(2, '0')}`;
+};
 
 export const HoursCell =
   (color: string) =>
   (v: unknown): React.ReactNode => {
     const h = Number(v ?? 0);
+    const display = formatHoursToHHMM(h);
     return (
       <Typography
         variant='body2'
         fontSize='0.82rem'
         fontWeight={h > 0 ? 700 : 400}
         color={h > 0 ? color : 'text.disabled'}
+        sx={{ fontFamily: 'monospace' }}
       >
-        {fmtHours(h)}
+        {display}
       </Typography>
     );
   };
@@ -84,7 +94,7 @@ export const TotalCell = (_v: unknown, row: IConfigWorkingDayTemplate): React.Re
     (row.sundayHours ?? 0);
   return (
     <Chip
-      label={`${total}h`}
+      label={formatHoursToHHMM(total)}
       size='small'
       sx={{ fontWeight: 800, fontFamily: 'monospace', fontSize: '0.78rem' }}
     />

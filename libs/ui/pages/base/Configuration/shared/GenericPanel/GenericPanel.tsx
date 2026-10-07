@@ -2054,6 +2054,13 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
                     (sum, name) => sum + (Number(form[name]) || 0),
                     0,
                   );
+                  const h = Math.floor(total);
+                  const decimalPart = Math.round((total - h) * 100);
+                  const clampedMin = Math.min(decimalPart, 59);
+                  const display =
+                    total <= 0
+                      ? '—'
+                      : `${String(h).padStart(2, '0')}:${String(clampedMin).padStart(2, '0')}`;
                   return (
                     <TextField
                       key={field.name}
@@ -2061,7 +2068,13 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
                       size='small'
                       fullWidth
                       disabled
-                      value={`${total}h`}
+                      value={display}
+                      sx={{
+                        '& .MuiInputBase-input': {
+                          fontFamily: 'monospace',
+                          fontWeight: 700,
+                        },
+                      }}
                     />
                   );
                 }
@@ -2099,8 +2112,14 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
                 }
                 if (field.type === 'dayWorkingTimes') {
                   const rawValue = form[field.name];
+                  const hours = Number(rawValue ?? 0);
+                  const h = Math.floor(hours);
+                  const decimalPart = Math.round((hours - h) * 100);
+                  const clampedMin = Math.min(decimalPart, 59);
                   const displayValue =
-                    rawValue === undefined || rawValue === '' ? '0h' : `${Number(rawValue)}h`;
+                    rawValue === undefined || rawValue === '' || hours <= 0
+                      ? '—'
+                      : `${String(h).padStart(2, '0')}:${String(clampedMin).padStart(2, '0')}`;
                   return (
                     <TextField
                       key={field.name}
@@ -2109,6 +2128,12 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
                       fullWidth
                       disabled
                       value={displayValue}
+                      sx={{
+                        '& .MuiInputBase-input': {
+                          fontFamily: 'monospace',
+                          fontWeight: 600,
+                        },
+                      }}
                       InputProps={{
                         endAdornment: (
                           <IconButton
