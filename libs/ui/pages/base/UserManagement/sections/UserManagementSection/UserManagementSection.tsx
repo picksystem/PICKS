@@ -103,7 +103,7 @@ const UserManagementSection = ({
                   onClick={onOpenNew}
                   sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
                 >
-                  Add New User
+                  New
                 </Button>
               </Tooltip>
             )}

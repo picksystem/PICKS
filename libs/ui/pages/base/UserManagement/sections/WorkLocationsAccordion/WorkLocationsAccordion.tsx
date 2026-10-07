@@ -239,7 +239,7 @@ const WorkLocationsAccordion = () => {
                 onClick={() => workLocationsRef.current?.openNew()}
                 sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
               >
-                Add New Work Location
+                New
               </Button>
             </Tooltip>
           )}

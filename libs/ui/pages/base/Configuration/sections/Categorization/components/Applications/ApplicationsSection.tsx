@@ -436,7 +436,7 @@ export const ApplicationsSection = ({ data, onDataChange }: ApplicationsSectionP
                 onClick={handleNewClick}
                 sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
               >
-                Add New Application
+                New
               </Button>
             </Tooltip>
           )}

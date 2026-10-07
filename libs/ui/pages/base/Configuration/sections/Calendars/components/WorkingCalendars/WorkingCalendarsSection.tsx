@@ -504,7 +504,7 @@ const WorkingCalendarsSection = ({ data, onDataChange }: WorkingCalendarsSection
                 onClick={handleNewClick}
                 sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
               >
-                Add New Working Calendar
+                New
               </Button>
             </Tooltip>
           )}

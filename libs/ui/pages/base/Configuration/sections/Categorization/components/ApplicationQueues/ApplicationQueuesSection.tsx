@@ -395,7 +395,7 @@ export const ApplicationQueuesSection = ({ data, onDataChange }: ApplicationQueu
                 onClick={handleNewClick}
                 sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
               >
-                Add New Queue
+                New
               </Button>
             </Tooltip>
           )}

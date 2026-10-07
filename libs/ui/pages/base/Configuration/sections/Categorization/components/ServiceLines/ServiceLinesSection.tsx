@@ -498,7 +498,7 @@ export const ServiceLinesSection = ({ data, onDataChange }: ServiceLinesSectionP
                 onClick={handleNewClick}
                 sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
               >
-                Add New Service Line
+                New
               </Button>
             </Tooltip>
           )}

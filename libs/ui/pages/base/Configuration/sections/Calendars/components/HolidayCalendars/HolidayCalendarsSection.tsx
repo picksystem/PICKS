@@ -336,7 +336,7 @@ const HolidayCalendarsSection = ({
                 onClick={handleNewClick}
                 sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
               >
-                Add New Holiday Calendar
+                New
               </Button>
             </Tooltip>
           )}
