@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { IConfigResolutionTemplate } from '@serviceops/interfaces';
 import { useConfiguration } from '@serviceops/confighooks';
+import { useAuth } from '@serviceops/hooks';
 import { GenericPanel } from '@serviceops/genericpanel';
 import { useStyles } from '../../styles';
 import { RESOLUTION_CONFIG, resolutionColumns } from '../shared/TemplatesPanelConfig';
+import { ResolutionFormDialog } from './ResolutionFormDialog';
 
 interface ResolutionSectionProps {
   data?: IConfigResolutionTemplate[];
@@ -13,8 +15,20 @@ interface ResolutionSectionProps {
 const ResolutionSection = ({ data, onDataChange }: ResolutionSectionProps) => {
   const { classes } = useStyles();
   const { resolutionTemplates, saveSection } = useConfiguration();
+  const { user } = useAuth();
 
   const [rows, setRows] = useState<IConfigResolutionTemplate[]>([]);
+  const [dialogMode, setDialogMode] = useState<'create' | 'edit' | 'select' | null>(null);
+  const [editingItem, setEditingItem] = useState<IConfigResolutionTemplate | null>(null);
+  const [selectedItem, setSelectedItem] = useState<IConfigResolutionTemplate | null>(null);
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+
+  const handleRowSelect = useCallback((id: string | null) => {
+    setSelectedRowId(id);
+  }, []);
+
+  const currentUserName = user ? `${user.firstName} ${user.lastName}`.trim() : '';
+  const now = () => new Date().toISOString();
 
   useEffect(() => {
     if (data !== undefined) {
@@ -33,15 +47,79 @@ const ResolutionSection = ({ data, onDataChange }: ResolutionSectionProps) => {
     }
   };
 
+  const handleNew = () => {
+    setEditingItem(null);
+    setSelectedItem(null);
+    setSelectedRowId(null);
+    setDialogMode('create');
+  };
+
+  const handleEdit = () => {
+    const selected = rows.find((r) => r.id === selectedRowId);
+    if (selected) {
+      setEditingItem(selected);
+      setDialogMode('edit');
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setDialogMode(null);
+    setEditingItem(null);
+    setSelectedItem(null);
+    setSelectedRowId(null);
+  };
+
+  const handleDialogSave = (formData: Record<string, unknown>) => {
+    const existing = formData.id as string | undefined;
+    let next: IConfigResolutionTemplate[];
+
+    if (existing) {
+      next = rows.map((r) =>
+        r.id === existing
+          ? ({
+              ...r,
+              ...formData,
+              updatedBy: currentUserName,
+              updatedAt: now(),
+            } as IConfigResolutionTemplate)
+          : r,
+      );
+    } else {
+      const newTemplate: IConfigResolutionTemplate = {
+        id: crypto.randomUUID(),
+        ...formData,
+        createdBy: currentUserName,
+        createdAt: now(),
+      } as IConfigResolutionTemplate;
+      next = [...rows, newTemplate];
+    }
+
+    handleSave(next);
+    handleCloseDialog();
+  };
+
   return (
     <div id='resolution-template' className={classes.sectionAccordion}>
       <GenericPanel
         config={RESOLUTION_CONFIG}
         data={rows}
         onSave={handleSave}
-        customColumns={resolutionColumns as unknown as undefined}
+        onNewClick={handleNew}
+        onEditClick={handleEdit}
+        customColumns={resolutionColumns as any}
         variant='plain'
-        defaultExpanded={false}
+        selectedRowId={selectedRowId}
+        onRowSelect={handleRowSelect}
+      />
+
+      <ResolutionFormDialog
+        open={dialogMode !== null}
+        onClose={handleCloseDialog}
+        mode={dialogMode || 'create'}
+        initialData={
+          dialogMode === 'edit' ? editingItem : dialogMode === 'select' ? selectedItem : undefined
+        }
+        onSave={handleDialogSave}
       />
     </div>
   );

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { IConfigTimeEntryTemplate } from '@serviceops/interfaces';
 import { useConfiguration } from '@serviceops/confighooks';
+import { useAuth } from '@serviceops/hooks';
 import { GenericPanel } from '@serviceops/genericpanel';
 import { useStyles } from '../../styles';
 import { TIME_ENTRY_CONFIG, timeEntryColumns } from '../shared/TemplatesPanelConfig';
@@ -14,12 +15,16 @@ interface TimeEntrySectionProps {
 const TimeEntrySection = ({ data, onDataChange }: TimeEntrySectionProps) => {
   const { classes } = useStyles();
   const { timeEntryTemplates, saveSection } = useConfiguration();
+  const { user } = useAuth();
 
   const [rows, setRows] = useState<IConfigTimeEntryTemplate[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editingRow, setEditingRow] = useState<IConfigTimeEntryTemplate | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const currentUserName = user ? `${user.firstName} ${user.lastName}`.trim() : '';
+  const now = () => new Date().toISOString();
 
   useEffect(() => {
     if (data !== undefined) {
@@ -64,15 +69,27 @@ const TimeEntrySection = ({ data, onDataChange }: TimeEntrySectionProps) => {
 
   const handleSubmit = useCallback(
     (formData: IConfigTimeEntryTemplate) => {
+      let finalData: IConfigTimeEntryTemplate;
       if (isEdit && editingRow) {
-        handleSave(rows.map((r) => (r.id === editingRow.id ? formData : r)));
+        finalData = {
+          ...formData,
+          updatedBy: currentUserName,
+          updatedAt: now(),
+        };
+        handleSave(rows.map((r) => (r.id === editingRow.id ? finalData : r)));
       } else {
-        handleSave([...rows, formData]);
+        finalData = {
+          ...formData,
+          id: crypto.randomUUID(),
+          createdBy: currentUserName,
+          createdAt: now(),
+        };
+        handleSave([...rows, finalData]);
       }
       setDialogOpen(false);
       setEditingRow(null);
     },
-    [isEdit, editingRow, rows],
+    [isEdit, editingRow, rows, currentUserName],
   );
 
   return (
@@ -81,7 +98,7 @@ const TimeEntrySection = ({ data, onDataChange }: TimeEntrySectionProps) => {
         config={TIME_ENTRY_CONFIG}
         data={rows}
         onSave={handleSave}
-        customColumns={timeEntryColumns as unknown as undefined}
+        customColumns={timeEntryColumns as any}
         variant='plain'
         defaultExpanded={false}
         selectedRowId={selectedId}

@@ -1129,6 +1129,10 @@ export interface IConfigResolutionTemplate {
   resolutionCode: string;
   resolution: string;
   resolutionInternalNote: string;
+  createdBy?: string;
+  createdAt?: string;
+  updatedBy?: string;
+  updatedAt?: string;
 }
 
 export interface IConfigResolutionTemplates {
@@ -1159,6 +1163,11 @@ export interface IConfigTimeEntryTemplate {
   entries: IConfigTimeEntryLine[];
   externalComment: string;
   internalComment: string;
+  nonBillable?: boolean;
+  createdBy?: string;
+  createdAt?: string;
+  updatedBy?: string;
+  updatedAt?: string;
 }
 
 export interface IConfigTimeEntryTemplates {

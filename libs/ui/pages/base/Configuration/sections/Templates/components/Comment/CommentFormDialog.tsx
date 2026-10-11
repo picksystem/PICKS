@@ -36,12 +36,10 @@ const createEmptyForm = () => ({
   description: '',
   active: true,
   ticketStatus: '',
-  subjectLine: '',
   commentDescription: '',
   internalNote: false,
   notifyAssigneesOnly: false,
   selfNote: false,
-  appendToResolution: false,
 });
 
 interface FormState {
@@ -49,12 +47,10 @@ interface FormState {
   description: string;
   active: boolean;
   ticketStatus: string;
-  subjectLine: string;
   commentDescription: string;
   internalNote: boolean;
   notifyAssigneesOnly: boolean;
   selfNote: boolean;
-  appendToResolution: boolean;
 }
 
 export const CommentFormDialog = ({
@@ -94,16 +90,13 @@ export const CommentFormDialog = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.ticketStatus]);
 
-  const handleTsSelect = useCallback(
-    (opt: { value: string; label: string }) => {
-      setTsInput(opt.label);
-      setTsOptionsOpen(false);
-      setTsFiltered([]);
-      setTouched((t) => ({ ...t, ticketStatus: true }));
-      setForm((prev) => ({ ...prev, ticketStatus: opt.value }));
-    },
-    [],
-  );
+  const handleTsSelect = useCallback((opt: { value: string; label: string }) => {
+    setTsInput(opt.label);
+    setTsOptionsOpen(false);
+    setTsFiltered([]);
+    setTouched((t) => ({ ...t, ticketStatus: true }));
+    setForm((prev) => ({ ...prev, ticketStatus: opt.value }));
+  }, []);
 
   const handleTsClear = useCallback(() => {
     setTsInput('');
@@ -138,12 +131,10 @@ export const CommentFormDialog = ({
         description: initialData.description,
         active: initialData.active,
         ticketStatus: initialData.ticketStatus,
-        subjectLine: initialData.subjectLine ?? '',
         commentDescription: initialData.commentDescription,
         internalNote: initialData.internalNote,
         notifyAssigneesOnly: initialData.notifyAssigneesOnly,
         selfNote: initialData.selfNote,
-        appendToResolution: initialData.appendToResolution,
       });
     } else {
       setForm(createEmptyForm());
@@ -226,7 +217,7 @@ export const CommentFormDialog = ({
 
       <DialogContent dividers sx={{ p: 0 }}>
         <Box sx={{ px: 2.5, py: 2 }}>
-          {/* Row 1: Template Name + Subject Line side-by-side */}
+          {/* Row 1: Template Name + Ticket Status side-by-side */}
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
             <Box>
               <TextField
@@ -244,22 +235,6 @@ export const CommentFormDialog = ({
                 helperText={nameError}
               />
             </Box>
-            <Box>
-              <TextField
-                label='Subject Line'
-                size='small'
-                fullWidth
-                value={form.subjectLine}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  handleChange('subjectLine', e.target.value)
-                }
-                placeholder='Enter subject line'
-              />
-            </Box>
-          </Box>
-
-          {/* Row 2: Ticket Status + Active side-by-side */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
             <Box sx={{ position: 'relative' }}>
               <TextField
                 label='Ticket Status'
@@ -345,20 +320,6 @@ export const CommentFormDialog = ({
                 </Paper>
               )}
             </Box>
-            <Box>
-              <TextField
-                label='Active'
-                size='small'
-                fullWidth
-                value={form.active ? 'Yes' : 'No'}
-                disabled
-                slotProps={{
-                  input: {
-                    readOnly: true,
-                  },
-                }}
-              />
-            </Box>
           </Box>
 
           {/* Row 3: Description (RichTextEditor) */}
@@ -414,7 +375,6 @@ export const CommentFormDialog = ({
                 { key: 'internalNote', label: 'Internal Note' },
                 { key: 'notifyAssigneesOnly', label: 'Notify Assignees Only' },
                 { key: 'selfNote', label: 'Self Note' },
-                { key: 'appendToResolution', label: 'Append to Resolution' },
               ].map(({ key, label }) => (
                 <FormControlLabel
                   key={key}

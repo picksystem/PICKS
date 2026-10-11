@@ -28,54 +28,22 @@ const formatDateTime = (v: unknown): React.ReactNode => {
     </Typography>
   );
 };
-
-const mkYesNoCell = (v: unknown): React.ReactNode => {
-  const on = Boolean(v);
-  return (
-    <Box
-      sx={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 0.5,
-        px: 1,
-        py: 0.25,
-        borderRadius: 999,
-        fontSize: '0.65rem',
-        fontWeight: 700,
-        textTransform: 'uppercase',
-        bgcolor: on ? '#dcfce7' : '#f1f5f9',
-        color: on ? '#15803d' : '#64748b',
-        border: '1px solid',
-        borderColor: on ? '#16a34a' : '#cbd5e1',
-        minWidth: 40,
-      }}
-    >
-      <Box
-        component='span'
-        sx={{
-          width: 6,
-          height: 6,
-          borderRadius: '50%',
-          bgcolor: on ? '#16a34a' : '#94a3b8',
-        }}
-      />
-      {on ? 'Yes' : 'No'}
-    </Box>
-  );
-};
-
 // ── Column Definitions ─────────────────────────────────────────────────────────
 
 export const ticketUpdateColumns: Column<IConfigTicketUpdateTemplate>[] = [
   { id: 'name', label: 'Template Name', minWidth: 160, format: mkCell(true) },
   { id: 'description', label: 'Description', minWidth: 180, format: mkDescCell },
-  { id: 'active', label: 'Active', minWidth: 80, format: mkYesNoCell },
+  { id: 'active', label: 'Active', minWidth: 80, format: mkActiveChip },
   { id: 'ticketStatus', label: 'Ticket Status', minWidth: 130, format: mkCell() },
   { id: 'commentDescription', label: 'Comment', minWidth: 160, format: mkCell() },
-  { id: 'internalNote', label: 'Internal Note', minWidth: 100, format: mkYesNoCell },
-  { id: 'notifyAssigneesOnly', label: 'Notify Assignees Only', minWidth: 140, format: mkYesNoCell },
-  { id: 'selfNote', label: 'Self Note', minWidth: 100, format: mkYesNoCell },
+  { id: 'internalNote', label: 'Internal Note', minWidth: 100, format: mkActiveChip },
+  {
+    id: 'notifyAssigneesOnly',
+    label: 'Notify Assignees Only',
+    minWidth: 140,
+    format: mkActiveChip,
+  },
+  { id: 'selfNote', label: 'Self Note', minWidth: 100, format: mkActiveChip },
   { id: 'createdBy', label: 'Created By', minWidth: 120, format: mkCell() },
   { id: 'createdAt', label: 'Created Date & Time', minWidth: 160, format: formatDateTime },
   { id: 'updatedBy', label: 'Updated By', minWidth: 120, format: mkCell() },
@@ -85,14 +53,17 @@ export const ticketUpdateColumns: Column<IConfigTicketUpdateTemplate>[] = [
 export const commentColumns: Column<IConfigCommentTemplate>[] = [
   { id: 'name', label: 'Name', minWidth: 160, format: mkCell(true) },
   { id: 'description', label: 'Description', minWidth: 180, format: mkDescCell },
-  { id: 'active', label: 'Active', minWidth: 80, format: mkYesNoCell },
+  { id: 'active', label: 'Active', minWidth: 80, format: mkActiveChip },
   { id: 'ticketStatus', label: 'Ticket Status', minWidth: 130, format: mkCell() },
-  { id: 'subjectLine', label: 'Subject Line', minWidth: 170, format: mkCell() },
   { id: 'commentDescription', label: 'Comment', minWidth: 160, format: mkCell() },
-  { id: 'internalNote', label: 'Internal Note', minWidth: 100, format: mkYesNoCell },
-  { id: 'notifyAssigneesOnly', label: 'Notify Assignees Only', minWidth: 140, format: mkYesNoCell },
-  { id: 'selfNote', label: 'Self Note', minWidth: 100, format: mkYesNoCell },
-  { id: 'appendToResolution', label: 'Append to Res.', minWidth: 130, format: mkYesNoCell },
+  { id: 'internalNote', label: 'Internal Note', minWidth: 100, format: mkActiveChip },
+  {
+    id: 'notifyAssigneesOnly',
+    label: 'Notify Assignees Only',
+    minWidth: 140,
+    format: mkActiveChip,
+  },
+  { id: 'selfNote', label: 'Self Note', minWidth: 100, format: mkActiveChip },
   { id: 'createdBy', label: 'Created By', minWidth: 120, format: mkCell() },
   { id: 'createdAt', label: 'Created Date & Time', minWidth: 160, format: formatDateTime },
   { id: 'updatedBy', label: 'Updated By', minWidth: 120, format: mkCell() },
@@ -181,7 +152,6 @@ export const COMMENT_CONFIG: TableConfig = {
     { name: 'name', label: 'Name', required: true, bold: true },
     { name: 'description', label: 'Description', type: 'richText' },
     { name: 'ticketStatus', label: 'Ticket Status' },
-    { name: 'subjectLine', label: 'Subject Line' },
     { name: 'commentDescription', label: 'Comment Description', type: 'richText' },
     {
       name: 'internalNote',
@@ -208,15 +178,6 @@ export const COMMENT_CONFIG: TableConfig = {
       defaultValue: false,
       activationDescriptionActive: 'This comment will be logged as a self note',
       activationDescriptionInactive: 'This comment will not be logged as a self note',
-      activationAccent: '#0369a1',
-    },
-    {
-      name: 'appendToResolution',
-      label: 'Append to Resolution',
-      type: 'activationToggle' as const,
-      defaultValue: false,
-      activationDescriptionActive: 'This comment will be appended to the ticket resolution',
-      activationDescriptionInactive: 'This comment will not be appended to the ticket resolution',
       activationAccent: '#0369a1',
     },
     {
@@ -276,6 +237,10 @@ export const resolutionColumns: Column<IConfigResolutionTemplate>[] = [
   { id: 'resolutionCode', label: 'Resolution Code', minWidth: 130, format: mkCell() },
   { id: 'resolution', label: 'Resolution', minWidth: 120, format: mkCell() },
   { id: 'resolutionInternalNote', label: 'Res. Internal Note', minWidth: 140, format: mkCell() },
+  { id: 'createdBy', label: 'Created By', minWidth: 120, format: mkCell() },
+  { id: 'createdAt', label: 'Created Date & Time', minWidth: 160, format: formatDateTime },
+  { id: 'updatedBy', label: 'Updated By', minWidth: 120, format: mkCell() },
+  { id: 'updatedAt', label: 'Updated Date & Time', minWidth: 160, format: formatDateTime },
 ];
 
 export const RESOLUTION_CONFIG: TableConfig = {
@@ -349,6 +314,10 @@ export const timeEntryColumns: Column<IConfigTimeEntryTemplate>[] = [
   { id: 'externalComment', label: 'External Comment', minWidth: 150, format: mkCell() },
   { id: 'internalComment', label: 'Internal Comment', minWidth: 150, format: mkCell() },
   { id: 'nonBillable', label: 'Non Billable', minWidth: 100, format: mkActiveChip },
+  { id: 'createdBy', label: 'Created By', minWidth: 120, format: mkCell() },
+  { id: 'createdAt', label: 'Created Date & Time', minWidth: 160, format: formatDateTime },
+  { id: 'updatedBy', label: 'Updated By', minWidth: 120, format: mkCell() },
+  { id: 'updatedAt', label: 'Updated Date & Time', minWidth: 160, format: formatDateTime },
 ];
 
 export const TIME_ENTRY_CONFIG: TableConfig = {
