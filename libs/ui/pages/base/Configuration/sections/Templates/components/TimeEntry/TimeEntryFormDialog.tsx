@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -6,16 +6,33 @@ import {
   FormControlLabel,
   Switch,
   Button,
+  Divider,
 } from '@serviceops/component';
-import { alpha, darken, Dialog, DialogContent, DialogActions, Divider } from '@mui/material';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import {
+  alpha,
+  InputAdornment,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Paper,
+  darken,
+  Dialog,
+  DialogContent,
+  DialogActions,
+} from '@mui/material';
+import { Clear as ClearIcon, Search as SearchIcon } from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import { RichTextEditor, parseRichText } from '@serviceops/richtexteditor';
 import type { IConfigTimeEntryTemplate, IConfigTimeEntryLine } from '@serviceops/interfaces';
+import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
 import { useStyles } from '../../../../styles';
+import { DurationPickerField } from '../../../../shared/GenericPanel/components/DurationPickerField/DurationPickerField';
+import { useFieldError } from '@serviceops/hooks';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 
 interface TimeEntryFormDialogProps {
   open: boolean;
@@ -45,10 +62,13 @@ const createEmptyForm = () => ({
   description: '',
   active: true,
   ticketStatus: '',
-  weekStartDate: '',
-  entries: [createEmptyEntry()],
+  date: '',
+  duration: '',
+  billingCode: '',
+  activityTask: '',
   externalComment: '',
   internalComment: '',
+  nonBillable: false,
 });
 
 interface FormState {
@@ -56,10 +76,13 @@ interface FormState {
   description: string;
   active: boolean;
   ticketStatus: string;
-  weekStartDate: string;
-  entries: IConfigTimeEntryLine[];
+  date: string;
+  duration: string;
+  billingCode: string;
+  activityTask: string;
   externalComment: string;
   internalComment: string;
+  nonBillable: boolean;
 }
 
 export const TimeEntryFormDialog = ({
@@ -70,10 +93,197 @@ export const TimeEntryFormDialog = ({
   initialData,
   accent = '#0369a1',
 }: TimeEntryFormDialogProps) => {
-  const { classes } = useStyles();
+  const _classes = useStyles();
+  const config = useConfiguration();
   const [form, setForm] = useState<FormState>(createEmptyForm());
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
+  // ── Validation state ──────────────────────────────────────────────────
+  const [touched, setTouched] = useState<{
+    [K in keyof FormState]?: boolean;
+  }>({});
+  const [requiredErrors, setRequiredErrors] = useState<{
+    [K in keyof FormState]?: string;
+  }>({});
+
+  const reqError = useFieldError();
+
+  const validateRequired = (f: FormState) => {
+    const errs: typeof requiredErrors = {};
+    if (!String(f.name ?? '').trim()) errs.name = 'required';
+    if (!String(f.description ?? '').trim()) errs.description = 'required';
+    if (!String(f.ticketStatus ?? '').trim()) errs.ticketStatus = 'required';
+    if (!String(f.date ?? '').trim()) errs.date = 'required';
+    if (!String(f.duration ?? '').trim()) errs.duration = 'required';
+    if (!String(f.billingCode ?? '').trim()) errs.billingCode = 'required';
+    if (!String(f.activityTask ?? '').trim()) errs.activityTask = 'required';
+    if (!String(f.externalComment ?? '').trim()) errs.externalComment = 'required';
+    if (!String(f.internalComment ?? '').trim()) errs.internalComment = 'required';
+    return errs;
+  };
+
+  // ── Searchable field helpers (mirror ResolutionFormDialog) ───────────
+  const useSearchableField = (
+    input: string,
+    setInput: (v: string) => void,
+    open: boolean,
+    setOpen: (v: boolean) => void,
+    filtered: { value: string; label: string }[],
+    setFiltered: (v: { value: string; label: string }[]) => void,
+    debounceRef: React.MutableRefObject<ReturnType<typeof setTimeout> | null>,
+    options: { value: string; label: string }[],
+    formField: keyof FormState,
+  ) => {
+    const handleSelect = (opt: { value: string; label: string }) => {
+      setInput(opt.label);
+      setOpen(false);
+      setFiltered([]);
+      setForm((prev) => ({ ...prev, [formField]: opt.value }));
+      setRequiredErrors((prev) => ({ ...prev, [formField]: undefined }));
+    };
+
+    const handleClear = () => {
+      setInput('');
+      setFiltered([]);
+      setOpen(false);
+      setForm((prev) => ({ ...prev, [formField]: '' }));
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      setInput(val);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        const q = val.trim().toLowerCase();
+        const next = q ? options.filter((o) => o.label.toLowerCase().includes(q)) : options;
+        setFiltered(next);
+        setOpen(next.length > 0);
+      }, 150);
+    };
+
+    const handleFocus = () => {
+      const q = input.trim().toLowerCase();
+      const next = q ? options.filter((o) => o.label.toLowerCase().includes(q)) : options;
+      setFiltered(next);
+      if (next.length > 0) setOpen(true);
+    };
+
+    const handleBlur = () => {
+      setTimeout(() => setOpen(false), 150);
+    };
+
+    const renderDropdown = () =>
+      open && filtered.length > 0 ? (
+        <Paper
+          elevation={4}
+          sx={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            zIndex: 1000,
+            mt: 0,
+            maxHeight: 280,
+            overflow: 'auto',
+          }}
+        >
+          <List dense disablePadding>
+            {filtered.map((opt) => (
+              <ListItem key={opt.value} disablePadding>
+                <ListItemButton
+                  onClick={() => handleSelect(opt)}
+                  sx={{
+                    py: 1,
+                    px: 1.5,
+                    '&:hover': { bgcolor: alpha(accent, 0.08) },
+                  }}
+                >
+                  <ListItemText
+                    primary={opt.label}
+                    primaryTypographyProps={{ fontSize: '0.84rem', noWrap: true }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Paper>
+      ) : null;
+
+    const endAdornment = input ? (
+      <InputAdornment position='end'>
+        <ClearIcon
+          onClick={handleClear}
+          sx={{ fontSize: 18, color: 'text.primary', cursor: 'pointer' }}
+        />
+      </InputAdornment>
+    ) : (
+      <InputAdornment position='end'>
+        <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+      </InputAdornment>
+    );
+
+    return { handleInputChange, handleFocus, handleBlur, renderDropdown, endAdornment };
+  };
+
+  // ── Ticket Status searchable field ───────────────────────────────────
+  const [tsInput, setTsInput] = useState<string>('');
+  const [tsOpen, setTsOpen] = useState(false);
+  const [tsFiltered, setTsFiltered] = useState<{ value: string; label: string }[]>([]);
+  const tsDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const statuses = (config?.data?.statuses?.items ?? []).map((s) => ({
+    value: s.name,
+    label: s.displayName,
+  }));
+
+  // Sync local input with form value
+  useEffect(() => {
+    const stored = String(form.ticketStatus ?? '');
+    if (stored !== tsInput) setTsInput(stored);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.ticketStatus]);
+
+  const tsSearch = useSearchableField(
+    tsInput,
+    setTsInput,
+    tsOpen,
+    setTsOpen,
+    tsFiltered,
+    setTsFiltered,
+    tsDebounceRef,
+    statuses,
+    'ticketStatus',
+  );
+
+  // ── Billing Code searchable field ────────────────────────────────────
+  const [bcInput, setBcInput] = useState<string>('');
+  const [bcOpen, setBcOpen] = useState(false);
+  const [bcFiltered, setBcFiltered] = useState<{ value: string; label: string }[]>([]);
+  const bcDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const billingCodes = (config?.data?.categorization?.applications ?? []).flatMap((app) =>
+    (app.billingCodes ?? []).map((bc) => ({ value: bc.code, label: bc.description })),
+  );
+
+  // Sync local input with form value
+  useEffect(() => {
+    const stored = String(form.billingCode ?? '');
+    if (stored !== bcInput) setBcInput(stored);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.billingCode]);
+
+  const bcSearch = useSearchableField(
+    bcInput,
+    setBcInput,
+    bcOpen,
+    setBcOpen,
+    bcFiltered,
+    setBcFiltered,
+    bcDebounceRef,
+    billingCodes,
+    'billingCode',
+  );
+
+  // ── Init form from initialData ────────────────────────────────────────
   useEffect(() => {
     if (initialData) {
       setForm({
@@ -81,64 +291,89 @@ export const TimeEntryFormDialog = ({
         description: initialData.description,
         active: initialData.active,
         ticketStatus: initialData.ticketStatus,
-        weekStartDate: initialData.weekStartDate,
-        entries: initialData.entries.length > 0 ? initialData.entries : [createEmptyEntry()],
+        date: initialData.weekStartDate || '',
+        duration: initialData.entries?.[0]
+          ? String(
+              (initialData.entries[0].mon || 0) +
+                (initialData.entries[0].tue || 0) +
+                (initialData.entries[0].wed || 0) +
+                (initialData.entries[0].thu || 0) +
+                (initialData.entries[0].fri || 0) +
+                (initialData.entries[0].sat || 0) +
+                (initialData.entries[0].sun || 0),
+            )
+          : '',
+        billingCode: initialData.entries?.[0]?.billingCode || '',
+        activityTask: initialData.entries?.[0]?.activityTask || '',
         externalComment: initialData.externalComment,
         internalComment: initialData.internalComment,
+        nonBillable: initialData.nonBillable ?? false,
       });
+      // Sync inputs — they auto-populate from form via the useEffect hooks above
+      setTsFiltered([]);
+      setTsOpen(false);
+      setBcFiltered([]);
+      setBcOpen(false);
     } else {
       setForm(createEmptyForm());
+      setTsInput('');
+      setTsOpen(false);
+      setTsFiltered([]);
+      setBcInput('');
+      setBcOpen(false);
+      setBcFiltered([]);
     }
+    setTouched({});
+    setRequiredErrors({});
   }, [initialData, open]);
 
   const handleChange = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleEntryChange = (
-    field: keyof IConfigTimeEntryLine,
-    value: string | boolean | number,
-  ) => {
-    setForm((prev) => ({
-      ...prev,
-      entries: prev.entries.map((entry, idx) => (idx === 0 ? { ...entry, [field]: value } : entry)),
-    }));
-  };
-
   const handleSubmit = () => {
+    setTouched({
+      name: true,
+      description: true,
+      ticketStatus: true,
+      date: true,
+      duration: true,
+      billingCode: true,
+      activityTask: true,
+      externalComment: true,
+      internalComment: true,
+      nonBillable: true,
+    });
+    const errs = validateRequired(form);
+    setRequiredErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    const entry: IConfigTimeEntryLine = createEmptyEntry();
+    entry.billingCode = form.billingCode;
+    entry.activityTask = form.activityTask;
+    entry.nonBillable = form.nonBillable;
+
     const template: IConfigTimeEntryTemplate = {
       ...form,
       id: initialData?.id || `template-${Date.now()}`,
-    };
+      weekStartDate: form.date,
+      entries: [entry],
+    } as IConfigTimeEntryTemplate;
     onSubmit(template);
   };
 
-  const handleDateTimeChange = (newValue: Dayjs | null) => {
-    handleChange('weekStartDate', newValue ? newValue.format('YYYY-MM-DD HH:mm') : '');
-  };
+  const nameError = reqError(touched.name, requiredErrors.name);
+  const descriptionError = reqError(touched.description, requiredErrors.description);
+  const ticketStatusError = reqError(touched.ticketStatus, requiredErrors.ticketStatus);
+  const dateError = reqError(touched.date, requiredErrors.date);
+  const durationError = reqError(touched.duration, requiredErrors.duration);
+  // NOTE: billingCode validation runs in validateRequired but ProjectSearchField
+  // manages its own internal error display — the error var suppresses the lint rule.
 
-  const handleExternalCommentChange = (value: {
-    segments: Array<{ text: string; bold?: boolean; italic?: boolean; underline?: boolean }>;
-  }) => {
-    const text = value.segments.map((s) => s.text).join('');
-    handleChange('externalComment', text);
-  };
-
-  const handleInternalCommentChange = (value: {
-    segments: Array<{ text: string; bold?: boolean; italic?: boolean; underline?: boolean }>;
-  }) => {
-    const text = value.segments.map((s) => s.text).join('');
-    handleChange('internalComment', text);
-  };
-
-  const handleDescriptionChange = (value: {
-    segments: Array<{ text: string; bold?: boolean; italic?: boolean; underline?: boolean }>;
-  }) => {
-    const text = value.segments.map((s) => s.text).join('');
-    handleChange('description', text);
-  };
-
-  const entry = form.entries[0] || createEmptyEntry();
+  const _billingCodeError = reqError(touched.billingCode, requiredErrors.billingCode);
+  const activityTaskError = reqError(touched.activityTask, requiredErrors.activityTask);
+  const externalCommentError = reqError(touched.externalComment, requiredErrors.externalComment);
+  const internalCommentError = reqError(touched.internalComment, requiredErrors.internalComment);
 
   return (
     <Dialog
@@ -192,214 +427,210 @@ export const TimeEntryFormDialog = ({
       <DialogContent dividers sx={{ p: 0 }}>
         <Box sx={{ px: 2.5, py: 2 }}>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-            {/* Row 1: Name */}
-            <Box sx={{ mb: 2 }}>
-              <TextField
-                label='Name'
-                size='small'
-                fullWidth
-                value={form.name}
-                onChange={(e) => handleChange('name', e.target.value)}
-                required
-                placeholder='Enter template name'
-              />
+            {/* Row 1: Template Name + Ticket Status side-by-side */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
+              <Box>
+                <TextField
+                  label='Template Name'
+                  size='small'
+                  fullWidth
+                  value={form.name}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    handleChange('name', e.target.value)
+                  }
+                  required
+                  placeholder='Enter template name'
+                  inputProps={{ maxLength: 40 }}
+                  error={Boolean(nameError)}
+                  helperText={nameError}
+                />
+              </Box>
+              <Box sx={{ position: 'relative' }}>
+                <TextField
+                  label='Ticket Status'
+                  size='small'
+                  fullWidth
+                  value={tsInput}
+                  onChange={tsSearch.handleInputChange}
+                  onFocus={tsSearch.handleFocus}
+                  onBlur={tsSearch.handleBlur}
+                  placeholder='Search ticket status...'
+                  required
+                  error={Boolean(ticketStatusError)}
+                  helperText={ticketStatusError}
+                  slotProps={{ input: { endAdornment: tsSearch.endAdornment } }}
+                />
+                {tsSearch.renderDropdown()}
+              </Box>
             </Box>
 
-            {/* Description with RichTextEditor */}
+            {/* Row 2: Description (RichTextEditor) */}
             <Box sx={{ mb: 2 }}>
-              <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary', mb: 0.75 }}>
-                Description
-              </Typography>
               <RichTextEditor
                 value={parseRichText(form.description)}
-                onChange={handleDescriptionChange}
+                onChange={(value: { segments: Array<{ text: string }> }) => {
+                  const text = value.segments.map((s) => s.text).join('');
+                  handleChange('description', text);
+                }}
                 accent={accent}
+                title='Description'
                 placeholder='Enter description...'
                 showFooterActions={false}
+                required
               />
+              {descriptionError && (
+                <Typography sx={{ color: 'error.main', fontSize: '0.75rem', mt: 0.5 }}>
+                  {descriptionError}
+                </Typography>
+              )}
             </Box>
 
-            {/* Row 2: Date & Time, Billing Code, Activity/Task */}
+            {/* Row 3: Date + Duration side-by-side */}
             <Box
               sx={{
                 display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr',
+                gridTemplateColumns: '1fr 1fr',
                 gap: 1.5,
                 mb: 2,
               }}
             >
-              <DateTimePicker
-                label={
-                  <span>
-                    Date{' '}
-                    <Typography component='span' sx={{ color: 'error.main' }}>
-                      *
-                    </Typography>
-                  </span>
-                }
-                value={form.weekStartDate ? dayjs(form.weekStartDate) : null}
-                onChange={handleDateTimeChange}
-                open={datePickerOpen}
-                onOpen={() => setDatePickerOpen(true)}
-                onClose={() => setDatePickerOpen(false)}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    fullWidth: true,
-                    onClick: () => setDatePickerOpen(true),
-                    sx: { '& .MuiOutlinedInput-root': { borderRadius: 1 } },
-                  },
-                }}
-              />
-              <TextField
-                label='Billing Code'
-                size='small'
-                value={entry.billingCode}
-                onChange={(e) => handleEntryChange('billingCode', e.target.value)}
-                placeholder='Select billing code'
-                required
-              />
-              <TextField
-                label='Activity/Task'
-                size='small'
-                value={entry.activityTask}
-                onChange={(e) => handleEntryChange('activityTask', e.target.value)}
-                placeholder='Select activity/task'
-                required
-              />
+              <Box>
+                <DatePicker
+                  label='Date'
+                  value={form.date ? dayjs(form.date) : null}
+                  onChange={(newValue: Dayjs | null) => {
+                    handleChange('date', newValue ? newValue.format('YYYY-MM-DD') : '');
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      required: true,
+                      error: Boolean(dateError),
+                      helperText: dateError,
+                    },
+                  }}
+                />
+              </Box>
+              <Box>
+                <DurationPickerField
+                  label='Duration'
+                  required
+                  value={form.duration}
+                  onChange={(val: string) => handleChange('duration', val)}
+                  error={Boolean(durationError)}
+                  helperText={durationError}
+                />
+              </Box>
             </Box>
 
-            <Divider sx={{ my: 2 }} />
+            {/* Row 4: Billing Code / Project + Activity / Task side-by-side */}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 1.5,
+                mb: 2,
+              }}
+            >
+              <Box sx={{ position: 'relative' }}>
+                <TextField
+                  label='Billing Code'
+                  size='small'
+                  fullWidth
+                  value={bcInput}
+                  onChange={bcSearch.handleInputChange}
+                  onFocus={bcSearch.handleFocus}
+                  onBlur={bcSearch.handleBlur}
+                  placeholder='Search billing code...'
+                  required
+                  error={Boolean(_billingCodeError && touched.billingCode)}
+                  helperText={_billingCodeError && touched.billingCode ? _billingCodeError : ''}
+                  slotProps={{ input: { endAdornment: bcSearch.endAdornment } }}
+                />
+                {bcSearch.renderDropdown()}
+              </Box>
+              <Box>
+                <TextField
+                  label='Activity / Task'
+                  size='small'
+                  fullWidth
+                  value={form.activityTask}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    handleChange('activityTask', e.target.value)
+                  }
+                  required
+                  placeholder='Enter activity/task'
+                  error={Boolean(activityTaskError)}
+                  helperText={activityTaskError}
+                />
+              </Box>
+            </Box>
 
-            {/* External Comment with RichTextEditor */}
+            {/* Row 6: External Comment (RichTextEditor) */}
             <Box sx={{ mb: 2 }}>
-              <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary', mb: 0.75 }}>
-                External Comment{' '}
-                <Typography
-                  component='span'
-                  variant='caption'
-                  sx={{ color: 'text.disabled', fontSize: '0.7rem' }}
-                >
-                  (gets printed on the customer invoice copies, when the time is billable)
-                </Typography>
-              </Typography>
               <RichTextEditor
                 value={parseRichText(form.externalComment)}
-                onChange={handleExternalCommentChange}
+                onChange={(value: { segments: Array<{ text: string }> }) => {
+                  const text = value.segments.map((s) => s.text).join('');
+                  handleChange('externalComment', text);
+                }}
                 accent={accent}
+                title='External Comment'
                 placeholder='Enter external comment...'
                 showFooterActions={false}
+                required
               />
+              {externalCommentError && (
+                <Typography sx={{ color: 'error.main', fontSize: '0.75rem', mt: 0.5 }}>
+                  {externalCommentError}
+                </Typography>
+              )}
             </Box>
 
-            {/* Internal Comment with RichTextEditor */}
+            {/* Row 7: Internal Comment (RichTextEditor) */}
             <Box sx={{ mb: 2 }}>
-              <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary', mb: 0.75 }}>
-                Internal Comment{' '}
-                <Typography
-                  component='span'
-                  variant='caption'
-                  sx={{ color: 'text.disabled', fontSize: '0.7rem' }}
-                >
-                  (max 60 char)
-                </Typography>
-              </Typography>
               <RichTextEditor
                 value={parseRichText(form.internalComment)}
-                onChange={handleInternalCommentChange}
+                onChange={(value: { segments: Array<{ text: string }> }) => {
+                  const text = value.segments.map((s) => s.text).join('');
+                  handleChange('internalComment', text);
+                }}
                 accent={accent}
+                title='Internal Comment'
                 placeholder='Enter internal comment...'
                 showFooterActions={false}
+                required
               />
+              {internalCommentError && (
+                <Typography sx={{ color: 'error.main', fontSize: '0.75rem', mt: 0.5 }}>
+                  {internalCommentError}
+                </Typography>
+              )}
             </Box>
 
-            {/* Non Billable activation switch */}
+            {/* Row 8: Switches at the bottom */}
+            <Divider sx={{ my: 2 }} />
             <Box
-              className={classes.dialogActivationRow}
-              sx={{
-                borderColor: entry.nonBillable ? alpha(accent, 0.3) : 'divider',
-                bgcolor: entry.nonBillable ? alpha(accent, 0.04) : 'transparent',
-                mb: 1.5,
-              }}
+              sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 2 }}
             >
-              <Box>
-                <Typography variant='body2' color='#0369a1' fontWeight={600}>
-                  Non Billable
-                </Typography>
-                <Typography
-                  variant='caption'
-                  color='#2687bb'
-                  className={classes.dialogActivationDescription}
-                >
-                  {entry.nonBillable
-                    ? 'This time entry is marked as non-billable'
-                    : 'This time entry is billable'}
-                </Typography>
-              </Box>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={entry.nonBillable}
-                    onChange={(e) => handleEntryChange('nonBillable', e.target.checked)}
-                    color='success'
-                  />
-                }
-                label={
-                  <Typography
-                    variant='body2'
-                    fontWeight={700}
-                    className={classes.dialogActivationLabel}
-                    sx={{ color: entry.nonBillable ? 'success.main' : 'text.secondary' }}
-                  >
-                    {entry.nonBillable ? 'Active' : 'Inactive'}
-                  </Typography>
-                }
-                className={classes.dialogActivationFormControl}
-              />
-            </Box>
-
-            {/* Active switch */}
-            <Box
-              className={classes.dialogActivationRow}
-              sx={{
-                borderColor: form.active ? alpha(accent, 0.3) : 'divider',
-                bgcolor: form.active ? alpha(accent, 0.04) : 'transparent',
-              }}
-            >
-              <Box>
-                <Typography variant='body2' color='#0369a1' fontWeight={600}>
-                  Active
-                </Typography>
-                <Typography
-                  variant='caption'
-                  color='#2687bb'
-                  className={classes.dialogActivationDescription}
-                >
-                  {form.active
-                    ? 'This time entry template is active'
-                    : 'This time entry template is inactive'}
-                </Typography>
-              </Box>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={form.active}
-                    onChange={(e) => handleChange('active', e.target.checked)}
-                    color='success'
-                  />
-                }
-                label={
-                  <Typography
-                    variant='body2'
-                    fontWeight={700}
-                    className={classes.dialogActivationLabel}
-                    sx={{ color: form.active ? 'success.main' : 'text.secondary' }}
-                  >
-                    {form.active ? 'Active' : 'Inactive'}
-                  </Typography>
-                }
-                className={classes.dialogActivationFormControl}
-              />
+              {[
+                { key: 'active', label: 'Active' },
+                { key: 'nonBillable', label: 'Non-billable' },
+              ].map(({ key, label }) => (
+                <FormControlLabel
+                  key={key}
+                  labelPlacement='start'
+                  control={
+                    <Switch
+                      checked={form[key as keyof FormState] as boolean}
+                      onChange={(e) => handleChange(key as keyof FormState, e.target.checked)}
+                      size='small'
+                    />
+                  }
+                  label={label}
+                />
+              ))}
             </Box>
           </LocalizationProvider>
         </Box>

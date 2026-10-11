@@ -10,6 +10,7 @@ import type {
   IConfigCommentTemplate,
   IConfigInternalNoteTemplate,
   IConfigTimeEntryTemplate,
+  IConfigTimeEntryLine,
 } from '@serviceops/interfaces';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -25,6 +26,27 @@ const formatDateTime = (v: unknown): React.ReactNode => {
   return (
     <Typography variant='body2' fontSize='0.82rem'>
       {dateStr} {timeStr}
+    </Typography>
+  );
+};
+
+// @ts-ignore — used via timeEntryColumns cross-file
+const formatDuration = (v: unknown): React.ReactNode => {
+  const row = v as { entries?: IConfigTimeEntryLine[] } | undefined;
+  const entry = row?.entries?.[0];
+  if (!entry) return <>&mdash;</>;
+  const total =
+    (entry.mon || 0) +
+    (entry.tue || 0) +
+    (entry.wed || 0) +
+    (entry.thu || 0) +
+    (entry.fri || 0) +
+    (entry.sat || 0) +
+    (entry.sun || 0);
+  if (total <= 0) return <>&mdash;</>;
+  return (
+    <Typography variant='body2' fontSize='0.82rem'>
+      {total}h
     </Typography>
   );
 };
@@ -309,6 +331,7 @@ export const timeEntryColumns: Column<IConfigTimeEntryTemplate>[] = [
   { id: 'active', label: 'Active', minWidth: 80, format: mkActiveChip },
   { id: 'ticketStatus', label: 'Ticket Status', minWidth: 130, format: mkCell() },
   { id: 'weekStartDate', label: 'Date& Time', minWidth: 120, format: mkCell() },
+  { id: 'duration', label: 'Duration', minWidth: 90, format: formatDuration },
   { id: 'billingCode', label: 'Billing Code', minWidth: 120, format: mkCell() },
   { id: 'activityTask', label: 'Activity/Task', minWidth: 130, format: mkCell() },
   { id: 'externalComment', label: 'External Comment', minWidth: 150, format: mkCell() },
