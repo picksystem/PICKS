@@ -1,7 +1,6 @@
-import { Column } from '@serviceops/component';
+import { Box, Column, Typography } from '@serviceops/component';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import CommentIcon from '@mui/icons-material/Comment';
-import NoteIcon from '@mui/icons-material/Note';
 import { mkCell, mkDescCell, mkActiveChip } from '@serviceops/configutils';
 import ChecklistIcon from '@mui/icons-material/Checklist';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -13,17 +12,43 @@ import type {
   IConfigTimeEntryTemplate,
 } from '@serviceops/interfaces';
 
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+const formatDateTime = (v: unknown): React.ReactNode => {
+  const raw = String(v ?? '');
+  if (!raw || raw === 'undefined' || raw === 'null') return <>&mdash;</>;
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return <>{raw}</>;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const timeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return (
+    <Typography variant='body2' fontSize='0.82rem'>
+      {dateStr} {timeStr}
+    </Typography>
+  );
+};
+
 // ── Column Definitions ─────────────────────────────────────────────────────────
 
 export const ticketUpdateColumns: Column<IConfigTicketUpdateTemplate>[] = [
-  { id: 'name', label: 'Name', minWidth: 160, format: mkCell(true) },
+  { id: 'name', label: 'Template Name', minWidth: 160, format: mkCell(true) },
   { id: 'description', label: 'Description', minWidth: 180, format: mkDescCell },
   { id: 'active', label: 'Active', minWidth: 80, format: mkActiveChip },
   { id: 'ticketStatus', label: 'Ticket Status', minWidth: 130, format: mkCell() },
-  { id: 'internalNote', label: 'Internal Note', minWidth: 100, format: mkCell() },
-  { id: 'notifyAssigneesOnly', label: 'Notify Assignees', minWidth: 110, format: mkCell() },
-  { id: 'selfNote', label: 'Self Note', minWidth: 90, format: mkCell() },
-  { id: 'appendToResolution', label: 'Append to Res.', minWidth: 110, format: mkCell() },
+  { id: 'commentDescription', label: 'Comment', minWidth: 160, format: mkCell() },
+  { id: 'internalNote', label: 'Internal Note', minWidth: 100, format: mkActiveChip },
+  {
+    id: 'notifyAssigneesOnly',
+    label: 'Notify Assignees Only',
+    minWidth: 140,
+    format: mkActiveChip,
+  },
+  { id: 'selfNote', label: 'Self Note', minWidth: 100, format: mkActiveChip },
+  { id: 'createdBy', label: 'Created By', minWidth: 120, format: mkCell() },
+  { id: 'createdAt', label: 'Created Date & Time', minWidth: 160, format: formatDateTime },
+  { id: 'updatedBy', label: 'Updated By', minWidth: 120, format: mkCell() },
+  { id: 'updatedAt', label: 'Updated Date & Time', minWidth: 160, format: formatDateTime },
 ];
 
 export const commentColumns: Column<IConfigCommentTemplate>[] = [
@@ -62,11 +87,24 @@ export const TICKET_UPDATE_CONFIG: TableConfig = {
   entity: 'Ticket Update Template',
   accordionId: 'ticket-update-template',
   fields: [
-    { name: 'name', label: 'Name', required: true, bold: true },
-    { name: 'description', label: 'Description', type: 'richText' },
+    { name: 'name', label: 'Template Name', required: true, bold: true, type: 'text' },
+    {
+      name: 'description',
+      label: 'Description',
+      required: true,
+      type: 'text',
+    },
+    {
+      name: 'active',
+      label: 'Active',
+      type: 'activationToggle' as const,
+      defaultValue: true,
+      activationDescriptionActive: 'This template is active',
+      activationDescriptionInactive: 'This template is inactive',
+      activationAccent: '#0369a1',
+    },
     { name: 'ticketStatus', label: 'Ticket Status' },
-    { name: 'subjectLine', label: 'Subject Line' },
-    { name: 'commentDescription', label: 'Comment Description', type: 'richText' },
+    { name: 'commentDescription', label: 'Comment', type: 'richText' },
     {
       name: 'internalNote',
       label: 'Internal Note',
@@ -92,24 +130,6 @@ export const TICKET_UPDATE_CONFIG: TableConfig = {
       defaultValue: false,
       activationDescriptionActive: 'This update will be logged as a self note',
       activationDescriptionInactive: 'This update will not be logged as a self note',
-      activationAccent: '#0369a1',
-    },
-    {
-      name: 'appendToResolution',
-      label: 'Append to Resolution',
-      type: 'activationToggle' as const,
-      defaultValue: false,
-      activationDescriptionActive: 'This update will be appended to the ticket resolution',
-      activationDescriptionInactive: 'This update will not be appended to the ticket resolution',
-      activationAccent: '#0369a1',
-    },
-    {
-      name: 'active',
-      label: 'Active',
-      type: 'activationToggle' as const,
-      defaultValue: true,
-      activationDescriptionActive: 'This ticket update template is active',
-      activationDescriptionInactive: 'This ticket update template is inactive',
       activationAccent: '#0369a1',
     },
   ],
@@ -171,67 +191,6 @@ export const COMMENT_CONFIG: TableConfig = {
       defaultValue: true,
       activationDescriptionActive: 'This comment template is active',
       activationDescriptionInactive: 'This comment template is inactive',
-      activationAccent: '#0369a1',
-    },
-  ],
-};
-
-export const INTERNAL_NOTE_CONFIG: TableConfig = {
-  title: 'Internal Note Template',
-  subtitle: 'Define reusable internal note templates with customer-visible comment options',
-  accent: '#0369a1',
-  icon: <NoteIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />,
-  entity: 'Internal Note Template',
-  accordionId: 'internal-note-template',
-  fields: [
-    { name: 'name', label: 'Name', required: true, bold: true },
-    { name: 'description', label: 'Description', type: 'richText' },
-    { name: 'ticketStatus', label: 'Ticket Status' },
-    { name: 'subjectLine', label: 'Subject Line' },
-    { name: 'commentDescription', label: 'Comment Description', type: 'richText' },
-    {
-      name: 'internalNote',
-      label: 'Customer Visible',
-      type: 'activationToggle' as const,
-      defaultValue: false,
-      activationDescriptionActive: 'This internal note will be visible to the customer',
-      activationDescriptionInactive: 'This internal note will not be visible to the customer',
-      activationAccent: '#0369a1',
-    },
-    {
-      name: 'notifyAssigneesOnly',
-      label: 'Notify Assignees Only',
-      type: 'activationToggle' as const,
-      defaultValue: false,
-      activationDescriptionActive: 'Only assignees will be notified about this note',
-      activationDescriptionInactive: 'All relevant users will be notified about this note',
-      activationAccent: '#0369a1',
-    },
-    {
-      name: 'selfNote',
-      label: 'Self Note',
-      type: 'activationToggle' as const,
-      defaultValue: false,
-      activationDescriptionActive: 'This note will be logged as a self note',
-      activationDescriptionInactive: 'This note will not be logged as a self note',
-      activationAccent: '#0369a1',
-    },
-    {
-      name: 'appendToResolution',
-      label: 'Append to Resolution',
-      type: 'activationToggle' as const,
-      defaultValue: false,
-      activationDescriptionActive: 'This note will be appended to the ticket resolution',
-      activationDescriptionInactive: 'This note will not be appended to the ticket resolution',
-      activationAccent: '#0369a1',
-    },
-    {
-      name: 'active',
-      label: 'Active',
-      type: 'activationToggle' as const,
-      defaultValue: true,
-      activationDescriptionActive: 'This internal note template is active',
-      activationDescriptionInactive: 'This internal note template is inactive',
       activationAccent: '#0369a1',
     },
   ],

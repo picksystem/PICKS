@@ -35,7 +35,6 @@ export const SearchableField = ({
   value,
   options,
   onChange,
-  onBlur,
   error,
   errorText,
   label,

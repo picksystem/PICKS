@@ -1,14 +1,6 @@
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import React, { lazy, Suspense } from 'react';
-import {
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Collapse,
-  alpha,
-  ListItemButton,
-} from '@mui/material';
+import { List, ListItemIcon, ListItemText, Collapse, alpha, ListItemButton } from '@mui/material';
 import { Box, Typography, Loader } from '@serviceops/component';
 import TuneIcon from '@mui/icons-material/Tune';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -90,14 +82,13 @@ export const NAV_ITEMS = [
     accent: colorAccent,
     hidden: true,
   },
+  { label: 'Reason Codes', path: `${BASE}/reason-codes`, Icon: CommentIcon, accent: colorAccent },
   {
     label: 'Templates',
     path: `${BASE}/templates`,
     Icon: FileCopyIcon,
     accent: colorAccent,
-    hidden: true,
   },
-  { label: 'Reason Codes', path: `${BASE}/reason-codes`, Icon: CommentIcon, accent: colorAccent },
   { label: 'Calendars', path: `${BASE}/calendars`, Icon: CalendarMonthIcon, accent: colorAccent },
   {
     label: 'Timesheets',

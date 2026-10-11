@@ -3,7 +3,6 @@ import { useStyles } from './styles';
 import {
   TicketUpdateSection,
   CommentSection,
-  InternalNoteSection,
   ResolutionSection,
   TimeEntrySection,
 } from './components';
@@ -17,7 +16,6 @@ const Templates = () => {
       <ConfigurationSection loaderMessage='Loading Templates Configuration...'>
         <TicketUpdateSection />
         <CommentSection />
-        <InternalNoteSection />
         <ResolutionSection />
         <TimeEntrySection />
       </ConfigurationSection>

@@ -1092,6 +1092,10 @@ export interface IConfigTicketUpdateTemplate {
   notifyAssigneesOnly: boolean;
   selfNote: boolean;
   appendToResolution: boolean;
+  createdBy?: string;
+  createdAt?: string;
+  updatedBy?: string;
+  updatedAt?: string;
 }
 
 export type IConfigCommentTemplate = IConfigTicketUpdateTemplate;
