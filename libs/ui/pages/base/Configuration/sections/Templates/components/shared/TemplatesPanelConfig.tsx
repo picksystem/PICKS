@@ -1,4 +1,4 @@
-import { Box, Column, Typography } from '@serviceops/component';
+import { Column, Typography, Box } from '@serviceops/component';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import CommentIcon from '@mui/icons-material/Comment';
 import { mkCell, mkDescCell, mkActiveChip } from '@serviceops/configutils';
@@ -29,22 +29,53 @@ const formatDateTime = (v: unknown): React.ReactNode => {
   );
 };
 
+const mkYesNoCell = (v: unknown): React.ReactNode => {
+  const on = Boolean(v);
+  return (
+    <Box
+      sx={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 0.5,
+        px: 1,
+        py: 0.25,
+        borderRadius: 999,
+        fontSize: '0.65rem',
+        fontWeight: 700,
+        textTransform: 'uppercase',
+        bgcolor: on ? '#dcfce7' : '#f1f5f9',
+        color: on ? '#15803d' : '#64748b',
+        border: '1px solid',
+        borderColor: on ? '#16a34a' : '#cbd5e1',
+        minWidth: 40,
+      }}
+    >
+      <Box
+        component='span'
+        sx={{
+          width: 6,
+          height: 6,
+          borderRadius: '50%',
+          bgcolor: on ? '#16a34a' : '#94a3b8',
+        }}
+      />
+      {on ? 'Yes' : 'No'}
+    </Box>
+  );
+};
+
 // ── Column Definitions ─────────────────────────────────────────────────────────
 
 export const ticketUpdateColumns: Column<IConfigTicketUpdateTemplate>[] = [
   { id: 'name', label: 'Template Name', minWidth: 160, format: mkCell(true) },
   { id: 'description', label: 'Description', minWidth: 180, format: mkDescCell },
-  { id: 'active', label: 'Active', minWidth: 80, format: mkActiveChip },
+  { id: 'active', label: 'Active', minWidth: 80, format: mkYesNoCell },
   { id: 'ticketStatus', label: 'Ticket Status', minWidth: 130, format: mkCell() },
   { id: 'commentDescription', label: 'Comment', minWidth: 160, format: mkCell() },
-  { id: 'internalNote', label: 'Internal Note', minWidth: 100, format: mkActiveChip },
-  {
-    id: 'notifyAssigneesOnly',
-    label: 'Notify Assignees Only',
-    minWidth: 140,
-    format: mkActiveChip,
-  },
-  { id: 'selfNote', label: 'Self Note', minWidth: 100, format: mkActiveChip },
+  { id: 'internalNote', label: 'Internal Note', minWidth: 100, format: mkYesNoCell },
+  { id: 'notifyAssigneesOnly', label: 'Notify Assignees Only', minWidth: 140, format: mkYesNoCell },
+  { id: 'selfNote', label: 'Self Note', minWidth: 100, format: mkYesNoCell },
   { id: 'createdBy', label: 'Created By', minWidth: 120, format: mkCell() },
   { id: 'createdAt', label: 'Created Date & Time', minWidth: 160, format: formatDateTime },
   { id: 'updatedBy', label: 'Updated By', minWidth: 120, format: mkCell() },
@@ -54,14 +85,18 @@ export const ticketUpdateColumns: Column<IConfigTicketUpdateTemplate>[] = [
 export const commentColumns: Column<IConfigCommentTemplate>[] = [
   { id: 'name', label: 'Name', minWidth: 160, format: mkCell(true) },
   { id: 'description', label: 'Description', minWidth: 180, format: mkDescCell },
-  { id: 'active', label: 'Active', minWidth: 80, format: mkActiveChip },
+  { id: 'active', label: 'Active', minWidth: 80, format: mkYesNoCell },
   { id: 'ticketStatus', label: 'Ticket Status', minWidth: 130, format: mkCell() },
   { id: 'subjectLine', label: 'Subject Line', minWidth: 170, format: mkCell() },
   { id: 'commentDescription', label: 'Comment', minWidth: 160, format: mkCell() },
-  { id: 'internalNote', label: 'Internal Note', minWidth: 100, format: mkCell() },
-  { id: 'notifyAssigneesOnly', label: 'Notify Assignees', minWidth: 110, format: mkCell() },
-  { id: 'selfNote', label: 'Self Note', minWidth: 90, format: mkCell() },
-  { id: 'appendToResolution', label: 'Append to Res.', minWidth: 110, format: mkCell() },
+  { id: 'internalNote', label: 'Internal Note', minWidth: 100, format: mkYesNoCell },
+  { id: 'notifyAssigneesOnly', label: 'Notify Assignees Only', minWidth: 140, format: mkYesNoCell },
+  { id: 'selfNote', label: 'Self Note', minWidth: 100, format: mkYesNoCell },
+  { id: 'appendToResolution', label: 'Append to Res.', minWidth: 130, format: mkYesNoCell },
+  { id: 'createdBy', label: 'Created By', minWidth: 120, format: mkCell() },
+  { id: 'createdAt', label: 'Created Date & Time', minWidth: 160, format: formatDateTime },
+  { id: 'updatedBy', label: 'Updated By', minWidth: 120, format: mkCell() },
+  { id: 'updatedAt', label: 'Updated Date & Time', minWidth: 160, format: formatDateTime },
 ];
 
 export const internalNoteColumns: Column<IConfigInternalNoteTemplate>[] = [
