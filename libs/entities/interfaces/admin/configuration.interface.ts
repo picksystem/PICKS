@@ -1125,8 +1125,11 @@ export interface IConfigResolutionTemplate {
   receivedCustomerInformation: boolean;
   recurringIssue: boolean;
   rootCauseIdentified: boolean;
+  workaroundIdentified: boolean;
   rootCause: string;
   resolutionCode: string;
+  rootCauseId: string;
+  workaroundId: string;
   resolution: string;
   resolutionInternalNote: string;
   createdBy?: string;

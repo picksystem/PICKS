@@ -14,7 +14,7 @@ interface ResolutionSectionProps {
 
 const ResolutionSection = ({ data, onDataChange }: ResolutionSectionProps) => {
   const { classes } = useStyles();
-  const { resolutionTemplates, saveSection } = useConfiguration();
+  const { resolutionTemplates, saveSection, statuses, categorization } = useConfiguration();
   const { user } = useAuth();
 
   const [rows, setRows] = useState<IConfigResolutionTemplate[]>([]);
@@ -26,6 +26,31 @@ const ResolutionSection = ({ data, onDataChange }: ResolutionSectionProps) => {
   const handleRowSelect = useCallback((id: string | null) => {
     setSelectedRowId(id);
   }, []);
+
+  const statusOptions = (statuses?.items ?? []).map((s) => ({
+    value: s.displayName,
+    label: s.displayName,
+  }));
+
+  const applicationOptions = (categorization?.applications ?? []).map((a) => ({
+    value: a.name,
+    label: a.name,
+  }));
+
+  const categoryOptions = (categorization?.applicationCategories ?? []).map((c) => ({
+    value: c.categoryName,
+    label: c.categoryName,
+  }));
+
+  const subCategoryOptions = (categorization?.applicationSubCategories ?? []).map((sc) => ({
+    value: sc.subCategoryName,
+    label: sc.subCategoryName,
+  }));
+
+  const resolutionCodeOptions = [
+    ...(statuses?.items ?? []).map((s) => ({ value: s.displayName, label: s.displayName })),
+    { value: 'N/A', label: 'N/A' },
+  ];
 
   const currentUserName = user ? `${user.firstName} ${user.lastName}`.trim() : '';
   const now = () => new Date().toISOString();
@@ -120,6 +145,11 @@ const ResolutionSection = ({ data, onDataChange }: ResolutionSectionProps) => {
           dialogMode === 'edit' ? editingItem : dialogMode === 'select' ? selectedItem : undefined
         }
         onSave={handleDialogSave}
+        statusOptions={statusOptions}
+        applicationOptions={applicationOptions}
+        categoryOptions={categoryOptions}
+        subCategoryOptions={subCategoryOptions}
+        resolutionCodeOptions={resolutionCodeOptions}
       />
     </div>
   );
