@@ -292,17 +292,7 @@ export const TimeEntryFormDialog = ({
         active: initialData.active,
         ticketStatus: initialData.ticketStatus,
         date: initialData.weekStartDate || '',
-        duration: initialData.entries?.[0]
-          ? String(
-              (initialData.entries[0].mon || 0) +
-                (initialData.entries[0].tue || 0) +
-                (initialData.entries[0].wed || 0) +
-                (initialData.entries[0].thu || 0) +
-                (initialData.entries[0].fri || 0) +
-                (initialData.entries[0].sat || 0) +
-                (initialData.entries[0].sun || 0),
-            )
-          : '',
+        duration: initialData.entries?.[0] ? `${initialData.entries[0].mon || 0}:00` : '',
         billingCode: initialData.entries?.[0]?.billingCode || '',
         activityTask: initialData.entries?.[0]?.activityTask || '',
         externalComment: initialData.externalComment,
@@ -348,10 +338,17 @@ export const TimeEntryFormDialog = ({
     setRequiredErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
-    const entry: IConfigTimeEntryLine = createEmptyEntry();
-    entry.billingCode = form.billingCode;
-    entry.activityTask = form.activityTask;
-    entry.nonBillable = form.nonBillable;
+    const entry: IConfigTimeEntryLine =
+      isEdit && initialData?.entries?.[0]
+        ? { ...initialData.entries[0] }
+        : {
+            ...createEmptyEntry(),
+            billingCode: form.billingCode,
+            activityTask: form.activityTask,
+            nonBillable: form.nonBillable,
+          };
+
+    entry.mon = Number(String(form.duration).split(':')[0]) || 0;
 
     const template: IConfigTimeEntryTemplate = {
       ...form,

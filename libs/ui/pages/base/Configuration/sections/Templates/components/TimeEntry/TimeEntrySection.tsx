@@ -29,7 +29,11 @@ const TimeEntrySection = ({ data, onDataChange }: TimeEntrySectionProps) => {
   useEffect(() => {
     if (data !== undefined) {
       setRows(data);
-    } else if (timeEntryTemplates?.items) {
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (data === undefined && timeEntryTemplates?.items) {
       setRows(timeEntryTemplates.items);
     }
   }, [data, timeEntryTemplates]);

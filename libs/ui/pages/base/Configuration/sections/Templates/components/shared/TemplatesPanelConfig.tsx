@@ -30,23 +30,15 @@ const formatDateTime = (v: unknown): React.ReactNode => {
   );
 };
 
-// @ts-ignore — used via timeEntryColumns cross-file
+// @ts-ignore
 const formatDuration = (v: unknown): React.ReactNode => {
   const row = v as { entries?: IConfigTimeEntryLine[] } | undefined;
   const entry = row?.entries?.[0];
-  if (!entry) return <>&mdash;</>;
-  const total =
-    (entry.mon || 0) +
-    (entry.tue || 0) +
-    (entry.wed || 0) +
-    (entry.thu || 0) +
-    (entry.fri || 0) +
-    (entry.sat || 0) +
-    (entry.sun || 0);
-  if (total <= 0) return <>&mdash;</>;
+  const hours = entry?.mon;
+  if (hours === undefined || hours === null) return <>&mdash;</>;
   return (
     <Typography variant='body2' fontSize='0.82rem'>
-      {total}h
+      {hours}h
     </Typography>
   );
 };
@@ -332,7 +324,7 @@ export const timeEntryColumns: Column<IConfigTimeEntryTemplate>[] = [
   { id: 'ticketStatus', label: 'Ticket Status', minWidth: 130, format: mkCell() },
   { id: 'weekStartDate', label: 'Date& Time', minWidth: 120, format: mkCell() },
   { id: 'duration', label: 'Duration', minWidth: 90, format: formatDuration },
-  { id: 'billingCode', label: 'Billing Code', minWidth: 120, format: mkCell() },
+  { id: 'billingCode', label: 'Billing code / Project', minWidth: 120, format: mkCell() },
   { id: 'activityTask', label: 'Activity/Task', minWidth: 130, format: mkCell() },
   { id: 'externalComment', label: 'External Comment', minWidth: 150, format: mkCell() },
   { id: 'internalComment', label: 'Internal Comment', minWidth: 150, format: mkCell() },
@@ -355,7 +347,7 @@ export const TIME_ENTRY_CONFIG: TableConfig = {
     { name: 'description', label: 'Description', type: 'richText' },
     { name: 'ticketStatus', label: 'Ticket Status' },
     { name: 'weekStartDate', label: 'Date & Time', type: 'datetime' },
-    { name: 'billingCode', label: 'Billing Code' },
+    { name: 'billingCode', label: 'Billing code / Project' },
     { name: 'activityTask', label: 'Activity/Task' },
     { name: 'externalComment', label: 'External Comment', type: 'richText' },
     { name: 'internalComment', label: 'Internal Comment', type: 'richText' },
