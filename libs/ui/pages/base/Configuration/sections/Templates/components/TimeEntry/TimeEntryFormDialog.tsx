@@ -505,6 +505,17 @@ export const TimeEntryFormDialog = ({
                       required: true,
                       error: Boolean(dateError),
                       helperText: dateError,
+                      // Match the sibling fields' rounded border + blue outline
+                      // (MUI X renders a PickersOutlinedInput, not MuiOutlinedInput-root)
+                      sx: {
+                        '& .MuiPickersOutlinedInput-root': {
+                          borderRadius: '8px',
+                          '& fieldset': { borderColor: '#2d5ebb' },
+                          '&:hover fieldset': { borderColor: '#2d5ebb' },
+                          '&.Mui-focused fieldset': { borderColor: '#2d5ebb' },
+                        },
+                        '& .MuiInputBase-root': { borderRadius: '8px' },
+                      },
                     },
                   }}
                 />
