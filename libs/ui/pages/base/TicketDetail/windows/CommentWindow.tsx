@@ -36,6 +36,7 @@ const CommentWindow = ({
   incident,
   onSuccess,
   mode = 'comment',
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- passed from parents
   incidentStatus,
 }: CommentWindowProps) => {
   const { user } = useAuth();
@@ -54,17 +55,8 @@ const CommentWindow = ({
 
   // ── Save as Template (Scenario 2) ────────────────────────────────────────────
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
-  const [newTemplateName, setNewTemplateName] = useState('');
   const [newTemplateDescription, setNewTemplateDescription] = useState('');
-  const [newTemplateStatusValue, setNewTemplateStatusValue] = useState('');
   const [newTemplateActive, setNewTemplateActive] = useState(true);
-  const [templateStatusOptionsOpen, setTemplateStatusOptionsOpen] = useState(false);
-  const [templateStatusOptions, setTemplateStatusOptions] = useState<
-    {
-      id: string;
-      label: string;
-    }[]
-  >([]);
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
 
   // ── Status search field ─────────────────────────────────────────────────
@@ -179,6 +171,12 @@ const CommentWindow = ({
     [statusOptions],
   );
 
+  // Template name typing — used when saving as a new template (no lookup)
+  const handleTemplateNameChange = useCallback((value: string) => {
+    setTemplateInput(value);
+    setTemplateValue('');
+  }, []);
+
   const handleTemplateClear = useCallback(() => {
     setTemplateInput('');
     setTemplateValue('');
@@ -210,12 +208,14 @@ const CommentWindow = ({
     status?: boolean;
     message?: boolean;
     templateName?: boolean;
+    templateDescription?: boolean;
   }>({});
   const [requiredErrors, setRequiredErrors] = useState<{
     template?: string;
     status?: string;
     message?: string;
     templateName?: string;
+    templateDescription?: string;
   }>({});
 
   const validateRequired = (): {
@@ -223,11 +223,13 @@ const CommentWindow = ({
     status?: string;
     message?: string;
     templateName?: string;
+    templateDescription?: string;
   } => {
     const errs: typeof requiredErrors = {};
     // Scenario 2: new-template name is required only when saving as a template.
     // Scenario 3 (custom comment, no template): a template is optional.
-    if (saveAsTemplate && !newTemplateName.trim()) errs.templateName = 'required';
+    if (saveAsTemplate && !templateInput.trim()) errs.templateName = 'required';
+    if (saveAsTemplate && !newTemplateDescription.trim()) errs.templateDescription = 'required';
     if (!statusValue) errs.status = 'required';
     if (!message.trim()) errs.message = 'required';
     return errs;
@@ -249,9 +251,7 @@ const CommentWindow = ({
       setEmailFrom('');
       setFiles([]);
       setSaveAsTemplate(false);
-      setNewTemplateName('');
       setNewTemplateDescription('');
-      setNewTemplateStatusValue('');
       setNewTemplateActive(true);
       setIsSavingTemplate(false);
       setTouched({});
@@ -284,7 +284,6 @@ const CommentWindow = ({
         setNotifyAssigneesOnly(false);
       }
     }
-    setNewTemplateStatusValue(incidentStatus ?? incident.status ?? '');
   }, [open, mode]);
 
   // ── Reset conflicting toggle when internal is toggled ────────────────────
@@ -315,6 +314,10 @@ const CommentWindow = ({
   const statusError = reqError(touched.status, requiredErrors.status);
   const messageError = reqError(touched.message, requiredErrors.message);
   const templateNameError = reqError(touched.templateName, requiredErrors.templateName);
+  const templateDescriptionError = reqError(
+    touched.templateDescription,
+    requiredErrors.templateDescription,
+  );
 
   // ── Save handler ────────────────────────────────────────────────────────
   const handleSave = async () => {
@@ -323,6 +326,7 @@ const CommentWindow = ({
       status: true,
       message: true,
       templateName: true,
+      templateDescription: true,
     });
     const errs = validateRequired();
     setRequiredErrors(errs);
@@ -334,12 +338,11 @@ const CommentWindow = ({
         setIsSavingTemplate(true);
         const now = new Date().toISOString();
         const currentUserName = user ? `${user.firstName} ${user.lastName}`.trim() : '';
-        const statusLabel =
-          statusOptions.find((o) => o.id === newTemplateStatusValue)?.label ||
-          newTemplateStatusValue;
+        // Use the Status field value at the top of the dialog
+        const statusLabel = statusOptions.find((o) => o.id === statusValue)?.label || statusValue;
         const newTemplate: IConfigCommentTemplate = {
           id: crypto.randomUUID(),
-          name: newTemplateName.trim(),
+          name: templateInput.trim(),
           description: newTemplateDescription.trim(),
           active: newTemplateActive,
           ticketStatus: statusLabel,
@@ -486,38 +489,98 @@ const CommentWindow = ({
       maxWidth='sm'
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+        {/* Save as Template toggle — above the fields; header left, switch after label */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            px: 2,
+            py: 1,
+            border: '1px dashed',
+            borderColor: 'divider',
+            borderRadius: 1.5,
+          }}
+        >
+          <Typography sx={{ fontSize: '0.85rem', color: '#374151', whiteSpace: 'nowrap' }}>
+            Save as Template
+          </Typography>
+          <Switch
+            checked={saveAsTemplate}
+            onChange={(e) => setSaveAsTemplate(e.target.checked)}
+            size='small'
+            color='primary'
+          />
+          {saveAsTemplate && (
+            <Box sx={{ ml: 'auto' }}>
+              <FormControlLabel
+                labelPlacement='end'
+                control={
+                  <Switch
+                    checked={newTemplateActive}
+                    onChange={(e) => setNewTemplateActive(e.target.checked)}
+                    size='small'
+                    color='primary'
+                  />
+                }
+                label={
+                  <Typography sx={{ fontSize: '0.85rem', color: '#374151', whiteSpace: 'nowrap' }}>
+                    Active
+                  </Typography>
+                }
+              />
+            </Box>
+          )}
+        </Box>
+
         {/* Response Template + Status — side by side */}
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Box sx={{ flex: 1, position: 'relative' }}>
-            <TextField
-              label='Response Template'
-              placeholder='Search templates...'
-              value={templateInput}
-              onChange={(e) => handleTemplateInputChange(e.target.value)}
-              error={Boolean(templateError)}
-              helperText={templateError}
-              required={saveAsTemplate}
-              onFocus={() => {
-                const q = templateInput.trim().toLowerCase();
-                const next = q
-                  ? templateOptions.filter((o) => o.name.toLowerCase().includes(q))
-                  : templateOptions;
-                setTemplateFiltered(next);
-                if (next.length > 0) setTemplateOptionsOpen(true);
-              }}
-              onBlur={() => {
-                setTouched((t) => ({ ...t, template: true }));
-                setTimeout(() => setTemplateOptionsOpen(false), 200);
-              }}
-              fullWidth
-              size='small'
-              sx={fieldBaseSx}
-              slotProps={{
-                input: {
-                  endAdornment: searchAdornment(templateInput.length > 0, handleTemplateClear),
-                },
-              }}
-            />
+            {saveAsTemplate ? (
+              // Save-as-template: plain text field for the new template name
+              <TextField
+                label='Template Name'
+                placeholder='Enter template name'
+                value={templateInput}
+                onChange={(e) => handleTemplateNameChange(e.target.value)}
+                error={Boolean(templateNameError)}
+                helperText={templateNameError}
+                required
+                fullWidth
+                size='small'
+                sx={fieldBaseSx}
+              />
+            ) : (
+              // Scenario 3: searchable response template lookup
+              <TextField
+                label='Response Template'
+                placeholder='Search templates...'
+                value={templateInput}
+                onChange={(e) => handleTemplateInputChange(e.target.value)}
+                error={Boolean(templateError)}
+                helperText={templateError}
+                onFocus={() => {
+                  const q = templateInput.trim().toLowerCase();
+                  const next = q
+                    ? templateOptions.filter((o) => o.name.toLowerCase().includes(q))
+                    : templateOptions;
+                  setTemplateFiltered(next);
+                  if (next.length > 0) setTemplateOptionsOpen(true);
+                }}
+                onBlur={() => {
+                  setTouched((t) => ({ ...t, template: true }));
+                  setTimeout(() => setTemplateOptionsOpen(false), 200);
+                }}
+                fullWidth
+                size='small'
+                sx={fieldBaseSx}
+                slotProps={{
+                  input: {
+                    endAdornment: searchAdornment(templateInput.length > 0, handleTemplateClear),
+                  },
+                }}
+              />
+            )}
             {templateOptionsOpen && templateFiltered.length > 0 && (
               <Paper
                 elevation={4}
@@ -624,214 +687,22 @@ const CommentWindow = ({
           </Box>
         </Box>
 
-        {/* Existing template enable/disable — flip the active flag of the selected template */}
-        {selectedTemplate && (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              px: 2,
-              py: 0.75,
-              border: '1px solid',
-              borderColor: alpha(COMMENT_ACCENT, 0.25),
-              bgcolor: alpha(COMMENT_ACCENT, 0.03),
-              borderRadius: 1.5,
-            }}
-          >
-            <Box sx={{ minWidth: 0 }}>
-              <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#1e293b' }}>
-                Selected: {selectedTemplate.name}
-              </Typography>
-              <Typography sx={{ fontSize: '0.72rem', color: '#64748b' }}>
-                {selectedTemplate.active
-                  ? 'Template is active — visible in the template list'
-                  : 'Template is inactive — hidden from the template list'}
-              </Typography>
-            </Box>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={selectedTemplate.active}
-                  onChange={() => toggleTemplateActive()}
-                  size='small'
-                  color='primary'
-                  sx={{ mr: 1 }}
-                />
-              }
-              label={<Typography sx={{ fontSize: '0.85rem', color: '#374151' }}>Active</Typography>}
-            />
-          </Box>
-        )}
-
-        {/* Save as Template — Scenario 2 toggle */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2,
-            px: 2,
-            py: 1,
-            border: '1px dashed',
-            borderColor: 'divider',
-            borderRadius: 1.5,
-          }}
-        >
-          <FormControlLabel
-            control={
-              <Switch
-                checked={saveAsTemplate}
-                onChange={(e) => {
-                  setSaveAsTemplate(e.target.checked);
-                  if (e.target.checked)
-                    setNewTemplateStatusValue(statusValue || incident.status || '');
-                }}
-                size='small'
-                color='primary'
-                sx={{ mr: 1 }}
-              />
-            }
-            label={
-              <Typography sx={{ fontSize: '0.85rem', color: '#374151', whiteSpace: 'nowrap' }}>
-                Save as Template
-              </Typography>
-            }
-          />
-          <Typography sx={{ fontSize: '0.75rem', color: '#64748b' }}>
-            {saveAsTemplate
-              ? 'Comment will also be stored as a reusable Comment Template'
-              : 'Comment will not be saved as a template'}
-          </Typography>
-        </Box>
-
-        {/* New Template fields — shown when saving as a template */}
+        {/* New template description — shown when saving as a template */}
         {saveAsTemplate && (
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 1.5,
-              px: 2,
-              py: 1.5,
-              bgcolor: alpha(COMMENT_ACCENT, 0.04),
-              border: '1px solid',
-              borderColor: alpha(COMMENT_ACCENT, 0.25),
-              borderRadius: 1.5,
-            }}
-          >
-            <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: '#1e293b' }}>
-              New Template Details
-            </Typography>
-            <TextField
-              label='Template Name'
-              placeholder='Enter template name'
-              value={newTemplateName}
-              onChange={(e) => setNewTemplateName(e.target.value)}
-              error={Boolean(templateNameError)}
-              helperText={templateNameError}
+          <Box>
+            <RichTextEditor
+              value={{ segments: parseRichText(newTemplateDescription).segments }}
+              onChange={(value) => setNewTemplateDescription(serializeRichText(value.segments))}
+              showFooterActions={false}
+              title='Description'
               required
-              fullWidth
-              size='small'
-              sx={fieldBaseSx}
+              error={Boolean(templateDescriptionError)}
             />
-            <Box sx={{ position: 'relative' }}>
-              <TextField
-                label='Template Status'
-                placeholder='Status applied when this template is used'
-                value={statusOptions.find((o) => o.id === newTemplateStatusValue)?.label || ''}
-                onChange={(e) => {
-                  const match = statusOptions.find((o) => o.label === e.target.value);
-                  setNewTemplateStatusValue(match ? match.id : '');
-                }}
-                onFocus={() => {
-                  const next = statusOptions;
-                  setTemplateStatusOptions(next);
-                  if (next.length > 0) setTemplateStatusOptionsOpen(true);
-                }}
-                onBlur={() => {
-                  setTimeout(() => setTemplateStatusOptionsOpen(false), 200);
-                }}
-                fullWidth
-                size='small'
-                sx={fieldBaseSx}
-                slotProps={{
-                  input: {
-                    endAdornment: searchAdornment(
-                      !!statusOptions.find((o) => o.id === newTemplateStatusValue),
-                      () => setNewTemplateStatusValue(''),
-                    ),
-                  },
-                }}
-              />
-              {templateStatusOptionsOpen && (
-                <Paper
-                  elevation={4}
-                  sx={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    zIndex: 1000,
-                    mt: 0,
-                    maxHeight: 280,
-                    overflow: 'auto',
-                  }}
-                >
-                  {templateStatusOptions.map((o) => (
-                    <Box
-                      key={o.id}
-                      onClick={() => {
-                        setNewTemplateStatusValue(o.id);
-                        setTemplateStatusOptionsOpen(false);
-                      }}
-                      sx={{
-                        px: 1.5,
-                        py: 1,
-                        cursor: 'pointer',
-                        fontSize: '0.84rem',
-                        borderBottom: '1px solid',
-                        borderColor: 'divider',
-                        '&:last-child': { borderBottom: 'none' },
-                        '&:hover': { bgcolor: alpha(COMMENT_ACCENT, 0.08) },
-                      }}
-                    >
-                      {o.label}
-                    </Box>
-                  ))}
-                </Paper>
-              )}
-            </Box>
-            <TextField
-              label='Description'
-              placeholder='Short description (shown as tooltip on the template list)'
-              value={newTemplateDescription}
-              onChange={(e) => setNewTemplateDescription(e.target.value)}
-              fullWidth
-              size='small'
-              sx={fieldBaseSx}
-            />
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={newTemplateActive}
-                    onChange={(e) => setNewTemplateActive(e.target.checked)}
-                    size='small'
-                    color='primary'
-                    sx={{ mr: 1 }}
-                  />
-                }
-                label={
-                  <Typography sx={{ fontSize: '0.85rem', color: '#374151', whiteSpace: 'nowrap' }}>
-                    Active (enable for future use)
-                  </Typography>
-                }
-              />
-            </Box>
-            <Typography sx={{ fontSize: '0.72rem', color: '#64748b' }}>
-              The Internal Note, Self-note and Notify assignees only switches below will be saved
-              with this template.
-            </Typography>
+            {templateDescriptionError && (
+              <Typography sx={{ color: 'error.main', fontSize: '0.75rem', mt: 0.5 }}>
+                {templateDescriptionError}
+              </Typography>
+            )}
           </Box>
         )}
 
@@ -853,6 +724,7 @@ const CommentWindow = ({
                       : 'Add a comment (visible to affected user)'
             }
             required
+            error={Boolean(messageError)}
           />
           {messageError && (
             <Typography sx={{ color: 'error.main', fontSize: '0.75rem', mt: 0.5 }}>
