@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Box, Button, TextField, Typography, Switch, Modal } from '../../../../components';
-import { alpha, darken, Paper, InputAdornment } from '@mui/material';
+import { Box, Button, TextField, Typography, Switch, Modal, Tooltip } from '../../../../components';
+import { alpha, darken, Paper, InputAdornment, Divider, FormControlLabel } from '@mui/material';
 import {
   Comment as CommentIcon,
   Search as SearchIcon,
@@ -9,7 +9,7 @@ import {
   DeleteOutline as DeleteOutlineIcon,
 } from '@mui/icons-material';
 import { useCreateTicketCommentMutation } from '../../../../../services';
-import { useAuth, useNotification } from '@serviceops/hooks';
+import { useAuth, useNotification, useFieldError } from '@serviceops/hooks';
 import { TicketEntity } from '../types/ticketDetail.types';
 import { useConfiguration } from '@serviceops/confighooks';
 import {
@@ -37,8 +37,9 @@ const CommentWindow = ({
 }: CommentWindowProps) => {
   const { user } = useAuth();
   const [createComment, { isLoading }] = useCreateTicketCommentMutation();
-  const { statuses } = useConfiguration();
+  const { statuses, commentTemplates } = useConfiguration();
   const notify = useNotification();
+  const reqError = useFieldError();
 
   const [message, setMessage] = useState('');
   const [isInternal, setIsInternal] = useState(false);
@@ -53,7 +54,6 @@ const CommentWindow = ({
   const [statusValue, setStatusValue] = useState('');
   const [statusOptionsOpen, setStatusOptionsOpen] = useState(false);
   const [statusFiltered, setStatusFiltered] = useState<{ id: string; label: string }[]>([]);
-  const [statusTouched, setStatusTouched] = useState(false);
   const statusDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const statusOptions = statuses?.items
@@ -92,16 +92,71 @@ const CommentWindow = ({
     setStatusFiltered([]);
   }, []);
 
-  // ── Response Template search field (stub) ────────────────────────────────
+  // ── Response Template search field ────────────────────────────────────────
   const [templateInput, setTemplateInput] = useState('');
+  const [templateValue, setTemplateValue] = useState('');
+  const [templateOptionsOpen, setTemplateOptionsOpen] = useState(false);
+  const [templateFiltered, setTemplateFiltered] = useState<
+    { id: string; name: string; description: string }[]
+  >([]);
+  const templateDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleTemplateInputChange = useCallback((value: string) => {
-    setTemplateInput(value);
+  const templateOptions = commentTemplates?.items
+    ? commentTemplates.items
+        .filter((t) => t.active)
+        .map((t) => ({ id: t.id, name: t.name, description: t.description || '' }))
+    : [];
+
+  const handleTemplateInputChange = useCallback(
+    (value: string) => {
+      setTemplateInput(value);
+      setTemplateValue('');
+      if (templateDebounceRef.current) clearTimeout(templateDebounceRef.current);
+      templateDebounceRef.current = setTimeout(() => {
+        const q = value.trim().toLowerCase();
+        const next = q
+          ? templateOptions.filter((o) => o.name.toLowerCase().includes(q))
+          : templateOptions;
+        setTemplateFiltered(next);
+        setTemplateOptionsOpen(next.length > 0);
+      }, 150);
+    },
+    [templateOptions],
+  );
+
+  const handleTemplateSelect = useCallback((opt: { id: string; name: string }) => {
+    setTemplateInput(opt.name);
+    setTemplateValue(opt.id);
+    setTemplateOptionsOpen(false);
+    setTemplateFiltered([]);
   }, []);
 
   const handleTemplateClear = useCallback(() => {
     setTemplateInput('');
+    setTemplateValue('');
+    setTemplateOptionsOpen(false);
+    setTemplateFiltered([]);
   }, []);
+
+  // ── Required field validation ──────────────────────────────────────────
+  const [touched, setTouched] = useState<{
+    template?: boolean;
+    status?: boolean;
+    message?: boolean;
+  }>({});
+  const [requiredErrors, setRequiredErrors] = useState<{
+    template?: string;
+    status?: string;
+    message?: string;
+  }>({});
+
+  const validateRequired = (): { template?: string; status?: string; message?: string } => {
+    const errs: { template?: string; status?: string; message?: string } = {};
+    if (!templateValue) errs.template = 'required';
+    if (!statusValue) errs.status = 'required';
+    if (!message.trim()) errs.message = 'required';
+    return errs;
+  };
 
   // ── Reset fields when dialog opens ──────────────────────────────────────
   useEffect(() => {
@@ -109,13 +164,17 @@ const CommentWindow = ({
       setMessage('');
       setStatusInput('');
       setStatusValue('');
-      setStatusTouched(false);
       setTemplateInput('');
+      setTemplateValue('');
+      setTemplateOptionsOpen(false);
+      setTemplateFiltered([]);
       setStatusOptionsOpen(false);
       setStatusFiltered([]);
       setEmailTo('');
       setEmailFrom('');
       setFiles([]);
+      setTouched({});
+      setRequiredErrors({});
     }
   }, [open]);
 
@@ -149,10 +208,10 @@ const CommentWindow = ({
   // ── Mode-based toggle exclusivity ─────────────────────────────────────────
   // isInternalDisabled: when in 'self' mode, internal note is not applicable
   // isSelfNoteDisabled: when in 'internal' mode, self-note is not applicable
-  // notifyAssigneesDisabled: only works with internal note (excluded in 'self' and default 'comment' modes)
+  // notifyAssigneesDisabled: no longer gated on mode
   const isInternalDisabled = mode === 'self';
   const isSelfNoteDisabled = mode === 'internal';
-  const notifyAssigneesDisabled = mode === 'self' || mode === 'comment';
+  const notifyAssigneesDisabled = false;
 
   // ── Reset conflicting toggle when internal is toggled ────────────────────
   useEffect(() => {
@@ -177,16 +236,18 @@ const CommentWindow = ({
     </InputAdornment>
   );
 
+  // ── Required-field error renderers ──────────────────────────────────────
+  const templateError = reqError(touched.template, requiredErrors.template);
+  const statusError = reqError(touched.status, requiredErrors.status);
+  const messageError = reqError(touched.message, requiredErrors.message);
+
   // ── Save handler ────────────────────────────────────────────────────────
   const handleSave = async () => {
-    if (!message.trim()) {
-      notify.error('Message is required');
-      return;
-    }
-    if (!statusValue) {
-      setStatusTouched(true);
-      return;
-    }
+    setTouched({ template: true, status: true, message: true });
+    const errs = validateRequired();
+    setRequiredErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
     try {
       await createComment({
         ticketType: incident.ticketType,
@@ -306,15 +367,30 @@ const CommentWindow = ({
       footer={footer}
       maxWidth='sm'
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
         {/* Response Template + Status — side by side */}
         <Box sx={{ display: 'flex', gap: 2 }}>
-          <Box sx={{ flex: 1 }}>
+          <Box sx={{ flex: 1, position: 'relative' }}>
             <TextField
               label='Response Template'
               placeholder='Search templates...'
               value={templateInput}
               onChange={(e) => handleTemplateInputChange(e.target.value)}
+              error={Boolean(templateError)}
+              helperText={templateError}
+              required
+              onFocus={() => {
+                const q = templateInput.trim().toLowerCase();
+                const next = q
+                  ? templateOptions.filter((o) => o.name.toLowerCase().includes(q))
+                  : templateOptions;
+                setTemplateFiltered(next);
+                if (next.length > 0) setTemplateOptionsOpen(true);
+              }}
+              onBlur={() => {
+                setTouched((t) => ({ ...t, template: true }));
+                setTimeout(() => setTemplateOptionsOpen(false), 200);
+              }}
               fullWidth
               size='small'
               sx={fieldBaseSx}
@@ -324,6 +400,44 @@ const CommentWindow = ({
                 },
               }}
             />
+            {templateOptionsOpen && templateFiltered.length > 0 && (
+              <Paper
+                elevation={4}
+                sx={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  zIndex: 1000,
+                  mt: 0,
+                  maxHeight: 280,
+                  overflow: 'auto',
+                }}
+              >
+                {templateFiltered.map((opt) => (
+                  <Tooltip key={opt.id} title={opt.description || ''} arrow placement='left'>
+                    <Box
+                      component='div'
+                      role='button'
+                      tabIndex={0}
+                      onClick={() => handleTemplateSelect(opt)}
+                      sx={{
+                        px: 1.5,
+                        py: 1,
+                        cursor: 'pointer',
+                        fontSize: '0.84rem',
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                        '&:last-child': { borderBottom: 'none' },
+                        '&:hover': { bgcolor: alpha(COMMENT_ACCENT, 0.08) },
+                      }}
+                    >
+                      {opt.name}
+                    </Box>
+                  </Tooltip>
+                ))}
+              </Paper>
+            )}
           </Box>
           <Box sx={{ flex: 1, position: 'relative' }}>
             <TextField
@@ -332,8 +446,8 @@ const CommentWindow = ({
               placeholder='Search statuses...'
               value={statusInput}
               onChange={(e) => handleStatusInputChange(e.target.value)}
-              error={statusTouched && !statusValue}
-              helperText={statusTouched && !statusValue ? 'Status is required' : ' '}
+              error={Boolean(statusError)}
+              helperText={statusError}
               onFocus={() => {
                 const q = statusInput.trim().toLowerCase();
                 const next = q
@@ -343,7 +457,7 @@ const CommentWindow = ({
                 if (next.length > 0) setStatusOptionsOpen(true);
               }}
               onBlur={() => {
-                setStatusTouched(true);
+                setTouched((t) => ({ ...t, status: true }));
                 setTimeout(() => setStatusOptionsOpen(false), 200);
               }}
               fullWidth
@@ -411,6 +525,11 @@ const CommentWindow = ({
             }
             required
           />
+          {messageError && (
+            <Typography sx={{ color: 'error.main', fontSize: '0.75rem', mt: 0.5 }}>
+              {messageError}
+            </Typography>
+          )}
         </Box>
 
         {/* Email section — always expanded, no toggle */}
@@ -461,63 +580,64 @@ const CommentWindow = ({
         )}
 
         {/* Toggle switches */}
-        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           <Box
             sx={{
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              py: 0.25,
+              flexWrap: 'wrap',
+              gap: 2,
+              py: 2,
+              borderTop: '1px solid',
+              borderTopColor: 'divider',
               borderBottom: '1px solid',
-              borderColor: 'divider',
+              borderBottomColor: 'divider',
             }}
           >
-            <Typography sx={{ fontSize: '0.85rem', color: '#374151' }}>Internal Note</Typography>
-            <Switch
-              size='small'
-              color='primary'
-              checked={isInternal}
-              disabled={isInternalDisabled}
-              onChange={(e) => setIsInternal(e.target.checked)}
-            />
-          </Box>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              py: 0.25,
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-            }}
-          >
-            <Typography sx={{ fontSize: '0.85rem', color: '#374151' }}>Self-note</Typography>
-            <Switch
-              size='small'
-              color='primary'
-              checked={isSelfNote}
-              disabled={isSelfNoteDisabled}
-              onChange={(e) => setIsSelfNote(e.target.checked)}
-            />
-          </Box>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              py: 0.25,
-            }}
-          >
-            <Typography sx={{ fontSize: '0.85rem', color: '#374151' }}>
-              Notify assignees only
-            </Typography>
-            <Switch
-              size='small'
-              color='primary'
-              checked={notifyAssigneesOnly}
-              disabled={notifyAssigneesDisabled}
-              onChange={(e) => setNotifyAssigneesOnly(e.target.checked)}
-            />
+            {[
+              {
+                key: 'internal' as const,
+                checked: isInternal,
+                set: setIsInternal,
+                label: 'Internal Note',
+              },
+              {
+                key: 'self' as const,
+                checked: isSelfNote,
+                set: setIsSelfNote,
+                label: 'Self-note',
+              },
+              {
+                key: 'notify' as const,
+                checked: notifyAssigneesOnly,
+                set: setNotifyAssigneesOnly,
+                label: 'Notify assignees only',
+              },
+            ].map(({ key, checked, set, label }) => (
+              <Box key={key} sx={{ flex: '1 1 0', minWidth: 0 }}>
+                <FormControlLabel
+                  labelPlacement='start'
+                  control={
+                    <Switch
+                      checked={checked}
+                      onChange={(e) => set(e.target.checked)}
+                      size='small'
+                      sx={{ mr: 1 }}
+                    />
+                  }
+                  label={
+                    <Typography
+                      sx={{
+                        fontSize: '0.85rem',
+                        color: '#374151',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {label}
+                    </Typography>
+                  }
+                />
+              </Box>
+            ))}
           </Box>
         </Box>
 

@@ -12,6 +12,7 @@ import ListIcon from '@mui/icons-material/List';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import LocalActivityIcon from '@mui/icons-material/LocalActivity';
+import TimerIcon from '@mui/icons-material/Timer';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PeopleIcon from '@mui/icons-material/People';
 import GroupWorkIcon from '@mui/icons-material/GroupWork';
@@ -32,6 +33,7 @@ const adminMenuItems: MenuItemConfig[] = [
   { label: 'Change Management', icon: <ChangeCircleIcon />, pathKey: 'CHANGE_MANAGEMENT' },
   { label: 'Problem Management', icon: <ReportProblemIcon />, pathKey: 'PROBLEM_MANAGEMENT' },
   { label: 'Ticket Bundle', icon: <LocalActivityIcon />, pathKey: 'TICKET_TEMPLATES' },
+  { label: 'Timesheet', icon: <TimerIcon />, pathKey: 'TIMESHEET' },
   { label: 'Knowledge Base', icon: <LibraryBooksIcon />, pathKey: 'KNOWLEDGE_BASE' },
   { label: 'Cab Request', icon: <HowToRegIcon />, pathKey: 'CAB_REQUEST' },
   { label: 'Test Scripts', icon: <ListIcon />, pathKey: 'TEST_SCRIPTS' },
