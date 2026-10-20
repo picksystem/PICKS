@@ -308,9 +308,66 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   linesToolbar: {
     display: 'flex' as const,
     alignItems: 'center',
-    gap: theme.spacing(1),
-    marginBottom: theme.spacing(1.5),
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing(2.5),
+    gap: theme.spacing(0.5, 1),
     flexWrap: 'wrap' as const,
+    background: '#ffffff',
+    border: '1px solid rgba(226, 232, 255, 0.8)',
+    borderRadius: 16,
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0,0,0,0.04)',
+    padding: theme.spacing(1, 1.5),
+  },
+
+  timesheetIconPill: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    display: 'flex' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'transform 0.15s ease',
+    flexShrink: 0,
+    '.timesheetActionButton:hover &': {
+      transform: 'scale(1.08)',
+    },
+  },
+
+  timesheetActionButton: {
+    flex: '0 0 auto',
+    display: 'flex' as const,
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: theme.spacing(0.75, 1),
+    gap: 4,
+    cursor: 'pointer',
+    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+    borderRadius: 12,
+    minWidth: 72,
+    position: 'relative' as const,
+    overflow: 'hidden',
+
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      background: 'rgba(99, 102, 241, 0.07)',
+      boxShadow: '0 4px 12px rgba(99, 102, 241, 0.15)',
+    },
+
+    '&:active': {
+      transform: 'translateY(0)',
+      background: 'rgba(99, 102, 241, 0.12)',
+    },
+  },
+
+  timesheetActionLabel: {
+    fontSize: '0.7rem',
+    lineHeight: 1.2,
+    color: '#475569',
+    fontWeight: 600,
+    whiteSpace: 'nowrap' as const,
+    textAlign: 'center' as const,
+    letterSpacing: '0.2px',
   },
 
   toolbarTitle: {
@@ -319,39 +376,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     color: theme.palette.text.primary,
     marginRight: theme.spacing(0.5),
     whiteSpace: 'nowrap' as const,
-  },
-
-  toolbarDivider: {
-    width: 1,
-    height: 20,
-    backgroundColor: theme.palette.divider,
-    margin: '0 8px',
-    alignSelf: 'center',
-  },
-
-  toolbarToggle: {
-    display: 'inline-flex' as const,
-    alignItems: 'center',
-    gap: theme.spacing(0.75),
-    fontSize: '0.8rem',
-    fontWeight: 600,
-    color: theme.palette.text.secondary,
-    whiteSpace: 'nowrap' as const,
-  },
-
-  /* ── Toolbar toggle switch sizing ───────────────────────────── */
-  toolbarToggleSwitch: {
-    '& .MuiSwitch-root': {
-      height: 24,
-      width: 44,
-      '& .MuiSwitch-switchBase': {
-        padding: 3,
-      },
-      '& .MuiSwitch-thumb': {
-        width: 16,
-        height: 16,
-      },
-    },
   },
 
   /* ── Billable toggle cell ───────────────────────────────────── */
@@ -494,6 +518,26 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     fontSize: '40px !important',
     color: `${theme.palette.text.disabled} !important`,
     marginBottom: `${theme.spacing(1)}!important`,
+  },
+
+  /* ── Status legend (below the lines table) ─────────────────── */
+  statusLegend: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(2),
+    flexWrap: 'wrap' as const,
+    marginTop: theme.spacing(1.5),
+    paddingTop: theme.spacing(1.5),
+    borderTop: `1px dashed ${theme.palette.divider}`,
+  },
+
+  statusLegendItem: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: theme.spacing(0.75),
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    color: theme.palette.text.primary,
   },
 
   /* ── Footer actions ──────────────────────────────────────────── */

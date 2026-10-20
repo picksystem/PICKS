@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useMemo, useState } from 'react';
 import {
   Box,
@@ -21,6 +22,10 @@ import {
   Select,
   IconButton,
   TextField,
+  Checkbox,
+  BookmarkIcon,
+  CommentIcon,
+  AssessmentIcon,
 } from '../../../components';
 import {
   Table,
@@ -33,20 +38,26 @@ import {
   styled,
 } from '@mui/material';
 import StickyNote2Icon from '@mui/icons-material/StickyNote2';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useNotification } from '@serviceops/hooks';
+import { constants } from '@serviceops/utils';
+import { useNavigate } from 'react-router-dom';
+import { ProjectSearchField } from '../Configuration/shared/GenericPanel/components/ProjectSearchField/ProjectSearchField';
+import { ClientSearchField } from '../Configuration/shared/GenericPanel/components/ClientSearchField/ClientSearchField';
 import { useStyles } from './styles';
-import {
-  TimesheetLine,
-  TIMESHEET_CLIENTS,
-  TIMESHEET_TASKS,
-  DayEntry,
-  ApprovalEntry,
-} from './types/timesheet.types';
+import { TimesheetLine, TIMESHEET_TASKS, DayEntry, ApprovalEntry } from './types/timesheet.types';
 
-const theme_warning = '#ff9800';
-const theme_success = '#008a00';
+export const theme_warning = '#ff9800';
+export const theme_success = '#008a00';
+export const theme_error = '#d32f2f';
+export const theme_draft = '#c5cae9';
+
+const STATUS_LEGEND: { label: string; color: string }[] = [
+  { label: 'Draft', color: theme_draft },
+  { label: 'Pending', color: theme_warning },
+  { label: 'Approved', color: theme_success },
+  { label: 'Rejected', color: theme_error },
+];
 
 const StatusDot = styled('span')(({ theme }) => ({
   display: 'inline-block',
@@ -56,6 +67,25 @@ const StatusDot = styled('span')(({ theme }) => ({
   marginRight: theme.spacing(1),
   flexShrink: 0,
 }));
+
+const TIMESHEET_ICON_SX = { fontSize: '1.5rem' };
+
+const TimesheetIconPill = ({
+  color,
+  children,
+  classes,
+}: {
+  color: string;
+  children: React.ReactNode;
+  classes: Record<string, string>;
+}) => (
+  <Box
+    className={classes.timesheetIconPill}
+    style={{ background: `${color}18` } as React.CSSProperties}
+  >
+    {children}
+  </Box>
+);
 
 const DAY_KEY_MAP: Record<number, string> = {
   0: 'sun',
@@ -183,6 +213,7 @@ const seedLines = (week: DayEntry[]): TimesheetLine[] => {
 const Timesheet = () => {
   const { classes, cx } = useStyles();
   const notify = useNotification();
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState(0);
   const [weekOffset, setWeekOffset] = useState(0);
@@ -192,6 +223,18 @@ const Timesheet = () => {
   const [submitModalOpen, setSubmitModalOpen] = useState(false);
   const [showDetailedTotals, setShowDetailedTotals] = useState(true);
   const [showAdvancedNotes, setShowAdvancedNotes] = useState(false);
+  const [selectedLineIds, setSelectedLineIds] = useState<Record<string, boolean>>({});
+
+  const allLinesSelected = lines.length > 0 && lines.every((l) => selectedLineIds[l.id]);
+  const someLinesSelected = lines.some((l) => selectedLineIds[l.id]);
+
+  const toggleSelectAll = () => {
+    setSelectedLineIds(allLinesSelected ? {} : Object.fromEntries(lines.map((l) => [l.id, true])));
+  };
+
+  const toggleSelectLine = (id: string) => {
+    setSelectedLineIds((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const weekRangeLabel = useMemo(() => {
     const base = new Date();
@@ -203,31 +246,6 @@ const Timesheet = () => {
       d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     return `${fmt(startOfWeek)}  -  ${fmt(new Date(startOfWeek.getTime() + 6 * 86400000))}`;
   }, [weekOffset]);
-
-  const handleAddLine = () => {
-    const id = `line-${Date.now()}`;
-    const dayValues = week.reduce(
-      (acc, d) => {
-        acc[d.key] = 0;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-    setLines((prev) => [
-      ...prev,
-      {
-        id,
-        client: TIMESHEET_CLIENTS[0],
-        task: TIMESHEET_TASKS[0],
-        externalNote: '',
-        internalNote: '',
-        billable: false,
-        dayValues,
-        status: 'pending',
-      },
-    ]);
-    notify.success('Timesheet line added');
-  };
 
   const handleCopyFromPreviousWeek = () => {
     const prevWeek = buildWeek(weekOffset - 1);
@@ -299,6 +317,75 @@ const Timesheet = () => {
     notify.success('Timesheet submitted for approval');
   };
 
+  const toolbarActions = [
+    {
+      label: 'New line',
+      icon: AddIcon,
+      color: '#1976d2',
+      onClick: () => notify.info('New line coming soon'),
+    },
+    {
+      label: 'Edit',
+      icon: EditIcon,
+      color: '#1d4ed8',
+      onClick: () => notify.info('Edit coming soon'),
+    },
+    {
+      label: 'Remove line',
+      icon: DeleteIcon,
+      color: '#dc2626',
+      onClick: () => notify.info('Remove line coming soon'),
+    },
+    {
+      label: 'Copy from favourite',
+      icon: StarIcon,
+      color: '#7c3aed',
+      onClick: () => notify.info('Copy from favourite coming soon'),
+    },
+    {
+      label: 'Copy from timesheet',
+      icon: ContentCopyIcon,
+      color: '#1d4ed8',
+      onClick: handleCopyFromPreviousWeek,
+    },
+    {
+      label: 'Add to favourites',
+      icon: StickyNote2Icon,
+      color: '#ca8a04',
+      onClick: () => notify.info('Line added to favourites'),
+    },
+    {
+      label: 'Copy to a timesheet',
+      icon: LinkIcon,
+      color: '#059669',
+      onClick: () => notify.info('Copy to a timesheet coming soon'),
+    },
+    {
+      label: 'Add attachment',
+      icon: AttachFileIcon,
+      color: '#92400e',
+      onClick: () => notify.info('Attachment coming soon'),
+    },
+    {
+      label: 'Use advanced notes',
+      icon: CommentIcon,
+      color: '#0d9488',
+      onClick: () => setShowAdvancedNotes((v) => !v),
+    },
+    {
+      label: 'Show detailed totals',
+      icon: AssessmentIcon,
+      color: '#0284c7',
+      onClick: () => setShowDetailedTotals((v) => !v),
+    },
+    {
+      label: 'Manage favourites',
+      icon: BookmarkIcon,
+      color: '#d97706',
+      onClick: () => notify.info('Manage favourites coming soon'),
+    },
+  ];
+
   return (
     <Box className={classes.container}>
       <PageHeader
@@ -328,13 +415,25 @@ const Timesheet = () => {
             startIcon={<ArrowBackIcon />}
             label='Back'
             className={classes.topAction}
-            onClick={() => notify.info('Navigating back')}
+            onClick={() => navigate(constants.BasePath.TIMESHEET)}
           />
         </Stack>
       </Box>
 
       {activeTab === 0 ? (
         <>
+          {/* ── Toolbar: icon-pill actions ─────────────────────── */}
+          <Box className={classes.linesToolbar}>
+            {toolbarActions.map((btn) => (
+              <Box key={btn.label} className={classes.timesheetActionButton} onClick={btn.onClick}>
+                <TimesheetIconPill color={btn.color} classes={classes}>
+                  <btn.icon sx={{ ...TIMESHEET_ICON_SX, color: btn.color }} />
+                </TimesheetIconPill>
+                <Typography className={classes.timesheetActionLabel}>{btn.label}</Typography>
+              </Box>
+            ))}
+          </Box>
+
           {/* ── Person / period bar ───────────────────────────── */}
           <Box className={classes.periodBar}>
             <Stack
@@ -365,85 +464,6 @@ const Timesheet = () => {
 
           {/* ── Timesheet lines section ───────────────────────── */}
           <Box className={classes.linesSection}>
-            {/* ── Toolbar: title + actions + toggles ──────────── */}
-            <Box className={classes.linesToolbar}>
-              <Typography className={classes.toolbarTitle}>Timesheet lines</Typography>
-              <Button
-                variant='outlined'
-                size='small'
-                startIcon={<ContentCopyIcon />}
-                label='Copy from favourite'
-                onClick={() => notify.info('Copy from favourite coming soon')}
-              />
-              <Button
-                variant='outlined'
-                size='small'
-                startIcon={<ContentCopyIcon />}
-                label='Copy from timesheet'
-                onClick={handleCopyFromPreviousWeek}
-              />
-              <Button
-                variant='outlined'
-                size='small'
-                startIcon={<StickyNote2Icon />}
-                label='Add to favourites'
-                onClick={() => notify.info('Line added to favourites')}
-              />
-              <Button
-                variant='outlined'
-                size='small'
-                startIcon={<LinkIcon />}
-                label='Copy to a timesheet'
-                onClick={() => notify.info('Copy to a timesheet coming soon')}
-              />
-              <Button
-                variant='outlined'
-                size='small'
-                startIcon={<AttachFileIcon />}
-                label='Add attachment'
-                onClick={() => notify.info('Attachment coming soon')}
-              />
-              <Box className={classes.toolbarDivider} />
-              <Stack direction='row' spacing={3} alignItems='center'>
-                <Box className={classes.toolbarToggle}>
-                  <Typography variant='body2' sx={{ fontWeight: 600 }}>
-                    Use advanced notes
-                  </Typography>
-                  <Toggle
-                    checked={showAdvancedNotes}
-                    onChange={() => setShowAdvancedNotes((v) => !v)}
-                    size='small'
-                    className={cx(classes.billableSwitch, classes.toolbarToggleSwitch)}
-                  />
-                </Box>
-                <Box className={classes.toolbarToggle}>
-                  <Typography variant='body2' sx={{ fontWeight: 600 }}>
-                    Show detailed totals
-                  </Typography>
-                  <Toggle
-                    checked={showDetailedTotals}
-                    onChange={() => setShowDetailedTotals((v) => !v)}
-                    size='small'
-                    className={cx(classes.billableSwitch, classes.toolbarToggleSwitch)}
-                  />
-                </Box>
-                <Button
-                  variant='text'
-                  size='small'
-                  startIcon={<BookmarkIcon sx={{ fontSize: '1rem' }} />}
-                  label='Manage favourites'
-                  onClick={() => notify.info('Manage favourites coming soon')}
-                />
-                <Button
-                  variant='contained'
-                  size='small'
-                  startIcon={<AddIcon />}
-                  label='New line'
-                  onClick={handleAddLine}
-                />
-              </Stack>
-            </Box>
-
             {lines.length === 0 ? (
               <Box className={classes.emptyState}>
                 <AddIcon className={classes.emptyIcon} />
@@ -457,8 +477,20 @@ const Timesheet = () => {
                 <Table size='small'>
                   <TableHead>
                     <TableRow>
+                      <TableCell className={cx(classes.headerCell, classes.selectCell)}>
+                        <Checkbox
+                          checked={allLinesSelected}
+                          indeterminate={someLinesSelected && !allLinesSelected}
+                          onChange={toggleSelectAll}
+                          size='small'
+                          className={classes.checkbox}
+                        />
+                      </TableCell>
                       <TableCell className={cx(classes.headerCell, classes.cellSelectHeader)}>
-                        Client/Project
+                        Client
+                      </TableCell>
+                      <TableCell className={cx(classes.headerCell, classes.cellSelectHeader)}>
+                        Project
                       </TableCell>
                       <TableCell className={cx(classes.headerCell, classes.cellSelectHeader)}>
                         Task
@@ -493,17 +525,26 @@ const Timesheet = () => {
                       const isApproved = line.status === 'approved';
                       return (
                         <TableRow key={line.id} className={classes.dataRow}>
-                          <TableCell>
-                            <Select
-                              className={classes.cellSelect}
-                              options={TIMESHEET_CLIENTS.map((c) => ({
-                                value: c,
-                                label: c,
-                                disabled: isApproved,
-                              }))}
-                              value={line.client}
+                          <TableCell className={classes.selectCell}>
+                            <Checkbox
+                              checked={!!selectedLineIds[line.id]}
+                              onChange={() => toggleSelectLine(line.id)}
                               size='small'
-                              onChange={(e) => updateLine(line.id, { client: e.target.value })}
+                              className={classes.checkbox}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <ClientSearchField
+                              value={line.client}
+                              onChange={(client) => updateLine(line.id, { client })}
+                              disabled={isApproved}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <ProjectSearchField
+                              value={line.project ?? ''}
+                              onChange={(project) => updateLine(line.id, { project })}
+                              disabled={isApproved}
                             />
                           </TableCell>
                           <TableCell>
@@ -599,9 +640,6 @@ const Timesheet = () => {
                                   backgroundColor: isApproved ? theme_success : theme_warning,
                                 }}
                               />
-                              <Typography variant='body2' color='text.secondary'>
-                                {isApproved ? 'Approved' : 'Pending approval'}
-                              </Typography>
                             </Stack>
                           </TableCell>
                           <TableCell className={classes.actionsCell}>
@@ -654,7 +692,7 @@ const Timesheet = () => {
 
                     {/* ── Totals (Total Hours always shown) ─────────── */}
                     <TableRow className={classes.totalsRow}>
-                      <TableCell colSpan={5}>
+                      <TableCell colSpan={7}>
                         <Typography variant='body2' sx={{ fontWeight: 700 }}>
                           Total Hours
                         </Typography>
@@ -676,7 +714,7 @@ const Timesheet = () => {
                     {showDetailedTotals && (
                       <>
                         <TableRow className={classes.totalsRow}>
-                          <TableCell colSpan={5}>
+                          <TableCell colSpan={7}>
                             <Typography variant='body2' color='text.secondary'>
                               Total billable hours
                             </Typography>
@@ -691,7 +729,7 @@ const Timesheet = () => {
                           <TableCell />
                         </TableRow>
                         <TableRow className={classes.totalsRow}>
-                          <TableCell colSpan={5}>
+                          <TableCell colSpan={7}>
                             <Typography variant='body2' color='text.secondary'>
                               Total non-billable hours
                             </Typography>
@@ -706,7 +744,7 @@ const Timesheet = () => {
                           <TableCell />
                         </TableRow>
                         <TableRow className={classes.totalsRow}>
-                          <TableCell colSpan={5}>
+                          <TableCell colSpan={7}>
                             <Typography variant='body2' color='text.secondary'>
                               Billable hours ratio
                             </Typography>
@@ -726,6 +764,22 @@ const Timesheet = () => {
                 </Table>
               </TableContainer>
             )}
+
+            {/* ── Status legend ─────────────────────────────────── */}
+            <Box className={classes.statusLegend}>
+              {STATUS_LEGEND.map((item) => (
+                <Stack
+                  key={item.label}
+                  direction='row'
+                  spacing={0.75}
+                  alignItems='center'
+                  className={classes.statusLegendItem}
+                >
+                  <StatusDot style={{ backgroundColor: item.color }} />
+                  <Typography variant='body2'>{item.label}</Typography>
+                </Stack>
+              ))}
+            </Box>
           </Box>
         </>
       ) : (

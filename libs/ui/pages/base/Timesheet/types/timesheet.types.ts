@@ -10,6 +10,7 @@ export interface DayEntry {
 export interface TimesheetLine {
   id: string;
   client: string;
+  project?: string;
   task: string;
   externalNote: string;
   internalNote: string;

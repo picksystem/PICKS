@@ -106,7 +106,6 @@ const ProjectSearchField = ({
   return (
     <Box ref={containerRef} sx={{ position: 'relative', ...sx }}>
       <TextField
-        label={label}
         required={required}
         disabled={disabled}
         placeholder={loading ? 'Loading...' : 'Search projects...'}

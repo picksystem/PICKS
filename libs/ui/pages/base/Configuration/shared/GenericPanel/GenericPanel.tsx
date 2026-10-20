@@ -56,6 +56,7 @@ import { WorkingCalendarSearchField } from './components/WorkingCalendarSearchFi
 import { HolidayCalendarSearchField } from './components/HolidayCalendarSearchField/HolidayCalendarSearchField';
 import { WorkingDayTemplateSearchField } from './components/WorkingDayTemplateSearchField/WorkingDayTemplateSearchField';
 import { OptionsSearchField } from './components/OptionsSearchField/OptionsSearchField';
+import { ClientSearchField } from './components/ClientSearchField/ClientSearchField';
 import { SearchField } from '../SearchField';
 import { DatePickerField } from './components/DatePickerField/DatePickerField';
 import { YearPickerField } from './components/YearPickerField/YearPickerField';
@@ -90,6 +91,7 @@ export interface TableField {
     | 'consultantSearch'
     | 'userSearch'
     | 'consultantRoleSearch'
+    | 'clientSearch'
     | 'userWorkLocationSearch'
     | 'workingCalendarSearch'
     | 'holidayCalendarSearch'
@@ -127,6 +129,10 @@ export interface TableField {
    * currently selected Application, used to scope the role options
    * (defaults to 'application'). */
   applicationField?: string;
+  /** For clientSearch - which sibling field on the same form holds the
+   * currently selected client's id, kept in sync automatically when a client
+   * is picked (defaults to 'clientId'). */
+  clientIdField?: string;
   /** For userWorkLocationSearch - sibling field names to auto-fill with the
    * selected work location's defaults (still editable afterwards). */
   workLocationAutoFillFields?: {
@@ -1688,6 +1694,26 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
                       value={currentValue}
                       applicationValue={applicationValue}
                       onChange={(value) => handleTextFieldChange(field.name, value)}
+                      required={field.required}
+                      error={Boolean(showValidation && mergedFormErrors[field.name])}
+                      helperText={reqError(showValidation, mergedFormErrors[field.name])}
+                    />
+                  );
+                }
+                if (field.type === 'clientSearch') {
+                  const clientNameValue = (form[field.name] ?? '') as string;
+                  const clientIdFieldName = field.clientIdField ?? 'clientId';
+                  const clientIdValue = String(form[clientIdFieldName] ?? '');
+                  return (
+                    <ClientSearchField
+                      key={field.name}
+                      label={field.label}
+                      value={clientNameValue}
+                      clientIdValue={clientIdValue}
+                      onChange={(nextName, nextId) => {
+                        handleTextFieldChange(field.name, nextName);
+                        handleTextFieldChange(clientIdFieldName, nextId ?? '');
+                      }}
                       required={field.required}
                       error={Boolean(showValidation && mergedFormErrors[field.name])}
                       helperText={reqError(showValidation, mergedFormErrors[field.name])}

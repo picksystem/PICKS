@@ -313,6 +313,7 @@ export const adminApi = baseApi.injectEndpoints({
       transformResponse: (response: { data: IAdminTicketTimeEntry }) => response.data,
       invalidatesTags: (result, _err, { ticketId }) => [
         { type: 'TicketTimeEntries', id: ticketId },
+        { type: 'TicketActivities', id: ticketId },
         'Ticket',
       ],
     }),
@@ -358,6 +359,7 @@ export const adminApi = baseApi.injectEndpoints({
     getTicketActivities: builder.query<IAdminTicketActivity[], ITicketRef>({
       query: ({ ticketId }) => `/api/admin/tickets/${ticketId}/activities`,
       transformResponse: (response: { data: IAdminTicketActivity[] }) => response.data,
+      providesTags: (result, _err, { ticketId }) => [{ type: 'TicketActivities', id: ticketId }],
     }),
 
     // =============================================

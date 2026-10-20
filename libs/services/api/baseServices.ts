@@ -48,6 +48,7 @@ export const baseApi = createApi({
     'TicketComments',
     'TicketTimeEntries',
     'TicketResolutions',
+    'TicketActivities',
     'CustomFields',
     'KBArticle',
   ],
