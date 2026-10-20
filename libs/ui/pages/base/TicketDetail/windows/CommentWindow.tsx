@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Button, TextField, Typography, Switch, Modal, Tooltip } from '../../../../components';
-import { alpha, darken, Paper, InputAdornment, Divider, FormControlLabel } from '@mui/material';
+import { alpha, darken, Paper, InputAdornment, FormControlLabel } from '@mui/material';
 import {
   Comment as CommentIcon,
   Search as SearchIcon,
@@ -56,6 +56,7 @@ const CommentWindow = ({
   const [statusFiltered, setStatusFiltered] = useState<{ id: string; label: string }[]>([]);
   const statusDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const statusOptions = statuses?.items
     ? statuses.items
         .filter((s) => s.isActive)
@@ -101,10 +102,20 @@ const CommentWindow = ({
   >([]);
   const templateDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const templateOptions = commentTemplates?.items
     ? commentTemplates.items
         .filter((t) => t.active)
-        .map((t) => ({ id: t.id, name: t.name, description: t.description || '' }))
+        .map((t) => ({
+          id: t.id,
+          name: t.name,
+          description: t.description || '',
+          ticketStatus: t.ticketStatus || '',
+          commentDescription: t.commentDescription || '',
+          internalNote: t.internalNote,
+          notifyAssigneesOnly: t.notifyAssigneesOnly,
+          selfNote: t.selfNote,
+        }))
     : [];
 
   const handleTemplateInputChange = useCallback(
@@ -124,12 +135,31 @@ const CommentWindow = ({
     [templateOptions],
   );
 
-  const handleTemplateSelect = useCallback((opt: { id: string; name: string }) => {
-    setTemplateInput(opt.name);
-    setTemplateValue(opt.id);
-    setTemplateOptionsOpen(false);
-    setTemplateFiltered([]);
-  }, []);
+  const handleTemplateSelect = useCallback(
+    (opt: (typeof templateOptions)[number]) => {
+      setTemplateInput(opt.name);
+      setTemplateValue(opt.id);
+      setTemplateOptionsOpen(false);
+      setTemplateFiltered([]);
+
+      // Populate fields from the template's config
+      if (opt.commentDescription) {
+        setMessage(serializeRichText(parseRichText(opt.commentDescription).segments));
+      }
+      if (opt.ticketStatus) {
+        // The template stores the status displayName; look up the matching active status
+        const match = statusOptions.find(
+          (s) => s.label.toLowerCase() === opt.ticketStatus.toLowerCase(),
+        );
+        setStatusValue(match ? match.id : '');
+        setStatusInput(match ? match.label : opt.ticketStatus);
+      }
+      setIsInternal(opt.internalNote);
+      setIsSelfNote(opt.selfNote);
+      setNotifyAssigneesOnly(opt.notifyAssigneesOnly);
+    },
+    [statusOptions],
+  );
 
   const handleTemplateClear = useCallback(() => {
     setTemplateInput('');
@@ -204,14 +234,6 @@ const CommentWindow = ({
       }
     }
   }, [open, mode]);
-
-  // ── Mode-based toggle exclusivity ─────────────────────────────────────────
-  // isInternalDisabled: when in 'self' mode, internal note is not applicable
-  // isSelfNoteDisabled: when in 'internal' mode, self-note is not applicable
-  // notifyAssigneesDisabled: no longer gated on mode
-  const isInternalDisabled = mode === 'self';
-  const isSelfNoteDisabled = mode === 'internal';
-  const notifyAssigneesDisabled = false;
 
   // ── Reset conflicting toggle when internal is toggled ────────────────────
   useEffect(() => {
@@ -290,7 +312,7 @@ const CommentWindow = ({
           ? 'Email will trigger to Assigned to and Secondary resource(s) only'
           : mode === 'email'
             ? 'Send an email note for this ticket'
-            : 'Visible to everyone (including affected user, client-side contact(s), assigned consultant(s), and all followers)';
+            : 'A public comment visible to the affected user and ticket followers';
 
   const footer = (
     <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
@@ -414,7 +436,7 @@ const CommentWindow = ({
                   overflow: 'auto',
                 }}
               >
-                {templateFiltered.map((opt) => (
+                {templateFiltered.map((opt: any) => (
                   <Tooltip key={opt.id} title={opt.description || ''} arrow placement='left'>
                     <Box
                       component='div'
