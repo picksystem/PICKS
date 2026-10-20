@@ -55,15 +55,16 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   /* ── Person / period bar ───────────────────────────────────── */
   periodBar: {
     display: 'flex',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
     gap: theme.spacing(2),
-    padding: theme.spacing(1, 2),
+    padding: theme.spacing(2, 3),
     marginBottom: theme.spacing(1.5),
     flexWrap: 'wrap' as const,
-    background: 'linear-gradient(100deg, #2c1a5c 0%, #3b2a8a 45%, #2d5ebb 100%)',
+    backgroundColor: '#ffffff',
     borderRadius: 4,
-    color: '#ffffff',
+    border: '1px solid #e5e7eb',
+    color: '#111827',
     position: 'relative' as const,
     overflow: 'hidden' as const,
     '&::after': {
@@ -73,20 +74,15 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
       top: 0,
       bottom: 0,
       width: '18%',
-      background:
-        'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.14) 50%, rgba(255,255,255,0.05) 60%, transparent 80%)',
+      background: 'linear-gradient(115deg, transparent 30%, rgba(0,0,0,0.03) 50%, transparent 80%)',
       pointerEvents: 'none' as const,
-    },
-    [theme.breakpoints.down('sm')]: {
-      justifyContent: 'center',
-      textAlign: 'center',
     },
   },
 
   personName: {
     fontWeight: 700,
     fontSize: '1rem',
-    color: '#ffffff',
+    color: '#111827',
   },
 
   periodControls: {
@@ -95,17 +91,28 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     alignItems: 'center',
   },
 
+  periodNav: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #d1d5db',
+    color: '#1e3a8a',
+    minWidth: 36,
+    height: 36,
+    padding: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 0,
+    '&:hover': {
+      backgroundColor: '#f3f4f6',
+      border: '1px solid #9ca3af',
+    },
+  },
+
   periodLabel: {
     fontSize: '0.95rem',
     fontWeight: 700,
     letterSpacing: '0.02em',
     whiteSpace: 'nowrap' as const,
-  },
-
-  periodNav: {
-    backgroundColor: 'rgba(255,255,255,0.85)',
-    color: '#1e3a8a',
-    '&:hover': { backgroundColor: '#ffffff' },
   },
 
   /* ── Summary card ────────────────────────────────────────────── */

@@ -1,5 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Box, Button, TextField, Typography, Switch, Modal, Tooltip } from '../../../../components';
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Switch,
+  Modal,
+  Tooltip,
+  FormControlLabel,
+} from '../../../../components';
 import { alpha, darken, Paper, InputAdornment } from '@mui/material';
 import type { SystemStyleObject } from '@mui/system';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -17,7 +26,7 @@ import { useCreateTicketTimeEntryMutation } from '../../../../../services';
 import { useAuth, useNotification, useFieldError } from '@serviceops/hooks';
 import { useConfiguration } from '@serviceops/confighooks';
 import { TicketEntity } from '../types/ticketDetail.types';
-import type { IConfigTimeEntryLine } from '@serviceops/interfaces';
+import type { IConfigTimeEntryLine, IConfigTimeEntryTemplate } from '@serviceops/interfaces';
 import {
   parseRichText,
   serializeRichText,
@@ -37,11 +46,17 @@ interface TimeEntryWindowProps {
 const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindowProps) => {
   const { user } = useAuth();
   const [createTimeEntry, { isLoading }] = useCreateTicketTimeEntryMutation();
-  const { statuses } = useConfiguration();
+  const { statuses, timeEntryTemplates, saveSection } = useConfiguration();
   const notify = useNotification();
 
   const [duration, setDuration] = useState('');
   const [billingCode, setBillingCode] = useState('');
+
+  // ── Save as Template (mirror CommentWindow) ────────────────────────────
+  const [saveAsTemplate, setSaveAsTemplate] = useState(false);
+  const [newTemplateDescription, setNewTemplateDescription] = useState('');
+  const [newTemplateActive, setNewTemplateActive] = useState(true);
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
 
   // ── Billing Code / Project searchable field (mirror TimeEntryFormDialog) ──
   const { categorization } = useConfiguration();
@@ -176,7 +191,6 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
   }, []);
 
   // ── Time Entry Template search field ─────────────────────────────────────
-  const { timeEntryTemplates } = useConfiguration();
   const [templateInput, setTemplateInput] = useState('');
   const [templateValue, setTemplateValue] = useState('');
   const [templateOptionsOpen, setTemplateOptionsOpen] = useState(false);
@@ -244,7 +258,9 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
         const entry = opt.entries[0];
         setBillingCode(entry.billingCode || '');
         setActivityTask(entry.activityTask || '');
-        // Sum the whole weekly entry (mon–sun hours) into a single H:MM duration
+        // Sum the whole weekly entry (mon–sun hours) into a single H:MM duration.
+        // A trailing "HH:MM duration" marker in the description (written by the
+        // Save-as-Template flow) overrides with exact hours + minutes.
         const totalHours =
           (entry.mon || 0) +
           (entry.tue || 0) +
@@ -253,7 +269,12 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
           (entry.fri || 0) +
           (entry.sat || 0) +
           (entry.sun || 0);
-        setDuration(totalHours > 0 ? `${totalHours}:00` : '');
+        const durationMarker = /(\d+):(\d{2}) duration/.exec(opt.description || '');
+        if (durationMarker) {
+          setDuration(`${String(Number(durationMarker[1])).padStart(2, '0')}:${durationMarker[2]}`);
+        } else {
+          setDuration(totalHours > 0 ? `${totalHours}:00` : '');
+        }
       }
       if (opt.externalComment) {
         setExternalComment(opt.externalComment);
@@ -276,6 +297,12 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
     [statusOptions],
   );
 
+  // Template name typing — used when saving as a new template (no lookup)
+  const handleTemplateNameChange = useCallback((value: string) => {
+    setTemplateInput(value);
+    setTemplateValue('');
+  }, []);
+
   const handleTemplateClear = useCallback(() => {
     setTemplateInput('');
     setTemplateValue('');
@@ -294,6 +321,8 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
     activityTask?: boolean;
     externalComment?: boolean;
     internalComment?: boolean;
+    templateName?: boolean;
+    templateDescription?: boolean;
   }>({});
   const [requiredErrors, setRequiredErrors] = useState<{
     template?: string;
@@ -304,11 +333,17 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
     activityTask?: string;
     externalComment?: string;
     internalComment?: string;
+    templateName?: string;
+    templateDescription?: string;
   }>({});
 
   const validateRequired = (): typeof requiredErrors => {
     const errs: typeof requiredErrors = {};
-    if (!templateValue) errs.template = 'required';
+    // Save-as-template mode: template name is required, existing template lookup is not
+    if (saveAsTemplate && !templateInput.trim()) errs.templateName = 'required';
+    if (saveAsTemplate && !newTemplateDescription.trim()) errs.templateDescription = 'required';
+    // Existing-template mode: a template must be selected
+    if (!saveAsTemplate && !templateValue) errs.template = 'required';
     if (!statusValue) errs.status = 'required';
     if (!date) errs.date = 'required';
     if (
@@ -326,6 +361,11 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
 
   // ── Required-field error renderers ──────────────────────────────────────
   const templateError = reqError(touched.template, requiredErrors.template);
+  const templateNameError = reqError(touched.templateName, requiredErrors.templateName);
+  const templateDescriptionError = reqError(
+    touched.templateDescription,
+    requiredErrors.templateDescription,
+  );
   const statusError = reqError(touched.status, requiredErrors.status);
   const dateError = reqError(touched.date, requiredErrors.date);
   const durationError = reqError(touched.duration, requiredErrors.duration);
@@ -372,6 +412,10 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
       setTemplateFiltered([]);
       setStatusOptionsOpen(false);
       setStatusFiltered([]);
+      setSaveAsTemplate(false);
+      setNewTemplateDescription('');
+      setNewTemplateActive(true);
+      setIsSavingTemplate(false);
       setTouched({});
       setRequiredErrors({});
     }
@@ -388,6 +432,8 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
       activityTask: true,
       externalComment: true,
       internalComment: true,
+      templateName: true,
+      templateDescription: true,
     });
     const errs = validateRequired();
     setRequiredErrors(errs);
@@ -396,6 +442,62 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
     const durParts = duration.split(':').map(Number);
     const durH = isNaN(durParts[0]) ? 0 : durParts[0];
     const durM = isNaN(durParts[1]) ? 0 : durParts[1];
+
+    // Save-as-template: save the new template to config first; on failure, do not post the entry.
+    if (saveAsTemplate) {
+      try {
+        setIsSavingTemplate(true);
+        const now = new Date().toISOString();
+        const currentUserName = user ? `${user.firstName} ${user.lastName}`.trim() : '';
+        const statusLabel = statusOptions.find((o) => o.id === statusValue)?.label || statusValue;
+
+        // Build a weekly entry: all duration hours are allocated to Monday.
+        // Minutes are preserved in the description (mon is a whole-hour number)
+        // so the configuration table can render the full H:MM duration.
+        const descriptionParts: string[] = [newTemplateDescription.trim()];
+        if (durM > 0) descriptionParts.push(`${durH}:${String(durM).padStart(2, '0')} duration`);
+        const newTemplate: IConfigTimeEntryTemplate = {
+          id: crypto.randomUUID(),
+          name: templateInput.trim(),
+          description: descriptionParts.filter(Boolean).join(' '),
+          active: newTemplateActive,
+          ticketStatus: statusLabel,
+          weekStartDate: date ? date.format('YYYY-MM-DD') : '',
+          entries: [
+            {
+              id: '',
+              billingCode: billingCode || '',
+              activityTask: activityTask || '',
+              nonBillable: isNonBillable,
+              mon: durH,
+              tue: 0,
+              wed: 0,
+              thu: 0,
+              fri: 0,
+              sat: 0,
+              sun: 0,
+            },
+          ],
+          externalComment: externalComment || '',
+          internalComment: internalComment || '',
+          nonBillable: isNonBillable,
+          createdBy: currentUserName,
+          createdAt: now,
+        };
+        await saveSection('timeEntryTemplates', {
+          items: [...(timeEntryTemplates?.items ?? []), newTemplate],
+        });
+        // Pre-select the just-saved template in the Time Entry Template field
+        setTemplateValue(newTemplate.id);
+        setTemplateInput(newTemplate.name);
+      } catch {
+        setIsSavingTemplate(false);
+        notify.error('Failed to save template');
+        return;
+      }
+      setIsSavingTemplate(false);
+    }
+
     try {
       await createTimeEntry({
         ticketType: incident.ticketType,
@@ -422,8 +524,8 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
       <Button variant='outlined' onClick={onClose}>
         Cancel
       </Button>
-      <Button variant='contained' onClick={handleSave} disabled={isLoading}>
-        Save
+      <Button variant='contained' onClick={handleSave} disabled={isLoading || isSavingTemplate}>
+        {isSavingTemplate ? 'Saving Template...' : 'Save'}
       </Button>
     </Box>
   );
@@ -520,39 +622,102 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
     >
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+          {/* Save as Template toggle — above the fields; header left, switch after label */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              px: 2,
+              py: 1,
+              border: '1px dashed',
+              borderColor: 'divider',
+              borderRadius: 1.5,
+            }}
+          >
+            <Typography sx={{ fontSize: '0.85rem', color: '#374151', whiteSpace: 'nowrap' }}>
+              Save as Template
+            </Typography>
+            <Switch
+              checked={saveAsTemplate}
+              onChange={(e) => setSaveAsTemplate(e.target.checked)}
+              size='small'
+              color='primary'
+            />
+            {saveAsTemplate && (
+              <Box sx={{ ml: 'auto' }}>
+                <FormControlLabel
+                  labelPlacement='end'
+                  control={
+                    <Switch
+                      checked={newTemplateActive}
+                      onChange={(e) => setNewTemplateActive(e.target.checked)}
+                      size='small'
+                      color='primary'
+                    />
+                  }
+                  label={
+                    <Typography
+                      sx={{ fontSize: '0.85rem', color: '#374151', whiteSpace: 'nowrap' }}
+                    >
+                      Active
+                    </Typography>
+                  }
+                />
+              </Box>
+            )}
+          </Box>
+
           {/* Time Entry Template + Status — side by side */}
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
             <Box sx={{ position: 'relative' }}>
-              <TextField
-                label='Time Entry Template'
-                required
-                placeholder='Search templates...'
-                value={templateInput}
-                onChange={(e) => handleTemplateInputChange(e.target.value)}
-                onFocus={() => {
-                  const q = templateInput.trim().toLowerCase();
-                  const next = q
-                    ? templateOptions.filter((o) => o.name.toLowerCase().includes(q))
-                    : templateOptions;
-                  setTemplateFiltered(next);
-                  if (next.length > 0) setTemplateOptionsOpen(true);
-                }}
-                onBlur={() => {
-                  setTouched((t) => ({ ...t, template: true }));
-                  setTimeout(() => setTemplateOptionsOpen(false), 200);
-                }}
-                error={Boolean(templateError)}
-                helperText={templateError}
-                fullWidth
-                size='small'
-                sx={fieldBaseSx}
-                slotProps={{
-                  input: {
-                    endAdornment: searchAdornment(templateInput.length > 0, handleTemplateClear),
-                  },
-                }}
-              />
-              {templateOptionsOpen && templateFiltered.length > 0 && (
+              {saveAsTemplate ? (
+                // Save-as-template: plain text field for the new template name
+                <TextField
+                  label='Template Name'
+                  placeholder='Enter template name'
+                  value={templateInput}
+                  onChange={(e) => handleTemplateNameChange(e.target.value)}
+                  error={Boolean(templateNameError)}
+                  helperText={templateNameError}
+                  required
+                  fullWidth
+                  size='small'
+                  sx={fieldBaseSx}
+                />
+              ) : (
+                // Existing-template lookup
+                <TextField
+                  label='Time Entry Template'
+                  required
+                  placeholder='Search templates...'
+                  value={templateInput}
+                  onChange={(e) => handleTemplateInputChange(e.target.value)}
+                  onFocus={() => {
+                    const q = templateInput.trim().toLowerCase();
+                    const next = q
+                      ? templateOptions.filter((o) => o.name.toLowerCase().includes(q))
+                      : templateOptions;
+                    setTemplateFiltered(next);
+                    if (next.length > 0) setTemplateOptionsOpen(true);
+                  }}
+                  onBlur={() => {
+                    setTouched((t) => ({ ...t, template: true }));
+                    setTimeout(() => setTemplateOptionsOpen(false), 200);
+                  }}
+                  error={Boolean(templateError)}
+                  helperText={templateError}
+                  fullWidth
+                  size='small'
+                  sx={fieldBaseSx}
+                  slotProps={{
+                    input: {
+                      endAdornment: searchAdornment(templateInput.length > 0, handleTemplateClear),
+                    },
+                  }}
+                />
+              )}
+              {!saveAsTemplate && templateOptionsOpen && templateFiltered.length > 0 && (
                 <Paper
                   elevation={4}
                   sx={{
@@ -657,6 +822,25 @@ const TimeEntryWindow = ({ open, onClose, incident, onSuccess }: TimeEntryWindow
               )}
             </Box>
           </Box>
+
+          {/* New template description — shown when saving as a template */}
+          {saveAsTemplate && (
+            <Box>
+              <RichTextEditor
+                value={{ segments: parseRichText(newTemplateDescription).segments }}
+                onChange={(value) => setNewTemplateDescription(serializeRichText(value.segments))}
+                showFooterActions={false}
+                title='Description'
+                required
+                error={Boolean(templateDescriptionError)}
+              />
+              {templateDescriptionError && (
+                <Typography sx={{ color: 'error.main', fontSize: '0.75rem', mt: 0.5 }}>
+                  {templateDescriptionError}
+                </Typography>
+              )}
+            </Box>
+          )}
 
           {/* Date + Duration — side by side */}
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>

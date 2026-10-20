@@ -30,15 +30,52 @@ const formatDateTime = (v: unknown): React.ReactNode => {
   );
 };
 
-// @ts-ignore
-const formatDuration = (v: unknown): React.ReactNode => {
-  const row = v as { entries?: IConfigTimeEntryLine[] } | undefined;
-  const entry = row?.entries?.[0];
+const formatDuration = (v: unknown, row?: unknown): React.ReactNode => {
+  const r = row as IConfigTimeEntryTemplate | undefined;
+  const entry = r?.entries?.[0];
   const hours = entry?.mon;
   if (hours === undefined || hours === null) return <>&mdash;</>;
+  // A trailing "HH:MM duration" marker in the description (written by the
+  // Save-as-Template flow) carries the exact minutes; mon is whole hours only.
+  const match = /(\d+):(\d{2}) duration/.exec(r?.description || '');
+  const minutes = match ? Number(match[2]) : 0;
+  const display =
+    minutes > 0
+      ? `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+      : `${String(hours).padStart(2, '0')}:00`;
   return (
     <Typography variant='body2' fontSize='0.82rem'>
-      {hours}h
+      {display}
+    </Typography>
+  );
+};
+
+const formatBillingCodeCell = (_v: unknown, row?: unknown): React.ReactNode => {
+  const value = (row as { entries?: IConfigTimeEntryLine[] })?.entries?.[0]?.billingCode;
+  if (!value)
+    return (
+      <Typography variant='body2' fontSize='0.82rem'>
+        &mdash;
+      </Typography>
+    );
+  return (
+    <Typography variant='body2' fontSize='0.82rem'>
+      {value}
+    </Typography>
+  );
+};
+
+const formatActivityTaskCell = (_v: unknown, row?: unknown): React.ReactNode => {
+  const value = (row as { entries?: IConfigTimeEntryLine[] })?.entries?.[0]?.activityTask;
+  if (!value)
+    return (
+      <Typography variant='body2' fontSize='0.82rem'>
+        &mdash;
+      </Typography>
+    );
+  return (
+    <Typography variant='body2' fontSize='0.82rem'>
+      {value}
     </Typography>
   );
 };
@@ -324,8 +361,13 @@ export const timeEntryColumns: Column<IConfigTimeEntryTemplate>[] = [
   { id: 'ticketStatus', label: 'Ticket Status', minWidth: 130, format: mkCell() },
   { id: 'weekStartDate', label: 'Date& Time', minWidth: 120, format: mkCell() },
   { id: 'duration', label: 'Duration', minWidth: 90, format: formatDuration },
-  { id: 'billingCode', label: 'Billing code / Project', minWidth: 120, format: mkCell() },
-  { id: 'activityTask', label: 'Activity/Task', minWidth: 130, format: mkCell() },
+  {
+    id: 'billingCode',
+    label: 'Billing code / Project',
+    minWidth: 120,
+    format: formatBillingCodeCell,
+  },
+  { id: 'activityTask', label: 'Activity/Task', minWidth: 130, format: formatActivityTaskCell },
   { id: 'externalComment', label: 'External Comment', minWidth: 150, format: mkCell() },
   { id: 'internalComment', label: 'Internal Comment', minWidth: 150, format: mkCell() },
   { id: 'nonBillable', label: 'Non Billable', minWidth: 100, format: mkActiveChip },

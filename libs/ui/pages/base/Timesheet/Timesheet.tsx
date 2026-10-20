@@ -15,6 +15,12 @@ import {
   ContentCopyIcon,
   LinkIcon,
   AttachFileIcon,
+  EditIcon,
+  StarBorderIcon,
+  StarIcon,
+  Select,
+  IconButton,
+  TextField,
 } from '../../../components';
 import {
   Table,
@@ -28,6 +34,7 @@ import {
 } from '@mui/material';
 import StickyNote2Icon from '@mui/icons-material/StickyNote2';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useNotification } from '@serviceops/hooks';
 import { useStyles } from './styles';
 import {
@@ -243,6 +250,46 @@ const Timesheet = () => {
     notify.success('Copied hours from previous week');
   };
 
+  const updateLine = (id: string, patch: Partial<TimesheetLine>) => {
+    setLines((prev) => prev.map((line) => (line.id === id ? { ...line, ...patch } : line)));
+  };
+
+  const updateDayValue = (id: string, dayKey: string, value: number) => {
+    setLines((prev) =>
+      prev.map((line) =>
+        line.id === id ? { ...line, dayValues: { ...line.dayValues, [dayKey]: value } } : line,
+      ),
+    );
+  };
+
+  const handleDeleteLine = (id: string) => {
+    setLines((prev) => prev.filter((line) => line.id !== id));
+    notify.info('Timesheet line deleted');
+  };
+
+  const totals = useMemo(() => {
+    const perDay = week.map((d) => {
+      let all = 0;
+      let billable = 0;
+      let nonBillable = 0;
+      lines.forEach((line) => {
+        const v = line.dayValues[d.key] ?? 0;
+        all += v;
+        if (line.billable) billable += v;
+        else nonBillable += v;
+      });
+      return { all, billable, nonBillable };
+    });
+    const grand = {
+      all: perDay.reduce((sum, d) => sum + d.all, 0),
+      billable: perDay.reduce((sum, d) => sum + d.billable, 0),
+      nonBillable: perDay.reduce((sum, d) => sum + d.nonBillable, 0),
+    };
+    const billableRatio =
+      grand.all > 0 ? `${Math.round((grand.billable / grand.all) * 100)}%` : '—';
+    return { perDay, grand, billableRatio };
+  }, [lines, week]);
+
   const handleSave = () => {
     notify.success('Timesheet saved');
   };
@@ -290,9 +337,6 @@ const Timesheet = () => {
         <>
           {/* ── Person / period bar ───────────────────────────── */}
           <Box className={classes.periodBar}>
-            <Typography variant='body2' className={classes.personName}>
-              Srinivas Penumalla
-            </Typography>
             <Stack
               direction='row'
               spacing={1}
@@ -304,7 +348,6 @@ const Timesheet = () => {
                 size='small'
                 startIcon={<NavigateBeforeIcon />}
                 className={classes.periodNav}
-                sx={{ borderRadius: '50%', px: 1 }}
                 onClick={() => setWeekOffset((o) => o - 1)}
               />
               <Typography variant='body2' className={classes.periodLabel}>
@@ -315,7 +358,6 @@ const Timesheet = () => {
                 size='small'
                 endIcon={<NavigateNextIcon />}
                 className={classes.periodNav}
-                sx={{ borderRadius: '50%', px: 1 }}
                 onClick={() => setWeekOffset((o) => o + 1)}
               />
             </Stack>
@@ -402,13 +444,287 @@ const Timesheet = () => {
               </Stack>
             </Box>
 
-            {lines.length === 0 && (
+            {lines.length === 0 ? (
               <Box className={classes.emptyState}>
                 <AddIcon className={classes.emptyIcon} />
                 <Typography variant='body1' color='text.secondary'>
                   No timesheet lines yet. Click &ldquo;New line&rdquo; to add one.
                 </Typography>
               </Box>
+            ) : (
+              /* ── Timesheet grid ─────────────────────────────── */
+              <TableContainer className={classes.tableContainer}>
+                <Table size='small'>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell className={cx(classes.headerCell, classes.cellSelectHeader)}>
+                        Client/Project
+                      </TableCell>
+                      <TableCell className={cx(classes.headerCell, classes.cellSelectHeader)}>
+                        Task
+                      </TableCell>
+                      <TableCell className={classes.headerCell}>External Note</TableCell>
+                      <TableCell className={classes.headerCell}>Internal Note</TableCell>
+                      <TableCell className={classes.headerCell}>Billable</TableCell>
+                      {week.map((d) => (
+                        <TableCell
+                          key={d.key}
+                          className={cx(classes.headerCell, classes.dayColumn)}
+                        >
+                          <Typography variant='body2' sx={{ fontWeight: 700 }}>
+                            {d.day}
+                          </Typography>
+                          <Typography variant='caption' color='text.secondary'>
+                            {d.date}
+                          </Typography>
+                        </TableCell>
+                      ))}
+                      <TableCell className={classes.headerCell}>Total Hours</TableCell>
+                      <TableCell className={classes.headerCell}>Status</TableCell>
+                      <TableCell className={classes.headerCell}>Line actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {lines.map((line) => {
+                      const lineTotal = week.reduce(
+                        (sum, d) => sum + (line.dayValues[d.key] ?? 0),
+                        0,
+                      );
+                      const isApproved = line.status === 'approved';
+                      return (
+                        <TableRow key={line.id} className={classes.dataRow}>
+                          <TableCell>
+                            <Select
+                              className={classes.cellSelect}
+                              options={TIMESHEET_CLIENTS.map((c) => ({
+                                value: c,
+                                label: c,
+                                disabled: isApproved,
+                              }))}
+                              value={line.client}
+                              size='small'
+                              onChange={(e) => updateLine(line.id, { client: e.target.value })}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Select
+                              className={classes.cellSelect}
+                              options={TIMESHEET_TASKS.map((t) => ({
+                                value: t,
+                                label: t,
+                                disabled: isApproved,
+                              }))}
+                              value={line.task}
+                              size='small'
+                              onChange={(e) => updateLine(line.id, { task: e.target.value })}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Box
+                              sx={{
+                                color: line.externalNote ? theme_success : theme_warning,
+                                fontSize: '1.1rem',
+                                cursor: isApproved ? 'default' : 'pointer',
+                              }}
+                              title={line.externalNote ? 'External note' : 'No external note'}
+                              onClick={() =>
+                                isApproved
+                                  ? undefined
+                                  : notify.info(`Edit external note for ${line.task}`)
+                              }
+                            >
+                              <EditIcon />
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Box
+                              sx={{
+                                color: line.internalNote ? theme_success : theme_warning,
+                                fontSize: '1.1rem',
+                                cursor: isApproved ? 'default' : 'pointer',
+                              }}
+                              title={line.internalNote ? 'Internal note' : 'No internal note'}
+                              onClick={() =>
+                                isApproved
+                                  ? undefined
+                                  : notify.info(`Edit internal note for ${line.task}`)
+                              }
+                            >
+                              <EditIcon />
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Toggle
+                              checked={line.billable}
+                              disabled={isApproved}
+                              onChange={() => updateLine(line.id, { billable: !line.billable })}
+                              size='small'
+                              className={cx(classes.billableSwitch, classes.billableCell)}
+                            />
+                          </TableCell>
+                          {week.map((d) => (
+                            <TableCell key={d.key} className={classes.dayColumn}>
+                              <TextField
+                                variant='outlined'
+                                size='small'
+                                type='number'
+                                inputProps={{ min: 0, step: 0.5 }}
+                                value={line.dayValues[d.key] ?? 0}
+                                onChange={(e) =>
+                                  updateDayValue(
+                                    line.id,
+                                    d.key,
+                                    e.target.value === '' ? 0 : Number(e.target.value),
+                                  )
+                                }
+                                disabled={isApproved}
+                                className={classes.dayCellField}
+                              />
+                            </TableCell>
+                          ))}
+                          <TableCell>
+                            <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                              {lineTotal}
+                            </Typography>
+                          </TableCell>
+                          <TableCell className={classes.statusCell}>
+                            <Stack
+                              direction='row'
+                              spacing={0.75}
+                              alignItems='center'
+                              justifyContent='center'
+                            >
+                              <StatusDot
+                                style={{
+                                  backgroundColor: isApproved ? theme_success : theme_warning,
+                                }}
+                              />
+                              <Typography variant='body2' color='text.secondary'>
+                                {isApproved ? 'Approved' : 'Pending approval'}
+                              </Typography>
+                            </Stack>
+                          </TableCell>
+                          <TableCell className={classes.actionsCell}>
+                            <Stack direction='row' spacing={0.5} alignItems='center'>
+                              <IconButton
+                                size='small'
+                                className={classes.actionIconButton}
+                                onClick={() =>
+                                  notify.info(
+                                    isApproved ? 'Line is approved' : 'Timesheet line deleted',
+                                  )
+                                }
+                              >
+                                {isApproved ? (
+                                  <DeleteIcon sx={{ fontSize: '1rem', color: theme_success }} />
+                                ) : (
+                                  <DeleteIcon sx={{ fontSize: '1rem' }} />
+                                )}
+                              </IconButton>
+                              <IconButton
+                                size='small'
+                                className={classes.actionIconButton}
+                                onClick={() => updateLine(line.id, { liked: !line.liked })}
+                              >
+                                {line.liked ? (
+                                  <StarIcon sx={{ fontSize: '1rem', color: theme_success }} />
+                                ) : (
+                                  <StarBorderIcon sx={{ fontSize: '1rem' }} />
+                                )}
+                              </IconButton>
+                              <IconButton
+                                size='small'
+                                className={classes.actionIconButton}
+                                onClick={() =>
+                                  updateLine(line.id, { favourited: !line.favourited })
+                                }
+                              >
+                                <BookmarkIcon
+                                  sx={{
+                                    fontSize: '1rem',
+                                    color: line.favourited ? theme_success : undefined,
+                                  }}
+                                />
+                              </IconButton>
+                            </Stack>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+
+                    {/* ── Totals (Total Hours always shown) ─────────── */}
+                    <TableRow className={classes.totalsRow}>
+                      <TableCell colSpan={5}>
+                        <Typography variant='body2' sx={{ fontWeight: 700 }}>
+                          Total Hours
+                        </Typography>
+                      </TableCell>
+                      {totals.perDay.map((d, i) => (
+                        <TableCell key={week[i].key} className={classes.dayColumn}>
+                          {d.all}
+                        </TableCell>
+                      ))}
+                      <TableCell>
+                        <Typography variant='body2' sx={{ fontWeight: 700 }}>
+                          {totals.grand.all}
+                        </Typography>
+                      </TableCell>
+                      <TableCell />
+                      <TableCell />
+                    </TableRow>
+
+                    {showDetailedTotals && (
+                      <>
+                        <TableRow className={classes.totalsRow}>
+                          <TableCell colSpan={5}>
+                            <Typography variant='body2' color='text.secondary'>
+                              Total billable hours
+                            </Typography>
+                          </TableCell>
+                          {totals.perDay.map((d, i) => (
+                            <TableCell key={week[i].key} className={classes.dayColumn}>
+                              {d.billable}
+                            </TableCell>
+                          ))}
+                          <TableCell>{totals.grand.billable}</TableCell>
+                          <TableCell />
+                          <TableCell />
+                        </TableRow>
+                        <TableRow className={classes.totalsRow}>
+                          <TableCell colSpan={5}>
+                            <Typography variant='body2' color='text.secondary'>
+                              Total non-billable hours
+                            </Typography>
+                          </TableCell>
+                          {totals.perDay.map((d, i) => (
+                            <TableCell key={week[i].key} className={classes.dayColumn}>
+                              {d.nonBillable}
+                            </TableCell>
+                          ))}
+                          <TableCell>{totals.grand.nonBillable}</TableCell>
+                          <TableCell />
+                          <TableCell />
+                        </TableRow>
+                        <TableRow className={classes.totalsRow}>
+                          <TableCell colSpan={5}>
+                            <Typography variant='body2' color='text.secondary'>
+                              Billable hours ratio
+                            </Typography>
+                          </TableCell>
+                          {totals.perDay.map((d, i) => (
+                            <TableCell key={week[i].key} className={classes.dayColumn}>
+                              {d.all > 0 ? `${Math.round((d.billable / d.all) * 100)}%` : '0%'}
+                            </TableCell>
+                          ))}
+                          <TableCell>{totals.billableRatio}</TableCell>
+                          <TableCell />
+                          <TableCell />
+                        </TableRow>
+                      </>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             )}
           </Box>
         </>
