@@ -364,6 +364,7 @@ const TicketDetailView = () => {
           setActiveModal(null);
           refetch();
         }}
+        incidentStatus={incident.status}
       />
 
       <TimeEntryWindow

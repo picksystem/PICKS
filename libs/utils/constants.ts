@@ -14,6 +14,8 @@ const BasePath = {
   REPORTS: `${BASE}/reports`,
   TICKET_TEMPLATES: `${BASE}/ticket-bundle`,
   TIMESHEET: `${BASE}/timesheet`,
+  TIMESHEET_DASHBOARD: `${BASE}/timesheet`,
+  TIMESHEET_SUBMIT: `${BASE}/timesheet/submit`,
   CAB_REQUEST: `${BASE}/cab-request`,
   KNOWLEDGE_BASE: `${BASE}/knowledge-base`,
   TEST_SCRIPTS: `${BASE}/test-scripts`,

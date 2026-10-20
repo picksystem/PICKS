@@ -14,6 +14,7 @@ export const LazyMenuItems = {
   BaseReportsPage: lazy(() => import('@serviceops/pages/base/Reports')),
   BaseTicketBundlePage: lazy(() => import('@serviceops/pages/base/TicketBundle')),
   BaseTimesheetPage: lazy(() => import('@serviceops/pages/base/Timesheet')),
+  BaseTimesheetDashboardPage: lazy(() => import('@serviceops/pages/base/TimesheetDashboard')),
   BaseCabRequestPage: lazy(() => import('@serviceops/pages/base/CabRequest')),
   BaseKnowledgeBasePage: lazy(() => import('@serviceops/pages/base/KnowledgeBase')),
   BaseTestScriptsPage: lazy(() => import('@serviceops/pages/base/TestScripts')),

@@ -9,6 +9,7 @@ import {
   DeleteOutline as DeleteOutlineIcon,
 } from '@mui/icons-material';
 import { useCreateTicketCommentMutation } from '../../../../../services';
+import type { IConfigCommentTemplate } from '@serviceops/interfaces';
 import { useAuth, useNotification, useFieldError } from '@serviceops/hooks';
 import { TicketEntity } from '../types/ticketDetail.types';
 import { useConfiguration } from '@serviceops/confighooks';
@@ -26,6 +27,7 @@ interface CommentWindowProps {
   incident: TicketEntity;
   onSuccess: () => void;
   mode?: 'comment' | 'internal' | 'self' | 'notify' | 'email';
+  incidentStatus?: string;
 }
 
 const CommentWindow = ({
@@ -34,10 +36,11 @@ const CommentWindow = ({
   incident,
   onSuccess,
   mode = 'comment',
+  incidentStatus,
 }: CommentWindowProps) => {
   const { user } = useAuth();
   const [createComment, { isLoading }] = useCreateTicketCommentMutation();
-  const { statuses, commentTemplates } = useConfiguration();
+  const { statuses, commentTemplates, saveSection } = useConfiguration();
   const notify = useNotification();
   const reqError = useFieldError();
 
@@ -48,6 +51,21 @@ const CommentWindow = ({
   const [emailTo, setEmailTo] = useState('');
   const [emailFrom, setEmailFrom] = useState('');
   const [files, setFiles] = useState<File[]>([]);
+
+  // ── Save as Template (Scenario 2) ────────────────────────────────────────────
+  const [saveAsTemplate, setSaveAsTemplate] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState('');
+  const [newTemplateDescription, setNewTemplateDescription] = useState('');
+  const [newTemplateStatusValue, setNewTemplateStatusValue] = useState('');
+  const [newTemplateActive, setNewTemplateActive] = useState(true);
+  const [templateStatusOptionsOpen, setTemplateStatusOptionsOpen] = useState(false);
+  const [templateStatusOptions, setTemplateStatusOptions] = useState<
+    {
+      id: string;
+      label: string;
+    }[]
+  >([]);
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
 
   // ── Status search field ─────────────────────────────────────────────────
   const [statusInput, setStatusInput] = useState('');
@@ -168,21 +186,48 @@ const CommentWindow = ({
     setTemplateFiltered([]);
   }, []);
 
+  const selectedTemplate = templateValue
+    ? (commentTemplates?.items ?? []).find((t) => t.id === templateValue)
+    : undefined;
+
+  const toggleTemplateActive = useCallback(async () => {
+    if (!selectedTemplate) return;
+    try {
+      await saveSection('commentTemplates', {
+        items: (commentTemplates?.items ?? []).map((t) =>
+          t.id === selectedTemplate.id ? { ...t, active: !t.active } : t,
+        ),
+      });
+      notify.success(selectedTemplate.active ? 'Template disabled' : 'Template enabled');
+    } catch {
+      notify.error('Failed to update template');
+    }
+  }, [selectedTemplate, commentTemplates, saveSection, notify]);
+
   // ── Required field validation ──────────────────────────────────────────
   const [touched, setTouched] = useState<{
     template?: boolean;
     status?: boolean;
     message?: boolean;
+    templateName?: boolean;
   }>({});
   const [requiredErrors, setRequiredErrors] = useState<{
     template?: string;
     status?: string;
     message?: string;
+    templateName?: string;
   }>({});
 
-  const validateRequired = (): { template?: string; status?: string; message?: string } => {
-    const errs: { template?: string; status?: string; message?: string } = {};
-    if (!templateValue) errs.template = 'required';
+  const validateRequired = (): {
+    template?: string;
+    status?: string;
+    message?: string;
+    templateName?: string;
+  } => {
+    const errs: typeof requiredErrors = {};
+    // Scenario 2: new-template name is required only when saving as a template.
+    // Scenario 3 (custom comment, no template): a template is optional.
+    if (saveAsTemplate && !newTemplateName.trim()) errs.templateName = 'required';
     if (!statusValue) errs.status = 'required';
     if (!message.trim()) errs.message = 'required';
     return errs;
@@ -203,6 +248,12 @@ const CommentWindow = ({
       setEmailTo('');
       setEmailFrom('');
       setFiles([]);
+      setSaveAsTemplate(false);
+      setNewTemplateName('');
+      setNewTemplateDescription('');
+      setNewTemplateStatusValue('');
+      setNewTemplateActive(true);
+      setIsSavingTemplate(false);
       setTouched({});
       setRequiredErrors({});
     }
@@ -233,6 +284,7 @@ const CommentWindow = ({
         setNotifyAssigneesOnly(false);
       }
     }
+    setNewTemplateStatusValue(incidentStatus ?? incident.status ?? '');
   }, [open, mode]);
 
   // ── Reset conflicting toggle when internal is toggled ────────────────────
@@ -262,13 +314,57 @@ const CommentWindow = ({
   const templateError = reqError(touched.template, requiredErrors.template);
   const statusError = reqError(touched.status, requiredErrors.status);
   const messageError = reqError(touched.message, requiredErrors.message);
+  const templateNameError = reqError(touched.templateName, requiredErrors.templateName);
 
   // ── Save handler ────────────────────────────────────────────────────────
   const handleSave = async () => {
-    setTouched({ template: true, status: true, message: true });
+    setTouched({
+      template: true,
+      status: true,
+      message: true,
+      templateName: true,
+    });
     const errs = validateRequired();
     setRequiredErrors(errs);
     if (Object.keys(errs).length > 0) return;
+
+    // Scenario 2: save the new template to config first; on failure, do not post the comment.
+    if (saveAsTemplate) {
+      try {
+        setIsSavingTemplate(true);
+        const now = new Date().toISOString();
+        const currentUserName = user ? `${user.firstName} ${user.lastName}`.trim() : '';
+        const statusLabel =
+          statusOptions.find((o) => o.id === newTemplateStatusValue)?.label ||
+          newTemplateStatusValue;
+        const newTemplate: IConfigCommentTemplate = {
+          id: crypto.randomUUID(),
+          name: newTemplateName.trim(),
+          description: newTemplateDescription.trim(),
+          active: newTemplateActive,
+          ticketStatus: statusLabel,
+          subjectLine: '',
+          commentDescription: message,
+          internalNote: isInternal,
+          notifyAssigneesOnly,
+          selfNote: isSelfNote,
+          appendToResolution: false,
+          createdBy: currentUserName,
+          createdAt: now,
+        };
+        await saveSection('commentTemplates', {
+          items: [...(commentTemplates?.items ?? []), newTemplate],
+        });
+        // Pre-select the just-saved template in the Response Template field
+        setTemplateValue(newTemplate.id);
+        setTemplateInput(newTemplate.name);
+      } catch {
+        setIsSavingTemplate(false);
+        notify.error('Failed to save template');
+        return;
+      }
+      setIsSavingTemplate(false);
+    }
 
     try {
       await createComment({
@@ -319,8 +415,8 @@ const CommentWindow = ({
       <Button variant='outlined' onClick={onClose}>
         Cancel
       </Button>
-      <Button variant='contained' onClick={handleSave} disabled={isLoading}>
-        Save
+      <Button variant='contained' onClick={handleSave} disabled={isLoading || isSavingTemplate}>
+        {isSavingTemplate ? 'Saving Template...' : 'Save'}
       </Button>
     </Box>
   );
@@ -400,7 +496,7 @@ const CommentWindow = ({
               onChange={(e) => handleTemplateInputChange(e.target.value)}
               error={Boolean(templateError)}
               helperText={templateError}
-              required
+              required={saveAsTemplate}
               onFocus={() => {
                 const q = templateInput.trim().toLowerCase();
                 const next = q
@@ -527,6 +623,217 @@ const CommentWindow = ({
             )}
           </Box>
         </Box>
+
+        {/* Existing template enable/disable — flip the active flag of the selected template */}
+        {selectedTemplate && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              px: 2,
+              py: 0.75,
+              border: '1px solid',
+              borderColor: alpha(COMMENT_ACCENT, 0.25),
+              bgcolor: alpha(COMMENT_ACCENT, 0.03),
+              borderRadius: 1.5,
+            }}
+          >
+            <Box sx={{ minWidth: 0 }}>
+              <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#1e293b' }}>
+                Selected: {selectedTemplate.name}
+              </Typography>
+              <Typography sx={{ fontSize: '0.72rem', color: '#64748b' }}>
+                {selectedTemplate.active
+                  ? 'Template is active — visible in the template list'
+                  : 'Template is inactive — hidden from the template list'}
+              </Typography>
+            </Box>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={selectedTemplate.active}
+                  onChange={() => toggleTemplateActive()}
+                  size='small'
+                  color='primary'
+                  sx={{ mr: 1 }}
+                />
+              }
+              label={<Typography sx={{ fontSize: '0.85rem', color: '#374151' }}>Active</Typography>}
+            />
+          </Box>
+        )}
+
+        {/* Save as Template — Scenario 2 toggle */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            px: 2,
+            py: 1,
+            border: '1px dashed',
+            borderColor: 'divider',
+            borderRadius: 1.5,
+          }}
+        >
+          <FormControlLabel
+            control={
+              <Switch
+                checked={saveAsTemplate}
+                onChange={(e) => {
+                  setSaveAsTemplate(e.target.checked);
+                  if (e.target.checked)
+                    setNewTemplateStatusValue(statusValue || incident.status || '');
+                }}
+                size='small'
+                color='primary'
+                sx={{ mr: 1 }}
+              />
+            }
+            label={
+              <Typography sx={{ fontSize: '0.85rem', color: '#374151', whiteSpace: 'nowrap' }}>
+                Save as Template
+              </Typography>
+            }
+          />
+          <Typography sx={{ fontSize: '0.75rem', color: '#64748b' }}>
+            {saveAsTemplate
+              ? 'Comment will also be stored as a reusable Comment Template'
+              : 'Comment will not be saved as a template'}
+          </Typography>
+        </Box>
+
+        {/* New Template fields — shown when saving as a template */}
+        {saveAsTemplate && (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1.5,
+              px: 2,
+              py: 1.5,
+              bgcolor: alpha(COMMENT_ACCENT, 0.04),
+              border: '1px solid',
+              borderColor: alpha(COMMENT_ACCENT, 0.25),
+              borderRadius: 1.5,
+            }}
+          >
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: '#1e293b' }}>
+              New Template Details
+            </Typography>
+            <TextField
+              label='Template Name'
+              placeholder='Enter template name'
+              value={newTemplateName}
+              onChange={(e) => setNewTemplateName(e.target.value)}
+              error={Boolean(templateNameError)}
+              helperText={templateNameError}
+              required
+              fullWidth
+              size='small'
+              sx={fieldBaseSx}
+            />
+            <Box sx={{ position: 'relative' }}>
+              <TextField
+                label='Template Status'
+                placeholder='Status applied when this template is used'
+                value={statusOptions.find((o) => o.id === newTemplateStatusValue)?.label || ''}
+                onChange={(e) => {
+                  const match = statusOptions.find((o) => o.label === e.target.value);
+                  setNewTemplateStatusValue(match ? match.id : '');
+                }}
+                onFocus={() => {
+                  const next = statusOptions;
+                  setTemplateStatusOptions(next);
+                  if (next.length > 0) setTemplateStatusOptionsOpen(true);
+                }}
+                onBlur={() => {
+                  setTimeout(() => setTemplateStatusOptionsOpen(false), 200);
+                }}
+                fullWidth
+                size='small'
+                sx={fieldBaseSx}
+                slotProps={{
+                  input: {
+                    endAdornment: searchAdornment(
+                      !!statusOptions.find((o) => o.id === newTemplateStatusValue),
+                      () => setNewTemplateStatusValue(''),
+                    ),
+                  },
+                }}
+              />
+              {templateStatusOptionsOpen && (
+                <Paper
+                  elevation={4}
+                  sx={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    zIndex: 1000,
+                    mt: 0,
+                    maxHeight: 280,
+                    overflow: 'auto',
+                  }}
+                >
+                  {templateStatusOptions.map((o) => (
+                    <Box
+                      key={o.id}
+                      onClick={() => {
+                        setNewTemplateStatusValue(o.id);
+                        setTemplateStatusOptionsOpen(false);
+                      }}
+                      sx={{
+                        px: 1.5,
+                        py: 1,
+                        cursor: 'pointer',
+                        fontSize: '0.84rem',
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                        '&:last-child': { borderBottom: 'none' },
+                        '&:hover': { bgcolor: alpha(COMMENT_ACCENT, 0.08) },
+                      }}
+                    >
+                      {o.label}
+                    </Box>
+                  ))}
+                </Paper>
+              )}
+            </Box>
+            <TextField
+              label='Description'
+              placeholder='Short description (shown as tooltip on the template list)'
+              value={newTemplateDescription}
+              onChange={(e) => setNewTemplateDescription(e.target.value)}
+              fullWidth
+              size='small'
+              sx={fieldBaseSx}
+            />
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={newTemplateActive}
+                    onChange={(e) => setNewTemplateActive(e.target.checked)}
+                    size='small'
+                    color='primary'
+                    sx={{ mr: 1 }}
+                  />
+                }
+                label={
+                  <Typography sx={{ fontSize: '0.85rem', color: '#374151', whiteSpace: 'nowrap' }}>
+                    Active (enable for future use)
+                  </Typography>
+                }
+              />
+            </Box>
+            <Typography sx={{ fontSize: '0.72rem', color: '#64748b' }}>
+              The Internal Note, Self-note and Notify assignees only switches below will be saved
+              with this template.
+            </Typography>
+          </Box>
+        )}
 
         {/* Message — RichTextEditor */}
         <Box>

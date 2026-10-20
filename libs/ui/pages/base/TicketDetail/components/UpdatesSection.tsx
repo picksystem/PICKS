@@ -2707,6 +2707,7 @@ const UpdatesSection = ({
         incident={incident}
         onSuccess={handleCommentSuccess}
         mode={modalMode}
+        incidentStatus={incident.status}
       />
     </Box>
   );
