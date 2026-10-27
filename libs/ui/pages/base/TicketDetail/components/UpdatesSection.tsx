@@ -35,6 +35,7 @@ import {
   useUpdateTicketCommentMutation,
   useCreateTicketCommentMutation,
   useUploadTicketAttachmentsMutation,
+  useGetTicketTimeEntriesQuery,
 } from '@serviceops/services';
 import { useAuth, useNotification, useFieldError } from '@serviceops/hooks';
 import {
@@ -1351,6 +1352,134 @@ const commentActionIconSx = {
   },
 };
 
+/* ── Time entry card — mirrors the CommentCard layout ────── */
+
+const TIME_ENTRY_ACCENT = '#059669';
+
+const timeEntryRowLabelSx = {
+  fontSize: '0.82rem',
+  color: '#1e293b',
+  fontWeight: 700,
+  lineHeight: 1.5,
+};
+
+const timeEntryRowValueSx = {
+  fontSize: '0.82rem',
+  color: '#1e293b',
+};
+
+const TimeEntryCard = ({
+  entry,
+  isPinned,
+  isSaved,
+  onCopy,
+  onPin,
+  onSave,
+}: {
+  entry: TimeEntryCardData;
+  isPinned?: boolean;
+  isSaved?: boolean;
+  onCopy?: () => void;
+  onPin?: () => void;
+  onSave?: () => void;
+}) => {
+  const avatarColor = getAvatarColor(entry.user || '');
+  const initials = getInitials(entry.user || '');
+
+  const handleCopy = async () => {
+    try {
+      const text = [
+        entry.externalComment ? entry.externalComment : '',
+        entry.internalComment ? `[Internal] ${entry.internalComment}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n');
+      await navigator.clipboard.writeText(text);
+      onCopy?.();
+    } catch {
+      // clipboard unavailable — silently fail
+    }
+  };
+
+  return (
+    <Box sx={{ ...commentCardSx, borderLeft: `3px solid ${TIME_ENTRY_ACCENT}` }}>
+      {/* Header */}
+      <Box sx={commentCardHeaderSx}>
+        {/* Left side — vertical stack, same layout as CommentCard */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          {/* Row 1: Avatar + User name */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Avatar sx={commentAvatarSx(avatarColor)}>{initials}</Avatar>
+            <Typography sx={commentAuthorSx}>{entry.user}</Typography>
+          </Box>
+
+          {/* Row 2: Date */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pl: '44px', pt: 0.5 }}>
+            <Typography sx={timeEntryRowLabelSx}>Date:</Typography>
+            <Typography sx={timeEntryRowValueSx}>{entry.dateLabel}</Typography>
+          </Box>
+
+          {/* Row 3: Duration */}
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, pl: '44px', pt: 0.5 }}>
+            <Typography sx={timeEntryRowLabelSx}>Duration:</Typography>
+            <Typography sx={timeEntryRowValueSx}>{entry.duration}</Typography>
+          </Box>
+
+          {/* Row 4: External comment — blue badge */}
+          {entry.externalComment && (
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, pl: '44px', pt: 0.75 }}>
+              <Typography sx={{ ...timeEntryRowLabelSx, color: '#1d4ed8' }}>
+                External:
+              </Typography>
+              <Typography sx={timeEntryRowValueSx}>{entry.externalComment}</Typography>
+            </Box>
+          )}
+
+          {/* Row 5: Internal comment — amber badge */}
+          {entry.internalComment && (
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, pl: '44px', pt: 0.5 }}>
+              <Typography sx={{ ...timeEntryRowLabelSx, color: '#d97706' }}>
+                Internal:
+              </Typography>
+              <Typography sx={timeEntryRowValueSx}>{entry.internalComment}</Typography>
+            </Box>
+          )}
+        </Box>
+
+        {/* Right side — label + timestamp + action icons, same as CommentCard */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+          <Typography sx={{ ...internalNoteLabelSx, color: TIME_ENTRY_ACCENT }}>
+            Time Entry
+          </Typography>
+
+          <Typography sx={commentTimestampSx}>{formatDateTime(entry.timestamp)}</Typography>
+
+          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
+            <Tooltip title='Copy'>
+              <Box component='span' sx={commentActionIconSx} onClick={handleCopy}>
+                <CopyIcon sx={{ fontSize: 20, fontWeight: 700 }} />
+              </Box>
+            </Tooltip>
+            <Tooltip title={isPinned ? 'Unpin' : 'Pin'}>
+              <Box component='span' sx={commentActionIconSx} onClick={onPin}>
+                <PinIcon sx={{ fontSize: 20, color: isPinned ? '#059669' : '#334155' }} />
+              </Box>
+            </Tooltip>
+            <Tooltip title={isSaved ? 'Unsave' : 'Save'}>
+              <Box component='span' sx={commentActionIconSx} onClick={onSave}>
+                <BookmarkIcon sx={{ fontSize: 20, color: isSaved ? '#d97706' : '#334155' }} />
+              </Box>
+            </Tooltip>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Body — same indentation as CommentCard body */}
+      <Box sx={commentCardBodySx} />
+    </Box>
+  );
+};
+
 /* ── Activity types & System Card ────────────────────────── */
 
 type ActivityType =
@@ -1377,6 +1506,19 @@ interface ActivityCard {
   emailSubject?: string;
   emailFrom?: string;
   emailTo?: string;
+}
+
+/* ── Separate shape for time entry cards so external/internal are explicit fields ── */
+interface TimeEntryCardData {
+  id: number;
+  type: 'time_entry_added';
+  timestamp: string;
+  user: string;
+  avatarInitials: string;
+  externalComment: string;
+  internalComment: string;
+  duration: string;
+  dateLabel: string;
 }
 
 const getActivityLabel = (type: ActivityType): string => {
@@ -1728,70 +1870,12 @@ const systemFieldValueSx = {
   lineHeight: 1.5,
 };
 
-/* ── Demo activity data ──────────────────────────────────── */
-
-const _DEMO_ACTIVITIES: ActivityCard[] = [
-  {
-    id: 1,
-    type: 'email_sent',
-    timestamp: '2026-01-07T11:45:00',
-    emailSubject: 'SESI: Inventory value cleanup- INC3913562 has been assigned to you',
-    emailFrom: 'Polaris Worldwide Service Desk',
-    emailTo: 'Vinees.Thumma@polaris.com',
-  },
-  {
-    id: 2,
-    type: 'field_change',
-    timestamp: '2026-01-09T11:40:00',
-    previousValue: 'New',
-    newValue: 'Awaiting Evidence Service',
-    user: 'Srinivas Penumalla',
-    avatarInitials: 'SP',
-  },
-  {
-    id: 3,
-    type: 'comment_added',
-    timestamp: '2026-01-09T12:15:00',
-    description: 'Working on this ticket. Will update shortly with findings.',
-    user: 'Srinivas Penumalla',
-    avatarInitials: 'SP',
-    avatarColor: '#6366f1',
-  },
-  {
-    id: 4,
-    type: 'internal_note',
-    timestamp: '2026-01-09T14:30:00',
-    description:
-      'Customer called in requesting escalation. Check with supervisor before responding.',
-    user: 'Admin User',
-    avatarInitials: 'AD',
-    avatarColor: '#6366f1',
-  },
-  {
-    id: 5,
-    type: 'notify_assignees',
-    timestamp: '2026-01-09T15:00:00',
-    description: 'Sent notification to all assigned team members about the priority change.',
-    user: 'Admin User',
-    avatarInitials: 'AD',
-    avatarColor: '#7c3aed',
-  },
-  {
-    id: 6,
-    type: 'self_note',
-    timestamp: '2026-08-11T01:15:02',
-    description: 'Reviewed documentation - need to check with team lead on this one',
-    user: 'Admin User',
-    avatarInitials: 'AD',
-    avatarColor: '#059669',
-  },
-];
-
 /* ── Main component ──────────────────────────────────────── */
 
 const UpdatesSection = ({
   comments,
   incidentId,
+  ticketType,
   incident,
   onRefresh,
   onRefreshComments,
@@ -1801,7 +1885,7 @@ const UpdatesSection = ({
   const { user } = useAuth();
   const notify = useNotification();
   const { statuses: configStatuses } = useConfiguration();
-  const [createComment, { isLoading }] = useCreateTicketCommentMutation();
+  const [createComment] = useCreateTicketCommentMutation();
   const [uploadAttachments] = useUploadTicketAttachmentsMutation();
   const [modalMode, setModalMode] = useState<'comment' | 'internal' | 'self' | 'notify' | 'email'>(
     'comment',
@@ -1810,7 +1894,6 @@ const UpdatesSection = ({
   const [inlineOpen, setInlineOpen] = useState(false);
   const [inlineMode, setInlineMode] = useState<'comment' | 'internal' | 'self'>('comment');
   const [inlineMessage, setInlineMessage] = useState('');
-  const [inlineStatus, setInlineStatus] = useState('');
   const [inlineTemplate, setInlineTemplate] = useState('');
   const [inlineIsInternal, setInlineIsInternal] = useState(false);
   const [inlineIsSelfNote, setInlineIsSelfNote] = useState(false);
@@ -1846,6 +1929,39 @@ const UpdatesSection = ({
   const [updateComment] = useUpdateTicketCommentMutation();
   const commentsListRef = useRef<HTMLDivElement>(null);
 
+  // Time entries — fetched so they always appear in the feed, like comments
+  const { data: timeEntries = [], refetch: refetchTimeEntries } = useGetTicketTimeEntriesQuery(
+    { ticketType, ticketId: incidentId },
+    { skip: !incidentId },
+  );
+
+  useEffect(() => {
+    refetchTimeEntries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const timeEntryCards: TimeEntryCardData[] = useMemo(() => {
+    return timeEntries.map((e) => {
+      const totalMinutes = (e.hours || 0) * 60 + (e.minutes || 0);
+      const h = Math.floor(totalMinutes / 60);
+      const m = totalMinutes % 60;
+      const durationStr =
+        [h > 0 ? `${h}h` : '', m > 0 ? `${m}m` : ''].filter(Boolean).join(' ') || '0m';
+
+      return {
+        id: -e.id, // negative so it never collides with real activity ids
+        type: 'time_entry_added' as const,
+        timestamp: String(e.createdAt),
+        user: e.createdBy,
+        avatarInitials: getInitials(e.createdBy),
+        externalComment: e.externalComment || '',
+        internalComment: e.internalComment || '',
+        duration: durationStr,
+        dateLabel: `${e.date}${e.billingCode ? ` • ${e.billingCode}` : ''}${e.isNonBillable ? ' • Non-billable' : ''}`,
+      };
+    });
+  }, [timeEntries]);
+
   // Inline form toggle exclusivity — only one mode at a time
   const inlineSelfNoteDisabled = inlineIsInternal;
   const inlineInternalDisabled = inlineIsSelfNote;
@@ -1865,6 +1981,30 @@ const UpdatesSection = ({
     return c?.isSaved ?? false;
   };
 
+  // Time entries use negative ids (-entryId); pin/save are held locally only
+  const getTimeEntryPinState = (entryId: number): boolean =>
+    optimisticState[entryId]?.isPinned ?? false;
+  const getTimeEntrySaveState = (entryId: number): boolean =>
+    optimisticState[entryId]?.isSaved ?? false;
+
+  const handlePinTimeEntry = (entryId: number) => {
+    const current = getTimeEntryPinState(entryId);
+    const next = !current;
+    setOptimisticState((prev) => ({
+      ...prev,
+      [entryId]: { ...prev[entryId], isPinned: next },
+    }));
+  };
+
+  const handleSaveTimeEntry = (entryId: number) => {
+    const current = getTimeEntrySaveState(entryId);
+    const next = !current;
+    setOptimisticState((prev) => ({
+      ...prev,
+      [entryId]: { ...prev[entryId], isSaved: next },
+    }));
+  };
+
   const handleScrollToBottom = () => {
     commentsListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   };
@@ -1882,6 +2022,7 @@ const UpdatesSection = ({
       { value: 'notify_assignees', label: 'Notify assignees' },
       { value: 'activity', label: 'Activity log' },
       { value: 'system', label: 'System notes' },
+      { value: 'time_entry', label: 'Time entries' },
     ];
     return opts;
   }, []);
@@ -1932,7 +2073,6 @@ const UpdatesSection = ({
     setInlineMode(mode);
     setInlineOpen(true);
     setInlineMessage('');
-    setInlineStatus('');
     setInlineStatusInput('');
     setInlineTemplate('');
     setInlineIsInternal(mode === 'internal');
@@ -2564,7 +2704,7 @@ const UpdatesSection = ({
         // Build combined timeline
         const timelineItems: Array<{
           kind: 'comment' | 'system';
-          item: IIncidentComment | ActivityCard;
+          item: IIncidentComment | ActivityCard | TimeEntryCardData;
           timestamp: Date;
         }> = [];
 
@@ -2593,6 +2733,8 @@ const UpdatesSection = ({
               case 'notify_assignees':
                 if (!comment.notifyAssigneesOnly) return false;
                 break;
+              case 'time_entry':
+                return false; // time entries are rendered separately below
               case 'comment':
               default:
                 if (
@@ -2616,6 +2758,18 @@ const UpdatesSection = ({
           });
         });
 
+        // Time entry cards — always included in the feed, not behind a toggle
+        const includeTimeEntries = commentTypeFilter === '' || commentTypeFilter === 'time_entry';
+        if (includeTimeEntries && timeEntryCards.length > 0) {
+          timeEntryCards.forEach((te) => {
+            timelineItems.push({
+              kind: 'system',
+              item: te,
+              timestamp: new Date(te.timestamp),
+            });
+          });
+        }
+
         // "Show activity log" — include system activity entries when enabled
         if (showActivity && activities) {
           activities.forEach((activity) => {
@@ -2627,12 +2781,19 @@ const UpdatesSection = ({
           });
         }
 
-        // Sort by timestamp descending (newest first), but pinned comments always come first
+        // Sort by timestamp descending (newest first), but pinned items always come first
+        const isPinnedItem = (
+          item: { kind: string; item: IIncidentComment | ActivityCard | TimeEntryCardData },
+        ) => {
+          if (item.kind === 'comment')
+            return getCommentPinState((item.item as IIncidentComment).id);
+          const act = item.item as TimeEntryCardData;
+          return act.type === 'time_entry_added' && getTimeEntryPinState(act.id);
+        };
+
         timelineItems.sort((a, b) => {
-          const aPinned =
-            a.kind === 'comment' && getCommentPinState((a.item as IIncidentComment).id);
-          const bPinned =
-            b.kind === 'comment' && getCommentPinState((b.item as IIncidentComment).id);
+          const aPinned = isPinnedItem(a);
+          const bPinned = isPinnedItem(b);
           if (aPinned && !bPinned) return -1;
           if (!aPinned && bPinned) return 1;
           return b.timestamp.getTime() - a.timestamp.getTime();
@@ -2662,7 +2823,6 @@ const UpdatesSection = ({
                         isSelfNote,
                         notifyAssigneesOnly,
                       }) => {
-                        const c = entry.item as IIncidentComment;
                         try {
                           await updateComment({
                             ticketId: incidentId,
@@ -2681,12 +2841,22 @@ const UpdatesSection = ({
                     />
                   );
                 }
-                return (
-                  <SystemCard
-                    key={`activity-${entry.item.id}`}
-                    activity={entry.item as ActivityCard}
-                  />
-                );
+                const act = entry.item as ActivityCard | TimeEntryCardData;
+                if (act.type === 'time_entry_added') {
+                  const te = act as TimeEntryCardData;
+                  return (
+                    <TimeEntryCard
+                      key={`time-entry-${te.id}`}
+                      entry={te}
+                      isPinned={getTimeEntryPinState(te.id)}
+                      isSaved={getTimeEntrySaveState(te.id)}
+                      onPin={() => handlePinTimeEntry(te.id)}
+                      onSave={() => handleSaveTimeEntry(te.id)}
+                    />
+                  );
+                }
+                const sys = act as ActivityCard;
+                return <SystemCard key={`activity-${sys.id}`} activity={sys} />;
               })}
             </Box>
           );

@@ -19,7 +19,6 @@ import {
   EditIcon,
   StarBorderIcon,
   StarIcon,
-  Select,
   IconButton,
   TextField,
   Checkbox,
@@ -38,12 +37,26 @@ import {
   styled,
 } from '@mui/material';
 import StickyNote2Icon from '@mui/icons-material/StickyNote2';
+import PublicIcon from '@mui/icons-material/Public';
+import LockIcon from '@mui/icons-material/Lock';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ScheduleIcon from '@mui/icons-material/Schedule';
+import PaidIcon from '@mui/icons-material/Paid';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import BeachAccessIcon from '@mui/icons-material/BeachAccess';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
+import PercentIcon from '@mui/icons-material/Percent';
 import { useNotification } from '@serviceops/hooks';
 import { constants } from '@serviceops/utils';
 import { useNavigate } from 'react-router-dom';
 import { ProjectSearchField } from '../Configuration/shared/GenericPanel/components/ProjectSearchField/ProjectSearchField';
 import { ClientSearchField } from '../Configuration/shared/GenericPanel/components/ClientSearchField/ClientSearchField';
+import { OptionsSearchField } from '../Configuration/shared/GenericPanel/components/OptionsSearchField/OptionsSearchField';
+import {
+  RichTextEditor,
+  parseRichText,
+  serializeRichText,
+} from '../Configuration/shared/RichTextEditor';
 import { useStyles } from './styles';
 import { TimesheetLine, TIMESHEET_TASKS, DayEntry, ApprovalEntry } from './types/timesheet.types';
 
@@ -51,6 +64,38 @@ export const theme_warning = '#ff9800';
 export const theme_success = '#008a00';
 export const theme_error = '#d32f2f';
 export const theme_draft = '#c5cae9';
+
+/* ── Note types: external (client-visible, blue) vs internal (team-only, amber) ── */
+export type NoteKind = 'external' | 'internal';
+
+const NOTE_TYPE_CONFIG: Record<
+  NoteKind,
+  {
+    color: string;
+    emptyLabel: string;
+    filledLabel: string;
+    dialogTitle: string;
+    dialogSubtitle: string;
+    editorTitle: string;
+  }
+> = {
+  external: {
+    color: '#1d4ed8',
+    emptyLabel: 'Add External comment',
+    filledLabel: 'External comment',
+    dialogTitle: 'Add External comment',
+    dialogSubtitle: 'Visible to the client — use plain, client-friendly language.',
+    editorTitle: 'External Comment',
+  },
+  internal: {
+    color: theme_warning,
+    emptyLabel: 'Add Internal comment',
+    filledLabel: 'Internal comment',
+    dialogTitle: 'Add Internal comment',
+    dialogSubtitle: 'Visible to your team only — never shown to the client.',
+    editorTitle: 'Internal Comment',
+  },
+};
 
 const STATUS_LEGEND: { label: string; color: string }[] = [
   { label: 'Draft', color: theme_draft },
@@ -69,6 +114,57 @@ const StatusDot = styled('span')(({ theme }) => ({
 }));
 
 const TIMESHEET_ICON_SX = { fontSize: '1.5rem' };
+
+const TASK_OPTIONS = TIMESHEET_TASKS.map((t) => ({ value: t, label: t }));
+
+/* ── KPI stat card: pastel icon chip + value/label, shared by both rows ── */
+/* ── Holiday / leave hours per line id (used by the KPI cards) ── */
+const HOLIDAYS_HOURS: Record<string, number> = { 'line-4': 8 };
+const LEAVES_HOURS: Record<string, number> = { 'line-3': 8 };
+
+const STAT_CARD_TONES = {
+  indigo: { bg: '#e0e7ff', border: '#c7d2fe', color: '#4f46e5' },
+  blue: { bg: '#dbeafe', border: '#bfdbfe', color: '#2563eb' },
+  green: { bg: '#d1fae5', border: '#a7f3d0', color: '#059669' },
+  amber: { bg: '#fef3c7', border: '#fde68a', color: '#d97706' },
+  teal: { bg: '#ccfbf1', border: '#99f6e4', color: '#0d9488' },
+  cyan: { bg: '#e0f2fe', border: '#bae6fd', color: '#0284c7' },
+  purple: { bg: '#ede9fe', border: '#ddd6fe', color: '#7c3aed' },
+} as const;
+
+const StatCard = ({
+  tone,
+  icon: Icon,
+  value,
+  label,
+  valueNode,
+  classes,
+}: {
+  tone: keyof typeof STAT_CARD_TONES;
+  icon: React.ElementType;
+  value?: string;
+  label: string;
+  valueNode?: React.ReactNode;
+  classes: Record<string, string>;
+}) => {
+  const toneCfg = STAT_CARD_TONES[tone];
+  return (
+    <Box className={classes.statCardWrapper}>
+      <Box
+        className={classes.statCardIconBox}
+        sx={{ backgroundColor: toneCfg.bg, border: `1px solid ${toneCfg.border}` }}
+      >
+        <Icon sx={{ color: toneCfg.color, fontSize: '1.25rem' }} />
+      </Box>
+      <Box>
+        {valueNode ?? (
+          <Typography className={classes.statCardValue}>{value}</Typography>
+        )}
+        <Typography className={classes.statCardLabel}>{label}</Typography>
+      </Box>
+    </Box>
+  );
+};
 
 const TimesheetIconPill = ({
   color,
@@ -210,6 +306,166 @@ const seedLines = (week: DayEntry[]): TimesheetLine[] => {
   ];
 };
 
+/* ── Note dialog: type-differentiated header & theme per kind ── */
+const NoteDialog = ({
+  kind,
+  draft,
+  onClose,
+  onSave,
+  onDraftChange,
+  modalFooterClass,
+}: {
+  kind: NoteKind;
+  draft: string;
+  onClose: () => void;
+  onSave: () => void;
+  onDraftChange: (d: string) => void;
+  modalFooterClass?: string;
+}) => {
+  const cfg = NOTE_TYPE_CONFIG[kind];
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      headerBackground={`linear-gradient(135deg, ${cfg.color}22 0%, ${cfg.color}44 100%)`}
+      headerTextColor={cfg.color}
+      title={
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: 1,
+              bgcolor: `${cfg.color}22`,
+              border: `1px solid ${cfg.color}44`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {kind === 'external' ? (
+              <PublicIcon sx={{ fontSize: '1rem', color: cfg.color }} />
+            ) : (
+              <LockIcon sx={{ fontSize: '1rem', color: cfg.color }} />
+            )}
+          </Box>
+          <Box>
+            <Typography sx={{ fontSize: '1rem', fontWeight: 600, color: '#fff', lineHeight: 1.3 }}>
+              {cfg.dialogTitle}
+            </Typography>
+            <Typography
+              sx={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.85)', lineHeight: 1.3 }}
+            >
+              {cfg.dialogSubtitle}
+            </Typography>
+          </Box>
+        </Box>
+      }
+      maxWidth='xs'
+      footer={
+        <Stack direction='row' spacing={1} justifyContent='center'>
+          <Button variant='outlined' size='small' label='Cancel' onClick={onClose} />
+          <Button
+            variant='contained'
+            size='small'
+            label='Save'
+            onClick={onSave}
+            sx={{ bgcolor: cfg.color, '&:hover': { bgcolor: `${cfg.color}dd` } }}
+          />
+        </Stack>
+      }
+    >
+      <Box sx={{ p: 1 }}>
+        <RichTextEditor
+          value={{ segments: parseRichText(draft).segments }}
+          onChange={(value) => onDraftChange(serializeRichText(value.segments))}
+          showFooterActions={false}
+          title={cfg.editorTitle}
+        />
+      </Box>
+    </Modal>
+  );
+};
+
+/* ── Note cell button: same layout, clearly different per type ── */
+const NoteCellButton = ({
+  kind,
+  hasValue,
+  disabled,
+  onOpen,
+}: {
+  kind: NoteKind;
+  hasValue: boolean;
+  disabled?: boolean;
+  onOpen: () => void;
+}) => {
+  const cfg = NOTE_TYPE_CONFIG[kind];
+  return (
+    <Box
+      className='noteButton'
+      onClick={onOpen}
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 1,
+        border: `1px solid ${cfg.color}`,
+        borderRadius: 10,
+        p: '4px 12px',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.55 : 1,
+        background: hasValue ? `${cfg.color}10` : 'transparent',
+        transition: 'box-shadow 0.15s ease, background-color 0.15s ease',
+        '&:hover': {
+          boxShadow: `0 0 0 3px ${cfg.color}22`,
+          backgroundColor: `${cfg.color}08`,
+        },
+      }}
+    >
+      <Stack direction='row' spacing={0.5} alignItems='center'>
+        {/* type badge */}
+        <Box
+          sx={{
+            width: 18,
+            height: 18,
+            borderRadius: 2,
+            backgroundColor: hasValue ? cfg.color : 'transparent',
+            border: `1px solid ${cfg.color}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          {kind === 'external' ? (
+            <PublicIcon sx={{ fontSize: '0.8rem', color: hasValue ? '#fff' : cfg.color }} />
+          ) : (
+            <LockIcon sx={{ fontSize: '0.8rem', color: hasValue ? '#fff' : cfg.color }} />
+          )}
+        </Box>
+        <Typography
+          sx={{
+            fontSize: '0.85rem',
+            fontWeight: 500,
+            color: hasValue ? cfg.color : 'text.secondary',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {hasValue ? cfg.filledLabel : cfg.emptyLabel}
+        </Typography>
+      </Stack>
+      <EditIcon
+        sx={{
+          fontSize: '1.15rem',
+          color: cfg.color,
+          transform: 'rotate(-45deg)',
+        }}
+      />
+    </Box>
+  );
+};
+
 const Timesheet = () => {
   const { classes, cx } = useStyles();
   const notify = useNotification();
@@ -224,6 +480,35 @@ const Timesheet = () => {
   const [showDetailedTotals, setShowDetailedTotals] = useState(true);
   const [showAdvancedNotes, setShowAdvancedNotes] = useState(false);
   const [selectedLineIds, setSelectedLineIds] = useState<Record<string, boolean>>({});
+
+  // ── Note dialog state ──────────────────────────────────────────
+  const [noteDialog, setNoteDialog] = useState<{
+    open: boolean;
+    lineId: string;
+    kind: NoteKind;
+    draft: string;
+  }>({ open: false, lineId: '', kind: 'external', draft: '' });
+
+  const openNoteDialog = (lineId: string, kind: NoteKind) => {
+    const line = lines.find((l) => l.id === lineId);
+    if (!line) return;
+    setNoteDialog({
+      open: true,
+      lineId,
+      kind,
+      draft: kind === 'external' ? line.externalNote : line.internalNote,
+    });
+  };
+
+  const closeNoteDialog = () =>
+    setNoteDialog((prev) => ({ ...prev, open: false, lineId: '', draft: '' }));
+
+  const saveNoteDialog = () => {
+    updateLine(noteDialog.lineId, {
+      [noteDialog.kind === 'external' ? 'externalNote' : 'internalNote']: noteDialog.draft,
+    });
+    closeNoteDialog();
+  };
 
   const allLinesSelected = lines.length > 0 && lines.every((l) => selectedLineIds[l.id]);
   const someLinesSelected = lines.some((l) => selectedLineIds[l.id]);
@@ -305,8 +590,49 @@ const Timesheet = () => {
     };
     const billableRatio =
       grand.all > 0 ? `${Math.round((grand.billable / grand.all) * 100)}%` : '—';
-    return { perDay, grand, billableRatio };
+
+    // Status counts across all lines (for the summary cards)
+    const statusCounts = lines.reduce(
+      (acc, line) => {
+        switch (line.status) {
+          case 'approved':
+            acc.approved += 1;
+            break;
+          case 'submitted':
+            acc.pending += 1;
+            break;
+          default:
+            acc.draft += 1;
+        }
+        return acc;
+      },
+      { draft: 0, pending: 0, approved: 0, rejected: 0 },
+    );
+
+    return { perDay, grand, billableRatio, statusCounts };
   }, [lines, week]);
+
+  /* Overall status for the KPI "Status" card:
+     Approved → only when EVERY line is approved
+     Pending  → any line awaiting review (pending / submitted)
+     Draft    → nothing entered / no line is in review yet */
+  const overallStatus = useMemo(() => {
+    if (lines.length === 0) return 'Draft';
+    if (lines.every((l) => l.status === 'approved')) return 'Approved';
+    if (lines.some((l) => l.status === 'pending' || l.status === 'submitted'))
+      return 'Pending';
+    return 'Draft';
+  }, [lines]);
+
+  /* Holiday / leave hours for lines that still exist */
+  const holidayHours = Object.entries(HOLIDAYS_HOURS).reduce(
+    (sum, [id, hours]) => (lines.some((l) => l.id === id) ? sum + hours : sum),
+    0,
+  );
+  const leaveHours = Object.entries(LEAVES_HOURS).reduce(
+    (sum, [id, hours]) => (lines.some((l) => l.id === id) ? sum + hours : sum),
+    0,
+  );
 
   const handleSave = () => {
     notify.success('Timesheet saved');
@@ -389,7 +715,7 @@ const Timesheet = () => {
   return (
     <Box className={classes.container}>
       <PageHeader
-        title=' My timesheets'
+        title='Timesheet'
         description='Log your hours per task for the selected week.'
         className={classes.pageHeader}
       />
@@ -422,6 +748,59 @@ const Timesheet = () => {
 
       {activeTab === 0 ? (
         <>
+          {/* ── Stat cards: all in a single row ───────────────── */}
+          <Box className={classes.statCardsRow}>
+            <StatCard
+              tone='green'
+              icon={PaidIcon}
+              value={`${totals.grand.all}h`}
+              label='Total Hours'
+              classes={classes}
+            />
+            <StatCard
+              tone={overallStatus === 'Approved' ? 'green' : 'amber'}
+              icon={LocalOfferIcon}
+              value={overallStatus}
+              label='Status'
+              classes={classes}
+            />
+            <StatCard
+              tone='cyan'
+              icon={BeachAccessIcon}
+              value={`${totals.grand.billable}h`}
+              label='Billable Hours'
+              classes={classes}
+            />
+            <StatCard
+              tone='blue'
+              icon={EventBusyIcon}
+              value={`${totals.grand.nonBillable}h`}
+              label='Non-Billable Hours'
+              classes={classes}
+            />
+            <StatCard
+              tone='teal'
+              icon={BeachAccessIcon}
+              value={`${holidayHours}h`}
+              label='Holidays'
+              classes={classes}
+            />
+            <StatCard
+              tone='indigo'
+              icon={ScheduleIcon}
+              value={`${leaveHours}h`}
+              label='Leaves'
+              classes={classes}
+            />
+            <StatCard
+              tone='purple'
+              icon={PercentIcon}
+              value={totals.billableRatio}
+              label='Billable Ratio'
+              classes={classes}
+            />
+          </Box>
+
           {/* ── Toolbar: icon-pill actions ─────────────────────── */}
           <Box className={classes.linesToolbar}>
             {toolbarActions.map((btn) => (
@@ -495,8 +874,12 @@ const Timesheet = () => {
                       <TableCell className={cx(classes.headerCell, classes.cellSelectHeader)}>
                         Task
                       </TableCell>
-                      <TableCell className={classes.headerCell}>External Note</TableCell>
-                      <TableCell className={classes.headerCell}>Internal Note</TableCell>
+                      <TableCell className={cx(classes.headerCell, classes.noteCell)}>
+                        External Note
+                      </TableCell>
+                      <TableCell className={cx(classes.headerCell, classes.noteCell)}>
+                        Internal Note
+                      </TableCell>
                       <TableCell className={classes.headerCell}>Billable</TableCell>
                       {week.map((d) => (
                         <TableCell
@@ -548,51 +931,36 @@ const Timesheet = () => {
                             />
                           </TableCell>
                           <TableCell>
-                            <Select
-                              className={classes.cellSelect}
-                              options={TIMESHEET_TASKS.map((t) => ({
-                                value: t,
-                                label: t,
-                                disabled: isApproved,
-                              }))}
+                            <OptionsSearchField
+                              label='Task'
                               value={line.task}
-                              size='small'
-                              onChange={(e) => updateLine(line.id, { task: e.target.value })}
+                              options={TASK_OPTIONS}
+                              onChange={(task) => updateLine(line.id, { task })}
+                              disabled={isApproved}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  height: 30,
+                                  fontSize: '0.8rem',
+                                },
+                                '& .MuiInputBase-input': { fontSize: '0.8rem' },
+                              }}
                             />
                           </TableCell>
                           <TableCell>
-                            <Box
-                              sx={{
-                                color: line.externalNote ? theme_success : theme_warning,
-                                fontSize: '1.1rem',
-                                cursor: isApproved ? 'default' : 'pointer',
-                              }}
-                              title={line.externalNote ? 'External note' : 'No external note'}
-                              onClick={() =>
-                                isApproved
-                                  ? undefined
-                                  : notify.info(`Edit external note for ${line.task}`)
-                              }
-                            >
-                              <EditIcon />
-                            </Box>
+                            <NoteCellButton
+                              kind='external'
+                              hasValue={Boolean(line.externalNote)}
+                              disabled={isApproved}
+                              onOpen={() => openNoteDialog(line.id, 'external')}
+                            />
                           </TableCell>
                           <TableCell>
-                            <Box
-                              sx={{
-                                color: line.internalNote ? theme_success : theme_warning,
-                                fontSize: '1.1rem',
-                                cursor: isApproved ? 'default' : 'pointer',
-                              }}
-                              title={line.internalNote ? 'Internal note' : 'No internal note'}
-                              onClick={() =>
-                                isApproved
-                                  ? undefined
-                                  : notify.info(`Edit internal note for ${line.task}`)
-                              }
-                            >
-                              <EditIcon />
-                            </Box>
+                            <NoteCellButton
+                              kind='internal'
+                              hasValue={Boolean(line.internalNote)}
+                              disabled={isApproved}
+                              onOpen={() => openNoteDialog(line.id, 'internal')}
+                            />
                           </TableCell>
                           <TableCell>
                             <Toggle
@@ -874,6 +1242,17 @@ const Timesheet = () => {
           Are you sure you want to submit?
         </Typography>
       </Modal>
+
+      {/* ── Note (external / internal) dialog — type-differentiated ── */}
+      {noteDialog.open && (
+        <NoteDialog
+          kind={noteDialog.kind}
+          draft={noteDialog.draft}
+          onClose={closeNoteDialog}
+          onDraftChange={(d) => setNoteDialog((prev) => ({ ...prev, draft: d }))}
+          onSave={saveNoteDialog}
+        />
+      )}
     </Box>
   );
 };

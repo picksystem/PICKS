@@ -58,8 +58,8 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     justifyContent: 'center',
     alignItems: 'center',
     gap: theme.spacing(2),
-    padding: theme.spacing(2, 3),
-    marginBottom: theme.spacing(1.5),
+    padding: theme.spacing(1, 2),
+    marginBottom: theme.spacing(1),
     flexWrap: 'wrap' as const,
     backgroundColor: '#ffffff',
     borderRadius: 4,
@@ -113,6 +113,68 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     fontWeight: 700,
     letterSpacing: '0.02em',
     whiteSpace: 'nowrap' as const,
+  },
+
+  /* ── Summary stat cards (top of page, below topBar) ────────── */
+  statCardsRow: {
+    display: 'flex' as const,
+    gap: theme.spacing(1.5),
+    marginBottom: theme.spacing(2),
+    flexWrap: 'wrap' as const,
+    alignItems: 'flex-start' as const,
+  },
+
+  statCardWrapper: {
+    flex: '1 1 140px',
+    minWidth: 140,
+    backgroundColor: '#ffffff',
+    border: '1px solid #e5e7eb',
+    borderRadius: 12,
+    padding: theme.spacing(1.25, 1.5),
+    display: 'flex' as const,
+    alignItems: 'center',
+    gap: theme.spacing(1.25),
+  },
+
+  statCardIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    display: 'flex' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+
+  statCardValue: {
+    fontSize: '1rem',
+    fontWeight: 700,
+    color: '#111827',
+    lineHeight: 1.1,
+  },
+
+  statCardLabel: {
+    marginTop: 1,
+    fontSize: '0.85rem',
+    color: '#6b7280',
+    fontWeight: 500,
+    lineHeight: 1.3,
+  },
+
+  /* ── Totals row detail label cell ─────────────────────────── */
+  totalsDetailLabelCell: {
+    textAlign: 'right' as const,
+    paddingLeft: theme.spacing(2),
+    fontSize: '0.8rem',
+    color: theme.palette.text.secondary,
+  },
+
+  statCardRow2: {
+    display: 'flex' as const,
+    gap: theme.spacing(1.5),
+    marginBottom: theme.spacing(1.5),
+    flexWrap: 'wrap' as const,
+    alignItems: 'flex-start' as const,
   },
 
   /* ── Summary card ────────────────────────────────────────────── */
@@ -195,7 +257,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     backgroundColor: theme.palette.background.paper,
     border: '1px solid #e5e7eb',
     borderRadius: 12,
-    padding: theme.spacing(2, 2.5),
+    padding: theme.spacing(1.5, 2),
   },
 
   linesHeader: {
@@ -225,11 +287,11 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   headerCell: {
     fontWeight: 700,
-    fontSize: '0.75rem',
+    fontSize: '0.7rem',
     color: theme.palette.text.secondary,
     borderBottom: `2px solid ${theme.palette.divider}`,
     whiteSpace: 'nowrap' as const,
-    padding: theme.spacing(0.75, 0.75),
+    padding: theme.spacing(0.5, 0.5),
   },
 
   dataRow: {
@@ -237,7 +299,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
       backgroundColor: 'rgba(37,99,235,0.03)',
     },
     '& td': {
-      padding: theme.spacing(0.5, 0.75),
+      padding: theme.spacing(0.4, 0.5),
       verticalAlign: 'middle' as const,
     },
   },
@@ -250,6 +312,10 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   cellSelectHeader: {
     minWidth: 140,
+  },
+
+  noteCell: {
+    minWidth: 170,
   },
 
   checkbox: {
@@ -271,14 +337,14 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   dayCellField: {
     '& .MuiOutlinedInput-root': {
-      height: 30,
-      minWidth: 36,
-      maxWidth: 44,
+      height: 28,
+      minWidth: 30,
+      maxWidth: 40,
     },
     '& .MuiOutlinedInput-root .MuiOutlinedInput-input': {
       textAlign: 'center' as const,
-      padding: '3px 4px',
-      fontSize: '0.8rem',
+      padding: '2px 3px',
+      fontSize: '0.78rem',
     },
   },
 
@@ -293,7 +359,8 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   /* ── Day cell with sub-total ───────────────────────────────── */
   dayColumn: {
-    minWidth: 84,
+    minWidth: 56,
+    maxWidth: 72,
     textAlign: 'center' as const,
   },
 
@@ -309,20 +376,20 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     display: 'flex' as const,
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing(2.5),
-    gap: theme.spacing(0.5, 1),
+    marginBottom: theme.spacing(1.5),
+    gap: theme.spacing(0.5, 0.75),
     flexWrap: 'wrap' as const,
     background: '#ffffff',
     border: '1px solid rgba(226, 232, 255, 0.8)',
-    borderRadius: 16,
+    borderRadius: 12,
     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0,0,0,0.04)',
-    padding: theme.spacing(1, 1.5),
+    padding: theme.spacing(0.75, 1.25),
   },
 
   timesheetIconPill: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 8,
     display: 'flex' as const,
     alignItems: 'center',
     justifyContent: 'center',
@@ -339,12 +406,12 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     flexDirection: 'column' as const,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: theme.spacing(0.75, 1),
-    gap: 4,
+    padding: theme.spacing(0.5, 0.75),
+    gap: 3,
     cursor: 'pointer',
     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    borderRadius: 12,
-    minWidth: 72,
+    borderRadius: 10,
+    minWidth: 60,
     position: 'relative' as const,
     overflow: 'hidden',
 
@@ -410,6 +477,30 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     '& .MuiIconButton-standard': {
       fontSize: '1.05rem',
     },
+  },
+
+  /* ── Note buttons (Add external / internal comment) ───────── */
+  noteButton: {
+    display: 'flex' as const,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: theme.spacing(1),
+    border: `1px solid ${theme.palette.primary.main}`,
+    borderRadius: 10,
+    padding: theme.spacing(0.5, 1),
+    cursor: 'pointer',
+    transition: 'box-shadow 0.15s ease, background-color 0.15s ease',
+    '&:hover': {
+      boxShadow: `0 0 0 3px ${theme.palette.primary.main}22`,
+      backgroundColor: `${theme.palette.primary.main}08`,
+    },
+  },
+
+  noteButtonLabel: {
+    fontSize: '0.85rem',
+    fontWeight: 500,
+    color: theme.palette.text.primary,
+    whiteSpace: 'nowrap' as const,
   },
 
   /* ── Status pill ────────────────────────────────────────────── */

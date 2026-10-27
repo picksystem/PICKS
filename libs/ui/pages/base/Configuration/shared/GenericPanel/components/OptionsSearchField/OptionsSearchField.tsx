@@ -25,8 +25,10 @@ export interface OptionsSearchFieldProps {
   options: OptionsSearchFieldOption[];
   placeholder?: string;
   required?: boolean;
+  disabled?: boolean;
   error?: boolean;
   helperText?: React.ReactNode;
+  sx?: Record<string, unknown>;
 }
 
 export const OptionsSearchField = ({
@@ -36,8 +38,10 @@ export const OptionsSearchField = ({
   options,
   placeholder,
   required,
+  disabled = false,
   error,
   helperText,
+  sx,
 }: OptionsSearchFieldProps) => {
   const [inputValue, setInputValue] = useState(value || '');
   const [filtered, setFiltered] = useState<OptionsSearchFieldOption[]>([]);
@@ -59,6 +63,7 @@ export const OptionsSearchField = ({
 
   const handleInputChange = useCallback(
     (newInputValue: string) => {
+      if (disabled) return;
       setInputValue(newInputValue);
       onChange(newInputValue);
 
@@ -69,10 +74,11 @@ export const OptionsSearchField = ({
         setOpen(next.length > 0);
       }, 200);
     },
-    [buildOptions, onChange],
+    [buildOptions, onChange, disabled],
   );
 
   const handleSelect = (option: OptionsSearchFieldOption) => {
+    if (disabled) return;
     setInputValue(option.label);
     setOpen(false);
     setFiltered([]);
@@ -80,6 +86,7 @@ export const OptionsSearchField = ({
   };
 
   const handleClear = () => {
+    if (disabled) return;
     setInputValue('');
     setFiltered([]);
     setOpen(false);
@@ -87,16 +94,17 @@ export const OptionsSearchField = ({
   };
 
   return (
-    <Box sx={{ position: 'relative' }}>
+    <Box sx={{ position: 'relative', ...sx }}>
       <TextField
-        label={label}
-        placeholder={placeholder ?? 'Search...'}
+        placeholder={disabled ? '' : (placeholder ?? 'Search...')}
         value={inputValue}
+        disabled={disabled}
         onChange={(e) => handleInputChange(e.target.value)}
         onBlur={() => {
           setTimeout(() => setOpen(false), 200);
         }}
         onFocus={() => {
+          if (disabled) return;
           const next = buildOptions(inputValue);
           setFiltered(next);
           if (next.length > 0) setOpen(true);
