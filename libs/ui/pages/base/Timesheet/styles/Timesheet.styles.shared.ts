@@ -287,11 +287,13 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   headerCell: {
     fontWeight: 700,
-    fontSize: '0.7rem',
+    fontSize: '0.72rem',
+    letterSpacing: '0.03em',
     color: theme.palette.text.secondary,
-    borderBottom: `2px solid ${theme.palette.divider}`,
+    textAlign: 'center',
     whiteSpace: 'nowrap' as const,
-    padding: theme.spacing(0.5, 0.5),
+    borderBottom: `2px solid ${theme.palette.divider}`,
+    padding: theme.spacing(1, 0.5),
   },
 
   dataRow: {
@@ -299,23 +301,58 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
       backgroundColor: 'rgba(37,99,235,0.03)',
     },
     '& td': {
-      padding: theme.spacing(0.4, 0.5),
+      /* 0 horizontal padding: the field cells (Client / Project / Task /
+         notes) sit flush with no gap between them */
+      padding: theme.spacing(0.75, 0),
       verticalAlign: 'middle' as const,
+    },
+  },
+
+  /* ── Uniform cell fields: same width/height for Client, Project, Task ── */
+  cellField: {
+    '& .MuiOutlinedInput-root': {
+      height: 34,
+      /* 100% of the cell: the table stretches to full page width and
+         distributes the leftover space across columns — a fixed px width
+         would leave a visible gap; filling the cell keeps fields flush */
+      width: '100%',
+      minWidth: 100,
+      borderRadius: 8,
+      backgroundColor: '#ffffff',
+      '&.Mui-disabled': { backgroundColor: '#f3f4f6' },
+    },
+    '& .MuiInputBase-input': {
+      fontSize: '0.85rem',
+      padding: '7px 12px',
+      whiteSpace: 'nowrap' as const,
+      overflow: 'hidden' as const,
+      textOverflow: 'ellipsis',
     },
   },
 
   selectCell: {
     width: 40,
+    textAlign: 'center' as const,
     paddingLeft: theme.spacing(1),
     paddingRight: theme.spacing(0.5),
   },
 
   cellSelectHeader: {
-    minWidth: 140,
+    minWidth: 126,
+  },
+
+  cellSelect: {
+    minWidth: 126,
   },
 
   noteCell: {
-    minWidth: 170,
+    minWidth: 126,
+  },
+
+  billableColumn: {
+    textAlign: 'center' as const,
+    paddingLeft: theme.spacing(0.5),
+    paddingRight: theme.spacing(0.5),
   },
 
   checkbox: {
@@ -323,28 +360,18 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     color: theme.palette.primary.main,
   },
 
-  cellSelect: {
-    '& .MuiOutlinedInput-root': {
-      height: 30,
-      fontSize: '0.8rem',
-      minWidth: 120,
-    },
-    '& .MuiInputBase-input': {
-      padding: '3px 8px',
-      fontSize: '0.8rem',
-    },
-  },
-
   dayCellField: {
     '& .MuiOutlinedInput-root': {
-      height: 28,
+      height: 32,
+      width: '100%',
       minWidth: 30,
-      maxWidth: 40,
+      maxWidth: 44,
+      borderRadius: 8,
     },
     '& .MuiOutlinedInput-root .MuiOutlinedInput-input': {
       textAlign: 'center' as const,
       padding: '2px 3px',
-      fontSize: '0.78rem',
+      fontSize: '0.8rem',
     },
   },
 
@@ -359,8 +386,9 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   /* ── Day cell with sub-total ───────────────────────────────── */
   dayColumn: {
+    width: 56,
     minWidth: 56,
-    maxWidth: 72,
+    maxWidth: 56,
     textAlign: 'center' as const,
   },
 
@@ -526,9 +554,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   /* ── Line actions cell ──────────────────────────────────────── */
-  actionsCell: {
-    whiteSpace: 'nowrap' as const,
-  },
+  actionsCell: {},
 
   actionIconButton: {
     p: 0.5,

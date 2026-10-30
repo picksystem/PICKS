@@ -157,9 +157,7 @@ const StatCard = ({
         <Icon sx={{ color: toneCfg.color, fontSize: '1.25rem' }} />
       </Box>
       <Box>
-        {valueNode ?? (
-          <Typography className={classes.statCardValue}>{value}</Typography>
-        )}
+        {valueNode ?? <Typography className={classes.statCardValue}>{value}</Typography>}
         <Typography className={classes.statCardLabel}>{label}</Typography>
       </Box>
     </Box>
@@ -401,65 +399,24 @@ const NoteCellButton = ({
   onOpen: () => void;
 }) => {
   const cfg = NOTE_TYPE_CONFIG[kind];
+  /* Rendered as a real (read-only) TextField so the note fields are
+     pixel-identical to the Client / Project / Task search fields:
+     same height, width, border and radius. Clicking opens the note
+     dialog instead of typing. */
   return (
-    <Box
-      className='noteButton'
-      onClick={onOpen}
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 1,
-        border: `1px solid ${cfg.color}`,
-        borderRadius: 10,
-        p: '4px 12px',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.55 : 1,
-        background: hasValue ? `${cfg.color}10` : 'transparent',
-        transition: 'box-shadow 0.15s ease, background-color 0.15s ease',
-        '&:hover': {
-          boxShadow: `0 0 0 3px ${cfg.color}22`,
-          backgroundColor: `${cfg.color}08`,
-        },
-      }}
-    >
-      <Stack direction='row' spacing={0.5} alignItems='center'>
-        {/* type badge */}
-        <Box
-          sx={{
-            width: 18,
-            height: 18,
-            borderRadius: 2,
-            backgroundColor: hasValue ? cfg.color : 'transparent',
-            border: `1px solid ${cfg.color}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
-          {kind === 'external' ? (
-            <PublicIcon sx={{ fontSize: '0.8rem', color: hasValue ? '#fff' : cfg.color }} />
-          ) : (
-            <LockIcon sx={{ fontSize: '0.8rem', color: hasValue ? '#fff' : cfg.color }} />
-          )}
-        </Box>
-        <Typography
-          sx={{
-            fontSize: '0.85rem',
-            fontWeight: 500,
-            color: hasValue ? cfg.color : 'text.secondary',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {hasValue ? cfg.filledLabel : cfg.emptyLabel}
-        </Typography>
-      </Stack>
-      <EditIcon
+    <Box onClick={onOpen}>
+      <TextField
+        size='small'
+        variant='outlined'
+        fullWidth
+        value={hasValue ? cfg.filledLabel : ''}
+        placeholder={cfg.emptyLabel}
+        inputProps={{ readOnly: true }}
+        disabled={disabled}
         sx={{
-          fontSize: '1.15rem',
-          color: cfg.color,
-          transform: 'rotate(-45deg)',
+          '& .MuiOutlinedInput-input': {
+            cursor: disabled ? 'not-allowed' : 'pointer',
+          },
         }}
       />
     </Box>
@@ -619,8 +576,7 @@ const Timesheet = () => {
   const overallStatus = useMemo(() => {
     if (lines.length === 0) return 'Draft';
     if (lines.every((l) => l.status === 'approved')) return 'Approved';
-    if (lines.some((l) => l.status === 'pending' || l.status === 'submitted'))
-      return 'Pending';
+    if (lines.some((l) => l.status === 'pending' || l.status === 'submitted')) return 'Pending';
     return 'Draft';
   }, [lines]);
 
@@ -916,37 +872,30 @@ const Timesheet = () => {
                               className={classes.checkbox}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className={cx(classes.cellSelect, classes.cellField)}>
                             <ClientSearchField
                               value={line.client}
                               onChange={(client) => updateLine(line.id, { client })}
                               disabled={isApproved}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className={cx(classes.cellSelect, classes.cellField)}>
                             <ProjectSearchField
                               value={line.project ?? ''}
                               onChange={(project) => updateLine(line.id, { project })}
                               disabled={isApproved}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className={cx(classes.cellSelect, classes.cellField)}>
                             <OptionsSearchField
                               label='Task'
                               value={line.task}
                               options={TASK_OPTIONS}
                               onChange={(task) => updateLine(line.id, { task })}
                               disabled={isApproved}
-                              sx={{
-                                '& .MuiOutlinedInput-root': {
-                                  height: 30,
-                                  fontSize: '0.8rem',
-                                },
-                                '& .MuiInputBase-input': { fontSize: '0.8rem' },
-                              }}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className={cx(classes.noteCell, classes.cellField)}>
                             <NoteCellButton
                               kind='external'
                               hasValue={Boolean(line.externalNote)}
@@ -954,7 +903,7 @@ const Timesheet = () => {
                               onOpen={() => openNoteDialog(line.id, 'external')}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className={cx(classes.noteCell, classes.cellField)}>
                             <NoteCellButton
                               kind='internal'
                               hasValue={Boolean(line.internalNote)}
@@ -962,7 +911,7 @@ const Timesheet = () => {
                               onOpen={() => openNoteDialog(line.id, 'internal')}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className={classes.billableColumn}>
                             <Toggle
                               checked={line.billable}
                               disabled={isApproved}
@@ -991,7 +940,7 @@ const Timesheet = () => {
                               />
                             </TableCell>
                           ))}
-                          <TableCell>
+                          <TableCell className={classes.billableColumn}>
                             <Typography variant='body2' sx={{ fontWeight: 600 }}>
                               {lineTotal}
                             </Typography>
@@ -1002,6 +951,7 @@ const Timesheet = () => {
                               spacing={0.75}
                               alignItems='center'
                               justifyContent='center'
+                              sx={{ width: '100%' }}
                             >
                               <StatusDot
                                 style={{
@@ -1011,7 +961,13 @@ const Timesheet = () => {
                             </Stack>
                           </TableCell>
                           <TableCell className={classes.actionsCell}>
-                            <Stack direction='row' spacing={0.5} alignItems='center'>
+                            <Stack
+                              direction='row'
+                              spacing={0.5}
+                              alignItems='center'
+                              justifyContent='center'
+                              sx={{ width: '100%' }}
+                            >
                               <IconButton
                                 size='small'
                                 className={classes.actionIconButton}
@@ -1070,7 +1026,7 @@ const Timesheet = () => {
                           {d.all}
                         </TableCell>
                       ))}
-                      <TableCell>
+                      <TableCell className={classes.billableColumn}>
                         <Typography variant='body2' sx={{ fontWeight: 700 }}>
                           {totals.grand.all}
                         </Typography>
@@ -1092,7 +1048,9 @@ const Timesheet = () => {
                               {d.billable}
                             </TableCell>
                           ))}
-                          <TableCell>{totals.grand.billable}</TableCell>
+                          <TableCell className={classes.billableColumn}>
+                            {totals.grand.billable}
+                          </TableCell>
                           <TableCell />
                           <TableCell />
                         </TableRow>
@@ -1107,7 +1065,9 @@ const Timesheet = () => {
                               {d.nonBillable}
                             </TableCell>
                           ))}
-                          <TableCell>{totals.grand.nonBillable}</TableCell>
+                          <TableCell className={classes.billableColumn}>
+                            {totals.grand.nonBillable}
+                          </TableCell>
                           <TableCell />
                           <TableCell />
                         </TableRow>
@@ -1122,7 +1082,9 @@ const Timesheet = () => {
                               {d.all > 0 ? `${Math.round((d.billable / d.all) * 100)}%` : '0%'}
                             </TableCell>
                           ))}
-                          <TableCell>{totals.billableRatio}</TableCell>
+                          <TableCell className={classes.billableColumn}>
+                            {totals.billableRatio}
+                          </TableCell>
                           <TableCell />
                           <TableCell />
                         </TableRow>
