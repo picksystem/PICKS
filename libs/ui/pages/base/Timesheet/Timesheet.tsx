@@ -423,6 +423,67 @@ const NoteCellButton = ({
   );
 };
 
+/* Renders a decimal hour count the way the day columns display it, e.g.
+   8 -> "08:00", 0 -> "00:00", 1.5 -> "01:30". Used by the day inputs and
+   the per-day / grand totals so every hour figure on the page reads the
+   same. */
+const formatDayHours = (hours: number): string => {
+  const safe = Number.isFinite(hours) && hours > 0 ? hours : 0;
+  const h = Math.floor(safe);
+  const m = Math.round((safe - h) * 60);
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+};
+
+/* A day-cell input that keeps the underlying value as decimal hours but
+   displays it as HH:MM ("00:00" by default). Clicking the field shows the
+   formatted time (selected, ready to type over); the value only changes
+   once the user actually types — they may enter decimal hours ("8.5") or
+   a time ("08:30") — and it snaps back to HH:MM on blur. */
+const DayCellField = ({
+  value,
+  onChange,
+  disabled,
+  className,
+}: {
+  value: number;
+  onChange: (value: number) => void;
+  disabled?: boolean;
+  className?: string;
+}) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+
+  const handleChange = (raw: string) => {
+    setEditing(true);
+    setDraft(raw);
+    let next: number;
+    if (raw.includes(':')) {
+      const [h, m] = raw.split(':');
+      next = Number(h) + Number(m || 0) / 60;
+    } else {
+      const cleaned = raw.replace(/[^0-9.]/g, '');
+      next = cleaned === '' ? 0 : Number(cleaned);
+    }
+    onChange(Number.isFinite(next) ? next : 0);
+  };
+
+  return (
+    <TextField
+      variant='outlined'
+      size='small'
+      /* while focused and untouched the field still shows the HH:MM form;
+         only a keystroke switches it to the raw editable text */
+      value={editing ? draft : formatDayHours(value)}
+      onChange={(e) => handleChange(e.target.value)}
+      onFocus={() => setEditing(false)}
+      onBlur={() => setEditing(false)}
+      inputProps={{ selectOnFocus: true }}
+      disabled={disabled}
+      className={className}
+    />
+  );
+};
+
 const Timesheet = () => {
   const { classes, cx } = useStyles();
   const notify = useNotification();
@@ -809,7 +870,12 @@ const Timesheet = () => {
             ) : (
               /* ── Timesheet grid ─────────────────────────────── */
               <TableContainer className={classes.tableContainer}>
-                <Table size='small'>
+                {/* table-layout: fixed at 100% of the container: the column
+                    percentages in Timesheet.styles.shared.ts always sum to
+                    100%, so the grid fits its parent at any screen size —
+                    no horizontal scroll. Field text truncates inside the
+                    inputs instead of stretching the table. */}
+                <Table size='small' sx={{ tableLayout: 'fixed', width: '100%' }}>
                   <TableHead>
                     <TableRow>
                       <TableCell className={cx(classes.headerCell, classes.selectCell)}>
@@ -821,7 +887,7 @@ const Timesheet = () => {
                           className={classes.checkbox}
                         />
                       </TableCell>
-                      <TableCell className={cx(classes.headerCell, classes.cellSelectHeader)}>
+                      <TableCell className={cx(classes.headerCell, classes.clientCell)}>
                         Client
                       </TableCell>
                       <TableCell className={cx(classes.headerCell, classes.cellSelectHeader)}>
@@ -836,7 +902,9 @@ const Timesheet = () => {
                       <TableCell className={cx(classes.headerCell, classes.noteCell)}>
                         Internal Note
                       </TableCell>
-                      <TableCell className={classes.headerCell}>Billable</TableCell>
+                      <TableCell className={cx(classes.headerCell, classes.billableColumn)}>
+                        Billable
+                      </TableCell>
                       {week.map((d) => (
                         <TableCell
                           key={d.key}
@@ -850,9 +918,15 @@ const Timesheet = () => {
                           </Typography>
                         </TableCell>
                       ))}
-                      <TableCell className={classes.headerCell}>Total Hours</TableCell>
-                      <TableCell className={classes.headerCell}>Status</TableCell>
-                      <TableCell className={classes.headerCell}>Line actions</TableCell>
+                      <TableCell className={cx(classes.headerCell, classes.totalHoursCell)}>
+                        Total Hours
+                      </TableCell>
+                      <TableCell className={cx(classes.headerCell, classes.statusCell)}>
+                        Status
+                      </TableCell>
+                      <TableCell className={cx(classes.headerCell, classes.actionsCell)}>
+                        Line actions
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -872,7 +946,7 @@ const Timesheet = () => {
                               className={classes.checkbox}
                             />
                           </TableCell>
-                          <TableCell className={cx(classes.cellSelect, classes.cellField)}>
+                          <TableCell className={cx(classes.clientCell, classes.cellField)}>
                             <ClientSearchField
                               value={line.client}
                               onChange={(client) => updateLine(line.id, { client })}
@@ -922,27 +996,17 @@ const Timesheet = () => {
                           </TableCell>
                           {week.map((d) => (
                             <TableCell key={d.key} className={classes.dayColumn}>
-                              <TextField
-                                variant='outlined'
-                                size='small'
-                                type='number'
-                                inputProps={{ min: 0, step: 0.5 }}
+                              <DayCellField
                                 value={line.dayValues[d.key] ?? 0}
-                                onChange={(e) =>
-                                  updateDayValue(
-                                    line.id,
-                                    d.key,
-                                    e.target.value === '' ? 0 : Number(e.target.value),
-                                  )
-                                }
+                                onChange={(v) => updateDayValue(line.id, d.key, v)}
                                 disabled={isApproved}
                                 className={classes.dayCellField}
                               />
                             </TableCell>
                           ))}
-                          <TableCell className={classes.billableColumn}>
+                          <TableCell className={classes.totalHoursCell}>
                             <Typography variant='body2' sx={{ fontWeight: 600 }}>
-                              {lineTotal}
+                              {formatDayHours(lineTotal)}
                             </Typography>
                           </TableCell>
                           <TableCell className={classes.statusCell}>
@@ -1016,19 +1080,25 @@ const Timesheet = () => {
 
                     {/* ── Totals (Total Hours always shown) ─────────── */}
                     <TableRow className={classes.totalsRow}>
-                      <TableCell colSpan={7}>
-                        <Typography variant='body2' sx={{ fontWeight: 700 }}>
-                          Total Hours
-                        </Typography>
+                      {/* label spans through the Internal Note column with the
+                          text right-aligned under it; the empty Billable cell +
+                          7 day figures keep those aligned under Mon–Sun */}
+                      <TableCell colSpan={6} className={classes.totalsLabelCell}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', pr: 1.5 }}>
+                          <Typography variant='body2' sx={{ fontWeight: 700 }}>
+                            Total Hours
+                          </Typography>
+                        </Box>
                       </TableCell>
+                      <TableCell />
                       {totals.perDay.map((d, i) => (
                         <TableCell key={week[i].key} className={classes.dayColumn}>
-                          {d.all}
+                          {formatDayHours(d.all)}
                         </TableCell>
                       ))}
-                      <TableCell className={classes.billableColumn}>
+                      <TableCell className={classes.totalHoursCell}>
                         <Typography variant='body2' sx={{ fontWeight: 700 }}>
-                          {totals.grand.all}
+                          {formatDayHours(totals.grand.all)}
                         </Typography>
                       </TableCell>
                       <TableCell />
@@ -1038,51 +1108,64 @@ const Timesheet = () => {
                     {showDetailedTotals && (
                       <>
                         <TableRow className={classes.totalsRow}>
-                          <TableCell colSpan={7}>
-                            <Typography variant='body2' color='text.secondary'>
-                              Total billable hours
-                            </Typography>
+                          <TableCell colSpan={6} className={classes.totalsLabelCell}>
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', pr: 1.5 }}>
+                              <Typography variant='body2' color='text.secondary'>
+                                Total billable hours
+                              </Typography>
+                            </Box>
                           </TableCell>
+                          <TableCell />
                           {totals.perDay.map((d, i) => (
                             <TableCell key={week[i].key} className={classes.dayColumn}>
-                              {d.billable}
+                              {formatDayHours(d.billable)}
                             </TableCell>
                           ))}
-                          <TableCell className={classes.billableColumn}>
-                            {totals.grand.billable}
+                          <TableCell className={classes.totalHoursCell}>
+                            <Typography variant='body2' sx={{ fontWeight: 700 }}>
+                              {formatDayHours(totals.grand.billable)}
+                            </Typography>
                           </TableCell>
                           <TableCell />
                           <TableCell />
                         </TableRow>
                         <TableRow className={classes.totalsRow}>
-                          <TableCell colSpan={7}>
-                            <Typography variant='body2' color='text.secondary'>
-                              Total non-billable hours
-                            </Typography>
+                          <TableCell colSpan={6} className={classes.totalsLabelCell}>
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', pr: 1.5 }}>
+                              <Typography variant='body2' color='text.secondary'>
+                                Total non-billable hours
+                              </Typography>
+                            </Box>
                           </TableCell>
+                          <TableCell />
                           {totals.perDay.map((d, i) => (
                             <TableCell key={week[i].key} className={classes.dayColumn}>
-                              {d.nonBillable}
+                              {formatDayHours(d.nonBillable)}
                             </TableCell>
                           ))}
-                          <TableCell className={classes.billableColumn}>
-                            {totals.grand.nonBillable}
+                          <TableCell className={classes.totalHoursCell}>
+                            <Typography variant='body2' sx={{ fontWeight: 700 }}>
+                              {formatDayHours(totals.grand.nonBillable)}
+                            </Typography>
                           </TableCell>
                           <TableCell />
                           <TableCell />
                         </TableRow>
                         <TableRow className={classes.totalsRow}>
-                          <TableCell colSpan={7}>
-                            <Typography variant='body2' color='text.secondary'>
-                              Billable hours ratio
-                            </Typography>
+                          <TableCell colSpan={6} className={classes.totalsLabelCell}>
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', pr: 1.5 }}>
+                              <Typography variant='body2' color='text.secondary'>
+                                Billable hours ratio
+                              </Typography>
+                            </Box>
                           </TableCell>
+                          <TableCell />
                           {totals.perDay.map((d, i) => (
                             <TableCell key={week[i].key} className={classes.dayColumn}>
                               {d.all > 0 ? `${Math.round((d.billable / d.all) * 100)}%` : '0%'}
                             </TableCell>
                           ))}
-                          <TableCell className={classes.billableColumn}>
+                          <TableCell className={classes.totalHoursCell}>
                             {totals.billableRatio}
                           </TableCell>
                           <TableCell />

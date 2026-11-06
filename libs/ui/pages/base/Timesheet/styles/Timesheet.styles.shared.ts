@@ -293,7 +293,9 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     textAlign: 'center',
     whiteSpace: 'nowrap' as const,
     borderBottom: `2px solid ${theme.palette.divider}`,
-    padding: theme.spacing(1, 0.5),
+    /* mirrors the data-row padding so column headers line up with the
+       fields beneath them */
+    padding: theme.spacing(1, 1),
   },
 
   dataRow: {
@@ -301,9 +303,9 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
       backgroundColor: 'rgba(37,99,235,0.03)',
     },
     '& td': {
-      /* 0 horizontal padding: the field cells (Client / Project / Task /
-         notes) sit flush with no gap between them */
-      padding: theme.spacing(0.75, 0),
+      /* uniform 8px gutter around every cell, so every search/text field
+         and the day inputs share the same gap between neighbours */
+      padding: theme.spacing(0.75, 1),
       verticalAlign: 'middle' as const,
     },
   },
@@ -316,7 +318,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
          distributes the leftover space across columns — a fixed px width
          would leave a visible gap; filling the cell keeps fields flush */
       width: '100%',
-      minWidth: 100,
       borderRadius: 8,
       backgroundColor: '#ffffff',
       '&.Mui-disabled': { backgroundColor: '#f3f4f6' },
@@ -331,28 +332,47 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   selectCell: {
-    width: 40,
+    width: '3%',
     textAlign: 'center' as const,
     paddingLeft: theme.spacing(1),
     paddingRight: theme.spacing(0.5),
   },
 
+  /* Column widths for the lines table. The table uses table-layout: fixed
+     at exactly 100% of the container width (see Timesheet.tsx) with these
+     percentage widths, so the grid always fits its parent — no horizontal
+     scroll. The five field columns (Client / Project / Task / notes) take
+     the bulk of the space and their text truncates inside the fields
+     (ellipsis) instead of stretching the table.
+     3 + 5×10.3 + 3.5 + 7×4 + 4.5 + 4 + 5.5 = 100% — the five field
+     columns (Client / Project / Task / notes) are all identical */
+  clientCell: {
+    width: '10.3%',
+  },
+
   cellSelectHeader: {
-    minWidth: 126,
+    width: '10.3%',
   },
 
   cellSelect: {
-    minWidth: 126,
+    width: '10.3%',
   },
 
   noteCell: {
-    minWidth: 126,
+    width: '10.3%',
   },
 
   billableColumn: {
+    width: '3.5%',
     textAlign: 'center' as const,
-    paddingLeft: theme.spacing(0.5),
-    paddingRight: theme.spacing(0.5),
+    paddingLeft: 0,
+    paddingRight: 0,
+  },
+
+  totalHoursCell: {
+    width: '4.5%',
+    /* center the figure in the column, matching the centered day inputs */
+    textAlign: 'center' as const,
   },
 
   checkbox: {
@@ -361,11 +381,12 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   dayCellField: {
+    /* fill the whole day column so the input's edges align with the
+       centered header (Mon/2) and the per-day totals below — the HH:MM
+       text itself stays centered inside the input */
     '& .MuiOutlinedInput-root': {
       height: 32,
       width: '100%',
-      minWidth: 30,
-      maxWidth: 44,
       borderRadius: 8,
     },
     '& .MuiOutlinedInput-root .MuiOutlinedInput-input': {
@@ -374,6 +395,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
       fontSize: '0.8rem',
     },
   },
+
 
   dayCell: {
     textAlign: 'center' as const,
@@ -386,9 +408,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   /* ── Day cell with sub-total ───────────────────────────────── */
   dayColumn: {
-    width: 56,
-    minWidth: 56,
-    maxWidth: 56,
+    width: '4%',
     textAlign: 'center' as const,
   },
 
@@ -529,10 +549,13 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     fontWeight: 500,
     color: theme.palette.text.primary,
     whiteSpace: 'nowrap' as const,
+    overflow: 'hidden' as const,
+    textOverflow: 'ellipsis',
   },
 
   /* ── Status pill ────────────────────────────────────────────── */
   statusCell: {
+    width: '4%',
     whiteSpace: 'nowrap' as const,
   },
 
@@ -554,7 +577,9 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   /* ── Line actions cell ──────────────────────────────────────── */
-  actionsCell: {},
+  actionsCell: {
+    width: '5.5%',
+  },
 
   actionIconButton: {
     p: 0.5,
@@ -575,6 +600,8 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
       paddingBottom: 0,
       height: 34,
       backgroundColor: theme.palette.background.paper,
+      /* keep the per-day figures centered under their day-column inputs */
+      textAlign: 'center' as const,
       '&:first-child': { paddingLeft: theme.spacing(2) },
     },
     '&:hover td': {
@@ -618,6 +645,17 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   totalsRowLabel: {
     fontSize: '0.8rem',
     fontWeight: 700,
+    color: theme.palette.text.primary,
+  },
+
+  /* totals-row label cell: the label spans every column up to (and
+     including) Internal Note, so it ends flush with that column — the
+     day figures to its right then line up under their day headers */
+  totalsLabelCell: {
+    textAlign: 'right' as const,
+    paddingRight: theme.spacing(1.5),
+    whiteSpace: 'nowrap' as const,
+    fontSize: '0.8rem',
     color: theme.palette.text.primary,
   },
 
