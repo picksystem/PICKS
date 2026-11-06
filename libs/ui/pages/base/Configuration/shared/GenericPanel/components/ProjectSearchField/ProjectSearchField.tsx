@@ -1,5 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Box, Paper, InputAdornment, TextField, CircularProgress } from '@mui/material';
+/* Box / TextField / Paper come from the shared component registry — the
+   same sources as ClientSearchField / OptionsSearchField — so this field
+   renders with identical border/outline styling inside the Timesheet
+   lines table. (Importing them from '@mui/material' instead breaks the
+   shared theme and the field's border looks different from its siblings.) */
+import { Box, TextField, Paper } from '@serviceops/component';
+import InputAdornment from '@mui/material/InputAdornment';
+import CircularProgress from '@mui/material/CircularProgress';
 import { Search as SearchIcon, Clear as ClearIcon } from '@mui/icons-material';
 import { IConfigProject } from '@serviceops/interfaces';
 import { useConfiguration } from '@serviceops/pages/base/Configuration/hooks/useConfiguration';
@@ -115,23 +122,30 @@ const ProjectSearchField = ({
         onBlur={handleBlur}
         fullWidth
         size='small'
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position='end'>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                {loading ? (
-                  <CircularProgress size={16} sx={{ color: 'text.secondary' }} />
-                ) : inputValue ? (
-                  <ClearIcon
-                    onClick={handleClear}
-                    sx={{ fontSize: 18, color: 'text.primary', cursor: 'pointer' }}
-                  />
-                ) : (
-                  <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
-                )}
-              </Box>
-            </InputAdornment>
-          ),
+        slotProps={{
+          input: {
+            endAdornment: (
+              <InputAdornment position='end'>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  {loading ? (
+                    <CircularProgress size={16} />
+                  ) : inputValue ? (
+                    <ClearIcon
+                      onClick={handleClear}
+                      sx={{
+                        fontSize: 18,
+                        color: 'text.secondary',
+                        cursor: 'pointer',
+                        '&:hover': { color: 'text.primary' },
+                      }}
+                    />
+                  ) : (
+                    <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                  )}
+                </Box>
+              </InputAdornment>
+            ),
+          },
         }}
       />
       {optionsOpen && filteredOptions.length > 0 && !disabled && (

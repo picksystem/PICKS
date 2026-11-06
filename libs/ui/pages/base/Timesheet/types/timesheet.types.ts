@@ -1,4 +1,4 @@
-export type TimesheetStatus = 'pending' | 'approved' | 'submitted';
+export type TimesheetStatus = 'open' | 'pending' | 'approved' | 'submitted';
 
 export interface DayEntry {
   key: string;

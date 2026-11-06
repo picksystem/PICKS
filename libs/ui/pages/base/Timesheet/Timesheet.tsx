@@ -97,7 +97,27 @@ const NOTE_TYPE_CONFIG: Record<
   },
 };
 
+/* Open = the default, in-work state until a line is saved or submitted. */
+const theme_open = '#0ea5e9';
+
+/* status -> color, used for the per-row status dot and the Status card. */
+const statusColor = (status: string): string => {
+  switch (status) {
+    case 'approved':
+      return theme_success;
+    case 'rejected':
+      return theme_error;
+    case 'pending':
+    case 'submitted':
+      return theme_warning;
+    case 'open':
+    default:
+      return theme_open;
+  }
+};
+
 const STATUS_LEGEND: { label: string; color: string }[] = [
+  { label: 'Open', color: theme_open },
   { label: 'Draft', color: theme_draft },
   { label: 'Pending', color: theme_warning },
   { label: 'Approved', color: theme_success },
@@ -247,61 +267,25 @@ const APPROVAL_HISTORY: ApprovalEntry[] = [
   },
 ];
 
-const seedLines = (week: DayEntry[]): TimesheetLine[] => {
-  const keys = week.map((d) => d.key);
-  const days = (vals: number[]) =>
-    vals.reduce(
-      (acc, v, i) => {
-        acc[keys[i]] = v;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-
-  return [
-    {
-      id: 'line-1',
-      client: 'Hive Implementation',
-      task: 'Development',
-      externalNote: '',
-      internalNote: '',
-      billable: true,
-      dayValues: days([8, 8, 0, 0, 0, 0, 0]),
-      status: 'pending',
-      liked: false,
-      favourited: false,
-    },
-    {
-      id: 'line-2',
-      client: 'Hive Implementation',
-      task: 'Internal calls',
-      externalNote: '',
-      internalNote: '',
-      billable: false,
-      dayValues: days([1, 1, 0, 0, 0, 0, 0]),
-      status: 'pending',
-    },
-    {
-      id: 'line-3',
-      client: 'Administrative',
-      task: 'Vacation',
-      externalNote: '',
-      internalNote: '',
-      billable: false,
-      dayValues: days([0, 0, 0, 0, 0, 0, 0]),
-      status: 'pending',
-    },
-    {
-      id: 'line-4',
-      client: 'Administrative',
-      task: 'Fixed holidays',
-      externalNote: '',
-      internalNote: '',
-      billable: false,
-      dayValues: days([0, 0, 0, 0, 0, 0, 0]),
-      status: 'approved',
-    },
-  ];
+/* Lines are added/removed dynamically at runtime ("New line" / "Remove
+   line"), so the table starts empty. This builds a fresh blank line with
+   a unique id; dayValues start empty and read as 0 (00:00) per day. */
+let newLineSeq = 0;
+const createNewLine = (): TimesheetLine => {
+  newLineSeq += 1;
+  return {
+    id: `line-${Date.now()}-${newLineSeq}`,
+    client: '',
+    project: '',
+    task: '',
+    externalNote: '',
+    internalNote: '',
+    billable: true,
+    dayValues: {},
+    status: 'open',
+    liked: false,
+    favourited: false,
+  };
 };
 
 /* ── Note dialog: type-differentiated header & theme per kind ── */
@@ -475,14 +459,31 @@ const DayCellField = ({
          only a keystroke switches it to the raw editable text */
       value={editing ? draft : formatDayHours(value)}
       onChange={(e) => handleChange(e.target.value)}
-      onFocus={() => setEditing(false)}
+      onFocus={(e) => {
+        setEditing(false);
+        /* select the displayed HH:MM so typing immediately replaces it */
+        e.target.select();
+      }}
       onBlur={() => setEditing(false)}
-      inputProps={{ selectOnFocus: true }}
       disabled={disabled}
       className={className}
     />
   );
 };
+
+/* Wraps a table checkbox so it is centered in the cell both horizontally
+   and vertically. MUI's checkbox carries its own left padding and
+   height: 100% is not reliable inside table cells, so the wrapper is
+   absolutely positioned over the whole cell content area (the cell is
+   position: relative, see selectCell) — deterministic centering
+   regardless of row height. */
+const CenteredCheckbox = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className: string;
+}) => <Box className={className}>{children}</Box>;
 
 const Timesheet = () => {
   const { classes, cx } = useStyles();
@@ -493,7 +494,9 @@ const Timesheet = () => {
   const [weekOffset, setWeekOffset] = useState(0);
   const week = useMemo(() => buildWeek(weekOffset), [weekOffset]);
 
-  const [lines, setLines] = useState<TimesheetLine[]>(() => seedLines(buildWeek(0)));
+  /* start with a single blank line; more are added via the "New line"
+     toolbar action and removed via the row checkboxes + "Remove line" */
+  const [lines, setLines] = useState<TimesheetLine[]>(() => [createNewLine()]);
   const [submitModalOpen, setSubmitModalOpen] = useState(false);
   const [showDetailedTotals, setShowDetailedTotals] = useState(true);
   const [showAdvancedNotes, setShowAdvancedNotes] = useState(false);
@@ -583,9 +586,34 @@ const Timesheet = () => {
     );
   };
 
+  /* "New line": append a blank line to the table */
+  const handleAddLine = () => {
+    setLines((prev) => [...prev, createNewLine()]);
+  };
+
+  /* "Remove line": delete every line whose checkbox is ticked (or, when
+     nothing is selected, the single line) */
+  const handleRemoveSelectedLines = () => {
+    const selected = lines.filter((l) => selectedLineIds[l.id]).map((l) => l.id);
+    const idsToRemove = selected.length > 0 ? selected : lines.map((l) => l.id);
+    setLines((prev) => prev.filter((line) => !idsToRemove.includes(line.id)));
+    setSelectedLineIds({});
+    notify.success(
+      idsToRemove.length > 1
+        ? `${idsToRemove.length} timesheet lines removed`
+        : 'Timesheet line removed',
+    );
+  };
+
+  /* per-row trash button: delete just that line */
   const handleDeleteLine = (id: string) => {
     setLines((prev) => prev.filter((line) => line.id !== id));
-    notify.info('Timesheet line deleted');
+    setSelectedLineIds((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    notify.success('Timesheet line removed');
   };
 
   const totals = useMemo(() => {
@@ -619,26 +647,30 @@ const Timesheet = () => {
           case 'submitted':
             acc.pending += 1;
             break;
+          case 'open':
+            acc.open += 1;
+            break;
           default:
             acc.draft += 1;
         }
         return acc;
       },
-      { draft: 0, pending: 0, approved: 0, rejected: 0 },
+      { open: 0, draft: 0, pending: 0, approved: 0, rejected: 0 },
     );
 
     return { perDay, grand, billableRatio, statusCounts };
   }, [lines, week]);
 
   /* Overall status for the KPI "Status" card:
+     Open     → default, work-in-progress state until the sheet is saved or
+                submitted (fresh / unsaved lines)
      Approved → only when EVERY line is approved
-     Pending  → any line awaiting review (pending / submitted)
-     Draft    → nothing entered / no line is in review yet */
+     Pending  → any line awaiting review (pending / submitted) */
   const overallStatus = useMemo(() => {
-    if (lines.length === 0) return 'Draft';
+    if (lines.length === 0) return 'Open';
     if (lines.every((l) => l.status === 'approved')) return 'Approved';
     if (lines.some((l) => l.status === 'pending' || l.status === 'submitted')) return 'Pending';
-    return 'Draft';
+    return 'Open';
   }, [lines]);
 
   /* Holiday / leave hours for lines that still exist */
@@ -651,12 +683,16 @@ const Timesheet = () => {
     0,
   );
 
+  /* Save moves the sheet from Open to Pending (saved, awaiting review). */
   const handleSave = () => {
+    setLines((prev) => prev.map((l) => (l.status === 'open' ? { ...l, status: 'pending' } : l)));
     notify.success('Timesheet saved');
   };
 
+  /* Submit moves the sheet to Submitted (in the approval queue). */
   const handleSubmit = () => {
     setSubmitModalOpen(false);
+    setLines((prev) => prev.map((l) => ({ ...l, status: 'submitted' })));
     notify.success('Timesheet submitted for approval');
   };
 
@@ -665,7 +701,7 @@ const Timesheet = () => {
       label: 'New line',
       icon: AddIcon,
       color: '#1976d2',
-      onClick: () => notify.info('New line coming soon'),
+      onClick: handleAddLine,
     },
     {
       label: 'Edit',
@@ -677,7 +713,7 @@ const Timesheet = () => {
       label: 'Remove line',
       icon: DeleteIcon,
       color: '#dc2626',
-      onClick: () => notify.info('Remove line coming soon'),
+      onClick: handleRemoveSelectedLines,
     },
     {
       label: 'Copy from favourite',
@@ -775,7 +811,13 @@ const Timesheet = () => {
               classes={classes}
             />
             <StatCard
-              tone={overallStatus === 'Approved' ? 'green' : 'amber'}
+              tone={
+                overallStatus === 'Approved'
+                  ? 'green'
+                  : overallStatus === 'Pending'
+                    ? 'amber'
+                    : 'cyan' /* Open */
+              }
               icon={LocalOfferIcon}
               value={overallStatus}
               label='Status'
@@ -879,13 +921,15 @@ const Timesheet = () => {
                   <TableHead>
                     <TableRow>
                       <TableCell className={cx(classes.headerCell, classes.selectCell)}>
-                        <Checkbox
-                          checked={allLinesSelected}
-                          indeterminate={someLinesSelected && !allLinesSelected}
-                          onChange={toggleSelectAll}
-                          size='small'
-                          className={classes.checkbox}
-                        />
+                        <CenteredCheckbox className={classes.selectCheckboxBox}>
+                          <Checkbox
+                            checked={allLinesSelected}
+                            indeterminate={someLinesSelected && !allLinesSelected}
+                            onChange={toggleSelectAll}
+                            size='small'
+                            className={classes.checkbox}
+                          />
+                        </CenteredCheckbox>
                       </TableCell>
                       <TableCell className={cx(classes.headerCell, classes.clientCell)}>
                         Client
@@ -939,12 +983,14 @@ const Timesheet = () => {
                       return (
                         <TableRow key={line.id} className={classes.dataRow}>
                           <TableCell className={classes.selectCell}>
-                            <Checkbox
-                              checked={!!selectedLineIds[line.id]}
-                              onChange={() => toggleSelectLine(line.id)}
-                              size='small'
-                              className={classes.checkbox}
-                            />
+                            <CenteredCheckbox className={classes.selectCheckboxBox}>
+                              <Checkbox
+                                checked={!!selectedLineIds[line.id]}
+                                onChange={() => toggleSelectLine(line.id)}
+                                size='small'
+                                className={classes.checkbox}
+                              />
+                            </CenteredCheckbox>
                           </TableCell>
                           <TableCell className={cx(classes.clientCell, classes.cellField)}>
                             <ClientSearchField
@@ -1019,7 +1065,7 @@ const Timesheet = () => {
                             >
                               <StatusDot
                                 style={{
-                                  backgroundColor: isApproved ? theme_success : theme_warning,
+                                  backgroundColor: statusColor(line.status),
                                 }}
                               />
                             </Stack>
@@ -1036,9 +1082,9 @@ const Timesheet = () => {
                                 size='small'
                                 className={classes.actionIconButton}
                                 onClick={() =>
-                                  notify.info(
-                                    isApproved ? 'Line is approved' : 'Timesheet line deleted',
-                                  )
+                                  isApproved
+                                    ? notify.info('Line is approved and cannot be removed')
+                                    : handleDeleteLine(line.id)
                                 }
                               >
                                 {isApproved ? (

@@ -333,9 +333,22 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   selectCell: {
     width: '3%',
+    /* position relative so the absolutely-positioned checkbox centering box
+       (CenteredCheckbox in Timesheet.tsx) spans exactly the cell's content
+       area — deterministic horizontal AND vertical centering regardless of
+       row height, since height: 100% is not reliable inside table cells */
+    position: 'relative' as const,
     textAlign: 'center' as const,
-    paddingLeft: theme.spacing(1),
-    paddingRight: theme.spacing(0.5),
+    verticalAlign: 'middle' as const,
+  },
+
+  /* full-content-area flex box that centers the checkbox in selectCell */
+  selectCheckboxBox: {
+    position: 'absolute' as const,
+    inset: 0,
+    display: 'flex' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   /* Column widths for the lines table. The table uses table-layout: fixed
@@ -395,7 +408,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
       fontSize: '0.8rem',
     },
   },
-
 
   dayCell: {
     textAlign: 'center' as const,
@@ -612,6 +624,9 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   totalsLabelCell: {
     textAlign: 'right' as const,
     paddingLeft: theme.spacing(2),
+    whiteSpace: 'nowrap' as const,
+    fontSize: '0.8rem',
+    color: theme.palette.text.primary,
   },
 
   totalsDayCell: {
@@ -645,17 +660,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   totalsRowLabel: {
     fontSize: '0.8rem',
     fontWeight: 700,
-    color: theme.palette.text.primary,
-  },
-
-  /* totals-row label cell: the label spans every column up to (and
-     including) Internal Note, so it ends flush with that column — the
-     day figures to its right then line up under their day headers */
-  totalsLabelCell: {
-    textAlign: 'right' as const,
-    paddingRight: theme.spacing(1.5),
-    whiteSpace: 'nowrap' as const,
-    fontSize: '0.8rem',
     color: theme.palette.text.primary,
   },
 
