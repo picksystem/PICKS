@@ -15,6 +15,7 @@ import {
   getSessionUser,
   destroySession,
   revokeAllUserSessions,
+  SESSION_COOKIE_NAME,
 } from '@serviceops/database';
 import { getPasetoSigner } from '@serviceops/core/infrastructure';
 import { PrismaClient } from '@prisma/client';
@@ -490,7 +491,32 @@ export class AuthController {
     // get-session: hydrate the UI on page load. No session → not authenticated.
     if (action === 'get-session') {
       if (!sessionUser) {
-        res.json({ message: 'Not authenticated', data: { authenticated: false } });
+        // Diagnostics: pin down WHICH link broke, so the browser's response is
+        // self-explanatory instead of a bare 401:
+        //   cookiePresent=false  -> the request didn't carry the session cookie
+        //      (most common: cross-site fetch without credentials:'include', or
+        //       the browser rejected a SameSite/Secure cookie for this origin)
+        //   cookiePresent=true, sessionId missing -> cookie malformed/expired
+        //   sessionId present, userId missing -> session destroyed or cleared
+        const rawSid = req.cookies?.[SESSION_COOKIE_NAME] as string | undefined;
+        const userIdPresent =
+          req.session?.userId !== undefined && req.session?.userId !== null;
+        logger.debug?.('get-session: no active session', {
+          cookiePresent: Boolean(rawSid),
+          sessionId: req.sessionID || null,
+          userId: req.session?.userId ?? null,
+        });
+        res.json({
+          message: 'Not authenticated',
+          data: {
+            authenticated: false,
+            debug: {
+              cookiePresent: Boolean(rawSid),
+              sessionId: req.sessionID || null,
+              userId: req.session?.userId ?? null,
+            },
+          },
+        });
         return;
       }
       const user = await db.user.findUnique({ where: { id: sessionUser.id } });

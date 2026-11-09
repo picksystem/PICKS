@@ -13,7 +13,10 @@ import {
  * stored in localStorage/sessionStorage — the server holds the session.
  */
 const rawBaseQuery = fetchBaseQuery({
-  baseUrl: process.env.API_URL || 'http://localhost:3001',
+  // Empty in dev → requests are relative to the page origin and go through the
+  // Vite proxy (same-origin, normal cookie). Set API_URL to an absolute URL for
+  // prod / a separately-hosted API (then cross-site cookie rules apply).
+  baseUrl: process.env.API_URL ?? '',
   credentials: 'include',
 });
 

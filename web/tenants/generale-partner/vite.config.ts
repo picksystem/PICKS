@@ -33,7 +33,11 @@ export default defineConfig(({ mode }) => ({
     'process.env.PARTNER': JSON.stringify(partnerConfig.partner || PARTNER),
     'process.env.PARTNER_ID': JSON.stringify(partnerConfig.partnerId),
     'process.env.PARTNER_NAME': JSON.stringify(partnerConfig.partnerName),
-    'process.env.API_URL': JSON.stringify(process.env.API_URL || 'http://localhost:3001'),
+    // Same-origin by default in dev: the API is proxied (see `server.proxy`) so
+    // the session cookie is a normal same-site cookie — no CORS, no
+    // SameSite=None. Set API_URL to an absolute URL only if you run the API on
+    // another origin (then you need cross-site cookie support).
+    'process.env.API_URL': JSON.stringify(process.env.API_URL ?? ''),
     __PARTNER_CONFIG__: JSON.stringify(partnerConfig),
     APP_NAME: JSON.stringify('administration'),
     PARTNER: JSON.stringify(PARTNER),
@@ -61,6 +65,16 @@ export default defineConfig(({ mode }) => ({
   server: {
     port: 1700,
     open: false,
+    // Same-origin dev: forward API + upload calls to the backend so the session
+    // cookie stays same-site (no CORS, no cross-site cookie requirements).
+    // Set API_URL to an absolute URL to point at a separately-hosted API instead.
+    proxy: process.env.API_URL
+      ? undefined
+      : {
+          '/api': { target: 'http://localhost:3001', changeOrigin: true },
+          '/uploads': { target: 'http://localhost:3001', changeOrigin: true },
+          '/health': { target: 'http://localhost:3001', changeOrigin: true },
+        },
   },
 
   build: {

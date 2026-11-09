@@ -111,9 +111,23 @@ export interface ISignInResponse {
  * Response of the `get-session` action, used to re-hydrate the UI on page
  * load against the server-side session cookie (no token is involved).
  */
+/**
+ * Diagnostics included on `get-session` when no active session is found, so a
+ * browser's "not authenticated" response can be interpreted without guessing:
+ *  - cookiePresent: false  -> the request never carried the session cookie
+ *    (usually a cross-site fetch missing credentials:'include', or the
+ *    browser rejecting a SameSite/Secure cookie for that origin)
+ *  - userId: null + sessionId present -> the session was destroyed/expired
+ */
+export interface ISessionDebug {
+  cookiePresent: boolean;
+  sessionId: string | null;
+  userId: number | null;
+}
+
 export interface ISessionResponse {
   message: string;
   data:
-    | { authenticated: false }
+    | { authenticated: false; debug?: ISessionDebug }
     | { authenticated: true; user: IAuthUser; mustResetPassword: boolean };
 }
