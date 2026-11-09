@@ -17,7 +17,6 @@ import {
   LinkIcon,
   AttachFileIcon,
   EditIcon,
-  StarBorderIcon,
   StarIcon,
   IconButton,
   TextField,
@@ -25,6 +24,7 @@ import {
   BookmarkIcon,
   CommentIcon,
   AssessmentIcon,
+  Tooltip,
 } from '../../../components';
 import {
   Table,
@@ -35,6 +35,9 @@ import {
   TableContainer,
   Stack,
   styled,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
 } from '@mui/material';
 import StickyNote2Icon from '@mui/icons-material/StickyNote2';
 import PublicIcon from '@mui/icons-material/Public';
@@ -57,6 +60,11 @@ import {
   parseRichText,
   serializeRichText,
 } from '../Configuration/shared/RichTextEditor';
+import {
+  ConfigFormDialog,
+  ConfigDeleteDialog,
+} from '../Configuration/dialogs/ConfigDialogs/ConfigDialogs';
+import { APPROVED_ESTIMATES_ACCENT } from '../Configuration/sections/General/components/ApprovedEstimates/shared/ApprovedEstimatesConfig';
 import { useStyles } from './styles';
 import { TimesheetLine, TIMESHEET_TASKS, DayEntry, ApprovalEntry } from './types/timesheet.types';
 
@@ -74,6 +82,7 @@ const NOTE_TYPE_CONFIG: Record<
     color: string;
     emptyLabel: string;
     filledLabel: string;
+    tooltipText: string;
     dialogTitle: string;
     dialogSubtitle: string;
     editorTitle: string;
@@ -83,6 +92,7 @@ const NOTE_TYPE_CONFIG: Record<
     color: '#1d4ed8',
     emptyLabel: 'Add External comment',
     filledLabel: 'External comment',
+    tooltipText: 'Click to add or view the External comment — the comment box will open.',
     dialogTitle: 'Add External comment',
     dialogSubtitle: 'Visible to the client — use plain, client-friendly language.',
     editorTitle: 'External Comment',
@@ -91,6 +101,7 @@ const NOTE_TYPE_CONFIG: Record<
     color: theme_warning,
     emptyLabel: 'Add Internal comment',
     filledLabel: 'Internal comment',
+    tooltipText: 'Click to add or view the Internal comment — the comment box will open.',
     dialogTitle: 'Add Internal comment',
     dialogSubtitle: 'Visible to your team only — never shown to the client.',
     editorTitle: 'Internal Comment',
@@ -288,77 +299,46 @@ const createNewLine = (): TimesheetLine => {
   };
 };
 
-/* ── Note dialog: type-differentiated header & theme per kind ── */
+/* ── Note dialog: mirrors the ConfigFormDialog look of the "Add Approved
+   Estimate" dialog — same APPROVED_ESTIMATES_ACCENT header gradient, icon
+   tile, Cancel/Save actions and md width. Icon & subtitle still differ
+   per note kind (globe/external vs lock/internal). ── */
 const NoteDialog = ({
   kind,
   draft,
   onClose,
   onSave,
   onDraftChange,
-  modalFooterClass,
 }: {
   kind: NoteKind;
   draft: string;
   onClose: () => void;
   onSave: () => void;
   onDraftChange: (d: string) => void;
-  modalFooterClass?: string;
 }) => {
   const cfg = NOTE_TYPE_CONFIG[kind];
+  const isEdit = draft.trim().length > 0;
 
   return (
-    <Modal
+    <ConfigFormDialog
       open
       onClose={onClose}
-      headerBackground={`linear-gradient(135deg, ${cfg.color}22 0%, ${cfg.color}44 100%)`}
-      headerTextColor={cfg.color}
-      title={
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: 1,
-              bgcolor: `${cfg.color}22`,
-              border: `1px solid ${cfg.color}44`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {kind === 'external' ? (
-              <PublicIcon sx={{ fontSize: '1rem', color: cfg.color }} />
-            ) : (
-              <LockIcon sx={{ fontSize: '1rem', color: cfg.color }} />
-            )}
-          </Box>
-          <Box>
-            <Typography sx={{ fontSize: '1rem', fontWeight: 600, color: '#fff', lineHeight: 1.3 }}>
-              {cfg.dialogTitle}
-            </Typography>
-            <Typography
-              sx={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.85)', lineHeight: 1.3 }}
-            >
-              {cfg.dialogSubtitle}
-            </Typography>
-          </Box>
-        </Box>
+      onSubmit={onSave}
+      isEdit={isEdit}
+      icon={
+        kind === 'external' ? (
+          <PublicIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />
+        ) : (
+          <LockIcon sx={{ color: '#fff', fontSize: '1.1rem' }} />
+        )
       }
-      maxWidth='xs'
-      footer={
-        <Stack direction='row' spacing={1} justifyContent='center'>
-          <Button variant='outlined' size='small' label='Cancel' onClick={onClose} />
-          <Button
-            variant='contained'
-            size='small'
-            label='Save'
-            onClick={onSave}
-            sx={{ bgcolor: cfg.color, '&:hover': { bgcolor: `${cfg.color}dd` } }}
-          />
-        </Stack>
-      }
+      accent={APPROVED_ESTIMATES_ACCENT}
+      title={cfg.editorTitle}
+      subtitle={cfg.dialogSubtitle}
+      submitLabel='Save'
+      maxWidth='md'
     >
-      <Box sx={{ p: 1 }}>
+      <Box sx={{ borderRadius: 1 }}>
         <RichTextEditor
           value={{ segments: parseRichText(draft).segments }}
           onChange={(value) => onDraftChange(serializeRichText(value.segments))}
@@ -366,44 +346,141 @@ const NoteDialog = ({
           title={cfg.editorTitle}
         />
       </Box>
-    </Modal>
+    </ConfigFormDialog>
   );
+};
+
+/* ── Advanced notes panel: a shared external/internal editor that writes one
+   note into every target line at once (toggled by the "Use advanced notes"
+   toolbar action). Kept as a stateful widget so its draft survives the main
+   page component re-rendering. */
+const AdvancedNotesPanel = ({
+  kind,
+  onKindChange,
+  onApply,
+  targetCount,
+}: {
+  kind: NoteKind;
+  onKindChange: (k: NoteKind) => void;
+  onApply: (text: string) => void;
+  targetCount: number;
+}) => {
+  const [draft, setDraft] = useState('');
+  const cfg = NOTE_TYPE_CONFIG[kind];
+  return (
+    <Box
+      sx={{
+        border: '1px solid #e5e7eb',
+        backgroundColor: '#ffffff',
+        borderRadius: 3,
+        p: 2,
+        mb: 2,
+      }}
+    >
+      <Stack direction='row' spacing={1} alignItems='center' mb={1.5}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, pr: 1 }}>
+          <PublicIcon sx={{ fontSize: '1rem', color: cfg.color }} />
+          <Typography variant='body2' sx={{ fontWeight: 700, color: cfg.color }}>
+            Advanced notes
+          </Typography>
+        </Box>
+        <RadioGroup
+          row
+          value={kind}
+          onChange={(e) => onKindChange(e.target.value as NoteKind)}
+          sx={{ gap: 1 }}
+        >
+          <FormControlLabel
+            value='external'
+            control={<Radio size='small' color='primary' />}
+            label='External'
+          />
+          <FormControlLabel
+            value='internal'
+            control={<Radio size='small' color='primary' />}
+            label='Internal'
+          />
+        </RadioGroup>
+        <Box sx={{ ml: 'auto', fontSize: '0.75rem', color: 'text.secondary', textAlign: 'right' }}>
+          Applies to {targetCount} target line{targetCount === 1 ? '' : 's'}
+        </Box>
+      </Stack>
+      <RichTextEditor
+        value={{ segments: parseRichText(draft).segments }}
+        onChange={(value) => setDraft(serializeRichText(value.segments))}
+        showFooterActions={false}
+        title={cfg.editorTitle}
+        placeholder={cfg.emptyLabel}
+      />
+      <Stack direction='row' spacing={1} mt={1.5} justifyContent='flex-end'>
+        <Button variant='outlined' size='small' label='Clear' onClick={() => setDraft('')} />
+        <Button
+          variant='contained'
+          size='small'
+          label='Apply note'
+          onClick={() => onApply(draft)}
+          disabled={!draft.trim()}
+          sx={{ bgcolor: cfg.color, '&:hover': { bgcolor: `${cfg.color}dd` } }}
+        />
+      </Stack>
+    </Box>
+  );
+};
+
+/* Collapses a serialized rich-text note to a short single-line preview
+   (first line, markers stripped), so a filled note cell shows at least
+   some of its content instead of a generic label. */
+const notePreviewText = (note: string, maxLen = 32): string => {
+  const text = parseRichText(note).segments[0]?.text?.trim() ?? '';
+  if (!text) return '';
+  return text.length > maxLen ? `${text.slice(0, maxLen)}…` : text;
 };
 
 /* ── Note cell button: same layout, clearly different per type ── */
 const NoteCellButton = ({
   kind,
-  hasValue,
+  note,
   disabled,
   onOpen,
 }: {
   kind: NoteKind;
-  hasValue: boolean;
+  note: string;
   disabled?: boolean;
   onOpen: () => void;
 }) => {
   const cfg = NOTE_TYPE_CONFIG[kind];
+  const preview = notePreviewText(note);
   /* Rendered as a real (read-only) TextField so the note fields are
      pixel-identical to the Client / Project / Task search fields:
      same height, width, border and radius. Clicking opens the note
-     dialog instead of typing. */
+     dialog instead of typing. Empty lines show the "Add … comment"
+     placeholder; filled lines preview their first content line.
+     A tooltip on hover explains that clicking opens the comment box. */
   return (
-    <Box onClick={onOpen}>
-      <TextField
-        size='small'
-        variant='outlined'
-        fullWidth
-        value={hasValue ? cfg.filledLabel : ''}
-        placeholder={cfg.emptyLabel}
-        inputProps={{ readOnly: true }}
-        disabled={disabled}
-        sx={{
-          '& .MuiOutlinedInput-input': {
-            cursor: disabled ? 'not-allowed' : 'pointer',
-          },
-        }}
-      />
-    </Box>
+    <Tooltip
+      title={disabled ? 'This line is approved and cannot be edited' : cfg.tooltipText}
+      placement='top'
+    >
+      <Box onClick={onOpen}>
+        <TextField
+          size='small'
+          variant='outlined'
+          fullWidth
+          value={preview}
+          placeholder={cfg.emptyLabel}
+          icon={<EditIcon sx={{ fontSize: '1rem', color: disabled ? undefined : '#616161' }} />}
+          iconAlignment='right'
+          inputProps={{ readOnly: true }}
+          disabled={disabled}
+          sx={{
+            '& .MuiOutlinedInput-input': {
+              cursor: disabled ? 'not-allowed' : 'pointer',
+              textOverflow: 'ellipsis',
+            },
+          }}
+        />
+      </Box>
+    </Tooltip>
   );
 };
 
@@ -494,10 +571,23 @@ const Timesheet = () => {
   const [weekOffset, setWeekOffset] = useState(0);
   const week = useMemo(() => buildWeek(weekOffset), [weekOffset]);
 
+  /* Tab 2 (My Allocation) is not built yet — keep the tab but surface a
+     placeholder panel instead of a dead button, as in the reference UI */
+  const handleTabChange = (_: unknown, value: number) => {
+    setActiveTab(value);
+  };
+
   /* start with a single blank line; more are added via the "New line"
      toolbar action and removed via the row checkboxes + "Remove line" */
   const [lines, setLines] = useState<TimesheetLine[]>(() => [createNewLine()]);
   const [submitModalOpen, setSubmitModalOpen] = useState(false);
+  /* Pending line deletion awaiting the confirmation dialog: the label is
+     shown in the dialog body and the action runs only after "Delete" */
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    open: boolean;
+    label: string;
+    action: () => void;
+  }>({ open: false, label: '', action: () => {} });
   const [showDetailedTotals, setShowDetailedTotals] = useState(true);
   const [showAdvancedNotes, setShowAdvancedNotes] = useState(false);
   const [selectedLineIds, setSelectedLineIds] = useState<Record<string, boolean>>({});
@@ -510,6 +600,13 @@ const Timesheet = () => {
     draft: string;
   }>({ open: false, lineId: '', kind: 'external', draft: '' });
 
+  /* "Use advanced notes" toggles the dedicated external/internal note cells;
+     this picks which note type the advanced note editor writes into */
+  const [advancedNoteKind, setAdvancedNoteKind] = useState<NoteKind>('external');
+
+  /* "Edit" (toolbar) opens a selection dialog to target the affected line(s) */
+  const [editSelectionOpen, setEditSelectionOpen] = useState(false);
+
   const openNoteDialog = (lineId: string, kind: NoteKind) => {
     const line = lines.find((l) => l.id === lineId);
     if (!line) return;
@@ -521,8 +618,18 @@ const Timesheet = () => {
     });
   };
 
-  const closeNoteDialog = () =>
+  const closeNoteDialog = () => {
     setNoteDialog((prev) => ({ ...prev, open: false, lineId: '', draft: '' }));
+    /* MUI Modal restores focus to the element that was focused before the
+       dialog opened — the note cell's read-only input — leaving it visibly
+       focused after save/cancel. Drop focus back to body on the next frame
+       (after MUI has finished its restore) so the field doesn't keep a
+       focus ring. */
+    requestAnimationFrame(() => {
+      const el = document.activeElement as HTMLElement | null;
+      el?.blur();
+    });
+  };
 
   const saveNoteDialog = () => {
     updateLine(noteDialog.lineId, {
@@ -591,29 +698,189 @@ const Timesheet = () => {
     setLines((prev) => [...prev, createNewLine()]);
   };
 
+  /* ── Line deletion: nothing is actually removed until the user confirms
+       in the delete-confirmation dialog. Each handler only opens it,
+       passing the action that will run on "Delete". */
+  const askToDelete = (label: string, action: () => void) => {
+    setDeleteConfirm({ open: true, label, action });
+  };
+  const closeDeleteConfirm = () => {
+    setDeleteConfirm({ open: false, label: '', action: () => {} });
+    /* MUI Modal restores focus to the trigger; drop it back to body so the
+       row / toolbar button does not keep a visible focus ring */
+    requestAnimationFrame(() => {
+      const el = document.activeElement as HTMLElement | null;
+      el?.blur();
+    });
+  };
+  const confirmDelete = () => {
+    deleteConfirm.action();
+    closeDeleteConfirm();
+  };
+
   /* "Remove line": delete every line whose checkbox is ticked (or, when
      nothing is selected, the single line) */
   const handleRemoveSelectedLines = () => {
     const selected = lines.filter((l) => selectedLineIds[l.id]).map((l) => l.id);
-    const idsToRemove = selected.length > 0 ? selected : lines.map((l) => l.id);
-    setLines((prev) => prev.filter((line) => !idsToRemove.includes(line.id)));
-    setSelectedLineIds({});
-    notify.success(
-      idsToRemove.length > 1
-        ? `${idsToRemove.length} timesheet lines removed`
-        : 'Timesheet line removed',
-    );
+    const count = selected.length > 0 ? selected.length : lines.length;
+    askToDelete(count > 1 ? `${count} timesheet lines` : 'this timesheet line', () => {
+      const idsToRemove = selected.length > 0 ? selected : lines.map((l) => l.id);
+      setLines((prev) => prev.filter((line) => !idsToRemove.includes(line.id)));
+      setSelectedLineIds({});
+      notify.success(count > 1 ? `${count} timesheet lines removed` : 'Timesheet line removed');
+    });
   };
 
   /* per-row trash button: delete just that line */
   const handleDeleteLine = (id: string) => {
-    setLines((prev) => prev.filter((line) => line.id !== id));
-    setSelectedLineIds((prev) => {
-      const next = { ...prev };
-      delete next[id];
+    askToDelete('this timesheet line', () => {
+      setLines((prev) => prev.filter((line) => line.id !== id));
+      setSelectedLineIds((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      notify.success('Timesheet line removed');
+    });
+  };
+
+  /* per-row duplicate button: clone the line (client / project / task /
+     notes / billable / day hours) into a fresh open line inserted directly
+     below the original. */
+  const handleDuplicateLine = (id: string) => {
+    setLines((prev) => {
+      const idx = prev.findIndex((l) => l.id === id);
+      if (idx === -1) return prev;
+      const src = prev[idx];
+      newLineSeq += 1;
+      const copy: TimesheetLine = {
+        ...src,
+        id: `line-${Date.now()}-${newLineSeq}`,
+        status: 'open',
+        dayValues: { ...src.dayValues },
+        liked: false,
+        favourited: false,
+      };
+      const next = [...prev];
+      next.splice(idx + 1, 0, copy);
       return next;
     });
-    notify.success('Timesheet line removed');
+    notify.success('Line duplicated');
+  };
+
+  /* ── Toolbar actions, wired to the table state ────────────── */
+
+  const selectedCount = lines.filter((l) => selectedLineIds[l.id]).length;
+
+  /* "Edit" picks a target scope, then selects that line's checkbox so the
+     table row below is the active edit target (editing is inline in the grid). */
+  const [editTarget, setEditTarget] = useState<string>(selectedCount > 0 ? 'selected' : 'all');
+  const handleEdit = () => setEditSelectionOpen(true);
+  const confirmEditSelection = () => {
+    const target = editTarget === 'all' ? lines : lines.filter((l) => selectedLineIds[l.id]);
+    const ids = target.length > 0 ? target.map((l) => l.id) : lines.map((l) => l.id);
+    setSelectedLineIds(Object.fromEntries(ids.map((id) => [id, true])));
+    setEditSelectionOpen(false);
+    notify.info(`${ids.length} line${ids.length > 1 ? 's' : ''} selected for editing`);
+  };
+
+  /* "Copy from favourite": clone the first favourited line into a fresh open
+     line. Without a favourite there is nothing to copy. */
+  const handleCopyFromFavourite = () => {
+    const src = lines.find((l) => l.favourited);
+    if (!src) {
+      notify.info('No favourite lines yet — mark a line as favourite first');
+      return;
+    }
+    newLineSeq += 1;
+    const copy: TimesheetLine = {
+      ...src,
+      id: `line-${Date.now()}-${newLineSeq}`,
+      status: 'open',
+      dayValues: { ...src.dayValues },
+      liked: false,
+      favourited: false,
+    };
+    setLines((prev) => [...prev, copy]);
+    notify.success(`New line copied from favourite${src.client ? `: ${src.client}` : ''}`);
+  };
+
+  /* "Add to favourites": mark the selected lines (or all, when nothing is
+     selected) as favourites so they can be quickly copied / managed later. */
+  const handleAddToFavourites = () => {
+    const targets = selectedCount > 0 ? lines.filter((l) => selectedLineIds[l.id]) : lines;
+    if (targets.length === 0) {
+      notify.info('No lines to favourite yet');
+      return;
+    }
+    const ids = new Set(targets.map((l) => l.id));
+    setLines((prev) => prev.map((l) => (ids.has(l.id) ? { ...l, favourited: true } : l)));
+    notify.success(`${targets.length} line${targets.length > 1 ? 's' : ''} added to favourites`);
+  };
+
+  /* "Copy to a timesheet": duplicate the selected lines (or all when nothing
+     is selected) into new open lines — the realistic in-page equivalent of
+     copying these lines onto another sheet. */
+  const handleCopyToTimesheet = () => {
+    const sources = selectedCount > 0 ? lines.filter((l) => selectedLineIds[l.id]) : lines;
+    if (sources.length === 0) {
+      notify.info('Nothing to copy yet');
+      return;
+    }
+    setLines((prev) => {
+      const copies = sources.map((src, i) => {
+        newLineSeq += 1;
+        return {
+          ...src,
+          id: `line-${Date.now()}-${newLineSeq}-${i}`,
+          status: 'open' as const,
+          dayValues: { ...src.dayValues },
+          liked: false,
+          favourited: false,
+        };
+      });
+      return [...prev, ...copies];
+    });
+    notify.success(
+      `${sources.length} line${sources.length > 1 ? 's' : ''} copied to a new timesheet`,
+    );
+  };
+
+  /* "Add attachment": flag the selected lines (or all) as carrying an
+     attachment, shown per-row via the clip icon. */
+  const handleAddAttachment = () => {
+    const targets = selectedCount > 0 ? lines.filter((l) => selectedLineIds[l.id]) : lines;
+    if (targets.length === 0) {
+      notify.info('No lines to attach to yet');
+      return;
+    }
+    const ids = new Set(targets.map((l) => l.id));
+    setLines((prev) => prev.map((l) => (ids.has(l.id) ? { ...l, attachment: true } : l)));
+    notify.success(`Attachment added to ${targets.length} line${targets.length > 1 ? 's' : ''}`);
+  };
+
+  /* "Manage favourites": a small dialog listing favourited lines, where the
+     user can unfavourite or remove them. */
+  const [favouritesOpen, setFavouritesOpen] = useState(false);
+  const favouritedLines = lines.filter((l) => l.favourited);
+  const handleManageFavourites = () => setFavouritesOpen(true);
+  const handleUnfavourite = (id: string) => updateLine(id, { favourited: false });
+  const handleDeleteFavourite = (id: string) => handleDeleteLine(id);
+
+  /* "Use advanced notes": apply the note editor's text into the chosen
+     external or internal note of every target line (selected, or all when
+     nothing is selected). */
+  const applyAdvancedNote = (text: string) => {
+    const key = advancedNoteKind === 'external' ? 'externalNote' : 'internalNote';
+    const ids =
+      selectedCount > 0
+        ? lines.filter((l) => selectedLineIds[l.id]).map((l) => l.id)
+        : lines.map((l) => l.id);
+    const idSet = new Set(ids);
+    setLines((prev) => prev.map((l) => (idSet.has(l.id) ? { ...l, [key]: text } : l)));
+    notify.success(
+      `Applied ${advancedNoteKind} note to ${ids.length} line${ids.length > 1 ? 's' : ''}`,
+    );
   };
 
   const totals = useMemo(() => {
@@ -707,7 +974,7 @@ const Timesheet = () => {
       label: 'Edit',
       icon: EditIcon,
       color: '#1d4ed8',
-      onClick: () => notify.info('Edit coming soon'),
+      onClick: handleEdit,
     },
     {
       label: 'Remove line',
@@ -719,7 +986,7 @@ const Timesheet = () => {
       label: 'Copy from favourite',
       icon: StarIcon,
       color: '#7c3aed',
-      onClick: () => notify.info('Copy from favourite coming soon'),
+      onClick: handleCopyFromFavourite,
     },
     {
       label: 'Copy from timesheet',
@@ -731,25 +998,33 @@ const Timesheet = () => {
       label: 'Add to favourites',
       icon: StickyNote2Icon,
       color: '#ca8a04',
-      onClick: () => notify.info('Line added to favourites'),
+      onClick: handleAddToFavourites,
     },
     {
       label: 'Copy to a timesheet',
       icon: LinkIcon,
       color: '#059669',
-      onClick: () => notify.info('Copy to a timesheet coming soon'),
+      onClick: handleCopyToTimesheet,
     },
     {
       label: 'Add attachment',
       icon: AttachFileIcon,
       color: '#92400e',
-      onClick: () => notify.info('Attachment coming soon'),
+      onClick: handleAddAttachment,
     },
     {
       label: 'Use advanced notes',
       icon: CommentIcon,
       color: '#0d9488',
-      onClick: () => setShowAdvancedNotes((v) => !v),
+      onClick: () => {
+        const next = !showAdvancedNotes;
+        setShowAdvancedNotes(next);
+        notify.info(
+          next
+            ? 'Advanced notes enabled — apply an external or internal note to the selected lines'
+            : 'Advanced notes hidden',
+        );
+      },
     },
     {
       label: 'Show detailed totals',
@@ -761,7 +1036,7 @@ const Timesheet = () => {
       label: 'Manage favourites',
       icon: BookmarkIcon,
       color: '#d97706',
-      onClick: () => notify.info('Manage favourites coming soon'),
+      onClick: handleManageFavourites,
     },
   ];
 
@@ -773,21 +1048,45 @@ const Timesheet = () => {
         className={classes.pageHeader}
       />
 
-      {/* ── Top bar: tabs + actions ───────────────────────────── */}
+      {/* ── Top bar: tabs + period range + actions ───────────── */}
       <Box className={classes.topBar}>
-        <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} className={classes.tabsBar}>
+        <Tabs value={activeTab} onChange={handleTabChange} className={classes.tabsBar}>
           <Tab label='Timesheet' />
           <Tab label='Approval History' />
+          <Tab label='My Allocation' />
         </Tabs>
 
+        {/* period range, centered between the tabs and the action buttons —
+            only meaningful on the Timesheet tab, so it is hidden elsewhere */}
+        {activeTab === 0 && (
+          <Stack
+            direction='row'
+            spacing={1}
+            alignItems='center'
+            justifyContent='center'
+            className={classes.periodPill}
+          >
+            <Button
+              variant='contained'
+              size='small'
+              startIcon={<NavigateBeforeIcon />}
+              className={classes.periodNav}
+              onClick={() => setWeekOffset((o) => o - 1)}
+            />
+            <Typography variant='body2' className={classes.periodLabel}>
+              {weekRangeLabel}
+            </Typography>
+            <Button
+              variant='contained'
+              size='small'
+              endIcon={<NavigateNextIcon />}
+              className={classes.periodNav}
+              onClick={() => setWeekOffset((o) => o + 1)}
+            />
+          </Stack>
+        )}
+
         <Stack direction='row' spacing={1}>
-          <Button
-            variant='outlined'
-            size='small'
-            label='My Allocation'
-            className={classes.topAction}
-            onClick={() => notify.info('My Allocation coming soon')}
-          />
           <Button
             variant='outlined'
             size='small'
@@ -872,33 +1171,15 @@ const Timesheet = () => {
             ))}
           </Box>
 
-          {/* ── Person / period bar ───────────────────────────── */}
-          <Box className={classes.periodBar}>
-            <Stack
-              direction='row'
-              spacing={1}
-              alignItems='center'
-              className={classes.periodControls}
-            >
-              <Button
-                variant='contained'
-                size='small'
-                startIcon={<NavigateBeforeIcon />}
-                className={classes.periodNav}
-                onClick={() => setWeekOffset((o) => o - 1)}
-              />
-              <Typography variant='body2' className={classes.periodLabel}>
-                {weekRangeLabel}
-              </Typography>
-              <Button
-                variant='contained'
-                size='small'
-                endIcon={<NavigateNextIcon />}
-                className={classes.periodNav}
-                onClick={() => setWeekOffset((o) => o + 1)}
-              />
-            </Stack>
-          </Box>
+          {/* ── Advanced notes (toggled by the "Use advanced notes" action) ── */}
+          {showAdvancedNotes && (
+            <AdvancedNotesPanel
+              kind={advancedNoteKind}
+              onKindChange={setAdvancedNoteKind}
+              onApply={(text) => applyAdvancedNote(text)}
+              targetCount={selectedCount > 0 ? selectedCount : lines.length}
+            />
+          )}
 
           {/* ── Timesheet lines section ───────────────────────── */}
           <Box className={classes.linesSection}>
@@ -1018,7 +1299,7 @@ const Timesheet = () => {
                           <TableCell className={cx(classes.noteCell, classes.cellField)}>
                             <NoteCellButton
                               kind='external'
-                              hasValue={Boolean(line.externalNote)}
+                              note={line.externalNote}
                               disabled={isApproved}
                               onOpen={() => openNoteDialog(line.id, 'external')}
                             />
@@ -1026,7 +1307,7 @@ const Timesheet = () => {
                           <TableCell className={cx(classes.noteCell, classes.cellField)}>
                             <NoteCellButton
                               kind='internal'
-                              hasValue={Boolean(line.internalNote)}
+                              note={line.internalNote}
                               disabled={isApproved}
                               onOpen={() => openNoteDialog(line.id, 'internal')}
                             />
@@ -1068,6 +1349,13 @@ const Timesheet = () => {
                                   backgroundColor: statusColor(line.status),
                                 }}
                               />
+                              {line.attachment && (
+                                <Tooltip title='Attachment added' arrow>
+                                  <AttachFileIcon
+                                    sx={{ fontSize: '0.95rem', color: theme_warning }}
+                                  />
+                                </Tooltip>
+                              )}
                             </Stack>
                           </TableCell>
                           <TableCell className={classes.actionsCell}>
@@ -1078,46 +1366,62 @@ const Timesheet = () => {
                               justifyContent='center'
                               sx={{ width: '100%' }}
                             >
-                              <IconButton
-                                size='small'
-                                className={classes.actionIconButton}
-                                onClick={() =>
+                              {/* Duplicate: clone this line into a new open line
+                                  inserted directly below it. */}
+                              <Tooltip title='Duplicate this line — copies client, project, task, notes and hours into a new line below'>
+                                <IconButton
+                                  size='small'
+                                  className={classes.actionIconButton}
+                                  onClick={() => handleDuplicateLine(line.id)}
+                                >
+                                  <ContentCopyIcon sx={{ fontSize: '1rem' }} />
+                                </IconButton>
+                              </Tooltip>
+
+                              {/* Favourite: mark this line for quick copy /
+                                  manage later (used by the toolbar favourite
+                                  actions). */}
+                              <Tooltip
+                                title={
+                                  line.favourited
+                                    ? 'Remove this line from favourites'
+                                    : 'Add this line to favourites'
+                                }
+                              >
+                                <IconButton
+                                  size='small'
+                                  className={classes.actionIconButton}
+                                  onClick={() =>
+                                    updateLine(line.id, { favourited: !line.favourited })
+                                  }
+                                >
+                                  <BookmarkIcon
+                                    sx={{
+                                      fontSize: '1rem',
+                                      color: line.favourited ? theme_success : undefined,
+                                    }}
+                                  />
+                                </IconButton>
+                              </Tooltip>
+
+                              {/* Delete: remove just this line. Approved lines
+                                  are locked and cannot be deleted. */}
+                              <Tooltip
+                                title={
                                   isApproved
-                                    ? notify.info('Line is approved and cannot be removed')
-                                    : handleDeleteLine(line.id)
+                                    ? 'This line is approved and cannot be removed'
+                                    : 'Remove this line'
                                 }
                               >
-                                {isApproved ? (
-                                  <DeleteIcon sx={{ fontSize: '1rem', color: theme_success }} />
-                                ) : (
+                                <IconButton
+                                  size='small'
+                                  className={classes.actionIconButton}
+                                  disabled={isApproved}
+                                  onClick={() => handleDeleteLine(line.id)}
+                                >
                                   <DeleteIcon sx={{ fontSize: '1rem' }} />
-                                )}
-                              </IconButton>
-                              <IconButton
-                                size='small'
-                                className={classes.actionIconButton}
-                                onClick={() => updateLine(line.id, { liked: !line.liked })}
-                              >
-                                {line.liked ? (
-                                  <StarIcon sx={{ fontSize: '1rem', color: theme_success }} />
-                                ) : (
-                                  <StarBorderIcon sx={{ fontSize: '1rem' }} />
-                                )}
-                              </IconButton>
-                              <IconButton
-                                size='small'
-                                className={classes.actionIconButton}
-                                onClick={() =>
-                                  updateLine(line.id, { favourited: !line.favourited })
-                                }
-                              >
-                                <BookmarkIcon
-                                  sx={{
-                                    fontSize: '1rem',
-                                    color: line.favourited ? theme_success : undefined,
-                                  }}
-                                />
-                              </IconButton>
+                                </IconButton>
+                              </Tooltip>
                             </Stack>
                           </TableCell>
                         </TableRow>
@@ -1241,7 +1545,7 @@ const Timesheet = () => {
             </Box>
           </Box>
         </>
-      ) : (
+      ) : activeTab === 1 ? (
         /* ── Approval History tab ─────────────────────────────── */
         <Box className={classes.linesSection}>
           <TableContainer className={classes.tableContainer}>
@@ -1280,6 +1584,15 @@ const Timesheet = () => {
               </TableBody>
             </Table>
           </TableContainer>
+        </Box>
+      ) : (
+        /* ── My Allocation tab (placeholder for now) ─────────── */
+        <Box className={classes.linesSection}>
+          <Box className={classes.emptyState}>
+            <Typography variant='body1' color='text.secondary'>
+              My Allocation coming soon.
+            </Typography>
+          </Box>
         </Box>
       )}
 
@@ -1334,6 +1647,23 @@ const Timesheet = () => {
         </Typography>
       </Modal>
 
+      {/* ── Delete-confirmation modal (per-row trash / Remove line) ── */}
+      {/* shared delete-confirmation dialog, matching the Configuration
+          admin-controls / table delete pattern (@serviceops/configdialogs) */}
+      <ConfigDeleteDialog
+        open={deleteConfirm.open}
+        onClose={closeDeleteConfirm}
+        onConfirm={confirmDelete}
+        entityName='Timesheet line'
+        itemName={deleteConfirm.label}
+        message={
+          <>
+            Are you sure you want to delete {deleteConfirm.label}? It will be removed from the
+            current week&rsquo;s timesheet.
+          </>
+        }
+      />
+
       {/* ── Note (external / internal) dialog — type-differentiated ── */}
       {noteDialog.open && (
         <NoteDialog
@@ -1344,6 +1674,140 @@ const Timesheet = () => {
           onSave={saveNoteDialog}
         />
       )}
+
+      {/* ── Edit target selection (toolbar "Edit") ── */}
+      <Modal
+        open={editSelectionOpen}
+        onClose={() => setEditSelectionOpen(false)}
+        title='Edit timesheet'
+        headerBackground='linear-gradient(135deg, #1d4ed822 0%, #1d4ed844 100%)'
+        headerTextColor='#1d4ed8'
+        maxWidth='xs'
+        footer={
+          <Stack
+            direction='row'
+            spacing={1}
+            justifyContent='center'
+            className={classes.modalFooter}
+          >
+            <Button
+              variant='outlined'
+              size='small'
+              label='Cancel'
+              onClick={() => setEditSelectionOpen(false)}
+            />
+            <Button
+              variant='contained'
+              size='small'
+              label='Select lines'
+              onClick={confirmEditSelection}
+              sx={{ bgcolor: '#1d4ed8', '&:hover': { bgcolor: '#1d4ed8dd' } }}
+            />
+          </Stack>
+        }
+      >
+        <Box sx={{ p: 1 }}>
+          <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+            Editing is done inline in the table. Pick which lines to target:
+          </Typography>
+          <RadioGroup value={editTarget} onChange={(e) => setEditTarget(e.target.value)}>
+            <FormControlLabel
+              value='all'
+              control={<Radio size='small' color='primary' />}
+              label={<Typography variant='body2'>All lines ({lines.length})</Typography>}
+            />
+            <FormControlLabel
+              value='selected'
+              control={<Radio size='small' color='primary' />}
+              label={<Typography variant='body2'>Only selected lines ({selectedCount})</Typography>}
+            />
+          </RadioGroup>
+        </Box>
+      </Modal>
+
+      {/* ── Manage favourites (toolbar "Manage favourites") ── */}
+      <Modal
+        open={favouritesOpen}
+        onClose={() => setFavouritesOpen(false)}
+        title='Manage favourites'
+        headerBackground='linear-gradient(135deg, #d9770622 0%, #d9770644 100%)'
+        headerTextColor='#d97706'
+        maxWidth='sm'
+        footer={
+          <Stack
+            direction='row'
+            spacing={1}
+            justifyContent='center'
+            className={classes.modalFooter}
+          >
+            <Button
+              variant='outlined'
+              size='small'
+              label='Close'
+              onClick={() => setFavouritesOpen(false)}
+            />
+          </Stack>
+        }
+      >
+        <Box sx={{ p: 1 }}>
+          {favouritedLines.length === 0 ? (
+            <Typography variant='body2' color='text.secondary' sx={{ textAlign: 'center', py: 3 }}>
+              No favourite lines yet. Use &ldquo;Add to favourites&rdquo; to pin a line.
+            </Typography>
+          ) : (
+            <Stack spacing={1}>
+              {favouritedLines.map((line) => {
+                const label =
+                  [line.client, line.project, line.task].filter(Boolean).join(' · ') ||
+                  'Untitled line';
+                return (
+                  <Box
+                    key={line.id}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 1,
+                      px: 1.5,
+                      py: 1,
+                      border: '1px solid #fde68a',
+                      borderRadius: 1.5,
+                      backgroundColor: '#fffbeb',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+                      <BookmarkIcon
+                        sx={{ fontSize: '1rem', color: theme_success, flexShrink: 0 }}
+                      />
+                      <Typography
+                        variant='body2'
+                        sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                      >
+                        {label}
+                      </Typography>
+                    </Box>
+                    <Stack direction='row' spacing={0.5}>
+                      <Button
+                        variant='outlined'
+                        size='small'
+                        label='Unfavourite'
+                        onClick={() => handleUnfavourite(line.id)}
+                      />
+                      <Button
+                        variant='outlined'
+                        size='small'
+                        color='error'
+                        label='Remove'
+                        onClick={() => handleDeleteFavourite(line.id)}
+                      />
+                    </Stack>
+                  </Box>
+                );
+              })}
+            </Stack>
+          )}
+        </Box>
+      </Modal>
     </Box>
   );
 };

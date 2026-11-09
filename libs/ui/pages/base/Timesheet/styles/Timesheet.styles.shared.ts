@@ -4,6 +4,9 @@ import { CSSObject } from 'tss-react';
 export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   container: {
     padding: theme.spacing(3),
+    /* light grey page backdrop so the white cards (stat cards, toolbar,
+       table) stand out instead of blending into a flat white page */
+    backgroundColor: '#f8f9fb',
     [theme.breakpoints.down('sm')]: { padding: theme.spacing(1.5) },
     [theme.breakpoints.between('sm', 'md')]: { padding: theme.spacing(2) },
   },
@@ -44,8 +47,31 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   tabsBar: {
-    borderBottom: 'none',
     gap: 0,
+    /* give the tab bar a soft bottom rule that doubles as the indicator
+       track, so the tabs read as a proper segmented control rather than
+       bare text on a flat page */
+    borderBottom: `1px solid ${theme.palette.divider}`,
+    '& .MuiTab': {
+      textTransform: 'none',
+      fontWeight: 600,
+      minHeight: 44,
+      padding: theme.spacing(1, 2),
+      fontSize: '0.9rem',
+      color: theme.palette.text.secondary,
+      '&:hover': { color: theme.palette.primary.main, backgroundColor: 'transparent' },
+      '&.Mui-selected': {
+        color: theme.palette.primary.main,
+      },
+    },
+    '& .MuiTabs-indicator': {
+      height: 3,
+      borderRadius: 3,
+      backgroundColor: theme.palette.primary.main,
+    },
+    '& .MuiTabs-scrollButtons': {
+      display: 'none',
+    },
   },
 
   topAction: {
@@ -53,30 +79,23 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   /* ── Person / period bar ───────────────────────────────────── */
-  periodBar: {
+  /* Period pill shown on the top bar (tabs | period range | actions),
+     matching the reference layout: a white band that stretches across the
+     whole middle of the top bar — from just after the "Approval History"
+     tab to just before the "My Allocation" button — with the ‹ › nav
+     buttons and the selected week range centered inside it */
+  periodPill: {
     display: 'flex',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
+    flexGrow: 1,
+    minWidth: 240,
+    /* roomy padding around the ‹ › buttons and the week-range label */
     gap: theme.spacing(2),
     padding: theme.spacing(1, 2),
-    marginBottom: theme.spacing(1),
-    flexWrap: 'wrap' as const,
     backgroundColor: '#ffffff',
-    borderRadius: 4,
+    borderRadius: 12,
     border: '1px solid #e5e7eb',
-    color: '#111827',
-    position: 'relative' as const,
-    overflow: 'hidden' as const,
-    '&::after': {
-      content: '""',
-      position: 'absolute' as const,
-      right: 0,
-      top: 0,
-      bottom: 0,
-      width: '18%',
-      background: 'linear-gradient(115deg, transparent 30%, rgba(0,0,0,0.03) 50%, transparent 80%)',
-      pointerEvents: 'none' as const,
-    },
   },
 
   personName: {
@@ -85,23 +104,18 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     color: '#111827',
   },
 
-  periodControls: {
-    position: 'relative' as const,
-    zIndex: 1,
-    alignItems: 'center',
-  },
-
   periodNav: {
     backgroundColor: '#ffffff',
     border: '1px solid #d1d5db',
     color: '#1e3a8a',
-    minWidth: 36,
-    height: 36,
-    padding: 0,
+    minWidth: 40,
+    height: 40,
+    /* generous internal padding so the chevron has room to breathe */
+    padding: theme.spacing(1),
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 0,
+    borderRadius: 8,
     '&:hover': {
       backgroundColor: '#f3f4f6',
       border: '1px solid #9ca3af',
@@ -109,10 +123,12 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   periodLabel: {
-    fontSize: '0.95rem',
+    fontSize: '1rem',
     fontWeight: 700,
     letterSpacing: '0.02em',
     whiteSpace: 'nowrap' as const,
+    /* padding around the date text so it isn't cramped against the chevrons */
+    padding: theme.spacing(0.5, 1.5),
   },
 
   /* ── Summary stat cards (top of page, below topBar) ────────── */
