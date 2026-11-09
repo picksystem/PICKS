@@ -490,6 +490,29 @@ serivceops implements a comprehensive role-based access control system with thre
 - Short-lived signed tokens (e.g. the 15-minute password-reset token) use
   **PASETO** — the safer successor to JWT — never JWT, and never for sessions
 
+**Cookie & CORS in production**
+
+The session cookie's `Secure`/`SameSite` flags follow the *actual* connection
+scheme, not `NODE_ENV`:
+
+- **Same-site** (frontend + API on one domain, or a reverse proxy in front):
+  plain http dev → `SameSite=Lax`. Fine, no config needed.
+- **Cross-site** (e.g. app on `app.serviceops.tech`, API on
+  `api.serviceops.tech`): both must be HTTPS, the API is automatically
+  `Secure; SameSite=None` over TLS, and you **must** list every calling
+  origin in `CORS_ORIGIN` (comma-separated) or the browser drops the
+  credentials-bearing requests. The server logs a warning at startup if
+  `CORS_ORIGIN` is empty.
+- Behind a TLS-terminating proxy (Render, Vercel, nginx) nothing extra is
+  needed — the app trusts the immediate proxy hop for the scheme.
+- `SESSION_COOKIE_SECURE=true|false` forces the flag either way if a setup
+  needs it.
+
+> Sign-in that "succeeds then immediately logs out" is almost always a
+> cookie that the browser rejected: a `Secure` cookie set over plain http, or
+> a `SameSite=None` cookie whose origin wasn't in `CORS_ORIGIN`. Check the
+> cookie's flags and the response headers first.
+
 ### Account Security
 
 - **Account Lockout**: 5 failed login attempts trigger a 30-minute lockout

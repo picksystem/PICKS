@@ -11,7 +11,7 @@ import cookieParser from 'cookie-parser';
 
 // Centralized error handling + auth middleware
 import { errorHandler, notFoundHandler, requireAuth, PgSessionStore } from '@serviceops/middleware';
-import { pool } from '@serviceops/database';
+import { pool, sessionCookieSettings } from '@serviceops/database';
 
 // Import route modules
 import authRoutes from '../api/auth/Auth.routes';
@@ -25,7 +25,6 @@ type AppDeps = {
 };
 
 // ─── Session configuration ───────────────────────────────────────────────────
-const IS_PROD = process.env.NODE_ENV === 'production';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'serivceops-session-secret-key';
 // Session lifetime (days) for the "stay signed in" cookie.
 const SESSION_TTL_DAYS = parseInt(process.env.SESSION_TTL_DAYS || '7', 10);
@@ -48,6 +47,24 @@ function parseCorsOrigins(raw?: string): string[] | undefined {
 export function createApp({ ticketRouter }: AppDeps = {}): express.Application {
   const app = express();
 
+  // Deployments terminate TLS at a proxy (Render, Vercel, nginx). Trust the
+  // immediate proxy hop so req.secure reflects the original scheme — that's
+  // what drives the session cookie's Secure/SameSite flags (see
+  // sessionCookieSettings in @serviceops/database).
+  app.set('trust proxy', 1);
+
+  // Cookie sessions rely on CORS + credentials being configured correctly.
+  // A missing/empty CORS_ORIGIN means any cross-origin frontend will be
+  // blocked by the browser — warn loudly at boot so it isn't a silent 401.
+  if (!process.env.CORS_ORIGIN?.trim()) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[startup] CORS_ORIGIN is not set — cross-origin browsers will be blocked ' +
+        'from sending the session cookie. Set e.g. ' +
+        'CORS_ORIGIN=https://app.serviceops.tech,https://api.serviceops.tech',
+    );
+  }
+
   // Gzip compress all responses — reduces payload size by 60-80%
   app.use(compression());
 
@@ -65,7 +82,16 @@ export function createApp({ ticketRouter }: AppDeps = {}): express.Application {
   // Parse cookies (needed to read the session cookie)
   app.use(cookieParser());
 
-  // Server-side sessions persisted in PostgreSQL (UserSession table)
+  // Server-side sessions persisted in PostgreSQL (UserSession table).
+  //
+  // Cookie flags follow the ACTUAL connection scheme (req.secure), NOT the
+  // NODE_ENV label:
+  //  - plain http  -> SameSite=Lax, not secure   (works for same-site dev)
+  //  - https       -> SameSite=None + Secure     (required for cross-site)
+  // `proxy: true` makes req.secure honor X-Forwarded-Proto behind a
+  // TLS-terminating reverse proxy (Render/Vercel/nginx).
+  // A secure cookie set over plain http is silently dropped by the browser,
+  // which is exactly why tying this to NODE_ENV=production broke local dev.
   app.use(
     session({
       name: 'serviceops.sid',
@@ -73,12 +99,15 @@ export function createApp({ ticketRouter }: AppDeps = {}): express.Application {
       store: new PgSessionStore(pool, SESSION_TTL_MS),
       resave: false,
       saveUninitialized: false,
-      cookie: {
-        httpOnly: true,
-        // Cross-site cookie: requires secure (HTTPS) in production.
-        secure: IS_PROD,
-        sameSite: IS_PROD ? 'none' : 'lax',
-        maxAge: SESSION_TTL_MS,
+      proxy: true,
+      cookie: (req) => {
+        const { secure, sameSite } = sessionCookieSettings(req);
+        return {
+          httpOnly: true,
+          secure,
+          sameSite,
+          maxAge: SESSION_TTL_MS,
+        };
       },
     }),
   );

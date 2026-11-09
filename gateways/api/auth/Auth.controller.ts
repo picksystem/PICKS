@@ -260,19 +260,30 @@ export class AuthController {
 
     // Server-side session: regenerate the session (new sid, so a previous
     // anonymous session can't be hijacked into an authenticated one), then
-    // record who is signed in and persist it explicitly. regenerate() works
-    // asynchronously with the Postgres store, so we set the data inside its
-    // callback and call save() ourselves — the documented pattern for
-    // session fixation protection. Every protected request re-loads the user
-    // from the DB, keeping the session revocable.
-    req.session.regenerate((regenerateErr) => {
-      if (regenerateErr) {
-        logger.error('Session regeneration failed:', regenerateErr);
-        return;
-      }
-      req.session.userId = user.id;
+    // record who is signed in and persist it.
+    //
+    // IMPORTANT: regenerate() with a Postgres store is ASYNC (it round-trips
+    // to the DB). We must await it before finishing the response, otherwise
+    // the response ends while the old, unmodified session is still current
+    // and express-session never sends the Set-Cookie header — the browser
+    // signs in but the next request has no session. Every protected request
+    // re-loads the user from the DB, keeping the session revocable.
+    await new Promise<void>((resolve, reject) => {
+      req.session.regenerate((err) => {
+        if (err) {
+          logger.error('Session regeneration failed:', err);
+          reject(new HttpException(500, 'Could not start a session. Please sign in again.'));
+          return;
+        }
+        resolve();
+      });
+    });
+    req.session.userId = user.id;
+    // Persist now, before the response ends.
+    await new Promise<void>((resolve) => {
       req.session.save((saveErr) => {
         if (saveErr) logger.error('Session save failed:', saveErr);
+        resolve();
       });
     });
 

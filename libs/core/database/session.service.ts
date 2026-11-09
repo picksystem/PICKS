@@ -55,14 +55,37 @@ export async function getSessionUser(req: Request): Promise<SessionUser | null> 
   };
 }
 
+/**
+ * Cookie flags for the session cookie, derived from the ACTUAL connection,
+ * not the NODE_ENV label.
+ *
+ * A `Secure` cookie set over plain http is silently rejected by the browser,
+ * which makes sign-in look successful but the very next request is unauthenticated
+ * (the auto-logout symptom). So:
+ *  - over HTTPS (direct or behind a TLS-terminating proxy, `req.secure` true):
+ *    `secure + SameSite=None` — required for cross-origin cookie sessions
+ *  - over plain http: `SameSite=Lax`, no secure flag — same-site dev flow
+ *
+ * `SESSION_COOKIE_SECURE=true|false` forces either outcome when a setup needs
+ * it (e.g. mixed environments).
+ */
+export function sessionCookieSettings(req: Request): {
+  secure: boolean;
+  sameSite: 'none' | 'lax';
+} {
+  const override = process.env.SESSION_COOKIE_SECURE;
+  if (override === 'true' || override === 'false') {
+    const secure = override === 'true';
+    return { secure, sameSite: secure ? 'none' : 'lax' };
+  }
+  const secure = req.secure; // respects X-Forwarded-Proto when session proxy:true
+  return { secure, sameSite: secure ? 'none' : 'lax' };
+}
+
 /** Destroy the current session (server-side) and clear the cookie (client-side). */
 export function destroySession(req: Request, res: Response): void {
-  res.clearCookie(SESSION_COOKIE_NAME, {
-    httpOnly: true,
-    // Keep the secure flag consistent with the session cookie's settings.
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-  });
+  const { secure, sameSite } = sessionCookieSettings(req);
+  res.clearCookie(SESSION_COOKIE_NAME, { httpOnly: true, secure, sameSite });
   req.session.destroy(() => {});
 }
 
