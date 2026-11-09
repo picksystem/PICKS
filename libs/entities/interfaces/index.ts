@@ -3,6 +3,9 @@ export * from './auth.interface';
 export * from './auth.signup.interface';
 export * from './auth.forgotpassword.interface';
 
+// Cache gateway contract (PostgreSQL-backed)
+export * from './cache.interface';
+
 // Admin interfaces
 export * from './admin';
 

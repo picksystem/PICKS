@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ValidationError } from 'yup';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import {
   SignInSchema,
@@ -11,12 +10,23 @@ import {
   ResetPasswordSchema,
 } from '@serviceops/interfaces';
 import { BadRequestException, HttpException, UnauthorizedException } from '@serviceops/middleware';
-import { prisma } from '@serviceops/database';
+import {
+  prisma,
+  getSessionUser,
+  destroySession,
+  revokeAllUserSessions,
+} from '@serviceops/database';
+import { getPasetoSigner } from '@serviceops/core/infrastructure';
 import { PrismaClient } from '@prisma/client';
-import { sendEmail, generateOtp } from '@serviceops/config';
+import { sendEmail, generateOtp, logger } from '@serviceops/config';
+import { toUserDto, toLoginLogDto, toUserChangeLogDto } from './user.mapper';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'serivceops-jwt-secret-key';
-const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '24h') as jwt.SignOptions['expiresIn'];
+// PASETO v2 signer for the short-lived, signed password-reset token. PASETO is
+// the recommended replacement for short-lived signed tokens — safe by default
+// (no algorithm/audience confusion, like JWT). It is NOT used for sessions;
+// sessions are server-side cookie-based.
+const paseto = getPasetoSigner();
+
 const APP_URL = process.env.APP_URL || 'http://localhost:4200';
 
 // ─── User Status Constants ────────────────────────────────────────────────────
@@ -47,6 +57,8 @@ type AuthAction =
   | 'change-password'
   | 'get-my-profile'
   | 'update-my-profile'
+  | 'get-session'
+  | 'logout'
   | 'get-role-requests'
   | 'get-pending-role-requests'
   | 'approve-role-request'
@@ -67,14 +79,14 @@ type AuthAction =
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+/**
+ * Entity → DTO. Delegates to the positive allow-list mapper in user.mapper.ts
+ * so only `IUserDto` fields ever reach the client — backend-only/secret fields
+ * (password hash, OTP, invitation token, lockout counters, …) are excluded by
+ * construction rather than by a fragile deletion list.
+ */
 function sanitizeUser(user: Record<string, unknown>) {
-  const { password, otp, otpExpiresAt, otpIsUsed, invitationToken, ...safe } = user;
-  return {
-    ...safe,
-    userId: safe.id,
-    userName: safe.name,
-    userEmail: safe.email,
-  };
+  return toUserDto(user);
 }
 
 /** Generate a random temporary password: uppercase + lowercase + digit + symbol */
@@ -134,7 +146,9 @@ export class AuthController {
         case 'change-password':
         case 'get-my-profile':
         case 'update-my-profile':
-          return await this.handleAuthenticatedAction(req, res, action);
+        case 'get-session':
+        case 'logout':
+          return await this.handleSessionAction(req, res, action);
         case 'get-role-requests':
         case 'get-pending-role-requests':
         case 'approve-role-request':
@@ -244,17 +258,23 @@ export class AuthController {
       },
     });
 
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        lastLoginAt: now.toISOString(),
-      },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN },
-    );
+    // Server-side session: regenerate the session (new sid, so a previous
+    // anonymous session can't be hijacked into an authenticated one), then
+    // record who is signed in and persist it explicitly. regenerate() works
+    // asynchronously with the Postgres store, so we set the data inside its
+    // callback and call save() ourselves — the documented pattern for
+    // session fixation protection. Every protected request re-loads the user
+    // from the DB, keeping the session revocable.
+    req.session.regenerate((regenerateErr) => {
+      if (regenerateErr) {
+        logger.error('Session regeneration failed:', regenerateErr);
+        return;
+      }
+      req.session.userId = user.id;
+      req.session.save((saveErr) => {
+        if (saveErr) logger.error('Session save failed:', saveErr);
+      });
+    });
 
     const userWithLogin = { ...user, lastLoginAt: now } as unknown as Record<string, unknown>;
     const mustReset = (user as any).mustResetPassword === true;
@@ -265,7 +285,6 @@ export class AuthController {
         : 'Sign in successful',
       data: {
         user: sanitizeUser(userWithLogin),
-        token,
         mustResetPassword: mustReset,
         adminApproved: user.role === 'admin',
         adminRequestPending: false,
@@ -400,10 +419,12 @@ export class AuthController {
 
     await db.user.update({ where: { id: user.id }, data: { otpIsUsed: true } });
 
-    const resetToken = jwt.sign(
+    // Short-lived (15 min) signed reset token. PASETO v2 is the recommended
+    // tool for short-lived signed data — safe by default, no algorithm/audience
+    // confusion like JWT. (NOT used for sessions; those are cookie-based.)
+    const resetToken = await paseto.sign(
       { email: validatedData.email, purpose: 'password-reset' },
-      JWT_SECRET,
-      { expiresIn: '15m' },
+      { expiresIn: '15 minutes' },
     );
     res.json({ message: 'OTP verified', data: { verified: true, resetToken } });
   };
@@ -416,7 +437,8 @@ export class AuthController {
 
     let decoded: { email: string; purpose: string };
     try {
-      decoded = jwt.verify(validatedData.resetToken, JWT_SECRET) as typeof decoded;
+      const payload = await paseto.verify(validatedData.resetToken, { clockTolerance: '30s' });
+      decoded = payload as { email: string; purpose: string };
     } catch {
       res.status(400).json({ message: 'Invalid or expired reset token' });
       return;
@@ -440,26 +462,69 @@ export class AuthController {
       },
     });
 
+    // A password reset invalidates any existing sessions for this user.
+    const user = await db.user.findUnique({ where: { email: validatedData.email } });
+    if (user) await revokeAllUserSessions(user.id);
+
     res.json({ message: 'Password reset successfully. You can now sign in.' });
   };
 
-  // ── Authenticated (non-admin) actions ────────────────────────────────────────
-  private handleAuthenticatedAction = async (req: Request, res: Response, action: string) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer '))
-      throw new UnauthorizedException('Access token is required');
-
-    const token = authHeader.split(' ')[1];
-    let decoded: { id: number; email: string; name: string; role: string };
-    try {
-      decoded = jwt.verify(token, JWT_SECRET) as typeof decoded;
-    } catch {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
-
+  // ── Session-backed actions (change-password, my-profile, get-session, logout) ─
+  private handleSessionAction = async (req: Request, res: Response, action: string) => {
     const db = prisma as PrismaClient;
 
-    const userId = Number(decoded.id);
+    // read the current session user (revocable: re-loads from the DB every time)
+    const sessionUser = await getSessionUser(req);
+
+    // get-session: hydrate the UI on page load. No session → not authenticated.
+    if (action === 'get-session') {
+      if (!sessionUser) {
+        res.json({ message: 'Not authenticated', data: { authenticated: false } });
+        return;
+      }
+      const user = await db.user.findUnique({ where: { id: sessionUser.id } });
+      if (!user) {
+        res.json({ message: 'Not authenticated', data: { authenticated: false } });
+        return;
+      }
+      const mustReset = (user as any).mustResetPassword === true;
+      res.json({
+        message: 'Session retrieved',
+        data: {
+          authenticated: true,
+          user: sanitizeUser(user as unknown as Record<string, unknown>),
+          mustResetPassword: mustReset,
+        },
+      });
+      return;
+    }
+
+    // logout: destroy the session and clear the cookie
+    if (action === 'logout') {
+      if (sessionUser) {
+        db.user
+          .update({ where: { id: sessionUser.id }, data: { lastActivityAt: new Date() } })
+          .catch(() => {});
+        // Record the logout time on the most recent login log.
+        const lastLog = await db.loginLog.findFirst({
+          where: { userId: sessionUser.id },
+          orderBy: { loginTime: 'desc' },
+        });
+        if (lastLog) {
+          await db.loginLog.update({ where: { id: lastLog.id }, data: { logoutTime: new Date() } });
+        }
+      }
+      destroySession(req, res);
+      res.json({ message: 'Signed out' });
+      return;
+    }
+
+    if (!sessionUser) {
+      res.status(401).json({ message: 'Session expired. Please sign in again.' });
+      return;
+    }
+
+    const userId = sessionUser.id;
 
     // Track last activity (fire-and-forget — does not block the response)
     db.user.update({ where: { id: userId }, data: { lastActivityAt: new Date() } }).catch(() => {});
@@ -501,6 +566,12 @@ export class AuthController {
           mustResetPassword: false,
         },
       });
+
+      // A password change revokes every session on other devices so a stale
+      // cookie can't outlive the credential change. The current session is
+      // kept alive (it's re-authenticated with the new credential on next use).
+      await revokeAllUserSessions(userId, req.sessionID);
+
       res.json({ message: 'Password changed successfully' });
     }
 
@@ -571,24 +642,27 @@ export class AuthController {
 
   // ── Admin actions ─────────────────────────────────────────────────────────────
   private handleAdminAction = async (req: Request, res: Response, action: string) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer '))
-      throw new UnauthorizedException('Access token is required');
+    const db = prisma as PrismaClient;
 
-    const token = authHeader.split(' ')[1];
-    let decoded: { id: number; email: string; name: string; role: string };
-    try {
-      decoded = jwt.verify(token, JWT_SECRET) as typeof decoded;
-    } catch {
-      throw new UnauthorizedException('Invalid or expired token');
+    // Session-based auth: the express-session middleware (in app.ts) has already
+    // resolved the cookie to `req.session`. Load the user and check the role.
+    const sessionUser = await getSessionUser(req);
+    if (!sessionUser) {
+      throw new UnauthorizedException('Access token is required');
     }
 
-    if (decoded.role !== 'admin') {
+    const adminRow = await db.user.findUnique({
+      where: { id: sessionUser.id },
+      select: { id: true, email: true, name: true, role: true },
+    });
+    const decoded = adminRow
+      ? { id: adminRow.id, email: adminRow.email, name: adminRow.name, role: adminRow.role }
+      : null;
+
+    if (!decoded || decoded.role !== 'admin') {
       res.status(403).json({ message: 'Admin access required' });
       return;
     }
-
-    const db = prisma as PrismaClient;
 
     // Track last activity (fire-and-forget — does not block the response)
     db.user
@@ -1138,6 +1212,9 @@ export class AuthController {
             data: { password: hashed, mustResetPassword: true, passwordChangedAt: new Date() },
           });
 
+          // A temp-password reset ends every session for that user.
+          await revokeAllUserSessions(uid);
+
           await logChange(db, uid, 'password_reset', decoded.id, decoded.name, {
             reasonNotes: 'Temporary password generated by admin',
           });
@@ -1188,6 +1265,9 @@ export class AuthController {
           },
         });
 
+        // An admin password reset ends every session for that user.
+        await revokeAllUserSessions(userId);
+
         await logChange(db, userId, 'password_reset', decoded.id, decoded.name, {
           reasonNotes: 'Password reset by admin',
         });
@@ -1213,7 +1293,10 @@ export class AuthController {
           where: { userId },
           orderBy: { createdAt: 'desc' },
         });
-        res.json({ message: 'Change log retrieved', data: logs });
+        res.json({
+          message: 'Change log retrieved',
+          data: logs.map((r: Record<string, unknown>) => toUserChangeLogDto(r)),
+        });
         break;
       }
 
@@ -1265,7 +1348,10 @@ export class AuthController {
           orderBy: { loginTime: 'desc' },
           take: 100,
         });
-        res.json({ message: 'Login logs retrieved', data: logs });
+        res.json({
+          message: 'Login logs retrieved',
+          data: logs.map((r: Record<string, unknown>) => toLoginLogDto(r)),
+        });
         break;
       }
 

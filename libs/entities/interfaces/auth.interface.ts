@@ -32,50 +32,16 @@ export enum RoleRequestStatus {
   REJECTED = 'rejected',
 }
 
-export interface IAuthUser {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  name: string;
-  phone: string | null;
-  workLocation: string | null;
-  department: string | null;
-  businessUnit: string | null;
-  employeeId: string | null;
-  managerName: string | null;
-  dateOfBirth: string | null;
-  profilePicture: string | null;
-  reasonForAccess: string | null;
-  role: UserRole;
-  requestedRole: string | null;
-  status: string | null;
-  reviewedBy: number | null;
-  reviewedAt: string | null;
-  adminNotes: string | null;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  // Extended fields
-  accessFromDate: string | null;
-  accessToDate: string | null;
-  timezone: string | null;
-  dateFormat: string | null;
-  timeFormat: string | null;
-  language: string | null;
-  slaWorkingCalendar: string | null;
-  slaExceptionGroup: string | null;
-  application: string | null;
-  applicationLead: string | null;
-  consultantProfileUpdated: boolean;
-  mustResetPassword: boolean;
-  source: string | null;
-  lastActivityAt: string | null;
-  lastLoginAt?: string | null;
-  failedLoginAttempts?: number | null;
-  lockedUntil?: string | null;
-  passwordChangedAt?: string | null;
-}
+/**
+ * The user shape the backend sends to the frontend.
+ *
+ * `IAuthUser` is a DTO — a positive allow-list projection of the Prisma `User`
+ * entity, NOT the entity itself. It excludes every backend-only/secret field
+ * (password hash, OTP, invitation token, lockout counters, …). The entity is
+ * owned by the backend; the DTO is what crosses the boundary. See
+ * `libs/entities/dtos/user.dto.ts` and `gateways/api/auth/user.mapper.ts`.
+ */
+export type IAuthUser = import('../dtos/user.dto').IUserDto;
 
 export interface IUserChangeLog {
   id: number;
@@ -100,6 +66,8 @@ export type AuthAction =
   | 'change-password'
   | 'get-my-profile'
   | 'update-my-profile'
+  | 'get-session'
+  | 'logout'
   | 'get-role-requests'
   | 'get-pending-role-requests'
   | 'approve-role-request'
@@ -133,8 +101,19 @@ export interface ISignInResponse {
   message: string;
   data: {
     user: IAuthUser;
-    token: string;
+    mustResetPassword: boolean;
     adminApproved: boolean;
     adminRequestPending: boolean;
   };
+}
+
+/**
+ * Response of the `get-session` action, used to re-hydrate the UI on page
+ * load against the server-side session cookie (no token is involved).
+ */
+export interface ISessionResponse {
+  message: string;
+  data:
+    | { authenticated: false }
+    | { authenticated: true; user: IAuthUser; mustResetPassword: boolean };
 }

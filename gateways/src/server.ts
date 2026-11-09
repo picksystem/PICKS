@@ -31,11 +31,11 @@ import { logger } from '@serviceops/config';
 import { createApp } from './app';
 
 // Prisma client for database access
-import { prisma } from '@serviceops/database';
+import { prisma, pruneExpiredSessions } from '@serviceops/database';
 
 // Build dynamic ticket router from Configuration API
 import { createTicketRouter } from '../api/admin/Ticket/Ticket.routes';
-import { CleanupExpiredDraftsUseCase, AdminTicketGateway } from '@serviceops/core';
+import { CleanupExpiredDraftsUseCase, AdminTicketGateway, getCacheGateway } from '@serviceops/core';
 
 const ticketGateway = new AdminTicketGateway(prisma as any);
 
@@ -100,6 +100,22 @@ async function startServer() {
       };
       setTimeout(runCleanup, 10_000); // delay initial run until pool is warmed up
       setInterval(runCleanup, 24 * 60 * 60 * 1000);
+
+      // Periodically prune expired server-side sessions (UserSession table) and
+      // expired PostgreSQL cache entries (CacheEntry table). PostgreSQL backs
+      // both the session store and the cache, so a single sweep covers both.
+      const runSessionAndCachePrune = async () => {
+        try {
+          await pruneExpiredSessions();
+          await getCacheGateway().pruneExpired();
+        } catch (error) {
+          logger.warn('Session/cache prune failed (will retry on next cycle):', error);
+        }
+      };
+      setTimeout(runSessionAndCachePrune, 30_000);
+      // Hourly sweep is plenty for a cache whose entries are invalidated on
+      // write and self-expire; the prune just reclaims the storage.
+      setInterval(runSessionAndCachePrune, 60 * 60 * 1000);
     });
 
     /**

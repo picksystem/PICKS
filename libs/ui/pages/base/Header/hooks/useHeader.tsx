@@ -198,10 +198,10 @@ export const useHeader = () => {
   };
 
   // Navigation handlers
-  const handleLogout = () => {
+  const handleLogout = async () => {
     handleSettingsClose();
-    logout();
-    navigate(AuthPath.SIGNIN);
+    await logout();
+    navigate(AuthPath.SIGNIN, { replace: true });
   };
 
   const handleProfile = () => {

@@ -79,20 +79,18 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   },
 
   /* ── Person / period bar ───────────────────────────────────── */
-  /* Period pill shown on the top bar (tabs | period range | actions),
-     matching the reference layout: a white band that stretches across the
-     whole middle of the top bar — from just after the "Approval History"
-     tab to just before the "My Allocation" button — with the ‹ › nav
-     buttons and the selected week range centered inside it */
+  /* Period band: its own full-width row directly under the tab row, with the
+     ‹ › nav buttons and the selected week range centered inside it (matches
+     the reference layout where the week range sits on the line below the tabs) */
   periodPill: {
+    width: '100%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    flexGrow: 1,
-    minWidth: 240,
     /* roomy padding around the ‹ › buttons and the week-range label */
     gap: theme.spacing(2),
     padding: theme.spacing(1, 2),
+    marginBottom: theme.spacing(2),
     backgroundColor: '#ffffff',
     borderRadius: 12,
     border: '1px solid #e5e7eb',

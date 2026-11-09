@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgres:18-alpine
     container_name: SerivceOps-postgres
     environment:
       POSTGRES_USER: postgres
@@ -15,16 +15,6 @@ services:
     networks:
       - SerivceOps-network
 
-  redis:
-    image: redis:7-alpine
-    container_name: SerivceOps-redis
-    ports:
-      - '6379:6379'
-    volumes:
-      - redis_data:/data
-    networks:
-      - SerivceOps-network
-
   # Uncomment to run the admin in Docker
   # admin:
   #   build:
@@ -34,13 +24,13 @@ services:
   #   environment:
   #     - APP=admin
   #     - DATABASE_URL=postgresql://postgres:password@postgres:5432/SerivceOps_db?schema=public
-  #     - REDIS_HOST=redis
-  #     - REDIS_PORT=6379
+  #     - SESSION_SECRET=your-super-secret-session-key-change-this-in-production
+  #     - SESSION_TTL_DAYS=7
+  #     - CORS_ORIGIN=http://localhost:1600
   #   ports:
   #     - '3001:3001'
   #   depends_on:
   #     - postgres
-  #     - redis
   #   networks:
   #     - SerivceOps-network
 
@@ -53,19 +43,18 @@ services:
   #   environment:
   #     - APP=user
   #     - DATABASE_URL=postgresql://postgres:password@postgres:5432/SerivceOps_db?schema=public
-  #     - REDIS_HOST=redis
-  #     - REDIS_PORT=6379
+  #     - SESSION_SECRET=your-super-secret-session-key-change-this-in-production
+  #     - SESSION_TTL_DAYS=7
+  #     - CORS_ORIGIN=http://localhost:1700
   #   ports:
   #     - '3002:3002'
   #   depends_on:
   #     - postgres
-  #     - redis
   #   networks:
   #     - SerivceOps-network
 
 volumes:
   postgres_data:
-  redis_data:
 
 networks:
   serivceops-network:

@@ -12,6 +12,7 @@ import {
   IConfigBillingCode,
   IConfigApplicationQueue,
   IConfigTimesheetConversionCode,
+  ICacheGateway,
 } from '@serviceops/interfaces';
 
 /**
@@ -23,8 +24,17 @@ import {
  * always reflect the live set of ticket types.
  */
 export class PrismaConfigurationGateway implements IConfigurationGateway {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(private readonly prisma: any) {}
+  private static readonly CACHE_KEY = 'config:adminConfiguration';
+  private static readonly CACHE_TTL_SECONDS = 5 * 60; // 5 min — invalidated explicitly on write
+
+  constructor(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private readonly prisma: any,
+    /** Optional PostgreSQL-backed cache. When supplied, reads are served from
+     * the cache and every write invalidates it. Kept optional so existing
+     * call sites that don't have a cache instance still work. */
+    private readonly cache?: ICacheGateway,
+  ) {}
 
   // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -353,6 +363,13 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
   // ── IConfigurationGateway ──────────────────────────────────────────────────
 
   async get(): Promise<IConfiguration> {
+    // Serve from the PostgreSQL cache when available. The cache is invalidated
+    // on every write (upsert / updateSection), so this is safe.
+    if (this.cache) {
+      const cached = await this.cache.get<IConfiguration>(PrismaConfigurationGateway.CACHE_KEY);
+      if (cached) return cached;
+    }
+
     let row = await this.prisma.adminConfiguration.findFirst();
     if (!row) {
       row = await this.prisma.adminConfiguration.create({
@@ -361,7 +378,16 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
     }
 
     const enriched = await this.enrichWithTicketTypes(row.data as IConfigurationData);
-    return { ...row, data: enriched };
+    const result = { ...row, data: enriched };
+
+    if (this.cache) {
+      await this.cache.set(
+        PrismaConfigurationGateway.CACHE_KEY,
+        result,
+        PrismaConfigurationGateway.CACHE_TTL_SECONDS,
+      );
+    }
+    return result;
   }
 
   async upsert(data: IConfigurationData, updatedBy?: number): Promise<IConfiguration> {
@@ -377,6 +403,12 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
         data: { data: enriched as object, updatedBy: updatedBy ?? null },
       });
     }
+
+    // Invalidate the cache so the next read reflects the new value.
+    if (this.cache) {
+      await this.cache.delete(PrismaConfigurationGateway.CACHE_KEY);
+    }
+
     return { ...row, data: enriched };
   }
 

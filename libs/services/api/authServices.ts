@@ -1,4 +1,4 @@
-import { IAuthActionRequest } from '@serviceops/interfaces';
+import { IAuthActionRequest, ISessionResponse } from '@serviceops/interfaces';
 import { baseApi } from './baseServices';
 
 export const authApi = baseApi.injectEndpoints({
@@ -8,6 +8,23 @@ export const authApi = baseApi.injectEndpoints({
         url: '/api/auth',
         method: 'POST',
         body,
+      }),
+    }),
+    // Re-validate the server-side session cookie on page load.
+    getSession: builder.mutation<ISessionResponse, void>({
+      query: () => ({
+        url: '/api/auth',
+        method: 'POST',
+        body: { action: 'get-session' },
+      }),
+      transformResponse: (response: any) => response,
+    }),
+    // Destroy the server-side session (logout).
+    logout: builder.mutation<{ message: string }, void>({
+      query: () => ({
+        url: '/api/auth',
+        method: 'POST',
+        body: { action: 'logout' },
       }),
     }),
     getAllUsers: builder.mutation<any, void>({
@@ -54,6 +71,8 @@ export const authApi = baseApi.injectEndpoints({
 
 export const {
   useAuthActionMutation,
+  useGetSessionMutation,
+  useLogoutMutation,
   useGetAllUsersMutation,
   useGetUserMutation,
   useUpdateUserMutation,

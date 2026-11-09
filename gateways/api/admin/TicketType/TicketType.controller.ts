@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '@serviceops/database';
-import { PrismaTicketTypeGateway } from '@serviceops/core/infrastructure';
+import { PrismaTicketTypeGateway, getCacheGateway } from '@serviceops/core/infrastructure';
 import {
   GetTicketTypesUseCase,
   GetTicketTypeByIdUseCase,
@@ -10,7 +10,7 @@ import {
   ReorderTicketTypesUseCase,
 } from '@serviceops/core/use-cases';
 
-const gateway = new PrismaTicketTypeGateway(prisma as any);
+const gateway = new PrismaTicketTypeGateway(prisma as any, getCacheGateway());
 
 const getTicketTypesUseCase = new GetTicketTypesUseCase(gateway);
 const getTicketTypeByIdUseCase = new GetTicketTypeByIdUseCase(gateway);

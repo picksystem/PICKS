@@ -19,6 +19,7 @@ export {
   hideLoader,
   setCredentials,
   updateUser,
+  markHydrated,
   logout,
 } from './slices';
 

@@ -19,7 +19,7 @@ export interface TimesheetLine {
   status: TimesheetStatus;
   liked?: boolean;
   favourited?: boolean;
-  attachment?: boolean;
+  attachments?: string[];
 }
 
 export interface ApprovalEntry {

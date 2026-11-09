@@ -4,7 +4,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
 import { LazyMenuItems } from './routes';
 import { constants } from '@serviceops/utils';
-import { ErrorBoundary, MainContent } from '@serviceops/component';
+import { ErrorBoundary, MainContent, Loader } from '@serviceops/component';
 import { useAuth } from '@serviceops/hooks';
 import { AppRoleContext } from '@serviceops/theme';
 
@@ -44,8 +44,14 @@ const {
 
 const AppRoutes = () => {
   const { BasePath, UserPath, ConsultantPath, AuthPath, Path, DefalutPage } = constants;
-  const { isAuthenticated, isAdmin, isConsultant } = useAuth();
+  const { isAuthenticated, hydrated, isAdmin, isConsultant } = useAuth();
   const location = useLocation();
+
+  // Wait for the server-side session check (get-session) before deciding which
+  // routes to show, so a returning user isn't flashed to the sign-in page.
+  if (!hydrated) {
+    return <Loader />;
+  }
 
   if (!isAuthenticated) {
     return (

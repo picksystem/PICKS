@@ -60,7 +60,8 @@ SerivceOps is an ITIL Service Management Platform built with clean architecture 
 - **Role-Based Access** — Admin, User, and Consultant roles with approval workflow
 - **Mock Data** — Easy to test all UI variations in Storybook
 - **Multi-Tenant Theming** — Support for different partner configurations
-- **Docker Support** — Containerized PostgreSQL and Redis for local development
+- **Single-Database Stack** — PostgreSQL handles both data and caching; sessions
+  are server-side (cookie-based) — no Redis
 
 ### Key Principles
 
@@ -299,10 +300,12 @@ SerivceOps/
 
 ### Prerequisites
 
-- Node.js 20+
-- PostgreSQL 15+ (or use Docker)
-- Redis 7+ (optional, or use Docker)
+- Node.js 24+
+- PostgreSQL 18+ (or use Docker)
 - npm 9+
+
+> Postgres and the session store are the only backend dependencies. Redis was
+> removed — caching and sessions both run on PostgreSQL.
 
 ### Installation
 
@@ -351,10 +354,10 @@ npm run storybook                   # http://localhost:6006
 
 ## Docker Setup
 
-Use Docker Compose for local development with PostgreSQL and Redis:
+Use Docker Compose for local development with PostgreSQL:
 
 ```bash
-# Start PostgreSQL and Redis containers
+# Start the PostgreSQL container
 docker-compose up -d
 
 # Stop containers
@@ -368,8 +371,7 @@ docker-compose logs -f
 
 | Service | Container | Port | Description |
 |---------|-----------|------|-------------|
-| PostgreSQL | serivceops-postgres | 5432 | Primary database |
-| Redis | serivceops-redis | 6379 | Caching layer |
+| PostgreSQL | serivceops-postgres | 5432 | Primary database + cache + session store |
 
 ### Environment Variables
 
@@ -384,13 +386,9 @@ HOST=localhost
 # Database
 DATABASE_URL=postgresql://postgres:password@localhost:5432/serivceops_db?schema=public
 
-# JWT Authentication
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production-min-32-chars
-JWT_EXPIRES_IN=7d
-
-# Redis (Optional)
-REDIS_HOST=localhost
-REDIS_PORT=6379
+# Server-side Session Authentication (cookie sessions, persisted in PostgreSQL)
+SESSION_SECRET=your-super-secret-session-key-change-this-in-production-min-32-chars
+SESSION_TTL_DAYS=7
 
 # Rate Limiting
 THROTTLE_TTL=60
@@ -480,11 +478,17 @@ serivceops implements a comprehensive role-based access control system with thre
 
 ## Authentication & Security
 
-### JWT-Based Authentication
+### Server-Side Cookie Sessions (no JWT)
 
-- Secure token-based authentication
+- Secure, revocable server-side sessions: an `httpOnly` cookie (`serviceops.sid`)
+  references a session persisted in the PostgreSQL `UserSession` table
 - Password hashing with bcryptjs (salt rounds: 10)
-- Token expiration: 7 days (configurable)
+- Session lifetime: `SESSION_TTL_DAYS` (default 7 days)
+- Sessions are re-validated against the DB on every protected request, so
+  logout / deactivation / password change kills access immediately (unlike a
+  stateless JWT, which can't be revoked)
+- Short-lived signed tokens (e.g. the 15-minute password-reset token) use
+  **PASETO** — the safer successor to JWT — never JWT, and never for sessions
 
 ### Account Security
 
@@ -890,7 +894,7 @@ npm run validate                 # Format check + Lint + Type check
 ### Docker
 
 ```bash
-docker-compose up -d             # Start services (PostgreSQL + Redis)
+docker-compose up -d             # Start the PostgreSQL service
 docker-compose down              # Stop services
 docker-compose logs -f           # View logs
 ```
@@ -905,11 +909,16 @@ docker-compose logs -f           # View logs
 http://localhost:3001
 ```
 
-All protected endpoints require a JWT bearer token:
+All protected endpoints require a valid session cookie (set automatically on
+sign-in via the `serviceops.sid` cookie; send it with `credentials: 'include'`):
 
 ```
-Authorization: Bearer <token>
+Cookie: serviceops.sid=<session>
 ```
+
+No bearer token / `Authorization` header is needed — the server holds the
+session. Sign in via `POST /api/auth` (`action: 'signin'`), then the cookie
+travels with every subsequent request.
 
 ### Health Check
 
@@ -1291,9 +1300,9 @@ import { useAppSelector } from '@serviceops/state';
 | Category | Technology | Version | Purpose |
 |----------|------------|---------|---------|
 | **Backend** | Express.js | 4.18 | REST API server |
-| **Database** | PostgreSQL | 15 | Data persistence |
+| **Database** | PostgreSQL | 18 | Data persistence + cache + session store |
 | **ORM** | Prisma | 7.2 | Database access |
-| **Cache** | Redis | 7 | Caching layer (optional) |
+| **Cache** | PostgreSQL (jsonb) | — | Caching layer (replaces Redis) |
 | **Frontend** | React | 19.0 | UI framework |
 | **UI Library** | MUI | 7.3 | Component library |
 | **State** | Redux Toolkit | 2.10 | State management |
@@ -1304,7 +1313,7 @@ import { useAppSelector } from '@serviceops/state';
 | **Docs** | Storybook | 10.1 | Component documentation |
 | **Build** | Webpack + NX | 22.1 | Build tooling |
 | **Validation** | Yup | 1.7 | Schema validation |
-| **Auth** | bcryptjs + JWT | 3.0 / 9.0 | Authentication & password hashing |
+| **Auth** | bcryptjs + express-session + PASETO | 3.0 | Password hashing & server-side cookie sessions |
 | **Email** | Nodemailer | 7.0 | OTP & transactional emails |
 | **Logging** | Winston | 3.19 | Structured logging |
 | **Language** | TypeScript | 5.9 | Type safety |
@@ -1385,7 +1394,7 @@ import { useAppSelector } from '@serviceops/state';
 
 4. **Check Node version:**
    ```bash
-   node -v   # Must be 20+
+   node -v   # Must be 24+
    npm -v    # Must be 9+
    ```
 

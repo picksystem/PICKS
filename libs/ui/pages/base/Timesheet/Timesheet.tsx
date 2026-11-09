@@ -38,11 +38,14 @@ import {
   Radio,
   RadioGroup,
   FormControlLabel,
+  alpha,
+  darken,
 } from '@mui/material';
 import StickyNote2Icon from '@mui/icons-material/StickyNote2';
 import PublicIcon from '@mui/icons-material/Public';
 import LockIcon from '@mui/icons-material/Lock';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import PaidIcon from '@mui/icons-material/Paid';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
@@ -81,7 +84,6 @@ const NOTE_TYPE_CONFIG: Record<
   {
     color: string;
     emptyLabel: string;
-    filledLabel: string;
     tooltipText: string;
     dialogTitle: string;
     dialogSubtitle: string;
@@ -91,7 +93,6 @@ const NOTE_TYPE_CONFIG: Record<
   external: {
     color: '#1d4ed8',
     emptyLabel: 'Add External comment',
-    filledLabel: 'External comment',
     tooltipText: 'Click to add or view the External comment — the comment box will open.',
     dialogTitle: 'Add External comment',
     dialogSubtitle: 'Visible to the client — use plain, client-friendly language.',
@@ -100,7 +101,6 @@ const NOTE_TYPE_CONFIG: Record<
   internal: {
     color: theme_warning,
     emptyLabel: 'Add Internal comment',
-    filledLabel: 'Internal comment',
     tooltipText: 'Click to add or view the Internal comment — the comment box will open.',
     dialogTitle: 'Add Internal comment',
     dialogSubtitle: 'Visible to your team only — never shown to the client.',
@@ -134,6 +134,19 @@ const STATUS_LEGEND: { label: string; color: string }[] = [
   { label: 'Approved', color: theme_success },
   { label: 'Rejected', color: theme_error },
 ];
+
+/* Human-readable status text (shown in the per-row status-dot tooltip) plus a
+   short description of what that state means, so the dot's color is self-
+   explaining on hover. */
+const STATUS_LABEL: Record<string, { label: string; hint: string }> = {
+  open: { label: 'Open', hint: 'In progress — the line has not been saved or submitted yet.' },
+  draft: { label: 'Draft', hint: 'Saved but not yet submitted for review.' },
+  pending: { label: 'Pending', hint: 'Awaiting manager review / approval.' },
+  submitted: { label: 'Pending', hint: 'Submitted and waiting in the approval queue.' },
+  approved: { label: 'Approved', hint: 'Approved by the manager and locked.' },
+  rejected: { label: 'Rejected', hint: 'Rejected — changes requested by the approver.' },
+};
+const statusLabel = (status: string) => STATUS_LABEL[status] ?? STATUS_LABEL.open;
 
 const StatusDot = styled('span')(({ theme }) => ({
   display: 'inline-block',
@@ -350,80 +363,434 @@ const NoteDialog = ({
   );
 };
 
-/* ── Advanced notes panel: a shared external/internal editor that writes one
-   note into every target line at once (toggled by the "Use advanced notes"
-   toolbar action). Kept as a stateful widget so its draft survives the main
-   page component re-rendering. */
-const AdvancedNotesPanel = ({
+/* ── Advanced notes dialog: week-level external + internal comments for the
+   entire timesheet of the selected week (opened by the "Use advanced notes"
+   toolbar action). These are distinct from the per-line note cells, which
+   stay project/line-specific. Both fields use the same rich-text editor as
+   the existing "Add External/Internal comment" fields. */
+const NoteField = ({
   kind,
-  onKindChange,
-  onApply,
-  targetCount,
+  value,
+  onChange,
 }: {
   kind: NoteKind;
-  onKindChange: (k: NoteKind) => void;
-  onApply: (text: string) => void;
-  targetCount: number;
+  value: string;
+  onChange: (v: string) => void;
 }) => {
-  const [draft, setDraft] = useState('');
   const cfg = NOTE_TYPE_CONFIG[kind];
+  return (
+    <Box sx={{ borderRadius: 1 }}>
+      <RichTextEditor
+        value={{ segments: parseRichText(value).segments }}
+        onChange={(v) => onChange(serializeRichText(v.segments))}
+        showFooterActions={false}
+        title={cfg.editorTitle}
+        placeholder={cfg.emptyLabel}
+      />
+    </Box>
+  );
+};
+
+const AdvancedNotesDialog = ({
+  open,
+  externalNote,
+  internalNote,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  externalNote: string;
+  internalNote: string;
+  onClose: () => void;
+  onSave: (external: string, internal: string) => void;
+}) => {
+  const [extDraft, setExtDraft] = useState(externalNote);
+  const [intDraft, setIntDraft] = useState(internalNote);
+
+  return (
+    <ConfigFormDialog
+      open={open}
+      onClose={onClose}
+      onSubmit={() => onSave(extDraft, intDraft)}
+      isEdit
+      icon={<StickyNote2Icon sx={{ color: '#fff', fontSize: '1.1rem' }} />}
+      accent={APPROVED_ESTIMATES_ACCENT}
+      title='Advanced notes'
+      editTitle='Advanced notes'
+      subtitle='Applies to the entire timesheet for this week — shared across all lines.'
+      submitLabel='Save'
+      maxWidth='md'
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+        <NoteField kind='external' value={extDraft} onChange={setExtDraft} />
+        <NoteField kind='internal' value={intDraft} onChange={setIntDraft} />
+      </Box>
+    </ConfigFormDialog>
+  );
+};
+
+/* Renders the saved week-level advanced notes (external + internal) as a
+   compact read-only strip under the toolbar, so the user can see the notes
+   that apply to the whole week without reopening the dialog. */
+const AdvancedNotesSummary = ({
+  externalNote,
+  internalNote,
+}: {
+  externalNote: string;
+  internalNote: string;
+}) => {
+  const extText = notePreviewText(externalNote, 80);
+  const intText = notePreviewText(internalNote, 80);
+  const hasExternal = extText.length > 0;
+  const hasInternal = intText.length > 0;
+  if (!hasExternal && !hasInternal) return null;
   return (
     <Box
       sx={{
         border: '1px solid #e5e7eb',
         backgroundColor: '#ffffff',
         borderRadius: 3,
-        p: 2,
+        p: 1.5,
         mb: 2,
       }}
     >
-      <Stack direction='row' spacing={1} alignItems='center' mb={1.5}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, pr: 1 }}>
-          <PublicIcon sx={{ fontSize: '1rem', color: cfg.color }} />
-          <Typography variant='body2' sx={{ fontWeight: 700, color: cfg.color }}>
-            Advanced notes
-          </Typography>
-        </Box>
-        <RadioGroup
-          row
-          value={kind}
-          onChange={(e) => onKindChange(e.target.value as NoteKind)}
-          sx={{ gap: 1 }}
-        >
-          <FormControlLabel
-            value='external'
-            control={<Radio size='small' color='primary' />}
-            label='External'
-          />
-          <FormControlLabel
-            value='internal'
-            control={<Radio size='small' color='primary' />}
-            label='Internal'
-          />
-        </RadioGroup>
-        <Box sx={{ ml: 'auto', fontSize: '0.75rem', color: 'text.secondary', textAlign: 'right' }}>
-          Applies to {targetCount} target line{targetCount === 1 ? '' : 's'}
-        </Box>
-      </Stack>
-      <RichTextEditor
-        value={{ segments: parseRichText(draft).segments }}
-        onChange={(value) => setDraft(serializeRichText(value.segments))}
-        showFooterActions={false}
-        title={cfg.editorTitle}
-        placeholder={cfg.emptyLabel}
-      />
-      <Stack direction='row' spacing={1} mt={1.5} justifyContent='flex-end'>
-        <Button variant='outlined' size='small' label='Clear' onClick={() => setDraft('')} />
-        <Button
-          variant='contained'
-          size='small'
-          label='Apply note'
-          onClick={() => onApply(draft)}
-          disabled={!draft.trim()}
-          sx={{ bgcolor: cfg.color, '&:hover': { bgcolor: `${cfg.color}dd` } }}
-        />
+      <Typography
+        variant='body2'
+        sx={{ fontWeight: 700, color: 'text.secondary', mb: 0.5, letterSpacing: '0.02em' }}
+      >
+        Advanced notes for this week
+      </Typography>
+      <Stack spacing={0.5}>
+        {hasExternal && (
+          <Stack direction='row' spacing={1} alignItems='flex-start'>
+            <Box sx={{ flexShrink: 0, mt: 0.25 }}>
+              <PublicIcon sx={{ fontSize: '0.95rem', color: NOTE_TYPE_CONFIG.external.color }} />
+            </Box>
+            <Typography variant='body2' sx={{ color: 'text.primary' }}>
+              {extText}
+            </Typography>
+          </Stack>
+        )}
+        {hasInternal && (
+          <Stack direction='row' spacing={1} alignItems='flex-start'>
+            <Box sx={{ flexShrink: 0, mt: 0.25 }}>
+              <LockIcon sx={{ fontSize: '0.95rem', color: NOTE_TYPE_CONFIG.internal.color }} />
+            </Box>
+            <Typography variant='body2' sx={{ color: 'text.primary' }}>
+              {intText}
+            </Typography>
+          </Stack>
+        )}
       </Stack>
     </Box>
+  );
+};
+
+/* ── Attachments dialog: mirrors the TicketDetail AttachmentModal pattern
+   (existing list + dashed "Choose file" dropzone + pending files + footer),
+   scoped to the in-memory timesheet lines. File names are what is stored, so
+   this is a UI prototype — no network upload. */
+const ATTACHMENT_ACCENT = '#0369a1';
+
+const TimesheetAttachmentDialog = ({
+  open,
+  targetCount,
+  existing,
+  onClose,
+  onAttach,
+  onRemove,
+}: {
+  open: boolean;
+  targetCount: number;
+  existing: string[];
+  onClose: () => void;
+  onAttach: (names: string[]) => void;
+  onRemove: (name: string) => void;
+}) => {
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { files } = event.target;
+    if (files && files.length > 0) {
+      setSelectedFiles((prev) => [...prev, ...Array.from(files)]);
+    }
+    event.target.value = '';
+  };
+
+  const handleAttach = () => {
+    if (selectedFiles.length === 0) return;
+    onAttach(selectedFiles.map((f) => f.name));
+    setSelectedFiles([]);
+  };
+
+  const handleCancel = () => {
+    setSelectedFiles([]);
+    onClose();
+  };
+
+  const existingCount = existing.length;
+
+  return (
+    <Modal
+      open={open}
+      onClose={handleCancel}
+      title={
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box
+            sx={{
+              width: 38,
+              height: 38,
+              borderRadius: 1.5,
+              bgcolor: 'rgba(255,255,255,0.18)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <CloudUploadOutlinedIcon sx={{ fontSize: '1.1rem', color: '#fff' }} />
+          </Box>
+          <Box>
+            <Typography
+              sx={{ fontSize: '1.1rem', fontWeight: 600, lineHeight: 1.3, color: '#fff' }}
+            >
+              Attachments
+            </Typography>
+            <Typography
+              sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.85)', lineHeight: 1.3 }}
+            >
+              {targetCount > 1
+                ? `Manage attachments for ${targetCount} selected lines`
+                : 'Manage attachments for this line'}
+            </Typography>
+          </Box>
+        </Box>
+      }
+      headerTextColor='#fff'
+      headerBackground={`linear-gradient(135deg, ${darken(ATTACHMENT_ACCENT, 0.18)} 0%, ${ATTACHMENT_ACCENT} 100%)`}
+      maxWidth='sm'
+      footer={
+        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+          <Button
+            onClick={handleCancel}
+            variant='outlined'
+            size='small'
+            label='Cancel'
+            sx={{
+              textTransform: 'none',
+              borderColor: alpha(ATTACHMENT_ACCENT, 0.4),
+              color: darken(ATTACHMENT_ACCENT, 0.15),
+              '&:hover': {
+                borderColor: ATTACHMENT_ACCENT,
+                bgcolor: alpha(ATTACHMENT_ACCENT, 0.04),
+              },
+            }}
+          />
+          <Button
+            onClick={handleAttach}
+            disabled={selectedFiles.length === 0}
+            variant='contained'
+            size='small'
+            label='Attach'
+            sx={{
+              textTransform: 'none',
+              bgcolor: ATTACHMENT_ACCENT,
+              '&:hover': { bgcolor: darken(ATTACHMENT_ACCENT, 0.15) },
+              '&.Mui-disabled': { bgcolor: alpha(ATTACHMENT_ACCENT, 0.4) },
+            }}
+          />
+        </Box>
+      }
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '15px', p: 1 }}>
+        {existingCount > 0 && (
+          <Box>
+            <Typography variant='subtitle2' sx={{ mb: 1.5, fontWeight: 600, color: '#374151' }}>
+              Existing Attachments ({existingCount})
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {existing.map((name) => (
+                <Box
+                  key={name}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    p: '12px 16px',
+                    borderRadius: '10px',
+                    border: '1px solid rgba(226, 232, 255, 0.9)',
+                    background: '#ffffff',
+                    transition: 'all 0.15s ease',
+                    '&:hover': {
+                      background: '#f8faff',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                    },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: '8px',
+                      background: '#eef2ff',
+                      border: '1px solid rgba(99,102,241,0.15)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <AttachFileIcon sx={{ fontSize: 18, color: '#6366f1' }} />
+                  </Box>
+                  <Typography
+                    sx={{
+                      flex: 1,
+                      fontSize: '0.88rem',
+                      fontWeight: 700,
+                      color: '#1e293b',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                    title={name}
+                  >
+                    {name}
+                  </Typography>
+                  <Tooltip title='Remove attachment' arrow placement='top'>
+                    <IconButton
+                      size='small'
+                      onClick={() => onRemove(name)}
+                      sx={{
+                        width: 34,
+                        height: 34,
+                        color: '#dc2626',
+                        flexShrink: 0,
+                        '&:hover': { background: '#fef2f2', borderRadius: '8px' },
+                      }}
+                    >
+                      <DeleteIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
+
+        <Box>
+          <Typography variant='subtitle2' sx={{ mb: 1.5, fontWeight: 600, color: '#374151' }}>
+            Add New Attachments
+          </Typography>
+          <Box
+            onClick={() =>
+              document.querySelector<HTMLInputElement>('.timesheet-attachment-input')?.click()
+            }
+            sx={{
+              border: '2px dashed #ccc',
+              borderRadius: 1,
+              p: '24px 16px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              transition: 'border-color 0.2s',
+              bgcolor: alpha(ATTACHMENT_ACCENT, 0.02),
+              '&:hover': {
+                borderColor: ATTACHMENT_ACCENT,
+                bgcolor: alpha(ATTACHMENT_ACCENT, 0.04),
+              },
+            }}
+          >
+            <input
+              type='file'
+              className='timesheet-attachment-input'
+              multiple
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+            />
+            <Box sx={{ mb: 0.75 }}>
+              <CloudUploadOutlinedIcon sx={{ fontSize: 24, color: '#9ca3af' }} />
+            </Box>
+            <Button
+              variant='contained'
+              size='small'
+              label='Choose file'
+              sx={{
+                bgcolor: ATTACHMENT_ACCENT,
+                '&:hover': { bgcolor: darken(ATTACHMENT_ACCENT, 0.15) },
+                textTransform: 'none',
+                px: 3,
+                py: 0.75,
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                borderRadius: 1.5,
+              }}
+            />
+          </Box>
+        </Box>
+
+        {selectedFiles.length > 0 && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151' }}>
+              Attached Files ({selectedFiles.length})
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+              {selectedFiles.map((file, index) => (
+                <Box
+                  key={`${file.name}-${index}`}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 1,
+                    p: 1,
+                    borderRadius: 1.5,
+                    border: '1px solid #e5e7eb',
+                    bgcolor: alpha(ATTACHMENT_ACCENT, 0.04),
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0, flex: 1 }}>
+                    <CloudUploadOutlinedIcon
+                      sx={{ fontSize: '1.1rem', color: ATTACHMENT_ACCENT }}
+                    />
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                      <Typography
+                        sx={{
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          color: '#1e293b',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {file.name}
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.7rem', color: '#64748b' }}>
+                        {(file.size / 1024).toFixed(1)} KB
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box
+                    onClick={() => setSelectedFiles((prev) => prev.filter((_, i) => i !== index))}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      p: 0.5,
+                      borderRadius: 1,
+                      color: '#dc2626',
+                      '&:hover': { bgcolor: 'rgba(220, 38, 38, 0.08)' },
+                    }}
+                  >
+                    <DeleteIcon sx={{ fontSize: '1.1rem' }} />
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
+      </Box>
+    </Modal>
   );
 };
 
@@ -589,7 +956,6 @@ const Timesheet = () => {
     action: () => void;
   }>({ open: false, label: '', action: () => {} });
   const [showDetailedTotals, setShowDetailedTotals] = useState(true);
-  const [showAdvancedNotes, setShowAdvancedNotes] = useState(false);
   const [selectedLineIds, setSelectedLineIds] = useState<Record<string, boolean>>({});
 
   // ── Note dialog state ──────────────────────────────────────────
@@ -600,9 +966,13 @@ const Timesheet = () => {
     draft: string;
   }>({ open: false, lineId: '', kind: 'external', draft: '' });
 
-  /* "Use advanced notes" toggles the dedicated external/internal note cells;
-     this picks which note type the advanced note editor writes into */
-  const [advancedNoteKind, setAdvancedNoteKind] = useState<NoteKind>('external');
+  /* "Use advanced notes": week-level external + internal comments that apply
+     to the entire timesheet of the selected week (not per line). The dialog
+     is opened by the toolbar action; the saved values are shown in a compact
+     strip under the toolbar and reused each time the dialog opens. */
+  const [advancedNotesOpen, setAdvancedNotesOpen] = useState(false);
+  const [weekExternalNote, setWeekExternalNote] = useState('');
+  const [weekInternalNote, setWeekInternalNote] = useState('');
 
   /* "Edit" (toolbar) opens a selection dialog to target the affected line(s) */
   const [editSelectionOpen, setEditSelectionOpen] = useState(false);
@@ -846,17 +1216,55 @@ const Timesheet = () => {
     );
   };
 
-  /* "Add attachment": flag the selected lines (or all) as carrying an
-     attachment, shown per-row via the clip icon. */
-  const handleAddAttachment = () => {
-    const targets = selectedCount > 0 ? lines.filter((l) => selectedLineIds[l.id]) : lines;
-    if (targets.length === 0) {
-      notify.info('No lines to attach to yet');
-      return;
-    }
-    const ids = new Set(targets.map((l) => l.id));
-    setLines((prev) => prev.map((l) => (ids.has(l.id) ? { ...l, attachment: true } : l)));
-    notify.success(`Attachment added to ${targets.length} line${targets.length > 1 ? 's' : ''}`);
+  /* "Add attachment" opens the Attachments dialog (see
+     TimesheetAttachmentDialog below) scoped to the target lines: the selected
+     lines, or every line when nothing is selected. The per-row paperclip can
+     open it scoped to a single line via openAttachmentDialog([line.id]). */
+  const [attachmentDialog, setAttachmentDialog] = useState<{
+    open: boolean;
+    targetLineIds: string[];
+  }>({ open: false, targetLineIds: [] });
+
+  const openAttachmentDialog = (lineIds?: string[]) => {
+    const ids =
+      lineIds && lineIds.length > 0
+        ? lineIds
+        : selectedCount > 0
+          ? lines.filter((l) => selectedLineIds[l.id]).map((l) => l.id)
+          : lines.map((l) => l.id);
+    setAttachmentDialog({ open: true, targetLineIds: ids });
+  };
+  const closeAttachmentDialog = () => setAttachmentDialog({ open: false, targetLineIds: [] });
+
+  /* Attach the chosen file names to every target line (shown per-row via the
+     paperclip indicator). Runs from the dialog's "Attach" action. */
+  const attachFilesToLines = (names: string[]) => {
+    const idSet = new Set(attachmentDialog.targetLineIds);
+    setLines((prev) =>
+      prev.map((l) =>
+        idSet.has(l.id)
+          ? { ...l, attachments: Array.from(new Set([...(l.attachments ?? []), ...names])) }
+          : l,
+      ),
+    );
+    notify.success(
+      `${names.length} attachment${names.length > 1 ? 's' : ''} added to ${idSet.size} line${
+        idSet.size > 1 ? 's' : ''
+      }`,
+    );
+  };
+
+  /* Remove an existing attachment name from every target line. */
+  const removeAttachmentFromLines = (name: string) => {
+    const idSet = new Set(attachmentDialog.targetLineIds);
+    setLines((prev) =>
+      prev.map((l) =>
+        idSet.has(l.id)
+          ? { ...l, attachments: (l.attachments ?? []).filter((n) => n !== name) }
+          : l,
+      ),
+    );
+    notify.success(`Removed attachment "${name}"`);
   };
 
   /* "Manage favourites": a small dialog listing favourited lines, where the
@@ -867,21 +1275,19 @@ const Timesheet = () => {
   const handleUnfavourite = (id: string) => updateLine(id, { favourited: false });
   const handleDeleteFavourite = (id: string) => handleDeleteLine(id);
 
-  /* "Use advanced notes": apply the note editor's text into the chosen
-     external or internal note of every target line (selected, or all when
-     nothing is selected). */
-  const applyAdvancedNote = (text: string) => {
-    const key = advancedNoteKind === 'external' ? 'externalNote' : 'internalNote';
-    const ids =
-      selectedCount > 0
-        ? lines.filter((l) => selectedLineIds[l.id]).map((l) => l.id)
-        : lines.map((l) => l.id);
-    const idSet = new Set(ids);
-    setLines((prev) => prev.map((l) => (idSet.has(l.id) ? { ...l, [key]: text } : l)));
+  /* "Use advanced notes": save the week-level external + internal comments.
+     These describe the whole week's timesheet and are independent of the
+     per-line (project-specific) note cells. */
+  const handleSaveAdvancedNotes = (external: string, internal: string) => {
+    setWeekExternalNote(external);
+    setWeekInternalNote(internal);
+    setAdvancedNotesOpen(false);
+    const anySaved = external.trim().length > 0 || internal.trim().length > 0;
     notify.success(
-      `Applied ${advancedNoteKind} note to ${ids.length} line${ids.length > 1 ? 's' : ''}`,
+      anySaved ? 'Advanced notes saved for this week' : 'Advanced notes cleared for this week',
     );
   };
+  const hasAdvancedNotes = weekExternalNote.trim().length > 0 || weekInternalNote.trim().length > 0;
 
   const totals = useMemo(() => {
     const perDay = week.map((d) => {
@@ -1010,21 +1416,13 @@ const Timesheet = () => {
       label: 'Add attachment',
       icon: AttachFileIcon,
       color: '#92400e',
-      onClick: handleAddAttachment,
+      onClick: () => openAttachmentDialog(),
     },
     {
       label: 'Use advanced notes',
       icon: CommentIcon,
       color: '#0d9488',
-      onClick: () => {
-        const next = !showAdvancedNotes;
-        setShowAdvancedNotes(next);
-        notify.info(
-          next
-            ? 'Advanced notes enabled — apply an external or internal note to the selected lines'
-            : 'Advanced notes hidden',
-        );
-      },
+      onClick: () => setAdvancedNotesOpen(true),
     },
     {
       label: 'Show detailed totals',
@@ -1048,45 +1446,21 @@ const Timesheet = () => {
         className={classes.pageHeader}
       />
 
-      {/* ── Top bar: tabs + period range + actions ───────────── */}
+      {/* ── Row 1: tabs (left) + actions (right) ─────────────── */}
       <Box className={classes.topBar}>
         <Tabs value={activeTab} onChange={handleTabChange} className={classes.tabsBar}>
           <Tab label='Timesheet' />
           <Tab label='Approval History' />
-          <Tab label='My Allocation' />
         </Tabs>
 
-        {/* period range, centered between the tabs and the action buttons —
-            only meaningful on the Timesheet tab, so it is hidden elsewhere */}
-        {activeTab === 0 && (
-          <Stack
-            direction='row'
-            spacing={1}
-            alignItems='center'
-            justifyContent='center'
-            className={classes.periodPill}
-          >
-            <Button
-              variant='contained'
-              size='small'
-              startIcon={<NavigateBeforeIcon />}
-              className={classes.periodNav}
-              onClick={() => setWeekOffset((o) => o - 1)}
-            />
-            <Typography variant='body2' className={classes.periodLabel}>
-              {weekRangeLabel}
-            </Typography>
-            <Button
-              variant='contained'
-              size='small'
-              endIcon={<NavigateNextIcon />}
-              className={classes.periodNav}
-              onClick={() => setWeekOffset((o) => o + 1)}
-            />
-          </Stack>
-        )}
-
         <Stack direction='row' spacing={1}>
+          <Button
+            variant='outlined'
+            size='small'
+            label='My Allocation'
+            className={classes.topAction}
+            onClick={() => notify.info('My Allocation coming soon')}
+          />
           <Button
             variant='outlined'
             size='small'
@@ -1097,6 +1471,35 @@ const Timesheet = () => {
           />
         </Stack>
       </Box>
+
+      {/* ── Row 2: full-width period band (Timesheet tab only) ── */}
+      {activeTab === 0 && (
+        <Stack
+          direction='row'
+          spacing={1}
+          alignItems='center'
+          justifyContent='center'
+          className={classes.periodPill}
+        >
+          <Button
+            variant='contained'
+            size='small'
+            startIcon={<NavigateBeforeIcon />}
+            className={classes.periodNav}
+            onClick={() => setWeekOffset((o) => o - 1)}
+          />
+          <Typography variant='body2' className={classes.periodLabel}>
+            {weekRangeLabel}
+          </Typography>
+          <Button
+            variant='contained'
+            size='small'
+            endIcon={<NavigateNextIcon />}
+            className={classes.periodNav}
+            onClick={() => setWeekOffset((o) => o + 1)}
+          />
+        </Stack>
+      )}
 
       {activeTab === 0 ? (
         <>
@@ -1171,14 +1574,9 @@ const Timesheet = () => {
             ))}
           </Box>
 
-          {/* ── Advanced notes (toggled by the "Use advanced notes" action) ── */}
-          {showAdvancedNotes && (
-            <AdvancedNotesPanel
-              kind={advancedNoteKind}
-              onKindChange={setAdvancedNoteKind}
-              onApply={(text) => applyAdvancedNote(text)}
-              targetCount={selectedCount > 0 ? selectedCount : lines.length}
-            />
+          {/* ── Week-level advanced notes (view of the saved dialog values) ── */}
+          {hasAdvancedNotes && (
+            <AdvancedNotesSummary externalNote={weekExternalNote} internalNote={weekInternalNote} />
           )}
 
           {/* ── Timesheet lines section ───────────────────────── */}
@@ -1344,16 +1742,30 @@ const Timesheet = () => {
                               justifyContent='center'
                               sx={{ width: '100%' }}
                             >
-                              <StatusDot
-                                style={{
-                                  backgroundColor: statusColor(line.status),
-                                }}
-                              />
-                              {line.attachment && (
-                                <Tooltip title='Attachment added' arrow>
-                                  <AttachFileIcon
-                                    sx={{ fontSize: '0.95rem', color: theme_warning }}
+                              <Tooltip title={statusLabel(line.status).label}>
+                                <Box sx={{ cursor: 'pointer', display: 'inline-flex' }}>
+                                  <StatusDot
+                                    style={{
+                                      backgroundColor: statusColor(line.status),
+                                    }}
                                   />
+                                </Box>
+                              </Tooltip>
+                              {(line.attachments?.length ?? 0) > 0 && (
+                                <Tooltip
+                                  title={`${line.attachments!.length} attachment${
+                                    line.attachments!.length > 1 ? 's' : ''
+                                  }`}
+                                  arrow
+                                >
+                                  <Box
+                                    sx={{ cursor: 'pointer', display: 'inline-flex' }}
+                                    onClick={() => openAttachmentDialog([line.id])}
+                                  >
+                                    <AttachFileIcon
+                                      sx={{ fontSize: '0.95rem', color: theme_warning }}
+                                    />
+                                  </Box>
                                 </Tooltip>
                               )}
                             </Stack>
@@ -1405,18 +1817,22 @@ const Timesheet = () => {
                               </Tooltip>
 
                               {/* Delete: remove just this line. Approved lines
-                                  are locked and cannot be deleted. */}
+                                  are locked, and the last remaining line is
+                                  protected so the table can never be emptied
+                                  via the row trash button. */}
                               <Tooltip
                                 title={
                                   isApproved
                                     ? 'This line is approved and cannot be removed'
-                                    : 'Remove this line'
+                                    : lines.length <= 1
+                                      ? 'Keep at least one timesheet line'
+                                      : 'Remove this line'
                                 }
                               >
                                 <IconButton
                                   size='small'
                                   className={classes.actionIconButton}
-                                  disabled={isApproved}
+                                  disabled={isApproved || lines.length <= 1}
                                   onClick={() => handleDeleteLine(line.id)}
                                 >
                                   <DeleteIcon sx={{ fontSize: '1rem' }} />
@@ -1674,6 +2090,33 @@ const Timesheet = () => {
           onSave={saveNoteDialog}
         />
       )}
+
+      {/* ── Advanced notes dialog: week-level external + internal comments ── */}
+      {advancedNotesOpen && (
+        <AdvancedNotesDialog
+          open={advancedNotesOpen}
+          externalNote={weekExternalNote}
+          internalNote={weekInternalNote}
+          onClose={() => setAdvancedNotesOpen(false)}
+          onSave={handleSaveAdvancedNotes}
+        />
+      )}
+
+      {/* ── Attachments dialog (toolbar "Add attachment" / per-row paperclip) ── */}
+      <TimesheetAttachmentDialog
+        open={attachmentDialog.open}
+        targetCount={attachmentDialog.targetLineIds.length}
+        existing={Array.from(
+          new Set(
+            lines
+              .filter((l) => attachmentDialog.targetLineIds.includes(l.id))
+              .flatMap((l) => l.attachments ?? []),
+          ),
+        )}
+        onClose={closeAttachmentDialog}
+        onAttach={attachFilesToLines}
+        onRemove={removeAttachmentFromLines}
+      />
 
       {/* ── Edit target selection (toolbar "Edit") ── */}
       <Modal

@@ -348,6 +348,25 @@ model User {
   @@map("User")
 }
 
+model UserSession {
+  id        String   @id @default(uuid())
+  data      Json
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([expiresAt])
+  @@map("UserSession")
+}
+
+model CacheEntry {
+  key       String   @id
+  value     Json
+  expiresAt DateTime
+
+  @@index([expiresAt])
+  @@map("CacheEntry")
+}
+
 model UserChangeLog {
   id            Int      @id @default(autoincrement())
   userId        Int

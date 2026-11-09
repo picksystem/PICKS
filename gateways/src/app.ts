@@ -6,9 +6,12 @@ import cors from 'cors';
 import compression from 'compression';
 import path from 'path';
 import fs from 'fs';
+import session from 'express-session';
+import cookieParser from 'cookie-parser';
 
-// Centralized error handling middleware
-import { errorHandler, notFoundHandler } from '@serviceops/middleware';
+// Centralized error handling + auth middleware
+import { errorHandler, notFoundHandler, requireAuth, PgSessionStore } from '@serviceops/middleware';
+import { pool } from '@serviceops/database';
 
 // Import route modules
 import authRoutes from '../api/auth/Auth.routes';
@@ -20,6 +23,21 @@ import { ADMIN_PATHS, USER_PATHS, CONSULTANT_PATHS } from '@serviceops/constants
 type AppDeps = {
   ticketRouter?: express.Router;
 };
+
+// ─── Session configuration ───────────────────────────────────────────────────
+const IS_PROD = process.env.NODE_ENV === 'production';
+const SESSION_SECRET = process.env.SESSION_SECRET || 'serivceops-session-secret-key';
+// Session lifetime (days) for the "stay signed in" cookie.
+const SESSION_TTL_DAYS = parseInt(process.env.SESSION_TTL_DAYS || '7', 10);
+const SESSION_TTL_MS = SESSION_TTL_DAYS * 24 * 60 * 60 * 1000;
+
+function parseCorsOrigins(raw?: string): string[] | undefined {
+  if (!raw) return undefined;
+  return raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
 
 /**
  * Creates and configures the Express application.
@@ -33,11 +51,37 @@ export function createApp({ ticketRouter }: AppDeps = {}): express.Application {
   // Gzip compress all responses — reduces payload size by 60-80%
   app.use(compression());
 
-  // Enable CORS
-  app.use(cors());
+  // Enable CORS — allow credentials (cookie session) from configured origins
+  app.use(
+    cors({
+      origin: parseCorsOrigins(process.env.CORS_ORIGIN) ?? true,
+      credentials: true,
+    }),
+  );
 
   // Parse incoming JSON requests
   app.use(express.json({ limit: '10mb' }));
+
+  // Parse cookies (needed to read the session cookie)
+  app.use(cookieParser());
+
+  // Server-side sessions persisted in PostgreSQL (UserSession table)
+  app.use(
+    session({
+      name: 'serviceops.sid',
+      secret: SESSION_SECRET,
+      store: new PgSessionStore(pool, SESSION_TTL_MS),
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        // Cross-site cookie: requires secure (HTTPS) in production.
+        secure: IS_PROD,
+        sameSite: IS_PROD ? 'none' : 'lax',
+        maxAge: SESSION_TTL_MS,
+      },
+    }),
+  );
 
   // Serve uploaded files statically
   const uploadsDir = path.join(__dirname, '../../uploads/attachments');
@@ -46,18 +90,26 @@ export function createApp({ ticketRouter }: AppDeps = {}): express.Application {
   // Return plain 404 for missing static files (prevent API notFoundHandler JSON response)
   app.use('/uploads', (_req, res) => res.status(404).end());
 
-  // Auth API routes
+  // Auth API routes (public actions: signin/signup/forgot/verify/reset;
+  // session-protected actions: get-session/logout/authenticated profile actions)
   app.use('/api/auth', authRoutes);
 
-  // Admin API routes (includes dynamic ticket router)
+  // Admin API routes (includes dynamic ticket router).
+  //
+  // The whole /api/admin namespace requires an authenticated session. The
+  // admin-*management* sub-routers (controls / configuration / ticket-type /
+  // custom-field) additionally require the admin role — that guard is applied
+  // inside each of those route files, NOT here, because the ticket
+  // sub-router (/api/admin/tickets) is used by every role to create and manage
+  // tickets and must stay accessible to any authenticated user.
   const adminRouter = buildAdminRouter(ticketRouter);
-  app.use(`/api/${ADMIN_PATHS.ADMIN}`, adminRouter);
+  app.use(`/api/${ADMIN_PATHS.ADMIN}`, requireAuth, adminRouter);
 
-  // User API routes
-  app.use(`/api/${USER_PATHS.USER}`, userRoutes);
+  // User API routes — session only
+  app.use(`/api/${USER_PATHS.USER}`, requireAuth, userRoutes);
 
-  // Consultant API routes
-  app.use(`/api/${CONSULTANT_PATHS.CONSULTANT}`, consultantRoutes);
+  // Consultant API routes — session only
+  app.use(`/api/${CONSULTANT_PATHS.CONSULTANT}`, requireAuth, consultantRoutes);
 
   // Health Check
   app.get('/health', (_req, res) => {
