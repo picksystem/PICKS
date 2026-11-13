@@ -827,3 +827,52 @@ model AdminTicketActivity {
 
   @@map("admin_ticket_activity")
 }
+
+model Timesheet {
+  id               String   @id @default(cuid())
+  userId           Int
+  weekStart        String
+  status           String   @default("open")
+  totalHours       Float    @default(0)
+  billableHours    Float    @default(0)
+  nonBillableHours Float    @default(0)
+  externalNote     String?
+  internalNote     String?
+  submittedAt      DateTime?
+  submittedBy      String?
+  approvedAt       DateTime?
+  approvedBy       String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  lines            TimesheetLine[]
+
+  @@unique([userId, weekStart])
+  @@map("Timesheet")
+}
+
+model TimesheetLine {
+  id          String  @id @default(cuid())
+  timesheetId String
+  timesheet   Timesheet @relation(fields: [timesheetId], references: [id], onDelete: Cascade)
+  client      String
+  project     String?
+  task        String
+  externalNote String?
+  internalNote String?
+  billable    Boolean @default(true)
+  monday      Float  @default(0)
+  tuesday     Float  @default(0)
+  wednesday   Float  @default(0)
+  thursday    Float  @default(0)
+  friday      Float  @default(0)
+  saturday    Float  @default(0)
+  sunday      Float  @default(0)
+  favourited  Boolean @default(false)
+  liked       Boolean @default(false)
+  attachments String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([timesheetId])
+  @@map("TimesheetLine")
+}

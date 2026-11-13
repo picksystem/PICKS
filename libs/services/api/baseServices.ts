@@ -53,6 +53,7 @@ export const baseApi = createApi({
     'TicketActivities',
     'CustomFields',
     'KBArticle',
+    'Timesheet',
   ],
   endpoints: () => ({}), // intentionally empty - endpoints added by injectEndpoints
 });

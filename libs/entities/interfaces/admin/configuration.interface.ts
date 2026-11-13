@@ -544,6 +544,12 @@ export interface IConfigTimesheetProjectCategory {
   billability: string;
 }
 
+export interface IConfigTimesheetTaskCode {
+  id: string;
+  name: string;
+  description: string;
+}
+
 export interface IConfigTimesheets {
   conversionReasonCodes: IConfigTimesheetConversionCode[];
   cancellationReasonCodes: IConfigTimesheetCancellationCode[];
@@ -553,6 +559,7 @@ export interface IConfigTimesheets {
   queueEntries: IConfigTimesheetQueueEntry[];
   resourceEntries: IConfigTimesheetResourceEntry[];
   projectCategories: IConfigTimesheetProjectCategory[];
+  taskCodes: IConfigTimesheetTaskCode[];
 }
 
 export interface IConfigExpenseProjectEntry {
@@ -1937,6 +1944,14 @@ export const DEFAULT_CONFIGURATION_DATA: IConfigurationData = {
     queueEntries: [],
     resourceEntries: [],
     projectCategories: [],
+    taskCodes: [
+      { id: 'task-development', name: 'Development', description: '' },
+      { id: 'task-internal-calls', name: 'Internal calls', description: '' },
+      { id: 'task-vacation', name: 'Vacation', description: '' },
+      { id: 'task-fixed-holidays', name: 'Fixed holidays', description: '' },
+      { id: 'task-client-meetings', name: 'Client meetings', description: '' },
+      { id: 'task-documentation', name: 'Documentation', description: '' },
+    ],
   },
   expenses: {
     expenseProjects: [],

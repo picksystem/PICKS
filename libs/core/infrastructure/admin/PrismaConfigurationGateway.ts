@@ -342,6 +342,11 @@ export class PrismaConfigurationGateway implements IConfigurationGateway {
         queueEntries: data.timesheets?.queueEntries ?? [],
         resourceEntries: data.timesheets?.resourceEntries ?? [],
         projectCategories: data.timesheets?.projectCategories ?? [],
+        // Newer field than the original schema rows — fall back to the
+        // DEFAULT_CONFIGURATION_DATA task codes so the timesheet Task column
+        // always has options even when the DB row was written before this
+        // field existed (same pattern as the adminControls normalization).
+        taskCodes: data.timesheets?.taskCodes ?? DEFAULT_CONFIGURATION_DATA.timesheets.taskCodes,
       },
       userManagement: {
         workingTimes: {

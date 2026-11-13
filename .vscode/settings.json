@@ -67,6 +67,12 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.updateImportsOnFileMove.enabled": "always",
+  // Watch regenerated artifacts in node_modules so the TS server picks up
+  // `prisma generate` rewrites of .prisma/client automatically. Without this
+  // the running server keeps the pre-rewrite client in memory and reports
+  // phantom "Module '@prisma/client' has no exported member ..." errors that
+  // `tsc` (a fresh process) does not see.
+  "typescript.enableNodeModuleWatch": true,
 
   // === FILES TO EXCLUDE ===
   "files.exclude": {

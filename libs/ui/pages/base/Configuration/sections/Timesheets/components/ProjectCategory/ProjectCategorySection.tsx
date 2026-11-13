@@ -37,6 +37,7 @@ export const ProjectCategorySection = ({ data, onDataChange }: ProjectCategorySe
         queueEntries: apiTS?.queueEntries ?? [],
         resourceEntries: apiTS?.resourceEntries ?? [],
         projectCategories: next,
+        taskCodes: apiTS?.taskCodes ?? [],
       });
     }
   };

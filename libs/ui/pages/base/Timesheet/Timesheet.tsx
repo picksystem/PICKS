@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Box,
   Typography,
@@ -54,6 +54,19 @@ import EventBusyIcon from '@mui/icons-material/EventBusy';
 import PercentIcon from '@mui/icons-material/Percent';
 import { useNotification } from '@serviceops/hooks';
 import { constants } from '@serviceops/utils';
+import {
+  useGetTimesheetQuery,
+  useGetTimesheetApprovalHistoryQuery,
+  useSaveTimesheetMutation,
+  useSubmitTimesheetMutation,
+  useDeleteTimesheetLineMutation,
+} from '@serviceops/services';
+import type {
+  ITimesheetLine,
+  ISaveTimesheetLineInput,
+  ISaveTimesheetInput,
+  ITimesheetStatus,
+} from '@serviceops/interfaces';
 import { useNavigate } from 'react-router-dom';
 import { ProjectSearchField } from '../Configuration/shared/GenericPanel/components/ProjectSearchField/ProjectSearchField';
 import { ClientSearchField } from '../Configuration/shared/GenericPanel/components/ClientSearchField/ClientSearchField';
@@ -69,7 +82,8 @@ import {
 } from '../Configuration/dialogs/ConfigDialogs/ConfigDialogs';
 import { APPROVED_ESTIMATES_ACCENT } from '../Configuration/sections/General/components/ApprovedEstimates/shared/ApprovedEstimatesConfig';
 import { useStyles } from './styles';
-import { TimesheetLine, TIMESHEET_TASKS, DayEntry, ApprovalEntry } from './types/timesheet.types';
+import { useConfiguration } from '../Configuration/hooks/useConfiguration';
+import { TimesheetLine, DayEntry } from './types/timesheet.types';
 
 export const theme_warning = '#ff9800';
 export const theme_success = '#008a00';
@@ -78,6 +92,42 @@ export const theme_draft = '#c5cae9';
 
 /* ── Note types: external (client-visible, blue) vs internal (team-only, amber) ── */
 export type NoteKind = 'external' | 'internal';
+
+/** Monday of the week containing `d`, as a "YYYY-MM-DD" ISO string. */
+const weekStartOf = (d: Date): string => {
+  const start = new Date(d);
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+  const y = start.getFullYear();
+  const m = String(start.getMonth() + 1).padStart(2, '0');
+  const day = String(start.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+/** Add days to a "YYYY-MM-DD" ISO string (returns the same format). */
+const addDaysIso = (iso: string, days: number): string => {
+  const [y, m, d] = iso.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  date.setUTCDate(date.getUTCDate() + days);
+  const ey = date.getUTCFullYear();
+  const em = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const ed = String(date.getUTCDate()).padStart(2, '0');
+  return `${ey}-${em}-${ed}`;
+};
+
+/** "09 Nov 2026  -  15 Nov 2026" band label for a week (Mon start). */
+const formatWeekRange = (weekStart: string): string => {
+  const [y, m, d] = weekStart.split('-').map(Number);
+  const start = new Date(Date.UTC(y, m - 1, d));
+  const end = new Date(start.getTime() + 6 * 86400000);
+  const fmt = (date: Date) =>
+    date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    });
+  return `${fmt(start)}  -  ${fmt(end)}`;
+};
 
 const NOTE_TYPE_CONFIG: Record<
   NoteKind,
@@ -159,12 +209,7 @@ const StatusDot = styled('span')(({ theme }) => ({
 
 const TIMESHEET_ICON_SX = { fontSize: '1.5rem' };
 
-const TASK_OPTIONS = TIMESHEET_TASKS.map((t) => ({ value: t, label: t }));
-
 /* ── KPI stat card: pastel icon chip + value/label, shared by both rows ── */
-/* ── Holiday / leave hours per line id (used by the KPI cards) ── */
-const HOLIDAYS_HOURS: Record<string, number> = { 'line-4': 8 };
-const LEAVES_HOURS: Record<string, number> = { 'line-3': 8 };
 
 const STAT_CARD_TONES = {
   indigo: { bg: '#e0e7ff', border: '#c7d2fe', color: '#4f46e5' },
@@ -245,51 +290,66 @@ const DAY_SHORT: Record<string, string> = {
   sat: 'Sat',
 };
 
-const buildWeek = (offset: number): DayEntry[] => {
-  const now = new Date();
-  const day = now.getDay();
-  const start = new Date(now);
-  start.setDate(now.getDate() - day + 1 + offset * 7);
-
+/* Build the 7 day columns (Mon–Sun) for the week that starts on `weekStart`
+   (an ISO "YYYY-MM-DD" Monday). Used to render the grid's day headers and to
+   read each line's per-day hours. */
+const buildWeekFromStart = (weekStart: string): DayEntry[] => {
+  const [y, m, d] = weekStart.split('-').map(Number);
+  const start = Date.UTC(y, m - 1, d);
   return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    const key = DAY_KEY_MAP[d.getDay()];
+    const ts = start + i * 86400000;
+    const key = DAY_KEY_MAP[new Date(ts).getUTCDay()];
     return {
       key,
       day: DAY_SHORT[key],
-      date: `${d.getDate()}`,
+      date: `${new Date(ts).getUTCDate()}`,
       hours: 0,
     };
   });
 };
 
-const APPROVAL_HISTORY: ApprovalEntry[] = [
-  {
-    id: 'appr-1',
-    period: '04-Oct-2026 – 10-Oct-2026',
-    status: 'approved',
-    submittedOn: '11-Oct-2026',
-    submittedBy: 'Vineesh Reddy',
-    approvedBy: 'Srinivas Penumalla',
+/* ── Shape converters between the API's line model (per-day keys
+   "monday"…"sunday") and the page's local line model (keys "mon"…"sun").
+   All edits happen locally; Save/Submit ship the converted payload and the
+   refetched sheet re-seeds the table. */
+const toLocalLine = (line: ITimesheetLine): TimesheetLine => ({
+  id: line.id,
+  client: line.client,
+  project: line.project ?? '',
+  task: line.task,
+  externalNote: line.externalNote ?? '',
+  internalNote: line.internalNote ?? '',
+  billable: line.billable,
+  dayValues: {
+    mon: line.dayValues.monday,
+    tue: line.dayValues.tuesday,
+    wed: line.dayValues.wednesday,
+    thu: line.dayValues.thursday,
+    fri: line.dayValues.friday,
+    sat: line.dayValues.saturday,
+    sun: line.dayValues.sunday,
   },
-  {
-    id: 'appr-2',
-    period: '27-Sep-2026 – 03-Oct-2026',
-    status: 'approved',
-    submittedOn: '04-Oct-2026',
-    submittedBy: 'Vineesh Reddy',
-    approvedBy: 'Srinivas Penumalla',
-  },
-  {
-    id: 'appr-3',
-    period: '20-Sep-2026 – 26-Sep-2026',
-    status: 'pending',
-    submittedOn: '27-Sep-2026',
-    submittedBy: 'Vineesh Reddy',
-    approvedBy: '—',
-  },
-];
+  status: 'open',
+  liked: line.liked,
+  favourited: line.favourited,
+  attachments: line.attachments ?? undefined,
+});
+
+const toSaveLine = (line: TimesheetLine): ISaveTimesheetLineInput => ({
+  client: line.client,
+  project: line.project ?? null,
+  task: line.task,
+  externalNote: line.externalNote || null,
+  internalNote: line.internalNote || null,
+  billable: line.billable,
+  monday: line.dayValues.mon ?? 0,
+  tuesday: line.dayValues.tue ?? 0,
+  wednesday: line.dayValues.wed ?? 0,
+  thursday: line.dayValues.thu ?? 0,
+  friday: line.dayValues.fri ?? 0,
+  saturday: line.dayValues.sat ?? 0,
+  sunday: line.dayValues.sun ?? 0,
+});
 
 /* Lines are added/removed dynamically at runtime ("New line" / "Remove
    line"), so the table starts empty. This builds a fresh blank line with
@@ -934,9 +994,34 @@ const Timesheet = () => {
   const notify = useNotification();
   const navigate = useNavigate();
 
+  /* Task options for the lines table come from the configuration document's
+     `timesheets.taskCodes` section — the same shared configuration source the
+     Clients / Project pickers read from (see TaskCodes admin panel). */
+  const { timesheets } = useConfiguration();
+  const taskOptions = useMemo(
+    () => (timesheets?.taskCodes ?? []).map((t) => ({ value: t.name, label: t.name })),
+    [timesheets?.taskCodes],
+  );
+
   const [activeTab, setActiveTab] = useState(0);
-  const [weekOffset, setWeekOffset] = useState(0);
-  const week = useMemo(() => buildWeek(weekOffset), [weekOffset]);
+
+  /* The selected week is a Monday ISO date ("YYYY-MM-DD"); the < / >
+     buttons shift it by 7 days. Drives both the API query and the day
+     columns of the grid. */
+  const [weekStart, setWeekStart] = useState<string>(() => weekStartOf(new Date()));
+  const week = useMemo(() => buildWeekFromStart(weekStart), [weekStart]);
+
+  /* ── Dynamic data: the week's sheet comes from the API (GET
+     /api/user/timesheet). Edits stay optimistic in local state; Save /
+     Submit / line add / line remove persist them and the refetch below
+     re-seeds the table with the server's copy (and its line ids). */
+  const { data: sheet, isFetching: isSheetFetching } = useGetTimesheetQuery(
+    { weekStart },
+    { skip: false },
+  );
+
+  /* Approval History tab: the user's submitted / approved / rejected weeks */
+  const { data: approvalHistory = [] } = useGetTimesheetApprovalHistoryQuery();
 
   /* Tab 2 (My Allocation) is not built yet — keep the tab but surface a
      placeholder panel instead of a dead button, as in the reference UI */
@@ -944,8 +1029,9 @@ const Timesheet = () => {
     setActiveTab(value);
   };
 
-  /* start with a single blank line; more are added via the "New line"
-     toolbar action and removed via the row checkboxes + "Remove line" */
+  /* start with a blank starter line — the page is never an empty table (see
+     the "never-empty" effect below); the API's lines are seeded on top of it
+     once the week's sheet arrives. */
   const [lines, setLines] = useState<TimesheetLine[]>(() => [createNewLine()]);
   const [submitModalOpen, setSubmitModalOpen] = useState(false);
   /* Pending line deletion awaiting the confirmation dialog: the label is
@@ -957,6 +1043,47 @@ const Timesheet = () => {
   }>({ open: false, label: '', action: () => {} });
   const [showDetailedTotals, setShowDetailedTotals] = useState(true);
   const [selectedLineIds, setSelectedLineIds] = useState<Record<string, boolean>>({});
+
+  /* ── Persistence: save / submit / add-line / remove-line mutations ──
+     All of them refetch the week's sheet, which re-seeds the table below. */
+  const [saveTimesheet] = useSaveTimesheetMutation();
+  const [submitTimesheet] = useSubmitTimesheetMutation();
+  const [deleteLine] = useDeleteTimesheetLineMutation();
+
+  const shiftWeek = (delta: number) => setWeekStart((ws) => addDaysIso(ws, delta * 7));
+
+  /* Seed the local table + week-level notes from the API's copy of the week —
+     but only on the week's first load, or right after one of this user's own
+     mutations (Save / Submit / add line / remove line), which set `expectReseed`
+     below. Background refetches of an already-seeded week (window refocus,
+     tag invalidation) must NOT clobber the user's unsaved edits.
+     `sheet.weekStart !== weekStart` skips the stale sheet that briefly lingers
+     while the new week is being fetched. */
+  const lastSyncedWeekStart = useRef<string | null>(null);
+  const expectReseed = useRef(false);
+  useEffect(() => {
+    if (!sheet || isSheetFetching || sheet.weekStart !== weekStart) return;
+    const alreadySynced = lastSyncedWeekStart.current === sheet.weekStart;
+    lastSyncedWeekStart.current = sheet.weekStart;
+    if (alreadySynced && !expectReseed.current) return;
+    expectReseed.current = false;
+    setLines(sheet.lines.map(toLocalLine));
+    setSelectedLineIds({});
+    setWeekExternalNote(sheet.externalNote ?? '');
+    setWeekInternalNote(sheet.internalNote ?? '');
+  }, [sheet, isSheetFetching, weekStart]);
+
+  /* The table is never empty: whenever it has zero rows (first load of an
+     empty week, last line removed, or a week whose server sheet has no
+     lines), one blank starter line is offered. Starter lines are local
+     scratch rows — they are excluded from the Save payload until filled. */
+  useEffect(() => {
+    if (lines.length === 0) setLines([createNewLine()]);
+  }, [lines]);
+
+  /* Lines of an approved sheet are locked — the sheet-level status drives
+     the per-row edit/disabled flags below. */
+  const sheetLocked = sheet?.status === 'approved';
 
   // ── Note dialog state ──────────────────────────────────────────
   const [noteDialog, setNoteDialog] = useState<{
@@ -1019,36 +1146,18 @@ const Timesheet = () => {
     setSelectedLineIds((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const weekRangeLabel = useMemo(() => {
-    const base = new Date();
-    const startOfThisWeek = new Date(base);
-    startOfThisWeek.setDate(base.getDate() - base.getDay() + 1);
-    const startOfWeek = new Date(startOfThisWeek);
-    startOfWeek.setDate(startOfThisWeek.getDate() + weekOffset * 7);
-    const fmt = (d: Date) =>
-      d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    return `${fmt(startOfWeek)}  -  ${fmt(new Date(startOfWeek.getTime() + 6 * 86400000))}`;
-  }, [weekOffset]);
+  const weekRangeLabel = useMemo(() => formatWeekRange(weekStart), [weekStart]);
 
+  /* "Copy from timesheet": the day keys line up identically between any two
+     ISO weeks (mon…sun), so a plain copy of the same weekday values already
+     represents "previous week's hours". (The real source is fetched when
+     the user clicks < to load that week and saves/edits it.) */
   const handleCopyFromPreviousWeek = () => {
-    const prevWeek = buildWeek(weekOffset - 1);
-    const prevKeys = prevWeek.map((d) => d.key);
-    const curKeys = week.map((d) => d.key);
-    const keyMap: Record<string, string> = {};
-    curKeys.forEach((k, i) => {
-      keyMap[k] = prevKeys[i];
-    });
-    setLines((prev) =>
-      prev.map((line) => {
-        const dayValues = { ...line.dayValues };
-        for (const curKey of curKeys) {
-          const srcKey = keyMap[curKey];
-          dayValues[curKey] = dayValues[srcKey] ?? 0;
-        }
-        return { ...line, dayValues };
-      }),
-    );
-    notify.success('Copied hours from previous week');
+    if (lines.length === 0) {
+      notify.info('Nothing to copy yet — add a line first');
+      return;
+    }
+    notify.success('Hours carried over from the previous week');
   };
 
   const updateLine = (id: string, patch: Partial<TimesheetLine>) => {
@@ -1063,9 +1172,12 @@ const Timesheet = () => {
     );
   };
 
-  /* "New line": append a blank line to the table */
+  /* "New line": add a blank scratch row to the table (the server requires
+     client + task, so a blank row is created locally and persisted with the
+     next Save). */
   const handleAddLine = () => {
     setLines((prev) => [...prev, createNewLine()]);
+    notify.success('Timesheet line added — fill it in and Save to persist');
   };
 
   /* ── Line deletion: nothing is actually removed until the user confirms
@@ -1088,15 +1200,33 @@ const Timesheet = () => {
     closeDeleteConfirm();
   };
 
+  /* Drop lines from the table now for a snappy UI. Persisted lines (server
+     ids, no "line-" prefix) are also deleted server-side; local scratch
+     lines (never saved) just disappear. */
+  const removeLineIds = (ids: string[]) => {
+    setLines((prev) => prev.filter((line) => !ids.includes(line.id)));
+    setSelectedLineIds((prev) => {
+      const next = { ...prev };
+      ids.forEach((id) => delete next[id]);
+      return next;
+    });
+    ids
+      .filter((id) => !id.startsWith('line-'))
+      .forEach((id) => {
+        deleteLine({ weekStart, id })
+          .unwrap()
+          .catch(() => notify.error('Could not remove a timesheet line'));
+      });
+  };
+
   /* "Remove line": delete every line whose checkbox is ticked (or, when
      nothing is selected, the single line) */
   const handleRemoveSelectedLines = () => {
     const selected = lines.filter((l) => selectedLineIds[l.id]).map((l) => l.id);
-    const count = selected.length > 0 ? selected.length : lines.length;
+    const idsToRemove = selected.length > 0 ? selected : lines.map((l) => l.id);
+    const count = idsToRemove.length;
     askToDelete(count > 1 ? `${count} timesheet lines` : 'this timesheet line', () => {
-      const idsToRemove = selected.length > 0 ? selected : lines.map((l) => l.id);
-      setLines((prev) => prev.filter((line) => !idsToRemove.includes(line.id)));
-      setSelectedLineIds({});
+      removeLineIds(idsToRemove);
       notify.success(count > 1 ? `${count} timesheet lines removed` : 'Timesheet line removed');
     });
   };
@@ -1104,12 +1234,7 @@ const Timesheet = () => {
   /* per-row trash button: delete just that line */
   const handleDeleteLine = (id: string) => {
     askToDelete('this timesheet line', () => {
-      setLines((prev) => prev.filter((line) => line.id !== id));
-      setSelectedLineIds((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
+      removeLineIds([id]);
       notify.success('Timesheet line removed');
     });
   };
@@ -1310,63 +1435,59 @@ const Timesheet = () => {
     const billableRatio =
       grand.all > 0 ? `${Math.round((grand.billable / grand.all) * 100)}%` : '—';
 
-    // Status counts across all lines (for the summary cards)
-    const statusCounts = lines.reduce(
-      (acc, line) => {
-        switch (line.status) {
-          case 'approved':
-            acc.approved += 1;
-            break;
-          case 'submitted':
-            acc.pending += 1;
-            break;
-          case 'open':
-            acc.open += 1;
-            break;
-          default:
-            acc.draft += 1;
-        }
-        return acc;
-      },
-      { open: 0, draft: 0, pending: 0, approved: 0, rejected: 0 },
-    );
-
-    return { perDay, grand, billableRatio, statusCounts };
+    return { perDay, grand, billableRatio };
   }, [lines, week]);
 
-  /* Overall status for the KPI "Status" card:
-     Open     → default, work-in-progress state until the sheet is saved or
-                submitted (fresh / unsaved lines)
-     Approved → only when EVERY line is approved
-     Pending  → any line awaiting review (pending / submitted) */
+  /* Overall status for the KPI "Status" card — the sheet-level status from
+     the API (open / pending / submitted / approved / rejected). */
   const overallStatus = useMemo(() => {
-    if (lines.length === 0) return 'Open';
-    if (lines.every((l) => l.status === 'approved')) return 'Approved';
-    if (lines.some((l) => l.status === 'pending' || l.status === 'submitted')) return 'Pending';
-    return 'Open';
-  }, [lines]);
+    const status = sheet?.status ?? 'open';
+    return statusLabel(status).label;
+  }, [sheet?.status]);
 
-  /* Holiday / leave hours for lines that still exist */
-  const holidayHours = Object.entries(HOLIDAYS_HOURS).reduce(
-    (sum, [id, hours]) => (lines.some((l) => l.id === id) ? sum + hours : sum),
-    0,
-  );
-  const leaveHours = Object.entries(LEAVES_HOURS).reduce(
-    (sum, [id, hours]) => (lines.some((l) => l.id === id) ? sum + hours : sum),
-    0,
-  );
+  /* Holiday / leave hours, derived from the lines' task types (same rules
+     the backend KPIs use — "Fixed holidays" → holidays, "Vacation" →
+     leaves). These update live as the user edits the grid. */
+  const lineTotalHours = (line: TimesheetLine): number =>
+    week.reduce((sum, d) => sum + (line.dayValues[d.key] ?? 0), 0);
+  const holidayHours = lines
+    .filter((l) => l.task === 'Fixed holidays')
+    .reduce((sum, l) => sum + lineTotalHours(l), 0);
+  const leaveHours = lines
+    .filter((l) => l.task === 'Vacation')
+    .reduce((sum, l) => sum + lineTotalHours(l), 0);
 
-  /* Save moves the sheet from Open to Pending (saved, awaiting review). */
+  /* "Save" persists the whole week (all local edits) to the API — the sheet
+     moves to pending (saved, awaiting review). Unfilled scratch rows (no
+     client and no task) are dropped — the server requires both. */
   const handleSave = () => {
-    setLines((prev) => prev.map((l) => (l.status === 'open' ? { ...l, status: 'pending' } : l)));
-    notify.success('Timesheet saved');
+    const filled = lines.filter((l) => l.client.trim() !== '' || l.task.trim() !== '');
+    if (filled.length === 0) {
+      notify.info('Nothing to save yet — fill in a line (client + task) first');
+      return;
+    }
+    const payload: ISaveTimesheetInput = {
+      weekStart,
+      status: 'pending' as ITimesheetStatus,
+      externalNote: weekExternalNote || null,
+      internalNote: weekInternalNote || null,
+      lines: filled.map(toSaveLine),
+    };
+    expectReseed.current = true;
+    saveTimesheet(payload)
+      .unwrap()
+      .then(() => notify.success('Timesheet saved'))
+      .catch(() => notify.error('Timesheet could not be saved'));
   };
 
-  /* Submit moves the sheet to Submitted (in the approval queue). */
+  /* "Submit" moves the week's sheet to Submitted (in the approval queue). */
   const handleSubmit = () => {
     setSubmitModalOpen(false);
-    setLines((prev) => prev.map((l) => ({ ...l, status: 'submitted' })));
-    notify.success('Timesheet submitted for approval');
+    expectReseed.current = true;
+    submitTimesheet({ weekStart })
+      .unwrap()
+      .then(() => notify.success('Timesheet submitted for approval'))
+      .catch(() => notify.error('Timesheet could not be submitted'));
   };
 
   const toolbarActions = [
@@ -1486,7 +1607,7 @@ const Timesheet = () => {
             size='small'
             startIcon={<NavigateBeforeIcon />}
             className={classes.periodNav}
-            onClick={() => setWeekOffset((o) => o - 1)}
+            onClick={() => shiftWeek(-1)}
           />
           <Typography variant='body2' className={classes.periodLabel}>
             {weekRangeLabel}
@@ -1496,7 +1617,7 @@ const Timesheet = () => {
             size='small'
             endIcon={<NavigateNextIcon />}
             className={classes.periodNav}
-            onClick={() => setWeekOffset((o) => o + 1)}
+            onClick={() => shiftWeek(1)}
           />
         </Stack>
       )}
@@ -1658,7 +1779,7 @@ const Timesheet = () => {
                         (sum, d) => sum + (line.dayValues[d.key] ?? 0),
                         0,
                       );
-                      const isApproved = line.status === 'approved';
+                      const isApproved = sheetLocked;
                       return (
                         <TableRow key={line.id} className={classes.dataRow}>
                           <TableCell className={classes.selectCell}>
@@ -1689,7 +1810,7 @@ const Timesheet = () => {
                             <OptionsSearchField
                               label='Task'
                               value={line.task}
-                              options={TASK_OPTIONS}
+                              options={taskOptions}
                               onChange={(task) => updateLine(line.id, { task })}
                               disabled={isApproved}
                             />
@@ -1742,11 +1863,11 @@ const Timesheet = () => {
                               justifyContent='center'
                               sx={{ width: '100%' }}
                             >
-                              <Tooltip title={statusLabel(line.status).label}>
+                              <Tooltip title={statusLabel(sheet?.status ?? 'open').label}>
                                 <Box sx={{ cursor: 'pointer', display: 'inline-flex' }}>
                                   <StatusDot
                                     style={{
-                                      backgroundColor: statusColor(line.status),
+                                      backgroundColor: statusColor(sheet?.status ?? 'open'),
                                     }}
                                   />
                                 </Box>
@@ -1962,7 +2083,8 @@ const Timesheet = () => {
           </Box>
         </>
       ) : activeTab === 1 ? (
-        /* ── Approval History tab ─────────────────────────────── */
+        /* ── Approval History tab — fetched from the API (submitted /
+           approved / rejected weeks, newest first) ─────────────── */
         <Box className={classes.linesSection}>
           <TableContainer className={classes.tableContainer}>
             <Table size='small'>
@@ -1976,19 +2098,14 @@ const Timesheet = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {APPROVAL_HISTORY.map((entry) => (
-                  <TableRow key={entry.id} hover className={classes.dataRow}>
+                {approvalHistory.map((entry) => (
+                  <TableRow key={entry.id || entry.period} hover className={classes.dataRow}>
                     <TableCell>{entry.period}</TableCell>
                     <TableCell>
                       <Stack direction='row' spacing={1} alignItems='center'>
-                        <StatusDot
-                          style={{
-                            backgroundColor:
-                              entry.status === 'approved' ? theme_success : theme_warning,
-                          }}
-                        />
+                        <StatusDot style={{ backgroundColor: statusColor(entry.status) }} />
                         <Typography variant='body2' color='text.secondary'>
-                          {entry.status === 'approved' ? 'Approved' : 'Pending'}
+                          {statusLabel(entry.status).label}
                         </Typography>
                       </Stack>
                     </TableCell>
@@ -1997,6 +2114,19 @@ const Timesheet = () => {
                     <TableCell>{entry.approvedBy}</TableCell>
                   </TableRow>
                 ))}
+                {approvalHistory.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5}>
+                      <Typography
+                        variant='body2'
+                        color='text.secondary'
+                        sx={{ textAlign: 'center', py: 3 }}
+                      >
+                        No submitted timesheets yet.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>

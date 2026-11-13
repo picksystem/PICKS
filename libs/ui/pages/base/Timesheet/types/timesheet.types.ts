@@ -30,14 +30,3 @@ export interface ApprovalEntry {
   submittedBy: string;
   approvedBy: string;
 }
-
-export const TIMESHEET_CLIENTS = ['Hive Implementation', 'Administrative', 'Internal'];
-
-export const TIMESHEET_TASKS = [
-  'Development',
-  'Internal calls',
-  'Vacation',
-  'Fixed holidays',
-  'Client meetings',
-  'Documentation',
-];

@@ -6,6 +6,7 @@ import LayersIcon from '@mui/icons-material/Layers';
 import AppsIcon from '@mui/icons-material/Apps';
 import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
 import PersonIcon from '@mui/icons-material/Person';
+import ChecklistIcon from '@mui/icons-material/Checklist';
 import type { Column } from '@serviceops/component';
 import { mkCell, mkDescCell } from '@serviceops/configutils';
 import type {
@@ -17,6 +18,7 @@ import type {
   IConfigTimesheetApplicationEntry,
   IConfigTimesheetQueueEntry,
   IConfigTimesheetResourceEntry,
+  IConfigTimesheetTaskCode,
 } from '@serviceops/interfaces';
 import { TableConfig, TS_ACCENT } from './types';
 
@@ -167,6 +169,19 @@ export const PROJECT_CATEGORY_CONFIG: TableConfig = {
   ],
 };
 
+export const TASK_CODE_CONFIG: TableConfig = {
+  title: 'Task Codes',
+  subtitle: 'Define the task options available in the My Timesheet lines table',
+  accent: TS_ACCENT,
+  icon: <ChecklistIcon sx={{ fontSize: '1.1rem' }} />,
+  entity: 'Task Code',
+  accordionId: 'task-codes',
+  fields: [
+    { name: 'name', label: 'Task Name', required: true, bold: true },
+    { name: 'description', label: 'Description' },
+  ],
+};
+
 // ── Column Definitions ─────────────────────────────────────────────────────────
 
 export const timesheetProjectColumns: Column<IConfigTimesheetProjectEntry>[] = [
@@ -232,4 +247,9 @@ export const projectCategoryColumns: Column<IConfigTimesheetProjectCategory>[] =
   { id: 'description', label: 'Description', minWidth: 200, format: mkDescCell },
   { id: 'transitionType', label: 'Transition Type', minWidth: 140, format: mkCell() },
   { id: 'billability', label: 'Billability', minWidth: 120, format: mkCell() },
+];
+
+export const taskCodeColumns: Column<IConfigTimesheetTaskCode>[] = [
+  { id: 'name', label: 'Task Name', minWidth: 180, format: mkCell(true) },
+  { id: 'description', label: 'Description', minWidth: 220, format: mkDescCell },
 ];

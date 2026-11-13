@@ -103,6 +103,7 @@ export const TimesheetProjectsSection = ({ data, onDataChange }: TimesheetProjec
         queueEntries: queueRows,
         resourceEntries: resourceRows,
         projectCategories: apiTS?.projectCategories ?? [],
+        taskCodes: apiTS?.taskCodes ?? [],
       });
     }
   };
@@ -118,6 +119,7 @@ export const TimesheetProjectsSection = ({ data, onDataChange }: TimesheetProjec
       queueEntries: queueRows,
       resourceEntries: resourceRows,
       projectCategories: apiTS?.projectCategories ?? [],
+      taskCodes: apiTS?.taskCodes ?? [],
     });
   };
 
@@ -132,6 +134,7 @@ export const TimesheetProjectsSection = ({ data, onDataChange }: TimesheetProjec
       queueEntries: queueRows,
       resourceEntries: resourceRows,
       projectCategories: apiTS?.projectCategories ?? [],
+      taskCodes: apiTS?.taskCodes ?? [],
     });
   };
 
@@ -146,6 +149,7 @@ export const TimesheetProjectsSection = ({ data, onDataChange }: TimesheetProjec
       queueEntries: next,
       resourceEntries: resourceRows,
       projectCategories: apiTS?.projectCategories ?? [],
+      taskCodes: apiTS?.taskCodes ?? [],
     });
   };
 
@@ -160,6 +164,7 @@ export const TimesheetProjectsSection = ({ data, onDataChange }: TimesheetProjec
       queueEntries: queueRows,
       resourceEntries: next,
       projectCategories: apiTS?.projectCategories ?? [],
+      taskCodes: apiTS?.taskCodes ?? [],
     });
   };
 

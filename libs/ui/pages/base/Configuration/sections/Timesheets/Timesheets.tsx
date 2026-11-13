@@ -1,5 +1,5 @@
 import { Box } from '@serviceops/component';
-import { TimesheetProjectsSection, ProjectCategorySection } from './components';
+import { TimesheetProjectsSection, ProjectCategorySection, TaskCodesSection } from './components';
 import { useStyles } from './styles';
 import { ConfigurationSection } from '@serviceops/configsection';
 
@@ -11,6 +11,7 @@ const Timesheets = () => {
       <ConfigurationSection loaderMessage='Loading Timesheets Configuration...'>
         <TimesheetProjectsSection />
         <ProjectCategorySection />
+        <TaskCodesSection />
       </ConfigurationSection>
     </Box>
   );
