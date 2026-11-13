@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Box, Typography, Button, IconButton, PageHeader } from '../../../components';
+import { Box, Typography, Button, IconButton, PageHeader, Tooltip } from '../../../components';
 import { Menu, MenuItem, Stack, Box as MuiBox } from '@mui/material';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
@@ -7,8 +7,6 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import EditIcon from '@mui/icons-material/Edit';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-// import CircleOutlineIcon from '@mui/icons-material/CircleOutline';
-// import CancelOutlineIcon from '@mui/icons-material/CancelOutline';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { useNotification, useAppNavigation } from '@serviceops/hooks';
 import { constants } from '@serviceops/utils';
@@ -49,6 +47,8 @@ const STATUS_COLORS: Record<string, string> = {
   missed: '#d97706',
   holiday: '#6b7280',
   rejected: '#d32029',
+  /* Personal Time off (PTO) — violet, kept clear of the status colours above */
+  pto: '#7c3aed',
 };
 
 const leaveStatusIcon = (status: string) => {
@@ -67,7 +67,12 @@ const TimesheetDashboard = () => {
   const { BasePath } = constants;
   const submitPath = BasePath.TIMESHEET_SUBMIT || BasePath.TIMESHEET;
 
-  const [menu, setMenu] = useState<DayMenu>({ anchorEl: null, day: 0, open: false });
+  const [menu, setMenu] = useState<DayMenu>({
+    anchorEl: null,
+    day: 0,
+    open: false,
+    side: 'left',
+  });
 
   const days = useMemo(
     () => buildMonthDays(OCTOBER_2026.year, OCTOBER_2026.monthIndex, OCTOBER_2026_STATUS),
@@ -76,8 +81,15 @@ const TimesheetDashboard = () => {
 
   const todayCell: TimesheetDay | undefined = days.find((d) => d.inMonth && d.day === 20);
 
-  const openDayMenu = (event: React.MouseEvent<HTMLElement>, day: TimesheetDay) => {
-    setMenu({ anchorEl: event.currentTarget, day: day.day, open: true });
+  /* `side` controls which way the menu pops out of its anchor: day cells
+     (interior of the grid) open it to the LEFT — the default; the week edit
+     mark (far-right strip) opens it to the RIGHT, into the open space. */
+  const openDayMenu = (
+    event: React.MouseEvent<HTMLElement>,
+    day: TimesheetDay,
+    side: 'left' | 'right' = 'left',
+  ) => {
+    setMenu({ anchorEl: event.currentTarget, day: day.day, open: true, side });
   };
 
   const closeDayMenu = () => setMenu((m) => ({ ...m, open: false, anchorEl: null }));
@@ -134,12 +146,43 @@ const TimesheetDashboard = () => {
             ))}
           </MuiBox>
         )}
+      </MuiBox>
+    );
+  };
 
-        {!isOutside && d.status !== 'none' && (
-          <MuiBox className={classes.dayStatusMark}>
-            <EditIcon sx={{ fontSize: 15, color: STATUS_COLORS.draft }} />
-          </MuiBox>
-        )}
+  /* ── Calendar week: the 7 day cells plus a narrow marker strip on the
+     far right. The strip pins the week's edit mark (a boxed note/pencil,
+     like the reference) to its BOTTOM-RIGHT corner — the last position of
+     the cell. Weeks that fall fully in the next month (Oct 1–7 below the
+     29th) render the mark faded / empty, as in the reference. */
+  const renderWeekRow = (week: TimesheetDay[]) => {
+    const inMonthDays = week.filter((d) => d.inMonth);
+    /* Weeks with no entries (including the trailing week that spills fully
+       into the next month) keep the mark but render it faded — matching the
+       reference, where every week row carries a marker in its right strip. */
+    const hasEntries = inMonthDays.some((d) => d.status !== 'none');
+    /* The mark sits on the far-right edge of the calendar, so it opens the
+       menu to its RIGHT (into the open space) — day cells open to the left. */
+    return (
+      <MuiBox key={week[0]?.day} className={classes.calendarWeek}>
+        {week.map((d, i) => renderDayCell(d, i))}
+        <MuiBox
+          className={cx(classes.weekMarkColumn, !hasEntries && classes.weekMarkFaded)}
+          onClick={hasEntries ? (e) => openDayMenu(e, inMonthDays[0], 'right') : undefined}
+          sx={{ cursor: hasEntries ? 'pointer' : 'default' }}
+        >
+          <Tooltip
+            title={
+              hasEntries ? 'Edit/View this week’s timesheet entry' : 'No entries for this week'
+            }
+            placement='right'
+            arrow
+          >
+            <MuiBox className={classes.weekMark}>
+              <EditIcon sx={{ fontSize: 13, color: STATUS_COLORS.draft }} />
+            </MuiBox>
+          </Tooltip>
+        </MuiBox>
       </MuiBox>
     );
   };
@@ -186,8 +229,12 @@ const TimesheetDashboard = () => {
                     {wd}
                   </MuiBox>
                 ))}
+                {/* the marker strip has no header of its own */}
+                <MuiBox className={classes.weekMarkSpacer} />
               </MuiBox>
-              <MuiBox className={classes.gridRow}>{days.map(renderDayCell)}</MuiBox>
+              {Array.from({ length: days.length / 7 }, (_, w) =>
+                renderWeekRow(days.slice(w * 7, w * 7 + 7)),
+              )}
             </MuiBox>
 
             <MuiBox className={classes.legend}>
@@ -197,6 +244,7 @@ const TimesheetDashboard = () => {
                 'Missed Entry': STATUS_COLORS.missed,
                 Holiday: STATUS_COLORS.holiday,
                 Rejected: STATUS_COLORS.rejected,
+                'Personal Time off (PTO)': STATUS_COLORS.pto,
               }).map(([label, color]) => (
                 <MuiBox key={label} className={classes.legendItem}>
                   <span className={classes.legendLine} style={{ backgroundColor: color }} />
@@ -361,8 +409,19 @@ const TimesheetDashboard = () => {
         open={menu.open}
         onClose={closeDayMenu}
         className={classes.dayMenu}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        /* day cells (interior) open it BELOW the cursor; the week edit mark
+           (far-right strip) opens it to the RIGHT of the icon, vertically
+           centered on it (top of menu aligned with the icon, not below) */
+        anchorOrigin={
+          menu.side === 'right'
+            ? { vertical: 'center', horizontal: 'right' }
+            : { vertical: 'bottom', horizontal: 'right' }
+        }
+        transformOrigin={
+          menu.side === 'right'
+            ? { vertical: 'center', horizontal: 'left' }
+            : { vertical: 'top', horizontal: 'right' }
+        }
       >
         <MenuItem onClick={handleEditView} className={classes.dayMenuItem}>
           Edit/View Timesheet Entry

@@ -14,6 +14,9 @@ export interface DayMenu {
   anchorEl: HTMLElement | null;
   day: number;
   open: boolean;
+  /** which side of the anchor the menu pops out — day cells open it to the
+      left (default), the week edit mark opens it to the right */
+  side: 'left' | 'right';
 }
 
 export interface TimeOffBalance {

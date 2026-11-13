@@ -52,7 +52,7 @@ import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import BeachAccessIcon from '@mui/icons-material/BeachAccess';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import PercentIcon from '@mui/icons-material/Percent';
-import { useNotification } from '@serviceops/hooks';
+import { useNotification, useMediaQuery } from '@serviceops/hooks';
 import { constants } from '@serviceops/utils';
 import {
   useGetTimesheetQuery,
@@ -989,10 +989,228 @@ const CenteredCheckbox = ({
   className: string;
 }) => <Box className={className}>{children}</Box>;
 
+/* ── Mobile (< sm) card row: the same fields / handlers as the desktop
+   table row, laid out vertically. Defined at module level (NOT inside the
+   page component) so React keeps it — and its stateful day inputs — mounted
+   across re-renders; only `props` change. */
+const MobileLineCard = ({
+  line,
+  week,
+  sheetLocked,
+  selected,
+  onToggleSelect,
+  updateLine,
+  updateDayValue,
+  openNoteDialog,
+  taskOptions,
+  handleDuplicateLine,
+  handleDeleteLine,
+  openAttachmentDialog,
+  classes,
+  cx,
+}: {
+  line: TimesheetLine;
+  week: DayEntry[];
+  sheetLocked: boolean;
+  selected: boolean;
+  onToggleSelect: () => void;
+  updateLine: (id: string, patch: Partial<TimesheetLine>) => void;
+  updateDayValue: (id: string, dayKey: string, value: number) => void;
+  openNoteDialog: (lineId: string, kind: NoteKind) => void;
+  taskOptions: { value: string; label: string }[];
+  handleDuplicateLine: (id: string) => void;
+  handleDeleteLine: (id: string) => void;
+  openAttachmentDialog: (ids: string[]) => void;
+  classes: ReturnType<typeof useStyles>['classes'];
+  cx: ReturnType<typeof useStyles>['cx'];
+}) => {
+  const lineTotal = week.reduce((sum, d) => sum + (line.dayValues[d.key] ?? 0), 0);
+  const sheetStatus = sheetLocked ? 'approved' : 'open';
+  return (
+    <Box className={classes.mobileLineCard}>
+      {/* ── head: checkbox + status · client / task · total ── */}
+      <Box className={classes.mobileLineCardHead}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+          <Checkbox
+            checked={selected}
+            onChange={onToggleSelect}
+            size='small'
+            className={classes.checkbox}
+          />
+          <Tooltip title={statusLabel(sheetStatus).label}>
+            <Box sx={{ display: 'inline-flex' }}>
+              <StatusDot style={{ backgroundColor: statusColor(sheetStatus) }} />
+            </Box>
+          </Tooltip>
+        </Box>
+        <Box className={classes.mobileLineCardHeadText}>
+          <Typography
+            variant='body2'
+            noWrap
+            sx={{ fontWeight: 700, color: '#111827', maxWidth: '100%' }}
+          >
+            {line.client || 'New line'}
+          </Typography>
+          <Typography variant='caption' color='text.secondary' noWrap>
+            {line.task || 'No task yet'}
+          </Typography>
+        </Box>
+        <Box
+          sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}
+        >
+          <Typography sx={{ fontWeight: 700, color: theme_warning, whiteSpace: 'nowrap' }}>
+            {formatDayHours(lineTotal)}
+          </Typography>
+          <Typography variant='caption' color='text.secondary'>
+            Total
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* ── the six fields, exactly the components the desktop row uses ── */}
+      <Box className={classes.mobileLineFields}>
+        <Box className={classes.mobileFieldStack}>
+          <Typography className={classes.mobileFieldLabel}>Client</Typography>
+          <ClientSearchField
+            value={line.client}
+            onChange={(client) => updateLine(line.id, { client })}
+            disabled={sheetLocked}
+          />
+        </Box>
+        <Box className={classes.mobileFieldStack}>
+          <Typography className={classes.mobileFieldLabel}>Project</Typography>
+          <ProjectSearchField
+            value={line.project ?? ''}
+            onChange={(project) => updateLine(line.id, { project })}
+            disabled={sheetLocked}
+          />
+        </Box>
+        <Box className={classes.mobileFieldStack}>
+          <Typography className={classes.mobileFieldLabel}>Task</Typography>
+          <OptionsSearchField
+            label='Task'
+            value={line.task}
+            options={taskOptions}
+            onChange={(task) => updateLine(line.id, { task })}
+            disabled={sheetLocked}
+          />
+        </Box>
+        <Box className={classes.mobileFieldStack}>
+          <Typography className={classes.mobileFieldLabel}>External Note</Typography>
+          <NoteCellButton
+            kind='external'
+            note={line.externalNote}
+            disabled={sheetLocked}
+            onOpen={() => openNoteDialog(line.id, 'external')}
+          />
+        </Box>
+        <Box className={classes.mobileFieldStack}>
+          <Typography className={classes.mobileFieldLabel}>Internal Note</Typography>
+          <NoteCellButton
+            kind='internal'
+            note={line.internalNote}
+            disabled={sheetLocked}
+            onOpen={() => openNoteDialog(line.id, 'internal')}
+          />
+        </Box>
+        <Box className={classes.mobileFieldStack} sx={{ alignItems: 'center' }}>
+          <Typography className={classes.mobileFieldLabel}>Billable</Typography>
+          <Toggle
+            checked={line.billable}
+            disabled={sheetLocked}
+            onChange={() => updateLine(line.id, { billable: !line.billable })}
+            size='small'
+            className={cx(classes.billableSwitch)}
+          />
+        </Box>
+      </Box>
+
+      {/* ── seven day inputs (4 + 3 on a phone) ── */}
+      <Box className={classes.mobileDayGrid}>
+        {week.map((d) => (
+          <Box key={d.key} className={classes.mobileFieldStack} sx={{ alignItems: 'center' }}>
+            <Typography
+              className={classes.mobileFieldLabel}
+              sx={{ textAlign: 'center', width: '100%' }}
+            >
+              {d.day}
+            </Typography>
+            <DayCellField
+              value={line.dayValues[d.key] ?? 0}
+              onChange={(v) => updateDayValue(line.id, d.key, v)}
+              disabled={sheetLocked}
+              className={classes.dayCellField}
+            />
+          </Box>
+        ))}
+      </Box>
+
+      {/* ── footer: week total + the row actions (same four icons as the
+          desktop actions column) — kept out of the header so it never
+          wraps on a phone ── */}
+      <Box className={classes.mobileTotalLine}>
+        <Typography variant='body2' color='text.secondary'>
+          Total{' '}
+          <Typography component='span' sx={{ fontWeight: 700, color: 'inherit' }}>
+            {formatDayHours(lineTotal)}
+          </Typography>
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 0.25, alignItems: 'center' }}>
+          {(line.attachments?.length ?? 0) > 0 && (
+            <IconButton
+              size='small'
+              className={classes.actionIconButton}
+              onClick={() => openAttachmentDialog([line.id])}
+            >
+              <AttachFileIcon sx={{ fontSize: '1rem', color: theme_warning }} />
+            </IconButton>
+          )}
+          <Tooltip title='Duplicate this line'>
+            <IconButton
+              size='small'
+              className={classes.actionIconButton}
+              onClick={() => handleDuplicateLine(line.id)}
+            >
+              <ContentCopyIcon sx={{ fontSize: '1rem' }} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={line.favourited ? 'Remove from favourites' : 'Add to favourites'}>
+            <IconButton
+              size='small'
+              className={classes.actionIconButton}
+              onClick={() => updateLine(line.id, { favourited: !line.favourited })}
+            >
+              <BookmarkIcon
+                sx={{ fontSize: '1rem', color: line.favourited ? theme_success : undefined }}
+              />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={sheetLocked ? 'Approved — locked' : 'Remove this line'}>
+            <IconButton
+              size='small'
+              className={classes.actionIconButton}
+              disabled={sheetLocked}
+              onClick={() => handleDeleteLine(line.id)}
+            >
+              <DeleteIcon sx={{ fontSize: '1rem' }} />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Box>
+    </Box>
+  );
+};
+
 const Timesheet = () => {
   const { classes, cx } = useStyles();
   const notify = useNotification();
   const navigate = useNavigate();
+
+  /* Responsive layout flag (same technique as UserManagement): the 16-column
+     grid is unusable below the md breakpoint, so phones AND tablets render
+     the card list; desktop (>= 769px) renders the table. (Matches the
+     CSS down('sm') = 576.95 rules in the styles for the other blocks.) */
+  const showCards = useMediaQuery('(max-width: 768px)');
 
   /* Task options for the lines table come from the configuration document's
      `timesheets.taskCodes` section — the same shared configuration source the
@@ -1709,8 +1927,62 @@ const Timesheet = () => {
                   No timesheet lines yet. Click &ldquo;New line&rdquo; to add one.
                 </Typography>
               </Box>
+            ) : showCards ? (
+              /* ── Mobile: one card per line, same fields / handlers as
+                 the desktop grid (the wide table is too cramped on a
+                 phone) ───────────────────────────────────────── */
+              <Box className={classes.mobileLineList}>
+                {lines.map((line) => (
+                  <MobileLineCard
+                    key={line.id}
+                    line={line}
+                    week={week}
+                    sheetLocked={sheetLocked}
+                    selected={!!selectedLineIds[line.id]}
+                    onToggleSelect={() => toggleSelectLine(line.id)}
+                    updateLine={updateLine}
+                    updateDayValue={updateDayValue}
+                    openNoteDialog={openNoteDialog}
+                    taskOptions={taskOptions}
+                    handleDuplicateLine={handleDuplicateLine}
+                    handleDeleteLine={handleDeleteLine}
+                    openAttachmentDialog={openAttachmentDialog}
+                    classes={classes}
+                    cx={cx}
+                  />
+                ))}
+
+                {/* compact week totals for phones (the detailed per-day rows
+                    stay on the desktop table) */}
+                <Box className={classes.mobileTotalsGrid}>
+                  <Box className={classes.mobileTotalsCell}>
+                    <Typography className={classes.mobileTotalsCellLabel}>Total</Typography>
+                    <Typography className={classes.mobileTotalsCellValue}>
+                      {formatDayHours(totals.grand.all)}
+                    </Typography>
+                  </Box>
+                  <Box className={classes.mobileTotalsCell}>
+                    <Typography className={classes.mobileTotalsCellLabel}>Billable</Typography>
+                    <Typography className={classes.mobileTotalsCellValue}>
+                      {formatDayHours(totals.grand.billable)}
+                    </Typography>
+                  </Box>
+                  <Box className={classes.mobileTotalsCell}>
+                    <Typography className={classes.mobileTotalsCellLabel}>Non-Billable</Typography>
+                    <Typography className={classes.mobileTotalsCellValue}>
+                      {formatDayHours(totals.grand.nonBillable)}
+                    </Typography>
+                  </Box>
+                  <Box className={classes.mobileTotalsCell}>
+                    <Typography className={classes.mobileTotalsCellLabel}>Billable %</Typography>
+                    <Typography className={classes.mobileTotalsCellValue}>
+                      {totals.billableRatio}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
             ) : (
-              /* ── Timesheet grid ─────────────────────────────── */
+              /* ── Desktop / tablet: Timesheet grid ───────────── */
               <TableContainer className={classes.tableContainer}>
                 {/* table-layout: fixed at 100% of the container: the column
                     percentages in Timesheet.styles.shared.ts always sum to
@@ -2142,11 +2414,11 @@ const Timesheet = () => {
         </Box>
       )}
 
-      {/* ── Footer actions ────────────────────────────────────── */}
+      {/* ── Footer actions (stacks full-width on phones) ──────── */}
       <Stack
-        direction='row'
-        spacing={2}
-        justifyContent='flex-end'
+        direction={showCards ? 'column' : 'row'}
+        spacing={showCards ? 1 : 2}
+        justifyContent={showCards ? undefined : 'flex-end'}
         className={classes.footerActions}
       >
         <Button
@@ -2154,9 +2426,20 @@ const Timesheet = () => {
           color='primary'
           label='Close'
           onClick={() => notify.info('Timesheet closed')}
+          sx={showCards ? { width: '100%' } : undefined}
         />
-        <Button variant='contained' label='Save' onClick={handleSave} />
-        <Button variant='contained' label='Submit' onClick={() => setSubmitModalOpen(true)} />
+        <Button
+          variant='contained'
+          label='Save'
+          onClick={handleSave}
+          sx={showCards ? { width: '100%' } : undefined}
+        />
+        <Button
+          variant='contained'
+          label='Submit'
+          onClick={() => setSubmitModalOpen(true)}
+          sx={showCards ? { width: '100%' } : undefined}
+        />
       </Stack>
 
       {/* ── Submit confirmation modal ── */}

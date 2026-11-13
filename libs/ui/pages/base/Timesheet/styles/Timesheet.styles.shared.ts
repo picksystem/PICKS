@@ -44,6 +44,13 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     marginBottom: theme.spacing(1.5),
     gap: theme.spacing(1),
     flexWrap: 'wrap' as const,
+    /* NOTE: this theme sets xs: 0, so down('xs') compiles to
+       @media (max-width:-0.05px) and NEVER matches — always use
+       down('sm') (<=576.95px) for phone rules in this codebase. */
+    [theme.breakpoints.down('sm')]: {
+      flexDirection: 'column' as const,
+      alignItems: 'flex-start' as const,
+    },
   },
 
   tabsBar: {
@@ -94,6 +101,11 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     backgroundColor: '#ffffff',
     borderRadius: 12,
     border: '1px solid #e5e7eb',
+    [theme.breakpoints.down('sm')]: {
+      gap: theme.spacing(1),
+      padding: theme.spacing(0.75, 1),
+      borderRadius: 10,
+    },
   },
 
   personName: {
@@ -136,6 +148,14 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     marginBottom: theme.spacing(2),
     flexWrap: 'wrap' as const,
     alignItems: 'flex-start' as const,
+    /* phone: two-up grid. NOTE — this theme's breakpoints start at xs: 0,
+       so MUI's down('xs') compiles to max-width:-0.05px (never matches);
+       down('sm') is the first key that actually targets phones. */
+    [theme.breakpoints.down('sm')]: {
+      gap: theme.spacing(1),
+      display: 'grid' as const,
+      gridTemplateColumns: '1fr 1fr',
+    },
   },
 
   statCardWrapper: {
@@ -148,6 +168,12 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     display: 'flex' as const,
     alignItems: 'center',
     gap: theme.spacing(1.25),
+    /* the phone grid above needs the cards to be able to shrink */
+    [theme.breakpoints.down('sm')]: {
+      minWidth: 0,
+      borderRadius: 10,
+      padding: theme.spacing(1, 1.25),
+    },
   },
 
   statCardIconBox: {
@@ -297,6 +323,120 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     overflowX: 'auto' as const,
     border: '1px solid #e5e7eb',
     borderRadius: 8,
+  },
+
+  /* ── Phone / tablet (< md): one card per line, in place of the wide grid
+     (rendered via the showCards flag in Timesheet.tsx).
+       The card reuses the exact field components of the desktop table
+       (ClientSearchField / ProjectSearchField / OptionsSearchField /
+       NoteCellButton / DayCellField), so only the layout is different. */
+  mobileLineList: {
+    display: 'flex' as const,
+    flexDirection: 'column' as const,
+    gap: theme.spacing(1.5),
+  },
+
+  mobileLineCard: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #e5e7eb',
+    borderRadius: 12,
+    padding: theme.spacing(1.25, 1.5),
+    display: 'flex' as const,
+    flexDirection: 'column' as const,
+    gap: theme.spacing(1),
+  },
+
+  mobileLineCardHead: {
+    display: 'flex' as const,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: theme.spacing(1),
+  },
+
+  mobileLineCardHeadText: {
+    display: 'flex' as const,
+    flexDirection: 'column' as const,
+    gap: 2,
+    flex: '1 1 auto',
+    minWidth: 0,
+  },
+
+  /* 3 × 2 rows keeps each search field wide enough to be usable on a phone;
+     a tablet has the room for one row of all six fields */
+  mobileLineFields: {
+    display: 'grid' as const,
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: theme.spacing(0.75, 1),
+    [theme.breakpoints.between('sm', 'md')]: {
+      gridTemplateColumns: 'repeat(6, 1fr)',
+    },
+  },
+
+  /* the seven day inputs flow as 4 + 3 on a phone; a full Mon–Sun row on
+     a tablet */
+  mobileDayGrid: {
+    display: 'grid' as const,
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: theme.spacing(0.75, 1),
+    [theme.breakpoints.between('sm', 'md')]: {
+      gridTemplateColumns: 'repeat(7, 1fr)',
+    },
+  },
+
+  mobileFieldStack: {
+    display: 'flex' as const,
+    flexDirection: 'column' as const,
+    gap: 3,
+    minWidth: 0,
+  },
+
+  mobileFieldLabel: {
+    fontSize: '0.68rem',
+    fontWeight: 700,
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase' as const,
+    color: theme.palette.text.secondary,
+  },
+
+  mobileTotalLine: {
+    display: 'flex' as const,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    fontSize: '0.85rem',
+    fontWeight: 700,
+    color: theme.palette.primary.dark,
+  },
+
+  /* ── Mobile totals summary (the detail rows live under the table) ── */
+  mobileTotalsGrid: {
+    display: 'grid' as const,
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: theme.spacing(0.75),
+    [theme.breakpoints.down('sm')]: {
+      gridTemplateColumns: 'repeat(2, 1fr)',
+    },
+  },
+
+  mobileTotalsCell: {
+    display: 'flex' as const,
+    flexDirection: 'column' as const,
+    gap: 2,
+    padding: theme.spacing(0.75, 1),
+    backgroundColor: '#f8fafc',
+    border: '1px solid #eef2f7',
+    borderRadius: 8,
+  },
+
+  mobileTotalsCellLabel: {
+    fontSize: '0.68rem',
+    fontWeight: 600,
+    color: theme.palette.text.secondary,
+  },
+
+  mobileTotalsCellValue: {
+    fontSize: '0.85rem',
+    fontWeight: 700,
+    color: theme.palette.text.primary,
   },
 
   headerCell: {
@@ -458,6 +598,17 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     borderRadius: 12,
     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0,0,0,0.04)',
     padding: theme.spacing(0.75, 1.25),
+    /* phone: a single horizontally scrollable strip beats 6 rows of pills
+       (down('sm') = <=576.95px; down('xs') would never match in this theme) */
+    [theme.breakpoints.down('sm')]: {
+      flexWrap: 'nowrap' as const,
+      overflowX: 'auto' as const,
+      overflowY: 'hidden' as const,
+      gap: theme.spacing(0.5),
+      padding: theme.spacing(0.5, 1),
+      /* stop the scrollbar eating vertical space on desktop-like devices */
+      scrollbarWidth: 'thin' as const,
+    },
   },
 
   timesheetIconPill: {
@@ -488,6 +639,11 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     minWidth: 60,
     position: 'relative' as const,
     overflow: 'hidden',
+    [theme.breakpoints.down('sm')]: {
+      minWidth: 46,
+      padding: theme.spacing(0.375, 0.5),
+      gap: 2,
+    },
 
     '&:hover': {
       transform: 'translateY(-2px)',
@@ -713,7 +869,9 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     color: theme.palette.text.primary,
   },
 
-  /* ── Footer actions ──────────────────────────────────────────── */
+  /* ── Footer actions (on phone it stacks full-width — direction is
+     handled in JSX via a breakpoint sx, since Stack's own class sets
+     flex-direction) ─────────────────────────────────────────────── */
   footerActions: {
     marginTop: theme.spacing(3),
     paddingTop: theme.spacing(2),

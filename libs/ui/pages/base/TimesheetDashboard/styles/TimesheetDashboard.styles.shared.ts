@@ -102,10 +102,11 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     overflow: 'hidden' as const,
   },
 
+  /* Header row: the 7 day columns + the narrow right-side marker strip
+     (the navy band extends to the card edge, as in the reference). */
   gridRow: {
     display: 'grid' as const,
-    gridTemplateColumns: 'repeat(7, 1fr)',
-    borderLeft: 'none',
+    gridTemplateColumns: 'repeat(7, minmax(0, 1fr)) 34px',
   },
 
   weekdayCell: {
@@ -117,10 +118,57 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     padding: theme.spacing(1),
   },
 
-  dayCell: {
-    position: 'relative' as const,
-    borderRight: '1px solid #f1f5f9',
+  /* the header's empty 8th column — the marker strip has no label */
+  weekMarkSpacer: {
+    backgroundColor: NAVY,
+    borderLeft: `1px solid rgba(255, 255, 255, 0.12)`,
+  },
+
+  /* One calendar week: the 7 day cells + the 34px marker strip. The strip
+     holds the week's edit mark, pinned to its bottom-right corner (the last
+     position of the cell), as in the reference layout. */
+  calendarWeek: {
+    display: 'grid' as const,
+    gridTemplateColumns: 'repeat(7, minmax(0, 1fr)) 34px',
     borderBottom: '1px solid #f1f5f9',
+    '&:last-child': { borderBottom: 'none' },
+  },
+
+  /* the far-right marker strip: one edit mark per week row, anchored to the
+     strip's bottom-right corner. The strip itself is clickable (it opens the
+     day menu for the week) — the day cells remain the primary target. */
+  weekMarkColumn: {
+    borderLeft: '1px solid #f1f5f9',
+    display: 'flex' as const,
+    alignItems: 'flex-end' as const,
+    justifyContent: 'flex-end' as const,
+    padding: theme.spacing(0.5, 0.5, 0.75),
+    background: '#fff',
+    minHeight: 68,
+  },
+
+  /* the edit mark: a small boxed note/pencil chip, as in the reference */
+  weekMark: {
+    width: 22,
+    height: 22,
+    display: 'flex' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: '1px solid #cbd5e1',
+    borderRadius: 4,
+    backgroundColor: '#fff',
+    boxSizing: 'border-box' as const,
+  },
+
+  /* weeks with no entries (trailing next-month week) keep the mark but read
+     as disabled */
+  weekMarkFaded: {
+    opacity: 0.35,
+    cursor: 'default',
+  },
+
+  dayCell: {
+    borderRight: '1px solid #f1f5f9',
     minHeight: 68,
     padding: theme.spacing(0.5, 0.75),
     background: '#fff',
@@ -152,14 +200,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
   dayTime: {
     fontSize: '0.65rem',
     color: '#475569',
-  },
-
-  dayStatusMark: {
-    position: 'absolute' as const,
-    right: 8,
-    top: 8,
-    display: 'flex' as const,
-    alignItems: 'center' as const,
   },
 
   dayBorderBottomMissed: {
