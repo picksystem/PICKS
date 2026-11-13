@@ -1,7 +1,6 @@
 import { alpha } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useStyles } from './styles';
-import { Box, Button, Loader, Typography, Chip, Tooltip, PageHeader } from '@serviceops/component';
+import { Box, Loader, Typography, Chip, Tooltip, PageHeader } from '@serviceops/component';
 import useCreateTicket from './hooks/useCreateTicket';
 import { useGetTicketTypeQuery } from '../../../../services';
 import {
@@ -15,8 +14,7 @@ import {
 
 const CreateTicket = () => {
   const { classes } = useStyles();
-  const { selectedType, setSelectedType, handleEnterDetails, handleCancelCreation } =
-    useCreateTicket();
+  const { openTypeDetails } = useCreateTicket();
 
   const { data: ticketTypes, isLoading } = useGetTicketTypeQuery();
   const iconMap = loadIconMap();
@@ -24,7 +22,6 @@ const CreateTicket = () => {
 
   // API returns records already ordered by displayOrder from DB
   const activeTypes = (ticketTypes ?? []).filter((t) => t.isActive);
-  const selected = activeTypes.find((t) => t.type === selectedType);
 
   const getVisuals = (type: string) => {
     const tag = tagMap[type] ?? '';
@@ -50,48 +47,34 @@ const CreateTicket = () => {
           className={classes.pageHeader}
         />
 
-        {/* ── Ticket type grid ─────────────────────────────────────────────── */}
+        {/* ── Ticket type grid (click a card to open its create form) ─────── */}
         <Box className={classes.ticketTypeGrid}>
           {activeTypes.map((t) => {
-            const isSelected = selectedType === t.type;
             const { accent, gradient, glow } = getVisuals(t.type);
             const iconKey = iconMap[t.type];
-            const tag = tagMap[t.type] ?? '';
+            const displayTag = tagMap[t.type] ?? '';
             const ticketTypeName = t.name;
             const creationPageDisplayText = t.displayName;
             const creationPageDisplayTag = t.displayTag;
-            const displayTag = tag;
 
             return (
               <Tooltip key={t.type} title={t.description} placement='right' arrow>
                 <Box
                   className={classes.ticketCard}
-                  onClick={() => setSelectedType(t.type)}
+                  onClick={() => openTypeDetails(t.type)}
                   sx={{
-                    border: isSelected ? `1.5px solid ${accent}` : '1.5px solid transparent',
-                    boxShadow: isSelected
-                      ? `0 0 0 3px ${glow}, 0 8px 32px rgba(0,0,0,0.12)`
-                      : '0 2px 8px rgba(0,0,0,0.06)',
-                    background: isSelected
-                      ? `linear-gradient(160deg, ${alpha(accent, 0.06)} 0%, transparent 60%)`
-                      : undefined,
+                    border: '1.5px solid transparent',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                     '&:hover': {
-                      boxShadow: isSelected
-                        ? `0 0 0 3px ${glow}, 0 12px 40px rgba(0,0,0,0.16)`
-                        : `0 8px 32px ${alpha(accent, 0.22)}`,
+                      border: `1.5px solid ${accent}`,
+                      boxShadow: `0 0 0 3px ${glow}, 0 12px 40px rgba(0,0,0,0.16)`,
+                      background: `linear-gradient(160deg, ${alpha(accent, 0.06)} 0%, transparent 60%)`,
                       transform: 'translateY(-4px)',
                     },
                   }}
                 >
                   {/* Accent bar (left border) */}
                   <Box className={classes.ticketAccentBar} sx={{ background: gradient }} />
-
-                  {/* Selected checkmark */}
-                  {isSelected && (
-                    <CheckCircleIcon
-                      sx={{ position: 'absolute', top: 12, right: 12, color: accent, fontSize: 20 }}
-                    />
-                  )}
 
                   {/* Icon + title row */}
                   <Box className={classes.ticketCardHeader}>
@@ -142,50 +125,6 @@ const CreateTicket = () => {
               </Tooltip>
             );
           })}
-        </Box>
-      </Box>
-      {/* end scrollContent */}
-
-      {/* ── Bottom CTA ───────────────────────────────────────────────────── */}
-      <Box className={classes.ctaBar}>
-        <Box className={classes.ctaLeft}>
-          {selected && (
-            <Typography className={classes.ctaSelected}>
-              <b>Selected:</b>{' '}
-              <span style={{ color: getVisuals(selected.type).accent, fontWeight: 700 }}>
-                {selected.name}
-              </span>
-              {selected.displayName && selected.displayName !== selected.name && (
-                <span style={{ marginLeft: 6, color: 'text.secondary', fontWeight: 500 }}>
-                  ({selected.displayName})
-                </span>
-              )}
-            </Typography>
-          )}
-        </Box>
-        <Box className={classes.ctaButtons}>
-          <Button variant='outlined' color='error' onClick={handleCancelCreation}>
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            onClick={handleEnterDetails}
-            disabled={!selectedType}
-            sx={{
-              ...(selected && {
-                background: getVisuals(selected.type).gradient,
-                boxShadow: `0 4px 16px ${getVisuals(selected.type).glow}`,
-                '&:hover': {
-                  background: getVisuals(selected.type).gradient,
-                  filter: 'brightness(1.1)',
-                },
-              }),
-              minWidth: 160,
-              fontWeight: 700,
-            }}
-          >
-            Continue
-          </Button>
         </Box>
       </Box>
     </Box>

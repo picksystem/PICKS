@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Box, Typography, Button, IconButton, PageHeader, Tooltip } from '../../../components';
-import { Menu, MenuItem, Stack, Box as MuiBox } from '@mui/material';
+import { Menu, MenuItem, Stack, Divider as MuiDivider, Box as MuiBox } from '@mui/material';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -197,78 +197,119 @@ const TimesheetDashboard = () => {
       />
 
       <MuiBox className={classes.layout}>
-        {/* ═══ Left column ═══ */}
-        <MuiBox className={classes.col}>
-          {/* ── Calendar card ── */}
-          <MuiBox className={classes.card}>
-            <Stack
-              className={classes.calendarHeader}
-              direction='row'
-              spacing={1.5}
-              alignItems='center'
-              justifyContent='center'
-            >
-              <IconButton
-                className={classes.navButton}
-                onClick={() => notify.info('Previous month')}
-              >
-                <NavigateBeforeIcon sx={{ fontSize: 18 }} />
-              </IconButton>
-              <Typography className={classes.monthLabel}>
-                {MONTH_NAMES[OCTOBER_2026.monthIndex]} {OCTOBER_2026.year}
-              </Typography>
-              <IconButton className={classes.navButton} onClick={() => notify.info('Next month')}>
-                <NavigateNextIcon sx={{ fontSize: 18 }} />
-              </IconButton>
-            </Stack>
+        {/* ═══ Row 1: Calendar | My Action | My Approvals (equal height) ═══ */}
+        {/* ── Calendar card ── */}
+        <MuiBox className={classes.card}>
+          <Stack
+            className={classes.calendarHeader}
+            direction='row'
+            spacing={1.5}
+            alignItems='center'
+            justifyContent='center'
+          >
+            <IconButton className={classes.navButton} onClick={() => notify.info('Previous month')}>
+              <NavigateBeforeIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+            <Typography className={classes.monthLabel}>
+              {MONTH_NAMES[OCTOBER_2026.monthIndex]} {OCTOBER_2026.year}
+            </Typography>
+            <IconButton className={classes.navButton} onClick={() => notify.info('Next month')}>
+              <NavigateNextIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+          </Stack>
 
-            <MuiBox className={classes.calendarGrid}>
-              <MuiBox className={classes.gridRow}>
-                {WEEKDAYS.map((wd) => (
-                  <MuiBox key={wd} className={classes.weekdayCell}>
-                    {wd}
-                  </MuiBox>
-                ))}
-                {/* the marker strip has no header of its own */}
-                <MuiBox className={classes.weekMarkSpacer} />
-              </MuiBox>
-              {Array.from({ length: days.length / 7 }, (_, w) =>
-                renderWeekRow(days.slice(w * 7, w * 7 + 7)),
-              )}
-            </MuiBox>
-
-            <MuiBox className={classes.legend}>
-              {Object.entries({
-                Draft: STATUS_COLORS.draft,
-                Approved: STATUS_COLORS.approved,
-                'Missed Entry': STATUS_COLORS.missed,
-                Holiday: STATUS_COLORS.holiday,
-                Rejected: STATUS_COLORS.rejected,
-                'Personal Time off (PTO)': STATUS_COLORS.pto,
-              }).map(([label, color]) => (
-                <MuiBox key={label} className={classes.legendItem}>
-                  <span className={classes.legendLine} style={{ backgroundColor: color }} />
-                  {label}
+          <MuiBox className={classes.calendarGrid}>
+            <MuiBox className={classes.gridRow}>
+              {WEEKDAYS.map((wd) => (
+                <MuiBox key={wd} className={classes.weekdayCell}>
+                  {wd}
                 </MuiBox>
               ))}
+              {/* the marker strip has no header of its own */}
+              <MuiBox className={classes.weekMarkSpacer} />
             </MuiBox>
+            {Array.from({ length: days.length / 7 }, (_, w) =>
+              renderWeekRow(days.slice(w * 7, w * 7 + 7)),
+            )}
           </MuiBox>
 
-          {/* ── Personal Time-off Balance card ── */}
-          <MuiBox className={classes.card}>
-            <Typography className={classes.cardTitle}>Personal Time-off Balance</Typography>
+          <MuiBox className={classes.legend}>
+            {Object.entries({
+              Draft: STATUS_COLORS.draft,
+              Approved: STATUS_COLORS.approved,
+              'Missed Entry': STATUS_COLORS.missed,
+              Holiday: STATUS_COLORS.holiday,
+              Rejected: STATUS_COLORS.rejected,
+              'Personal Time off (PTO)': STATUS_COLORS.pto,
+            }).map(([label, color]) => (
+              <MuiBox key={label} className={classes.legendItem}>
+                <span className={classes.legendLine} style={{ backgroundColor: color }} />
+                {label}
+              </MuiBox>
+            ))}
+          </MuiBox>
+        </MuiBox>
 
-            <MuiBox className={classes.balanceRow}>
-              {timeOffBalance.map((b) => (
-                <MuiBox key={b.label}>
-                  <Typography className={classes.balanceValue}>{b.value}</Typography>
-                  <Typography className={classes.balanceLabel}>{b.label}</Typography>
-                </MuiBox>
-              ))}
+        {/* ── My Action card ── */}
+        <MuiBox className={classes.card}>
+          <Typography className={classes.cardTitle}>My Action</Typography>
+          {actionItems.map((item) => (
+            <MuiBox
+              key={item.id}
+              className={cx(classes.listRow, item.disabled && classes.listRowDisabled)}
+              onClick={item.disabled ? undefined : () => notify.info(`${item.title} coming soon`)}
+            >
+              <MuiBox className={classes.listRowText}>
+                <Typography className={classes.listRowTitle}>{item.title}</Typography>
+                <Typography className={classes.listRowSubtitle}>{item.subtitle}</Typography>
+              </MuiBox>
+              <ChevronRightIcon className={classes.chevron} />
+            </MuiBox>
+          ))}
+        </MuiBox>
+
+        {/* ── My Approvals card ── */}
+        <MuiBox className={classes.card}>
+          <Typography className={classes.cardTitle}>My Approvals</Typography>
+          {approvalItems.map((item) => (
+            <MuiBox
+              key={item.id}
+              className={classes.approvalRow}
+              onClick={() => notify.info(`${item.label} coming soon`)}
+            >
+              <MuiBox>{item.icon}</MuiBox>
+              <Typography className={classes.approvalLabel}>{item.label}</Typography>
+              <MuiBox className={classes.approvalCount}>{item.count}</MuiBox>
+            </MuiBox>
+          ))}
+        </MuiBox>
+
+        {/* ═══ Row 2: Time-off Balance | Upcoming Events | Holidays (equal height) ═══ */}
+        {/* ── Personal Time-off Balance card ── */}
+        <MuiBox className={classes.card}>
+          <Typography className={classes.cardTitle}>Personal Time-off Balance</Typography>
+
+          <MuiBox className={classes.balanceRow}>
+            {timeOffBalance.map((b) => (
+              <MuiBox key={b.label}>
+                <Typography className={classes.balanceValue}>{b.value}</Typography>
+                <Typography className={classes.balanceLabel}>{b.label}</Typography>
+              </MuiBox>
+            ))}
+          </MuiBox>
+          <MuiDivider />
+
+          <MuiBox className={classes.leaveTable}>
+            {/* Header */}
+            <MuiBox className={cx(classes.leaveTableRow, classes.leaveTableHead)}>
+              <Typography className={classes.leaveTableHeaderCell}>Status</Typography>
+              <Typography className={classes.leaveTableHeaderCell}>Date</Typography>
+              <Typography className={classes.leaveTableHeaderCell}>Leave Type</Typography>
+              <Typography className={classes.leaveTableHeaderCell}>Your wish</Typography>
             </MuiBox>
 
             {leaveRows.map((row) => (
-              <MuiBox key={row.id} className={classes.leaveRow}>
+              <MuiBox key={row.id} className={classes.leaveTableRow}>
                 <MuiBox className={classes.leaveStatusIcon}>{leaveStatusIcon(row.status)}</MuiBox>
                 <Typography variant='body2'>{row.period}</Typography>
                 <Typography variant='body2' color='primary'>
@@ -279,127 +320,85 @@ const TimesheetDashboard = () => {
                 </Typography>
               </MuiBox>
             ))}
-
-            <Stack
-              direction='row'
-              spacing={2}
-              alignItems='center'
-              justifyContent='space-between'
-              sx={{ marginTop: 1.5 }}
-            >
-              <Stack direction='row' spacing={2}>
-                {(['submitted', 'approved', 'rejected'] as const).map((s) => (
-                  <MuiBox key={s} className={classes.legendChip}>
-                    <span
-                      className={classes.legendDot}
-                      style={{
-                        borderColor: STATUS_COLORS[s === 'submitted' ? 'draft' : s],
-                      }}
-                    />
-                    {s[0].toUpperCase() + s.slice(1)}
-                  </MuiBox>
-                ))}
-              </Stack>
-              <Button
-                variant='text'
-                color='primary'
-                label='Create Time-Off'
-                onClick={() => notify.info('Create Time-Off coming soon')}
-              />
-            </Stack>
           </MuiBox>
+
+          <Stack
+            direction='row'
+            spacing={2}
+            alignItems='center'
+            justifyContent='space-between'
+            sx={{ marginTop: 1.5 }}
+          >
+            <Stack direction='row' spacing={2}>
+              {(['submitted', 'approved', 'rejected'] as const).map((s) => (
+                <MuiBox key={s} className={classes.legendChip}>
+                  <span
+                    className={classes.legendDot}
+                    style={{
+                      borderColor: STATUS_COLORS[s === 'submitted' ? 'draft' : s],
+                    }}
+                  />
+                  {s[0].toUpperCase() + s.slice(1)}
+                </MuiBox>
+              ))}
+            </Stack>
+            <Button
+              variant='text'
+              color='primary'
+              label='Create Time-Off'
+              onClick={() => notify.info('Create Time-Off coming soon')}
+            />
+          </Stack>
         </MuiBox>
 
-        {/* ═══ Middle column ═══ */}
-        <MuiBox className={classes.col}>
-          {/* ── My Action card ── */}
-          <MuiBox className={classes.card}>
-            <Typography className={classes.cardTitle}>My Action</Typography>
-            {actionItems.map((item) => (
-              <MuiBox
-                key={item.id}
-                className={cx(classes.listRow, item.disabled && classes.listRowDisabled)}
-                onClick={item.disabled ? undefined : () => notify.info(`${item.title} coming soon`)}
-              >
-                <MuiBox className={classes.listRowText}>
-                  <Typography className={classes.listRowTitle}>{item.title}</Typography>
-                  <Typography className={classes.listRowSubtitle}>{item.subtitle}</Typography>
-                </MuiBox>
-                <ChevronRightIcon className={classes.chevron} />
+        {/* ── Upcoming Events card ── */}
+        <MuiBox className={classes.card}>
+          <Typography className={classes.cardTitle}>Upcoming Events</Typography>
+          {events.map((ev) => (
+            <MuiBox key={ev.id} className={classes.eventRow}>
+              <MuiBox className={classes.eventDateBox}>
+                <Typography className={classes.eventDateDay}>{ev.day}</Typography>
+                <Typography className={classes.eventDateMonth}>{ev.month}</Typography>
               </MuiBox>
-            ))}
-          </MuiBox>
-
-          {/* ── Upcoming Events card ── */}
-          <MuiBox className={classes.card}>
-            <Typography className={classes.cardTitle}>Upcoming Events</Typography>
-            {events.map((ev) => (
-              <MuiBox key={ev.id} className={classes.eventRow}>
-                <MuiBox className={classes.eventDateBox}>
-                  <Typography className={classes.eventDateDay}>{ev.day}</Typography>
-                  <Typography className={classes.eventDateMonth}>{ev.month}</Typography>
-                </MuiBox>
-                <MuiBox sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant='body2' sx={{ fontWeight: 500 }}>
-                    {ev.title}
-                  </Typography>
-                  <Typography variant='caption' color='text.secondary'>
-                    {ev.subtitle}
-                  </Typography>
-                </MuiBox>
-                <IconButton size='small' onClick={() => notify.info('Opening event in new tab')}>
-                  <OpenInNewIcon sx={{ fontSize: 16 }} />
-                </IconButton>
-              </MuiBox>
-            ))}
-          </MuiBox>
-        </MuiBox>
-
-        {/* ═══ Right column ═══ */}
-        <MuiBox className={classes.col}>
-          {/* ── My Approvals card ── */}
-          <MuiBox className={classes.card}>
-            <Typography className={classes.cardTitle}>My Approvals</Typography>
-            {approvalItems.map((item) => (
-              <MuiBox
-                key={item.id}
-                className={classes.approvalRow}
-                onClick={() => notify.info(`${item.label} coming soon`)}
-              >
-                <MuiBox>{item.icon}</MuiBox>
-                <Typography className={classes.approvalLabel}>{item.label}</Typography>
-                <MuiBox className={classes.approvalCount}>{item.count}</MuiBox>
-              </MuiBox>
-            ))}
-          </MuiBox>
-
-          {/* ── Holidays card ── */}
-          <MuiBox className={classes.card}>
-            <Stack direction='row' alignItems='center' justifyContent='space-between'>
-              <Typography className={classes.cardTitle} sx={{ marginBottom: 0 }}>
-                Holidays
-              </Typography>
-              <IconButton size='small' onClick={() => notify.info('Calendar coming soon')}>
-                <CalendarMonthIcon sx={{ fontSize: 18 }} />
-              </IconButton>
-            </Stack>
-
-            {holidays[0].note && (
-              <MuiBox className={classes.holidayNote}>{holidays[0].note}</MuiBox>
-            )}
-
-            {holidays.map((h) => (
-              <Stack key={h.id} direction='row' spacing={1} sx={{ mb: 1 }}>
-                <MuiBox className={classes.eventDateBox}>
-                  <Typography className={classes.eventDateDay}>{h.day}</Typography>
-                  <Typography className={classes.eventDateMonth}>{h.month}</Typography>
-                </MuiBox>
-                <Typography variant='body2' sx={{ fontWeight: 500, alignSelf: 'center' }}>
-                  {h.title}
+              <MuiBox sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant='body2' sx={{ fontWeight: 500 }}>
+                  {ev.title}
                 </Typography>
-              </Stack>
-            ))}
-          </MuiBox>
+                <Typography variant='caption' color='text.secondary'>
+                  {ev.subtitle}
+                </Typography>
+              </MuiBox>
+              <IconButton size='small' onClick={() => notify.info('Opening event in new tab')}>
+                <OpenInNewIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            </MuiBox>
+          ))}
+        </MuiBox>
+
+        {/* ── Holidays card ── */}
+        <MuiBox className={classes.card}>
+          <Stack direction='row' alignItems='center' justifyContent='space-between'>
+            <Typography className={classes.cardTitle} sx={{ marginBottom: 0 }}>
+              Holidays
+            </Typography>
+            <IconButton size='small' onClick={() => notify.info('Calendar coming soon')}>
+              <CalendarMonthIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+          </Stack>
+
+          {holidays[0].note && <MuiBox className={classes.holidayNote}>{holidays[0].note}</MuiBox>}
+
+          {holidays.map((h) => (
+            <Stack key={h.id} direction='row' spacing={1} sx={{ mb: 1 }}>
+              <MuiBox className={classes.eventDateBox}>
+                <Typography className={classes.eventDateDay}>{h.day}</Typography>
+                <Typography className={classes.eventDateMonth}>{h.month}</Typography>
+              </MuiBox>
+              <Typography variant='body2' sx={{ fontWeight: 500, alignSelf: 'center' }}>
+                {h.title}
+              </Typography>
+            </Stack>
+          ))}
         </MuiBox>
       </MuiBox>
 

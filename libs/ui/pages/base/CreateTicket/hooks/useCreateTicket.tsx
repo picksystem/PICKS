@@ -1,34 +1,17 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useNotification } from '@serviceops/hooks';
 import { constants } from '@serviceops/utils';
 import { getRouteSlug } from '../utils/CreateTicket.utils';
 
 const useCreateTicket = () => {
   const navigate = useNavigate();
   const { BasePath } = constants;
-  const [selectedType, setSelectedType] = useState<string>('');
-  const notify = useNotification();
 
-  const handleEnterDetails = () => {
-    if (!selectedType) {
-      notify.warning('Please select a ticket type before entering details.');
-      return;
-    }
-    navigate(BasePath.CREATE_TICKET_TYPE.replace(':type', getRouteSlug(selectedType)));
+  /** Navigate straight to the create form for a given ticket type. */
+  const openTypeDetails = (type: string) => {
+    navigate(BasePath.CREATE_TICKET_TYPE.replace(':type', getRouteSlug(type)));
   };
 
-  const handleCancelCreation = () => {
-    setSelectedType('');
-    navigate(BasePath.DASHBOARD);
-  };
-
-  return {
-    selectedType,
-    setSelectedType,
-    handleEnterDetails,
-    handleCancelCreation,
-  };
+  return { openTypeDetails };
 };
 
 export default useCreateTicket;

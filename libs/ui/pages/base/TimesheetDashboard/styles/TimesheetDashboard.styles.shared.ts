@@ -44,13 +44,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     [theme.breakpoints.down('md')]: { gridTemplateColumns: '1fr' },
   },
 
-  col: {
-    display: 'flex' as const,
-    flexDirection: 'column' as const,
-    gap: theme.spacing(2),
-    minWidth: 0,
-  },
-
   /* ── Card shell ─────────────────────────────────────────────── */
   card: {
     backgroundColor: theme.palette.background.paper,
@@ -341,21 +334,36 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     marginTop: theme.spacing(0.25),
   },
 
-  leaveRow: {
+  leaveTable: {
+    border: '1px solid #e5e7eb',
+    borderRadius: 4,
+    padding: theme.spacing(0, 1.5),
+    marginBottom: theme.spacing(0.5),
+  },
+
+  leaveTableRow: {
     display: 'grid' as const,
-    gridTemplateColumns: '34px minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.4fr)',
+    gridTemplateColumns: 'repeat(4, 1fr)',
     alignItems: 'center',
     gap: theme.spacing(1),
-    padding: theme.spacing(0.75, 0.25),
-    borderBottom: `1px solid #f1f5f9`,
+    padding: theme.spacing(0.9, 0.25),
     fontSize: '0.82rem',
-    '&:last-child': { borderBottom: 'none' },
+  },
+
+  leaveTableHead: {
+    borderBottom: '2px solid #1e293b',
+  },
+
+  leaveTableHeaderCell: {
+    fontWeight: 700,
+    fontSize: '0.9rem',
+    color: '#1e293b',
   },
 
   leaveStatusIcon: {
     display: 'flex' as const,
     alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+    justifyContent: 'flex-start',
   },
 
   legendChip: {

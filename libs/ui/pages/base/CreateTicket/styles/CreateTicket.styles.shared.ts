@@ -52,7 +52,7 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
 
   ticketTypeGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateColumns: 'repeat(4, 1fr)',
     gap: theme.spacing(2),
     flex: 1,
     [theme.breakpoints.down('md')]: {
