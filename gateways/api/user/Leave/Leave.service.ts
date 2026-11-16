@@ -7,17 +7,6 @@ import {
   LeaveRequestResponseDto,
 } from './Leave.dto';
 
-/**
- * Default balances shown when a user has no balance rows yet — matches the
- * reference dashboard (Privilege / Casual / Sick / Optional Holiday).
- */
-const DEFAULT_BALANCES: LeaveBalanceResponseDto[] = [
-  { leaveType: 'Privilege Leave', total: 12, consumed: 1.5, available: 10.5 },
-  { leaveType: 'Casual Leave', total: 7, consumed: 7, available: 0 },
-  { leaveType: 'Sick Leave', total: 5, consumed: 4.5, available: 0.5 },
-  { leaveType: 'Optional Holiday', total: 2, consumed: 1, available: 1 },
-];
-
 const fmtDate = (iso: string): string => {
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', {
@@ -70,10 +59,9 @@ export class LeaveService extends BaseService<
     this.leaveRepo = repository;
   }
 
-  /** GET balances — falls back to the reference defaults when none are stored. */
+  /** GET the user's stored balances (empty when none have been set). */
   async getBalances(userId: number): Promise<LeaveBalanceResponseDto[]> {
     const rows = await this.leaveRepo.findBalances(userId);
-    if (rows.length === 0) return DEFAULT_BALANCES;
     return rows.map(toBalanceDto);
   }
 

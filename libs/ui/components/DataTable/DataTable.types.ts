@@ -6,6 +6,9 @@ export interface Column<T> {
   format?: (value: unknown, row: T) => React.ReactNode;
   sortable?: boolean;
   filterable?: boolean;
+  /** Custom header node (e.g. a select-all checkbox) that replaces the
+   *  plain label / sort label. Renders unsorted when present. */
+  header?: React.ReactNode;
 }
 
 export interface DataTableProps<T> {
@@ -21,6 +24,11 @@ export interface DataTableProps<T> {
   initialRowsPerPage?: number;
   elevation?: number;
   activeRowKey?: T[keyof T];
+  /** Size the table to its content instead of stretching to the container
+   *  width: columns keep their declared minWidth and the table scrolls
+   *  horizontally only if it genuinely overflows. Removes the big gaps
+   *  that a full-width stretch leaves between tight columns. */
+  fitContent?: boolean;
 }
 
 export type Order = 'asc' | 'desc';

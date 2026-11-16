@@ -430,6 +430,14 @@ interface GenericPanelProps {
    */
   plainAsSection?: boolean;
   /**
+   * Size the table to its content instead of stretching it to the panel
+   * width — columns sit at their declared minWidth and the table scrolls
+   * horizontally only when it genuinely overflows. Useful for wide
+   * manager-review tables where a full-width stretch leaves big gaps
+   * between headers.
+   */
+  fitContent?: boolean;
+  /**
    * Extra controls (e.g. dropdown filters) rendered in the toolbar between
    * the New button and the search field — only shown in the "nothing
    * selected" state, same slot as the search field sits in.
@@ -761,6 +769,7 @@ const StandardPanel = memo(
     hideHeader = false,
     hideToolbar = false,
     toolbarExtra,
+    fitContent = false,
   }: {
     config: TableConfig;
     columns: Column<GenericData>[];
@@ -780,6 +789,7 @@ const StandardPanel = memo(
     hideHeader?: boolean;
     hideToolbar?: boolean;
     toolbarExtra?: React.ReactNode;
+    fitContent?: boolean;
   }) => {
     return (
       <Box
@@ -825,6 +835,7 @@ const StandardPanel = memo(
             initialRowsPerPage={10}
             activeRowKey={selectedId ?? undefined}
             onRowClick={onRowClick}
+            fitContent={fitContent}
           />
         </Paper>
       </Box>
@@ -856,6 +867,7 @@ const PlainPanel = memo(
     hideToolbar = false,
     toolbarExtra,
     plainAsSection = false,
+    fitContent = false,
   }: {
     config: TableConfig;
     columns: Column<GenericData>[];
@@ -879,6 +891,9 @@ const PlainPanel = memo(
      * table) with NO accordion wrapper — for dashboards that want the
      * panel look without the collapsible chevron. */
     plainAsSection?: boolean;
+    /** Size the table to its content instead of stretching to the panel
+     *  width (see `GenericPanelProps.fitContent`). */
+    fitContent?: boolean;
   }) => {
     const { classes } = useStyles();
 
@@ -924,6 +939,7 @@ const PlainPanel = memo(
               initialRowsPerPage={10}
               activeRowKey={selectedId ?? undefined}
               onRowClick={onRowClick}
+              fitContent={fitContent}
             />
           </Paper>
         </Box>
@@ -979,6 +995,7 @@ const PlainPanel = memo(
               initialRowsPerPage={10}
               activeRowKey={selectedId ?? undefined}
               onRowClick={onRowClick}
+              fitContent={fitContent}
             />
           </Paper>
         </Box>
@@ -1016,6 +1033,7 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
       hideHeader = false,
       hideToolbar = false,
       plainAsSection = false,
+      fitContent = false,
       toolbarExtra,
       validate,
       validateFields,
@@ -1424,6 +1442,7 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
         hideHeader,
         hideToolbar,
         plainAsSection,
+        fitContent,
         toolbarExtra,
       }),
       [
@@ -1446,6 +1465,7 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
         hideHeader,
         hideToolbar,
         plainAsSection,
+        fitContent,
       ],
     );
 

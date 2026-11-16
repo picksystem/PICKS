@@ -37,6 +37,7 @@ export function DataTable<T extends object>({
   initialRowsPerPage = 10,
   elevation = 1,
   activeRowKey,
+  fitContent = false,
 }: DataTableProps<T>) {
   const { classes, cx } = useStyles();
   const [page, setPage] = useState(0);
@@ -189,7 +190,7 @@ export function DataTable<T extends object>({
       )}
 
       <TableContainer>
-        <MuiTable stickyHeader>
+        <MuiTable stickyHeader sx={fitContent ? { width: 'fit-content' } : undefined}>
           <TableHead>
             <TableRow>
               {selectable && (
@@ -208,7 +209,9 @@ export function DataTable<T extends object>({
                   className={classes.tableCell}
                   style={column.minWidth ? { minWidth: column.minWidth } : undefined}
                 >
-                  {column.sortable !== false ? (
+                  {column.header !== undefined ? (
+                    column.header
+                  ) : column.sortable !== false ? (
                     <TableSortLabel
                       active={orderBy === column.id}
                       direction={orderBy === column.id ? order : 'asc'}

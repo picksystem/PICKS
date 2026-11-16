@@ -71,6 +71,11 @@ const TimesheetDashboard = () => {
   const { BasePath, UserPath } = constants;
   const appRole = useAppRole();
   const submitPath = BasePath.TIMESHEET_SUBMIT || BasePath.TIMESHEET;
+  /* Shared Approvals page — one route per approval type, deep-linked via ?type= */
+  const approvalsBase =
+    appRole === 'user' ? UserPath.TIMESHEET_APPROVALS : BasePath.TIMESHEET_APPROVALS;
+  const openApprovalTab = (type?: string) =>
+    navigateToPath(type ? `${approvalsBase}?type=${type}` : approvalsBase);
 
   const [menu, setMenu] = useState<DayMenu>({
     anchorEl: null,
@@ -292,7 +297,7 @@ const TimesheetDashboard = () => {
             <MuiBox
               key={item.id}
               className={classes.approvalRow}
-              onClick={() => notify.info(`${item.label} coming soon`)}
+              onClick={() => openApprovalTab(item.approvalType)}
             >
               <MuiBox>{item.icon}</MuiBox>
               <Typography className={classes.approvalLabel}>{item.label}</Typography>

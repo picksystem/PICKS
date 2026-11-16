@@ -15,6 +15,7 @@ import {
   TimeOffBalance,
   TimesheetDay,
 } from '../types/timesheetDashboard.types';
+import { approvalCounts } from '../../TimesheetApprovals/timesheetApprovals.config';
 
 /** Build a month grid (Sunday-first). `monthIndex` is 0-based. */
 export const buildMonthDays = (
@@ -169,54 +170,65 @@ export const actionItems: ActionItem[] = [
   },
 ];
 
+/* Each row deep-links a tab on the shared TimesheetApprovals page. The badge
+   counts come from that page's config so the card and the tables never
+   diverge. */
 export const approvalItems: ApprovalItem[] = [
   {
     id: 'app-1',
     icon: <MoreTimeIcon sx={{ fontSize: 18 }} />,
     label: 'Timesheet Approval',
-    count: 3,
+    approvalType: 'timesheet',
+    count: approvalCounts.timesheet,
   },
   {
     id: 'app-2',
     icon: <RestartAltIcon sx={{ fontSize: 18 }} />,
     label: 'Reopen Timesheet Approval',
-    count: 0,
+    approvalType: 'reopenTimesheet',
+    count: approvalCounts.reopenTimesheet,
   },
   {
     id: 'app-3',
     icon: <EventBusyIcon sx={{ fontSize: 18 }} />,
     label: 'Time-Off Approval',
-    count: 0,
+    approvalType: 'timeOff',
+    count: approvalCounts.timeOff,
   },
   {
     id: 'app-4',
     icon: <AssignmentIcon sx={{ fontSize: 18 }} />,
     label: 'Project Approval',
-    count: 0,
+    approvalType: 'project',
+    count: approvalCounts.project,
   },
   {
     id: 'app-5',
     icon: <SupportAgentIcon sx={{ fontSize: 18 }} />,
     label: 'Customer Approval',
-    count: 0,
+    approvalType: 'customer',
+    count: approvalCounts.customer,
   },
   {
     id: 'app-6',
     icon: <BadgeIcon sx={{ fontSize: 18 }} />,
     label: 'Exti Approval',
-    count: 0,
+    approvalType: 'exti',
+    count: approvalCounts.exti,
   },
   {
     id: 'app-7',
     icon: <ReceiptIcon sx={{ fontSize: 18 }} />,
     label: 'Expense Approval',
-    count: 0,
+    approvalType: 'expense',
+    count: approvalCounts.expense,
   },
   {
     id: 'app-8',
     icon: <PeopleIcon sx={{ fontSize: 18 }} />,
     label: 'Employee Self Service Approval',
-    count: 0,
+    approvalType: 'employeeSelfService',
+    count: approvalCounts.employeeSelfService,
   },
 ];
 

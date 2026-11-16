@@ -48,7 +48,9 @@ const CreateLeaveModal = ({ open, onClose, onSuccess, leaveTypes }: CreateLeaveM
   const [reason, setReason] = useState('');
   const [submit, { isLoading }] = useSubmitLeaveRequestMutation();
 
-  const allTypes = leaveTypes.length ? leaveTypes : ['Privilege Leave'];
+  /* The leave types come entirely from the API (the user's balance rows) —
+     no hardcoded fallback list. */
+  const allTypes = leaveTypes;
   const selected = leaveType || allTypes[0] || '';
 
   /* Reset the transient search state when the dialog opens, mirroring the
@@ -122,7 +124,9 @@ const CreateLeaveModal = ({ open, onClose, onSuccess, leaveTypes }: CreateLeaveM
       newTitle='Create Time-Off'
       subtitle='Submit a leave request for approval'
       submitLabel='Submit'
-      submitDisabled={!startDate || isLoading}
+      /* A type must come from the API's balance rows — with no balance
+          data there is nothing valid to submit. */
+      submitDisabled={!startDate || !selected || isLoading}
       maxWidth='sm'
     >
       {/* Leave type — required searchable field (same pattern as the

@@ -45,6 +45,8 @@ export interface ApprovalItem {
   icon: React.ReactNode;
   label: string;
   count: number;
+  /** Tab key on the shared TimesheetApprovals page this row deep-links to */
+  approvalType?: string;
 }
 
 export interface HolidayItem {

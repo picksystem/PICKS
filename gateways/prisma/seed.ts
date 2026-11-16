@@ -490,6 +490,9 @@ async function clearAndSeed() {
     { leaveType: 'Casual Leave', total: 7, consumed: 7, available: 0 },
     { leaveType: 'Sick Leave', total: 5, consumed: 4.5, available: 0.5 },
     { leaveType: 'Optional Holiday', total: 2, consumed: 1, available: 1 },
+    /* Absent has no entitlement (0/0) — it exists as a row so the API can
+       return it for the dashboard's card list. */
+    { leaveType: 'Absent', total: 0, consumed: 0, available: 0 },
   ];
 
   for (const { user } of leaveSeed) {
