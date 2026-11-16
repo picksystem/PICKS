@@ -1698,12 +1698,28 @@ const Timesheet = () => {
       .catch(() => notify.error('Timesheet could not be saved'));
   };
 
-  /* "Submit" moves the week's sheet to Submitted (in the approval queue). */
+  /* "Submit" moves the week's sheet to Submitted (in the approval queue).
+     A week that was never Saved has no server row yet (GET only synthesizes
+     one in memory), so the filled lines are persisted first and the submit
+     only runs after that save succeeds. */
   const handleSubmit = () => {
+    const filled = lines.filter((l) => l.client.trim() !== '' || l.task.trim() !== '');
+    if (filled.length === 0) {
+      notify.error('Nothing to submit yet — fill in a line (client + task) first');
+      return;
+    }
     setSubmitModalOpen(false);
+    const payload: ISaveTimesheetInput = {
+      weekStart,
+      status: 'pending' as ITimesheetStatus,
+      externalNote: weekExternalNote || null,
+      internalNote: weekInternalNote || null,
+      lines: filled.map(toSaveLine),
+    };
     expectReseed.current = true;
-    submitTimesheet({ weekStart })
+    saveTimesheet(payload)
       .unwrap()
+      .then(() => submitTimesheet({ weekStart }).unwrap())
       .then(() => notify.success('Timesheet submitted for approval'))
       .catch(() => notify.error('Timesheet could not be submitted'));
   };

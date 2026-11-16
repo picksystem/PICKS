@@ -159,10 +159,15 @@ export class TimesheetService extends BaseService<
     return this.toResponse({ ...updated, lines: createdLines });
   }
 
-  /** Mark the sheet submitted for approval. */
+  /** Mark the sheet submitted for approval. A week that was only viewed
+   *  (GET returns an in-memory empty sheet and never persists a row) is
+   *  created as an open sheet first, so submit never 404s. */
   async submit(userId: number, weekStart: string): Promise<TimesheetResponseDto> {
-    const sheet = await this.tsRepo.findByUserAndWeek(userId, weekStart);
-    if (!sheet) throw new NotFoundException('Timesheet not found');
+    const existing = await this.tsRepo.findByUserAndWeek(userId, weekStart);
+    const sheet = existing ?? {
+      ...(await this.tsRepo.getOrCreateForWeek(userId, weekStart)),
+      lines: [],
+    };
     if (['approved', 'rejected'].includes(sheet.status)) {
       throw new BadRequestException(`Timesheet is ${sheet.status} and cannot be resubmitted`);
     }

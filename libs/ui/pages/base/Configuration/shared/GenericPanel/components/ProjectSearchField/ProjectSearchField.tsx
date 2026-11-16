@@ -83,10 +83,14 @@ const ProjectSearchField = ({
     [buildOptions],
   );
 
+  /* Emit the display name (what the field shows) — not the raw project id.
+     The Timesheet line stores `project` as a display string and feeds it back
+     as `value`, so emitting the id (e.g. "234") would overwrite the visible
+     label on the next sync. */
   const handleSelect = useCallback(
     (opt: { id: string; label: string }) => {
       setInputValue(opt.label);
-      onChange(opt.id);
+      onChange(opt.label);
       setOptionsOpen(false);
     },
     [onChange],

@@ -56,6 +56,7 @@ export const ClientSearchField = ({
   const [options, setOptions] = useState<{ clientId: string; clientName: string }[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync external value changes
@@ -63,16 +64,20 @@ export const ClientSearchField = ({
     setInputValue(value || '');
   }, [value]);
 
-  // Close dropdown on outside click
+  /* Close the dropdown only on mousedowns OUTSIDE the field (input + open
+     option list). A mousedown on a listed option must NOT close it — the
+     option's click handler fires right after that mousedown and performs the
+     select; closing first would unmount the list and swallow the click. */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (options.length === 0) return;
-      setOptions([]);
-      setOpen(false);
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOptions([]);
+        setOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [options.length]);
+  }, []);
 
   const buildOptions = useCallback(
     (query: string) => {
@@ -149,7 +154,7 @@ export const ClientSearchField = ({
   }, []);
 
   return (
-    <Box sx={{ position: 'relative', ...sx }}>
+    <Box ref={containerRef} sx={{ position: 'relative', ...sx }}>
       <TextField
         required={required}
         disabled={disabled}
