@@ -13,6 +13,7 @@ import HowToRegIcon from '@mui/icons-material/HowToReg';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import LocalActivityIcon from '@mui/icons-material/LocalActivity';
 import TimerIcon from '@mui/icons-material/Timer';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PeopleIcon from '@mui/icons-material/People';
 import GroupWorkIcon from '@mui/icons-material/GroupWork';
@@ -34,6 +35,7 @@ const adminMenuItems: MenuItemConfig[] = [
   { label: 'Problem Management', icon: <ReportProblemIcon />, pathKey: 'PROBLEM_MANAGEMENT' },
   { label: 'Ticket Bundle', icon: <LocalActivityIcon />, pathKey: 'TICKET_TEMPLATES' },
   { label: 'Timesheet', icon: <TimerIcon />, pathKey: 'TIMESHEET' },
+  { label: 'Personal Leave', icon: <EventBusyIcon />, pathKey: 'LEAVE' },
   { label: 'Knowledge Base', icon: <LibraryBooksIcon />, pathKey: 'KNOWLEDGE_BASE' },
   { label: 'Cab Request', icon: <HowToRegIcon />, pathKey: 'CAB_REQUEST' },
   { label: 'Test Scripts', icon: <ListIcon />, pathKey: 'TEST_SCRIPTS' },
@@ -52,6 +54,7 @@ const userMenuItems: MenuItemConfig[] = [
   { label: 'Incident Management', icon: <AssignmentIcon />, pathKey: 'INCIDENT_MANAGEMENT' },
   { label: 'Change Management', icon: <ChangeCircleIcon />, pathKey: 'CHANGE_MANAGEMENT' },
   { label: 'Problem Management', icon: <ReportProblemIcon />, pathKey: 'PROBLEM_MANAGEMENT' },
+  { label: 'Personal Leave', icon: <EventBusyIcon />, pathKey: 'LEAVE' },
 ];
 
 const consultantMenuItems: MenuItemConfig[] = [

@@ -10,7 +10,9 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import PendingIcon from '@mui/icons-material/Pending';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
 import { useNotification, useAppNavigation } from '@serviceops/hooks';
+import { useAppRole } from '@serviceops/theme';
 import { constants } from '@serviceops/utils';
 import { useGetLeaveBalanceQuery, useGetLeaveRequestsQuery } from '@serviceops/services';
 import { useStyles } from './styles';
@@ -66,7 +68,8 @@ const TimesheetDashboard = () => {
   const notify = useNotification();
   const { navigateToPath } = useAppNavigation();
 
-  const { BasePath } = constants;
+  const { BasePath, UserPath } = constants;
+  const appRole = useAppRole();
   const submitPath = BasePath.TIMESHEET_SUBMIT || BasePath.TIMESHEET;
 
   const [menu, setMenu] = useState<DayMenu>({
@@ -301,7 +304,21 @@ const TimesheetDashboard = () => {
         {/* ═══ Row 2: Time-off Balance | Upcoming Events | Holidays (equal height) ═══ */}
         {/* ── Personal Time-off Balance card ── */}
         <MuiBox className={classes.card}>
-          <Typography className={classes.cardTitle}>Personal Time-off Balance</Typography>
+          <Stack direction='row' alignItems='center' justifyContent='space-between'>
+            <Typography className={classes.cardTitle} sx={{ marginBottom: 0 }}>
+              Personal Time-off Balance
+            </Typography>
+            {/* Right-side jump link: opens the dedicated Personal Leave page
+               (the app role decides which route is mounted — admin/user). */}
+            <Tooltip title='Open Personal Leave' placement='top'>
+              <IconButton
+                size='small'
+                onClick={() => navigateToPath(appRole === 'user' ? UserPath.LEAVE : BasePath.LEAVE)}
+              >
+                <EventBusyIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+          </Stack>
 
           <MuiBox className={classes.balanceRow}>
             {leaveBalance.map((b) => (

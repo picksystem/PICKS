@@ -21,6 +21,7 @@ const {
   BaseTicketBundlePage,
   BaseTimesheetPage,
   BaseTimesheetDashboardPage,
+  BaseLeaveDashboardPage,
   BaseCabRequestPage,
   BaseKnowledgeBasePage,
   BaseTestScriptsPage,
@@ -198,6 +199,7 @@ const AppRoutes = () => {
                     <Route path={BasePath.TICKET_TEMPLATES} element={<BaseTicketBundlePage />} />
                     <Route path={BasePath.TIMESHEET} element={<BaseTimesheetDashboardPage />} />
                     <Route path={BasePath.TIMESHEET_SUBMIT} element={<BaseTimesheetPage />} />
+                    <Route path={BasePath.LEAVE} element={<BaseLeaveDashboardPage />} />
                     <Route path={BasePath.CAB_REQUEST} element={<BaseCabRequestPage />} />
                     <Route path={BasePath.KNOWLEDGE_BASE} element={<BaseKnowledgeBasePage />} />
                     <Route path={BasePath.TEST_SCRIPTS} element={<BaseTestScriptsPage />} />
@@ -284,6 +286,7 @@ const AppRoutes = () => {
             <Route path={UserPath.INCIDENT_MANAGEMENT} element={<BaseIncidentManagementPage />} />
             <Route path={UserPath.CHANGE_MANAGEMENT} element={<BaseChangeManagementPage />} />
             <Route path={UserPath.PROBLEM_MANAGEMENT} element={<BaseProblemManagementPage />} />
+            <Route path={UserPath.LEAVE} element={<BaseLeaveDashboardPage />} />
             <Route path={UserPath.PROFILE} element={<BaseProfilePage />} />
             <Route path={UserPath.INCIDENT_DETAIL} element={<BaseIncidentDetailPage />} />
             <Route

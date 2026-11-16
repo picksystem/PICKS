@@ -11,6 +11,7 @@ export { default as Reports } from './Reports';
 export { default as TicketBundle } from './TicketBundle';
 export { default as Timesheet } from './Timesheet';
 export { default as TimesheetDashboard } from './TimesheetDashboard';
+export { default as LeaveDashboard } from './LeaveDashboard';
 export { default as CabRequest } from './CabRequest';
 export { default as KnowledgeBase } from './KnowledgeBase';
 export { default as TestScripts } from './TestScripts';

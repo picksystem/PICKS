@@ -16,6 +16,7 @@ const BasePath = {
   TIMESHEET: `${BASE}/timesheet`,
   TIMESHEET_DASHBOARD: `${BASE}/timesheet`,
   TIMESHEET_SUBMIT: `${BASE}/timesheet/submit`,
+  LEAVE: `${BASE}/leave`,
   CAB_REQUEST: `${BASE}/cab-request`,
   KNOWLEDGE_BASE: `${BASE}/knowledge-base`,
   TEST_SCRIPTS: `${BASE}/test-scripts`,
@@ -40,6 +41,7 @@ const UserPath = {
   PROBLEM_MANAGEMENT: `${USER_BASE}/problem-management`,
   CREATE_TICKET: `${USER_BASE}/create-ticket`,
   PROFILE: `${USER_BASE}/profile`,
+  LEAVE: `${USER_BASE}/leave`,
   INCIDENT_DETAIL: `${USER_BASE}/incident/:number`,
   TICKET_DETAIL: `${USER_BASE}/ticket/:number`,
 };

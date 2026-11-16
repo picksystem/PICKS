@@ -423,6 +423,13 @@ interface GenericPanelProps {
    */
   hideToolbar?: boolean;
   /**
+   * `plain` variant only: render the panel as a plain rounded section
+   * (accent header band + toolbar + table) WITHOUT the accordion
+   * wrapper / expand-collapse chevron — for dashboards that want the
+   * panel look as a fixed section.
+   */
+  plainAsSection?: boolean;
+  /**
    * Extra controls (e.g. dropdown filters) rendered in the toolbar between
    * the New button and the search field — only shown in the "nothing
    * selected" state, same slot as the search field sits in.
@@ -606,44 +613,78 @@ const PanelContent = memo(
                 width: '100%',
               }}
             >
-              {enableNewButton && (
-                <Box className={classes.newButtonContainer}>
-                  <Tooltip title={`Add a new ${config.entity}`}>
-                    <Button
-                      size='small'
-                      variant='contained'
-                      startIcon={<AddIcon />}
-                      onClick={onNewClick}
+              {enableNewButton ? (
+                /* Standard CRUD panel: New on the left, extra actions +
+                   search pinned to the right (the New button occupies the
+                   left slot of the space-between row). */
+                <>
+                  <Box className={classes.newButtonContainer}>
+                    <Tooltip title={`Add a new ${config.entity}`}>
+                      <Button
+                        size='small'
+                        variant='contained'
+                        startIcon={<AddIcon />}
+                        onClick={onNewClick}
+                        sx={{
+                          textTransform: 'none',
+                          bgcolor: '#2d5ebb',
+                          width: '100%',
+                          '&:hover': { bgcolor: '#2d5ebb' },
+                        }}
+                      >
+                        New
+                      </Button>
+                    </Tooltip>
+                  </Box>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      alignItems: { sm: 'center' },
+                      gap: 1,
+                    }}
+                  >
+                    {toolbarExtra}
+                    <Box className={classes.searchFieldContainer}>
+                      <SearchField
+                        value={search}
+                        onChange={onSearchChange}
+                        isLoading={isSearchLoading}
+                        className={classes.tableSearchField}
+                      />
+                    </Box>
+                  </Box>
+                </>
+              ) : (
+                /* Read-only panel (New disabled): extra action buttons take
+                   the LEFT slot (where New would sit) and the search field
+                   is pinned to the right end. */
+                <>
+                  {toolbarExtra && (
+                    <Box
                       sx={{
-                        textTransform: 'none',
-                        bgcolor: '#2d5ebb',
-                        width: '100%',
-                        '&:hover': { bgcolor: '#2d5ebb' },
+                        display: 'flex',
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        alignItems: { sm: 'center' },
+                        gap: 1,
                       }}
                     >
-                      New
-                    </Button>
-                  </Tooltip>
-                </Box>
+                      {toolbarExtra}
+                    </Box>
+                  )}
+                  <Box
+                    sx={{ marginLeft: toolbarExtra ? undefined : 'auto' }}
+                    className={classes.searchFieldContainer}
+                  >
+                    <SearchField
+                      value={search}
+                      onChange={onSearchChange}
+                      isLoading={isSearchLoading}
+                      className={classes.tableSearchField}
+                    />
+                  </Box>
+                </>
               )}
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: { xs: 'column', sm: 'row' },
-                  alignItems: { sm: 'center' },
-                  gap: 1,
-                }}
-              >
-                {toolbarExtra}
-                <Box className={classes.searchFieldContainer}>
-                  <SearchField
-                    value={search}
-                    onChange={onSearchChange}
-                    isLoading={isSearchLoading}
-                    className={classes.tableSearchField}
-                  />
-                </Box>
-              </Box>
             </Box>
           ) : (
             <>
@@ -814,6 +855,7 @@ const PlainPanel = memo(
     enableDeleteButton = true,
     hideToolbar = false,
     toolbarExtra,
+    plainAsSection = false,
   }: {
     config: TableConfig;
     columns: Column<GenericData>[];
@@ -833,8 +875,60 @@ const PlainPanel = memo(
     enableDeleteButton?: boolean;
     hideToolbar?: boolean;
     toolbarExtra?: React.ReactNode;
+    /** Render as a plain rounded section (accent header band + toolbar +
+     * table) with NO accordion wrapper — for dashboards that want the
+     * panel look without the collapsible chevron. */
+    plainAsSection?: boolean;
   }) => {
     const { classes } = useStyles();
+
+    if (plainAsSection) {
+      /* Section mode: same accent box + toolbar + table, but the header is
+         a static band (PanelHeader) instead of a collapsible accordion. */
+      return (
+        <Box
+          sx={{
+            borderRadius: '10px',
+            overflow: 'hidden',
+            border: '1px solid',
+            borderColor: alpha(config.accent, 0.25),
+          }}
+        >
+          <PanelHeader icon={config.icon} title={config.title} accent={config.accent} />
+          {!hideToolbar && (
+            <PanelContent
+              config={config}
+              columns={columns}
+              filtered={filtered}
+              selectedId={selectedId}
+              search={search}
+              isSearchLoading={isSearchLoading}
+              onSearchChange={onSearchChange}
+              onRowClick={onRowClick}
+              onNewClick={onNewClick}
+              onEditClick={onEditClick}
+              onDeleteClick={onDeleteClick}
+              onClearClick={onClearClick}
+              enableNewButton={enableNewButton}
+              enableEditButton={enableEditButton}
+              enableDeleteButton={enableDeleteButton}
+              toolbarExtra={toolbarExtra}
+            />
+          )}
+          <Paper elevation={0} sx={{ borderRadius: 0 }}>
+            <DataTable<GenericData>
+              columns={columns}
+              data={filtered}
+              rowKey='id'
+              searchable={false}
+              initialRowsPerPage={10}
+              activeRowKey={selectedId ?? undefined}
+              onRowClick={onRowClick}
+            />
+          </Paper>
+        </Box>
+      );
+    }
 
     return (
       <GenericAccordion
@@ -921,6 +1015,7 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
       ticketTypeColumns,
       hideHeader = false,
       hideToolbar = false,
+      plainAsSection = false,
       toolbarExtra,
       validate,
       validateFields,
@@ -1328,6 +1423,7 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
         enableDeleteButton,
         hideHeader,
         hideToolbar,
+        plainAsSection,
         toolbarExtra,
       }),
       [
@@ -1349,6 +1445,7 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
         toolbarExtra,
         hideHeader,
         hideToolbar,
+        plainAsSection,
       ],
     );
 
