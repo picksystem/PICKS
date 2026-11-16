@@ -7,9 +7,12 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import EditIcon from '@mui/icons-material/Edit';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import PendingIcon from '@mui/icons-material/Pending';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { useNotification, useAppNavigation } from '@serviceops/hooks';
 import { constants } from '@serviceops/utils';
+import { useGetLeaveBalanceQuery, useGetLeaveRequestsQuery } from '@serviceops/services';
 import { useStyles } from './styles';
 import { DayMenu, TimesheetDay } from './types/timesheetDashboard.types';
 import {
@@ -18,11 +21,10 @@ import {
   buildMonthDays,
   events,
   holidays,
-  leaveRows,
   OCTOBER_2026,
   OCTOBER_2026_STATUS,
-  timeOffBalance,
 } from './data/timesheetDashboard.data';
+import CreateLeaveModal from './CreateLeaveModal';
 
 const MONTH_NAMES = [
   'January',
@@ -54,9 +56,9 @@ const STATUS_COLORS: Record<string, string> = {
 const leaveStatusIcon = (status: string) => {
   if (status === 'approved')
     return <CheckCircleOutlineIcon sx={{ color: STATUS_COLORS.approved, fontSize: 18 }} />;
-  // if (status === 'rejected')
-  //   return <CancelOutlineIcon sx={{ color: STATUS_COLORS.rejected, fontSize: 18 }} />;
-  // return <CircleOutlineIcon sx={{ color: STATUS_COLORS.draft, fontSize: 18 }} />;
+  if (status === 'rejected')
+    return <ErrorOutlineIcon sx={{ color: STATUS_COLORS.rejected, fontSize: 18 }} />;
+  return <PendingIcon sx={{ color: STATUS_COLORS.draft, fontSize: 18 }} />;
 };
 
 const TimesheetDashboard = () => {
@@ -73,6 +75,12 @@ const TimesheetDashboard = () => {
     open: false,
     side: 'left',
   });
+
+  /* Personal Time-off Balance card — live leave balances + submitted requests */
+  const [createOpen, setCreateOpen] = useState(false);
+  const { data: leaveBalance = [], refetch: refetchLeave } = useGetLeaveBalanceQuery();
+  const { data: leaveRequests = [] } = useGetLeaveRequestsQuery();
+  const leaveTypes = useMemo(() => leaveBalance.map((b) => b.leaveType), [leaveBalance]);
 
   const days = useMemo(
     () => buildMonthDays(OCTOBER_2026.year, OCTOBER_2026.monthIndex, OCTOBER_2026_STATUS),
@@ -102,6 +110,12 @@ const TimesheetDashboard = () => {
   const handleCopyFromPrevWeek = () => {
     closeDayMenu();
     notify.success(`Entries for ${menu.day} copied from previous week`);
+  };
+
+  const handleLeaveCreated = () => {
+    setCreateOpen(false);
+    refetchLeave();
+    notify.success('Time-off request submitted for approval');
   };
 
   const renderDayCell = (d: TimesheetDay, idx: number) => {
@@ -290,10 +304,10 @@ const TimesheetDashboard = () => {
           <Typography className={classes.cardTitle}>Personal Time-off Balance</Typography>
 
           <MuiBox className={classes.balanceRow}>
-            {timeOffBalance.map((b) => (
-              <MuiBox key={b.label}>
-                <Typography className={classes.balanceValue}>{b.value}</Typography>
-                <Typography className={classes.balanceLabel}>{b.label}</Typography>
+            {leaveBalance.map((b) => (
+              <MuiBox key={b.leaveType}>
+                <Typography className={classes.balanceValue}>{b.available}</Typography>
+                <Typography className={classes.balanceLabel}>{b.leaveType}</Typography>
               </MuiBox>
             ))}
           </MuiBox>
@@ -308,12 +322,12 @@ const TimesheetDashboard = () => {
               <Typography className={classes.leaveTableHeaderCell}>Your wish</Typography>
             </MuiBox>
 
-            {leaveRows.map((row) => (
+            {leaveRequests.map((row) => (
               <MuiBox key={row.id} className={classes.leaveTableRow}>
                 <MuiBox className={classes.leaveStatusIcon}>{leaveStatusIcon(row.status)}</MuiBox>
                 <Typography variant='body2'>{row.period}</Typography>
                 <Typography variant='body2' color='primary'>
-                  {row.type}
+                  {row.leaveType}
                 </Typography>
                 <Typography variant='body2' color='primary'>
                   {row.note}
@@ -346,7 +360,7 @@ const TimesheetDashboard = () => {
               variant='text'
               color='primary'
               label='Create Time-Off'
-              onClick={() => notify.info('Create Time-Off coming soon')}
+              onClick={() => setCreateOpen(true)}
             />
           </Stack>
         </MuiBox>
@@ -429,6 +443,14 @@ const TimesheetDashboard = () => {
           Copy From Previous Week
         </MenuItem>
       </Menu>
+
+      {/* ── Create Time-Off submit dialog ── */}
+      <CreateLeaveModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onSuccess={handleLeaveCreated}
+        leaveTypes={leaveTypes}
+      />
     </Box>
   );
 };

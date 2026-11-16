@@ -302,6 +302,8 @@ async function clearAndSeed() {
 
   // Clear all data using raw SQL (delete child tables first due to FK constraints)
   await pool.query(`
+    DELETE FROM "UserLeaveRequest" WHERE true;
+    DELETE FROM "UserLeaveBalance" WHERE true;
     DELETE FROM "AdminIncidentActivity" WHERE true;
     DELETE FROM "AdminIncidentResolution" WHERE true;
     DELETE FROM "AdminIncidentTimeEntry" WHERE true;
@@ -461,6 +463,87 @@ async function clearAndSeed() {
       updatedAt: now,
     },
   });
+
+  // Seed per-user leave balances + a few submitted/approved requests so the
+  // dashboard's Personal Time-off Balance card is dynamic from day one.
+  const adminUser = await (prisma as any).user.findUnique({
+    where: { email: 'admin@serviceops.tech' },
+    select: { id: true },
+  });
+  const regularUser = await (prisma as any).user.findUnique({
+    where: { email: 'user@serviceops.tech' },
+    select: { id: true },
+  });
+  const consultantUser = await (prisma as any).user.findUnique({
+    where: { email: 'consultant@serviceops.tech' },
+    select: { id: true },
+  });
+
+  const leaveSeed = [
+    { user: adminUser, email: 'admin@serviceops.tech' },
+    { user: regularUser, email: 'user@serviceops.tech' },
+    { user: consultantUser, email: 'consultant@serviceops.tech' },
+  ].filter((u) => !!u.user);
+
+  const balances = [
+    { leaveType: 'Privilege Leave', total: 12, consumed: 1.5, available: 10.5 },
+    { leaveType: 'Casual Leave', total: 7, consumed: 7, available: 0 },
+    { leaveType: 'Sick Leave', total: 5, consumed: 4.5, available: 0.5 },
+    { leaveType: 'Optional Holiday', total: 2, consumed: 1, available: 1 },
+  ];
+
+  for (const { user } of leaveSeed) {
+    for (const b of balances) {
+      await (prisma as any).userLeaveBalance.upsert({
+        where: { userId_leaveType: { userId: user.id, leaveType: b.leaveType } },
+        update: { total: b.total, consumed: b.consumed, available: b.available },
+        create: { userId: user.id, ...b },
+      });
+    }
+  }
+
+  // A couple of requests for the regular user so the leave table has rows.
+  if (regularUser) {
+    await (prisma as any).userLeaveRequest.createMany({
+      data: [
+        {
+          userId: regularUser.id,
+          leaveType: 'Privilege Leave',
+          startDate: '2026-10-01',
+          endDate: '2026-10-01',
+          days: 1,
+          reason: 'Family function',
+          status: 'approved',
+          submittedAt: new Date('2026-09-20T09:00:00Z'),
+          submittedBy: 'Srinivas Penumalla',
+          approvedAt: new Date('2026-09-25T10:00:00Z'),
+          approvedBy: 'Jane Manager',
+        },
+        {
+          userId: regularUser.id,
+          leaveType: 'Privilege Leave',
+          startDate: '2026-09-30',
+          endDate: '2026-09-30',
+          days: 1,
+          reason: 'Personal work',
+          status: 'approved',
+          submittedAt: new Date('2026-09-15T09:00:00Z'),
+          submittedBy: 'Srinivas Penumalla',
+        },
+        {
+          userId: regularUser.id,
+          leaveType: 'Sick Leave',
+          startDate: '2026-07-31',
+          endDate: '2026-07-31',
+          days: 1,
+          reason: 'Medical appointment',
+          status: 'submitted',
+          submittedAt: new Date('2026-07-30T09:00:00Z'),
+          submittedBy: 'Srinivas Penumalla',
+        },
+      ],
+    });
+  }
 
   // Seed sample incidents across all statuses and priorities
   await pool.query(`

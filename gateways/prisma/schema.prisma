@@ -850,6 +850,40 @@ model Timesheet {
   @@map("Timesheet")
 }
 
+model UserLeaveBalance {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  leaveType String
+  total     Float   @default(0)
+  consumed  Float   @default(0)
+  available Float   @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, leaveType])
+  @@map("UserLeaveBalance")
+}
+
+model UserLeaveRequest {
+  id          String   @id @default(cuid())
+  userId      Int
+  leaveType   String
+  startDate   String
+  endDate     String
+  days        Float    @default(0)
+  reason      String?
+  status      String   @default("submitted")
+  submittedAt DateTime @default(now())
+  submittedBy String?
+  approvedAt  DateTime?
+  approvedBy  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@map("UserLeaveRequest")
+}
+
 model TimesheetLine {
   id          String  @id @default(cuid())
   timesheetId String
@@ -875,4 +909,70 @@ model TimesheetLine {
 
   @@index([timesheetId])
   @@map("TimesheetLine")
+}
+
+/* ── Dashboard reference data (global, admin-managed) ── */
+
+model UserDashboardItem {
+  id          String   @id @default(cuid())
+  /** e.g. "Employee Privacy Policy" */
+  title       String
+  /** e.g. "Click to view the Policy" */
+  subtitle    String
+  /** Whether the item is actionable or just informational */
+  disabled    Boolean  @default(false)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("UserDashboardItem")
+}
+
+model UserApprovalItem {
+  id          String   @id @default(cuid())
+  /** e.g. "Timesheet Approval" */
+  label       String
+  /** Icon name string (e.g. "MoreTime", "RestartAlt", "EventBusy") */
+  icon        String   @default("MoreTime")
+  /** Default count — updated via API if needed */
+  count       Int      @default(0)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("UserApprovalItem")
+}
+
+model UserEvent {
+  id          String   @id @default(cuid())
+  /** Day number, e.g. "21" */
+  day         String
+  /** Month short name, e.g. "OCT" */
+  month       String
+  /** e.g. "Heartfulness at work" */
+  title       String
+  /** Detail text */
+  subtitle    String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("UserEvent")
+}
+
+model UserHoliday {
+  id          String   @id @default(cuid())
+  /** Day number, e.g. "21" */
+  day         String
+  /** Month short name, e.g. "OCT" */
+  month       String
+  /** e.g. "Ayutha Pooja" */
+  title       String
+  /** Optional longer note */
+  note        String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("UserHoliday")
 }

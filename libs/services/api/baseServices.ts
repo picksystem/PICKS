@@ -54,6 +54,7 @@ export const baseApi = createApi({
     'CustomFields',
     'KBArticle',
     'Timesheet',
+    'Leave',
   ],
   endpoints: () => ({}), // intentionally empty - endpoints added by injectEndpoints
 });
