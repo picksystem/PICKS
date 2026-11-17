@@ -2,6 +2,9 @@ export interface Column<T> {
   id: keyof T | string;
   label: string;
   minWidth?: number;
+  /** Explicit column width (e.g. a percentage in a `fixedLayout` table)
+   *  that overrides the auto-distributed layout. */
+  width?: string;
   align?: 'left' | 'right' | 'center';
   format?: (value: unknown, row: T) => React.ReactNode;
   sortable?: boolean;
@@ -9,12 +12,6 @@ export interface Column<T> {
   /** Custom header node (e.g. a select-all checkbox) that replaces the
    *  plain label / sort label. Renders unsorted when present. */
   header?: React.ReactNode;
-  /** In a `fixedLayout` table this column absorbs ALL the leftover
-   *  horizontal space (it gets no explicit width), so every other
-   *  column keeps its declared minWidth exactly and the panel's free
-   *  width is never spread into gaps between the headers. Use on
-   *  exactly one column — typically the last one. */
-  grow?: boolean;
 }
 
 export interface DataTableProps<T> {
@@ -35,13 +32,12 @@ export interface DataTableProps<T> {
    *  horizontally only if it genuinely overflows. Removes the big gaps
    *  that a full-width stretch leaves between tight columns. */
   fitContent?: boolean;
-  /** Use `table-layout: fixed`: every column keeps its declared minWidth
-   *  exactly (the leftover width is NEVER spread into gaps between the
-   *  headers, which is what auto table layout does to full-width tables),
-   *  and one `grow` column absorbs ALL the leftover space so the table
-   *  still fills the panel edge-to-edge. The table only scrolls
-   *  horizontally when the declared widths genuinely don't fit.
-   *  Pair with a single `grow: true` column — typically the last one. */
+  /** Use `table-layout: fixed` with PROPORTIONAL distribution: the
+   *  panel's full width is shared by every column in proportion to its
+   *  declared minWidth, so the table fills the panel edge-to-edge and the
+   *  headers stay evenly packed — no single column hoards the leftover
+   *  space as one giant empty stretch. The table only scrolls
+   *  horizontally when the declared widths genuinely don't fit. */
   fixedLayout?: boolean;
 }
 

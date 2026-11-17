@@ -317,17 +317,17 @@ const TimesheetApprovals = () => {
     const actionColumn: Column<PanelRow> = {
       id: 'action',
       label: 'Action',
-      minWidth: 150,
+      /* The field fills the cell (width: 100%) — under the fixed table
+         layout the column is exactly this wide, so it must leave room for
+         the "Select action" input plus its search adornment. */
+      minWidth: 210,
       align: 'center',
       sortable: false,
       filterable: false,
       format: (_v, row) => {
         const key = rowKey(row);
         return (
-          <Box
-            onClick={(e: ReactMouseEvent) => e.stopPropagation()}
-            sx={{ width: 170, margin: '0 auto' }}
-          >
+          <Box onClick={(e: ReactMouseEvent) => e.stopPropagation()} sx={{ width: '100%' }}>
             <OptionsSearchField
               label=''
               placeholder='Select action'
@@ -347,13 +347,12 @@ const TimesheetApprovals = () => {
        the comment's first line, with an edit icon on the right. Clicking
        it opens the comment dialog (RichTextEditor inside a
        ConfigFormDialog, the same shell the note dialog uses there).
-       `grow` makes it the catch-all column in the fixed-layout pending
-       table, so the Check column to its right stays at its 60px width. */
+       Fixed at 200px — the leftover panel width is absorbed by the
+       trailing Check column instead, so the field stays compact. */
     const commentColumn: Column<PanelRow> = {
       id: 'comment',
       label: 'Comment',
-      minWidth: 220,
-      grow: true,
+      minWidth: 200,
       align: 'left',
       sortable: false,
       filterable: false,
@@ -394,17 +393,21 @@ const TimesheetApprovals = () => {
       },
     };
 
-    /* Trailing "Check" column: eye icon opens the read-only timesheet dialog */
+    /* Trailing "Check" column: eye icon opens the read-only timesheet
+       dialog. In the proportional fixed-layout table every column (this
+       one included) gets its fair share of the panel width, so the icon
+       sits at the panel's right edge with no giant empty stretch. */
     const checkColumn: Column<PanelRow> = {
       id: 'check',
       label: 'Check',
       minWidth: 60,
+      align: 'right',
       sortable: false,
       filterable: false,
       format: (_v, row) => {
         const r = row as unknown as { timesheetDetail?: TimesheetDetail };
         const key = rowKey(row);
-        return r.timesheetDetail ? (
+        const icon = r.timesheetDetail ? (
           <Tooltip title='View timesheet' placement='top'>
             <IconButton
               size='small'
@@ -417,6 +420,7 @@ const TimesheetApprovals = () => {
         ) : (
           <VisibilityIcon sx={{ color: 'text.disabled', fontSize: 18 }} />
         );
+        return <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>{icon}</Box>;
       },
     };
 
@@ -431,16 +435,10 @@ const TimesheetApprovals = () => {
     }
 
     /* Other approval types: their data columns + icon-based quick actions.
-       In the fixed-layout table the widest data column is flagged as the
-       catch-all (`grow`) so the leftover panel width lands in a text
-       column, keeping the trailing icon Action column tight. */
+       The proportional fixed layout distributes the panel width across
+       every column, so no single column needs to be flagged as a
+       catch-all. */
     const dataColumns = activeTab.columns.map(toColumn);
-    if (!dataColumns.some((c) => c.grow)) {
-      dataColumns.forEach((c) => {
-        const widest = c.minWidth === Math.max(...dataColumns.map((d) => d.minWidth ?? 0));
-        if (widest) c.grow = true;
-      });
-    }
     return [
       ...dataColumns,
       {
@@ -510,9 +508,7 @@ const TimesheetApprovals = () => {
           minWidth: c.minWidth,
           ...(c.align ? { align: c.align } : {}),
         })),
-      /* Catch-all column of the fixed-layout history table — the leftover
-         panel width lands here, keeping the Status column tight. */
-      { id: 'decisionBy', label: 'Decided By', minWidth: 160, grow: true },
+      { id: 'decisionBy', label: 'Decided By', minWidth: 160 },
       {
         id: 'status',
         label: 'Status',
@@ -592,11 +588,10 @@ const TimesheetApprovals = () => {
           customColumns={pendingColumns}
           variant='plain'
           plainAsSection
-          /* Fixed layout: every header keeps its declared width exactly
-             (no gaps between headers) and the Comment column — flagged
-             `grow` below — absorbs ALL leftover panel space, so the table
-             still fills the panel edge-to-edge and only scrolls when the
-             columns genuinely don't fit. */
+          /* Fixed layout: the panel's full width is shared proportionally
+             across every column, so the headers stay evenly packed (no
+             gaps) and the table fills the panel edge-to-edge — it only
+             scrolls horizontally when the declared widths don't fit. */
           fixedLayout
           /* Decisions happen in-cell (Action/Comment) — clicking a row must
              not highlight it or drive the toolbar. */

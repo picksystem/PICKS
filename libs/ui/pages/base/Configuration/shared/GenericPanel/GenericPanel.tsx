@@ -580,21 +580,23 @@ const createEmptyForm = (fields: TableField[]): FormData =>
 // ── Common Panel Content ───────────────────────────────────────────────────────
 
 /**
- * Fixed-layout helper: when `fixedLayout` is on, exactly one column must
- * absorb the table's leftover width so the free panel space is never spread
- * into gaps between the headers. An explicit `grow` column is honored; when
- * none is flagged the LAST column becomes the catch-all automatically.
+ * Fixed-layout helper: when `fixedLayout` is on, the panel's full width is
+ * shared by every column IN PROPORTION to its declared minWidth, so the
+ * table fills the panel edge-to-edge and the headers stay evenly packed —
+ * no single column hoards the leftover space as one giant empty stretch.
  * Returns the same array when fixed layout is off.
  */
-const applyFixedLayoutGrow = (
+const applyFixedLayoutProportional = (
   columns: Column<GenericData>[],
   fixedLayout: boolean,
 ): Column<GenericData>[] => {
-  if (!fixedLayout) return columns;
-  if (columns.some((c) => c.grow)) return columns;
-  if (columns.length === 0) return columns;
-  const last = columns.length - 1;
-  return columns.map((c, i) => (i === last ? { ...c, grow: true } : c));
+  if (!fixedLayout || columns.length === 0) return columns;
+  const total = columns.reduce((sum, c) => sum + (c.minWidth ?? 100), 0);
+  return columns.map((c) => ({
+    ...c,
+    /* Column's share of the panel width, e.g. 80 of 1600 total -> 5%. */
+    width: total > 0 ? `${((c.minWidth ?? 100) / total) * 100}%` : undefined,
+  }));
 };
 
 interface PanelContentProps {
@@ -865,7 +867,7 @@ const StandardPanel = memo(
 
         <Paper elevation={0} sx={{ borderRadius: 0 }}>
           <DataTable<GenericData>
-            columns={applyFixedLayoutGrow(columns, fixedLayout)}
+            columns={applyFixedLayoutProportional(columns, fixedLayout)}
             data={filtered}
             rowKey='id'
             searchable={false}
@@ -974,7 +976,7 @@ const PlainPanel = memo(
           )}
           <Paper elevation={0} sx={{ borderRadius: 0 }}>
             <DataTable<GenericData>
-              columns={applyFixedLayoutGrow(columns, fixedLayout)}
+              columns={applyFixedLayoutProportional(columns, fixedLayout)}
               data={filtered}
               rowKey='id'
               searchable={false}
@@ -1031,7 +1033,7 @@ const PlainPanel = memo(
 
           <Paper elevation={0} sx={{ borderRadius: 0 }}>
             <DataTable<GenericData>
-              columns={applyFixedLayoutGrow(columns, fixedLayout)}
+              columns={applyFixedLayoutProportional(columns, fixedLayout)}
               data={filtered}
               rowKey='id'
               searchable={false}

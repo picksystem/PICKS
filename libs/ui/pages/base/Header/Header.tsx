@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   AppBar,
   Avatar,
@@ -22,6 +23,7 @@ import LogoMark from './components/LogoMark';
 import SearchBar from './components/SearchBar';
 import NotificationsDialog from './components/NotificationsDialog';
 import UserMenu from './components/UserMenu';
+import HrChatbot, { BotIcon, BOT_NAME } from './components/HrChatbot';
 
 // Shared sx for every icon button — uniform 32×32 touch target on mobile
 const iconBtnSx = {
@@ -35,6 +37,21 @@ const iconBtnSx = {
 
 const Header = () => {
   const { classes } = useStyles();
+  /* AIRA HR chatbot — the floating avatar (bottom-right) + intro bubble
+     and the chat panel are driven by this state. `airaDismissed` is set
+     when the user presses the bot's cancel (×) so the floating widget
+     disappears; the toolbar icon below always brings it back. */
+  const [airaOpen, setAiraOpen] = useState(false);
+  const [airaDismissed, setAiraDismissed] = useState(false);
+
+  const openAira = () => {
+    setAiraDismissed(false);
+    setAiraOpen(true);
+  };
+  const closeAira = () => {
+    setAiraOpen(false);
+    setAiraDismissed(true);
+  };
   const {
     user,
     userName,
@@ -174,6 +191,15 @@ const Header = () => {
             />
           </Box>
 
+          {/* Ask Aria — monochrome robot face in `currentColor` (white on
+              the header), slightly larger than the 1.25em toolbar icons
+              so the animated face stands out. */}
+          <Tooltip title={`Ask ${BOT_NAME}`} placement='bottom'>
+            <IconButton size='small' sx={iconBtnSx} onClick={openAira}>
+              <BotIcon size='2em' />
+            </IconButton>
+          </Tooltip>
+
           <Tooltip title='Create Ticket' placement='bottom'>
             <IconButton size='small' sx={iconBtnSx} onClick={handleCreateTicket}>
               <AddBoxIcon className={classes.icon} />
@@ -220,6 +246,19 @@ const Header = () => {
           {loadingMessage}
         </Typography>
       </Backdrop>
+
+      {/* AIRA — the floating avatar button + intro bubble sit at the
+          page's bottom-right corner; the panel replaces them while open.
+          Pressing the bot's cancel hides the widget entirely — the
+          header icon (openAira) brings it back. (Position fixed, so it
+          escapes the AppBar visually.) */}
+      <HrChatbot
+        open={airaOpen}
+        dismissed={airaDismissed}
+        onDismiss={closeAira}
+        onClose={closeAira}
+        onOpenChange={setAiraOpen}
+      />
     </AppBar>
   );
 };

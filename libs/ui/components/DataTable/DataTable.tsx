@@ -219,16 +219,17 @@ export function DataTable<T extends object>({
                   key={String(column.id)}
                   align={column.align ?? 'left'}
                   className={classes.tableCell}
-                  /* In a fixed-layout table the column's declared minWidth
-                     becomes an exact width — the one `grow` column gets no
-                     width so it soaks up all the table's leftover space. */
+                  /* In a fixed-layout table every column gets an explicit
+                     width: a `width` override (e.g. a percentage of the
+                     panel) when set, otherwise its declared minWidth. The
+                     panel's full width is shared proportionally, so no
+                     column hoards the leftover space as one giant gap. */
                   style={
                     fixedLayout
-                      ? column.grow
-                        ? undefined
-                        : column.minWidth
-                          ? { width: column.minWidth }
-                          : undefined
+                      ? {
+                          width: column.width ?? column.minWidth,
+                          ...(column.minWidth ? { minWidth: column.minWidth } : {}),
+                        }
                       : column.minWidth
                         ? { minWidth: column.minWidth }
                         : undefined
