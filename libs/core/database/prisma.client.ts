@@ -31,8 +31,16 @@ function parseDbUrl(raw: string) {
  * Creates a new pg Pool with settings safe for Supabase Session Mode pooler.
  *
  * Supabase aggressively drops idle connections (~10 min). The safest defence
- * is keeping a small minimum pool (`min: 2`) so there are always active
- * connections the pooler won't terminate.
+ * is keeping the minimum pool small (`min` env override, default 1) so there
+ * is an active connection the pooler won't terminate, without pinning slots
+ * in the shared pooler for everyone else.
+ *
+ * Every connection here feeds the Supabase SESSION-MODE pooler, which caps
+ * the total clients across ALL processes sharing the user at `pool_size`
+ * (default 15): the live Render instance, the old instance during a deploy,
+ * and any local dev boxes. Keep the per-process pools small (defaults
+ * max: 5 / min: 1 below) and override per environment via DB_POOL_MAX /
+ * DB_POOL_MIN when you know your instance count.
  *
  * Error handlers catch any connection drops that still slip through and
  * reset the pool so the next request gets fresh connections.
@@ -45,8 +53,8 @@ function createPool(): Pool {
 
   const pool = new Pool({
     ...parsed,
-    max: 10,
-    min: 2,
+    max: parseInt(process.env.DB_POOL_MAX || '5', 10),
+    min: parseInt(process.env.DB_POOL_MIN || '1', 10),
     idleTimeoutMillis: 0,
     connectionTimeoutMillis: 10_000,
     statement_timeout: 30_000,

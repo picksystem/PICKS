@@ -48,15 +48,57 @@ const HOST = process.env.HOST || '0.0.0.0';
  * Database Connection Check
  * --------------------------------
  * Ensures database is reachable
- * before starting the server
+ * before starting the server.
+ *
+ * The Supabase session pooler caps total simultaneous clients at `pool_size`
+ * (default 15) — and every process sharing that pooler user counts against
+ * it (old Render instance during a deploy, a local dev box, retry storms).
+ * A transient "max clients reached" blip must not kill the deploy, so the
+ * first check retries with backoff instead of exiting immediately.
  */
+const DB_CONNECT_ATTEMPTS = parseInt(process.env.DB_CONNECT_ATTEMPTS || '8', 10);
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function checkDatabaseConnection() {
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    logger.info('Database connection established');
-  } catch (error) {
-    logger.error('Failed to connect to database:', error);
-    process.exit(1); // Stop app if DB is unavailable
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      if (attempt > 1) {
+        logger.warn(`Database connection established on retry ${attempt - 1}`);
+      } else {
+        logger.info('Database connection established');
+      }
+      return;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const poolerFull =
+        message.includes('EMAXCONNSESSION') || message.includes('max clients');
+
+      if (attempt >= DB_CONNECT_ATTEMPTS) {
+        logger.error(`Failed to connect to database after ${attempt} attempts:`, error);
+        process.exit(1); // Stop app if DB is unavailable
+      }
+
+      const delayMs = Math.min(45_000, 5_000 * 2 ** (attempt - 1));
+      if (poolerFull) {
+        logger.warn(
+          `Database: Supabase pooler client limit reached ` +
+            `(attempt ${attempt}/${DB_CONNECT_ATTEMPTS}), retrying in ${delayMs / 1000}s. ` +
+            'Free slots by stopping idle local dev servers, checking for extra ' +
+            'services sharing the same pooler user, or raising Supabase pool_size.',
+        );
+      } else {
+        logger.warn(
+          `Database connection failed (attempt ${attempt}/${DB_CONNECT_ATTEMPTS}), ` +
+            `retrying in ${delayMs / 1000}s:`,
+          error,
+        );
+      }
+      await sleep(delayMs);
+    }
   }
 }
 
