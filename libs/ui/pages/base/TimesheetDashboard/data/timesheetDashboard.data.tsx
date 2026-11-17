@@ -238,7 +238,6 @@ export const holidays: HolidayItem[] = [
     month: 'OCT',
     day: '21',
     title: 'Ayutha Pooja',
-    note: 'Click this to view optional holidays applicable to your project. Consult with your manager before going on a holiday.',
   },
   { id: 'hol-2', month: 'OCT', day: '28', title: 'Ayutha Pooja' },
   { id: 'hol-3', month: 'NOV', day: '9', title: 'Day after Deepavali' },

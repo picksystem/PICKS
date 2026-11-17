@@ -54,7 +54,6 @@ export interface HolidayItem {
   month: string;
   day: string;
   title: string;
-  note?: string;
 }
 
 export interface EventItem {

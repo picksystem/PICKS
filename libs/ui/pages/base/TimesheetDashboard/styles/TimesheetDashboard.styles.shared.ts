@@ -416,17 +416,6 @@ export const getBaseStyles = (theme: Theme): Record<string, CSSObject> => ({
     color: '#64748b',
   },
 
-  /* ── Holiday row ────────────────────────────────────────────── */
-  holidayNote: {
-    backgroundColor: '#f8fafc',
-    border: '1px solid #e5e7eb',
-    borderRadius: 8,
-    padding: theme.spacing(1.5),
-    fontSize: '0.82rem',
-    color: '#475569',
-    marginBottom: theme.spacing(1.5),
-  },
-
   /* ── Day popup menu ─────────────────────────────────────────── */
   dayMenu: {
     '& .MuiMenu-paper': {

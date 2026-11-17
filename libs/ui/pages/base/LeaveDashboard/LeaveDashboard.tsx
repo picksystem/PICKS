@@ -33,6 +33,19 @@ const panelButtonSx = {
   '&:hover': { bgcolor: '#2d5ebb' },
 };
 
+/* The reference dashboard always shows a card per leave type — Privilege
+   Leave, Casual Leave, Sick Leave, Absent and Optional Holiday. The API only
+   returns the types that have a stored balance row, so the card row is built
+   from this canonical list (0/0 when the API has no row for the type) plus
+   any extra types the API happens to return. */
+const KNOWN_LEAVE_TYPES = [
+  'Privilege Leave',
+  'Casual Leave',
+  'Sick Leave',
+  'Optional Holiday',
+  'Absent',
+] as const;
+
 /* ── Flattened row shape for the panel columns (precomputed labels) ── */
 interface LeaveRow {
   id: string;
@@ -88,11 +101,23 @@ const LeaveDashboard = () => {
   const { data: leaveBalance = [], refetch: refetchBalance } = useGetLeaveBalanceQuery();
   const { data: leaveRequests = [], refetch: refetchRequests } = useGetLeaveRequestsQuery();
 
-  /* The card row and the modal's type list are driven entirely by the API —
-     one card per stored balance row, no fabricated types. */
-  const balanceCards: ILeaveBalance[] = leaveBalance;
+  /* Build the canonical card list first (the five known leave types always
+     render, 0/0 when the API has no stored row for the type), then the type
+     labels for the Create Time-Off modal (so "Absent" etc. are pickable
+     even with no stored balance row). */
+  const balanceCards: ILeaveBalance[] = useMemo(() => {
+    const byType = new Map(leaveBalance.map((b) => [b.leaveType, b]));
+    return [
+      ...KNOWN_LEAVE_TYPES.map(
+        (t) => byType.get(t) ?? { leaveType: t, total: 0, consumed: 0, available: 0 },
+      ),
+      ...leaveBalance.filter(
+        (b) => !(KNOWN_LEAVE_TYPES as readonly string[]).includes(b.leaveType),
+      ),
+    ];
+  }, [leaveBalance]);
 
-  const leaveTypes = useMemo(() => leaveBalance.map((b) => b.leaveType), [leaveBalance]);
+  const leaveTypes = useMemo(() => balanceCards.map((b) => b.leaveType), [balanceCards]);
 
   /* The reference shows the owner + project per row; both come from the
      signed-in user (this is the user's own leave dashboard). */
@@ -360,10 +385,11 @@ const LeaveDashboard = () => {
             <Box key={b.leaveType} className={classes.balanceCard}>
               <Box className={classes.balanceCardHeader}>
                 <Typography className={classes.balanceLabel}>{b.leaveType}</Typography>
-                {/* Always the available/total fraction from the API
-                    ("0/0" when the type has no allocation yet). */}
+                {/* Absent has no entitlement, so it reads a single "0"; the
+                    allocated types always show the available/total fraction
+                    (e.g. "0/0" when unused, "9.5/19.5" otherwise). */}
                 <Typography className={classes.balanceValue}>
-                  {`${b.available}/${b.total}`}
+                  {b.leaveType === 'Absent' ? 0 : `${b.available}/${b.total}`}
                 </Typography>
               </Box>
               <Box className={classes.balanceBarTrack}>

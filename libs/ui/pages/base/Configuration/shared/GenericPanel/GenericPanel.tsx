@@ -444,6 +444,17 @@ interface GenericPanelProps {
    */
   fitContent?: boolean;
   /**
+   * Use `table-layout: fixed` for the table: every column keeps its
+   * declared minWidth exactly, the panel's leftover width is NEVER spread
+   * into gaps between the headers (the default auto layout does that), and
+   * one `grow` column (or, when none is flagged, the last column) absorbs
+   * ALL the leftover space so the table still fills the panel
+   * edge-to-edge. The table only scrolls horizontally when the declared
+   * widths genuinely don't fit. Use for manager-review tables that must
+   * keep both tight headers AND an edge-to-edge panel.
+   */
+  fixedLayout?: boolean;
+  /**
    * Extra controls (e.g. dropdown filters) rendered in the toolbar between
    * the New button and the search field — only shown in the "nothing
    * selected" state, same slot as the search field sits in.
@@ -567,6 +578,24 @@ const createEmptyForm = (fields: TableField[]): FormData =>
   }, {} as FormData);
 
 // ── Common Panel Content ───────────────────────────────────────────────────────
+
+/**
+ * Fixed-layout helper: when `fixedLayout` is on, exactly one column must
+ * absorb the table's leftover width so the free panel space is never spread
+ * into gaps between the headers. An explicit `grow` column is honored; when
+ * none is flagged the LAST column becomes the catch-all automatically.
+ * Returns the same array when fixed layout is off.
+ */
+const applyFixedLayoutGrow = (
+  columns: Column<GenericData>[],
+  fixedLayout: boolean,
+): Column<GenericData>[] => {
+  if (!fixedLayout) return columns;
+  if (columns.some((c) => c.grow)) return columns;
+  if (columns.length === 0) return columns;
+  const last = columns.length - 1;
+  return columns.map((c, i) => (i === last ? { ...c, grow: true } : c));
+};
 
 interface PanelContentProps {
   config: TableConfig;
@@ -776,6 +805,7 @@ const StandardPanel = memo(
     hideToolbar = false,
     toolbarExtra,
     fitContent = false,
+    fixedLayout = false,
   }: {
     config: TableConfig;
     columns: Column<GenericData>[];
@@ -796,6 +826,7 @@ const StandardPanel = memo(
     hideToolbar?: boolean;
     toolbarExtra?: React.ReactNode;
     fitContent?: boolean;
+    fixedLayout?: boolean;
   }) => {
     return (
       <Box
@@ -834,7 +865,7 @@ const StandardPanel = memo(
 
         <Paper elevation={0} sx={{ borderRadius: 0 }}>
           <DataTable<GenericData>
-            columns={columns}
+            columns={applyFixedLayoutGrow(columns, fixedLayout)}
             data={filtered}
             rowKey='id'
             searchable={false}
@@ -842,6 +873,7 @@ const StandardPanel = memo(
             activeRowKey={selectedId ?? undefined}
             onRowClick={onRowClick}
             fitContent={fitContent}
+            fixedLayout={fixedLayout}
           />
         </Paper>
       </Box>
@@ -874,6 +906,7 @@ const PlainPanel = memo(
     toolbarExtra,
     plainAsSection = false,
     fitContent = false,
+    fixedLayout = false,
   }: {
     config: TableConfig;
     columns: Column<GenericData>[];
@@ -900,6 +933,9 @@ const PlainPanel = memo(
     /** Size the table to its content instead of stretching to the panel
      *  width (see `GenericPanelProps.fitContent`). */
     fitContent?: boolean;
+    /** Keep every header at its declared width and let one catch-all column
+     *  absorb the leftover space (see `GenericPanelProps.fixedLayout`). */
+    fixedLayout?: boolean;
   }) => {
     const { classes } = useStyles();
 
@@ -938,7 +974,7 @@ const PlainPanel = memo(
           )}
           <Paper elevation={0} sx={{ borderRadius: 0 }}>
             <DataTable<GenericData>
-              columns={columns}
+              columns={applyFixedLayoutGrow(columns, fixedLayout)}
               data={filtered}
               rowKey='id'
               searchable={false}
@@ -946,6 +982,7 @@ const PlainPanel = memo(
               activeRowKey={selectedId ?? undefined}
               onRowClick={onRowClick}
               fitContent={fitContent}
+              fixedLayout={fixedLayout}
             />
           </Paper>
         </Box>
@@ -994,7 +1031,7 @@ const PlainPanel = memo(
 
           <Paper elevation={0} sx={{ borderRadius: 0 }}>
             <DataTable<GenericData>
-              columns={columns}
+              columns={applyFixedLayoutGrow(columns, fixedLayout)}
               data={filtered}
               rowKey='id'
               searchable={false}
@@ -1002,6 +1039,7 @@ const PlainPanel = memo(
               activeRowKey={selectedId ?? undefined}
               onRowClick={onRowClick}
               fitContent={fitContent}
+              fixedLayout={fixedLayout}
             />
           </Paper>
         </Box>
@@ -1040,6 +1078,7 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
       hideToolbar = false,
       plainAsSection = false,
       fitContent = false,
+      fixedLayout = false,
       toolbarExtra,
       disableRowSelection = false,
       validate,
@@ -1453,6 +1492,7 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
         hideToolbar,
         plainAsSection,
         fitContent,
+        fixedLayout,
         toolbarExtra,
       }),
       [
@@ -1476,6 +1516,7 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
         hideToolbar,
         plainAsSection,
         fitContent,
+        fixedLayout,
       ],
     );
 

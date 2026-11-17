@@ -23,9 +23,11 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CommentIcon from '@mui/icons-material/Comment';
 import EditIcon from '@mui/icons-material/Edit';
+import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import { GenericPanel, type TableConfig } from '@serviceops/genericpanel';
 import { ConfigFormDialog } from '@serviceops/configdialogs';
-import { useAuth, useNotification } from '@serviceops/hooks';
+import { useAuth, useNotification, useAppNavigation } from '@serviceops/hooks';
+import { constants } from '@serviceops/utils';
 import {
   RichTextEditor,
   parseRichText,
@@ -114,6 +116,8 @@ const TimesheetApprovals = () => {
   const { classes } = useStyles();
   const notify = useNotification();
   const { user } = useAuth();
+  const { navigateToPath } = useAppNavigation();
+  const { BasePath } = constants;
   const [searchParams] = useSearchParams();
 
   /* The ?type= query param picks which approval type this page shows —
@@ -122,6 +126,12 @@ const TimesheetApprovals = () => {
   const activeTab =
     approvalTabs.find((t) => t.key === requested && VALID_KEYS.includes(requested)) ??
     approvalTabs[0];
+
+  /* Back to the timesheet page — the "My Approvals" dashboard section these
+     approval pages deep-link out of. Every type shares this one header. */
+  const handleBack = useCallback(() => {
+    navigateToPath(BasePath.TIMESHEET);
+  }, [navigateToPath, BasePath.TIMESHEET]);
 
   /* ── Panel configs for the shared GenericPanel component ── */
   type PanelRow = Record<string, unknown>;
@@ -254,7 +264,7 @@ const TimesheetApprovals = () => {
       label: string;
       minWidth: number;
       align?: 'left' | 'right' | 'center';
-    }) => ({
+    }): Column<PanelRow> => ({
       id: c.id,
       label: c.label,
       minWidth: c.minWidth,
@@ -336,11 +346,14 @@ const TimesheetApprovals = () => {
        note cell (NoteCellButton): a read-only outlined field that previews
        the comment's first line, with an edit icon on the right. Clicking
        it opens the comment dialog (RichTextEditor inside a
-       ConfigFormDialog, the same shell the note dialog uses there). */
+       ConfigFormDialog, the same shell the note dialog uses there).
+       `grow` makes it the catch-all column in the fixed-layout pending
+       table, so the Check column to its right stays at its 60px width. */
     const commentColumn: Column<PanelRow> = {
       id: 'comment',
       label: 'Comment',
       minWidth: 220,
+      grow: true,
       align: 'left',
       sortable: false,
       filterable: false,
@@ -417,9 +430,19 @@ const TimesheetApprovals = () => {
       return [selectColumn, ...dataCols, actionColumn, commentColumn, checkColumn];
     }
 
-    /* Other approval types: their data columns + icon-based quick actions */
+    /* Other approval types: their data columns + icon-based quick actions.
+       In the fixed-layout table the widest data column is flagged as the
+       catch-all (`grow`) so the leftover panel width lands in a text
+       column, keeping the trailing icon Action column tight. */
+    const dataColumns = activeTab.columns.map(toColumn);
+    if (!dataColumns.some((c) => c.grow)) {
+      dataColumns.forEach((c) => {
+        const widest = c.minWidth === Math.max(...dataColumns.map((d) => d.minWidth ?? 0));
+        if (widest) c.grow = true;
+      });
+    }
     return [
-      ...activeTab.columns.map(toColumn),
+      ...dataColumns,
       {
         id: 'action',
         label: 'Action',
@@ -487,7 +510,9 @@ const TimesheetApprovals = () => {
           minWidth: c.minWidth,
           ...(c.align ? { align: c.align } : {}),
         })),
-      { id: 'decisionBy', label: 'Decided By', minWidth: 160 },
+      /* Catch-all column of the fixed-layout history table — the leftover
+         panel width lands here, keeping the Status column tight. */
+      { id: 'decisionBy', label: 'Decided By', minWidth: 160, grow: true },
       {
         id: 'status',
         label: 'Status',
@@ -546,6 +571,19 @@ const TimesheetApprovals = () => {
         className={classes.pageHeader}
       />
 
+      {/* Back button — below the page header, bottom-right corner. Every
+          approval type shares this header, so one button covers all of
+          them; clicking it returns to the timesheet page. */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+        <Button
+          size='small'
+          variant='outlined'
+          startIcon={<NavigateBeforeIcon sx={{ fontSize: 16 }} />}
+          label='Back'
+          onClick={handleBack}
+        />
+      </Box>
+
       <Box className={classes.panelStack}>
         <GenericPanel
           config={pendingConfig}
@@ -554,11 +592,12 @@ const TimesheetApprovals = () => {
           customColumns={pendingColumns}
           variant='plain'
           plainAsSection
-          /* Pack the headers at their declared widths instead of
-             stretching the table to the panel width — the slack shows up
-             as a gap before the Search field, so let the table size to
-             its content and scroll horizontally if it overflows. */
-          fitContent
+          /* Fixed layout: every header keeps its declared width exactly
+             (no gaps between headers) and the Comment column — flagged
+             `grow` below — absorbs ALL leftover panel space, so the table
+             still fills the panel edge-to-edge and only scrolls when the
+             columns genuinely don't fit. */
+          fixedLayout
           /* Decisions happen in-cell (Action/Comment) — clicking a row must
              not highlight it or drive the toolbar. */
           disableRowSelection
@@ -605,7 +644,9 @@ const TimesheetApprovals = () => {
           customColumns={historyColumns}
           variant='plain'
           plainAsSection
-          fitContent
+          /* Same fixed layout as the pending panel: tight headers, the
+             "Decided By" column absorbs the leftover width. */
+          fixedLayout
           /* Decided requests are read-only — no row highlight on click. */
           disableRowSelection
           enableNewButton={false}

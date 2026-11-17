@@ -38,6 +38,7 @@ export function DataTable<T extends object>({
   elevation = 1,
   activeRowKey,
   fitContent = false,
+  fixedLayout = false,
 }: DataTableProps<T>) {
   const { classes, cx } = useStyles();
   const [page, setPage] = useState(0);
@@ -190,7 +191,18 @@ export function DataTable<T extends object>({
       )}
 
       <TableContainer>
-        <MuiTable stickyHeader sx={fitContent ? { width: 'fit-content' } : undefined}>
+        <MuiTable
+          stickyHeader
+          sx={{
+            ...(fitContent ? { width: 'fit-content' } : undefined),
+            /* Fixed layout: every column takes its declared width exactly,
+               so the panel's leftover space is never spread evenly into
+               gaps between the headers (the default auto layout does that
+               to full-width tables). The single `grow` column below
+               absorbs ALL of that leftover space instead. */
+            ...(fixedLayout ? { tableLayout: 'fixed' } : undefined),
+          }}
+        >
           <TableHead>
             <TableRow>
               {selectable && (
@@ -207,7 +219,20 @@ export function DataTable<T extends object>({
                   key={String(column.id)}
                   align={column.align ?? 'left'}
                   className={classes.tableCell}
-                  style={column.minWidth ? { minWidth: column.minWidth } : undefined}
+                  /* In a fixed-layout table the column's declared minWidth
+                     becomes an exact width — the one `grow` column gets no
+                     width so it soaks up all the table's leftover space. */
+                  style={
+                    fixedLayout
+                      ? column.grow
+                        ? undefined
+                        : column.minWidth
+                          ? { width: column.minWidth }
+                          : undefined
+                      : column.minWidth
+                        ? { minWidth: column.minWidth }
+                        : undefined
+                  }
                 >
                   {column.header !== undefined ? (
                     column.header

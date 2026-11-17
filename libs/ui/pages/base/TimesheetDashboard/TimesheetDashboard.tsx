@@ -1,20 +1,15 @@
 import { useMemo, useState } from 'react';
-import { Box, Typography, Button, IconButton, PageHeader, Tooltip } from '../../../components';
-import { Menu, MenuItem, Stack, Divider as MuiDivider, Box as MuiBox } from '@mui/material';
+import { Box, Typography, IconButton, PageHeader, Tooltip } from '../../../components';
+import { Menu, MenuItem, Stack, Box as MuiBox } from '@mui/material';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import EditIcon from '@mui/icons-material/Edit';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import PendingIcon from '@mui/icons-material/Pending';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import EventBusyIcon from '@mui/icons-material/EventBusy';
 import { useNotification, useAppNavigation } from '@serviceops/hooks';
 import { useAppRole } from '@serviceops/theme';
 import { constants } from '@serviceops/utils';
-import { useGetLeaveBalanceQuery, useGetLeaveRequestsQuery } from '@serviceops/services';
 import { useStyles } from './styles';
 import { DayMenu, TimesheetDay } from './types/timesheetDashboard.types';
 import {
@@ -26,7 +21,6 @@ import {
   OCTOBER_2026,
   OCTOBER_2026_STATUS,
 } from './data/timesheetDashboard.data';
-import CreateLeaveModal from './CreateLeaveModal';
 
 const MONTH_NAMES = [
   'January',
@@ -55,14 +49,6 @@ const STATUS_COLORS: Record<string, string> = {
   pto: '#7c3aed',
 };
 
-const leaveStatusIcon = (status: string) => {
-  if (status === 'approved')
-    return <CheckCircleOutlineIcon sx={{ color: STATUS_COLORS.approved, fontSize: 18 }} />;
-  if (status === 'rejected')
-    return <ErrorOutlineIcon sx={{ color: STATUS_COLORS.rejected, fontSize: 18 }} />;
-  return <PendingIcon sx={{ color: STATUS_COLORS.draft, fontSize: 18 }} />;
-};
-
 const TimesheetDashboard = () => {
   const { classes, cx } = useStyles();
   const notify = useNotification();
@@ -83,12 +69,6 @@ const TimesheetDashboard = () => {
     open: false,
     side: 'left',
   });
-
-  /* Personal Time-off Balance card — live leave balances + submitted requests */
-  const [createOpen, setCreateOpen] = useState(false);
-  const { data: leaveBalance = [], refetch: refetchLeave } = useGetLeaveBalanceQuery();
-  const { data: leaveRequests = [] } = useGetLeaveRequestsQuery();
-  const leaveTypes = useMemo(() => leaveBalance.map((b) => b.leaveType), [leaveBalance]);
 
   const days = useMemo(
     () => buildMonthDays(OCTOBER_2026.year, OCTOBER_2026.monthIndex, OCTOBER_2026_STATUS),
@@ -118,12 +98,6 @@ const TimesheetDashboard = () => {
   const handleCopyFromPrevWeek = () => {
     closeDayMenu();
     notify.success(`Entries for ${menu.day} copied from previous week`);
-  };
-
-  const handleLeaveCreated = () => {
-    setCreateOpen(false);
-    refetchLeave();
-    notify.success('Time-off request submitted for approval');
   };
 
   const renderDayCell = (d: TimesheetDay, idx: number) => {
@@ -306,87 +280,7 @@ const TimesheetDashboard = () => {
           ))}
         </MuiBox>
 
-        {/* ═══ Row 2: Time-off Balance | Upcoming Events | Holidays (equal height) ═══ */}
-        {/* ── Personal Time-off Balance card ── */}
-        <MuiBox className={classes.card}>
-          <Stack direction='row' alignItems='center' justifyContent='space-between'>
-            <Typography className={classes.cardTitle} sx={{ marginBottom: 0 }}>
-              Personal Time-off Balance
-            </Typography>
-            {/* Right-side jump link: opens the dedicated Personal Leave page
-               (the app role decides which route is mounted — admin/user). */}
-            <Tooltip title='Open Personal Leave' placement='top'>
-              <IconButton
-                size='small'
-                onClick={() => navigateToPath(appRole === 'user' ? UserPath.LEAVE : BasePath.LEAVE)}
-              >
-                <EventBusyIcon sx={{ fontSize: 18 }} />
-              </IconButton>
-            </Tooltip>
-          </Stack>
-
-          <MuiBox className={classes.balanceRow}>
-            {leaveBalance.map((b) => (
-              <MuiBox key={b.leaveType}>
-                <Typography className={classes.balanceValue}>{b.available}</Typography>
-                <Typography className={classes.balanceLabel}>{b.leaveType}</Typography>
-              </MuiBox>
-            ))}
-          </MuiBox>
-          <MuiDivider />
-
-          <MuiBox className={classes.leaveTable}>
-            {/* Header */}
-            <MuiBox className={cx(classes.leaveTableRow, classes.leaveTableHead)}>
-              <Typography className={classes.leaveTableHeaderCell}>Status</Typography>
-              <Typography className={classes.leaveTableHeaderCell}>Date</Typography>
-              <Typography className={classes.leaveTableHeaderCell}>Leave Type</Typography>
-              <Typography className={classes.leaveTableHeaderCell}>Your wish</Typography>
-            </MuiBox>
-
-            {leaveRequests.map((row) => (
-              <MuiBox key={row.id} className={classes.leaveTableRow}>
-                <MuiBox className={classes.leaveStatusIcon}>{leaveStatusIcon(row.status)}</MuiBox>
-                <Typography variant='body2'>{row.period}</Typography>
-                <Typography variant='body2' color='primary'>
-                  {row.leaveType}
-                </Typography>
-                <Typography variant='body2' color='primary'>
-                  {row.note}
-                </Typography>
-              </MuiBox>
-            ))}
-          </MuiBox>
-
-          <Stack
-            direction='row'
-            spacing={2}
-            alignItems='center'
-            justifyContent='space-between'
-            sx={{ marginTop: 1.5 }}
-          >
-            <Stack direction='row' spacing={2}>
-              {(['submitted', 'approved', 'rejected'] as const).map((s) => (
-                <MuiBox key={s} className={classes.legendChip}>
-                  <span
-                    className={classes.legendDot}
-                    style={{
-                      borderColor: STATUS_COLORS[s === 'submitted' ? 'draft' : s],
-                    }}
-                  />
-                  {s[0].toUpperCase() + s.slice(1)}
-                </MuiBox>
-              ))}
-            </Stack>
-            <Button
-              variant='text'
-              color='primary'
-              label='Create Time-Off'
-              onClick={() => setCreateOpen(true)}
-            />
-          </Stack>
-        </MuiBox>
-
+        {/* ═══ Row 2: Upcoming Events | Holidays (equal height) ═══ */}
         {/* ── Upcoming Events card ── */}
         <MuiBox className={classes.card}>
           <Typography className={classes.cardTitle}>Upcoming Events</Typography>
@@ -421,8 +315,6 @@ const TimesheetDashboard = () => {
               <CalendarMonthIcon sx={{ fontSize: 18 }} />
             </IconButton>
           </Stack>
-
-          {holidays[0].note && <MuiBox className={classes.holidayNote}>{holidays[0].note}</MuiBox>}
 
           {holidays.map((h) => (
             <Stack key={h.id} direction='row' spacing={1} sx={{ mb: 1 }}>
@@ -465,14 +357,6 @@ const TimesheetDashboard = () => {
           Copy From Previous Week
         </MenuItem>
       </Menu>
-
-      {/* ── Create Time-Off submit dialog ── */}
-      <CreateLeaveModal
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        onSuccess={handleLeaveCreated}
-        leaveTypes={leaveTypes}
-      />
     </Box>
   );
 };
