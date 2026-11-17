@@ -384,6 +384,12 @@ interface GenericPanelProps {
   selectedRowId?: string | null;
   /** Optional callback when a row is selected (works with selectedRowId) */
   onRowSelect?: (id: string | null) => void;
+  /**
+   * Set to true to stop row-click selection entirely: clicking a row does
+   * not highlight it or drive the Edit/Delete toolbar state. For review
+   * queues where decisions happen in-cell, not through a selected row.
+   */
+  disableRowSelection?: boolean;
   /** Optional callback when New button is clicked */
   onNewClick?: () => void;
   /** Optional callback when Edit button is clicked */
@@ -1035,6 +1041,7 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
       plainAsSection = false,
       fitContent = false,
       toolbarExtra,
+      disableRowSelection = false,
       validate,
       validateFields,
       summaryValidator,
@@ -1176,9 +1183,12 @@ export const GenericPanel = forwardRef<GenericPanelHandle, GenericPanelProps>(
 
     const handleRowClick = useCallback(
       (row: GenericData) => {
+        /* Selection (and its row highlight) is disabled for review queues —
+           decisions happen in-cell, not through a selected row. */
+        if (disableRowSelection) return;
         activeSetSelection(activeSelection === row.id ? null : row.id);
       },
-      [activeSelection, activeSetSelection],
+      [activeSelection, activeSetSelection, disableRowSelection],
     );
 
     const handleNewClick = useCallback(() => {

@@ -554,10 +554,14 @@ const TimesheetApprovals = () => {
           customColumns={pendingColumns}
           variant='plain'
           plainAsSection
-          /* Keep the headers tight together instead of stretching across
-             the panel width — the table scrolls horizontally if the screen
-             is too narrow for the columns. */
+          /* Pack the headers at their declared widths instead of
+             stretching the table to the panel width — the slack shows up
+             as a gap before the Search field, so let the table size to
+             its content and scroll horizontally if it overflows. */
           fitContent
+          /* Decisions happen in-cell (Action/Comment) — clicking a row must
+             not highlight it or drive the toolbar. */
+          disableRowSelection
           enableNewButton={false}
           enableEditButton={false}
           enableDeleteButton={false}
@@ -601,6 +605,9 @@ const TimesheetApprovals = () => {
           customColumns={historyColumns}
           variant='plain'
           plainAsSection
+          fitContent
+          /* Decided requests are read-only — no row highlight on click. */
+          disableRowSelection
           enableNewButton={false}
           enableEditButton={false}
           enableDeleteButton={false}
