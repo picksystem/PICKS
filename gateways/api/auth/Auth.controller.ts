@@ -186,6 +186,55 @@ export class AuthController {
     }
   };
 
+  /**
+   * Read-only session status for `GET /api/auth`.
+   *
+   * Mirrors the POST `get-session` action (same response shapes) so a plain
+   * GET never falls through to the 404 handler. Used by older builds, browser
+   * prefetch, or external health probes that ask for session state via GET.
+   * Safe to expose: it only reports whether a session exists and returns the
+   * allow-list user DTO — no mutation, no secrets.
+   */
+  getSession = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const db = prisma as PrismaClient;
+      const sessionUser = await getSessionUser(req);
+
+      if (!sessionUser) {
+        const rawSid = req.cookies?.[SESSION_COOKIE_NAME] as string | undefined;
+        res.json({
+          message: 'Not authenticated',
+          data: {
+            authenticated: false,
+            debug: {
+              cookiePresent: Boolean(rawSid),
+              sessionId: req.sessionID || null,
+              userId: null,
+            },
+          },
+        });
+        return;
+      }
+
+      const user = await db.user.findUnique({ where: { id: sessionUser.id } });
+      if (!user) {
+        res.json({ message: 'Not authenticated', data: { authenticated: false } });
+        return;
+      }
+      const mustReset = (user as any).mustResetPassword === true;
+      res.json({
+        message: 'Session retrieved',
+        data: {
+          authenticated: true,
+          user: sanitizeUser(user as unknown as Record<string, unknown>),
+          mustResetPassword: mustReset,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   // ── Sign In ─────────────────────────────────────────────────────────────────
   private signin = async (req: Request, res: Response) => {
     const validatedData = await SignInSchema.validate(req.body, {
@@ -499,8 +548,7 @@ export class AuthController {
         //   cookiePresent=true, sessionId missing -> cookie malformed/expired
         //   sessionId present, userId missing -> session destroyed or cleared
         const rawSid = req.cookies?.[SESSION_COOKIE_NAME] as string | undefined;
-        const userIdPresent =
-          req.session?.userId !== undefined && req.session?.userId !== null;
+        const userIdPresent = req.session?.userId !== undefined && req.session?.userId !== null;
         logger.debug?.('get-session: no active session', {
           cookiePresent: Boolean(rawSid),
           sessionId: req.sessionID || null,
