@@ -1,14 +1,16 @@
-# SerivceOps - Full-Stack Monorepo
+# SerivceOps — Full-Stack Monorepo
 
-A modern, scalable ITIL Service Management Platform (ITSM) built as a full-stack monorepo with React frontend, Express backend, shared interfaces, and multi-tenant support.
+A modern ITIL Service Management Platform (ITSM) built as a full-stack monorepo: a
+React + Vite frontend, an Express + Prisma backend, shared TypeScript interfaces,
+and multi-tenant support.
 
 [![React](https://img.shields.io/badge/React-19.0-blue.svg)](https://reactjs.org/)
 [![Express](https://img.shields.io/badge/Express-4.18-green.svg)](https://expressjs.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-7.2-purple.svg)](https://www.prisma.io/)
+[![Prisma](https://img.shields.io/badge/Prisma-7.4-purple.svg)](https://www.prisma.io/)
 [![MUI](https://img.shields.io/badge/MUI-7.3-blue.svg)](https://mui.com/)
-[![NX](https://img.shields.io/badge/NX-22.1-143055.svg)](https://nx.dev/)
-[![Storybook](https://img.shields.io/badge/Storybook-10.1-FF4785.svg)](https://storybook.js.org/)
+[![Vite](https://img.shields.io/badge/Vite-6.4-646CFF.svg)](https://vitejs.dev/)
+[![NX](https://img.shields.io/badge/NX-22-143055.svg)](https://nx.dev/)
 
 ---
 
@@ -19,28 +21,17 @@ A modern, scalable ITIL Service Management Platform (ITSM) built as a full-stack
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
 - [Docker Setup](#docker-setup)
+- [Environment Variables](#environment-variables)
 - [Role-Based Access Control](#role-based-access-control)
 - [Authentication & Security](#authentication--security)
-- [Incident Management](#incident-management)
+- [Core Modules](#core-modules)
 - [Shared Interfaces](#shared-interfaces)
 - [Backend Architecture](#backend-architecture)
 - [Frontend Architecture](#frontend-architecture)
-- [Component Styling Pattern](#component-styling-pattern)
 - [Database Migration Strategy](#database-migration-strategy)
 - [Testing](#testing)
 - [Development Commands](#development-commands)
 - [API Endpoints](#api-endpoints)
-  - [Base URL & Auth Header](#base-url--auth-header)
-  - [Auth API](#auth-api)
-  - [Incident API](#incident-api)
-  - [Comment API](#comment-api)
-  - [Time Entry API](#time-entry-api)
-  - [Resolution API](#resolution-api)
-  - [Activity API](#activity-api)
-  - [Ticket Type API](#ticket-type-api)
-  - [Enum Reference](#enum-reference)
-  - [Error Responses](#error-responses)
-  - [API Testing (Postman)](#api-testing-postman)
 - [Path Aliases](#path-aliases)
 - [Technology Stack](#technology-stack)
 - [Troubleshooting](#troubleshooting)
@@ -49,29 +40,43 @@ A modern, scalable ITIL Service Management Platform (ITSM) built as a full-stack
 
 ## Overview
 
-SerivceOps is an ITIL Service Management Platform built with clean architecture principles:
+SerivceOps is an ITIL Service Management Platform built with clean-architecture
+principles:
 
-- **ITSM Features** — Incident management, change management, problem management, dashboards, CAB requests, knowledge base, reports, time management
-- **Shared Interfaces** — Same TypeScript types used by both Frontend and Backend
-- **Use Case Pattern** — Business logic encapsulated in single-responsibility classes
-- **Gateway Pattern** — Dual implementations (Prisma for production, InMemory for tests)
-- **Dumb UI Components** — Components just render props, no business logic
-- **External Styles** — All component styles in separate files, no inline styles
-- **Role-Based Access** — Admin, User, and Consultant roles with approval workflow
-- **Mock Data** — Easy to test all UI variations in Storybook
-- **Multi-Tenant Theming** — Support for different partner configurations
-- **Single-Database Stack** — PostgreSQL handles both data and caching; sessions
-  are server-side (cookie-based) — no Redis
+- **ITSM features** — ticket/incident management, change & problem management,
+  dashboards, CAB requests, knowledge base, reports, timesheets, leave, and
+  approval workflows.
+- **Unified ticket model** — a single `tickets` router handles every ticket type
+  (incident, service request, advisory, …); types and their custom fields are
+  driven by the Configuration module, so new ticket types need no new routes.
+- **Timesheets & leave** — week-based timesheets with per-day lines, billable
+  tracking and submission/approval, plus per-user leave balances and time-off
+  requests.
+- **Shared interfaces** — the same TypeScript types are consumed by both the
+  frontend and the backend.
+- **Repository/Service/Controller pattern** — HTTP handlers stay thin;
+  business logic lives in services and repositories (Prisma) behind dependency
+  injection.
+- **Use-case classes** — cross-cutting business operations (draft cleanup,
+  ticket management, configuration, ticket types) are encapsulated in
+  single-responsibility classes under `libs/core/use-cases`.
+- **Dumb UI components** — components render props and receive no business
+  logic; styles live in separate `useStyles` files, not inline.
+- **Role-based access** — Admin, User, and Consultant roles with an approval
+  workflow.
+- **Single-database stack** — PostgreSQL is the only backend dependency: it
+  stores data, the cache (`CacheEntry`), and server-side sessions
+  (`UserSession`). There is no Redis.
 
-### Key Principles
+### Key principles
 
 | Principle | Description |
 |-----------|-------------|
-| **Separation of Concerns** | UI renders, Backend handles logic |
-| **Shared Types** | Same interface for FE & BE |
-| **External Styles** | No inline styles, all styles in `/styles` folder |
-| **Testability** | InMemory gateways for unit tests |
-| **Single Responsibility** | One use case = one business operation |
+| **Separation of concerns** | UI renders; the backend owns logic and data access |
+| **Shared types** | One interface set for frontend and backend |
+| **External styles** | No inline styles — styles are co-located `useStyles` files |
+| **Dependency injection** | Controllers receive services, services receive repositories |
+| **Single responsibility** | One use case / service / repository per concern |
 
 ---
 
@@ -79,34 +84,38 @@ SerivceOps is an ITIL Service Management Platform built with clean architecture 
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         FRONTEND (React)                         │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │
-│  │  Components │ ←─ │   Mocks     │ ←─ │  Storybook  │         │
-│  │  (Dumb UI)  │    │  (Testing)  │    │  (Preview)  │         │
-│  └──────┬──────┘    └─────────────┘    └─────────────┘         │
-│         │                                                        │
-│         ▼                                                        │
+│                       FRONTEND (React 19 + Vite)                │
+│  ┌──────────────┐   ┌──────────────────────────┐   ┌─────────┐  │
+│  │ Pages        │   │  Redux Toolkit + RTK     │   │ MUI 7  │  │
+│  │ (libs/ui)    │   │  Query (libs/services)   │   │ theme  │  │
+│  └──────┬───────┘   └────────────┬─────────────┘   └────────┘  │
+│         │                         │ fetch (cookie credentials)  │
+│         ▼                         ▼                              │
 │  ┌─────────────────────────────────────────────────────────────┐│
-│  │              @serviceops/interfaces (Shared Types)                ││
-│  │   IHeader, IJob, ICreateHeaderInput, IHeaderResponse, etc.  ││
+│  │     @serviceops/interfaces (shared TS types + Yup)          ││
+│  │   ITicket, ITicketType, ITimesheet, ILeaveBalance, ...     ││
 │  └─────────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
+                             │  REST + session cookie
+                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                         BACKEND (Express)                        │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │
-│  │ Controllers │ ──▶│  Use Cases  │ ──▶│  Gateways   │         │
-│  │  (HTTP)     │    │  (Logic)    │    │  (Data)     │         │
-│  └─────────────┘    └─────────────┘    └──────┬──────┘         │
-│                                                │                 │
-│                          ┌─────────────────────┼────────────┐   │
-│                          │                     │            │   │
-│                          ▼                     ▼            │   │
-│                   ┌─────────────┐       ┌─────────────┐     │   │
-│                   │   Prisma    │       │  InMemory   │     │   │
-│                   │  (Real DB)  │       │  (Tests)    │     │   │
-│                   └─────────────┘       └─────────────┘     │   │
+│                       BACKEND (Express)                          │
+│  ┌─────────────┐    ┌─────────────────┐    ┌─────────────────┐  │
+│  │ Controllers │──▶│     Services     │──▶│  Repositories   │  │
+│  │  (HTTP)     │    │    (logic)      │    │    (Prisma)     │  │
+│  └─────────────┘    └─────────────────┘    └────────┬────────┘  │
+│                                                       │          │
+│                ┌─────────────────────────────────────┼────────┐ │
+│                │  Use cases · Gateways · Middleware   │ Cache  │ │
+│                │  (libs/core)  ── PASETO · PgSession  │ Store  │ │
+│                └──────────────────────────────────────┘        │ │
+│                                                       │          │
+│                                                       ▼          │
+│                                            ┌──────────────────┐  │
+│                                            │  PostgreSQL      │  │
+│                                            │  (data + cache + │  │
+│                                            │   sessions)        │  │
+│                                            └──────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -116,181 +125,93 @@ SerivceOps is an ITIL Service Management Platform built with clean architecture 
 
 ```
 SerivceOps/
-├── gateways/                          # BACKEND (Express API)
+├── gateways/                        # BACKEND (Express API)
 │   ├── api/
-│   │   ├── admin/                     # Admin API routes
-│   │   │   ├── Incident/              # Incident management
-│   │   │   │   ├── Incident.controller.ts
-│   │   │   │   ├── Incident.dto.ts
-│   │   │   │   └── Incident.routes.ts
-│   │   │   ├── TicketType/
-│   │   │   ├── ServiceRequest/
-│   │   │   ├── AdvisoryRequest/
-│   │   │   ├── Configuration/
-│   │   │   ├── AdminControls/
+│   │   ├── auth/                    # Session auth (single action endpoint)
+│   │   │   ├── Auth.controller.ts
+│   │   │   ├── Auth.routes.ts
+│   │   │   └── user.mapper.ts
+│   │   ├── admin/                   # Admin API (requireAuth; admin role for mutations)
+│   │   │   ├── Ticket/              # Unified, type-agnostic ticket CRUD + sub-resources
+│   │   │   ├── TicketType/          # Ticket types (drives the dynamic ticket router)
+│   │   │   ├── CustomField/         # Per-type custom fields
+│   │   │   ├── Configuration/       # System configuration sections
+│   │   │   ├── AdminControls/       # Admin control flags
+│   │   │   └── routes.ts            # buildAdminRouter(ticketRouter)
+│   │   ├── user/                    # User API (requireAuth)
+│   │   │   ├── Timesheet/           # Week sheets, lines, save/submit, approvals
+│   │   │   ├── Leave/               # Leave balances + time-off requests
+│   │   │   ├── Dashboard/
 │   │   │   └── routes.ts
-│   │   ├── auth/                      # Authentication routes
-│   │   ├── user/                      # User API routes
-│   │   └── consultant/                # Consultant API routes
+│   │   ├── consultant/              # Consultant API (requireAuth)
+│   │   └── (NotFound stubs per scope)
 │   ├── prisma/
-│   │   ├── schema.prisma              # Database schema
-│   │   ├── prisma.config.ts           # Prisma configuration
-│   │   ├── seed.ts                    # Database seeding
+│   │   ├── schema.prisma            # Full schema (admin, user, timesheet, leave, sessions)
+│   │   ├── prisma.config.ts
+│   │   ├── seed.ts                  # Test users, ticket types, leave balances, dashboard data
 │   │   ├── scripts/
-│   │   │   ├── sync-schema.ts         # Quick sync for development
+│   │   │   ├── sync-schema.ts
 │   │   │   └── regenerate-migration.ts
-│   │   └── migrations/
-│   │       ├── migration_lock.toml
-│   │       ├── 20260105000000_init/
-│   │       └── 20260306000000_add_missing_incident_columns/
+│   │   └── migrations/              # Incremental migrations (init → timesheet → leave → dashboard)
 │   └── src/
-│       ├── app.ts                     # Express app setup
-│       ├── server.ts                  # Server initialization
-│       └── index.ts                   # Entry point
+│       ├── app.ts                   # createApp(): middleware + route mounting
+│       ├── server.ts                # Boot: DB check, dynamic ticket router, listen
+│       └── index.ts                 # Entry point
 │
-├── libs/                              # SHARED LIBRARIES
-│   ├── entities/                      # Shared interfaces (FE + BE)
+├── libs/
+│   ├── entities/                    # SHARED interfaces (FE + BE)
 │   │   ├── interfaces/
-│   │   │   ├── admin/
-│   │   │   │   ├── incident.interface.ts
-│   │   │   │   ├── ticketType.interface.ts
-│   │   │   │   ├── serviceRequest.interface.ts
-│   │   │   │   ├── advisoryRequest.interface.ts
-│   │   │   │   ├── configuration.interface.ts
-│   │   │   │   ├── header.interface.ts
-│   │   │   │   ├── dashboard.interface.ts
-│   │   │   │   ├── job.interface.ts
-│   │   │   │   └── ...
-│   │   │   └── user/
-│   │   │       ├── dashboard.interface.ts
-│   │   │       ├── sidenav.interface.ts
-│   │   │       └── ...
-│   │   ├── validations/               # Yup validation schemas
-│   │   └── config/partner.ts          # Partner configurations
+│   │   │   ├── admin/             (ticket, ticketType, configuration, incident, ...)
+│   │   │   ├── user/              (timesheet, leave, dashboard, header, sidenav)
+│   │   │   └── base/              (fieldConfiguration, ...)
+│   │   ├── dtos/
+│   │   ├── validations/            # Yup schemas
+│   │   └── config/
 │   │
-│   ├── core/                          # Backend core (BE only)
-│   │   ├── use-cases/admin/           # Business logic
-│   │   │   ├── incident/
-│   │   │   ├── ticketType/
-│   │   │   ├── serviceRequest/
-│   │   │   ├── advisoryRequest/
-│   │   │   ├── configuration/
-│   │   │   └── header/
-│   │   ├── infrastructure/admin/      # Gateway implementations
-│   │   │   ├── PrismaIncidentGateway.ts
-│   │   │   ├── InMemoryIncidentGateway.ts
-│   │   │   └── ...
-│   │   ├── middleware/
-│   │   │   ├── auth.middleware.ts
-│   │   │   └── error-handler.middleware.ts
-│   │   ├── database/
-│   │   │   └── prisma.client.ts
-│   │   ├── config/
-│   │   │   ├── email.config.ts
-│   │   │   ├── logger.config.ts
-│   │   │   └── config.json
-│   │   ├── repository/
-│   │   ├── service/
+│   ├── core/                        # BACKEND core
+│   │   ├── use-cases/admin/       (configuration, customField, ticket, ticketType)
+│   │   ├── gateways/              # Gateway interfaces
+│   │   ├── infrastructure/        # Prisma gateways, PASETO key, Prisma cache
+│   │   ├── repository/  service/  # Base repository / service abstractions
+│   │   ├── middleware/            # auth (requireAuth/requireAdmin), error handler
+│   │   ├── database/              # Prisma client, PgSessionStore, session cookie settings
+│   │   ├── config/                # winston logger, email, app config
 │   │   └── validation/
 │   │
-│   ├── ui/                            # Frontend (FE only)
-│   │   ├── components/                # 40+ shared UI components
-│   │   │   ├── Button/
-│   │   │   ├── DataTable/
-│   │   │   ├── Modal/
-│   │   │   ├── TextField/
-│   │   │   ├── Select/
-│   │   │   ├── Card/
-│   │   │   ├── JobStatusCard/
-│   │   │   └── ... (40+ components)
-│   │   ├── pages/
-│   │   │   ├── admin/
-│   │   │   │   ├── Dashboard/
-│   │   │   │   ├── CreateTicket/
-│   │   │   │   ├── IncidentManagement/
-│   │   │   │   ├── IncidentDetail/
-│   │   │   │   ├── TicketDetail/
-│   │   │   │   ├── ChangeManagement/
-│   │   │   │   ├── ProblemManagement/
-│   │   │   │   ├── CabRequest/
-│   │   │   │   ├── Configuration/
-│   │   │   │   ├── UserManagement/
-│   │   │   │   ├── RoleRequests/
-│   │   │   │   ├── ConsultantProfile/
-│   │   │   │   ├── KnowledgeBase/
-│   │   │   │   ├── TestScripts/
-│   │   │   │   ├── SuggestedSolution/
-│   │   │   │   ├── TimeManagement/
-│   │   │   │   ├── Reports/
-│   │   │   │   ├── Favourites/
-│   │   │   │   ├── RecentItems/
-│   │   │   │   ├── Profile/
-│   │   │   │   ├── Header/
-│   │   │   │   └── SideNav/
-│   │   │   ├── user/
-│   │   │   │   ├── Dashboard/
-│   │   │   │   ├── IncidentManagement/
-│   │   │   │   ├── ChangeManagement/
-│   │   │   │   ├── ProblemManagement/
-│   │   │   │   ├── Favourites/
-│   │   │   │   ├── RecentItems/
-│   │   │   │   ├── Header/
-│   │   │   │   └── SideNav/
-│   │   │   └── consultant/
-│   │   │       ├── Dashboard/
-│   │   │       ├── CreateTicket/
-│   │   │       ├── ChangeManagement/
-│   │   │       ├── ProblemManagement/
-│   │   │       ├── Header/
-│   │   │       └── SideNav/
-│   │   ├── hooks/                     # Custom React hooks
-│   │   ├── mocks/                     # Mock data for Storybook & testing
-│   │   │   ├── admin/
-│   │   │   │   ├── header.mock.ts
-│   │   │   │   ├── incident.mock.ts
-│   │   │   │   ├── jobStatus.mock.ts
-│   │   │   │   └── ticketType.mock.ts
-│   │   │   └── auth/
-│   │   ├── slices/                    # Redux slices
-│   │   ├── store/                     # Redux store
-│   │   └── state/                     # State management
+│   ├── services/                    # FRONTEND data layer
+│   │   ├── api/                   # RTK Query endpoints (auth, admin, user timesheet/leave)
+│   │   ├── store/                 # Redux store (auth + ui)
+│   │   └── slices/                # notificationSlice
 │   │
-│   ├── theme/                         # Theming system
-│   │   ├── createAppMetadata.ts
-│   │   ├── palette.ts
-│   │   ├── themePalettes.ts
-│   │   └── theme.ts
-│   ├── shared/                        # Shared constants & types
-│   │   └── constants/
-│   │       ├── admin.constants.ts
-│   │       ├── user.constants.ts
-│   │       └── consultant.constants.ts
-│   └── services/                      # API service layer
-│       ├── adminServices.ts
-│       ├── authServices.ts
-│       ├── userServices.ts
-│       └── baseServices.ts
+│   ├── ui/
+│   │   ├── components/            # ~60 dumb MUI-wrapped components (DataTable, GenericPanel, ...)
+│   │   ├── pages/
+│   │   │   ├── base/            # Role-shared feature pages (27 pages)
+│   │   │   └── shared/          # SignIn, SignUp, ForgotPassword, NotFound
+│   │   ├── hooks/               # useAuth, useNotification, useAppNavigation, ...
+│   │   ├── utils/  test-utils/
+│   │   └── index.ts
+│   │
+│   ├── theme/                       # Theme + role context + createAppStyles
+│   ├── shared/constants/            # ADMIN_PATHS / USER_PATHS / CONSULTANT_PATHS, enums
+│   └── utils/                       # dateFormatters, validators
 │
-├── web/                               # FRONTEND APPLICATIONS
-│   ├── apps/
-│   │   └── administration/            # Administration web app (port 1600)
-│   └── tenants/
-│       └── generale-partner/          # Generale Partner tenant (port 1700)
+├── web/                             # FRONTEND applications (Vite)
+│   ├── apps/administration/         # Administration app  (port 1600)
+│   └── tenants/generale-partner/   # Partner tenant       (port 1700)
 │
-├── env/src/                           # Environment configs per app
-│   ├── env.administration.json        # Administration app config
-│   ├── env.gateway.json               # Backend gateway config
-│   └── env.generale-partner.json      # Generale Partner tenant config
+├── env/src/                         # Per-app default env (merged under process.env)
+│   ├── env.administration.json
+│   ├── env.gateway.json
+│   └── env.generale-partner.json
 │
-├── docker-compose.yml                 # Docker services
-├── Dockerfile                         # Docker build
-├── nodemon.json                       # Nodemon config
-├── nx.json                            # NX monorepo config
-├── webpack.config.ts                  # Root webpack config
-├── tsconfig.base.json
-├── tsconfig.json
-├── tsconfig.app.json
-├── jest.config.ts
+├── tools/vite/                      # partner-vite-plugin.ts, env-loader.ts
+│
+├── docker-compose.yml               # PostgreSQL 18
+├── Dockerfile
+├── nodemon.json                     # dev:backend config
+├── nx.json                          # NX workspace
+├── tsconfig.base.json               # Path aliases (@serviceops/*)
 └── README.md
 ```
 
@@ -300,97 +221,102 @@ SerivceOps/
 
 ### Prerequisites
 
-- Node.js 24+
-- PostgreSQL 18+ (or use Docker)
-- npm 9+
+- **Node.js 24+** and **npm 9+**
+- **PostgreSQL 18+** (or Docker)
 
-> Postgres and the session store are the only backend dependencies. Redis was
-> removed — caching and sessions both run on PostgreSQL.
+> Postgres is the only backend dependency — it stores application data, the
+> cache, and the server-side session store. There is no Redis.
 
 ### Installation
 
 ```bash
-# Clone repository
 git clone <repository-url>
 cd SerivceOps
 
-# Install dependencies
 npm install
 
-# Generate Prisma client
-npm run prisma:generate
+# Configure the environment (see .env.example)
+cp .env.example .env
 
-# Run database migrations
-npm run prisma:migrate
-
-# Seed database with test data
-npm run prisma:seed
+# Prisma
+npm run prisma:generate      # generate the Prisma client
+npm run prisma:migrate       # push schema to the DB (development)
+npm run prisma:seed          # seed test users, ticket types, leave balances, dashboard data
 ```
 
 ### Running the Application
 
 ```bash
-# Start backend (Express API) — http://localhost:3001
-npm run dev:backend
+# Backend (Express API) — http://localhost:3001
+npm run dev:backend          # nodemon, hot reload
+# ...or
+npm run start:backend        # tsx, no reload
 
-# Start frontend apps
+# Frontend apps (Vite)
 npm run serve:administration        # http://localhost:1600
 npm run serve:generale-partner      # http://localhost:1700
-
-# Start Storybook (component library)
-npm run storybook                   # http://localhost:6006
 ```
 
-### Port Configuration
+In development the Vite dev server proxies `/api`, `/uploads`, and `/health` to
+`http://localhost:3001`, so the session cookie stays same-site (no CORS, no
+cross-site cookie requirements). Set `API_URL` to point a frontend at a
+separately-hosted API instead, or `BACKEND_PROXY_TARGET` to change the proxy
+target port.
+
+### Ports
 
 | App | Command | Port |
 |-----|---------|------|
 | **Administration** | `serve:administration` | 1600 |
 | **Generale Partner** | `serve:generale-partner` | 1700 |
-| **Backend API** | `dev:backend` | 3001 |
-| **Storybook** | `storybook` | 6006 |
+| **Backend API** | `dev:backend` / `start:backend` | 3001 |
 
 ---
 
 ## Docker Setup
 
-Use Docker Compose for local development with PostgreSQL:
+Docker Compose provides the PostgreSQL database:
 
 ```bash
-# Start the PostgreSQL container
-docker-compose up -d
-
-# Stop containers
-docker-compose down
-
-# View logs
-docker-compose logs -f
+docker-compose up -d        # start PostgreSQL
+docker-compose ps           # check status
+docker-compose logs -f      # tail logs
+docker-compose down         # stop
 ```
 
-### Docker Services
+### Docker services
 
 | Service | Container | Port | Description |
 |---------|-----------|------|-------------|
-| PostgreSQL | serivceops-postgres | 5432 | Primary database + cache + session store |
+| PostgreSQL | `SerivceOps-postgres` | 5432 | Data + cache + session store |
 
-### Environment Variables
+The compose file also ships (commented-out) `admin` and `user` service
+definitions for running the web apps in containers.
 
-Create a `.env` file in the project root (copy from `.env.example`):
+---
+
+## Environment Variables
+
+Copy `.env.example` to `.env`. Values in `env/src/env.*.json` are merged into
+`process.env` at boot, but only for keys not already set — `.env` and the
+system environment win.
 
 ```env
 # Server
 NODE_ENV=development
 PORT=3001
-HOST=localhost
+HOST=0.0.0.0
 
-# Database
-DATABASE_URL=postgresql://postgres:password@localhost:5432/serivceops_db?schema=public
+# Database (special characters in the password must be URL-encoded: & → %26)
+DATABASE_URL=postgresql://postgres:password@localhost:5432/SerivceOps_db?schema=public
 
-# Server-side Session Authentication (cookie sessions, persisted in PostgreSQL)
+# Server-side cookie sessions (persisted in PostgreSQL)
 SESSION_SECRET=your-super-secret-session-key-change-this-in-production-min-32-chars
 SESSION_TTL_DAYS=7
+# PASETO_SECRET=            # signing key for short-lived tokens; derived from SESSION_SECRET when unset
+# SESSION_COOKIE_SECURE=    # force the Secure flag (true/false); otherwise it follows the connection scheme
 
-# Rate Limiting
+# Rate limiting
 THROTTLE_TTL=60
 THROTTLE_LIMIT=10
 
@@ -399,7 +325,7 @@ LOG_LEVEL=debug
 LOG_FILE_PATH=./logs
 ENABLE_CONSOLE_LOGS=true
 
-# CORS
+# CORS — comma-separated list of browser origins allowed to send the session cookie
 CORS_ORIGIN=http://localhost:1600,http://localhost:1700
 
 # Email / SMTP
@@ -407,130 +333,93 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password-here
-SMTP_FROM=serivceops App <noreply@serviceops.tech>
+SMTP_FROM=SerivceOps App <noreply@serviceops.tech>
 ```
 
-#### Gmail SMTP Setup
+#### Gmail SMTP
 
-For Gmail, use an **App Password** (not your regular account password):
-
-1. Enable 2-Factor Authentication on your Google account
-2. Visit [https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
-3. Generate a new App Password for "Mail"
-4. Use the 16-character password as the `SMTP_PASS` value
-
-> **Note**: In development mode (`NODE_ENV=development`), OTPs are logged to the console, so SMTP is not required for local testing.
+Use a **Gmail App Password** (not your account password): enable 2FA on the
+Google account, generate an App Password at
+<https://myaccount.google.com/apppasswords>, and use the 16-character value as
+`SMTP_PASS`. In `NODE_ENV=development`, OTPs are logged to the console, so SMTP
+is not required for local testing.
 
 ---
 
 ## Role-Based Access Control
 
-serivceops implements a comprehensive role-based access control system with three primary roles.
+SerivceOps ships three roles. All three sign into the **same** administration
+frontend; the role controls which features are visible and which API mutations
+are permitted.
 
-### User Roles
+| Role | Access level |
+|------|--------------|
+| **Admin** | Full access — user & role management, system configuration, all ITSM features |
+| **User** | Day-to-day ITSM — dashboards, tickets, timesheets, leave |
+| **Consultant** | Scoped access — change/problem work, ticket creation, access requests |
 
-| Role | Access Level | Description |
-|------|-------------|-------------|
-| **Admin** | Full System Access | User management, role approvals, all ITSM features, system configuration |
-| **Consultant** | Change & Problem Management | Change management, problem management, ticket creation, access requests |
-| **User** | Basic ITSM Features | Incident management, dashboard, basic ticket operations |
+### Sign-up & role request flow
 
-### Sign-Up & Role Request Flow
+1. Sign up at `/signup`.
+2. Every account starts with the **User** role. If the requester picks
+   Consultant or Admin, that choice is filed as a **role request** pending
+   approval.
+3. An admin approves or rejects the request in **Role Requests**
+   (`/api/auth` admin actions).
 
-1. **Sign-Up**: Navigate to `/signup`
-2. **Role Selection**: Choose between:
-   - **Consultant** (requires approval)
-   - **Admin** (requires approval)
-3. **Account Creation**:
-   - All users start with **User** role by default
-   - Selected role (Consultant/Admin) sent as an approval request
-   - User redirected to the dashboard for profile setup
-4. **Approval Process**:
-   - Admin reviews role requests in the Role Requests section
-   - Upon approval, user gains requested role access
-
-### Role-Specific Features
-
-**Admin Features:**
-- Dashboard & Analytics
-- Incident, Change, Problem Management
-- CAB Requests & Ticket Templates
-- Knowledge Base, Test Scripts, Suggested Solutions
-- Time Management & Reports
-- User Management & Role Approvals
-- Consultant Profile Management
-- System Configuration (SLAs, priorities, statuses, categories)
-- Favourites & Recent Items
-
-**Consultant Features:**
-- Dashboard
-- Create Ticket
-- Change Management
-- Problem Management
-
-**User Features:**
-- Dashboard
-- Incident Management
-- Change & Problem Management (read/limited)
-- Favourites & Recent Items
+Mutating the admin-management sub-routers (admin controls, configuration,
+ticket types, custom fields, and the admin user/role actions) additionally
+requires the **admin** role — that guard lives inside those route files. The
+ticket sub-router is used by **every** authenticated role to create and manage
+tickets, so it is only gated by session auth, not role.
 
 ---
 
 ## Authentication & Security
 
-### Server-Side Cookie Sessions (no JWT)
+### Server-side cookie sessions (no JWT)
 
-- Secure, revocable server-side sessions: an `httpOnly` cookie (`serviceops.sid`)
-  references a session persisted in the PostgreSQL `UserSession` table
-- Password hashing with bcryptjs (salt rounds: 10)
-- Session lifetime: `SESSION_TTL_DAYS` (default 7 days)
+- Secure, revocable sessions: an `httpOnly` cookie named `serviceops.sid`
+  references a session row in the PostgreSQL `UserSession` table, managed by a
+  Prisma-backed `PgSessionStore`.
+- Passwords are hashed with **bcryptjs** (10 salt rounds).
+- Session lifetime: `SESSION_TTL_DAYS` (default 7). Expired sessions are pruned
+  on boot.
 - Sessions are re-validated against the DB on every protected request, so
-  logout / deactivation / password change kills access immediately (unlike a
-  stateless JWT, which can't be revoked)
+  logout, deactivation, or a password change revokes access immediately.
 - Short-lived signed tokens (e.g. the 15-minute password-reset token) use
-  **PASETO** — the safer successor to JWT — never JWT, and never for sessions
+  **PASETO** — the safer successor to JWT. PASETO is never used for sessions,
+  and JWT is not used at all.
 
 **Cookie & CORS in production**
 
 The session cookie's `Secure`/`SameSite` flags follow the *actual* connection
-scheme, not `NODE_ENV`:
+scheme (`req.secure`), not the `NODE_ENV` label. `trust proxy` is set so the
+immediate proxy hop determines the scheme.
 
-- **Same-site** (frontend + API on one domain, or a reverse proxy in front):
-  plain http dev → `SameSite=Lax`. Fine, no config needed.
-- **Cross-site** (e.g. app on `app.serviceops.tech`, API on
-  `api.serviceops.tech`): both must be HTTPS, the API is automatically
-  `Secure; SameSite=None` over TLS, and you **must** list every calling
-  origin in `CORS_ORIGIN` (comma-separated) or the browser drops the
-  credentials-bearing requests. The server logs a warning at startup if
-  `CORS_ORIGIN` is empty.
-- Behind a TLS-terminating proxy (Render, Vercel, nginx) nothing extra is
-  needed — the app trusts the immediate proxy hop for the scheme.
-- `SESSION_COOKIE_SECURE=true|false` forces the flag either way if a setup
-  needs it.
+- **Same-site** (frontend + API on one origin, or a reverse proxy in front):
+  plain `http` dev → `SameSite=Lax`. No extra config.
+- **Cross-site** (app on `app.serviceops.tech`, API on `api.serviceops.tech`):
+  both must be HTTPS; over TLS the API is `Secure; SameSite=None`, and you
+  **must** list every calling origin in `CORS_ORIGIN` or the browser drops the
+  credentialed requests. The server logs a startup warning if `CORS_ORIGIN` is
+  empty.
+- `SESSION_COOKIE_SECURE=true|false` forces the flag either way if a setup needs
+  it.
 
-> Sign-in that "succeeds then immediately logs out" is almost always a
-> cookie that the browser rejected: a `Secure` cookie set over plain http, or
-> a `SameSite=None` cookie whose origin wasn't in `CORS_ORIGIN`. Check the
-> cookie's flags and the response headers first.
+> A sign-in that "succeeds then immediately logs out" is almost always a cookie
+> the browser rejected: a `Secure` cookie set over plain http, or a
+> `SameSite=None` cookie whose origin wasn't in `CORS_ORIGIN`. Inspect the
+> cookie flags and response headers first.
 
-### Account Security
+### Account security
 
-- **Account Lockout**: 5 failed login attempts trigger a 30-minute lockout
-- **Password Reset**: OTP-based password reset via email
-- **OTP Validity**: 10 minutes
-- **Rate Limiting**: Prevents multiple OTP requests if an existing OTP is still valid
+- **Lockout**: 5 failed logins trigger a 30-minute lockout.
+- **Password reset**: OTP-based, sent by email; OTPs are valid for 10 minutes.
+- **Rate limiting**: repeated OTP requests are throttled while an OTP is valid.
+- **Audit**: `UserChangeLog` and `LoginLog` track admin changes and sign-ins.
 
-### Forgot Password Flow
-
-1. User enters email on `/forgot-password` page
-2. System generates a 6-digit OTP and sends via email
-3. User verifies OTP on the verification page
-4. User sets a new password
-5. System updates the password and allows sign-in
-
-> **Development Mode**: OTP is logged to console for testing without SMTP configuration.
-
-### Default Test Credentials (after seeding)
+### Default test credentials (after `prisma:seed`)
 
 ```
 admin@serviceops.tech       / admin123
@@ -540,25 +429,17 @@ consultant@serviceops.tech  / consultant123
 
 ---
 
-## Incident Management
+## Core Modules
 
-The Incident Management module provides full lifecycle management for IT incidents.
+### Tickets (unified)
 
-### Incident Statuses
+A single `/api/admin/tickets` router serves every ticket type. The set of
+active ticket types and their custom fields comes from the Configuration module,
+so adding a ticket type requires no new route. Each ticket supports the full
+ITSM lifecycle plus sub-resources: comments, time entries, resolutions, and an
+activity audit log. Drafts can carry an optional expiry.
 
-| Status | Description |
-|--------|-------------|
-| **New** | Newly created incident |
-| **In Progress** | Being actively worked on |
-| **On Hold** | Paused, awaiting external action |
-| **Resolved** | Fix applied, pending confirmation |
-| **Closed** | Confirmed resolved |
-| **Cancelled** | No longer needed |
-| **Draft** | Saved as draft with optional expiry |
-
-### Priority Matrix
-
-Priority is calculated from **Impact × Urgency**:
+Priority is derived from **Impact × Urgency**:
 
 | | High Urgency | Medium Urgency | Low Urgency |
 |---|---|---|---|
@@ -566,294 +447,200 @@ Priority is calculated from **Impact × Urgency**:
 | **Medium Impact** | High | Medium | Low |
 | **Low Impact** | Medium | Low | Low |
 
-### Incident Detail Page
+The **Ticket Detail** page is one unified component used by both the
+`/incidents/:number` and `/tickets/:id` routes — every ticket type is maintained
+by the same page.
 
-The detail page (`/admin/incidents/:number`) provides a full-featured view:
+### Timesheets
 
-- **Header** — Incident number with copy, title with copy, page URL copy, prev/next navigation
-- **Draft Expiry Banner** — Countdown timer for draft incidents with expiry dates
-- **Info Strip** — Caller, Priority (clickable chip), Queue, Primary Resource, Due Date, SLA progress bar, ETA (editable)
-- **Time Summary** — Collapsible section showing Approved/Billable/Non-Billable/Variance hours
-- **Action Bar** — Edit, Accept, Assign, Comment, Resolve, More Tools actions
-- **Work Timer** — Start/pause/stop timer for per-incident time tracking
-- **Description Section** — Rich text incident description
-- **Tabs Section** — Comments, Time Entries, Resolutions, Activities, Attachments
-- **Sidebar** — Created info, Client, Assignment Group, Secondary Resource, checkboxes (Major/Recurring/Release), accordions (Contact & Billing, Reporting, Additional Fields)
+Week-based sheets, one per user per `weekStart`. Each sheet holds **lines**
+(client / project / task, billable flag, external & internal notes,
+attachments, and per-day decimal hours from Monday to Sunday). A sheet can be
+saved as a draft or **submitted** for approval.
+
+- Sheet statuses: `open`, `draft`, `pending`, `submitted`, `approved`,
+  `rejected`.
+- Computed totals feed the dashboard KPI cards: all / billable / non-billable
+  hours per day, the billable ratio, and leave/holiday hours.
+- `GET /api/user/timesheet/approvals` returns the approver's history.
+
+### Leave
+
+Per-user balances across the standard leave types — **Privilege Leave, Casual
+Leave, Sick Leave, Optional Holiday, and Absent** — plus submitted time-off
+requests that feed the leave dashboard's request table and the approval queue.
+Request statuses: `submitted`, `approved`, `rejected`. The backend only stores
+the types that have a balance row; the frontend renders the full canonical set
+(`0/0` when a type has no stored allocation).
+
+### Approvals
+
+The Timesheet Approval page is a manager review queue with pending and history
+tables, a searchable per-row action field, bulk approve/reject, and a read-only
+timesheet preview dialog.
 
 ---
 
 ## Shared Interfaces
 
-Interfaces in `libs/entities/interfaces/` are shared between Frontend and Backend.
-
-### Example: Job Interface
-
-```typescript
-// libs/entities/interfaces/admin/job.interface.ts
-
-export type JobStatus = 'needs_attention' | 'in_progress' | 'completed' | 'failed' | 'pending';
-export type JobPriority = 'critical' | 'high' | 'medium' | 'low';
-
-export interface IJob {
-  id: string;
-  title: string;
-  description: string;
-  status: JobStatus;
-  priority: JobPriority;
-  assignee: string;
-  progress?: number;
-  dueDate?: string;
-}
-```
-
-### Usage
+Interfaces in `libs/entities/interfaces/` are shared by the frontend and
+backend, so a wire shape is defined once:
 
 ```typescript
-// Backend
-import { IJob, JobStatus } from '@serviceops/interfaces';
+// libs/entities/interfaces/admin/ticket.interface.ts
+export interface ITicket { /* ticket type, status, priority, custom fields, ... */ }
 
 // Frontend
-import { IJob, JOB_STATUS_CONFIG, JOB_PRIORITY_COLORS } from '@serviceops/interfaces';
+import { ITicket, ITicketStatus } from '@serviceops/interfaces';
+
+// Backend
+import { ITicket, ICreateTicketInput } from '@serviceops/interfaces';
 ```
+
+Yup validation schemas live in `libs/entities/validations/` and are shared the
+same way.
 
 ---
 
 ## Backend Architecture
 
-### Controller Pattern
+### Controller → Service → Repository
 
-Each API endpoint has a controller with DTOs and routes. Validation uses Yup schemas.
+HTTP handlers are thin and receive their dependencies by injection:
 
 ```typescript
-// gateways/api/admin/TicketType/TicketType.controller.ts
-export class TicketTypeController {
-  async create(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const validatedData = await CreateTicketTypeSchema.validate(req.body, {
-        abortEarly: false,
-        stripUnknown: true,
-      });
-      const result = await this.service.create(validatedData);
-      res.status(201).json(result);
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        next(new BadRequestException('Validation failed', error.inner));
-      }
-      next(error);
-    }
-  }
-}
+// gateways/api/user/Leave/Leave.routes.ts
+const repository = new LeaveRepository();
+const service    = new LeaveService(repository);
+const controller = new LeaveController(service);
+
+router.get('/balance',   controller.balance);
+router.post('/requests', controller.submit);
 ```
 
-### Gateway Pattern
+Controllers validate input (Yup), map DTOs, and delegate to a service; the
+service owns business rules and talks to a repository that wraps Prisma. The
+`gateways/api/*` tree is where the concrete modules live.
 
-Two implementations of the same interface — one for production, one for tests:
+### Use cases & gateways (libs/core)
 
-**Prisma Gateway (Production)**
-```typescript
-export class PrismaHeaderGateway implements IHeaderGateway {
-  constructor(private readonly prisma: PrismaClient) {}
+Cross-cutting, reusable operations live in `libs/core/use-cases` behind
+interface-based gateways:
 
-  async create(data: ICreateHeaderInput): Promise<IHeader> {
-    return this.prisma.adminHeader.create({ data });
-  }
-}
-```
+- **Ticket management** — create/list/update/delete, sub-resources, drafts.
+- **Configuration** — read and update sections.
+- **Ticket types & custom fields** — the data that drives the dynamic ticket
+  router.
+- **Cleanup of expired drafts** — a scheduled housekeeping use case.
 
-**InMemory Gateway (Testing)**
-```typescript
-export class InMemoryHeaderGateway implements IHeaderGateway {
-  private headers: IHeader[] = [];
+Prisma implementations of these gateways are in
+`libs/core/infrastructure/admin`; a Prisma-backed cache gateway
+(`PrismaCacheGateway`) powers the PostgreSQL cache.
 
-  async create(data: ICreateHeaderInput): Promise<IHeader> {
-    const header = { id: this.nextId++, ...data };
-    this.headers.push(header);
-    return header;
-  }
-}
-```
+### Dynamic ticket router
+
+At boot, `server.ts` reads the active ticket types from the DB and builds the
+ticket router (`createTicketRouter`), then hands it to `createApp`. This is what
+lets ticket types be data rather than code. The server also verifies a DB
+connection before listening and prunes expired sessions.
+
+### Middleware
+
+`libs/core/middleware` provides `requireAuth` (validates the session cookie
+against `UserSession`) and `requireAdmin` (role check), plus a global error
+handler and 404 handler. The whole `/api/admin` and `/api/user` trees sit behind
+`requireAuth`.
 
 ---
 
 ## Frontend Architecture
 
-### Dumb UI Components
+### Dumb UI components
 
-Components only receive props and render — no business logic inside components.
+`libs/ui/components` are presentational MUI wrappers. They take props and
+render — no data fetching or business logic. `GenericPanel`, `GenericToolbar`,
+`DataTable`, and the Configuration section primitives are the workhorses shared
+across the feature pages.
 
-```typescript
-// libs/ui/components/JobStatusCard/JobStatusCard.tsx
-export const JobStatusCard: React.FC<JobStatusCardProps> = ({
-  title,
-  status,
-  priority,
-  assignee,
-}) => {
-  const { classes } = useStyles({
-    statusColor: JOB_STATUS_CONFIG[status].color,
-  });
+The `DataTable` supports two width strategies: `fitContent` (size to content) and
+`fixedLayout` (proportional distribution — every column takes a share of the
+panel width in proportion to its declared `minWidth`, so wide tables fill the
+panel edge-to-edge without gaps between headers).
 
-  return (
-    <Card className={classes.card}>
-      <Typography className={classes.title}>{title}</Typography>
-    </Card>
-  );
-};
-```
+### State & data (RTK Query)
 
----
+The data layer lives in `libs/services`:
 
-## Component Styling Pattern
+- `libs/services/store` — Redux Toolkit store (`authStore` + `uiStore`).
+- `libs/services/api` — RTK Query `createApi` endpoints grouped by domain
+  (auth, admin, user timesheet, user leave). A shared `baseApi` uses
+  `credentials: 'include'` (cookie sessions, no token in localStorage) and, on an
+  unexpected 401, bounces to `/signin` so session hydration re-runs.
+- `libs/services/slices` — the notification slice and its actions.
 
-All components use external styles. **No inline styles allowed.**
+The 27 base pages and the shared auth pages are wired up as lazy routes in
+`web/apps/administration/src/app/routes.ts`.
 
-### Style File Structure
+### Styling
 
-```
-ComponentName/
-├── ComponentName.tsx
-├── index.ts
-└── styles/
-    ├── ComponentName.styles.shared.ts   # Base styles
-    ├── ComponentName.styles.ts          # useStyles hook (with tenant overrides)
-    └── index.ts                         # Exports
-```
-
-### Example
-
-**Shared Styles (Base)**
-```typescript
-// styles/ComponentName.styles.shared.ts
-export const getBaseStyles = (
-  theme: Theme,
-  params: ComponentStyleParams
-): Record<string, CSSObject> => ({
-  root: {
-    padding: theme.spacing(2),
-    backgroundColor: params.color,
-  },
-});
-```
-
-**Styles Hook with Tenant Overrides**
-```typescript
-// styles/ComponentName.styles.ts
-export const useStyles = createAppStyles(
-  (theme: Theme, params: ComponentStyleParams) => getBaseStyles(theme, params),
-  {
-    admin: {},           // Admin tenant overrides
-    user: {},            // User tenant overrides
-    consultant: {},      // Consultant tenant overrides
-  }
-);
-```
-
-**Usage in Component**
-```typescript
-const { classes } = useStyles({ color, isActive });
-return <Box className={classes.root}>...</Box>;
-```
+Components use a co-located `useStyles` hook built on `createAppStyles`, which
+accepts **per-role overrides** (`admin` / `user` / `consultant`). There are no
+inline styles — all styling is theme-aware and role-aware.
 
 ---
 
 ## Database Migration Strategy
 
-This project uses an **incremental migration** approach managed by Prisma.
-
-### Migration Structure
+The schema in `gateways/prisma/schema.prisma` is applied through incremental
+migrations. Development uses a fast push; production uses applied migration
+files.
 
 ```
 gateways/prisma/
-├── schema.prisma                               # Database schema definition
-├── prisma.config.ts                            # Prisma configuration
-├── seed.ts                                     # Database seeding
+├── schema.prisma
+├── prisma.config.ts
+├── seed.ts
 ├── scripts/
-│   ├── sync-schema.ts                          # Quick sync for development
-│   └── regenerate-migration.ts                 # Regenerate init migration
+│   ├── sync-schema.ts          # quick dev sync
+│   └── regenerate-migration.ts # rebuild the init migration
 └── migrations/
     ├── migration_lock.toml
-    ├── 20260105000000_init/                    # Initial schema
-    │   └── migration.sql
-    └── 20260306000000_add_missing_incident_columns/  # Schema additions
-        └── migration.sql
+    ├── 20260105000000_init/
+    ├── 20260808000000_add_custom_fields/
+    ├── 20260808010000_add_last_updated_by/
+    ├── 20260814000000_add_is_email_to_comment/
+    ├── 20260821084513_add_pinned_saved_to_comments/
+    ├── 20261115000000_add_timesheet/
+    ├── 20261120000000_add_sessions_and_cache/
+    ├── 20261121000000_add_leave/
+    └── 20261122000000_add_dashboard_data/
 ```
 
-### Development Workflow
-
-```bash
-# Step 1: Edit schema
-# Edit gateways/prisma/schema.prisma
-
-# Step 2: Sync to database (development only — no migration file created)
-npm run prisma:migrate
-
-# Step 3: (Optional) View data
-npm run prisma:studio
-```
-
-### Production Workflow
-
-```bash
-# Step 1: Edit schema
-# Edit gateways/prisma/schema.prisma
-
-# Step 2: Regenerate the init migration
-npm run prisma:regenerate
-
-# Step 3: Commit the updated migration
-git add gateways/prisma/migrations/
-git commit -m "Update database schema"
-
-# Step 4: Deploy to production
-npm run prisma:deploy
-```
-
-### Commands Reference
-
-| Command | When to Use | What It Does |
-|---------|-------------|--------------|
-| `prisma:migrate` | Development | Pushes schema changes directly to DB |
-| `prisma:regenerate` | Before production | Regenerates init migration from schema |
-| `prisma:deploy` | Production | Applies migration to production DB |
-| `prisma:reset` | Reset needed | Drops all data and recreates DB |
-| `prisma:studio` | Debug/View data | Opens Prisma Studio GUI |
-| `prisma:seed` | Initial setup | Seeds DB with test users and data |
+| Command | When | Effect |
+|---------|------|--------|
+| `prisma:generate` | After schema change | Regenerate the Prisma client |
+| `prisma:migrate` | Development | `prisma db push` — apply schema directly (no migration file) |
+| `prisma:regenerate` | Before release | Rebuild the init migration from the schema |
+| `prisma:deploy` | Production | `prisma migrate deploy` |
+| `prisma:reset` | Reset | Drop and recreate the DB |
+| `prisma:studio` | Debug | Open the Prisma Studio GUI |
+| `prisma:seed` | Initial setup | Seed users, ticket types, leave balances, dashboard data |
 
 ---
 
 ## Testing
 
-### Backend Testing (Use Cases)
+Jest 30 is wired through `@nx/jest` (`npm test`, `npm run test:watch`,
+`npm run test:coverage`). There are currently no committed test files in the
+repository — the harness is in place for adding them. The backend is written to
+be testable: services take a repository dependency, and repositories are the
+only seam that touches Prisma, so a fake repository can be injected in unit
+tests.
 
-```typescript
-import { CreateHeaderUseCase } from '../CreateHeader.usecase';
-import { InMemoryHeaderGateway } from '@serviceops/core/infrastructure';
-
-describe('CreateHeaderUseCase', () => {
-  let useCase: CreateHeaderUseCase;
-  let gateway: InMemoryHeaderGateway;
-
-  beforeEach(() => {
-    gateway = new InMemoryHeaderGateway(); // No DB needed!
-    useCase = new CreateHeaderUseCase(gateway);
-  });
-
-  it('should create a header', async () => {
-    const result = await useCase.execute({ name: 'Test', ... });
-    expect(result.name).toBe('Test');
-  });
-});
-```
-
-### Frontend Testing (Storybook)
-
-```bash
-npm run storybook
-```
-
-- See components in all states (loading, error, success)
-- Test different data scenarios with mocks
-- Preview per tenant/theme
+- **Backend** — instantiate a use case or service with an in-memory repository
+  stand-in and assert on the result; no database required.
+- **Frontend** — components are dumb and prop-driven, so they are easy to
+  render in isolation with the theme provider and a Redux store.
 
 ---
 
@@ -862,612 +649,298 @@ npm run storybook
 ### Backend
 
 ```bash
-npm run dev:backend              # Start Express server with hot reload
-npm run start:backend            # Start without hot reload
-npm run build:backend            # Compile TypeScript
-npm run build:backend:clean      # Clean dist and rebuild
+npm run dev:backend              # nodemon hot-reload
+npm run start:backend            # tsx, no reload
 ```
 
 ### Frontend
 
 ```bash
-# Serve apps
-npm run serve:administration     # Administration app (http://localhost:1600)
-npm run serve:generale-partner   # Generale Partner tenant (http://localhost:1700)
-
-# Build apps
-npm run build:administration     # Build Administration app
-npm run build:generale-partner   # Build Generale Partner tenant
-npm run build:shared             # Build shared libraries
-npm run build                    # Build all apps
+npm run serve:administration     # Vite dev server, http://localhost:1600
+npm run serve:generale-partner   # Vite dev server, http://localhost:1700
+npm run build:administration     # build the administration app
+npm run build:generale-partner   # build the partner tenant
+npm run build                    # build all apps via nx
 ```
 
 ### Database (Prisma)
 
 ```bash
-npm run prisma:generate          # Generate Prisma client
-npm run prisma:migrate           # Sync schema to DB (development)
-npm run prisma:deploy            # Apply migrations (production)
-npm run prisma:reset             # Reset database completely
-npm run prisma:studio            # Open Prisma Studio GUI
-npm run prisma:seed              # Seed database with test data
-npm run prisma:regenerate        # Regenerate init migration from schema
-npm run prisma:sync              # Quick schema sync script
+npm run prisma:generate         # generate the Prisma client
+npm run prisma:migrate          # push schema (development)
+npm run prisma:deploy          # apply migrations (production)
+npm run prisma:reset           # drop & recreate
+npm run prisma:studio          # Prisma Studio GUI
+npm run prisma:seed            # seed data
+npm run prisma:sync            # quick schema sync script
+npm run prisma:regenerate      # rebuild the init migration
 ```
 
-### Testing & Quality
+### Quality
 
 ```bash
-npm test                         # Run all tests
-npm run test:watch               # Watch mode
-npm run test:coverage            # With coverage report
-npm run test:shared              # Shared lib tests only
-npm run test:administration      # Administration app tests only
-npm run storybook                # Start Storybook
-npm run build-storybook          # Build Storybook static files
-npm run lint                     # Lint code
-npm run lint:fix                 # Auto-fix lint issues
-npm run format                   # Format with Prettier
-npm run format:check             # Check formatting
-npm run fix:all                  # Lint + Format in one step
-npm run type-check               # TypeScript type check
-npm run validate                 # Format check + Lint + Type check
+npm run test                    # run all Jest tests
+npm run test:watch
+npm run test:coverage
+npm run type-check              # tsc --noEmit
+npm run lint                    # eslint
+npm run lint:fix
+npm run format                  # prettier write
+npm run format:check
+npm run fix:all                 # lint:fix + format
+npm run validate                # format:check + lint + type-check
 ```
 
 ### Docker
 
 ```bash
-docker-compose up -d             # Start the PostgreSQL service
-docker-compose down              # Stop services
-docker-compose logs -f           # View logs
+docker-compose up -d
+docker-compose down
+docker-compose logs -f
 ```
 
 ---
 
 ## API Endpoints
 
-### Base URL & Auth Header
+Base URL: `http://localhost:3001`. Protected endpoints require the session
+cookie (`serviceops.sid`), sent automatically with `credentials: 'include'`.
+There is no bearer `Authorization` header — the server holds the session.
 
-```
-http://localhost:3001
-```
+### Health check
 
-All protected endpoints require a valid session cookie (set automatically on
-sign-in via the `serviceops.sid` cookie; send it with `credentials: 'include'`):
-
-```
-Cookie: serviceops.sid=<session>
-```
-
-No bearer token / `Authorization` header is needed — the server holds the
-session. Sign in via `POST /api/auth` (`action: 'signin'`), then the cookie
-travels with every subsequent request.
-
-### Health Check
-
-**GET** `/health` — No auth required.
+**GET** `/health` — public.
 
 ```json
-{ "status": "OK", "timestamp": "2025-02-12T10:00:00.000Z" }
+{ "status": "OK", "timestamp": "2026-02-12T10:00:00.000Z" }
 ```
 
----
+### Auth
 
-### Auth API
+All actions are a single **POST** `/api/auth` with an `action` field. A
+**GET** `/api/auth` mirrors `get-session` for plain status probes.
 
-All auth actions use a single **POST** `/api/auth` with an `action` field.
+| Action | Scope | Description |
+|--------|-------|-------------|
+| `signin` | public | Sign in (sets the session cookie) |
+| `signup` | public | Create account (User role; optional pending role request) |
+| `forgot-password` | public | Email a reset OTP |
+| `verify-otp` | public | Verify the OTP, returns a PASETO reset token |
+| `reset-password` | public | Set a new password with the reset token |
+| `change-password` | session | Change own password |
+| `get-my-profile` / `update-my-profile` | session | Read / update own profile |
+| `get-session` | session | Current session status |
+| `logout` | session | Destroy the session |
+| `get-all-users`, `get-user`, `update-user`, `delete-user`, `unlock-user`, `create-user`, `create-pending-user`, `generate-temp-password`, `reset-user-password`, `activate-user`, `deactivate-user`, `get-change-log`, `get-login-logs` | admin | User administration |
+| `get-role-requests`, `get-pending-role-requests`, `approve-role-request`, `reject-role-request` | admin | Role request workflow |
 
-#### Sign In
+**Sign in** — `POST /api/auth`
 
 ```json
 { "action": "signin", "email": "admin@serviceops.tech", "password": "admin123" }
 ```
 
-**Response (201):**
+On success the response sets the `serviceops.sid` cookie and returns the
+profile (there is no JWT/token to store).
 
-```json
-{
-  "message": "Sign in successful",
-  "data": {
-    "user": { "userId": 1, "userName": "Admin User", "userEmail": "admin@serviceops.tech", "role": "admin", "isActive": true },
-    "token": "eyJhbGciOiJIUzI1NiIs..."
-  }
-}
-```
+### Admin
 
-#### Seeded Test Users
-
-| Email | Password | Role |
-|-------|----------|------|
-| `admin@serviceops.tech` | `admin123` | admin |
-| `user@serviceops.tech` | `user123` | user |
-| `consultant@serviceops.tech` | `consultant123` | consultant |
-
-#### Sign Up
-
-```json
-{
-  "action": "signup",
-  "firstName": "John", "lastName": "Doe",
-  "email": "john@serviceops.tech",
-  "password": "password123", "confirmPassword": "password123",
-  "phone": "+1-555-0000",
-  "workLocation": "NYC", "department": "IT",
-  "reasonForAccess": "Support ticket handling",
-  "employeeId": "EMP123", "businessUnit": "Operations",
-  "managerName": "Jane Smith", "role": "user"
-}
-```
-
-**Response (201):** `{ "message": "Account created successfully. Your account is pending admin approval.", "data": { "roleRequestPending": true } }`
-
-#### Forgot Password
-
-```json
-{ "action": "forgot-password", "email": "user@serviceops.tech" }
-```
-
-**Response (200):** `{ "message": "If the email exists, an OTP has been sent." }`
-
-#### Verify OTP
-
-```json
-{ "action": "verify-otp", "email": "user@serviceops.tech", "otp": "123456" }
-```
-
-**Response (200):** `{ "message": "OTP verified successfully", "data": { "verified": true, "resetToken": "jwt-reset-token" } }`
-
-#### Reset Password
-
-```json
-{
-  "action": "reset-password",
-  "email": "user@serviceops.tech",
-  "resetToken": "jwt-reset-token",
-  "newPassword": "newpassword123", "confirmPassword": "newpassword123"
-}
-```
-
-**Response (200):** `{ "message": "Password reset successfully. You can now sign in with your new password." }`
-
-#### Change Password _(requires auth)_
-
-```json
-{ "action": "change-password", "currentPassword": "old123", "newPassword": "new123" }
-```
-
-#### Admin User Actions _(admin only)_
-
-| Action | Description |
-|--------|-------------|
-| `get-all-users` | List all users |
-| `get-user` + `userId` | Get single user |
-| `update-user` + `userId` + `data` | Update user fields |
-| `delete-user` + `userId` | Delete user |
-| `unlock-user` + `userId` | Unlock locked account |
-| `create-user` | Create active user immediately |
-| `create-pending-user` | Create user pending approval |
-| `activate-user` + `userId` | Manually activate user |
-| `deactivate-user` + `userId` | Deactivate user |
-| `get-role-requests` | Get all role requests |
-| `get-pending-role-requests` | Get pending role requests |
-| `approve-role-request` + `userId` + `adminNotes` | Approve role request |
-| `reject-role-request` + `userId` + `adminNotes` | Reject role request |
-| `get-change-log` | Get user audit log |
-
----
-
-### Incident API
-
-Base path: `/api/admin/incidents` — all endpoints require auth.
+Base path `/api/admin` — session required; mutations on the management
+sub-routers also require the admin role.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/admin/incidents` | Get all incidents |
-| GET | `/api/admin/incidents/drafts` | Get draft incidents |
-| GET | `/api/admin/incidents/:id` | Get incident by ID |
-| GET | `/api/admin/incidents/number/:number` | Get by number (e.g. `INC0000001`) |
-| POST | `/api/admin/incidents` | Create incident |
-| PUT | `/api/admin/incidents/:id` | Update incident |
-| DELETE | `/api/admin/incidents/:id` | Delete incident |
-
-**Create Incident** — required fields: `caller`, `businessCategory`, `serviceLine`, `application`, `shortDescription`, `description`, `impact`, `urgency`, `channel`, `assignmentGroup`, `createdBy`
-
-```json
-{
-  "caller": "John Doe", "businessCategory": "IT Support", "serviceLine": "Hardware",
-  "application": "Windows", "shortDescription": "Printer not working",
-  "description": "Network printer on floor 3 not responding",
-  "impact": "medium", "urgency": "medium", "channel": "portal",
-  "assignmentGroup": "IT Support Team", "createdBy": "admin@serviceops.tech",
-  "status": "new", "client": "Acme Corp", "isRecurring": false, "isMajor": false
-}
-```
-
-> For **drafts**, only `caller` and `createdBy` are required. Set `"status": "draft"`.
-
-**Update Incident** — all fields optional:
-
-```json
-{ "status": "in_progress", "priority": "2-High", "assignmentGroup": "Escalation Team" }
-```
-
----
-
-### Comment API
-
-Base path: `/api/admin/incidents/:id/comments`
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/admin/incidents/:id/comments` | Get comments |
-| POST | `/api/admin/incidents/:id/comments` | Add comment |
-
-**Create Comment** — required: `subject`, `message`
-
-```json
-{
-  "subject": "Follow-up needed",
-  "message": "User confirmed the issue persists",
-  "isInternal": false, "isSelfNote": false, "notifyAssigneesOnly": false,
-  "status": "in_progress", "createdBy": "admin@serviceops.tech"
-}
-```
-
----
-
-### Time Entry API
-
-Base path: `/api/admin/incidents/:id/time-entries`
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/admin/incidents/:id/time-entries` | Get time entries |
-| POST | `/api/admin/incidents/:id/time-entries` | Add time entry |
-
-**Create Time Entry** — required: `date`, `hours`, `minutes`
-
-```json
-{
-  "date": "2025-02-12", "hours": 2, "minutes": 30,
-  "billingCode": "PROJECT-001", "activityTask": "Troubleshooting printer drivers",
-  "externalComment": "Investigated driver compatibility",
-  "internalComment": "Need to escalate to vendor",
-  "isNonBillable": false, "createdBy": "admin@serviceops.tech"
-}
-```
-
----
-
-### Resolution API
-
-Base path: `/api/admin/incidents/:id/resolutions`
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/admin/incidents/:id/resolutions` | Get resolutions |
-| POST | `/api/admin/incidents/:id/resolutions` | Add resolution |
-
-**Create Resolution** — required: `resolutionCode`, `resolution`
-
-```json
-{
-  "resolutionCode": "permanent_fix",
-  "resolution": "Updated printer drivers to latest version",
-  "application": "Windows", "category": "Hardware Issue", "subCategory": "Printer",
-  "customerConfirmation": true, "isRecurring": false,
-  "rootCauseIdentified": true, "rootCause": "Outdated drivers caused compatibility issue",
-  "internalNote": "Recommend updating all printers on floor 3",
-  "createdBy": "admin@serviceops.tech"
-}
-```
-
-**Resolution Code values:** `permanent_fix`, `workaround`, `known_error`, `duplicate`, `not_reproducible`, `user_error`, `configuration_change`, `software_update`, `hardware_replacement`, `third_party_fix`, `other`
-
----
-
-### Activity API
-
-**GET** `/api/admin/incidents/:id/activities` — read-only audit log for an incident.
-
-```json
-{
-  "data": [{
-    "id": 1, "incidentId": 1, "activityType": "status_change",
-    "description": "Status changed from new to in_progress",
-    "previousValue": "new", "newValue": "in_progress",
-    "performedBy": "admin@serviceops.tech", "createdAt": "2025-02-12T10:00:00Z"
-  }]
-}
-```
-
----
-
-### Ticket Type API
-
-Base path: `/api/admin/ticket-type`
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/admin/ticket-type` | Get all ticket types |
-| GET | `/api/admin/ticket-type/:id` | Get by ID |
-| POST | `/api/admin/ticket-type` | Create ticket type |
-| PUT | `/api/admin/ticket-type/:id` | Update ticket type |
-| DELETE | `/api/admin/ticket-type/:id` | Delete ticket type |
-
----
-
-### Admin API Summary (`/api/admin/`)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| **Service Requests** | | |
-| GET | `/service-request` | Get all service requests |
-| GET | `/service-request/:number` | Get by number |
-| POST | `/service-request` | Create service request |
-| PUT | `/service-request/:id` | Update service request |
-| DELETE | `/service-request/:id` | Delete service request |
-| **Advisory Requests** | | |
-| GET | `/advisory-request` | Get all advisory requests |
-| GET | `/advisory-request/:number` | Get by number |
-| POST | `/advisory-request` | Create advisory request |
-| PUT | `/advisory-request/:id` | Update advisory request |
-| DELETE | `/advisory-request/:id` | Delete advisory request |
-| **Headers** | | |
-| GET | `/header` | Get all headers |
-| POST | `/header` | Create header |
-| PUT | `/header/:id` | Update header |
-| DELETE | `/header/:id` | Delete header |
+| **Admin controls** | | |
+| GET | `/admin/controls` | Get admin control flags |
+| PUT | `/admin/controls` | Update admin control flags |
 | **Configuration** | | |
-| GET | `/configuration` | Get system configuration |
-| PUT | `/configuration` | Update full configuration |
-| PUT | `/configuration/section` | Update a configuration section |
-| **Admin Controls** | | |
-| GET | `/admin-controls` | Get admin control settings |
-| PUT | `/admin-controls` | Update admin control settings |
+| GET | `/admin/configuration` | Get system configuration |
+| PUT | `/admin/configuration` | Update full configuration |
+| PATCH | `/admin/configuration/:section` | Update one section |
+| **Ticket types** | | |
+| GET | `/admin/ticket-type` | List ticket types |
+| GET | `/admin/ticket-type/:id` | Get by id |
+| POST/PUT/DELETE | `/admin/ticket-type[/:id]` | Create / update / delete |
+| PATCH | `/admin/ticket-type/reorder` | Reorder |
+| **Custom fields** | | |
+| GET/POST | `/admin/custom-field` | List / create |
+| GET/PUT/DELETE | `/admin/custom-field/:id` | Get / update / delete |
+| **Tickets (dynamic)** | | |
+| GET | `/admin/tickets` | List (filter with `?ticketType=`) |
+| GET | `/admin/tickets/drafts` | List drafts (optional `?ticketType=`) |
+| GET | `/admin/tickets/number/:number` | Get by number |
+| GET | `/admin/tickets/id/:id` | Get by id |
+| POST | `/admin/tickets` | Create (`ticketType` required) |
+| PUT / PATCH / DELETE | `/admin/tickets/id/:id` | Update / patch / delete |
+| GET/POST | `/admin/tickets/:ticketId/comments` | List / add comment |
+| GET/POST | `/admin/tickets/:ticketId/time-entries` | List / add time entry |
+| GET/POST | `/admin/tickets/:ticketId/resolutions` | List / add resolution |
+| GET | `/admin/tickets/:ticketId/activities` | Read-only activity log |
+| POST | `/admin/tickets/attachments/upload` | Upload attachments (multer, ≤10 files, 10 MB each) |
 
-### User API (`/api/user/`)
+Uploaded files are served statically from `/uploads/attachments`.
+
+### User
+
+Base path `/api/user` — session required.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/dashboard` | Get user dashboard data |
+| **Timesheet** | | |
+| GET | `/user/timesheet` | Current week's sheet (auto-created on first save) |
+| GET | `/user/timesheet/approvals` | Approver's decision history |
+| POST | `/user/timesheet/lines` | Add a line |
+| POST | `/user/timesheet/save` | Save the sheet as a draft |
+| POST | `/user/timesheet/submit` | Submit for approval |
+| PATCH | `/user/timesheet/lines/:id` | Update a line |
+| DELETE | `/user/timesheet/lines/:id` | Remove a line |
+| **Leave** | | |
+| GET | `/user/leave/balance` | Leave balances per type |
+| GET | `/user/leave/requests` | Leave requests |
+| POST | `/user/leave/requests` | Submit a time-off request |
+
+### Consultant
+
+Base path `/api/consultant` — session required (placeholder `not-found` route).
 
 ---
 
-### Enum Reference
+### Enum reference
 
 | Field | Values |
 |-------|--------|
 | **Impact / Urgency** | `high`, `medium`, `low` |
-| **Priority** | `1-Critical`, `2-High`, `3-Medium`, `4-Low`, `5-Planning` |
-| **Channel** | `email`, `phone`, `portal`, `chat`, `walk_in` |
-| **Status** | `draft`, `new`, `in_progress`, `on_hold`, `assigned`, `resolved`, `closed`, `cancelled` |
-| **Activity Types** | `status_change`, `priority_change`, `assignment_change`, `comment_added`, `time_entry_added`, `resolution_added`, `attachment_added`, `field_update`, `follow_added`, `escalation` |
+| **Priority** | `Critical`, `High`, `Medium`, `Low` |
+| **Ticket status** | `draft`, `new`, `in_progress`, `on_hold`, `assigned`, `resolved`, `closed`, `cancelled` |
+| **Timesheet status** | `open`, `draft`, `pending`, `submitted`, `approved`, `rejected` |
+| **Leave status** | `submitted`, `approved`, `rejected` |
+| **Activity types** | `status_change`, `priority_change`, `assignment_change`, `comment_added`, `time_entry_added`, `resolution_added`, `attachment_added`, `field_update`, `escalation` |
 
-Priority is auto-calculated from **Impact × Urgency**:
+### Error responses
 
-| | High Urgency | Medium Urgency | Low Urgency |
-|---|---|---|---|
-| **High Impact** | 1-Critical | 2-High | 3-Medium |
-| **Medium Impact** | 2-High | 3-Medium | 4-Low |
-| **Low Impact** | 3-Medium | 4-Low | 5-Planning |
-
----
-
-### Error Responses
-
-| Status | Description | Example |
-|--------|-------------|---------|
-| 400 | Validation error | `{ "message": "Validation failed", "errors": [...] }` |
-| 401 | Unauthorized | `{ "message": "Access token is required" }` |
-| 403 | Forbidden | `{ "message": "Admin access required" }` |
-| 404 | Not found | `{ "message": "Incident not found" }` |
+| Status | Meaning | Example |
+|--------|---------|---------|
+| 400 | Validation / bad input | `{ "message": "ticketType is required" }` |
+| 401 | No valid session | `{ "message": "Authentication required" }` |
+| 403 | Missing role | `{ "message": "Admin access required" }` |
+| 404 | Not found | `{ "message": "Ticket not found" }` |
 | 409 | Conflict | `{ "message": "Email already registered" }` |
-| 423 | Locked | `{ "message": "Account is locked. Try again after X minutes." }` |
+| 423 | Locked | `{ "message": "Account locked. Try again after 30 minutes." }` |
 | 429 | Rate limited | `{ "message": "OTP already sent. Wait X minutes." }` |
-
----
-
-### API Testing (Postman)
-
-1. **Create an environment** with variable `baseUrl` = `http://localhost:3001`
-2. **Add a pre-request script** to the Sign In request to auto-save the token:
-   ```javascript
-   if (pm.response.code === 201) {
-     const data = pm.response.json();
-     pm.environment.set("token", data.data.token);
-   }
-   ```
-3. **Set the Authorization header** on your collection to `Bearer {{token}}`
-4. Use `{{baseUrl}}` in all request URLs
 
 ---
 
 ## Path Aliases
 
+Defined in `tsconfig.base.json` and resolved by `vite-tsconfig-paths` / tsc.
+The main ones:
+
 ```typescript
-// Shared interfaces (FE + BE)
-import { IHeader, IJob } from '@serviceops/interfaces';
+// Shared types & validation
+import { ITicket, ITimesheet, ILeaveBalance } from '@serviceops/interfaces';
 
 // Backend core
-import { CreateHeaderUseCase } from '@serviceops/core/use-cases';
-import { PrismaHeaderGateway } from '@serviceops/core/infrastructure';
+import { requireAuth, requireAdmin } from '@serviceops/middleware';
+import { prisma } from '@serviceops/database';
+import { TicketManagementUseCase } from '@serviceops/core/use-cases';
 
-// Frontend components
-import { JobStatusCard, DataTable, Button } from '@serviceops/component';
+// Frontend data layer (Redux + RTK Query)
+import { baseApi, useGetLeaveBalanceQuery, store } from '@serviceops/services';
 
-// Mock data
-import { mockJobInProgress } from '@serviceops/mocks';
+// Components & pages
+import { DataTable, GenericPanel } from '@serviceops/component';
+import BaseTimesheetPage from '@serviceops/pages/base/Timesheet';
+import SignInPage from '@serviceops/pages/shared/SignIn';
 
-// Theme & Styles
-import { createAppStyles } from '@serviceops/theme';
-
-// Hooks
-import { useDebounce } from '@serviceops/hooks';
-
-// Services
-import { adminService } from '@serviceops/services';
-
-// Constants
-import { API_ROUTES } from '@serviceops/constants';
-
-// Store & State
-import { store } from '@serviceops/store';
-import { useAppSelector } from '@serviceops/state';
+// Theme, hooks, constants, utils
+import { createAppStyles, useAppRole } from '@serviceops/theme';
+import { useAuth, useNotification, useAppNavigation } from '@serviceops/hooks';
+import { ADMIN_PATHS, USER_PATHS } from '@serviceops/constants';
+import { formatDate } from '@serviceops/utils';
 ```
+
+The Configuration module additionally exposes focused aliases such as
+`@serviceops/genericpanel`, `@serviceops/configdialogs`, `@serviceops/richtexteditor`,
+`@serviceops/configsection`, and the ticket-type / priority / status form
+dialogs.
 
 ---
 
 ## Technology Stack
 
-| Category | Technology | Version | Purpose |
-|----------|------------|---------|---------|
-| **Backend** | Express.js | 4.18 | REST API server |
-| **Database** | PostgreSQL | 18 | Data persistence + cache + session store |
-| **ORM** | Prisma | 7.2 | Database access |
-| **Cache** | PostgreSQL (jsonb) | — | Caching layer (replaces Redis) |
-| **Frontend** | React | 19.0 | UI framework |
-| **UI Library** | MUI | 7.3 | Component library |
-| **State** | Redux Toolkit | 2.10 | State management |
-| **Forms** | Formik + Yup | 2.4 | Form handling & validation |
-| **Styling** | Emotion + tss-react | 4.9 | CSS-in-JS |
-| **Charts** | ApexCharts | 5.3 | Data visualization |
-| **Testing** | Jest | 30 | Unit testing |
-| **Docs** | Storybook | 10.1 | Component documentation |
-| **Build** | Webpack + NX | 22.1 | Build tooling |
-| **Validation** | Yup | 1.7 | Schema validation |
-| **Auth** | bcryptjs + express-session + PASETO | 3.0 | Password hashing & server-side cookie sessions |
-| **Email** | Nodemailer | 7.0 | OTP & transactional emails |
-| **Logging** | Winston | 3.19 | Structured logging |
-| **Language** | TypeScript | 5.9 | Type safety |
+| Category | Technology | Purpose |
+|----------|------------|---------|
+| **Backend** | Express 4.18 | REST API server |
+| **Database** | PostgreSQL 18 | Data + cache + session store |
+| **ORM** | Prisma 7 | Data access |
+| **Frontend** | React 19 | UI framework |
+| **UI library** | MUI 7 | Components |
+| **State** | Redux Toolkit 2 + RTK Query | State + data fetching |
+| **Forms** | Formik + Yup | Form handling & validation |
+| **Styling** | Emotion + tss-react | CSS-in-JS, role-aware `useStyles` |
+| **Charts** | ApexCharts | Data visualization |
+| **Router** | React Router 6 | Client-side routing |
+| **Auth** | express-session + PgSessionStore + PASETO + bcryptjs | Cookie sessions & password hashing |
+| **Email** | Nodemailer | OTP & transactional mail |
+| **Logging** | Winston | Structured logging |
+| **Build** | Vite 6 + NX 22 | Dev servers & builds |
+| **Testing** | Jest 30 | Unit testing |
+| **Language** | TypeScript 5.9 | Type safety |
 
 ---
 
 ## Troubleshooting
 
-### Email/OTP Not Sending
+### Sign-in succeeds then immediately logs out
 
-**Symptoms:** Users not receiving OTP emails, email errors in backend logs.
+The browser rejected the session cookie.
 
-1. **Development Mode** — OTP is printed to console:
-   ```
-   [DEV] OTP for user@example.com: 123456
-   ```
+1. Check the `serviceops.sid` cookie flags in the devtools **Application** tab.
+2. A `Secure` cookie over plain `http` is dropped — run dev over http with
+   `SameSite=Lax`, or serve everything over HTTPS.
+3. For cross-site setups, confirm every calling origin is in `CORS_ORIGIN`.
 
-2. **Verify SMTP config** in `.env`:
-   ```env
-   SMTP_HOST=smtp.gmail.com
-   SMTP_PORT=587
-   SMTP_USER=your-email@gmail.com
-   SMTP_PASS=your-app-password   # Must be App Password, not account password
-   ```
+### Email / OTP not sending
 
-3. **Gmail App Password** — Enable 2FA, then generate at [https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
+1. In `NODE_ENV=development` the OTP is printed to the console — no SMTP needed.
+2. For real mail, verify `SMTP_*` in `.env`; Gmail requires an **App Password**.
 
----
+### Database connection (`P1001`)
 
-### Database Connection Issues
+```bash
+docker-compose ps && docker-compose up -d   # Postgres running?
+npm run prisma:migrate && npm run prisma:generate
+npm run prisma:studio                      # inspect manually
+```
 
-**Symptoms:** `P1001: Can't reach database server`, connection timeout.
+### Build errors / stale cache
 
-1. **Check Docker containers:**
-   ```bash
-   docker-compose ps
-   docker-compose up -d
-   ```
+```bash
+rm -rf node_modules .nx dist
+npm install
+npm run prisma:generate
+npx nx reset
+```
 
-2. **Verify `DATABASE_URL`** format in `.env`:
-   ```env
-   DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/serivceops_db?schema=public
-   # Special characters in password must be URL-encoded (& → %26)
-   ```
-
-3. **Run migrations:**
-   ```bash
-   npm run prisma:migrate
-   npm run prisma:generate
-   ```
-
-4. **Test connection:**
-   ```bash
-   npm run prisma:studio
-   ```
-
----
-
-### Build Errors
-
-**Symptoms:** `Module not found`, TypeScript errors, Prisma client errors.
-
-1. **Clear cache and reinstall:**
-   ```bash
-   rm -rf node_modules .nx dist
-   npm install
-   ```
-
-2. **Regenerate Prisma client:**
-   ```bash
-   npm run prisma:generate
-   ```
-
-3. **Clear NX cache:**
-   ```bash
-   npx nx reset
-   ```
-
-4. **Check Node version:**
-   ```bash
-   node -v   # Must be 24+
-   npm -v    # Must be 9+
-   ```
-
----
-
-### Port Already in Use
-
-**Symptoms:** `EADDRINUSE: address already in use :::3001`
+### Port already in use
 
 ```bash
 # Windows
 netstat -ano | findstr :3001
 taskkill /PID <PID> /F
 
-# Mac/Linux
+# macOS / Linux
 lsof -ti:3001 | xargs kill -9
 ```
 
----
+### Role request not appearing
 
-### Role Request Not Appearing
+```bash
+npm run prisma:studio   # inspect the User table: requestedRole + status
+```
 
-**Symptoms:** User signed up as Consultant/Admin but no request appears in Role Requests.
-
-1. **Check database via Prisma Studio:**
-   ```bash
-   npm run prisma:studio
-   # Inspect User table — check requestedRole and status fields
-   ```
-
-2. **Check signup flow** — ensure frontend sends the correct role value and backend sets `requestedRole`.
-
----
-
-### Styles Not Applying in Consultant View
-
-**Symptoms:** Components look unstyled or use wrong theme in consultant pages.
-
-1. **Verify the component styles** include a `consultant:` override block:
-   ```typescript
-   export const useStyles = createAppStyles((theme: Theme) => getBaseStyles(theme), {
-     admin: {},
-     user: {},
-     consultant: {},  // Must be present
-   });
-   ```
-
-2. **Check theme context** — ensure consultant routes are wrapped with the correct theme provider.
-
-3. **Hard refresh browser** — `Ctrl+Shift+R` / `Cmd+Shift+R`
+Confirm the sign-up payload carries the requested role and the backend filed it
+as a pending role request.
 
 ---
 
@@ -1477,4 +950,4 @@ MIT
 
 ---
 
-**Last Updated:** March 2026
+**Last Updated:** November 2026
